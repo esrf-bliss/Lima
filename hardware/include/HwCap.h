@@ -15,11 +15,10 @@ public:
 		SerialLine, 		// Generic detector serial line
 	};
 
-	Type getType() const;
-	void *getCtrlObj() const;
-
 	HwCap(Type type, void *ctrl_obj);
 
+	Type getType() const;
+	void *getCtrlObj() const;
 
  private:
 	Type m_type;
