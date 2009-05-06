@@ -1,22 +1,14 @@
 #ifndef HWSYNCCTRLOBJ_H
 #define HWSYNCCTRLOBJ_H
 
+#include "Constants.h"
+
 namespace lima
 {
 
 class HwSyncCtrlObj
 {
 public:
-	enum TrigMode {
-		Internal, 
-		ExtTrigSingle, ExtTrigMult,
-		ExtGate, ExtStartStop,
-	};
-
-	enum ShutMode {
-		Manual, AutoFrame, AutoSeq,
-	};
-
 	HwSyncCtrlObj();
 	virtual ~HwSyncCtrlObj();
 
@@ -39,6 +31,9 @@ public:
 	virtual void getShutOpenTime (double& shut_open_time)  = 0;
 	virtual void setShutCloseTime(double  shut_close_time) = 0;
 	virtual void getShutCloseTime(double& shut_close_time) = 0;
+
+	virtual void setNbFrames(int  nb_frames) = 0;
+	virtual void getNbFrames(int& nb_frames) = 0;
 
  private:
 };

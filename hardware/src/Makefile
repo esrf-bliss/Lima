@@ -1,5 +1,5 @@
 
-hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o
+hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwBufferCtrlObj.o
 	
 CXXFLAGS += -I../include -I../../common/include -Wall
 

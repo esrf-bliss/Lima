@@ -8,8 +8,9 @@ class HwCap
 {
 public:
 	enum Type {
-		Sync, Buffer,		// Standard: these are mandatory
-		Roi, Bin, Flip,		// Image
+		DetInfo, ImageInfo,	// Standard: these are mandatory
+		Sync, Buffer,		
+		Roi, Bin, Flip,		// Image operations
 		Kinetics, FrameTransfer,// Acquisition modes
 		Timing,			// Read only detector timmings
 		SerialLine, 		// Generic detector serial line
@@ -26,5 +27,8 @@ public:
 };
  
 } // namespace lima
+
+#include "HwSyncCtrlObj.h"
+#include "HwBufferCtrlObj.h"
 
 #endif // HWCAP_H

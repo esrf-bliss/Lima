@@ -46,7 +46,8 @@ class HwInterface
 	virtual void startAcq() = 0;
 	virtual void stopAcq() = 0;
 	virtual void getStatus(StatusType& status) = 0;
-	virtual unsigned long getAcqFrameNb() = 0;
+	virtual int getNbAcquiredFrames() = 0;
+	virtual double getStartTimeStamp() = 0;
 };
 
 } // namespace lima
