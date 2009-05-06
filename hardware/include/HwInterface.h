@@ -17,13 +17,13 @@ class HwInterface
 	};
 
 	enum DetStatus {
-		DetFault=0x1, 
-		WaitForTrigger=0x2,
-		ShutterOpen=0x4,
-		Exposure=0x8,
-		ShutterClose=0x10,
-		ChargeShift=0x20,
-		Readout=0x40,
+		DetFault	= 0x01, 
+		WaitForTrigger	= 0x02,
+		ShutterOpen	= 0x04,
+		Exposure	= 0x08,
+		ShutterClose	= 0x10,
+		ChargeShift	= 0x20,
+		Readout		= 0x40,
 	};
 
 	typedef struct Status {
