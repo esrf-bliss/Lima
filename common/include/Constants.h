@@ -8,6 +8,10 @@ enum ImageType {
 	Bpp8, Bpp10, Bpp12, Bpp14, Bpp16, Bpp32
 };
 
+enum AcqMode {
+	Single, Accumulation, Concatenation,
+};
+
 enum TrigMode {
 	Internal, 
 	ExtTrigSingle, ExtTrigMult,
@@ -18,13 +22,9 @@ enum ShutMode {
 	Manual, AutoFrame, AutoSeq,
 };
 
-
 enum BufferMode {
 	Linear, Circular,
 };
-
-
-
 
 } // lima
 
