@@ -2,6 +2,10 @@
 
 using namespace lima;
 
+using std::min;
+using std::max;
+
+
 /*******************************************************************
  * \brief Aligns the Point to the nearest boundary of another Point
  *
@@ -20,19 +24,21 @@ void Point::alignTo(const Point& p, AlignDir align_dir)
 }
 
 
-FrameDim::FrameDim(const Size& size, ImageType type)
-{
-	m_size = size;
-	m_type = type;
-	m_depth = getImageTypeDepth(type);
-}
+/*******************************************************************
+ * \brief Set the roi by giving to arbitrary (diagonal) corners
+ *
+ * This method works by finding the top-left and bottom-right corners
+ *******************************************************************/
 
-
-FrameDim::FrameDim(int width, int height, ImageType type)
+void Roi::setCorners(const Point& p1, const Point& p2)
 {
-	m_size = Size(width, height);
-	m_type = type;
-	m_depth = getImageTypeDepth(type);
+	int x1 = min(p1.x, p2.x);
+	int x2 = max(p1.x, p2.x);
+	int y1 = min(p1.y, p2.y);
+	int y2 = max(p1.y, p2.y);
+	m_top_left = checkCorner(Point(x1, y1));
+	Point bottom_right = Point(x2, y2);
+	m_size = bottom_right + 1 - m_top_left;
 }
 
 int FrameDim::getImageTypeBpp(ImageType type)
@@ -44,7 +50,8 @@ int FrameDim::getImageTypeBpp(ImageType type)
 	case Bpp14: return 14;
 	case Bpp16: return 16;
 	case Bpp32: return 32;
-	default:    return 0;
+	default:
+		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");
 	}
 }
 
@@ -61,6 +68,6 @@ int FrameDim::getImageTypeDepth(ImageType type)
 	case Bpp32: 
 		return 4;
 	default:    
-		return 0;
+		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");
 	}
 }
