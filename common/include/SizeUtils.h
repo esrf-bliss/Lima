@@ -411,7 +411,7 @@ inline int FrameDim::getDepth() const
 	return m_depth;
 }
 
-int FrameDim::getMemSize() const
+inline int FrameDim::getMemSize() const
 {
 	return Point(m_size).getArea() * m_depth;
 }
