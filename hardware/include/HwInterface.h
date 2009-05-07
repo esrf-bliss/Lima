@@ -39,7 +39,7 @@ class HwInterface
 	HwInterface();
 	virtual ~HwInterface();
 
-	const HwCap *getCapOfType(HwCap::Type cap_type);
+	const HwCap *getCapOfType(HwCap::Type cap_type) const;
 	virtual const CapList& getCapList() const = 0;
 
 	virtual void reset(ResetLevel reset_level) = 0;
