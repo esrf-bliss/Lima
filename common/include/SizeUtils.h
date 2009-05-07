@@ -7,6 +7,20 @@
 namespace lima
 {
 
+
+/*******************************************************************
+ * \fn IsPowerOf2(x)
+ * \brief Calculates if a given number is a power of 2
+ *
+ * This very nice implementation was taken from David Fernandez
+ *******************************************************************/
+
+inline bool IsPowerOf2(int x)
+{
+	return (x > 0) && (((x - 1) & x) == 0);
+}
+
+
 /*******************************************************************
  * \class Point
  * \brief Basic two-dimension arithmetic class
@@ -172,7 +186,7 @@ class Bin
 
 inline bool Bin::isValid(int i)
 {
-	return (i > 0);
+	return IsPowerOf2(i);
 }
 
 inline Point Bin::checkValid(const Point& p)
