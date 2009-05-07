@@ -30,6 +30,6 @@ enum BufferMode {
 	Linear, Circular,
 };
 
-} // lima
+} // namespace lima
 
 #endif // CONSTANTS_H

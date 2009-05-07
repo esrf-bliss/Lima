@@ -3,7 +3,7 @@
 using namespace lima;
 
 /*******************************************************************
- * \brief Aligns the Point to the nearest boundary another Point
+ * \brief Aligns the Point to the nearest boundary of another Point
  *
  * This method aligns the point to the nearest boundary that is
  * a multiple of another Point. The align_dir parameter controls 
@@ -33,21 +33,6 @@ FrameDim::FrameDim(int width, int height, ImageType type)
 	m_size = Size(width, height);
 	m_type = type;
 	m_depth = getImageTypeDepth(type);
-}
-
-const Size& FrameDim::getSize() const
-{
-	return m_size;
-}
-
-ImageType FrameDim::getImageType() const
-{
-	return m_type;
-}
-
-int FrameDim::getDepth() const
-{
-	return m_depth;
 }
 
 int FrameDim::getImageTypeBpp(ImageType type)
