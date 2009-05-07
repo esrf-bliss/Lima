@@ -72,7 +72,7 @@ class CtSaving {
 	void setFramesPerFile(unsigned long frames_per_file);
 	void getFramePerFile(unsigned long& frames_per_file) const;
 
-	// --- headers
+	// --- common headers
 
 	void getStaticHeader(HeaderList& header) const;
 
@@ -80,12 +80,27 @@ class CtSaving {
 	void setCommonHeader(HeaderList header);
 	void getCommonHeader(HeaderList& header) const;
 	void addToCommonHeader(HeaderValue value);
+
+	// --- frame headers
+
+	void setFrameHeader(long frame_nr, HeaderList header);
+	void getFrameHeader(long frame_nr, HeaderList& header) const;
+	void takeFrameHeader(long frame_nr, HeaderList& header);
+	void addToFrameHeader(long frame_nr, HeaderValue value);
+
+	void removeFrameHeader(long frame_nr);
+	void removeAllFrameHeaders();
+
+	// --- final header
+
+	void takeHeader(long frame_nr, HeaderList& header);
 	
     private:
 
 	Parameters m_pars;
 	HeaderList m_static_header;
 	HeaderList m_common_header;
+	map<long, HeaderList> m_frame_headers;
 };
 
 } // namespace lima

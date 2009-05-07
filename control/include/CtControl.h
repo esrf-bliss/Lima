@@ -1,6 +1,8 @@
 #ifndef CTCONTROL_H
 #define CTCONTROL_H
 
+#include "HwInterface.h"
+
 namespace lima {
 
 class CtControl {
@@ -14,7 +16,7 @@ class CtControl {
 		long	LastCounterReady;
 	};
 
-	CtControl();
+	CtControl(HwInterface *hw);
 	~CtControl();
 
 	void prepareAcq();
@@ -27,7 +29,9 @@ class CtControl {
 	void reset();
 
     private:
+	HwInterface	m_hw;
 	ImageStatus	m_img_status;
+};
 
 } // namespace lima
 

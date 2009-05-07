@@ -2,6 +2,8 @@
 #define CTBUFFER_H
 
 #include "Constants.h"
+#include "HwInterface.h"
+#include "HwCap.h"
 
 namespace lima {
 
@@ -15,7 +17,7 @@ class CtBuffer {
 		short	maxMemory;
 	};
 
-	CtBuffer();
+	CtBuffer(HwInterface *hw);
 	~CtBuffer();
 
 	void setMode(BufferMode mode);
@@ -28,7 +30,8 @@ class CtBuffer {
 	void getMaxMemory(short& max_memory) const;
 
     private:
-	Parameters m_pars;
+	HwBufferCtrlObj	*m_hw_buffer;
+	Parameters	m_pars;
 
 } // namespace lima
 
