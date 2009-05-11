@@ -363,6 +363,7 @@ inline bool operator !=(const Roi& r1, const Roi& r2)
 class FrameDim
 {
  public:
+	FrameDim();
 	FrameDim(const Size& size, ImageType type);
 	FrameDim(int width, int height, ImageType type);
 
@@ -375,25 +376,27 @@ class FrameDim
 	static int getImageTypeDepth(ImageType type);
 
  private:
-	FrameDim();
-
 	Size m_size;
 	ImageType m_type;
 	int m_depth;
 };
 
-inline FrameDim::FrameDim(const Size& size, ImageType type)
+inline FrameDim::FrameDim()
+	: m_size(), m_type(Bpp8)
 {
-	m_size = size;
-	m_type = type;
-	m_depth = getImageTypeDepth(type);
+	m_depth = getImageTypeDepth(m_type);
+}
+
+inline FrameDim::FrameDim(const Size& size, ImageType type)
+	: m_size(size), m_type(type)
+{
+	m_depth = getImageTypeDepth(m_type);
 }
 
 inline FrameDim::FrameDim(int width, int height, ImageType type)
+	: m_size(Size(width, height)), m_type(type)
 {
-	m_size = Size(width, height);
-	m_type = type;
-	m_depth = getImageTypeDepth(type);
+	m_depth = getImageTypeDepth(m_type);
 }
 
 inline const Size& FrameDim::getSize() const

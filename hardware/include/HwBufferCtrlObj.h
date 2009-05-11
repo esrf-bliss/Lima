@@ -6,11 +6,14 @@
 namespace lima
 {
 
-class HwBufferCtrlObj
+class HwBufferCtrlObj : public HwFrameCallbackGen
 {
 public:
 	HwBufferCtrlObj();
 	virtual ~HwBufferCtrlObj();
+
+	virtual void setFrameDim(const FrameDim& frame_dim) = 0;
+	virtual void getFramedim(      FrameDim& frame_dim) = 0;
 
 	virtual void setNbBuffers(int  nb_buffers) = 0;
 	virtual void getNbBuffers(int& nb_buffers) = 0;
@@ -30,8 +33,6 @@ public:
 	virtual void *getBufferPtr(int buffer_nb) = 0;
 	virtual void *getFramePtr(int acq_frame_nb) = 0;
 	virtual double getFrameTimeStamp(int acq_frame_nb) = 0;
-
- private:
 };
  
 } // namespace lima
