@@ -1,5 +1,5 @@
 
-common-objs := SizeUtils.o
+common-objs := SizeUtils.o Timestamp.o
 	
 CXXFLAGS += -I../include -Wall
 

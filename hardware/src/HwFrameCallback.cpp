@@ -42,6 +42,14 @@ void HwFrameCallbackGen::unregisterFrameCallback(HwFrameCallback *frame_cb)
 }
 
 
+bool HwFrameCallbackGen::newFrameReady(const FrameInfoType& frame_info)
+{
+	if (m_frame_cb == NULL)
+		return false;
+
+	return m_frame_cb->newFrameReady(frame_info);
+}
+
 void HwFrameCallback::setFrameCallbackGen(HwFrameCallbackGen *frame_cb_gen)
 {
 	if (frame_cb_gen && m_frame_cb_gen)

@@ -6,9 +6,15 @@
 namespace lima
 {
 
+
 class HwSyncCtrlObj
 {
 public:
+	typedef struct ValidRanges {
+		double min_exp_time, max_exp_time;
+		double min_lat_time, max_lat_time;
+	} ValidRangesType;
+
 	HwSyncCtrlObj();
 	virtual ~HwSyncCtrlObj();
 
@@ -21,19 +27,10 @@ public:
 	virtual void setLatTime(double  lat_time) = 0;
 	virtual void getLatTime(double& lat_time) = 0;
 
-	virtual void setShutMode(ShutMode  shut_mode) = 0;
-	virtual void getShutMode(ShutMode& shut_mode) = 0;
-
-	virtual void setShutState(bool  shut_open) = 0;
-	virtual void getShutState(bool& shut_open) = 0;
-
-	virtual void setShutOpenTime (double  shut_open_time)  = 0;
-	virtual void getShutOpenTime (double& shut_open_time)  = 0;
-	virtual void setShutCloseTime(double  shut_close_time) = 0;
-	virtual void getShutCloseTime(double& shut_close_time) = 0;
-
 	virtual void setNbFrames(int  nb_frames) = 0;
 	virtual void getNbFrames(int& nb_frames) = 0;
+
+	virtual const ValidRangesType& getValidRanges() = 0;
 
  private:
 };

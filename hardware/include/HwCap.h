@@ -13,6 +13,7 @@ public:
 		Roi, Bin, Flip,		// Image operations
 		Kinetics, FrameTransfer,// Acquisition modes
 		Timing,			// Read only detector timmings
+		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
 	};
 

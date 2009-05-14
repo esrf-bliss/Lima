@@ -22,10 +22,6 @@ enum TrigMode {
 	ExtGate, ExtStartStop,
 };
 
-enum ShutMode {
-	Manual, AutoFrame, AutoSeq,
-};
-
 enum BufferMode {
 	Linear, Circular,
 };
