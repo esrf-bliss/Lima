@@ -9,7 +9,7 @@ int main( void )
 {
 	GaussPeak p[2]={{333, 512, 50, 1}, {666, 512, 100, 1}};
 	vector<GaussPeak> pv( p, p + sizeof(p)/sizeof(*p) );
-	FrameBuilder fb(1, 1, 1024, 1024, 2, pv);
+	FrameBuilder fb, fb2(1, 1, 1024, 1024, 2, pv);
 	BufferSave bs("boza", FMT_EDF);
 	FrameInfoType finfo;
 	unsigned char *_buffer;

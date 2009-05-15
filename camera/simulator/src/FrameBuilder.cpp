@@ -9,6 +9,19 @@ using namespace lima;
 using namespace std;
 
 
+FrameBuilder::FrameBuilder()
+{
+	bin_X = 1;
+	bin_Y = 1;
+	width = height = 1024;
+	depth = 2;
+	GaussPeak p={512, 512, 100, 1};
+	peaks.push_back(p);
+
+	this->_frame_nr = 0;
+}
+
+
 FrameBuilder::FrameBuilder( int bin_X, int bin_Y, 
                             int width, int height, int depth,
                             std::vector<struct GaussPeak> &peaks ):

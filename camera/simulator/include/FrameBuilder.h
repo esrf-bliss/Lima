@@ -20,8 +20,8 @@ class FrameBuilder {
 	int width, height, depth;
 	std::vector<struct GaussPeak> peaks;
 	double inc;
-	
 
+	FrameBuilder();
 	FrameBuilder( int bin_X, int bin_Y, int width, int height, int depth,
 	              std::vector<struct GaussPeak> &peaks );
 	~FrameBuilder();
