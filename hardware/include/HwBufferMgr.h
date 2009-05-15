@@ -80,7 +80,7 @@ class BufferCbMgr : public HwFrameCallbackGen
 {
  public:
 	enum Cap {
-		Concat=1, Acc=2,
+		Basic=0, Concat=1, Acc=2,
 	};
 
 	virtual ~BufferCbMgr();
@@ -122,12 +122,16 @@ class StdBufferCbMgr : public BufferCbMgr
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
 	virtual void allocBuffers(int nb_buffers, 
 				  const FrameDim& frame_dim);
-	virtual const FrameDim& getFrameDim() const;
-	virtual int getNbBuffers() const;
+	virtual const FrameDim& getFrameDim();
+	virtual int getNbBuffers();
 	virtual void releaseBuffers();
 
-	virtual void *getBufferPtr(int buffer_nb) const;
-	virtual Timestamp getBufferTimestamp(int buffer_nb) const;
+	virtual void *getBufferPtr(int buffer_nb);
+
+	virtual void clearBuffer(int buffer_nb);
+	virtual void clearAllBuffers();
+
+	virtual Timestamp getBufferTimestamp(int buffer_nb);
 
 	void setStartTimestamp(Timestamp start_ts);
 	bool newFrameReady(int acq_frame_nr);
@@ -158,8 +162,11 @@ class StdBufferCbMgr : public BufferCbMgr
 class BufferCtrlMgr
 {
  public:
+	BufferCtrlMgr(BufferCbMgr *acq_buffer_mgr = NULL);
+	~BufferCtrlMgr();
+
 	void setFrameDim(const FrameDim& frame_dim);
-	void getFramedim(      FrameDim& frame_dim);
+	void getFrameDim(      FrameDim& frame_dim);
 
 	void setNbBuffers(int  nb_buffers);
 	void getNbBuffers(int& nb_buffers);
@@ -181,6 +188,15 @@ class BufferCtrlMgr
 
 	void   registerFrameCallback(HwFrameCallback *frame_cb);
 	void unregisterFrameCallback(HwFrameCallback *frame_cb);
+
+	BufferCbMgr& getAcqBufferMgr();
+
+ private:
+	BufferCbMgr *m_acq_buffer_mgr;
+	bool m_int_acq_buffer_mgr;
+	StdBufferCbMgr m_aux_buffer_mgr;
+	BufferCbMgr *m_effect_buffer_mgr;
+	FrameDim m_frame_dim;
 };
 
 

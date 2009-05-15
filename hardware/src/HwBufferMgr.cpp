@@ -144,6 +144,11 @@ StdBufferCbMgr::~StdBufferCbMgr()
 		delete m_alloc_mgr;
 }
 
+BufferCbMgr::Cap StdBufferCbMgr::getCap()
+{
+	return Basic;
+}
+
 int StdBufferCbMgr::getMaxNbBuffers(const FrameDim& frame_dim)
 {
 	return m_alloc_mgr->getMaxNbBuffers(frame_dim);
@@ -202,26 +207,95 @@ bool StdBufferCbMgr::newFrameReady(int acq_frame_nb)
 	return HwFrameCallbackGen::newFrameReady(frame_info);
 }
 
-const FrameDim& StdBufferCbMgr::getFrameDim() const
+const FrameDim& StdBufferCbMgr::getFrameDim()
 {
 	return m_alloc_mgr->getFrameDim();
 }
 
-int StdBufferCbMgr::getNbBuffers() const
+int StdBufferCbMgr::getNbBuffers()
 {
 	return m_alloc_mgr->getNbBuffers();
 }
 
-void *StdBufferCbMgr::getBufferPtr(int buffer_nb) const
+void *StdBufferCbMgr::getBufferPtr(int buffer_nb)
 {
 	return m_alloc_mgr->getBufferPtr(buffer_nb);
 }
 
-Timestamp StdBufferCbMgr::getBufferTimestamp(int buffer_nb) const
+void StdBufferCbMgr::clearBuffer(int buffer_nb)
+{
+	m_alloc_mgr->clearBuffer(buffer_nb);
+}
+
+void StdBufferCbMgr::clearAllBuffers()
+{
+	m_alloc_mgr->clearAllBuffers();
+}
+
+Timestamp StdBufferCbMgr::getBufferTimestamp(int buffer_nb)
 {
 	const Timestamp& ts = m_ts_list[buffer_nb];
 	if (!ts.isSet())
 		return ts;
 	return ts - m_start_ts;
+}
+
+/*******************************************************************
+ * \brief BufferCtrlMgr constructor
+ *******************************************************************/
+
+BufferCtrlMgr::BufferCtrlMgr(BufferCbMgr *acq_buffer_mgr)
+{
+	m_acq_buffer_mgr = acq_buffer_mgr;
+	m_int_acq_buffer_mgr = (acq_buffer_mgr == NULL);
+	if (m_int_acq_buffer_mgr)
+		m_acq_buffer_mgr = new StdBufferCbMgr();
+}
+
+BufferCtrlMgr::~BufferCtrlMgr()
+{
+	if (m_int_acq_buffer_mgr)
+		delete m_acq_buffer_mgr;
+}
+
+void BufferCtrlMgr::setFrameDim(const FrameDim& frame_dim)
+{
+	if (frame_dim != m_frame_dim)
+		m_acq_buffer_mgr->releaseBuffers();
+
+	m_frame_dim = frame_dim;
+}
+
+void BufferCtrlMgr::getFrameDim(FrameDim& frame_dim)
+{
+	frame_dim = m_frame_dim;
+}
+
+void BufferCtrlMgr::setNbBuffers(int  nb_buffers)
+{
+	if (nb_buffers == m_acq_buffer_mgr->getNbBuffers())
+		return;
+
+	m_acq_buffer_mgr->allocBuffers(nb_buffers, m_frame_dim);
+}
+
+void BufferCtrlMgr::getNbBuffers(int& nb_buffers)
+{
+	nb_buffers = m_acq_buffer_mgr->getNbBuffers();
+}
+
+void BufferCtrlMgr::getMaxNbBuffers(int& max_nb_buffers)
+{
+	max_nb_buffers = m_acq_buffer_mgr->getMaxNbBuffers(m_frame_dim);
+}
+
+void BufferCtrlMgr::registerFrameCallback(HwFrameCallback *frame_cb)
+{
+	m_acq_buffer_mgr->registerFrameCallback(frame_cb);
+}
+
+void BufferCtrlMgr::unregisterFrameCallback(HwFrameCallback *frame_cb)
+{
+	m_acq_buffer_mgr->unregisterFrameCallback(frame_cb);
 }
 
