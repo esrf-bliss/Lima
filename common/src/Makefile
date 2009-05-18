@@ -1,7 +1,7 @@
 
-common-objs := SizeUtils.o Timestamp.o
+common-objs := SizeUtils.o Timestamp.o ThreadUtils.o
 	
-CXXFLAGS += -I../include -Wall
+CXXFLAGS += -I../include -Wall -pthread
 
 all:	clean Common.o
 

@@ -8,8 +8,7 @@ class HwCap
 {
 public:
 	enum Type {
-		DetInfo, ImageInfo,	// Standard: these are mandatory
-		Sync, Buffer,		
+		DetInfo, Sync, Buffer, 	// Standard: these are mandatory
 		Roi, Bin, Flip,		// Image operations
 		Kinetics, FrameTransfer,// Acquisition modes
 		Timing,			// Read only detector timmings

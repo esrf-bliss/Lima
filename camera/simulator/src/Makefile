@@ -1,8 +1,9 @@
 
-objs = FrameBuilder.o
+objs = FrameBuilder.o Simulator.o
 	
 CXX = g++
-CXXFLAGS += -I../include -I../../../common/include -Wall
+INC = -I../include -I../../../common/include -I../../../hardware/include 
+CXXFLAGS += $(INC) -Wall -pthread
 
 all: 	clean $(objs)
 
