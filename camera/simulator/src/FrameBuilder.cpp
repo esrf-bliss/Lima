@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include "FrameBuilder.h"
+#include "SizeUtils.h"
 
 using namespace lima;
 using namespace std;
@@ -11,25 +12,26 @@ using namespace std;
 
 FrameBuilder::FrameBuilder()
 {
-	bin_X = 1;
-	bin_Y = 1;
-	width = height = 1024;
-	depth = 2;
+	m_bin_X = 1;
+	m_bin_Y = 1;
+	m_frame_dim = FrameDim(1024, 1024, Bpp16);
 	GaussPeak p={512, 512, 100, 1};
-	peaks.push_back(p);
-
-	this->_frame_nr = 0;
+	m_peaks.push_back(p);
+	m_grow_factor = 0.0;
+	m_frame_nr = 0;
 }
 
 
 FrameBuilder::FrameBuilder( int bin_X, int bin_Y, 
-                            int width, int height, int depth,
-                            std::vector<struct GaussPeak> &peaks ):
-	bin_X(bin_X), bin_Y(bin_Y), 
-	width(width), height(height), depth(depth), 
-	peaks(peaks)
+                            FrameDim &frame_dim,
+                            std::vector<struct GaussPeak> &peaks,
+                            double grow_factor ):
+	m_bin_X(bin_X), m_bin_Y(bin_Y), 
+	m_frame_dim(frame_dim), 
+	m_peaks(peaks), 
+	m_grow_factor( grow_factor )
 {
-	this->_frame_nr = 0;
+	m_frame_nr = 0;
 }
 
 
@@ -40,15 +42,25 @@ FrameBuilder::~FrameBuilder()
 
 void FrameBuilder::resetFrameNr(int frame_nr)
 {
-	this->_frame_nr = frame_nr;
+	m_frame_nr = frame_nr;
 }
 
 
-unsigned long FrameBuilder::getCurrFrameNr()
+unsigned long FrameBuilder::getFrameNr()
 {
-	return this->_frame_nr;
+	return m_frame_nr;
 }
 
+/*
+FrameDim& FrameBuilder::getFrameDim() {
+	return m_frame_dim;
+}
+
+
+void FrameBuilder::setFrameDim(FrameDim &frame_dim) {
+	m_frame_dim = frame_dim;
+}
+*/
 
 #define SGM_FWHM 0.42466090014400952136075141705144  // 1/(2*sqrt(2*ln(2)))
 
@@ -64,7 +76,7 @@ double FrameBuilder::dataXY( int x, int y )
 	double value=0.0;
 	vector<GaussPeak>::iterator p;
 
-	for( p = peaks.begin( ); p != peaks.end( ); ++p) {
+	for( p = m_peaks.begin( ); p != m_peaks.end( ); ++p) {
 		value += gauss2D(x, y, p->x0, p->y0, p->fwhm, p->max);
 	}
 	return value;
@@ -80,7 +92,7 @@ int FrameBuilder::writeFrameData(unsigned char *ptr)
 	unsigned long *p4;
 	
 
-	switch( depth ) {
+	switch( m_frame_dim.getDepth() ) {
 		case 1 :
 			p1 = (unsigned char *) ptr;
 			break;
@@ -94,10 +106,10 @@ int FrameBuilder::writeFrameData(unsigned char *ptr)
 			return -1;
 	}
 
-	for( y=0; y<height; y++ ) {
-		for( x=0; x<width; x++ ) {
+	for( y=0; y<m_frame_dim.getSize().getHeight(); y++ ) {
+		for( x=0; x<m_frame_dim.getSize().getWidth(); x++ ) {
 			data = dataXY(x, y);
-			switch( depth ) {
+			switch( m_frame_dim.getDepth() ) {
 				case 1 :
 					*p1 = (unsigned char) (255.0 * data);
 					p1++;
@@ -124,6 +136,6 @@ void FrameBuilder::getNextFrame( unsigned char *ptr )
 	if( ret < 0 ) {
 		// throw an exception
 	} else {
-		_frame_nr++;
+		m_frame_nr++;
 	}
 }

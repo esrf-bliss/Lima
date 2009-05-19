@@ -2,6 +2,7 @@
 #define FRAMEBUILDER_H
 
 #include <vector>
+#include "SizeUtils.h"
 
 namespace lima {
 
@@ -16,22 +17,23 @@ struct GaussPeak {
 class FrameBuilder {
 
   public:
-	int bin_X, bin_Y;
-	int width, height, depth;
-	std::vector<struct GaussPeak> peaks;
-	double inc;
+	int m_bin_X, m_bin_Y;
+	FrameDim m_frame_dim;
 
 	FrameBuilder();
-	FrameBuilder( int bin_X, int bin_Y, int width, int height, int depth,
-	              std::vector<struct GaussPeak> &peaks );
+	FrameBuilder( int bin_X, int bin_Y, FrameDim &frame_dim,
+	              std::vector<struct GaussPeak> &peaks, double grow_factor );
 	~FrameBuilder();
 
 	void getNextFrame( unsigned char *ptr );
+
+	unsigned long getFrameNr();
 	void resetFrameNr( int frame_nr=0 );
-	unsigned long getCurrFrameNr();
 
   private:
-	unsigned long _frame_nr;
+	std::vector<struct GaussPeak> m_peaks;
+	double m_grow_factor;
+	unsigned long m_frame_nr;
 
 	int writeFrameData( unsigned char *ptr );
 	double dataXY( int x, int y );

@@ -1,43 +1,47 @@
 #include <vector>
+#include <exception>
 #include "FrameBuilder.h"
 #include "BufferSave.h"
+#include "SizeUtils.h"
+#include "Exceptions.h"
 
 using namespace std;
 using namespace lima;
 
 int main( void )
 {
-	GaussPeak p[2]={{333, 512, 50, 1}, {666, 512, 100, 1}};
-	vector<GaussPeak> pv( p, p + sizeof(p)/sizeof(*p) );
-	FrameBuilder fb, fb2(1, 1, 1024, 1024, 2, pv);
+	FrameBuilder fb;
 	BufferSave bs("boza", FMT_EDF);
 	FrameInfoType finfo;
-	unsigned char *_buffer;
+	unsigned char *buffer;
+	FrameDim fd = fb.m_frame_dim;
 
 
-	_buffer = NULL;
+	buffer = NULL;
 	try {
-		int size = fb.width*fb.height*fb.depth;
-		_buffer = new unsigned char[size];
+		int size = fd.getSize().getWidth()*
+		           fd.getSize().getHeight()*
+		           fd.getDepth();
+		buffer = new unsigned char[size];
 	} catch( bad_alloc& ) {
-		/* ??? */
+		goto end;
 	}
 
 	for( int i=0; i<5; i++ ) {
-		fb.getNextFrame( _buffer );
+		fb.getNextFrame( buffer );
 
-		finfo.acq_frame_nb = fb.getCurrFrameNr();
-		finfo.frame_ptr = _buffer;
-		finfo.width =  fb.width;
-		finfo.height = fb.height;
-		finfo.depth = fb.depth;
+		finfo.acq_frame_nb = fb.getFrameNr();
+		finfo.frame_ptr = buffer;
+		finfo.width =  fd.getSize().getWidth();
+		finfo.height = fd.getSize().getHeight();
+		finfo.depth = fd.getDepth();
 		finfo.frame_time_stamp = 0; /* XXX */
 
 		bs.writeFrame(finfo);
 	}
-
-	if( _buffer )
-		delete[] _buffer;
+ end:
+	if( buffer )
+		delete[] buffer;
 
 	return 0;
 }

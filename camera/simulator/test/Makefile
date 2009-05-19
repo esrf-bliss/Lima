@@ -14,7 +14,7 @@ LDFLAGS = -pthread
 all: 	clean test testsimulator
 
 test:	$(test-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(test-ext-objs) 
+	$(CXX) $(LDFLAGS) -o $@ $+ $(test-ext-objs) $(std-objs)
 
 testsimulator: $(testsimulator-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(testsimulator-ext-objs) 
