@@ -31,7 +31,7 @@ class Simulator
 	void setExpTime(double  exp_time);
 	void getExpTime(double& exp_time);
 
-	void setBin(Bin  bin);
+	void setBin(const Bin& bin);
 	void getBin(Bin& bin);
 
 	Status getStatus();

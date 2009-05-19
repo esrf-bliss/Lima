@@ -103,7 +103,7 @@ void Simulator::getExpTime(double& exp_time)
 	exp_time = m_exp_time;
 }
 
-void Simulator::setBin(Bin bin)
+void Simulator::setBin(const Bin& bin)
 {
 	m_frame_builder.m_bin = bin;
 }
