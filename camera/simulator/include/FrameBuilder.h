@@ -17,8 +17,9 @@ struct GaussPeak {
 class FrameBuilder {
 
   public:
-	int m_bin_X, m_bin_Y;
+	int m_bin_X, m_bin_Y;  // use Bin calss!
 	FrameDim m_frame_dim;
+
 
 	FrameBuilder();
 	FrameBuilder( int bin_X, int bin_Y, FrameDim &frame_dim,
@@ -33,7 +34,9 @@ class FrameBuilder {
   private:
 	std::vector<struct GaussPeak> m_peaks;
 	double m_grow_factor;
+
 	unsigned long m_frame_nr;
+
 
 	int writeFrameData( unsigned char *ptr );
 	double dataXY( int x, int y );

@@ -27,8 +27,8 @@ enum FileFormat {
 
 class BufferSave {
   public :
-	std::string prefix;
-	enum FileFormat format;
+	std::string m_prefix;
+	enum FileFormat m_format;
 
 	BufferSave( const std::string &prefix, enum FileFormat format );
 	~BufferSave( );

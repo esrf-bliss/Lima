@@ -11,17 +11,18 @@ using namespace lima;
 int main( void )
 {
 	FrameBuilder fb;
-	BufferSave bs("boza", FMT_EDF);
-	FrameInfoType finfo;
-	unsigned char *buffer;
 	FrameDim fd = fb.m_frame_dim;
+	int width = fd.getSize().getWidth();
+	int height = fd.getSize().getHeight();
+	int depth = fd.getDepth();
+	BufferSave bs("boza", FMT_EDF);
+	unsigned char *buffer;
+	FrameInfoType finfo;
 
 
 	buffer = NULL;
 	try {
-		int size = fd.getSize().getWidth()*
-		           fd.getSize().getHeight()*
-		           fd.getDepth();
+		int size = width * height * depth;
 		buffer = new unsigned char[size];
 	} catch( bad_alloc& ) {
 		goto end;
@@ -32,9 +33,9 @@ int main( void )
 
 		finfo.acq_frame_nb = fb.getFrameNr();
 		finfo.frame_ptr = buffer;
-		finfo.width =  fd.getSize().getWidth();
-		finfo.height = fd.getSize().getHeight();
-		finfo.depth = fd.getDepth();
+		finfo.width =  width;
+		finfo.height = height;
+		finfo.depth = depth;
 		finfo.frame_time_stamp = 0; /* XXX */
 
 		bs.writeFrame(finfo);

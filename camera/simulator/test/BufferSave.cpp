@@ -1,4 +1,5 @@
 #include <ctime>
+#include <cstdio>
 #include <fstream>
 #include <unistd.h>
 #include <sys/time.h>
@@ -51,7 +52,7 @@ int BufferSave::writeEdfHeader( const FrameInfoType &finfo,
 
 
 BufferSave::BufferSave( const string &prefix, enum FileFormat format ) :
-	prefix(prefix), format(format) 
+	m_prefix(prefix), m_format(format) 
 {
 }
 
@@ -63,14 +64,17 @@ BufferSave::~BufferSave( )
 
 int BufferSave::writeFrame( FrameInfoType &finfo )
 {
-	string name=this->prefix;
+	string name;
+	char num_str[64];
 
-	if( name.find(".edf") == string::npos )
-		name += ".edf";
+	name = m_prefix;
+	snprintf(num_str, 63, "%06lu", finfo.acq_frame_nb);
+	name += string(num_str);
+	name += ".edf";
 
 	ofstream file(name.c_str(), ios_base::out | ios_base::binary);
 
-	if( this->format == FMT_EDF )
+	if( m_format == FMT_EDF )
 		writeEdfHeader(finfo, file);
 
 	file.write((char *)finfo.frame_ptr, finfo.width*finfo.height*finfo.depth);
