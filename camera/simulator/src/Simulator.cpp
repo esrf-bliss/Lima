@@ -105,13 +105,12 @@ void Simulator::getExpTime(double& exp_time)
 
 void Simulator::setBin(Bin bin)
 {
-	m_frame_builder.m_bin_X = bin.getX();
-	m_frame_builder.m_bin_Y = bin.getY();
+	m_frame_builder.m_bin = bin;
 }
 
 void Simulator::getBin(Bin& bin)
 {
-	bin = Bin(m_frame_builder.m_bin_X, m_frame_builder.m_bin_Y);
+	bin = m_frame_builder.m_bin;
 }
 
 Simulator::Status Simulator::getStatus()

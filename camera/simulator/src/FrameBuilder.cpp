@@ -12,8 +12,7 @@ using namespace std;
 
 FrameBuilder::FrameBuilder()
 {
-	m_bin_X = 1;
-	m_bin_Y = 1;
+	m_bin = Bin(1,1);
 	m_frame_dim = FrameDim(1024, 1024, Bpp16);
 	GaussPeak p={512, 512, 100, 1};
 	m_peaks.push_back(p);
@@ -22,14 +21,13 @@ FrameBuilder::FrameBuilder()
 }
 
 
-FrameBuilder::FrameBuilder( int bin_X, int bin_Y, 
-                            FrameDim &frame_dim,
+FrameBuilder::FrameBuilder( Bin &bin, FrameDim &frame_dim,
                             std::vector<struct GaussPeak> &peaks,
                             double grow_factor ):
-	m_bin_X(bin_X), m_bin_Y(bin_Y), 
+	m_bin(bin), 
 	m_frame_dim(frame_dim), 
 	m_peaks(peaks), 
-	m_grow_factor( grow_factor )
+	m_grow_factor(grow_factor)
 {
 	m_frame_nr = 0;
 }

@@ -17,12 +17,12 @@ struct GaussPeak {
 class FrameBuilder {
 
   public:
-	int m_bin_X, m_bin_Y;  // use Bin calss!
+	Bin m_bin;
 	FrameDim m_frame_dim;
 
 
 	FrameBuilder();
-	FrameBuilder( int bin_X, int bin_Y, FrameDim &frame_dim,
+	FrameBuilder( Bin &bin, FrameDim &frame_dim,
 	              std::vector<struct GaussPeak> &peaks, double grow_factor );
 	~FrameBuilder();
 
