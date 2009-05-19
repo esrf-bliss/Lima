@@ -71,12 +71,12 @@ class HwFrameCallbackGen
 class HwFrameCallback
 {
  public:
+	HwFrameCallback() : m_frame_cb_gen(NULL) {}
 	virtual ~HwFrameCallback();
 
 	HwFrameCallbackGen *getFrameCallbackGen() const;
 
  protected:
-	HwFrameCallback() : m_frame_cb_gen(NULL) {}
 	virtual bool newFrameReady(const FrameInfoType& frame_info) = 0;
 
  private:

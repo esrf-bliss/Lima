@@ -114,7 +114,7 @@ class BufferCbMgr : public HwFrameCallbackGen
 class StdBufferCbMgr : public BufferCbMgr
 {
  public:
-	StdBufferCbMgr(BufferAllocMgr *alloc_mgr = NULL);
+	StdBufferCbMgr(BufferAllocMgr& alloc_mgr);
 	virtual ~StdBufferCbMgr();
 
 	virtual Cap getCap();
@@ -142,8 +142,7 @@ class StdBufferCbMgr : public BufferCbMgr
  private:
 	typedef std::vector<Timestamp> TimestampList;
 
-	BufferAllocMgr *m_alloc_mgr;
-	bool m_int_alloc_mgr;
+	BufferAllocMgr& m_alloc_mgr;
 	TimestampList m_ts_list;
 	Timestamp m_start_ts;
 	bool m_fcb_act;
@@ -162,7 +161,7 @@ class StdBufferCbMgr : public BufferCbMgr
 class BufferCtrlMgr
 {
  public:
-	BufferCtrlMgr(BufferCbMgr *acq_buffer_mgr = NULL);
+	BufferCtrlMgr(BufferCbMgr& acq_buffer_mgr);
 	~BufferCtrlMgr();
 
 	void setFrameDim(const FrameDim& frame_dim);
@@ -192,8 +191,8 @@ class BufferCtrlMgr
 	BufferCbMgr& getAcqBufferMgr();
 
  private:
-	BufferCbMgr *m_acq_buffer_mgr;
-	bool m_int_acq_buffer_mgr;
+	BufferCbMgr& m_acq_buffer_mgr;
+	SoftBufferAllocMgr m_aux_alloc_mgr;
 	StdBufferCbMgr m_aux_buffer_mgr;
 	BufferCbMgr *m_effect_buffer_mgr;
 	FrameDim m_frame_dim;

@@ -1,5 +1,5 @@
 
-common-objs := SizeUtils.o Timestamp.o ThreadUtils.o
+common-objs := SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o
 	
 CXXFLAGS += -I../include -Wall -pthread
 
