@@ -14,9 +14,9 @@ FrameBuilder::FrameBuilder()
 {
 	m_bin = Bin(1,1);
 	m_frame_dim = FrameDim(1024, 1024, Bpp16);
-	GaussPeak p={512, 512, 100, 1};
+	GaussPeak p={512, 512, 100, 100};
 	m_peaks.push_back(p);
-	m_grow_factor = 0.0;
+	m_grow_factor = 1.00;
 	m_frame_nr = 0;
 }
 
@@ -71,15 +71,20 @@ double gauss2D( double x, double y, double x0, double y0, double fwhm, double ma
 
 double FrameBuilder::dataXY( int x, int y )
 {
-	double value=0.0;
+	double val=0.0;
 	vector<GaussPeak>::iterator p;
 
 	for( p = m_peaks.begin( ); p != m_peaks.end( ); ++p) {
-		value += gauss2D(x, y, p->x0, p->y0, p->fwhm, p->max);
+		val += gauss2D(x, y, p->x0, p->y0, p->fwhm, p->max);
 	}
-	return value;
+	val = val + val*(m_grow_factor*m_frame_nr);
+	return val;
 }
 
+
+#define MAX_8  255.0
+#define MAX_16 65535.0
+#define MAX_32 4294967295.0
 
 int FrameBuilder::writeFrameData(unsigned char *ptr)
 {
@@ -88,41 +93,49 @@ int FrameBuilder::writeFrameData(unsigned char *ptr)
 	unsigned char *p1;
 	unsigned short *p2;
 	unsigned long *p4;
+	int width = m_frame_dim.getSize().getWidth();
+	int height = m_frame_dim.getSize().getHeight();
+	int depth = m_frame_dim.getDepth();
 	
 
-	switch( m_frame_dim.getDepth() ) {
+	switch( depth ) {
 		case 1 :
+			// use a template function here!
 			p1 = (unsigned char *) ptr;
+			for( y=0; y<height; y++ ) {
+				for( x=0; x<width; x++ ) {
+					data = dataXY(x, y);
+					*p1 = (unsigned char) data;
+					p1++;
+				}
+			}
 			break;
 		case 2 :
+			// use a template function here!
 			p2 = (unsigned short *) ptr;
+			for( y=0; y<height; y++ ) {
+				for( x=0; x<width; x++ ) {
+					data = dataXY(x, y);
+					*p2 = (unsigned short) data;
+					p2++;
+				}
+			}
 			break;
 		case 4 :
+			// use a template function here!
 			p4 = (unsigned long *) ptr;
+			for( y=0; y<height; y++ ) {
+				for( x=0; x<width; x++ ) {
+					data = dataXY(x, y);
+					*p4 = (unsigned long) data;
+					p4++;
+				}
+			}
 			break;
 		default:
 			return -1;
 	}
 
-	for( y=0; y<m_frame_dim.getSize().getHeight(); y++ ) {
-		for( x=0; x<m_frame_dim.getSize().getWidth(); x++ ) {
-			data = dataXY(x, y);
-			switch( m_frame_dim.getDepth() ) {
-				case 1 :
-					*p1 = (unsigned char) (255.0 * data);
-					p1++;
-					break;
-				case 2 :
-					*p2 = (unsigned short) (65535.0 * data);
-					p2++;
-					break;
-				case 4 :
-					*p4 = (unsigned long) (4294967295.0 * data);
-					p4++;
-					break;
-			}
-		}
-	}
 	return 0;
 }
 
