@@ -11,10 +11,17 @@ using namespace lima;
 int main( void )
 {
 	FrameBuilder fb;
+
 	FrameDim fd = fb.m_frame_dim;
 	int width = fd.getSize().getWidth();
 	int height = fd.getSize().getHeight();
 	int depth = fd.getDepth();
+
+	Bin bin = Bin(2,2);
+	fb.m_bin = bin;
+	int binX = bin.getX();
+	int binY = bin.getY();
+
 	BufferSave bs("boza", FMT_EDF);
 	unsigned char *buffer;
 	FrameInfoType finfo;
@@ -33,8 +40,8 @@ int main( void )
 
 		finfo.acq_frame_nb = fb.getFrameNr();
 		finfo.frame_ptr = buffer;
-		finfo.width =  width;
-		finfo.height = height;
+		finfo.width = width/binX;
+		finfo.height = height/binY;
 		finfo.depth = depth;
 		finfo.frame_time_stamp = 0; /* XXX */
 

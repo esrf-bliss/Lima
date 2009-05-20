@@ -85,7 +85,9 @@ double FrameBuilder::dataXY( int x, int y )
 template <class depth> 
 void FrameBuilder::fillData( unsigned char *ptr )
 {
-	int x, y;
+	int x, bx, y, by;
+	int binX = m_bin.getX();
+	int binY = m_bin.getY();
 	int width = m_frame_dim.getSize().getWidth();
 	int height = m_frame_dim.getSize().getHeight();
 	depth *p = (depth *) ptr;
@@ -93,9 +95,14 @@ void FrameBuilder::fillData( unsigned char *ptr )
 
 
 	max = (double) ((depth) -1);
-	for( y=0; y<height; y++ ) {
-		for( x=0; x<width; x++ ) {
-			data = dataXY(x, y);
+	for( by=0; by<height/binY; by++ ) {
+		for( bx=0; bx<width/binX; bx++ ) {
+			data = 0.0;
+			for( y=by*binY; y<by*binY+binY; y++ ) {
+				for( x=bx*binX; x<bx*binX+binX; x++ ) {
+					data += dataXY(x, y);
+				}
+			}
 			if( data > max ) data = max;  // ???
 			*p++ = (depth) data;
 		}
