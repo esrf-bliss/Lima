@@ -82,55 +82,38 @@ double FrameBuilder::dataXY( int x, int y )
 }
 
 
-#define MAX_8  255.0
-#define MAX_16 65535.0
-#define MAX_32 4294967295.0
+template <class depth> 
+void FrameBuilder::fillData( unsigned char *ptr )
+{
+	int x, y;
+	int width = m_frame_dim.getSize().getWidth();
+	int height = m_frame_dim.getSize().getHeight();
+	depth *p = (depth *) ptr;
+	double data, max;
+
+
+	max = (double) ((depth) -1);
+	for( y=0; y<height; y++ ) {
+		for( x=0; x<width; x++ ) {
+			data = dataXY(x, y);
+			if( data > max ) data = max;  // ???
+			*p++ = (depth) data;
+		}
+	}
+}
+
 
 int FrameBuilder::writeFrameData(unsigned char *ptr)
 {
-	int x, y;
-	double data;
-	unsigned char *p1;
-	unsigned short *p2;
-	unsigned long *p4;
-	int width = m_frame_dim.getSize().getWidth();
-	int height = m_frame_dim.getSize().getHeight();
-	int depth = m_frame_dim.getDepth();
-	
-
-	switch( depth ) {
+	switch( m_frame_dim.getDepth() ) {
 		case 1 :
-			// use a template function here!
-			p1 = (unsigned char *) ptr;
-			for( y=0; y<height; y++ ) {
-				for( x=0; x<width; x++ ) {
-					data = dataXY(x, y);
-					*p1 = (unsigned char) data;
-					p1++;
-				}
-			}
+			fillData<unsigned char>(ptr);
 			break;
 		case 2 :
-			// use a template function here!
-			p2 = (unsigned short *) ptr;
-			for( y=0; y<height; y++ ) {
-				for( x=0; x<width; x++ ) {
-					data = dataXY(x, y);
-					*p2 = (unsigned short) data;
-					p2++;
-				}
-			}
+			fillData<unsigned short>(ptr);
 			break;
 		case 4 :
-			// use a template function here!
-			p4 = (unsigned long *) ptr;
-			for( y=0; y<height; y++ ) {
-				for( x=0; x<width; x++ ) {
-					data = dataXY(x, y);
-					*p4 = (unsigned long) data;
-					p4++;
-				}
-			}
+			fillData<unsigned long>(ptr);
 			break;
 		default:
 			return -1;

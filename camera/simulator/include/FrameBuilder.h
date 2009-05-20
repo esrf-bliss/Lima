@@ -40,6 +40,7 @@ class FrameBuilder {
 
 	int writeFrameData( unsigned char *ptr );
 	double dataXY( int x, int y );
+	template <class depth> void fillData( unsigned char *ptr );
 };
 
 
