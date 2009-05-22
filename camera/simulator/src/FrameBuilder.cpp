@@ -49,6 +49,31 @@ unsigned long FrameBuilder::getFrameNr()
 	return m_frame_nr;
 }
 
+
+void FrameBuilder::getBin( Bin &bin ) const
+{
+	bin = m_bin;
+}
+
+
+void FrameBuilder::setBin( const Bin &bin )
+{
+	m_bin = bin;
+}
+
+
+void FrameBuilder::getFrameDim( FrameDim &dim ) const
+{
+	dim = m_frame_dim;
+}
+
+
+void FrameBuilder::setFrameDim( const FrameDim &dim )
+{
+	m_frame_dim = dim;
+}
+
+
 /*
 FrameDim& FrameBuilder::getFrameDim() {
 	return m_frame_dim;

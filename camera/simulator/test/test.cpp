@@ -12,15 +12,16 @@ int main( void )
 {
 	FrameBuilder fb;
 
-	FrameDim fd = fb.m_frame_dim;
+	Bin bin = Bin(2,2);
+	fb.setBin(bin);
+	int binX = bin.getX();
+	int binY = bin.getY();
+
+	FrameDim fd;
+	fb.getFrameDim(fd);
 	int width = fd.getSize().getWidth();
 	int height = fd.getSize().getHeight();
 	int depth = fd.getDepth();
-
-	Bin bin = Bin(2,2);
-	fb.m_bin = bin;
-	int binX = bin.getX();
-	int binY = bin.getY();
 
 	BufferSave bs("boza", FMT_EDF);
 	unsigned char *buffer;
