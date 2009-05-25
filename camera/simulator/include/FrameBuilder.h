@@ -33,6 +33,7 @@ class FrameBuilder {
 	void setFrameDim( const FrameDim &dim );
 
   private:
+	Roi m_roi;
 	Bin m_bin;
 	FrameDim m_frame_dim;
 	std::vector<struct GaussPeak> m_peaks;

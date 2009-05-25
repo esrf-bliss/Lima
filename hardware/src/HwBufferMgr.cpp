@@ -1,3 +1,4 @@
+#include <cstring>
 #include "HwBufferMgr.h"
 
 #include <sys/sysinfo.h>

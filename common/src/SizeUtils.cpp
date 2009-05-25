@@ -71,3 +71,9 @@ int FrameDim::getImageTypeDepth(ImageType type)
 		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");
 	}
 }
+
+
+Roi::Roi()
+{
+	return;
+}
