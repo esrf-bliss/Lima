@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "SizeUtils.h"
+#include "Exceptions.h"
 
 namespace lima {
 
@@ -18,31 +19,33 @@ class FrameBuilder {
 
   public:
 	FrameBuilder();
-	FrameBuilder( Bin &bin, FrameDim &frame_dim,
+	FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
 	              std::vector<struct GaussPeak> &peaks, double grow_factor );
 	~FrameBuilder();
-
-	void getNextFrame( unsigned char *ptr );
-	unsigned long getFrameNr();
-	void resetFrameNr( int frame_nr=0 );
-
-	void getBin( Bin &bin ) const;
-	void setBin( const Bin &bin );
 
 	void getFrameDim( FrameDim &dim ) const;
 	void setFrameDim( const FrameDim &dim );
 
+	void getBin( Bin &bin ) const;
+	void setBin( const Bin &bin );
+
+	void getRoi( Roi &roi ) const;
+	void setRoi( const Roi &roi );
+
+	void getNextFrame( unsigned char *ptr ) throw (Exception);
+	unsigned long getFrameNr();
+	void resetFrameNr( int frame_nr=0 );
+
   private:
-	Roi m_roi;
-	Bin m_bin;
 	FrameDim m_frame_dim;
+	Bin m_bin;
+	Roi m_roi;
 	std::vector<struct GaussPeak> m_peaks;
 	double m_grow_factor;
 
 	unsigned long m_frame_nr;
 
 
-	int writeFrameData( unsigned char *ptr );
 	double dataXY( int x, int y );
 	template <class depth> void fillData( unsigned char *ptr );
 };

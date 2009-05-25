@@ -12,8 +12,9 @@ using namespace std;
 
 FrameBuilder::FrameBuilder()
 {
-	m_bin = Bin(1,1);
 	m_frame_dim = FrameDim(1024, 1024, Bpp16);
+	m_bin = Bin(1,1);
+	m_roi = Roi();  // ???
 	GaussPeak p={512, 512, 100, 100};
 	m_peaks.push_back(p);
 	m_grow_factor = 1.00;
@@ -21,11 +22,12 @@ FrameBuilder::FrameBuilder()
 }
 
 
-FrameBuilder::FrameBuilder( Bin &bin, FrameDim &frame_dim,
+FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
                             std::vector<struct GaussPeak> &peaks,
                             double grow_factor ):
-	m_bin(bin), 
 	m_frame_dim(frame_dim), 
+	m_bin(bin), 
+	m_roi(roi),
 	m_peaks(peaks), 
 	m_grow_factor(grow_factor)
 {
@@ -38,15 +40,15 @@ FrameBuilder::~FrameBuilder()
 }
 
 
-void FrameBuilder::resetFrameNr(int frame_nr)
+void FrameBuilder::getFrameDim( FrameDim &dim ) const
 {
-	m_frame_nr = frame_nr;
+	dim = m_frame_dim;
 }
 
 
-unsigned long FrameBuilder::getFrameNr()
+void FrameBuilder::setFrameDim( const FrameDim &dim )
 {
-	return m_frame_nr;
+	m_frame_dim = dim;
 }
 
 
@@ -62,15 +64,15 @@ void FrameBuilder::setBin( const Bin &bin )
 }
 
 
-void FrameBuilder::getFrameDim( FrameDim &dim ) const
+void FrameBuilder::getRoi( Roi &roi ) const
 {
-	dim = m_frame_dim;
+	roi = m_roi;
 }
 
 
-void FrameBuilder::setFrameDim( const FrameDim &dim )
+void FrameBuilder::setRoi( const Roi &roi )
 {
-	m_frame_dim = dim;
+	m_roi = roi;
 }
 
 
@@ -135,7 +137,7 @@ void FrameBuilder::fillData( unsigned char *ptr )
 }
 
 
-int FrameBuilder::writeFrameData(unsigned char *ptr)
+void FrameBuilder::getNextFrame( unsigned char *ptr ) throw (Exception)
 {
 	switch( m_frame_dim.getDepth() ) {
 		case 1 :
@@ -148,20 +150,20 @@ int FrameBuilder::writeFrameData(unsigned char *ptr)
 			fillData<unsigned long>(ptr);
 			break;
 		default:
-			return -1;
+			throw Exception( Hardware, NotSupported, "",
+			                 __FILE__, __FUNCTION__, __LINE__ );
 	}
-
-	return 0;
+	++m_frame_nr;
 }
 
 
-void FrameBuilder::getNextFrame( unsigned char *ptr )
+void FrameBuilder::resetFrameNr( int frame_nr )
 {
-	int ret = writeFrameData( ptr );
+	m_frame_nr = frame_nr;
+}
 
-	if( ret < 0 ) {
-		// throw an exception
-	} else {
-		m_frame_nr++;
-	}
+
+unsigned long FrameBuilder::getFrameNr()
+{
+	return m_frame_nr;
 }

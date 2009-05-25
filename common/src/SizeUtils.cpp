@@ -75,5 +75,6 @@ int FrameDim::getImageTypeDepth(ImageType type)
 
 Roi::Roi()
 {
-	return;
+	m_top_left = Point(0, 0);
+	m_size = Size(0, 0);
 }
