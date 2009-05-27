@@ -1,43 +1,63 @@
 #ifndef BUFFERSAVE_H
 #define BUFFERSAVE_H
+
+#include <stdio.h>
 #include <string>
 #include <fstream>
 #include "FrameBuilder.h"
+#include "HwFrameCallback.h"
 
 namespace lima {
 
 
-#define EDF_HEADER_LEN		1024
-#define EDF_HEADER_BUFFER_LEN	(10 * EDF_HEADER_LEN)
-
-
-typedef struct FrameInfo {
-	unsigned long acq_frame_nb;
-	void *frame_ptr;
-	int width, height, depth;
-	double frame_time_stamp;
-} FrameInfoType;
-
-
-enum FileFormat {
-	FMT_RAW,
-	FMT_EDF,
-};
-
-
 class BufferSave {
   public :
-	std::string m_prefix;
-	enum FileFormat m_format;
+	enum FileFormat {
+		Raw, EDF,
+	};
 
-	BufferSave( const std::string &prefix, enum FileFormat format );
+	typedef std::string String;
+
+	BufferSave( );
+	BufferSave( FileFormat format, const String& prefix, 
+		    int idx = 0, const String& suffix = "", 
+		    bool overwrite = false , int tot_file_frames = 1);
 	~BufferSave( );
 
-	int writeFrame( FrameInfoType &finfo );
+	void writeFrame( const FrameInfoType& finfo );
+
+	void setPrefix(const String& prefix);
+	void getPrefix(String& prefix) const;
+
+	void setFormat(FileFormat  format);
+	void getFormat(FileFormat& format) const;
+
+	void setIndex(int  idx);
+	void getIndex(int& idx) const;
+
+	void setTotFileFrames(int  tot_file_frames);
+	void getTotFileFrames(int& tot_file_frames) const;
+
+	void getOpenFileName(String& file_name) const;
+	bool isFileOpen() const;
 
   private:
-	int writeEdfHeader( const FrameInfoType &finfo, std::ofstream &file );
+	String getDefSuffix() const;
+	void openFile();
+	void closeFile();
 
+	void writeEdfHeader( const FrameInfoType& finfo );
+
+	FileFormat m_format;
+	String m_prefix;
+	int m_idx;
+	String m_suffix;
+	String m_file_name;
+	bool m_overwrite;
+	int m_written_frames;
+	int m_tot_file_frames;
+	FrameInfoType m_last_frame;
+	std::ofstream *m_fout;
 };
 
 

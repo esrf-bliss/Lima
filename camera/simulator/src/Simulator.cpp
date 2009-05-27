@@ -42,6 +42,9 @@ void Simulator::SimuThread::execStartAcq()
 	StdBufferCbMgr& buffer_mgr = m_simu.m_buffer_cb_mgr;
 	buffer_mgr.setStartTimestamp(Timestamp::now());
 
+	FrameBuilder& frame_builder = m_simu.m_frame_builder;
+	frame_builder.resetFrameNr();
+
 	struct timespec treq, trem;
 	double exp_time = m_simu.m_exp_time;
 	treq.tv_sec = int(floor(exp_time));
@@ -52,7 +55,14 @@ void Simulator::SimuThread::execStartAcq()
 	for (frame_nb = 0; frame_nb < nb_frames; frame_nb++) {
 		setStatus(Exposure);
 		nanosleep(&treq, &trem);
+
 		setStatus(Readout);
+		int buffer_nb = frame_nb % buffer_mgr.getNbBuffers();
+
+		typedef unsigned char *BufferPtr;
+		BufferPtr ptr = BufferPtr(buffer_mgr.getBufferPtr(buffer_nb));
+		frame_builder.getNextFrame(ptr);
+		buffer_mgr.newFrameReady(frame_nb);
 	}
 	setStatus(Ready);
 }
@@ -111,6 +121,16 @@ void Simulator::setBin(const Bin& bin)
 void Simulator::getBin(Bin& bin)
 {
 	m_frame_builder.getBin(bin);
+}
+
+void Simulator::setFrameDim(const FrameDim& frame_dim)
+{
+	m_frame_builder.setFrameDim(frame_dim);
+}
+
+void Simulator::getFrameDim(FrameDim& frame_dim)
+{
+	m_frame_builder.getFrameDim(frame_dim);
 }
 
 Simulator::Status Simulator::getStatus()

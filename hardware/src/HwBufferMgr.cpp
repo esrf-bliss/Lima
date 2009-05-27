@@ -207,8 +207,10 @@ bool StdBufferCbMgr::newFrameReady(int acq_frame_nb)
 		return false;
 
         int buffer_nb = acq_frame_nb % getNbBuffers();
+	Timestamp now = Timestamp::now();
+	m_ts_list[buffer_nb] = now;
 	FrameInfoType frame_info(acq_frame_nb, getBufferPtr(buffer_nb), 
-				 &getFrameDim(), Timestamp::now());
+				 &getFrameDim(), now - m_start_ts);
 	return HwFrameCallbackGen::newFrameReady(frame_info);
 }
 

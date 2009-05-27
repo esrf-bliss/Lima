@@ -4,6 +4,7 @@
 #include "BufferSave.h"
 #include "SizeUtils.h"
 #include "Exceptions.h"
+#include "AutoObj.h"
 
 using namespace std;
 using namespace lima;
@@ -12,45 +13,31 @@ int main( void )
 {
 	FrameBuilder fb;
 
+	FrameDim full_fd;
+	fb.getFrameDim(full_fd);
+	
 	Bin bin = Bin(2,2);
 	fb.setBin(bin);
-	int binX = bin.getX();
-	int binY = bin.getY();
 
-	FrameDim fd;
-	fb.getFrameDim(fd);
-	int width = fd.getSize().getWidth();
-	int height = fd.getSize().getHeight();
-	int depth = fd.getDepth();
+	FrameDim fd = full_fd / bin;
+	
+	BufferSave bs(BufferSave::EDF, "boza");
+	bs.setTotFileFrames(5);
 
-	BufferSave bs("boza", FMT_EDF);
-	unsigned char *buffer;
-	FrameInfoType finfo;
+	int size = fd.getMemSize();
+	AutoPtr<unsigned char, true> buffer;
+	buffer = new unsigned char[size];
 
-
-	buffer = NULL;
-	try {
-		int size = width * height * depth;
-		buffer = new unsigned char[size];
-	} catch( bad_alloc& ) {
-		goto end;
-	}
+	Timestamp start = Timestamp::now();
 
 	for( int i=0; i<10; i++ ) {
+		int frame_nb = fb.getFrameNr();
 		fb.getNextFrame( buffer );
 
-		finfo.acq_frame_nb = fb.getFrameNr();
-		finfo.frame_ptr = buffer;
-		finfo.width = width/binX;
-		finfo.height = height/binY;
-		finfo.depth = depth;
-		finfo.frame_time_stamp = 0; /* XXX */
-
+		Timestamp t = Timestamp::now() - start;
+		FrameInfoType finfo(frame_nb, buffer, &fd, t);
 		bs.writeFrame(finfo);
 	}
- end:
-	if( buffer )
-		delete[] buffer;
 
 	return 0;
 }

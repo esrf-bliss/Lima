@@ -375,6 +375,9 @@ class FrameDim
 	static int getImageTypeBpp(ImageType type);
 	static int getImageTypeDepth(ImageType type);
 
+	FrameDim& operator *=(const Bin& bin);
+	FrameDim& operator /=(const Bin& bin);
+
  private:
 	Size m_size;
 	ImageType m_type;
@@ -419,6 +422,18 @@ inline int FrameDim::getMemSize() const
 	return Point(m_size).getArea() * m_depth;
 }
 
+inline FrameDim& FrameDim::operator *=(const Bin& bin)
+{
+	m_size *= bin;
+	return *this;
+}
+
+inline FrameDim& FrameDim::operator /=(const Bin& bin)
+{
+	m_size /= bin;
+	return *this;
+}
+
 inline bool operator ==(const FrameDim& f1, const FrameDim& f2)
 {
 	return ((f1.getSize()  == f2.getSize()) && 
@@ -430,7 +445,18 @@ inline bool operator !=(const FrameDim& f1, const FrameDim& f2)
 	return !(f1 == f2);
 }
 
- 
+inline FrameDim operator *(const FrameDim& fdim, const Bin& bin)
+{
+	FrameDim bin_fdim = fdim;
+	return bin_fdim *= bin;
+}
+
+inline FrameDim operator /(const FrameDim& fdim, const Bin& bin)
+{
+	FrameDim bin_fdim = fdim;
+	return bin_fdim /= bin;
+}
+
 } // namespace lima
 
 #endif // SIZEUTILS_H

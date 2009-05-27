@@ -34,6 +34,9 @@ class Simulator
 	void setBin(const Bin& bin);
 	void getBin(Bin& bin);
 
+	void setFrameDim(const FrameDim& frame_dim);
+	void getFrameDim(FrameDim& frame_dim);
+	
 	Status getStatus();
 
  private:
