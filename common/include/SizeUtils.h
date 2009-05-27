@@ -378,6 +378,9 @@ class FrameDim
 	FrameDim& operator *=(const Bin& bin);
 	FrameDim& operator /=(const Bin& bin);
 
+	void checkValidBin(const Bin& bin);
+	void checkValidRoi(const Roi& roi);
+
  private:
 	Size m_size;
 	ImageType m_type;
@@ -422,6 +425,22 @@ inline int FrameDim::getMemSize() const
 	return Point(m_size).getArea() * m_depth;
 }
 
+inline void FrameDim::checkValidBin(const Bin& bin)
+{
+	if ((m_size.getWidth()  % bin.getX() != 0) ||
+	    (m_size.getHeight() % bin.getY() != 0))
+		throw LIMA_COM_EXC(InvalidValue, "FrameDim size not multiple "
+				   "of bin");
+}
+
+inline void FrameDim::checkValidRoi(const Roi& roi)
+{
+	Roi full_frame(0, m_size);
+	if (!full_frame.containsRoi(roi))
+		throw LIMA_COM_EXC(InvalidValue, "Roi does not fit in the "
+				   "FrameDim");
+}
+
 inline FrameDim& FrameDim::operator *=(const Bin& bin)
 {
 	m_size *= bin;
@@ -430,6 +449,7 @@ inline FrameDim& FrameDim::operator *=(const Bin& bin)
 
 inline FrameDim& FrameDim::operator /=(const Bin& bin)
 {
+	checkValidBin(bin);
 	m_size /= bin;
 	return *this;
 }
