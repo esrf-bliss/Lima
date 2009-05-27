@@ -1,4 +1,5 @@
 #include "Simulator.h"
+#include "BufferSave.h"
 
 #include <iostream>
 
@@ -8,11 +9,13 @@ using namespace std;
 class TestFrameCallback : public HwFrameCallback
 {
 public:
-	TestFrameCallback(Simulator& simu) : m_simu(simu) {}
+	TestFrameCallback(Simulator& simu, BufferSave& buffer_save) 
+		: m_simu(simu), m_buffer_save(buffer_save) {}
 protected:
 	virtual bool newFrameReady(const FrameInfoType& frame_info);
 private:
 	Simulator& m_simu;
+	BufferSave& m_buffer_save;
 };
 
 bool TestFrameCallback::newFrameReady(const FrameInfoType& frame_info)
@@ -20,6 +23,7 @@ bool TestFrameCallback::newFrameReady(const FrameInfoType& frame_info)
 	cout << "acq_frame_nb=" << frame_info.acq_frame_nb  << ", "
 	     << "ts=" << frame_info.frame_timestamp << ", "
 	     << "simu=" << m_simu  << endl;
+	m_buffer_save.writeFrame(frame_info);
 	return true;
 }
 
@@ -27,14 +31,15 @@ bool TestFrameCallback::newFrameReady(const FrameInfoType& frame_info)
 int main(int argc, char *argv[])
 {
 	Simulator simu;
-	TestFrameCallback cb(simu);
+	BufferSave buffer_save(BufferSave::EDF);
+	TestFrameCallback cb(simu, buffer_save);
 
 	FrameDim frame_dim;
 	simu.getFrameDim(frame_dim);
 
 	BufferCtrlMgr& buffer_mgr = simu.getBufferMgr();
 	buffer_mgr.setFrameDim(frame_dim);
-	buffer_mgr.setNbBuffers(1);
+	buffer_mgr.setNbBuffers(10);
 	buffer_mgr.registerFrameCallback(&cb);
 
 	cout << "simu=" << simu << endl;

@@ -18,8 +18,7 @@ class BufferSave {
 
 	typedef std::string String;
 
-	BufferSave( );
-	BufferSave( FileFormat format, const String& prefix, 
+	BufferSave( FileFormat format = Raw, const String& prefix = "img", 
 		    int idx = 0, const String& suffix = "", 
 		    bool overwrite = false , int tot_file_frames = 1);
 	~BufferSave( );

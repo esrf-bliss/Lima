@@ -28,17 +28,6 @@ BufferSave::BufferSave( FileFormat format, const String& prefix, int idx,
 }
 
 
-BufferSave::BufferSave( ) 
-	: m_format(Raw), m_prefix(), m_idx(0), m_overwrite(false),
-	  m_tot_file_frames(1)
-{
-	m_written_frames = 0;
-	m_fout = NULL;
-	if (m_suffix == "")
-		m_suffix = getDefSuffix();
-}
-
-
 BufferSave::~BufferSave( ) 
 {
 	closeFile();
@@ -80,25 +69,25 @@ void BufferSave::closeFile()
 void BufferSave::writeEdfHeader( const FrameInfoType& finfo )
 {
 	time_t ctime_now;
-	struct timeval tod_now;
-	char time_str[64], buffer[EDF_HEADER_BUFFER_LEN], *p;
-	int l, len, rem;
-	const FrameDim *fdim = finfo.frame_dim;
-
-	const Size& frame_size = fdim->getSize();
-	int depth = fdim->getDepth();
-
-	int image = m_written_frames + 1;
-
 	time(&ctime_now);
+
+	struct timeval tod_now;
 	gettimeofday(&tod_now, NULL);
+
+	char time_str[64];
 	ctime_r(&ctime_now, time_str);
 	time_str[strlen(time_str) - 1] = '\0';
 
-	p = buffer;
+	const FrameDim *fdim = finfo.frame_dim;
+	const Size& frame_size = fdim->getSize();
+	int depth = fdim->getDepth();
+	int image_nb = m_written_frames + 1;
+
+	char buffer[EDF_HEADER_BUFFER_LEN];
+	char *p = buffer;
 	p += sprintf(p, "{\n");
-	p += sprintf(p, "HeaderID = EH:%06u:000000:000000 ;\n", image);
-	p += sprintf(p, "Image = %u ;\n", image);
+	p += sprintf(p, "HeaderID = EH:%06u:000000:000000 ;\n", image_nb);
+	p += sprintf(p, "Image = %u ;\n", image_nb);
 	p += sprintf(p, "ByteOrder = LowByteFirst ;\n");
 	p += sprintf(p, "DataType = %s ;\n", 
 		      (depth == 1) ? "UnsignedByte" :
@@ -115,9 +104,9 @@ void BufferSave::writeEdfHeader( const FrameInfoType& finfo )
                 p += sprintf(p, "time_of_frame = %.6f ;\n",
                              double(finfo.frame_timestamp));
 
-	l = p - buffer;
-	len = l;
-	rem = len % EDF_HEADER_LEN;
+	int l = p - buffer;
+	int len = l;
+	int rem = len % EDF_HEADER_LEN;
 	if (rem > 0)
 		len += EDF_HEADER_LEN - rem;
 	p += sprintf(p, "%*s}\n", len - (l + 2), "");
