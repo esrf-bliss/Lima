@@ -17,7 +17,7 @@ enum AcqMode {
 };
 
 enum TrigMode {
-	Internal, 
+	IntTrig, 
 	ExtTrigSingle, ExtTrigMult,
 	ExtGate, ExtStartStop,
 };

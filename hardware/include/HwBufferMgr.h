@@ -80,7 +80,7 @@ class BufferCbMgr : public HwFrameCallbackGen
 {
  public:
 	enum Cap {
-		Basic=0, Concat=1, Acc=2,
+		Basic=0, Concat=1, Acc=2, // bit mask
 	};
 
 	virtual ~BufferCbMgr();
@@ -166,6 +166,10 @@ class StdBufferCbMgr : public BufferCbMgr
 class BufferCtrlMgr
 {
  public:
+	enum AcqMode {
+		Normal, Concat, Acc,
+	};
+
 	BufferCtrlMgr(BufferCbMgr& acq_buffer_mgr);
 	~BufferCtrlMgr();
 
@@ -183,9 +187,6 @@ class BufferCtrlMgr
 
 	void getMaxNbBuffers(int& max_nb_buffers);
 
-	void setBufferMode(BufferMode  buffer_mode);
-	void getBufferMode(BufferMode& buffer_mode);
-
 	void *getBufferPtr(int buffer_nb);
 	void *getFramePtr(int acq_frame_nb);
 
@@ -198,8 +199,11 @@ class BufferCtrlMgr
 	void unregisterFrameCallback(HwFrameCallback *frame_cb);
 
 	BufferCbMgr& getAcqBufferMgr();
+	AcqMode getAcqMode();
 
  private:
+	int m_nb_concat_frames;
+	int m_nb_acc_frames;
 	BufferCbMgr& m_acq_buffer_mgr;
 	SoftBufferAllocMgr m_aux_alloc_mgr;
 	StdBufferCbMgr m_aux_buffer_mgr;

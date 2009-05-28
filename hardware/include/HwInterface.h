@@ -2,8 +2,6 @@
 #define HWINTERFACE_H
 
 #include "HwCap.h"
-#include "HwDetInfoCtrlObj.h"
-
 #include <vector>
 
 namespace lima
@@ -19,6 +17,7 @@ class HwInterface
 	};
 
 	enum DetStatus {
+		DetIdle		= 0x00,
 		DetFault	= 0x01, 
 		WaitForTrigger	= 0x02,
 		ShutterOpen	= 0x04,
@@ -26,6 +25,7 @@ class HwInterface
 		ShutterClose	= 0x10,
 		ChargeShift	= 0x20,
 		Readout		= 0x40,
+		Latency		= 0x80,
 	};
 
 	typedef struct Status {

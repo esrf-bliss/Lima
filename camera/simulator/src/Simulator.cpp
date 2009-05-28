@@ -45,20 +45,22 @@ void Simulator::SimuThread::execStartAcq()
 	FrameBuilder& frame_builder = m_simu.m_frame_builder;
 	frame_builder.resetFrameNr();
 
-	struct timespec treq, trem;
-	double exp_time = m_simu.m_exp_time;
-	treq.tv_sec = int(floor(exp_time));
-	treq.tv_nsec = int((exp_time - treq.tv_sec) * 1e9);
-	
 	int nb_frames = m_simu.m_nb_frames;
 	int& frame_nb = m_acq_frame_nb;
 	for (frame_nb = 0; frame_nb < nb_frames; frame_nb++) {
-		setStatus(Exposure);
-		nanosleep(&treq, &trem);
+		struct timespec treq, trem;
+		double req_time;
+
+		req_time = m_simu.m_exp_time;
+		if (req_time > 0) {	
+			setStatus(Exposure);
+			treq.tv_sec = int(floor(req_time));
+			treq.tv_nsec = int((req_time - treq.tv_sec) * 1e9);
+			nanosleep(&treq, &trem);
+		}
 
 		setStatus(Readout);
 		int buffer_nb = frame_nb % buffer_mgr.getNbBuffers();
-
 		typedef unsigned char *BufferPtr;
 		BufferPtr ptr = BufferPtr(buffer_mgr.getBufferPtr(buffer_nb));
 		frame_builder.getNextFrame(ptr);
@@ -66,6 +68,14 @@ void Simulator::SimuThread::execStartAcq()
 		HwFrameInfoType frame_info;
 		frame_info.acq_frame_nb = frame_nb;
 		buffer_mgr.newFrameReady(frame_info);
+
+		req_time = m_simu.m_lat_time;
+		if (req_time > 0) {
+			setStatus(Latency);
+			treq.tv_sec = int(floor(req_time));
+			treq.tv_nsec = int((req_time - treq.tv_sec) * 1e9);
+			nanosleep(&treq, &trem);
+		}
 	}
 	setStatus(Ready);
 }
@@ -81,14 +91,15 @@ Simulator::Simulator()
 	  m_thread(*this)
 {
 	init();
+
+	m_thread.start();
 }
 
 void Simulator::init()
 {
 	m_exp_time = 1.0;
+	m_lat_time = 0.0;
 	m_nb_frames = 1;
-
-	m_thread.start();
 }
 
 Simulator::~Simulator()
@@ -98,6 +109,12 @@ Simulator::~Simulator()
 BufferCtrlMgr& Simulator::getBufferMgr()
 {
 	return m_buffer_ctrl_mgr;
+}
+
+void Simulator::getMaxImageSize(Size& max_image_size)
+{
+	int max_dim = 8 * 1024;
+	max_image_size = Size(max_dim, max_dim);
 }
 
 void Simulator::setNbFrames(int nb_frames)
@@ -126,6 +143,19 @@ void Simulator::getExpTime(double& exp_time)
 	exp_time = m_exp_time;
 }
 
+void Simulator::setLatTime(double lat_time)
+{
+	if (lat_time < 0)
+		throw LIMA_HW_EXC(InvalidValue, "Invalid latency time");
+		
+	m_lat_time = lat_time;
+}
+
+void Simulator::getLatTime(double& lat_time)
+{
+	lat_time = m_lat_time;
+}
+
 void Simulator::setBin(const Bin& bin)
 {
 	m_frame_builder.setBin(bin);
@@ -146,6 +176,13 @@ void Simulator::getFrameDim(FrameDim& frame_dim)
 	m_frame_builder.getFrameDim(frame_dim);
 }
 
+void Simulator::reset()
+{
+	stopAcq();
+
+	init();
+}
+
 Simulator::Status Simulator::getStatus()
 {
 	int thread_status = m_thread.getStatus();
@@ -156,6 +193,8 @@ Simulator::Status Simulator::getStatus()
 		return Simulator::Exposure;
 	case SimuThread::Readout:
 		return Simulator::Readout;
+	case SimuThread::Latency:
+		return Simulator::Latency;
 	default:
 		throw LIMA_HW_EXC(Error, "Invalid thread status");
 	}
@@ -163,6 +202,8 @@ Simulator::Status Simulator::getStatus()
 
 void Simulator::startAcq()
 {
+	m_buffer_ctrl_mgr.setStartTimestamp(Timestamp::now());
+
 	m_thread.sendCmd(SimuThread::StartAcq);
 	m_thread.waitNotStatus(SimuThread::Ready);
 }
@@ -188,6 +229,8 @@ ostream& lima::operator <<(ostream& os, Simulator& simu)
 		status = "Exposure"; break;
 	case Simulator::Readout:
 		status = "Readout"; break;
+	case Simulator::Latency:
+		status = "Latency"; break;
 	default:
 		status = "Unknown";
 	}

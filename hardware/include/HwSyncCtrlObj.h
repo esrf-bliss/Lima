@@ -30,7 +30,7 @@ public:
 	virtual void setNbFrames(int  nb_frames) = 0;
 	virtual void getNbFrames(int& nb_frames) = 0;
 
-	virtual const ValidRangesType& getValidRanges() = 0;
+	virtual void getValidRanges(ValidRangesType& valid_ranges) = 0;
 
  private:
 };

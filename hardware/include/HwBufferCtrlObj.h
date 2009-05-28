@@ -26,9 +26,6 @@ public:
 
 	virtual void getMaxNbBuffers(int& max_nb_buffers) = 0;
 
-	virtual void setBufferMode(BufferMode  buffer_mode) = 0;
-	virtual void getBufferMode(BufferMode& buffer_mode) = 0;
-
 	virtual void *getBufferPtr(int buffer_nb) = 0;
 	virtual void *getFramePtr(int acq_frame_nb) = 0;
 

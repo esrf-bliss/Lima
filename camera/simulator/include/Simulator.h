@@ -14,7 +14,7 @@ class Simulator
 {
  public:
 	enum Status {
-		Ready, Exposure, Readout,
+		Ready, Exposure, Readout, Latency,
 	};
 
 	Simulator();
@@ -31,6 +31,9 @@ class Simulator
 	void setExpTime(double  exp_time);
 	void getExpTime(double& exp_time);
 
+	void setLatTime(double  lat_time);
+	void getLatTime(double& lat_time);
+
 	void setBin(const Bin& bin);
 	void getBin(Bin& bin);
 
@@ -40,12 +43,16 @@ class Simulator
 	Status getStatus();
 	int getNbAcquiredFrames();
 
+	void getMaxImageSize(Size& max_image_size);
+
+	void reset();
+
  private:
 	class SimuThread : public CmdThread
 	{
 	public:
 		enum { // Status
-			Ready = MaxThreadStatus, Exposure, Readout,
+			Ready = MaxThreadStatus, Exposure, Readout, Latency,
 		};
 
 		enum { // Cmd 
@@ -76,6 +83,7 @@ class Simulator
 	BufferCtrlMgr m_buffer_ctrl_mgr;
 	FrameBuilder m_frame_builder;
 	double m_exp_time;
+	double m_lat_time;
 	int m_nb_frames;
 
 	SimuThread m_thread;
