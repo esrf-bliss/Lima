@@ -66,7 +66,7 @@ void BufferSave::closeFile()
 	m_idx++;
 }
 
-void BufferSave::writeEdfHeader( const FrameInfoType& finfo )
+void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 {
 	time_t ctime_now;
 	time(&ctime_now);
@@ -103,6 +103,7 @@ void BufferSave::writeEdfHeader( const FrameInfoType& finfo )
         if (finfo.frame_timestamp.isSet())
                 p += sprintf(p, "time_of_frame = %.6f ;\n",
                              double(finfo.frame_timestamp));
+	p += sprintf(p, "valid_pixels = %d ;\n", finfo.valid_pixels);
 
 	int l = p - buffer;
 	int len = l;
@@ -115,10 +116,10 @@ void BufferSave::writeEdfHeader( const FrameInfoType& finfo )
 	m_fout->write(buffer, len);
 }
 
-void BufferSave::writeFrame( const FrameInfoType& finfo )
+void BufferSave::writeFrame( const HwFrameInfoType& finfo )
 {
 	const FrameDim *fdim = finfo.frame_dim;
-	if (fdim == NULL)
+	if (!fdim)
 		throw LIMA_HW_EXC(InvalidValue, "Null finfo.fdim");
 
 	openFile();
@@ -135,7 +136,7 @@ void BufferSave::writeFrame( const FrameInfoType& finfo )
 
 bool BufferSave::isFileOpen() const
 {
-	return (m_fout != NULL);
+	return bool(m_fout);
 }
 
 void BufferSave::setPrefix(const String& prefix)

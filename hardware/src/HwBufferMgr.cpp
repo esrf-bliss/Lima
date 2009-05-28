@@ -174,9 +174,9 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers,
 	try {
 		m_alloc_mgr.allocBuffers(nb_buffers, frame_dim);
 
-		m_ts_list.reserve(nb_buffers);
+		m_info_list.reserve(nb_buffers);
 		for (int i = 0; i < nb_buffers; ++i)
-			m_ts_list.push_back(Timestamp());
+			m_info_list.push_back(HwFrameInfoType());
 	} catch (...) {
 		releaseBuffers();
 		throw;
@@ -186,7 +186,7 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers,
 void StdBufferCbMgr::releaseBuffers()
 {
 	m_alloc_mgr.releaseBuffers();
-	m_ts_list.clear();
+	m_info_list.clear();
 }
 
 void StdBufferCbMgr::setStartTimestamp(Timestamp start_ts)
@@ -196,21 +196,43 @@ void StdBufferCbMgr::setStartTimestamp(Timestamp start_ts)
 	m_start_ts = start_ts;
 }
 
+void StdBufferCbMgr::getStartTimestamp(Timestamp& start_ts) 
+{
+	start_ts = m_start_ts;
+}
+
 void StdBufferCbMgr::setFrameCallbackActive(bool cb_active)
 {
 	m_fcb_act = cb_active;
 }
 
-bool StdBufferCbMgr::newFrameReady(int acq_frame_nb)
+bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 {
+	Timestamp now = Timestamp::now();
+	if (!frame_info.frame_timestamp.isSet())
+		frame_info.frame_timestamp = now - m_start_ts;
+
+        int buffer_nb = frame_info.acq_frame_nb % getNbBuffers();
+	void *ptr = getBufferPtr(buffer_nb);
+	if (!frame_info.frame_ptr)
+		frame_info.frame_ptr = ptr;
+	else if (frame_info.frame_ptr != ptr)
+		throw LIMA_HW_EXC(InvalidValue, "Invalid frame ptr");
+
+	const FrameDim& frame_dim = getFrameDim();
+	if (!frame_info.frame_dim)
+		frame_info.frame_dim = &frame_dim;
+	else if (*frame_info.frame_dim != frame_dim)
+		throw LIMA_HW_EXC(InvalidValue, "Invalid frame dim");
+
+	if (frame_info.valid_pixels == 0)
+		frame_info.valid_pixels = Point(frame_dim.getSize()).getArea();
+
+	m_info_list[buffer_nb] = frame_info;
+
 	if (!m_fcb_act)
 		return false;
 
-        int buffer_nb = acq_frame_nb % getNbBuffers();
-	Timestamp now = Timestamp::now();
-	m_ts_list[buffer_nb] = now;
-	FrameInfoType frame_info(acq_frame_nb, getBufferPtr(buffer_nb), 
-				 &getFrameDim(), now - m_start_ts);
 	return HwFrameCallbackGen::newFrameReady(frame_info);
 }
 
@@ -239,12 +261,13 @@ void StdBufferCbMgr::clearAllBuffers()
 	m_alloc_mgr.clearAllBuffers();
 }
 
-Timestamp StdBufferCbMgr::getBufferTimestamp(int buffer_nb)
+void StdBufferCbMgr::getFrameInfo(int acq_frame_nb, HwFrameInfo& info)
 {
-	const Timestamp& ts = m_ts_list[buffer_nb];
-	if (!ts.isSet())
-		return ts;
-	return ts - m_start_ts;
+	int buffer_nb = acq_frame_nb % getNbBuffers();
+	if (m_info_list[buffer_nb].acq_frame_nb != acq_frame_nb)
+		throw LIMA_HW_EXC(Error, "Frame not available");
+
+	info = m_info_list[buffer_nb];
 }
 
 /*******************************************************************
@@ -306,3 +329,20 @@ BufferCbMgr& BufferCtrlMgr::getAcqBufferMgr()
 {
 	return m_acq_buffer_mgr;
 }
+
+void BufferCtrlMgr::setStartTimestamp(Timestamp start_ts)
+{
+	m_acq_buffer_mgr.setStartTimestamp(start_ts);
+}
+
+void BufferCtrlMgr::getStartTimestamp(Timestamp& start_ts)
+{
+	m_acq_buffer_mgr.getStartTimestamp(start_ts);
+}
+
+void BufferCtrlMgr::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
+{
+	
+	m_acq_buffer_mgr.getFrameInfo(acq_frame_nb, info);
+}
+

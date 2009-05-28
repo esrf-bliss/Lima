@@ -2,6 +2,8 @@
 #define HWINTERFACE_H
 
 #include "HwCap.h"
+#include "HwDetInfoCtrlObj.h"
+
 #include <vector>
 
 namespace lima
@@ -48,7 +50,6 @@ class HwInterface
 	virtual void stopAcq() = 0;
 	virtual void getStatus(StatusType& status) = 0;
 	virtual int getNbAcquiredFrames() = 0;
-	virtual double getStartTimeStamp() = 0;
 };
 
 } // namespace lima

@@ -9,19 +9,19 @@ HwFrameCallbackGen::HwFrameCallbackGen()
 
 HwFrameCallbackGen::~HwFrameCallbackGen()
 {
-	if (m_frame_cb != NULL)
+	if (m_frame_cb)
 		m_frame_cb->setFrameCallbackGen(NULL);
 }
 
 HwFrameCallback::~HwFrameCallback()
 {
-	if (m_frame_cb_gen != NULL)
+	if (m_frame_cb_gen)
 		m_frame_cb_gen->unregisterFrameCallback(this);
 }
 
 void HwFrameCallbackGen::registerFrameCallback(HwFrameCallback *frame_cb)
 {
-	if (m_frame_cb != NULL) 
+	if (m_frame_cb) 
 		throw LIMA_HW_EXC(InvalidValue, 
 				  "A FrameCallback is already registered");
 
@@ -42,9 +42,9 @@ void HwFrameCallbackGen::unregisterFrameCallback(HwFrameCallback *frame_cb)
 }
 
 
-bool HwFrameCallbackGen::newFrameReady(const FrameInfoType& frame_info)
+bool HwFrameCallbackGen::newFrameReady(const HwFrameInfoType& frame_info)
 {
-	if (m_frame_cb == NULL)
+	if (!m_frame_cb)
 		return false;
 
 	return m_frame_cb->newFrameReady(frame_info);

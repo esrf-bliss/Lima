@@ -23,7 +23,7 @@ class BufferSave {
 		    bool overwrite = false , int tot_file_frames = 1);
 	~BufferSave( );
 
-	void writeFrame( const FrameInfoType& finfo );
+	void writeFrame( const HwFrameInfoType& finfo );
 
 	void setPrefix(const String& prefix);
 	void getPrefix(String& prefix) const;
@@ -45,7 +45,7 @@ class BufferSave {
 	void openFile();
 	void closeFile();
 
-	void writeEdfHeader( const FrameInfoType& finfo );
+	void writeEdfHeader( const HwFrameInfoType& finfo );
 
 	FileFormat m_format;
 	String m_prefix;
@@ -55,7 +55,7 @@ class BufferSave {
 	bool m_overwrite;
 	int m_written_frames;
 	int m_tot_file_frames;
-	FrameInfoType m_last_frame;
+	HwFrameInfoType m_last_frame;
 	std::ofstream *m_fout;
 };
 

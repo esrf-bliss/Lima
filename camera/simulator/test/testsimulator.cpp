@@ -12,13 +12,13 @@ public:
 	TestFrameCallback(Simulator& simu, BufferSave& buffer_save) 
 		: m_simu(simu), m_buffer_save(buffer_save) {}
 protected:
-	virtual bool newFrameReady(const FrameInfoType& frame_info);
+	virtual bool newFrameReady(const HwFrameInfoType& frame_info);
 private:
 	Simulator& m_simu;
 	BufferSave& m_buffer_save;
 };
 
-bool TestFrameCallback::newFrameReady(const FrameInfoType& frame_info)
+bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 {
 	cout << "acq_frame_nb=" << frame_info.acq_frame_nb  << ", "
 	     << "ts=" << frame_info.frame_timestamp << ", "
@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
 
 	FrameDim frame_dim;
 	simu.getFrameDim(frame_dim);
+	Size size = frame_dim.getSize();
 
 	BufferCtrlMgr& buffer_mgr = simu.getBufferMgr();
 	buffer_mgr.setFrameDim(frame_dim);

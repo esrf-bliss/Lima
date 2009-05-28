@@ -62,15 +62,28 @@ void Simulator::SimuThread::execStartAcq()
 		typedef unsigned char *BufferPtr;
 		BufferPtr ptr = BufferPtr(buffer_mgr.getBufferPtr(buffer_nb));
 		frame_builder.getNextFrame(ptr);
-		buffer_mgr.newFrameReady(frame_nb);
+
+		HwFrameInfoType frame_info;
+		frame_info.acq_frame_nb = frame_nb;
+		buffer_mgr.newFrameReady(frame_info);
 	}
 	setStatus(Ready);
+}
+
+int Simulator::SimuThread::getNbAcquiredFrames()
+{
+	return m_acq_frame_nb;
 }
 
 Simulator::Simulator()
 	: m_buffer_cb_mgr(m_buffer_alloc_mgr),
 	  m_buffer_ctrl_mgr(m_buffer_cb_mgr),
 	  m_thread(*this)
+{
+	init();
+}
+
+void Simulator::init()
 {
 	m_exp_time = 1.0;
 	m_nb_frames = 1;
@@ -158,6 +171,11 @@ void Simulator::stopAcq()
 {
 	m_thread.sendCmd(SimuThread::StopAcq);
 	m_thread.waitStatus(SimuThread::Ready);
+}
+
+int Simulator::getNbAcquiredFrames()
+{
+	return m_thread.getNbAcquiredFrames();
 }
 
 ostream& lima::operator <<(ostream& os, Simulator& simu)

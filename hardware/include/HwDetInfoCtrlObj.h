@@ -19,7 +19,7 @@ class HwMaxImageSizeCallback
 
  protected:
 	virtual void maxImageSizeChanged(const Size& size, 
-					 ImageType& image_type) = 0;
+					 ImageType image_type) = 0;
 
  private:
 	friend class HwDetInfoCtrlObj;
@@ -55,6 +55,7 @@ class HwDetInfoCtrlObj
 
  protected:
 	virtual void setMaxImageSizeCallbackActive(bool cb_active) = 0;
+	void maxImageSizeChanged(const Size& size, ImageType image_type);
 
  private:
 	HwMaxImageSizeCallback *m_max_image_size_cb;

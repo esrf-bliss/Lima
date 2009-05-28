@@ -38,6 +38,7 @@ class Simulator
 	void getFrameDim(FrameDim& frame_dim);
 	
 	Status getStatus();
+	int getNbAcquiredFrames();
 
  private:
 	class SimuThread : public CmdThread
@@ -54,6 +55,8 @@ class Simulator
 		SimuThread(Simulator& simu);
 
 		virtual void start();
+		
+		int getNbAcquiredFrames();
 
 	protected:
 		virtual void init();
@@ -65,6 +68,8 @@ class Simulator
 		int m_acq_frame_nb;
 	};
 	friend class SimuThread;
+
+	void init();
 
 	SoftBufferAllocMgr m_buffer_alloc_mgr;
 	StdBufferCbMgr m_buffer_cb_mgr;

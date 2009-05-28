@@ -99,7 +99,10 @@ class BufferCbMgr : public HwFrameCallbackGen
 	virtual void clearBuffer(int buffer_nb) = 0;
 	virtual void clearAllBuffers() = 0;
 
-	virtual Timestamp getBufferTimestamp(int buffer_nb) = 0;
+	virtual void setStartTimestamp(Timestamp  start_ts) = 0;
+	virtual void getStartTimestamp(Timestamp& start_ts) = 0;
+
+	virtual void getFrameInfo(int buffer_nb, HwFrameInfoType& info) = 0;
 };
 
 
@@ -131,19 +134,21 @@ class StdBufferCbMgr : public BufferCbMgr
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
 
-	virtual Timestamp getBufferTimestamp(int buffer_nb);
+	virtual void setStartTimestamp(Timestamp  start_ts);
+	virtual void getStartTimestamp(Timestamp& start_ts);
 
-	void setStartTimestamp(Timestamp start_ts);
-	bool newFrameReady(int acq_frame_nr);
+	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info);
+
+	bool newFrameReady(HwFrameInfoType& frame_info);
 
  protected:
 	virtual void setFrameCallbackActive(bool cb_active);
 	
  private:
-	typedef std::vector<Timestamp> TimestampList;
+	typedef std::vector<HwFrameInfoType> FrameInfoList;
 
 	BufferAllocMgr& m_alloc_mgr;
-	TimestampList m_ts_list;
+	FrameInfoList m_info_list;
 	Timestamp m_start_ts;
 	bool m_fcb_act;
 };
@@ -183,7 +188,11 @@ class BufferCtrlMgr
 
 	void *getBufferPtr(int buffer_nb);
 	void *getFramePtr(int acq_frame_nb);
-	Timestamp getFrameTimeStamp(int acq_frame_nb);
+
+	void setStartTimestamp(Timestamp  start_ts);
+	void getStartTimestamp(Timestamp& start_ts);
+
+	void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info);
 
 	void   registerFrameCallback(HwFrameCallback *frame_cb);
 	void unregisterFrameCallback(HwFrameCallback *frame_cb);

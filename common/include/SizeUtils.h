@@ -139,20 +139,20 @@ class Size
 	{ m_xy = checkValid(m_xy / p); return *this; }
 
  private:
-	static bool isValid(int i);
+	static bool isValidCoord(int i);
 	static Point checkValid(const Point& p);
 
 	Point m_xy;
 };
 
-inline bool Size::isValid(int i)
+inline bool Size::isValidCoord(int i)
 {
 	return (i >= 0);
 }
 
 inline Point Size::checkValid(const Point& p)
 {
-	if (!(isValid(p.x) && isValid(p.y)))
+	if (!(isValidCoord(p.x) && isValidCoord(p.y)))
 		throw LIMA_COM_EXC(InvalidValue, "Invalid size");
 	return p;
 }
@@ -192,20 +192,20 @@ class Bin
 	{ m_xy = checkValid(m_xy / p); return *this; }
 
  private:
-	static bool isValid(int i);
+	static bool isValidCoord(int i);
 	static Point checkValid(const Point& p);
 
 	Point m_xy;
 };
 
-inline bool Bin::isValid(int i)
+inline bool Bin::isValidCoord(int i)
 {
 	return IsPowerOf2(i);
 }
 
 inline Point Bin::checkValid(const Point& p)
 {
-	if (!(isValid(p.x) && isValid(p.y)))
+	if (!(isValidCoord(p.x) && isValidCoord(p.y)))
 		throw LIMA_COM_EXC(InvalidValue, "Invalid binning");
 	return p;
 }
@@ -253,6 +253,8 @@ class Roi
 
 	Roi getBinned(const Bin& b) const;
 	Roi getUnbinned(const Bin& b) const;
+
+	bool isActive() const;
 
  private:
 	static bool isValidCoord(int i);
@@ -304,7 +306,6 @@ inline void Roi::setSize(const Size& size)
 	m_size = size;
 }
 
-
 inline bool Roi::isValidCoord(int i)
 {
 	return (i >= 0);
@@ -338,6 +339,11 @@ inline Roi Roi::getUnbinned(const Bin& b) const
 	return Roi(m_top_left * b, Size(m_size * b));
 }
 
+inline bool Roi::isActive() const
+{
+	return !m_size.isEmpty();
+}
+
 
 inline bool operator ==(const Roi& r1, const Roi& r2)
 {
@@ -349,7 +355,6 @@ inline bool operator !=(const Roi& r1, const Roi& r2)
 {
 	return !(r1 == r2);
 }
-
 
 
 /*******************************************************************
@@ -367,8 +372,14 @@ class FrameDim
 	FrameDim(const Size& size, ImageType type);
 	FrameDim(int width, int height, ImageType type);
 
+	bool isValid() const;
+
+	void setSize(const Size& size);
 	const Size& getSize() const;
+
+	void setImageType(ImageType image_type);
 	ImageType getImageType() const;
+
 	int getDepth() const;
 	int getMemSize() const;
 
@@ -405,9 +416,24 @@ inline FrameDim::FrameDim(int width, int height, ImageType type)
 	m_depth = getImageTypeDepth(m_type);
 }
 
+inline bool FrameDim::isValid() const
+{
+	return !m_size.isEmpty();
+}
+
 inline const Size& FrameDim::getSize() const
 {
 	return m_size;
+}
+
+inline void FrameDim::setSize(const Size& size)
+{
+	m_size = size;
+}
+
+inline void FrameDim::setImageType(ImageType image_type)
+{
+	m_type = image_type;
 }
 
 inline ImageType FrameDim::getImageType() const

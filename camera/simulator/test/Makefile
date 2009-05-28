@@ -1,11 +1,12 @@
 
 std-objs = ../../../common/src/Common.o ../../../hardware/src/Hw.o
+simu-objs = ../src/Simu.o
 
 test-objs = test.o BufferSave.o
-test-ext-objs = ../src/FrameBuilder.o
+test-ext-objs = $(simu-objs)
 	
 testsimulator-objs = testsimulator.o BufferSave.o
-testsimulator-ext-objs = ../src/Simulator.o ../src/FrameBuilder.o $(std-objs)
+testsimulator-ext-objs = $(simu-objs) $(std-objs)
 
 INC = -I../include -I../../../common/include -I../../../hardware/include 
 CXXFLAGS += $(INC) -Wall -pthread

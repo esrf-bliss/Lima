@@ -39,7 +39,8 @@ int main( void )
 		fb.getNextFrame( buffer );
 
 		Timestamp t = Timestamp::now() - start;
-		FrameInfoType finfo(frame_nb, buffer, &fd, t);
+		int pixels = Point(fd.getSize()).getArea();
+		HwFrameInfoType finfo(frame_nb, buffer, &fd, t, pixels);
 		bs.writeFrame(finfo);
 	}
 

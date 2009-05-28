@@ -16,7 +16,7 @@ HwDetInfoCtrlObj::~HwDetInfoCtrlObj()
 void 
 HwDetInfoCtrlObj::registerMaxImageSizeCallback(HwMaxImageSizeCallback *cb)
 {
-	if (m_max_image_size_cb != NULL) 
+	if (m_max_image_size_cb) 
 		throw LIMA_HW_EXC(InvalidValue, 
 				  "An ImageSizeCallback already registered");
 
@@ -37,3 +37,11 @@ HwDetInfoCtrlObj::unregisterMaxImageSizeCallback(HwMaxImageSizeCallback *cb)
 	cb->setDetInfoCtrlObj(NULL);
 }
 
+void 
+HwDetInfoCtrlObj::maxImageSizeChanged(const Size& size, ImageType image_type)
+{
+	if (!m_max_image_size_cb)
+		return;
+
+	m_max_image_size_cb->maxImageSizeChanged(size, image_type);
+}
