@@ -32,6 +32,9 @@ class FrameBuilder {
 	void getRoi( Roi &roi ) const;
 	void setRoi( const Roi &roi );
 
+	void getPeaks( std::vector<struct GaussPeak> &peaks ) const;
+	void getPeaks( const std::vector<struct GaussPeak> &peaks );
+
 	void getNextFrame( unsigned char *ptr ) throw (Exception);
 	unsigned long getFrameNr();
 	void resetFrameNr( int frame_nr=0 );
@@ -45,7 +48,7 @@ class FrameBuilder {
 
 	unsigned long m_frame_nr;
 
-
+	void checkValid() throw(Exception);
 	double dataXY( int x, int y );
 	template <class depth> void fillData( unsigned char *ptr );
 };

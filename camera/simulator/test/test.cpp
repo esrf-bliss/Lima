@@ -1,5 +1,7 @@
 #include <vector>
 #include <exception>
+#include <iostream>
+
 #include "FrameBuilder.h"
 #include "BufferSave.h"
 #include "SizeUtils.h"
@@ -11,6 +13,8 @@ using namespace lima;
 
 int main( void )
 {
+  try {
+
 	FrameBuilder fb;
 
 	FrameDim full_fd;
@@ -22,7 +26,7 @@ int main( void )
 	FrameDim fd = full_fd / bin;
 	
 	BufferSave bs(BufferSave::EDF, "boza");
-	bs.setTotFileFrames(5);
+	bs.setTotFileFrames(1);
 
 	int size = fd.getMemSize();
 	AutoPtr<unsigned char, true> buffer;
@@ -40,4 +44,9 @@ int main( void )
 	}
 
 	return 0;
+
+  } catch (Exception &e) {
+  	cout << "Exception: " << e.getErrDesc() << endl;
+	return -1;
+  }
 }

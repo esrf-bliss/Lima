@@ -14,8 +14,8 @@ FrameBuilder::FrameBuilder()
 {
 	m_frame_dim = FrameDim(1024, 1024, Bpp16);
 	m_bin = Bin(1,1);
-	m_roi = Roi();  // ???
-	GaussPeak p={512, 512, 100, 100};
+	m_roi = Roi(0, Size(0,0));  // Or the whole frame ???
+	GaussPeak p={512, 512, 100, 100}; // Binned or unbinned ???
 	m_peaks.push_back(p);
 	m_grow_factor = 1.00;
 	m_frame_nr = 0;
@@ -31,12 +31,35 @@ FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
 	m_peaks(peaks), 
 	m_grow_factor(grow_factor)
 {
+	checkValid();
 	m_frame_nr = 0;
 }
 
 
 FrameBuilder::~FrameBuilder()
 {
+}
+
+
+void FrameBuilder::checkValid() throw(Exception)
+{
+	FrameDim bin_dim = m_frame_dim / m_bin;
+
+	Roi roi;
+	if( m_roi.getSize() != 0 ) {
+		bin_dim.checkValidRoi(m_roi);
+		roi= m_roi;
+	} else {
+		roi = Roi(0, bin_dim.getSize());
+	}
+
+	// Check that the peaks set are compatible with the RoI
+	vector<GaussPeak>::iterator p;
+	for( p = m_peaks.begin( ); p != m_peaks.end( ); ++p) {
+		if( ! roi.containsPoint(Point(p->x0, p->y0)) )
+			throw Exception( Hardware, InvalidValue, "Peak",
+			                 __FILE__, __FUNCTION__, __LINE__ );
+	}
 }
 
 
@@ -49,6 +72,9 @@ void FrameBuilder::getFrameDim( FrameDim &dim ) const
 void FrameBuilder::setFrameDim( const FrameDim &dim )
 {
 	m_frame_dim = dim;
+
+	// Reset Bin and RoI or just check validity?
+	checkValid();
 }
 
 
@@ -61,6 +87,8 @@ void FrameBuilder::getBin( Bin &bin ) const
 void FrameBuilder::setBin( const Bin &bin )
 {
 	m_bin = bin;
+
+	checkValid();
 }
 
 
@@ -73,19 +101,24 @@ void FrameBuilder::getRoi( Roi &roi ) const
 void FrameBuilder::setRoi( const Roi &roi )
 {
 	m_roi = roi;
+
+	checkValid();
 }
 
 
-/*
-FrameDim& FrameBuilder::getFrameDim() {
-	return m_frame_dim;
+void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
+{
+	peaks = m_peaks;
 }
 
 
-void FrameBuilder::setFrameDim(FrameDim &frame_dim) {
-	m_frame_dim = frame_dim;
+void FrameBuilder::getPeaks( const std::vector<struct GaussPeak> &peaks )
+{
+	m_peaks = peaks;
+
+	checkValid();
 }
-*/
+
 
 #define SGM_FWHM 0.42466090014400952136075141705144  // 1/(2*sqrt(2*ln(2)))
 
@@ -150,7 +183,7 @@ void FrameBuilder::getNextFrame( unsigned char *ptr ) throw (Exception)
 			fillData<unsigned long>(ptr);
 			break;
 		default:
-			throw Exception( Hardware, NotSupported, "",
+			throw Exception( Hardware, NotSupported, "Depth",
 			                 __FILE__, __FUNCTION__, __LINE__ );
 	}
 	++m_frame_nr;

@@ -24,6 +24,8 @@ class Exception
 		  String file_name, String funct_name, int line_nr);
 
 
+	String &getErrDesc();
+
  private:
 	Layer m_layer;
 	ErrorType m_err_type;
