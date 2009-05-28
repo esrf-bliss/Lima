@@ -112,7 +112,7 @@ void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
 }
 
 
-void FrameBuilder::getPeaks( const std::vector<struct GaussPeak> &peaks )
+void FrameBuilder::setPeaks( const std::vector<struct GaussPeak> &peaks )
 {
 	m_peaks = peaks;
 
