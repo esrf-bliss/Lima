@@ -8,11 +8,14 @@ test-ext-objs = $(simu-objs)
 testsimulator-objs = testsimulator.o BufferSave.o
 testsimulator-ext-objs = $(simu-objs) $(std-objs)
 
+testsimuhwinterface-objs = testsimuhwinterface.o BufferSave.o
+testsimuhwinterface-ext-objs = $(simu-objs) $(std-objs)
+
 INC = -I../include -I../../../common/include -I../../../hardware/include 
 CXXFLAGS += $(INC) -Wall -pthread
 LDFLAGS = -pthread
 
-all: 	clean test testsimulator
+all: 	clean test testsimulator testsimuhwinterface
 
 test:	$(test-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(test-ext-objs) $(std-objs)
@@ -20,11 +23,11 @@ test:	$(test-objs)
 testsimulator: $(testsimulator-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(testsimulator-ext-objs) 
 
-clean: test-clean testsimulator-clean
+testsimuhwinterface: $(testsimuhwinterface-objs)
+	$(CXX) $(LDFLAGS) -o $@ $+ $(testsimuhwinterface-ext-objs) 
 
-test-clean:
+clean: 
 	rm -f $(test-objs) test *.edf
-
-testsimulator-clean:
 	rm -f $(testsimulator-objs) testsimulator
+	rm -f $(testsimuhwinterface-objs) testsimuhwinterface
 

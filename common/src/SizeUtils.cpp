@@ -1,9 +1,7 @@
 #include "SizeUtils.h"
 
 using namespace lima;
-
-using std::min;
-using std::max;
+using namespace std;
 
 
 /*******************************************************************
@@ -23,6 +21,22 @@ void Point::alignTo(const Point& p, AlignDir align_dir)
 	*this *= p;
 }
 
+ostream& lima::operator <<(ostream& os, const Point& p)
+{
+	return os << "<" << p.x << "," << p.y << ">";
+}
+
+
+ostream& lima::operator <<(ostream& os, const Size& s)
+{
+	return os << "<" << s.getWidth() << "x" << s.getHeight() << ">";
+}
+
+ostream& lima::operator <<(ostream& os, const Bin& bin)
+{
+	return os << "<" << bin.getX() << "x" << bin.getY() << ">";
+}
+
 
 /*******************************************************************
  * \brief Set the roi by giving to arbitrary (diagonal) corners
@@ -39,6 +53,11 @@ void Roi::setCorners(const Point& p1, const Point& p2)
 	m_top_left = checkCorner(Point(x1, y1));
 	Point bottom_right = Point(x2, y2);
 	m_size = bottom_right + 1 - m_top_left;
+}
+
+ostream& lima::operator <<(ostream& os, const Roi& roi)
+{
+	return os << roi.getTopLeft() << "-" << roi.getSize();
 }
 
 int FrameDim::getImageTypeBpp(ImageType type)
@@ -72,9 +91,9 @@ int FrameDim::getImageTypeDepth(ImageType type)
 	}
 }
 
-
-Roi::Roi()
+ostream& lima::operator <<(ostream& os, const FrameDim& fdim)
 {
-	m_top_left = Point(0, 0);
-	m_size = Size(0, 0);
+	const Size& size = fdim.getSize();
+	return os << "<" << size.getWidth() << "x" << size.getHeight() << "x"
+		  << fdim.getDepth() << "-" << fdim.getImageType() << ">";
 }

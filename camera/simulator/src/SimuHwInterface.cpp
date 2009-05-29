@@ -20,12 +20,12 @@ void SimuDetInfoCtrlObj::getMaxImageSize(Size& max_image_size)
 {
 	FrameDim fdim;
 	m_simu.getFrameDim(fdim);
-	det_image_size = fdim.getSize();
+	max_image_size = fdim.getSize();
 }
 
 void SimuDetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
 {
-	m_simu.getMaxImageSize(max_image_size);
+	m_simu.getMaxImageSize(det_image_size);
 }
 
 void SimuDetInfoCtrlObj::getDefImageType(ImageType& def_image_type)
@@ -231,14 +231,14 @@ void SimuSyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 SimuHwInterface::SimuHwInterface(Simulator& simu)
 	: m_simu(simu), m_det_info(simu), m_buffer(simu), m_sync(simu)
 {
-	HwCap cap = HwCap(HwCap::DetInfo, &m_det_info);
-	m_cap_list.push_back(cap);
+	HwDetInfoCtrlObj *det_info = &m_det_info;
+	m_cap_list.push_back(HwCap(det_info));
 
-	cap = HwCap(HwCap::Buffer, &m_buffer);
-	m_cap_list.push_back(cap);
+	HwBufferCtrlObj *buffer = &m_buffer;
+	m_cap_list.push_back(HwCap(buffer));
 
-	cap = HwCap(HwCap::Sync, &m_sync);
-	m_cap_list.push_back(cap);
+	HwSyncCtrlObj *sync = &m_sync;
+	m_cap_list.push_back(HwCap(sync));
 }
 
 SimuHwInterface::~SimuHwInterface()

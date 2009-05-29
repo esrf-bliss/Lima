@@ -1,21 +1,25 @@
 #include "HwCap.h"
 
-using namespace lima;
-
-HwCap::HwCap(Type type, void *ctrl_obj)
+namespace lima
 {
-	m_type = type;
-	m_ctrl_obj = ctrl_obj;
+
+
+template <>
+HwCap::Type HwCap::getTypeFromCtrlObj<>(HwDetInfoCtrlObj *p)
+{
+	return DetInfo;
 }
 
-HwCap::Type HwCap::getType() const
+template <>
+HwCap::Type HwCap::getTypeFromCtrlObj<>(HwBufferCtrlObj *p)
 {
-	return m_type;
+	return Buffer;
 }
 
-void *HwCap::getCtrlObj() const
+template <>
+HwCap::Type HwCap::getTypeFromCtrlObj<>(HwSyncCtrlObj *p)
 {
-	return m_ctrl_obj;
+	return Sync;
 }
 
-
+} // namespace lima

@@ -1,6 +1,10 @@
 #ifndef HWFRAMEINFO_H
 #define HWFRAMEINFO_H
 
+#include "SizeUtils.h"
+#include "Timestamp.h"
+#include <ostream>
+
 namespace lima
 {
 
@@ -28,6 +32,7 @@ typedef struct HwFrameInfo {
 		  frame_timestamp(timestamp), valid_pixels(pixels) {}
 } HwFrameInfoType;
 
+std::ostream& operator <<(std::ostream& os, const HwFrameInfoType& info);
 
 }
 

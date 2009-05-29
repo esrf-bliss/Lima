@@ -3,6 +3,7 @@
 
 #include "HwCap.h"
 #include <vector>
+#include <ostream>
 
 namespace lima
 {
@@ -41,8 +42,10 @@ class HwInterface
 	HwInterface();
 	virtual ~HwInterface();
 
-	const HwCap *getCapOfType(HwCap::Type cap_type) const;
 	virtual const CapList& getCapList() const = 0;
+
+	template <class CtrlObj>
+	bool getHwCtrlObj(CtrlObj *& ctrl_obj_ptr) const;
 
 	virtual void reset(ResetLevel reset_level) = 0;
 	virtual void prepareAcq() = 0;
@@ -51,6 +54,28 @@ class HwInterface
 	virtual void getStatus(StatusType& status) = 0;
 	virtual int getNbAcquiredFrames() = 0;
 };
+
+template <class CtrlObj>
+bool HwInterface::getHwCtrlObj(CtrlObj *& ctrl_obj) const
+{
+	const CapList& cap_list = getCapList();
+
+	typedef CapList::const_iterator It;
+	for (It i = cap_list.begin(); i != cap_list.end(); ++i)
+		if (i->getCtrlObj(ctrl_obj))
+			return true;
+
+	ctrl_obj = NULL;
+	return false;
+}
+
+std::ostream& operator <<(std::ostream& os, 
+			  HwInterface::AcqStatus acq_status);
+std::ostream& operator <<(std::ostream& os, 
+			  HwInterface::DetStatus det_status);
+std::ostream& operator <<(std::ostream& os, 
+			  const HwInterface::StatusType& status);
+
 
 } // namespace lima
 

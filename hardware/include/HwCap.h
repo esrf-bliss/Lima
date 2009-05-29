@@ -1,6 +1,8 @@
 #ifndef HWCAP_H
 #define HWCAP_H
 
+#include "Constants.h"
+
 namespace lima
 {
 
@@ -16,10 +18,23 @@ public:
 		SerialLine, 		// Generic detector serial line
 	};
 
-	HwCap(Type type, void *ctrl_obj);
+	template <class CtrlObj>
+	HwCap(CtrlObj *ctrl_obj) : m_ctrl_obj(ctrl_obj)
+	{ m_type = getTypeFromCtrlObj(ctrl_obj); }
 
-	Type getType() const;
-	void *getCtrlObj() const;
+	Type getType() const
+	{ return m_type; }
+
+	template <class CtrlObj>
+	static Type getTypeFromCtrlObj(CtrlObj *ctrl_obj);
+
+	template <class CtrlObj>
+	bool getCtrlObj(CtrlObj *& ctrl_obj) const
+	{ 
+		bool ok = (m_type == getTypeFromCtrlObj(ctrl_obj));
+		ctrl_obj = ok ? (CtrlObj *) m_ctrl_obj : NULL;
+		return ok;
+	}
 
  private:
 	Type m_type;
@@ -31,5 +46,6 @@ public:
 #include "HwDetInfoCtrlObj.h"
 #include "HwBufferCtrlObj.h"
 #include "HwSyncCtrlObj.h"
+
 
 #endif // HWCAP_H

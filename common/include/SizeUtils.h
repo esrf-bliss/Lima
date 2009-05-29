@@ -3,6 +3,7 @@
 
 #include "Constants.h"
 #include "Exceptions.h"
+#include <ostream>
 
 namespace lima
 {
@@ -95,6 +96,8 @@ inline bool operator !=(const Point& p1, const Point& p2)
 	return !(p1 == p2);
 }
 
+std::ostream& operator <<(std::ostream& os, const Point& p);
+
 
 /*******************************************************************
  * \class Size
@@ -157,6 +160,8 @@ inline Point Size::checkValid(const Point& p)
 	return p;
 }
 
+std::ostream& operator <<(std::ostream& os, const Size& s);
+
 
 /*******************************************************************
  * \class Bin
@@ -216,6 +221,8 @@ inline Point Bin::checkValid(const Point& p)
 	return p;
 }
 
+std::ostream& operator <<(std::ostream& os, const Bin& bin);
+
 
 /*******************************************************************
  * \class Roi
@@ -228,7 +235,8 @@ inline Point Bin::checkValid(const Point& p)
 class Roi
 {
  public:
-	Roi();
+	Roi() {}
+
 	Roi(const Point& top_left, const Size& size)
 		: m_top_left(checkCorner(top_left)),
 		  m_size(size) {}
@@ -377,6 +385,8 @@ inline bool operator !=(const Roi& r1, const Roi& r2)
 	return !(r1 == r2);
 }
 
+std::ostream& operator <<(std::ostream& os, const Roi& roi);
+
 
 /*******************************************************************
  * \class FrameDim
@@ -523,6 +533,9 @@ inline FrameDim operator /(const FrameDim& fdim, const Bin& bin)
 	FrameDim bin_fdim = fdim;
 	return bin_fdim /= bin;
 }
+
+std::ostream& operator <<(std::ostream& os, const FrameDim& fdim);
+
 
 } // namespace lima
 
