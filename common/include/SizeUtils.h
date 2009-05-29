@@ -179,6 +179,12 @@ class Bin
 	int getY() const
 	{ return m_xy.y; }
 
+	bool isOne() const
+	{ return ((m_xy.x==1) && (m_xy.y==1)); }
+
+	void reset()
+	{ m_xy.x= 1; m_xy.y= 1; }
+
 	operator Point() const
 	{ return m_xy; }
 
@@ -240,6 +246,9 @@ class Roi
 	const Point& getTopLeft() const;
 	const Size& getSize() const;
 
+	bool isEmpty() const;
+	void reset();
+
 	Point getTopRight() const;
 	Point getBottomLeft() const;
 	Point getBottomRight() const;
@@ -263,6 +272,18 @@ class Roi
 	Point m_top_left;
 	Size m_size;
 };
+
+inline bool Roi::isEmpty() const
+{
+	return m_size.isEmpty();
+}
+
+inline void Roi::reset()
+{
+	m_top_left.x= 0;
+	m_top_left.y= 0;
+	m_size= Size(0,0);
+}
 
 inline Roi& Roi::operator =(const Roi& r)
 { 
