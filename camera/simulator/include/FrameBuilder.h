@@ -39,6 +39,8 @@ class FrameBuilder {
 	unsigned long getFrameNr();
 	void resetFrameNr( int frame_nr=0 );
 
+	void getMaxImageSize(Size& max_size);
+
   private:
 	FrameDim m_frame_dim;
 	Bin m_bin;
@@ -48,7 +50,9 @@ class FrameBuilder {
 
 	unsigned long m_frame_nr;
 
-	void checkValid() throw(Exception);
+	void checkValid( const FrameDim &frame_dim, const Bin &bin, 
+	                 const Roi &roi ) throw(Exception);
+	void checkPeaks( std::vector<struct GaussPeak> const &peaks );
 	double dataXY( int x, int y );
 	template <class depth> void fillData( unsigned char *ptr );
 };

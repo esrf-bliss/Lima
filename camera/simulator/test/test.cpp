@@ -23,9 +23,13 @@ int main( void )
 	Bin bin = Bin(2,2);
 	fb.setBin(bin);
 
-	FrameDim fd = full_fd / bin;
+//	Roi roi = Roi(Point(128, 128), Point(384, 384));
+//	fb.setRoi(roi);
+
+	FrameDim fd = full_fd/bin;
+//	FrameDim fd = FrameDim(roi.getSize(), full_fd.getImageType());
 	
-	BufferSave bs(BufferSave::EDF, "boza");
+	BufferSave bs(BufferSave::EDF, "test");
 	bs.setTotFileFrames(1);
 
 	int size = fd.getMemSize();

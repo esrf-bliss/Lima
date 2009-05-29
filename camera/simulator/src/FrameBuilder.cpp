@@ -14,8 +14,8 @@ FrameBuilder::FrameBuilder()
 {
 	m_frame_dim = FrameDim(1024, 1024, Bpp16);
 	m_bin = Bin(1,1);
-	m_roi = Roi(0, Size(0,0));  // Or the whole frame ???
-	GaussPeak p={512, 512, 100, 100}; // Binned or unbinned ???
+	m_roi = Roi(0, Size(0,0));  // Or the whole frame?
+	GaussPeak p={512, 512, 100, 100}; // in unbinned units!
 	m_peaks.push_back(p);
 	m_grow_factor = 1.00;
 	m_frame_nr = 0;
@@ -23,15 +23,18 @@ FrameBuilder::FrameBuilder()
 
 
 FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
-                            std::vector<struct GaussPeak> &peaks,
+                            vector<struct GaussPeak> &peaks,
                             double grow_factor ):
-	m_frame_dim(frame_dim), 
-	m_bin(bin), 
-	m_roi(roi),
-	m_peaks(peaks), 
 	m_grow_factor(grow_factor)
 {
-	checkValid();
+	checkValid(frame_dim, bin, roi);
+	checkPeaks(peaks);
+
+	m_frame_dim = frame_dim;
+	m_bin = bin; 
+	m_roi = roi;
+	m_peaks = peaks;
+
 	m_frame_nr = 0;
 }
 
@@ -41,25 +44,38 @@ FrameBuilder::~FrameBuilder()
 }
 
 
-void FrameBuilder::checkValid() throw(Exception)
+void FrameBuilder::checkValid( const FrameDim &frame_dim, const Bin &bin, 
+                               const Roi &roi ) throw(Exception)
 {
-	FrameDim bin_dim = m_frame_dim / m_bin;
+	Size max_size;
+	getMaxImageSize( max_size );
 
-	Roi roi;
-	if( m_roi.getSize() != 0 ) {
-		bin_dim.checkValidRoi(m_roi);
-		roi= m_roi;
-	} else {
-		roi = Roi(0, bin_dim.getSize());
+	if( (frame_dim.getSize().getWidth()  > max_size.getWidth()) ||
+	    (frame_dim.getSize().getHeight() > max_size.getHeight()) )
+		throw Exception( Hardware, InvalidValue, "Frame size too big",
+		                 __FILE__, __FUNCTION__, __LINE__ );
+
+	FrameDim bin_dim = frame_dim / bin;
+
+	if( roi.getSize() != 0 ) {
+		bin_dim.checkValidRoi(roi);
 	}
+}
 
-	// Check that the peaks set are compatible with the RoI
-	vector<GaussPeak>::iterator p;
-	for( p = m_peaks.begin( ); p != m_peaks.end( ); ++p) {
+
+void FrameBuilder::checkPeaks( std::vector<struct GaussPeak> const &peaks )
+{
+	Size max_size;
+	getMaxImageSize(max_size);
+	Roi roi = Roi(0, max_size);
+	
+	vector<GaussPeak>::const_iterator p;
+	for( p = peaks.begin( ); p != peaks.end( ); ++p ) {
 		if( ! roi.containsPoint(Point(p->x0, p->y0)) )
-			throw Exception( Hardware, InvalidValue, "Peak",
+			throw Exception( Hardware, InvalidValue, "Peak too far",
 			                 __FILE__, __FUNCTION__, __LINE__ );
 	}
+	
 }
 
 
@@ -71,10 +87,11 @@ void FrameBuilder::getFrameDim( FrameDim &dim ) const
 
 void FrameBuilder::setFrameDim( const FrameDim &dim )
 {
+	checkValid(dim, m_bin, m_roi);
+
 	m_frame_dim = dim;
 
-	// Reset Bin and RoI or just check validity?
-	checkValid();
+	// Reset Bin and RoI?
 }
 
 
@@ -86,9 +103,9 @@ void FrameBuilder::getBin( Bin &bin ) const
 
 void FrameBuilder::setBin( const Bin &bin )
 {
-	m_bin = bin;
+	checkValid(m_frame_dim, bin, m_roi);
 
-	checkValid();
+	m_bin = bin;
 }
 
 
@@ -100,9 +117,9 @@ void FrameBuilder::getRoi( Roi &roi ) const
 
 void FrameBuilder::setRoi( const Roi &roi )
 {
-	m_roi = roi;
+	checkValid(m_frame_dim, m_bin, roi);
 
-	checkValid();
+	m_roi = roi;
 }
 
 
@@ -114,9 +131,9 @@ void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
 
 void FrameBuilder::setPeaks( const std::vector<struct GaussPeak> &peaks )
 {
-	m_peaks = peaks;
+	checkPeaks(peaks);
 
-	checkValid();
+	m_peaks = peaks;
 }
 
 
@@ -145,7 +162,7 @@ double FrameBuilder::dataXY( int x, int y )
 template <class depth> 
 void FrameBuilder::fillData( unsigned char *ptr )
 {
-	int x, bx, y, by;
+	int x, bx, bx0, bxM, y, by, by0, byM;
 	int binX = m_bin.getX();
 	int binY = m_bin.getY();
 	int width = m_frame_dim.getSize().getWidth();
@@ -153,10 +170,21 @@ void FrameBuilder::fillData( unsigned char *ptr )
 	depth *p = (depth *) ptr;
 	double data, max;
 
+	if( m_roi.getSize() != 0 ) {
+		bx0 = m_roi.getTopLeft().x;
+		bxM = m_roi.getBottomRight().x;
+		by0 = m_roi.getTopLeft().y;
+		byM = m_roi.getBottomRight().y;
+	} else {
+		bx0 = by0 = 0;
+		bxM = width/binX;
+		byM = height/binY;
+	}
+
 
 	max = (double) ((depth) -1);
-	for( by=0; by<height/binY; by++ ) {
-		for( bx=0; bx<width/binX; bx++ ) {
+	for( by=by0; by<byM; by++ ) {
+		for( bx=bx0; bx<bxM; bx++ ) {
 			data = 0.0;
 			for( y=by*binY; y<by*binY+binY; y++ ) {
 				for( x=bx*binX; x<bx*binX+binX; x++ ) {
@@ -199,4 +227,11 @@ void FrameBuilder::resetFrameNr( int frame_nr )
 unsigned long FrameBuilder::getFrameNr()
 {
 	return m_frame_nr;
+}
+
+
+void FrameBuilder::getMaxImageSize(Size& max_size)
+{
+	int max_dim = 8 * 1024;
+	max_size = Size(max_dim, max_dim);
 }
