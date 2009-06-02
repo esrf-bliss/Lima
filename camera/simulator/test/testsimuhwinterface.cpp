@@ -38,7 +38,7 @@ void print_status(SimuHwInterface& simu_hw)
 	cout << "status=" << status << endl;
 }
 
-int main(int argc, char *argv[])
+void test_simu_hw_interface()
 {
 	Simulator simu;
 	SimuHwInterface simu_hw(simu);
@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
 	HwSyncCtrlObj *hw_sync;
 	simu_hw.getHwCtrlObj(hw_sync);
 
-//	HwBinCtrlObj *hw_bin;
-//	simu_hw.getCtrlObj(hw_bin);
+	HwBinCtrlObj *hw_bin;
+	simu_hw.getHwCtrlObj(hw_bin);
 
 	Size size;
 	hw_det_info->getMaxImageSize(size);
@@ -63,9 +63,8 @@ int main(int argc, char *argv[])
 	hw_det_info->getCurrImageType(image_type);
 	FrameDim frame_dim(size, image_type);
 
-	Bin bin;
-//	if (hw_bin)
-//		hw_bin->getBin(bin);
+	Bin bin(1);
+	hw_bin->setBin(bin);
 
 	FrameDim effect_frame_dim = frame_dim / bin;
 	hw_buffer->setFrameDim(effect_frame_dim);
@@ -94,6 +93,39 @@ int main(int argc, char *argv[])
 	print_status(simu_hw);
 	simu_hw.stopAcq();
 	print_status(simu_hw);
+
+	bool raised_exception = false;
+	try {
+		bin = Bin(2, 1);
+		hw_bin->setBin(bin);
+	} catch (Exception) {
+		raised_exception = true;
+	}
+	if (raised_exception)
+		cout << "Exception was raised OK!" << endl;
+	else
+		throw LIMA_HW_EXC(Error, "Did not raise bad bin exception");
+
+	bin = Bin(2, 2);
+	hw_bin->setBin(bin);
+	effect_frame_dim = frame_dim / bin;
+	hw_buffer->setFrameDim(effect_frame_dim);
+	hw_buffer->setNbBuffers(10);
+
+	print_status(simu_hw);
+	simu_hw.startAcq();
+	print_status(simu_hw);
+	simu_hw.stopAcq();
+	print_status(simu_hw);
+}
+
+int main(int argc, char *argv[])
+{
+	try {
+		test_simu_hw_interface();
+	} catch (Exception e) {
+		cerr << "LIMA Exception:" << e << endl;
+	}
 
 	return 0;
 }

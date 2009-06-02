@@ -51,7 +51,7 @@ int main( void )
 	return 0;
 
   } catch (Exception &e) {
-  	cout << "Exception: " << e.getErrDesc() << endl;
+  	cerr << e << endl;
 	return -1;
   }
 }

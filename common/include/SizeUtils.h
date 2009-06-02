@@ -141,6 +141,9 @@ class Size
 	Size& operator /=(const Point& p)
 	{ m_xy = checkValid(m_xy / p); return *this; }
 
+	void alignTo(const Point& p, AlignDir align_dir)
+	{ m_xy.alignTo(p, align_dir); }
+
  private:
 	static bool isValidCoord(int i);
 	static Point checkValid(const Point& p);
@@ -273,6 +276,9 @@ class Roi
 
 	bool isActive() const;
 
+	void alignSizeTo(const Point& p, AlignDir align_dir);
+	void alignCornersTo(const Point& p, AlignDir align_dir);
+
  private:
 	static bool isValidCoord(int i);
 	static Point checkCorner(const Point& TopLeft);
@@ -371,6 +377,21 @@ inline Roi Roi::getUnbinned(const Bin& b) const
 inline bool Roi::isActive() const
 {
 	return !m_size.isEmpty();
+}
+
+inline void Roi::alignSizeTo(const Point& p, AlignDir align_dir)
+{
+	
+	m_size.alignTo(p, align_dir);
+}
+
+inline void Roi::alignCornersTo(const Point& p, AlignDir align_dir)
+{
+	Point br = getBottomRight() + 1;
+	AlignDir tl_align_dir = (align_dir == Floor) ? Ceil : Floor;
+	m_top_left.alignTo(p, tl_align_dir);
+	br.alignTo(p, align_dir);
+	m_size = br - m_top_left;
 }
 
 

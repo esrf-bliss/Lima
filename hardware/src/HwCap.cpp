@@ -22,4 +22,10 @@ HwCap::Type HwCap::getTypeFromCtrlObj<>(HwSyncCtrlObj *p)
 	return Sync;
 }
 
+template <>
+HwCap::Type HwCap::getTypeFromCtrlObj<>(HwBinCtrlObj *p)
+{
+	return Bin;
+}
+
 } // namespace lima

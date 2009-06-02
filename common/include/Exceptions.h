@@ -2,6 +2,7 @@
 #define EXCEPTIONS_H
 
 #include <string>
+#include <ostream>
 
 namespace lima
 {
@@ -24,7 +25,7 @@ class Exception
 		  String file_name, String funct_name, int line_nr);
 
 
-	String &getErrDesc();
+	String getErrMsg() const;
 
  private:
 	Layer m_layer;
@@ -34,6 +35,10 @@ class Exception
 	String m_funct_name;
 	int m_line_nr;
 };
+
+std::ostream& operator <<(std::ostream& os, Layer layer);
+std::ostream& operator <<(std::ostream& os, ErrorType err_type);
+std::ostream& operator <<(std::ostream& os, const Exception& e);
 
 
 #define LIMA_EXC(layer, err_type, err_desc) \

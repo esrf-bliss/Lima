@@ -28,6 +28,7 @@ class FrameBuilder {
 
 	void getBin( Bin &bin ) const;
 	void setBin( const Bin &bin );
+	void checkBin( Bin &bin ) const;
 
 	void getRoi( Roi &roi ) const;
 	void setRoi( const Roi &roi );

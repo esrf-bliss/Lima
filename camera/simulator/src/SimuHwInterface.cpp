@@ -225,11 +225,41 @@ void SimuSyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 
 
 /*******************************************************************
+ * \brief SimuBinCtrlObj constructor
+ *******************************************************************/
+
+SimuBinCtrlObj::SimuBinCtrlObj(Simulator& simu)
+	: m_simu(simu)
+{
+}
+
+SimuBinCtrlObj::~SimuBinCtrlObj()
+{
+}
+
+void SimuBinCtrlObj::setBin(const Bin& bin)
+{
+	m_simu.setBin(bin);
+}
+
+void SimuBinCtrlObj::getBin(Bin& bin)
+{
+	m_simu.getBin(bin);
+}
+
+void SimuBinCtrlObj::checkBin(Bin& bin)
+{
+	m_simu.checkBin(bin);
+}
+
+
+/*******************************************************************
  * \brief SimuHwInterface constructor
  *******************************************************************/
 
 SimuHwInterface::SimuHwInterface(Simulator& simu)
-	: m_simu(simu), m_det_info(simu), m_buffer(simu), m_sync(simu)
+	: m_simu(simu), m_det_info(simu), m_buffer(simu), m_sync(simu),
+	  m_bin(simu)
 {
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));
@@ -239,6 +269,9 @@ SimuHwInterface::SimuHwInterface(Simulator& simu)
 
 	HwSyncCtrlObj *sync = &m_sync;
 	m_cap_list.push_back(HwCap(sync));
+
+	HwBinCtrlObj *bin = &m_bin;
+	m_cap_list.push_back(HwCap(bin));
 }
 
 SimuHwInterface::~SimuHwInterface()

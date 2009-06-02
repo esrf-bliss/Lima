@@ -50,10 +50,14 @@ void FrameBuilder::checkValid( const FrameDim &frame_dim, const Bin &bin,
 	Size max_size;
 	getMaxImageSize( max_size );
 
+	Bin valid_bin = bin;
+	checkBin(valid_bin);
+	if (valid_bin != bin)
+		throw LIMA_HW_EXC(InvalidValue, "Invalid bin");
+
 	if( (frame_dim.getSize().getWidth()  > max_size.getWidth()) ||
 	    (frame_dim.getSize().getHeight() > max_size.getHeight()) )
-		throw Exception( Hardware, InvalidValue, "Frame size too big",
-		                 __FILE__, __FUNCTION__, __LINE__ );
+		throw LIMA_HW_EXC(InvalidValue, "Frame size too big");
 
 	FrameDim bin_dim = frame_dim / bin;
 
@@ -108,6 +112,14 @@ void FrameBuilder::setBin( const Bin &bin )
 	m_bin = bin;
 }
 
+
+void FrameBuilder::checkBin( Bin &bin ) const
+{
+	if ((bin == Bin(1,1)) || (bin == Bin(1,2)) || (bin == Bin(2,1)))
+		bin = Bin(1,1);
+	else
+		bin = Bin(2,2);
+}
 
 void FrameBuilder::getRoi( Roi &roi ) const
 {

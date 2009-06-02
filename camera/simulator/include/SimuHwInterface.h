@@ -111,6 +111,26 @@ class SimuSyncCtrlObj : public HwSyncCtrlObj
 
 
 /*******************************************************************
+ * \class SimuBinCtrlObj
+ * \brief Control object providing simulator binning interface
+ *******************************************************************/
+
+class SimuBinCtrlObj : public HwBinCtrlObj
+{
+ public:
+	SimuBinCtrlObj(Simulator& simu);
+	virtual ~SimuBinCtrlObj();
+
+	virtual void setBin(const Bin& bin);
+	virtual void getBin(Bin& bin);
+	virtual void checkBin(Bin& bin);
+
+ private:
+	Simulator& m_simu;
+};
+
+
+/*******************************************************************
  * \class SimuHwInterface
  * \brief Simulator hardware interface
  *******************************************************************/
@@ -136,6 +156,7 @@ class SimuHwInterface : public HwInterface
 	SimuDetInfoCtrlObj m_det_info;
 	SimuBufferCtrlObj  m_buffer;
 	SimuSyncCtrlObj    m_sync;
+	SimuBinCtrlObj     m_bin;
 };
 
 }

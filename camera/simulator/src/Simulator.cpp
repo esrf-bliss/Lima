@@ -113,8 +113,7 @@ BufferCtrlMgr& Simulator::getBufferMgr()
 
 void Simulator::getMaxImageSize(Size& max_image_size)
 {
-	int max_dim = 8 * 1024;
-	max_image_size = Size(max_dim, max_dim);
+	m_frame_builder.getMaxImageSize(max_image_size);
 }
 
 void Simulator::setNbFrames(int nb_frames)
@@ -164,6 +163,11 @@ void Simulator::setBin(const Bin& bin)
 void Simulator::getBin(Bin& bin)
 {
 	m_frame_builder.getBin(bin);
+}
+
+void Simulator::checkBin(Bin& bin)
+{
+	m_frame_builder.checkBin(bin);
 }
 
 void Simulator::setFrameDim(const FrameDim& frame_dim)
