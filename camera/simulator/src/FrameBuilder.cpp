@@ -121,6 +121,7 @@ void FrameBuilder::checkBin( Bin &bin ) const
 		bin = Bin(2,2);
 }
 
+
 void FrameBuilder::getRoi( Roi &roi ) const
 {
 	roi = m_roi;
@@ -184,15 +185,14 @@ void FrameBuilder::fillData( unsigned char *ptr )
 
 	if( m_roi.getSize() != 0 ) {
 		bx0 = m_roi.getTopLeft().x;
-		bxM = m_roi.getBottomRight().x;
+		bxM = m_roi.getBottomRight().x+1;
 		by0 = m_roi.getTopLeft().y;
-		byM = m_roi.getBottomRight().y;
+		byM = m_roi.getBottomRight().y+1;
 	} else {
 		bx0 = by0 = 0;
 		bxM = width/binX;
 		byM = height/binY;
 	}
-
 
 	max = (double) ((depth) -1);
 	for( by=by0; by<byM; by++ ) {
