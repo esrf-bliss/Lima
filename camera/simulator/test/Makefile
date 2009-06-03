@@ -2,13 +2,13 @@
 std-objs = ../../../common/src/Common.o ../../../hardware/src/Hw.o
 simu-objs = ../src/Simu.o
 
-test-objs = test.o BufferSave.o
+test-objs = test.o
 test-ext-objs = $(simu-objs)
 	
-testsimulator-objs = testsimulator.o BufferSave.o
+testsimulator-objs = testsimulator.o
 testsimulator-ext-objs = $(simu-objs) $(std-objs)
 
-testsimuhwinterface-objs = testsimuhwinterface.o BufferSave.o
+testsimuhwinterface-objs = testsimuhwinterface.o
 testsimuhwinterface-ext-objs = $(simu-objs) $(std-objs)
 
 INC = -I../include -I../../../common/include -I../../../hardware/include 

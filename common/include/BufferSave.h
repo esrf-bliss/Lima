@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
-#include "FrameBuilder.h"
-#include "HwFrameCallback.h"
+#include "HwFrameInfo.h"
 
 namespace lima {
 
