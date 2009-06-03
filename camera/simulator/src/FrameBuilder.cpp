@@ -136,6 +136,12 @@ void FrameBuilder::setRoi( const Roi &roi )
 }
 
 
+void FrameBuilder::checkRoi( Roi &roi ) const
+{
+	roi.alignCornersTo(8, Ceil);
+}
+
+
 void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
 {
 	peaks = m_peaks;
@@ -147,6 +153,19 @@ void FrameBuilder::setPeaks( const std::vector<struct GaussPeak> &peaks )
 	checkPeaks(peaks);
 
 	m_peaks = peaks;
+}
+
+
+void FrameBuilder::getGrowFactor( double &grow_factor ) const
+{
+	grow_factor = m_grow_factor;
+}
+
+
+void FrameBuilder::setGrowFactor( const double &grow_factor )
+{
+	// Any restrictions?
+	m_grow_factor = grow_factor;
 }
 
 

@@ -24,6 +24,7 @@ int main( void )
 	fb.setBin(bin);
 
 	Roi roi = Roi(Point(128, 128), Point(384, 384));
+	fb.checkRoi(roi);
 	fb.setRoi(roi);
 
 //	FrameDim fd = full_fd/bin;

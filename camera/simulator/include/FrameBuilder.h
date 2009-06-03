@@ -32,9 +32,13 @@ class FrameBuilder {
 
 	void getRoi( Roi &roi ) const;
 	void setRoi( const Roi &roi );
+	void checkRoi( Roi &roi ) const;
 
 	void getPeaks( std::vector<struct GaussPeak> &peaks ) const;
 	void setPeaks( const std::vector<struct GaussPeak> &peaks );
+
+	void getGrowFactor( double &grow_factor ) const;
+	void setGrowFactor( const double &grow_factor );
 
 	void getNextFrame( unsigned char *ptr ) throw (Exception);
 	unsigned long getFrameNr();
