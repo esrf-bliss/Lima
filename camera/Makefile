@@ -1,6 +1,9 @@
-.PHONY: simulator
+.PHONY: simulator common
 
-all: simulator
+all: simulator common
 
 simulator:
 	make -C simulator
+
+common:
+	make -C common

@@ -15,8 +15,8 @@ using namespace std;
 #define EDF_HEADER_BUFFER_LEN	(10 * EDF_HEADER_LEN)
 
 
-BufferSave::BufferSave( FileFormat format, const String& prefix, int idx,
-			const String& suffix, bool overwrite, 
+BufferSave::BufferSave( FileFormat format, const string& prefix, int idx,
+			const string& suffix, bool overwrite, 
 			int tot_file_frames ) 
 	: m_format(format), m_prefix(prefix), m_idx(idx), m_suffix(suffix),
 	  m_overwrite(overwrite), m_tot_file_frames(tot_file_frames)
@@ -33,7 +33,7 @@ BufferSave::~BufferSave( )
 	closeFile();
 }
 
-BufferSave::String BufferSave::getDefSuffix() const
+string BufferSave::getDefSuffix() const
 {
 	return (m_format == EDF) ? ".edf" : ".raw";
 }
@@ -139,7 +139,7 @@ bool BufferSave::isFileOpen() const
 	return bool(m_fout);
 }
 
-void BufferSave::setPrefix(const String& prefix)
+void BufferSave::setPrefix(const string& prefix)
 {
 	if (prefix == m_prefix)
 		return;
@@ -150,7 +150,7 @@ void BufferSave::setPrefix(const String& prefix)
 	m_prefix = prefix;
 }
 
-void BufferSave::getPrefix(String& prefix) const
+void BufferSave::getPrefix(string& prefix) const
 {
 	prefix = m_prefix;
 }

@@ -1,6 +1,7 @@
 #include "SimuHwInterface.h"
 
 using namespace lima;
+using namespace std;
 
 /*******************************************************************
  * \brief SimuDetInfoCtrlObj constructor
@@ -53,12 +54,12 @@ void SimuDetInfoCtrlObj::getPixelSize(double& pixel_size)
 	pixel_size = 1e-6;
 }
 
-void SimuDetInfoCtrlObj::getDetectorType(std::string& det_type)
+void SimuDetInfoCtrlObj::getDetectorType(string& det_type)
 {
 	det_type = "Simulator";
 }
 
-void SimuDetInfoCtrlObj::getDetectorModel(std::string& det_model)
+void SimuDetInfoCtrlObj::getDetectorModel(string& det_model)
 {
 	det_model = "PeakGenerator";
 }

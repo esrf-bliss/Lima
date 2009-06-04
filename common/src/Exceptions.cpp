@@ -5,15 +5,15 @@
 using namespace lima;
 using namespace std;
 
-Exception::Exception(Layer layer, ErrorType err_type, String err_desc,
-		     String file_name, String funct_name, int line_nr)
+Exception::Exception(Layer layer, ErrorType err_type, string err_desc,
+		     string file_name, string funct_name, int line_nr)
 	: m_layer(layer), m_err_type(err_type), m_err_desc(err_desc),
 	  m_file_name(file_name), m_funct_name(funct_name), m_line_nr(line_nr)
 {
 }
 
 
-Exception::String Exception::getErrMsg() const
+string Exception::getErrMsg() const
 {
 	ostringstream os;
 	os << m_layer << ": " 
@@ -23,7 +23,7 @@ Exception::String Exception::getErrMsg() const
 	return os.str();
 }
 
-std::ostream& lima::operator <<(std::ostream& os, Layer layer)
+ostream& lima::operator <<(ostream& os, Layer layer)
 {
 	string name = "Unknown";
 	switch (layer) {
@@ -34,7 +34,7 @@ std::ostream& lima::operator <<(std::ostream& os, Layer layer)
 	return os << name;
 }
 
-std::ostream& lima::operator <<(std::ostream& os, ErrorType err_type)
+ostream& lima::operator <<(ostream& os, ErrorType err_type)
 {
 	string name = "Unknown";
 	switch (err_type) {
@@ -45,7 +45,7 @@ std::ostream& lima::operator <<(std::ostream& os, ErrorType err_type)
 	return os << name;
 }
 
-std::ostream& lima::operator <<(std::ostream& os, const Exception& e)
+ostream& lima::operator <<(ostream& os, const Exception& e)
 {
 	return os << e.getErrMsg();
 }

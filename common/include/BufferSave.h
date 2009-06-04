@@ -15,17 +15,16 @@ class BufferSave {
 		Raw, EDF,
 	};
 
-	typedef std::string String;
-
-	BufferSave( FileFormat format = Raw, const String& prefix = "img", 
-		    int idx = 0, const String& suffix = "", 
+	BufferSave( FileFormat format = Raw, 
+		    const std::string& prefix = "img", 
+		    int idx = 0, const std::string& suffix = "", 
 		    bool overwrite = false , int tot_file_frames = 1);
 	~BufferSave( );
 
 	void writeFrame( const HwFrameInfoType& finfo );
 
-	void setPrefix(const String& prefix);
-	void getPrefix(String& prefix) const;
+	void setPrefix(const std::string& prefix);
+	void getPrefix(std::string& prefix) const;
 
 	void setFormat(FileFormat  format);
 	void getFormat(FileFormat& format) const;
@@ -36,21 +35,21 @@ class BufferSave {
 	void setTotFileFrames(int  tot_file_frames);
 	void getTotFileFrames(int& tot_file_frames) const;
 
-	void getOpenFileName(String& file_name) const;
+	void getOpenFileName(std::string& file_name) const;
 	bool isFileOpen() const;
 
   private:
-	String getDefSuffix() const;
+	std::string getDefSuffix() const;
 	void openFile();
 	void closeFile();
 
 	void writeEdfHeader( const HwFrameInfoType& finfo );
 
 	FileFormat m_format;
-	String m_prefix;
+	std::string m_prefix;
 	int m_idx;
-	String m_suffix;
-	String m_file_name;
+	std::string m_suffix;
+	std::string m_file_name;
 	bool m_overwrite;
 	int m_written_frames;
 	int m_tot_file_frames;

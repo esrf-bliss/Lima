@@ -1,7 +1,7 @@
 #ifndef EXCEPTIONS_H
 #define EXCEPTIONS_H
 
-#include <string>
+#include <string.h>
 #include <ostream>
 
 namespace lima
@@ -19,20 +19,18 @@ enum ErrorType {
 class Exception
 {
  public:
-	typedef std::string String;
-
-	Exception(Layer layer, ErrorType err_type, String err_desc,
-		  String file_name, String funct_name, int line_nr);
+	Exception(Layer layer, ErrorType err_type, std::string err_desc,
+		  std::string file_name, std::string funct_name, int line_nr);
 
 
-	String getErrMsg() const;
+	std::string getErrMsg() const;
 
  private:
 	Layer m_layer;
 	ErrorType m_err_type;
-	String m_err_desc;
-	String m_file_name;
-	String m_funct_name;
+	std::string m_err_desc;
+	std::string m_file_name;
+	std::string m_funct_name;
 	int m_line_nr;
 };
 
