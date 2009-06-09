@@ -48,8 +48,6 @@ class SoftBufferAllocMgr : public BufferAllocMgr
 	SoftBufferAllocMgr();
 	virtual ~SoftBufferAllocMgr();
 
-	static int getSystemMem(int& mem_unit);
-	
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
 	virtual void allocBuffers(int nb_buffers, 
 				  const FrameDim& frame_dim);
@@ -102,7 +100,7 @@ class BufferCbMgr : public HwFrameCallbackGen
 	virtual void setStartTimestamp(Timestamp  start_ts) = 0;
 	virtual void getStartTimestamp(Timestamp& start_ts) = 0;
 
-	virtual void getFrameInfo(int buffer_nb, HwFrameInfoType& info) = 0;
+	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info) = 0;
 };
 
 

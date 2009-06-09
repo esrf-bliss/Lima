@@ -1,8 +1,6 @@
-#include <cstring>
 #include "HwBufferMgr.h"
-
-#include <sys/sysinfo.h>
-#include <limits.h>
+#include "MemUtils.h"
+#include <cstring>
 
 using namespace lima;
 
@@ -41,36 +39,15 @@ SoftBufferAllocMgr::~SoftBufferAllocMgr()
 	releaseBuffers();
 }
 
-int SoftBufferAllocMgr::getSystemMem(int& mem_unit)
-{
-	if (mem_unit < 0)
-		throw LIMA_HW_EXC(InvalidValue, "Invalid mem_unit value");
-
-        struct sysinfo s_info;
-	if (sysinfo(&s_info) < 0)
-		throw LIMA_HW_EXC(Error, "Error calling sysinfo");
-
-        long long tot_mem = s_info.totalram;
-	tot_mem *= s_info.mem_unit;
-
-	if (mem_unit == 0) 
-		mem_unit = s_info.mem_unit;
-
-	long long mem_blocks = tot_mem / mem_unit;
-	if (mem_blocks > INT_MAX)
-		throw LIMA_HW_EXC(Error, "Too much memory to be described "
-				  "with the given mem_unit");
-	return mem_blocks;
-}
-
 int SoftBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
 {
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
 
-	long long tot_buffers = getSystemMem(frame_size);
-	return tot_buffers * 3 / 4;
+	int tot_buffers;
+	GetSystemMem(frame_size, tot_buffers);
+	return (long long) tot_buffers * 3 / 4;
 }
 
 void SoftBufferAllocMgr::allocBuffers(int nb_buffers, 
