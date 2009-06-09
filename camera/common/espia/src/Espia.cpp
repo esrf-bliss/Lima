@@ -37,6 +37,35 @@ void Espia::close()
 	m_dev_nr = Invalid;
 }
 
+void Espia::serWrite(const string& buffer, int block_size, double block_delay, 
+		     bool no_wait)
+{
+	unsigned long len = buffer.length();
+	char *ptr = len ? (char *) buffer.data() : NULL;
+	CHECK_CALL(espia_ser_write(m_dev, ptr, &len, block_size, 
+				   sec2us(block_delay), !no_wait));
+}
+
+void Espia::serRead(string& buffer, int len, double timeout)
+{
+	buffer.resize(len);
+	char *ptr = len ? (char *) buffer.data() : NULL;
+	unsigned long ret_len = len;
+	CHECK_CALL(espia_ser_read(m_dev, ptr, &ret_len, sec2us(timeout)));
+	buffer.resize(ret_len);
+}
+
+void Espia::serReadStr(string& buffer, int len, const string& term, 
+		       double timeout)
+{
+	buffer.resize(len);
+	char *ptr = len ? (char *) buffer.data() : NULL;
+	char *term_ptr = (char *) term.data();
+	unsigned long ret_len = len;
+	CHECK_CALL(espia_ser_read_str(m_dev, ptr, &ret_len, term_ptr,
+				      term.length(), sec2us(timeout)));
+	buffer.resize(ret_len);
+}
 
 void Espia::throwError(int ret, string file, string func, int line)
 {

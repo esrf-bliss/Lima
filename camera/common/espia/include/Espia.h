@@ -21,8 +21,8 @@ class Espia
 	void serWrite(const std::string& buffer, 
 		      int block_size = 0, double block_delay = 0, 
 		      bool no_wait = false);
-	void serRead(std::string& buffer, int& len, double timeout);
-	void serReadStr(std::string& buffer, int& len, 
+	void serRead(std::string& buffer, int len, double timeout);
+	void serReadStr(std::string& buffer, int len, 
 			const std::string& term, double timeout);
 
 	static void throwError(int ret, std::string file, std::string func, 
@@ -31,7 +31,8 @@ class Espia
  private:
 	void open(int dev_nr);
 	void close();
-	
+	unsigned long sec2us(double sec);
+
 	int m_dev_nr;
 	espia_t m_dev;
 
@@ -42,8 +43,14 @@ class Espia
 		int aux_ret = (ret);					\
 		if (aux_ret < 0)					\
 			Espia::throwError(aux_ret, __FILE__,		\
-					     __FUNCTION__, __LINE__);	\
+					  __FUNCTION__, __LINE__);	\
 	} while (0)
+
+
+inline unsigned long Espia::sec2us(double sec)
+{
+	return (unsigned long) (sec * 1e6);
+}
 
 
 } // namespace lima
