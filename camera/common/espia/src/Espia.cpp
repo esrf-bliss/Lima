@@ -67,6 +67,11 @@ void Espia::serReadStr(string& buffer, int len, const string& term,
 	buffer.resize(ret_len);
 }
 
+void Espia::serFlush()
+{
+	CHECK_CALL(espia_ser_flush(m_dev));
+}
+	
 void Espia::throwError(int ret, string file, string func, int line)
 {
 	string err_desc = string("Espia: ") + espia_strerror(ret);

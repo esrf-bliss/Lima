@@ -24,6 +24,7 @@ class Espia
 	void serRead(std::string& buffer, int len, double timeout);
 	void serReadStr(std::string& buffer, int len, 
 			const std::string& term, double timeout);
+	void serFlush();
 
 	static void throwError(int ret, std::string file, std::string func, 
 			       int line);
