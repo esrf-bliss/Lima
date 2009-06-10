@@ -3,7 +3,8 @@
 
 #include "SizeUtils.h"
 #include "Exceptions.h"
-#include "HwFrameInfo.h"
+#include "ThreadUtils.h"
+#include "HwFrameCallback.h"
 
 #include "espia_lib.h"
 
@@ -16,10 +17,19 @@ class Espia
 {
  public:
 	enum {
-		Invalid = -1,
+		Invalid = SCDXIPCI_INVALID,
+		NoBlock = SCDXIPCI_NO_BLOCK,
+		BlockForever = SCDXIPCI_BLOCK_FOREVER,
 	};
 
-	Espia(int dev_nr);
+	typedef struct AcqStatus {
+		bool	acq_started;
+		bool	acq_running;
+		int	acq_run_nb;
+		int	last_acq_frame_nb;
+	} AcqStatusType;
+
+	Espia(int dev_nb);
 	~Espia();
 
 	void bufferAlloc(const FrameDim& frame_dim, int& nb_buffers,
@@ -34,6 +44,15 @@ class Espia
 	void *getAcqFramePtr(int acq_frame_nb);
 	void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info);
 
+	void setNbFrames(int  nb_frames);
+	void getNbFrames(int& nb_frames);
+
+	void startAcq();
+	void stopAcq();
+	void getAcqStatus(AcqStatusType& acq_status);
+
+	void getStartTimestamp(Timestamp& start_ts);
+
 	void serWrite(const std::string& buffer, 
 		      int block_size = 0, double block_delay = 0, 
 		      bool no_wait = false);
@@ -46,7 +65,7 @@ class Espia
 			       int line);
 
  private:
-	void open(int dev_nr);
+	void open(int dev_nb);
 	void close();
 	unsigned long sec2usec(double sec);
 	double usec2sec(unsigned long usec);
@@ -59,14 +78,31 @@ class Espia
 
 	void real2virtFrameInfo(const struct img_frame_info& real_info, 
 				HwFrameInfoType& virt_info);
+	void resetFrameInfo(struct img_frame_info& frame_info);
 
-	int m_dev_nr;
+	static int cbDispatch(struct espia_cb_data *cb_data);
+
+	void registerLastFrameCb();
+	void unregisterLastFrameCb();
+	void lastFrameCb(struct espia_cb_data *cb_data);
+
+	AutoMutex acqLock();
+
+	int m_dev_nb;
 	espia_t m_dev;
+
 	FrameDim m_frame_dim;
 	int m_nb_buffers;
 	int m_buffer_frames;
 	int m_real_frame_factor;
 	int m_real_frame_size;
+
+	Mutex m_acq_mutex;
+	int m_nb_frames;
+	bool m_started;
+	Timestamp m_start_ts;
+	struct img_frame_info m_last_frame_info;
+	int m_last_frame_cb_nr;
 };
 
 #define ESPIA_CHECK_CALL(ret)						\
@@ -112,6 +148,16 @@ inline int Espia::virtBufferNb(int real_buffer, int real_frame)
 inline int Espia::virtFrameNb (int real_buffer, int real_frame)
 {
 	return real_frame % m_buffer_frames;
+}
+
+inline void Espia::getStartTimestamp(Timestamp& start_ts)
+{
+	start_ts = m_start_ts;
+}
+
+inline AutoMutex Espia::acqLock()
+{
+	return AutoMutex(m_acq_mutex, AutoMutex::Locked);
 }
 
 } // namespace lima
