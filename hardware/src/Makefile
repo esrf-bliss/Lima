@@ -1,7 +1,8 @@
 
 hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 	   HwFrameCallback.o HwBufferCtrlObj.o HwBufferMgr.o \
-	   HwShutterCtrlObj.o HwDetInfoCtrlObj.o HwBinCtrlObj.o
+	   HwShutterCtrlObj.o HwDetInfoCtrlObj.o HwBinCtrlObj.o \
+	   HwSerialLine.o
 	
 CXXFLAGS += -I../include -I../../common/include -Wall -pthread
 
