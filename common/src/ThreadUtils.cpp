@@ -1,5 +1,6 @@
 #include "ThreadUtils.h"
 #include <errno.h>
+#include <sys/time.h>
 
 using namespace lima;
 
@@ -127,7 +128,7 @@ MutexAttr Mutex::getAttr()
 }
 
 
-Cond::Cond()
+Cond::Cond() : m_mutex(MutexAttr::Normal)
 {
 	if (pthread_cond_init(&m_cond, NULL) != 0)
 		throw LIMA_COM_EXC(Error, "Error initializing condition");
@@ -138,10 +139,31 @@ Cond::~Cond()
 	pthread_cond_destroy(&m_cond);
 }
 
-void Cond::wait(Mutex& mutex)
+/** @brief wait on cond variable
+ *  @return 
+ *  - true if ok 
+ *  - false if timeout
+ */
+bool Cond::wait(double timeout)
 {
-	if (pthread_cond_wait(&m_cond, &mutex.m_mutex) != 0)
-		throw LIMA_COM_EXC(Error, "Error waiting for condition");
+  int retcode = 0;
+  if(timeout >= 0.)
+    {
+      struct timeval now;
+      struct timespec waitTimeout;
+      int retcode = 0;
+      gettimeofday(&now,NULL);
+      waitTimeout.tv_sec = now.tv_sec + long(timeout);
+      waitTimeout.tv_nsec = (now.tv_usec * 1000) + 
+	long((timeout - long(timeout)) * 1e9);
+      retcode = pthread_cond_timedwait(&m_cond,&m_mutex.m_mutex,&waitTimeout);
+    }
+  else
+      retcode = pthread_cond_wait(&m_cond, &m_mutex.m_mutex);
+	
+  if(retcode && retcode != ETIMEDOUT)
+    throw LIMA_COM_EXC(Error, "Error waiting for condition");
+  return !retcode;
 }
 
 void Cond::signal()
@@ -150,6 +172,11 @@ void Cond::signal()
 		throw LIMA_COM_EXC(Error, "Error signaling condition");
 }
 
+void Cond::broadcast()
+{
+  if (pthread_cond_broadcast(&m_cond) != 0)
+    throw LIMA_COM_EXC(Error, "Error broadcast condition");
+}
 
 Thread::Thread()
 {
@@ -238,12 +265,12 @@ CmdThread::~CmdThread()
 
 AutoMutex CmdThread::lock()
 {
-	return AutoMutex(m_mutex, AutoMutex::Locked);
+  return AutoMutex(m_cond.mutex(), AutoMutex::Locked);
 }
 
 AutoMutex CmdThread::tryLock()
 {
-	return AutoMutex(m_mutex, AutoMutex::TryLocked);
+  return AutoMutex(m_cond.mutex(), AutoMutex::TryLocked);
 }
 
 int CmdThread::getStatus()
@@ -263,14 +290,14 @@ void CmdThread::waitStatus(int status)
 {
 	AutoMutex l = lock();
 	while (m_status != status)
-		m_cond.wait(l.mutex());
+		m_cond.wait();
 }
 
 int CmdThread::waitNotStatus(int status)
 {
 	AutoMutex l = lock();
 	while (m_status == status)
-		m_cond.wait(l.mutex());
+		m_cond.wait();
 	return m_status;
 }
 
@@ -301,7 +328,7 @@ int CmdThread::waitNextCmd()
 	AutoMutex l = lock();
 
 	while (m_cmd == None)
-		m_cond.wait(l.mutex());
+	  m_cond.wait();
 
 	int cmd = m_cmd;
 	m_cmd = None;

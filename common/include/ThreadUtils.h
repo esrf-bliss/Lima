@@ -63,12 +63,17 @@ class Cond
  public:
 	Cond();
 	~Cond();
+	
+	void acquire();
+	void release();
+	Mutex& mutex() {return m_mutex;}
 
-	void wait(Mutex& mutex);
+	bool wait(double timeout = -1.);
 	void signal();
-
+	void broadcast();
  private:
 	pthread_cond_t m_cond;
+	Mutex	       m_mutex;
 };
 
 
@@ -142,7 +147,6 @@ class CmdThread
 	void cmdLoop();
 
 	AuxThread m_thread;
-	Mutex m_mutex;
 	Cond m_cond;
 	int m_status;
 	int m_cmd;
