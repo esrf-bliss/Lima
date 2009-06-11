@@ -340,6 +340,13 @@ void Espia::serFlush()
 {
 	CHECK_CALL(espia_ser_flush(m_dev));
 }
+
+void Espia::serGetAvailableBytes(int& available_bytes)
+{
+	unsigned long ret_bytes = 0;
+	CHECK_CALL(espia_ser_read(m_dev, NULL, &ret_bytes, 0));
+	available_bytes = ret_bytes;
+}
 	
 void Espia::throwError(int ret, string file, string func, int line)
 {

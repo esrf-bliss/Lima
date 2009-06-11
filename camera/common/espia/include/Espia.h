@@ -60,6 +60,7 @@ class Espia
 	void serReadStr(std::string& buffer, int len, 
 			const std::string& term, double timeout);
 	void serFlush();
+	void serGetAvailableBytes(int& available_bytes);
 
 	static void throwError(int ret, std::string file, std::string func, 
 			       int line);
