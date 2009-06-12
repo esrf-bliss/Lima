@@ -5,12 +5,6 @@ using namespace lima;
 using namespace std;
 
 
-#define check_null(ptr) if( NULL == ptr ) \
-{\
-	throw LIMA_HW_EXC(InvalidValue, #ptr " is NULL");\
-}
-
-
 HwSerialLine::HwSerialLine( char line_term, double timeout ) :
 	m_line_term(line_term),
 	m_timeout(timeout)
@@ -30,23 +24,24 @@ void HwSerialLine::readStr( string& buffer, int max_len,
                             const string& term, double timeout )
 {
 	Timestamp start=Timestamp::now();
-	int match=0, n, term_len=term.length();
-	bool have_timeout = (timeout > 0);
+	int match=0, n, term_len=term.length(), len=0;
+	bool have_timeout=(timeout > 0), have_maxlen=(max_len > 0);
 	double tout=timeout;
 	string buf;
 
 	buffer = "";
-	while( ((!have_timeout) || (tout > 0)) && (buffer.length() < max_len) ) {
+	while( ((!have_timeout) || (tout > 0)) && 
+	       ((!have_maxlen) || (len < max_len)) ) {
 		n = 1;
 		read( buf, n, tout );
 		if( 0 == n )
 			break;  // ???
 		buffer += buf;
+		len += n;
 		if( 0 == term.compare(match, n, buf) ) {
 			match += n;
-			if( match == term_len ) {
+			if( match == term_len )
 				return;
-			}
 		} else {
 			match = 0;
 		}
@@ -68,16 +63,43 @@ void HwSerialLine::readLine( string& buffer, int max_len, double timeout )
 /**
  * @brief Write and then immediately Read the serial line until available?
  */
-void HwSerialLine::writeRead()
+void HwSerialLine::writeRead( const std::string& writebuffer, int block_size,
+	                      double block_delay, bool no_wait,
+	                      std::string& readbuffer, /*int max_len, ???*/
+	                      double timeout )
+
 {
+	write( writebuffer, block_size, block_delay, no_wait );
+	readAvailable( readbuffer, timeout );
+// Or:	read( readbuffer, max_len, timeout );
 }
 
 
 /**
  * @brief Write and then immediately Read the serial line until term.
  */
-void HwSerialLine::writeReadStr()
+void HwSerialLine::writeReadStr( const std::string& writebuffer, 
+	                         int block_size, double block_delay, 
+	                         bool no_wait, std::string& readbuffer, 
+	                         int max_len, const std::string& term, 
+	                         double timeout )
+
 {
+	write( writebuffer, block_size, block_delay, no_wait );
+	readStr( readbuffer, max_len, term, timeout );
+}
+
+
+/**
+ * @brief Read the serial line until there is something to read
+ */
+void HwSerialLine::readAvailable( std::string& buffer, /*int max_len, ???*/
+	                            double timeout )
+
+{
+	int max_len;
+	getAvail( max_len );
+	read( buffer, max_len, timeout );
 }
 
 
@@ -86,17 +108,12 @@ void HwSerialLine::writeReadStr()
  */
 void HwSerialLine::flush()
 {
-	// Get available
-	// Read until there is something to read and thow it away
-}
+	string buf;
+	int n=1;  // We don't want to waste memory reading all that is available
 
-
-/**
- * @brief Read the serial line until there is something to read
- */
-void HwSerialLine::readAvailable()
-{
-	// Get available
-	// Read until there is something to read
+	while( n ) {
+		n = 1;
+		read(buf, n, TMOUT_NO_BLOCK);  // timeout ???
+	}
 }
 
