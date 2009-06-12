@@ -27,23 +27,25 @@ class HwSerialLine
 	                    double block_delay=0, bool no_wait=false ) = 0;
 
 	virtual void readStr( std::string& buffer, int max_len, 
-	                      const std::string& term, double timeout );
+	                      const std::string& term, 
+	                      double timeout=TMOUT_DEFAULT );
 
-	virtual void readLine( std::string& buffer, int max_len, double timeout );
+	virtual void readLine( std::string& buffer, int max_len, 
+	                       double timeout=TMOUT_DEFAULT );
 
 	virtual void writeRead( const std::string& writebuffer, int block_size,
 	                        double block_delay, bool no_wait,
 	                        std::string& readbuffer, /*int max_len, ???*/
-	                        double timeout );
+	                        double timeout=TMOUT_DEFAULT );
 
 	virtual void writeReadStr( const std::string& writebuffer, 
 	                           int block_size, double block_delay, 
 	                           bool no_wait, std::string& readbuffer, 
 	                           int max_len, const std::string& term, 
-	                           double timeout );
+	                           double timeout=TMOUT_DEFAULT );
 
 	virtual void readAvailable( std::string& buffer, /*int max_len, ???*/
-	                            double timeout );
+	                            double timeout=TMOUT_DEFAULT );
 
 	virtual void flush();
 

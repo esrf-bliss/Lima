@@ -26,7 +26,7 @@ void HwSerialLine::readStr( string& buffer, int max_len,
 	Timestamp start=Timestamp::now();
 	int match=0, n, term_len=term.length(), len=0;
 	bool have_timeout=(timeout > 0), have_maxlen=(max_len > 0);
-	double tout=timeout;
+	double tout=((TMOUT_DEFAULT==timeout)? m_timeout: timeout);
 	string buf;
 
 	buffer = "";
@@ -99,7 +99,7 @@ void HwSerialLine::readAvailable( std::string& buffer, /*int max_len, ???*/
 {
 	int max_len;
 	getAvail( max_len );
-	read( buffer, max_len, timeout );
+	read( buffer, max_len, ((TMOUT_DEFAULT==timeout)? m_timeout: timeout) );
 }
 
 
