@@ -5,9 +5,12 @@ using namespace lima;
 using namespace std;
 
 
-HwSerialLine::HwSerialLine( char line_term, double timeout ) :
+HwSerialLine::HwSerialLine( const string& line_term, double timeout,
+                            int block_size, double block_delay ) :
 	m_line_term(line_term),
-	m_timeout(timeout)
+	m_timeout(timeout),
+	m_block_size(block_size),
+	m_block_delay(block_delay)
 {
 }
 
@@ -26,7 +29,7 @@ void HwSerialLine::readStr( string& buffer, int max_len,
 	Timestamp start=Timestamp::now();
 	int match=0, n, term_len=term.length(), len=0;
 	bool have_timeout=(timeout > 0), have_maxlen=(max_len > 0);
-	double tout=((TMOUT_DEFAULT==timeout)? m_timeout: timeout);
+	double tout=checkDefTimeout(timeout);
 	string buf;
 
 	buffer = "";
@@ -34,14 +37,15 @@ void HwSerialLine::readStr( string& buffer, int max_len,
 	       ((!have_maxlen) || (len < max_len)) ) {
 		n = 1;
 		read( buf, n, tout );
+		n = buf.length();
 		if( 0 == n )
-			break;  // ???
+			return;  // Or throw an exception?
 		buffer += buf;
 		len += n;
 		if( 0 == term.compare(match, n, buf) ) {
 			match += n;
 			if( match == term_len )
-				return;
+				return;  // Terminator found
 		} else {
 			match = 0;
 		}
@@ -56,50 +60,43 @@ void HwSerialLine::readStr( string& buffer, int max_len,
  */
 void HwSerialLine::readLine( string& buffer, int max_len, double timeout )
 {
-	readStr( buffer, max_len, string(1, m_line_term), timeout );
+	readStr( buffer, max_len, m_line_term, timeout );
 }
 
 
 /**
- * @brief Write and then immediately Read the serial line until available?
+ * @brief Write and then immediately Read the serial line.
  */
-void HwSerialLine::writeRead( const std::string& writebuffer, int block_size,
-	                      double block_delay, bool no_wait,
-	                      std::string& readbuffer, /*int max_len, ???*/
-	                      double timeout )
+void HwSerialLine::writeRead( const string& writebuffer,
+	                      string& readbuffer, int max_len,
+	                      bool wr_no_wait, double rd_timeout )
 
 {
-	write( writebuffer, block_size, block_delay, no_wait );
-	readAvailable( readbuffer, timeout );
-// Or:	read( readbuffer, max_len, timeout );
+	write( writebuffer, wr_no_wait );
+	read( readbuffer, max_len, rd_timeout );
 }
 
 
 /**
  * @brief Write and then immediately Read the serial line until term.
  */
-void HwSerialLine::writeReadStr( const std::string& writebuffer, 
-	                         int block_size, double block_delay, 
-	                         bool no_wait, std::string& readbuffer, 
-	                         int max_len, const std::string& term, 
-	                         double timeout )
+void HwSerialLine::writeReadStr( const string& writebuffer,
+                                 string& readbuffer, int max_len, 
+                                 const string& term, 
+                                 bool wr_no_wait, double rd_timeout )
 
 {
-	write( writebuffer, block_size, block_delay, no_wait );
-	readStr( readbuffer, max_len, term, timeout );
+	write( writebuffer, wr_no_wait );
+	readStr( readbuffer, max_len, term, rd_timeout );
 }
 
 
 /**
- * @brief Read the serial line until there is something to read
+ * @brief Read without blocking from the serial line.
  */
-void HwSerialLine::readAvailable( std::string& buffer, /*int max_len, ???*/
-	                            double timeout )
-
+void HwSerialLine::readAvailable( string& buffer, int max_len )
 {
-	int max_len;
-	getAvail( max_len );
-	read( buffer, max_len, ((TMOUT_DEFAULT==timeout)? m_timeout: timeout) );
+	read( buffer, max_len, TMOUT_NO_BLOCK );
 }
 
 
@@ -109,11 +106,52 @@ void HwSerialLine::readAvailable( std::string& buffer, /*int max_len, ???*/
 void HwSerialLine::flush()
 {
 	string buf;
-	int n=1;  // We don't want to waste memory reading all that is available
+	int len;
 
-	while( n ) {
-		n = 1;
-		read(buf, n, TMOUT_NO_BLOCK);  // timeout ???
-	}
+	getNumAvailBytes(len);
+	read( buf, len, TMOUT_NO_BLOCK );
 }
 
+
+void HwSerialLine::setLineTerm( const string& line_term )
+{
+	m_line_term = line_term;
+}
+
+void HwSerialLine::getLineTerm( string& line_term ) const
+{
+	line_term = m_line_term;
+}
+
+
+void HwSerialLine::setTimeout( double timeout )
+{
+	m_timeout = timeout;
+}
+
+void HwSerialLine::getTimeout( double& timeout ) const
+{
+	timeout = m_timeout;
+}
+
+
+void HwSerialLine::setBlockSize( int block_size )
+{
+	m_block_size = block_size;
+}
+
+void HwSerialLine::getBlockSize( int& block_size ) const
+{
+	block_size = m_block_size;
+}
+
+
+void HwSerialLine::setBlockDelay( double block_delay )
+{
+	m_block_delay = block_delay;
+}
+
+void HwSerialLine::getBlockDelay( double& block_delay ) const
+{
+	block_delay = m_block_delay;
+}

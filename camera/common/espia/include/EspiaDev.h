@@ -20,15 +20,6 @@ class EspiaDev : public Espia
 	void registerCallback(struct espia_cb_data& cb_data, int& cb_nr);
 	void unregisterCallback(int& cb_nr);
 
-	void serWrite(const std::string& buffer, 
-		      int block_size = 0, double block_delay = 0, 
-		      bool no_wait = false);
-	void serRead(std::string& buffer, int len, double timeout);
-	void serReadStr(std::string& buffer, int len, 
-			const std::string& term, double timeout);
-	void serFlush();
-	void serGetAvailableBytes(int& available_bytes);
-
  private:
 	void open(int dev_nb);
 	void close();

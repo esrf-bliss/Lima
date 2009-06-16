@@ -4,6 +4,7 @@
 #include <string>
 #include "Exceptions.h"
 #include "HwSerialLine.h"
+#include "EspiaDev.h"
 
 
 namespace lima {
@@ -12,18 +13,27 @@ namespace lima {
 class EspiaSerialLine : public HwSerialLine
 {
   public :
-	EspiaSerialLine( char line_term='\r', double timeout=1.0 );
+	EspiaSerialLine( EspiaDev& edev, const std::string& line_term="\r", 
+	                 double timeout=1.0, int block_size=0, 
+	                 double block_delay=0 );
+
 	~EspiaSerialLine();
 
-	void serialGetAvail( int &avail );
-	void serialRead( std::string& buffer, int& len, double timeout );
-	void serialWrite( const std::string& buffer, int block_size = 0,
-	                  double block_delay = 0, bool no_wait = false );
+	virtual void write( const std::string& buffer, bool no_wait=false );
 
-	void serialFlush();
+	virtual void read( std::string& buffer, int max_len, 
+	                   double timeout=TMOUT_DEFAULT );
+
+	virtual void readStr( std::string& buffer, int max_len, 
+	                      const std::string& term, 
+	                      double timeout=TMOUT_DEFAULT );
+
+	void flush();
+
+	virtual void getNumAvailBytes( int &avail_bytes );
 
   private :
-
+	EspiaDev& m_dev;
 };
 
 
