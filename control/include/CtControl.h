@@ -3,35 +3,40 @@
 
 #include "HwInterface.h"
 
+#include "ThreadUtils.h"
+
 namespace lima {
 
-class CtControl {
-    public:
+  class CtSaving;
+  class CtControl {
+  public:
 
-	struct ImageStatus {
-		long	LastImageAcquired;
-		long	LastBaseImageReady;
-		long	LastImageReady;
-		long	LastImageSaved;
-		long	LastCounterReady;
-	};
+    struct ImageStatus {
+      long	LastImageAcquired;
+      long	LastBaseImageReady;
+      long	LastImageReady;
+      long	LastImageSaved;
+      long	LastCounterReady;
+    };
 
-	CtControl(HwInterface *hw);
-	~CtControl();
+    CtControl(HwInterface *hw);
+    ~CtControl();
 
-	void prepareAcq();
-	void startAcq();
-	void stopAcq();
+    void prepareAcq();
+    void startAcq();
+    void stopAcq();
 
-	void getAcqStatus(); // from HW
-	void getImageStatus(ImageStatus& status) const;
+    void getAcqStatus(); // from HW
+    void getImageStatus(ImageStatus& status) const;
 
-	void reset();
+    void reset();
 
-    private:
-	HwInterface	m_hw;
-	ImageStatus	m_img_status;
-};
+  private:
+    HwInterface		m_hw;
+    mutable Cond	m_cond;
+    ImageStatus		m_img_status;
+    CtSaving		*m_ct_saving;
+  };
 
 } // namespace lima
 
