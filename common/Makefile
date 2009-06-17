@@ -1,7 +1,8 @@
-MAKE_CMD = $(MAKE) -C src
 
 all:
-	$(MAKE_CMD) all
+	$(MAKE) -C src all
+	$(MAKE) -C test all
 
 clean:
-	$(MAKE_CMD) clean
+	$(MAKE) -C src clean
+	$(MAKE) -C test clean

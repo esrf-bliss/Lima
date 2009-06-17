@@ -1,6 +1,6 @@
 
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
-               BufferSave.o MemUtils.o
+               BufferSave.o MemUtils.o RegEx.o
 	
 CXXFLAGS += -I../include -I../../hardware/include -Wall -pthread
 
