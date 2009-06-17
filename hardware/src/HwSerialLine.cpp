@@ -96,7 +96,7 @@ void HwSerialLine::writeReadStr( const string& writebuffer,
  */
 void HwSerialLine::readAvailable( string& buffer, int max_len )
 {
-	read( buffer, max_len, TMOUT_NO_BLOCK );
+	read( buffer, max_len, TimeoutNoBlock );
 }
 
 
@@ -109,7 +109,7 @@ void HwSerialLine::flush()
 	int len;
 
 	getNumAvailBytes(len);
-	read( buf, len, TMOUT_NO_BLOCK );
+	read( buf, len, TimeoutNoBlock );
 }
 
 

@@ -22,11 +22,11 @@ class EspiaSerialLine : public HwSerialLine
 	virtual void write( const std::string& buffer, bool no_wait=false );
 
 	virtual void read( std::string& buffer, int max_len, 
-	                   double timeout=TMOUT_DEFAULT );
+	                   double timeout=TimeoutDefault );
 
 	virtual void readStr( std::string& buffer, int max_len, 
 	                      const std::string& term, 
-	                      double timeout=TMOUT_DEFAULT );
+	                      double timeout=TimeoutDefault );
 
 	void flush();
 

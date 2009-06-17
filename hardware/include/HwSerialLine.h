@@ -13,9 +13,9 @@ class HwSerialLine
   public :
 
 	enum TimeoutConst {
-		TMOUT_DEFAULT = -2,
-		TMOUT_BLOCK_FOREVER = -1,
-		TMOUT_NO_BLOCK = 0
+		TimeoutDefault = -2,
+		TimeoutBlockForever = -1,
+		TimeoutNoBlock = 0
 	};
 
 	HwSerialLine( const std::string& line_term="\r", double timeout=1.0,
@@ -26,27 +26,27 @@ class HwSerialLine
 	virtual void flush();
 
 	virtual void read( std::string& buffer, int max_len, 
-	                   double timeout=TMOUT_DEFAULT ) = 0;
+	                   double timeout=TimeoutDefault ) = 0;
 
 	virtual void write( const std::string& buffer, bool no_wait=false ) = 0;
 
 	virtual void readStr( std::string& buffer, int max_len, 
 	                      const std::string& term, 
-	                      double timeout=TMOUT_DEFAULT );
+	                      double timeout=TimeoutDefault );
 
 	virtual void readLine( std::string& buffer, int max_len, 
-	                       double timeout=TMOUT_DEFAULT );
+	                       double timeout=TimeoutDefault );
 
 	virtual void writeRead( const std::string& writebuffer,
 	                        std::string& readbuffer, int max_len,
 	                        bool wr_no_wait=false, 
-	                        double rd_timeout=TMOUT_DEFAULT );
+	                        double rd_timeout=TimeoutDefault );
 
 	virtual void writeReadStr( const std::string& writebuffer, 
 	                           std::string& readbuffer, 
 	                           int max_len, const std::string& term, 
 	                           bool wr_no_wait=false,
-	                           double rd_timeout=TMOUT_DEFAULT );
+	                           double rd_timeout=TimeoutDefault );
 
 	virtual void readAvailable( std::string& buffer, int max_len );
 
@@ -76,7 +76,7 @@ class HwSerialLine
 
 inline double HwSerialLine::checkDefTimeout( double timeout )
 {
-	return (TMOUT_DEFAULT == (int)timeout)? m_timeout : timeout; // XXX
+	return (TimeoutDefault == (int)timeout)? m_timeout : timeout; // XXX
 }
 
 
