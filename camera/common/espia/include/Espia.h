@@ -16,6 +16,7 @@ class Espia
 		Invalid = SCDXIPCI_INVALID,
 		NoBlock = SCDXIPCI_NO_BLOCK,
 		BlockForever = SCDXIPCI_BLOCK_FOREVER,
+		MetaDev = SCDXIPCI_META_DEV,
 	};
 
 	unsigned long sec2usec(double sec);

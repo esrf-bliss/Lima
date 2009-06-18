@@ -106,6 +106,11 @@ inline void EspiaAcq::getStartTimestamp(Timestamp& start_ts)
 	start_ts = m_start_ts;
 }
 
+inline AutoMutex EspiaAcq::acqLock()
+{
+	return m_dev.acqLock();
+}
+
 
 
 } // namespace lima

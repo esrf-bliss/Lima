@@ -17,14 +17,16 @@ class EspiaDev : public Espia
 
 	operator espia_t();
 
+	bool isMeta();
+
 	void registerCallback(struct espia_cb_data& cb_data, int& cb_nr);
 	void unregisterCallback(int& cb_nr);
+
+	AutoMutex acqLock();
 
  private:
 	void open(int dev_nb);
 	void close();
-
-	AutoMutex acqLock();
 
 	int m_dev_nb;
 	espia_t m_dev;
@@ -37,6 +39,10 @@ inline EspiaDev::operator espia_t()
 	return m_dev; 
 }
 
+inline bool EspiaDev::isMeta()
+{
+	return (m_dev_nb == MetaDev);
+}
 
 inline AutoMutex EspiaDev::acqLock()
 {
