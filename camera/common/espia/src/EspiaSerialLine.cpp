@@ -13,7 +13,7 @@ EspiaSerialLine::EspiaSerialLine( EspiaDev& edev, const string& line_term,
 	m_dev(edev),
 	HwSerialLine(line_term, timeout, block_size, block_delay)
 {
-	if( 0/*edev.isMeta()*/ )
+	if( edev.isMeta() )
 		throw LIMA_HW_EXC(NotSupported, "Can't create an "
 		                          "EspiaSerialLine for a meta-device");
 }
