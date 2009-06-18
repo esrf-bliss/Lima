@@ -59,7 +59,7 @@ void EspiaAcq::registerLastFrameCb()
 	cb_data.type    = ESPIA_CB_ACQ;
 	cb_data.cb      = dispatchFrameCb;
 	cb_data.data    = this;
-	cb_data.timeout = BlockForever;
+	cb_data.timeout = SCDXIPCI_BLOCK_FOREVER;
 
 	struct img_frame_info& req_finfo = cb_data.info.acq.req_finfo;
 	req_finfo.buffer_nr    = ESPIA_ACQ_ANY;
@@ -186,7 +186,7 @@ void EspiaAcq::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 	finfo.frame_nr     = ESPIA_ACQ_ANY;
 	finfo.round_count  = ESPIA_ACQ_ANY;
 	finfo.acq_frame_nr = acq_frame_nb;
-	CHECK_CALL(espia_get_frame(m_dev, &finfo, NoBlock));
+	CHECK_CALL(espia_get_frame(m_dev, &finfo, SCDXIPCI_NO_BLOCK));
 
 	real2virtFrameInfo(finfo, info);
 }
@@ -207,10 +207,10 @@ void EspiaAcq::real2virtFrameInfo(const struct img_frame_info& real_info,
 void EspiaAcq::resetFrameInfo(struct img_frame_info& frame_info)
 {
 	frame_info.buffer_ptr   = NULL;
-	frame_info.buffer_nr    = Invalid;
-	frame_info.frame_nr     = Invalid;
-	frame_info.round_count  = Invalid;
-	frame_info.acq_frame_nr = Invalid;
+	frame_info.buffer_nr    = SCDXIPCI_INVALID;
+	frame_info.frame_nr     = SCDXIPCI_INVALID;
+	frame_info.round_count  = SCDXIPCI_INVALID;
+	frame_info.acq_frame_nr = SCDXIPCI_INVALID;
 	frame_info.time_us      = 0;
 	frame_info.pixels       = 0;
 }
@@ -237,7 +237,7 @@ void EspiaAcq::startAcq()
 
 	resetFrameInfo(m_last_frame_info);
 
-	CHECK_CALL(espia_start_acq(m_dev, 0, m_nb_frames, NoBlock));
+	CHECK_CALL(espia_start_acq(m_dev, 0, m_nb_frames, SCDXIPCI_NO_BLOCK));
 
 	m_start_ts = Timestamp::now();
 	m_started = true;

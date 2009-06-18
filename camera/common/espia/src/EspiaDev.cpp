@@ -31,7 +31,7 @@ void EspiaDev::open(int dev_nb)
 
 void EspiaDev::close()
 {
-	if (m_dev_nb == Invalid)
+	if (m_dev_nb == int(Invalid))
 		return;
 
 	CHECK_CALL(espia_close(m_dev));

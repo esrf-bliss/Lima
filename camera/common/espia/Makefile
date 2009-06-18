@@ -1,2 +1,3 @@
-all:
-	make -C src
+sub-dirs = src
+
+include ../../../global.inc

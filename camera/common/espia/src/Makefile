@@ -1,12 +1,11 @@
 
 espia-objs = EspiaBase.o EspiaDev.o EspiaAcq.o EspiaSerialLine.o
 
-#ESPIA_DRV_BASE = ../../../../../../bliss/source/driver/linux-2.6/espia
-ESPIA_DRV_BASE = /segfs/bliss/source/driver/linux-2.6/espia
-ESPIA_DRV_INC = $(ESPIA_DRV_BASE)/src
+include ../include/espia.inc
 
-CXXFLAGS = -I../include -I../../../../hardware/include \
-	   -I../../../../common/include -I$(ESPIA_DRV_INC)
+CXXFLAGS = -I../include \
+	   -I../../../../hardware/include -I../../../../common/include \
+	   -I$(ESPIA_DRV_INCL) -Wall
 
 all:		clean Espia.o
 

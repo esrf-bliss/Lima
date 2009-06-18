@@ -1,8 +1,3 @@
+sub-dirs = src test
 
-all:
-	$(MAKE) -C src all
-	$(MAKE) -C test all
-
-clean:
-	$(MAKE) -C src clean
-	$(MAKE) -C test clean
+include ../global.inc

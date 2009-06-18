@@ -1,6 +1,3 @@
-.PHONY: espia
+sub-dirs = espia
 
-all:	espia
-
-espia:
-	make -C espia
+include ../../global.inc

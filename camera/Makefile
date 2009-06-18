@@ -1,9 +1,3 @@
-.PHONY: simulator common
+sub-dirs = common simulator frelon
 
-all: simulator common
-
-simulator:
-	make -C simulator
-
-common:
-	make -C common
+include ../global.inc

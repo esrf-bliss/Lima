@@ -10,8 +10,8 @@ using namespace std;
 EspiaSerialLine::EspiaSerialLine( EspiaDev& edev, const string& line_term, 
                                   double timeout, int block_size, 
                                   double block_delay ) :
-	m_dev(edev),
-	HwSerialLine(line_term, timeout, block_size, block_delay)
+	HwSerialLine(line_term, timeout, block_size, block_delay),
+	m_dev(edev)
 {
 	if( edev.isMeta() )
 		throw LIMA_HW_EXC(NotSupported, "Can't create an "

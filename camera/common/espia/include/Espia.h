@@ -13,9 +13,9 @@ class Espia
 {
  public:
 	enum {
-		Invalid = SCDXIPCI_INVALID,
-		NoBlock = SCDXIPCI_NO_BLOCK,
-		BlockForever = SCDXIPCI_BLOCK_FOREVER,
+		Invalid = -1,
+		NoBlock = 0,
+		BlockForever = -1,
 		MetaDev = SCDXIPCI_META_DEV,
 	};
 

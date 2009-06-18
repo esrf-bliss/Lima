@@ -1,7 +1,3 @@
-MAKE_CMD = $(MAKE) -C src
+sub-dirs = src 
 
-all:
-	$(MAKE_CMD) all
-
-clean:
-	$(MAKE_CMD) clean
+include ../global.inc
