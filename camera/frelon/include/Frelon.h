@@ -41,19 +41,22 @@ class Frelon
 			MsgSync, MsgCmd, MsgVal, MsgReq, MsgTerm, 
 		};
 
+		static const double TimeoutSingle, TimeoutNormal, TimeoutMax, 
+				    TimeoutReset;
+
 		SerialLine(EspiaSerialLine& espia_ser_line);
 	
 		virtual void write(const std::string& buffer, 
 				   bool no_wait = false);
 		virtual void read(std::string& buffer, int len, 
-				  double timeout);
+				  double timeout = TimeoutDefault);
 		virtual void readStr(std::string& buffer, int len, 
-				     double timeout);
+				     double timeout = TimeoutDefault);
 
 		virtual void getNumAvailBytes(int &avail);
 
 		void splitMsg(const std::string& msg, 
-			      std::map<MsgPart, std::string>& msg_parts);
+			      std::map<MsgPart, std::string>& msg_parts) const;
 
 	private:
 		EspiaSerialLine& m_espia_ser_line;

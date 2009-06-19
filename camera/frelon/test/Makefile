@@ -1,6 +1,6 @@
 
-frelon-obs = ../src/Frelon.o ../../common/espia/src/Espia.o \
-	     ../../../hardware/src/Hw.o ../../../common/src/Common.o
+frelon-objs = ../src/Frelon.o ../../common/espia/src/Espia.o \
+	      ../../../hardware/src/Hw.o ../../../common/src/Common.o
 
 include ../../common/espia/include/espia.inc
 

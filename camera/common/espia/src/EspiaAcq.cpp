@@ -173,7 +173,7 @@ void *EspiaAcq::getBufferFramePtr(int buffer_nb, int frame_nb)
 
 void *EspiaAcq::getAcqFramePtr(int acq_frame_nb)
 {
-	int buffer_nb = ESPIA_ACQ_ANY;
+	unsigned long buffer_nb = ESPIA_ACQ_ANY;
 	void *ptr;
 	CHECK_CALL(espia_frame_address(m_dev, buffer_nb, acq_frame_nb, &ptr));
 	return ptr;

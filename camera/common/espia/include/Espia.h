@@ -38,12 +38,16 @@ class Espia
 
 inline unsigned long Espia::sec2usec(double sec)
 {
-	return (unsigned long) (sec * 1e6);
+	if (sec > 0)
+		sec *= 1e6;
+	return (unsigned long) sec;
 }
 
 inline double Espia::usec2sec(unsigned long  usec)
 {
-	return usec * 1e-6;
+	if (usec > 0)
+		return usec * 1e-6;
+	return usec;
 }
 
 

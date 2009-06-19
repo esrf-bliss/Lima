@@ -10,7 +10,7 @@
 namespace lima {
 
 
-class EspiaSerialLine : public HwSerialLine
+class EspiaSerialLine : public HwSerialLine, public Espia
 {
   public :
 	EspiaSerialLine( EspiaDev& edev, const std::string& line_term="\r", 
