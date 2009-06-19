@@ -21,6 +21,7 @@ ESPIA_DRV_BASE = $(ESRF_COMP_BASE)/espia/release
 endif # ARCH == x86_64
 endif # ESRF_VER == redhate5
 endif # OS != suse82
+endif # ESPIA_DRV_BASE
 
 ifndef ESPIA_DRV_INCL
 ESPIA_DRV_INCL = $(ESPIA_DRV_BASE)/src
@@ -29,5 +30,3 @@ endif
 ifndef ESPIA_DRV_LIB
 ESPIA_DRV_LIB = $(ESPIA_DRV_BASE)/src
 endif
-
-endif # ESPIA_DRV_BASE
