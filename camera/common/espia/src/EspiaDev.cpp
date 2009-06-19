@@ -1,11 +1,11 @@
 #include "EspiaDev.h"
 
-using namespace lima;
+using namespace lima::Espia;
 using namespace std;
 
 #define CHECK_CALL(ret)		ESPIA_CHECK_CALL(ret)
 
-EspiaDev::EspiaDev(int dev_nb)
+Dev::Dev(int dev_nb)
 {
 	m_dev_nb = Invalid;
 	m_dev = ESPIA_DEV_INVAL;
@@ -13,12 +13,12 @@ EspiaDev::EspiaDev(int dev_nb)
 	open(dev_nb);
 }
 
-EspiaDev::~EspiaDev()
+Dev::~Dev()
 {
 	close();
 }
 
-void EspiaDev::open(int dev_nb)
+void Dev::open(int dev_nb)
 {
 	if (dev_nb == m_dev_nb)
 		return;
@@ -29,7 +29,7 @@ void EspiaDev::open(int dev_nb)
 	m_dev_nb = dev_nb;
 }
 
-void EspiaDev::close()
+void Dev::close()
 {
 	if (m_dev_nb == Invalid)
 		return;
@@ -40,7 +40,7 @@ void EspiaDev::close()
 	m_dev_nb = Invalid;
 }
 
-void EspiaDev::registerCallback(struct espia_cb_data& cb_data, int& cb_nr)
+void Dev::registerCallback(struct espia_cb_data& cb_data, int& cb_nr)
 {
 	CHECK_CALL(espia_register_callback(m_dev, &cb_data, &cb_nr));
 
@@ -54,7 +54,7 @@ void EspiaDev::registerCallback(struct espia_cb_data& cb_data, int& cb_nr)
 
 }
 
-void EspiaDev::unregisterCallback(int& cb_nr)
+void Dev::unregisterCallback(int& cb_nr)
 {
 	CHECK_CALL(espia_unregister_callback(m_dev, cb_nr));
 

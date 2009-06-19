@@ -1,11 +1,11 @@
-#include "Frelon.h"
+#include "FrelonCamera.h"
 
 #include <iostream>
 
 using namespace lima;
 using namespace std;
 
-typedef EspiaSerialLine    ESL;
+typedef Espia::SerialLine  ESL;
 typedef Frelon::SerialLine FSL;
 
 void print_str(const string& desc, const string& str)
@@ -30,22 +30,29 @@ void split_msg(const FSL& frelon_ser_line, const string& msg)
 
 void test_frelon()
 {
-	EspiaDev espia(0);
+	Espia::Dev espia(0);
 	ESL espia_ser_line(espia);
 	
 	string msg, ans;
+	Timestamp t0, t1;
 
 	espia_ser_line.setTimeout(FSL::TimeoutNormal);
 	espia_ser_line.setLineTerm("\r\n");
 
 	msg = ">C\r\n";
 	espia_ser_line.write(msg);
+	t0 = Timestamp::now();
 	espia_ser_line.read(ans, 10000);
+	t1 = Timestamp::now();
+	cout << "Elapsed " << (t1 - t0) << " sec" << endl;
 	print_str("Ans", ans);
 
 	msg = ">I?\r\n";
 	espia_ser_line.write(msg);
+	t0 = Timestamp::now();
 	espia_ser_line.readLine(ans, 10000, FSL::TimeoutSingle);
+	t1 = Timestamp::now();
+	cout << "Elapsed " << (t1 - t0) << " sec" << endl;
 	print_str("Ans", ans);
 
 	FSL frelon_ser_line(espia_ser_line);

@@ -7,17 +7,20 @@
 #include "EspiaDev.h"
 
 
-namespace lima {
+namespace lima 
+{
 
+namespace Espia
+{
 
-class EspiaSerialLine : public HwSerialLine, public Espia
+class SerialLine : public HwSerialLine
 {
   public :
-	EspiaSerialLine( EspiaDev& edev, const std::string& line_term="\r", 
-	                 double timeout=1.0, int block_size=0, 
-	                 double block_delay=0 );
+	SerialLine( Dev& edev, const std::string& line_term="\r", 
+		    double timeout=1.0, int block_size=0, 
+		    double block_delay=0 );
 
-	~EspiaSerialLine();
+	~SerialLine();
 
 	virtual void write( const std::string& buffer, bool no_wait=false );
 
@@ -33,10 +36,12 @@ class EspiaSerialLine : public HwSerialLine, public Espia
 	virtual void getNumAvailBytes( int &avail_bytes );
 
   private :
-	EspiaDev& m_dev;
+	Dev& m_dev;
 };
 
 
-}
+} // namespace Espia
+
+} // namespace lima
 
 #endif /* ESPIASERIALLINE_H */

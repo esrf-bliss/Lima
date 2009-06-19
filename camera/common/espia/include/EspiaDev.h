@@ -9,11 +9,14 @@
 namespace lima
 {
 
-class EspiaDev : public Espia
+namespace Espia
+{
+
+class Dev
 {
  public:
-	EspiaDev(int dev_nb);
-	~EspiaDev();
+	Dev(int dev_nb);
+	~Dev();
 
 	operator espia_t();
 
@@ -34,20 +37,23 @@ class EspiaDev : public Espia
 	Mutex m_acq_mutex;
 };
 
-inline EspiaDev::operator espia_t()
+inline Dev::operator espia_t()
 { 
 	return m_dev; 
 }
 
-inline bool EspiaDev::isMeta()
+inline bool Dev::isMeta()
 {
 	return (m_dev_nb == MetaDev);
 }
 
-inline AutoMutex EspiaDev::acqLock()
+inline AutoMutex Dev::acqLock()
 {
 	return AutoMutex(m_acq_mutex, AutoMutex::Locked);
 }
+
+
+} // namespace Espia
 
 } // namespace lima
 

@@ -9,47 +9,43 @@
 namespace lima
 {
 
-class Espia
+namespace Espia
 {
- public:
-	enum {
-		Invalid = -1,
-		NoBlock = 0,
-		BlockForever = -1,
-		MetaDev = SCDXIPCI_META_DEV,
-	};
 
-	unsigned long sec2usec(double sec);
-	double usec2sec(unsigned long usec);
-
-	static void throwError(int ret, std::string file, std::string func, 
-			       int line);
-
+enum {
+	Invalid = -1,
+	NoBlock = 0,
+	BlockForever = -1,
+	MetaDev = SCDXIPCI_META_DEV,
 };
 
-#define ESPIA_CHECK_CALL(ret)						\
-	do {								\
-		int aux_ret = (ret);					\
-		if (aux_ret < 0)					\
-			Espia::throwError(aux_ret, __FILE__,		\
-					  __FUNCTION__, __LINE__);	\
-	} while (0)
-
-
-inline unsigned long Espia::sec2usec(double sec)
+inline unsigned long Sec2USec(double sec)
 {
 	if (sec > 0)
 		sec *= 1e6;
 	return (unsigned long) sec;
 }
 
-inline double Espia::usec2sec(unsigned long  usec)
+inline double USec2Sec(unsigned long usec)
 {
 	if (usec > 0)
 		return usec * 1e-6;
 	return usec;
 }
 
+void ThrowError(int ret, std::string file, std::string func, int line);
+
+
+#define ESPIA_CHECK_CALL(espia_ret)					\
+	do {								\
+		int aux_ret = (espia_ret);				\
+		if (aux_ret < 0)					\
+			Espia::ThrowError(aux_ret, __FILE__,		\
+					  __FUNCTION__, __LINE__);	\
+	} while (0)
+
+
+} // namespace Espia
 
 } // namespace lima
 

@@ -1,14 +1,14 @@
 #include "EspiaAcq.h"
 #include "MemUtils.h"
 
-using namespace lima;
+using namespace lima::Espia;
 
 #define CHECK_CALL(ret)		ESPIA_CHECK_CALL(ret)
 
 #define ESPIA_MIN_BUFFER_SIZE	(128 * 1024)
 
 
-EspiaAcq::EspiaAcq(EspiaDev& dev)
+Acq::Acq(Dev& dev)
 	: m_dev(dev)
 {
 	m_nb_buffers = m_buffer_frames = 0;
@@ -23,21 +23,21 @@ EspiaAcq::EspiaAcq(EspiaDev& dev)
 	registerLastFrameCb();
 }
 
-EspiaAcq::~EspiaAcq()
+Acq::~Acq()
 {
 	bufferFree();
 	unregisterLastFrameCb();
 }
 
-int EspiaAcq::dispatchFrameCb(struct espia_cb_data *cb_data)
+int Acq::dispatchFrameCb(struct espia_cb_data *cb_data)
 {
-	EspiaAcq *espia = (EspiaAcq *) cb_data->data;
+	Acq *espia = (Acq *) cb_data->data;
 
-	void (EspiaAcq::*method)(struct espia_cb_data *cb_data) = NULL;
+	void (Acq::*method)(struct espia_cb_data *cb_data) = NULL;
 
 	int& cb_nr = cb_data->cb_nr;
 	if (cb_nr == espia->m_last_frame_cb_nr)
-		method = &EspiaAcq::lastFrameCb;
+		method = &Acq::lastFrameCb;
 	
 	if (method) {
 		try {
@@ -50,7 +50,7 @@ int EspiaAcq::dispatchFrameCb(struct espia_cb_data *cb_data)
 	return ESPIA_OK;
 }
 
-void EspiaAcq::registerLastFrameCb()
+void Acq::registerLastFrameCb()
 {
 	if (m_last_frame_cb_nr != Invalid)
 		return;
@@ -70,7 +70,7 @@ void EspiaAcq::registerLastFrameCb()
 	m_dev.registerCallback(cb_data, m_last_frame_cb_nr);
 }
 
-void EspiaAcq::unregisterLastFrameCb()
+void Acq::unregisterLastFrameCb()
 {
 	if (m_last_frame_cb_nr == Invalid)
 		return;
@@ -78,7 +78,7 @@ void EspiaAcq::unregisterLastFrameCb()
 	m_dev.unregisterCallback(m_last_frame_cb_nr);
 }
 
-void EspiaAcq::lastFrameCb(struct espia_cb_data *cb_data)
+void Acq::lastFrameCb(struct espia_cb_data *cb_data)
 {
 	AutoMutex l = acqLock();
 
@@ -87,8 +87,8 @@ void EspiaAcq::lastFrameCb(struct espia_cb_data *cb_data)
 		m_last_frame_info = cb_finfo;
 }
 
-void EspiaAcq::bufferAlloc(const FrameDim& frame_dim, int& nb_buffers,
-			int buffer_frames)
+void Acq::bufferAlloc(const FrameDim& frame_dim, int& nb_buffers,
+		      int buffer_frames)
 {
 	if (!frame_dim.isValid() || (nb_buffers <= 0) || (buffer_frames <= 0))
 		throw LIMA_HW_EXC(InvalidValue, "Invalid frame_dim, "
@@ -133,7 +133,7 @@ void EspiaAcq::bufferAlloc(const FrameDim& frame_dim, int& nb_buffers,
 	m_real_frame_size   = real_frame_size;
 }
 
-void EspiaAcq::bufferFree()
+void Acq::bufferFree()
 {
 	if ((m_nb_buffers == 0) || (m_buffer_frames == 0))
 		return;
@@ -147,22 +147,22 @@ void EspiaAcq::bufferFree()
 	m_real_frame_factor = m_real_frame_size = 0;
 }
 
-void EspiaAcq::getFrameDim(FrameDim& frame_dim)
+void Acq::getFrameDim(FrameDim& frame_dim)
 {
 	frame_dim = m_frame_dim;
 }
 
-void EspiaAcq::getNbBuffers(int& nb_buffers)
+void Acq::getNbBuffers(int& nb_buffers)
 {
 	nb_buffers = m_nb_buffers;
 }
 
-void EspiaAcq::getBufferFrames(int& buffer_frames)
+void Acq::getBufferFrames(int& buffer_frames)
 {
 	buffer_frames = m_buffer_frames;
 }
 
-void *EspiaAcq::getBufferFramePtr(int buffer_nb, int frame_nb)
+void *Acq::getBufferFramePtr(int buffer_nb, int frame_nb)
 {
 	int real_buffer = realBufferNb(buffer_nb, frame_nb);
 	int real_frame  = realFrameNb(buffer_nb, frame_nb);
@@ -171,7 +171,7 @@ void *EspiaAcq::getBufferFramePtr(int buffer_nb, int frame_nb)
 	return ptr;
 }
 
-void *EspiaAcq::getAcqFramePtr(int acq_frame_nb)
+void *Acq::getAcqFramePtr(int acq_frame_nb)
 {
 	unsigned long buffer_nb = ESPIA_ACQ_ANY;
 	void *ptr;
@@ -179,7 +179,7 @@ void *EspiaAcq::getAcqFramePtr(int acq_frame_nb)
 	return ptr;
 }
 
-void EspiaAcq::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
+void Acq::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 {
 	struct img_frame_info finfo;
 	finfo.buffer_nr    = ESPIA_ACQ_ANY;
@@ -191,8 +191,8 @@ void EspiaAcq::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 	real2virtFrameInfo(finfo, info);
 }
 
-void EspiaAcq::real2virtFrameInfo(const struct img_frame_info& real_info, 
-			       HwFrameInfoType& virt_info)
+void Acq::real2virtFrameInfo(const struct img_frame_info& real_info, 
+			     HwFrameInfoType& virt_info)
 {
 	char *buffer_ptr = (char *) real_info.buffer_ptr;
 	int frame_offset = real_info.frame_nr * m_real_frame_size;
@@ -200,11 +200,11 @@ void EspiaAcq::real2virtFrameInfo(const struct img_frame_info& real_info,
 	virt_info.acq_frame_nb    = real_info.acq_frame_nr;
 	virt_info.frame_ptr       = buffer_ptr + frame_offset;
 	virt_info.frame_dim       = &m_frame_dim;
-	virt_info.frame_timestamp = usec2sec(real_info.time_us);
+	virt_info.frame_timestamp = USec2Sec(real_info.time_us);
 	virt_info.valid_pixels    = real_info.pixels;
 }
 
-void EspiaAcq::resetFrameInfo(struct img_frame_info& frame_info)
+void Acq::resetFrameInfo(struct img_frame_info& frame_info)
 {
 	frame_info.buffer_ptr   = NULL;
 	frame_info.buffer_nr    = SCDXIPCI_INVALID;
@@ -215,7 +215,7 @@ void EspiaAcq::resetFrameInfo(struct img_frame_info& frame_info)
 	frame_info.pixels       = 0;
 }
 
-void EspiaAcq::setNbFrames(int nb_frames)
+void Acq::setNbFrames(int nb_frames)
 {
 	if (nb_frames < 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid nb of frames");
@@ -223,12 +223,12 @@ void EspiaAcq::setNbFrames(int nb_frames)
 	m_nb_frames = nb_frames;
 }
 
-void EspiaAcq::getNbFrames(int& nb_frames)
+void Acq::getNbFrames(int& nb_frames)
 {
 	nb_frames = m_nb_frames;
 }
 
-void EspiaAcq::startAcq()
+void Acq::startAcq()
 {
 	AutoMutex l = acqLock();
 
@@ -243,7 +243,7 @@ void EspiaAcq::startAcq()
 	m_started = true;
 }
 
-void EspiaAcq::stopAcq()
+void Acq::stopAcq()
 {
 	AutoMutex l = acqLock();
 
@@ -255,7 +255,7 @@ void EspiaAcq::stopAcq()
 	m_started = false;
 }
 
-void EspiaAcq::getAcqStatus(AcqStatusType& acq_status)
+void Acq::getAcqStatus(AcqStatusType& acq_status)
 {
 	AutoMutex l = acqLock();
 

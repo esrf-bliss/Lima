@@ -7,11 +7,14 @@
 namespace lima
 {
 
-class EspiaAcq : public Espia
+namespace Espia
+{
+
+class Acq
 {
  public:
-	EspiaAcq(EspiaDev& dev);
-	~EspiaAcq();
+	Acq(Dev& dev);
+	~Acq();
 
 	typedef struct AcqStatus {
 		bool	acq_started;
@@ -60,7 +63,7 @@ class EspiaAcq : public Espia
 
 	AutoMutex acqLock();
 
-	EspiaDev& m_dev;
+	Dev& m_dev;
 
 	FrameDim m_frame_dim;
 	int m_nb_buffers;
@@ -75,43 +78,44 @@ class EspiaAcq : public Espia
 	int m_last_frame_cb_nr;
 };
 
-inline bool EspiaAcq::hasVirtualBuffers()
+inline bool Acq::hasVirtualBuffers()
 {
 	return m_real_frame_factor != 1;
 }
 
-inline int EspiaAcq::realBufferNb(int virt_buffer, int virt_frame)
+inline int Acq::realBufferNb(int virt_buffer, int virt_frame)
 {
 	return virt_buffer / m_real_frame_factor;
 }
 
-inline int EspiaAcq::realFrameNb (int virt_buffer, int virt_frame)
+inline int Acq::realFrameNb (int virt_buffer, int virt_frame)
 {
 	return virt_buffer % m_real_frame_factor + virt_frame;
 }
 
-inline int EspiaAcq::virtBufferNb(int real_buffer, int real_frame)
+inline int Acq::virtBufferNb(int real_buffer, int real_frame)
 {
 	return (real_buffer * m_real_frame_factor + 
 		real_frame / m_buffer_frames);
 }
 
-inline int EspiaAcq::virtFrameNb (int real_buffer, int real_frame)
+inline int Acq::virtFrameNb (int real_buffer, int real_frame)
 {
 	return real_frame % m_buffer_frames;
 }
 
-inline void EspiaAcq::getStartTimestamp(Timestamp& start_ts)
+inline void Acq::getStartTimestamp(Timestamp& start_ts)
 {
 	start_ts = m_start_ts;
 }
 
-inline AutoMutex EspiaAcq::acqLock()
+inline AutoMutex Acq::acqLock()
 {
 	return m_dev.acqLock();
 }
 
 
+} // namespace Espia
 
 } // namespace lima
 
