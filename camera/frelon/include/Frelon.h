@@ -25,14 +25,20 @@ enum Reg {
 	Version,	SerNr,		Warn,
 };
 
+extern std::map<Reg, std::string> RegStrMap;
+
 enum Cmd {
 	Reset,		Start,		Stop,		Save,
 };
+
+extern std::map<Cmd, std::string> CmdStrMap;
 
 enum MultiLineCmd {
 	Help,		Config,		Dac,		Volt,
 	Aoi,
 };
+
+extern std::map<MultiLineCmd, std::string> MultiLineCmdStrMap;
 
 
 } // namespace Frelon

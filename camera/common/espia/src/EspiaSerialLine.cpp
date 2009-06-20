@@ -26,7 +26,7 @@ SerialLine::~SerialLine()
 
 void SerialLine::write( const string& buffer, bool no_wait )
 {
-	unsigned long len = buffer.length();
+	unsigned long len = buffer.size();
 	char *ptr = len ? (char *) buffer.data() : NULL;
 	int block_size; getBlockSize(block_size);
 	double block_delay; getBlockDelay(block_delay);
@@ -58,7 +58,7 @@ void SerialLine::readStr( string& buffer, int max_len,
 	unsigned long tmout = Sec2USec(checkDefTimeout(timeout));
 
 	CHECK_CALL( espia_ser_read_str(m_dev, ptr, &ret_len, term_ptr,
-				      term.length(), tmout) );
+				      term.size(), tmout) );
 	buffer.resize(ret_len);
 }
 

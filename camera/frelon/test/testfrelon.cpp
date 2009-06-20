@@ -28,40 +28,40 @@ void split_msg(const FSL& frelon_ser_line, const string& msg)
 	cout << endl;
 }
 
+void frelon_cmd(FSL& frelon_ser_line, const string& cmd)
+{
+	split_msg(frelon_ser_line, cmd);
+	frelon_ser_line.write(cmd);
+
+	Timestamp t0, t1;
+	string ans;
+	int max_len = 10000;
+
+	t0 = Timestamp::now();
+	frelon_ser_line.readLine(ans, max_len);
+	t1 = Timestamp::now();
+	cout << "Elapsed " << (t1 - t0) << " sec" << endl;
+	print_str("Ans", ans);
+}
+
 void test_frelon()
 {
 	Espia::Dev espia(0);
 	ESL espia_ser_line(espia);
-	
-	string msg, ans;
-	Timestamp t0, t1;
-
-	espia_ser_line.setTimeout(FSL::TimeoutNormal);
-	espia_ser_line.setLineTerm("\r\n");
-
-	msg = ">C\r\n";
-	espia_ser_line.write(msg);
-	t0 = Timestamp::now();
-	espia_ser_line.read(ans, 10000);
-	t1 = Timestamp::now();
-	cout << "Elapsed " << (t1 - t0) << " sec" << endl;
-	print_str("Ans", ans);
-
-	msg = ">I?\r\n";
-	espia_ser_line.write(msg);
-	t0 = Timestamp::now();
-	espia_ser_line.readLine(ans, 10000, FSL::TimeoutSingle);
-	t1 = Timestamp::now();
-	cout << "Elapsed " << (t1 - t0) << " sec" << endl;
-	print_str("Ans", ans);
-
 	FSL frelon_ser_line(espia_ser_line);
+	
+	frelon_ser_line.flush();
+
+	string msg;
+
+	msg = "RST";
+	frelon_cmd(frelon_ser_line, msg);
+
 	msg = ">C\r\n";
-	split_msg(frelon_ser_line, msg);
+	frelon_cmd(frelon_ser_line, msg);
+
 	msg = ">I?\r\n";
-	split_msg(frelon_ser_line, msg);
-	msg = "N1000";
-	split_msg(frelon_ser_line, msg);
+	frelon_cmd(frelon_ser_line, msg);
 
 }
 

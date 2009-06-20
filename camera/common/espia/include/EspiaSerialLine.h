@@ -31,7 +31,7 @@ class SerialLine : public HwSerialLine
 	                      const std::string& term, 
 	                      double timeout=TimeoutDefault );
 
-	void flush();
+	virtual void flush();
 
 	virtual void getNumAvailBytes( int &avail_bytes );
 
