@@ -1,5 +1,6 @@
 #include "FrelonSerialLine.h"
 #include "RegEx.h"
+#include <sstream>
 
 using namespace lima::Frelon;
 using namespace std;
@@ -15,8 +16,12 @@ SerialLine::SerialLine(Espia::SerialLine& espia_ser_line)
 {
 	m_espia_ser_line.setLineTerm("\r\n");
 	m_espia_ser_line.setTimeout(TimeoutNormal);
+
 	m_multi_line_cmd = false;
 	m_reset_cmd = false;
+	m_last_warn = 0;
+
+	flush();
 }
 
 void SerialLine::write(const string& buffer, bool no_wait)
@@ -122,10 +127,10 @@ void SerialLine::splitMsg(const string& msg,
 {
 	msg_parts.clear();
 
-	RegEx re("^(?P<sync>>)?"
-		 "(?P<cmd>[A-Z]+)"
-		 "((?P<req>\\?)|(?P<val>[0-9]+))?"
-		 "(?P<term>[\r\n]+)?$");
+	const static RegEx re("^(?P<sync>>)?"
+			      "(?P<cmd>[A-Z]+)"
+			      "((?P<req>\\?)|(?P<val>[0-9]+))?"
+			      "(?P<term>[\r\n]+)?$");
 
 	RegEx::FullNameMatchType match;
 	if (!re.matchName(msg, match))
@@ -147,3 +152,48 @@ void SerialLine::splitMsg(const string& msg,
 	}
 }
 
+void SerialLine::decodeFmtResp(const string& ans, string& fmt_resp)
+{
+	fmt_resp.clear();
+
+	const static RegEx re("!(OK(:(?P<resp>[^\r]+))?|"
+			        "W\a?:(?P<warn>[^\r]+)|"
+			        "E\a?:(?P<err>[^\r]+))\r\n");
+
+	RegEx::FullNameMatchType match;
+	if (!re.matchName(ans, match))
+		throw LIMA_HW_EXC(Error, "Invalid Frelon answer");
+
+	RegEx::SingleMatchType& err = match["err"];
+	if (err) {
+		string err_str(err.start, err.end);
+		string err_desc = string("Frelon Error: ") + err_str;
+		throw LIMA_HW_EXC(Error, err_desc);
+	}
+
+	RegEx::SingleMatchType& warn = match["warn"];
+	if (warn) {
+		string warn_str(err.start, err.end);
+		istringstream is(warn_str);
+		is >> m_last_warn;
+		return;
+	}
+
+	RegEx::SingleMatchType& resp = match["resp"];
+	fmt_resp = string(resp.start, resp.end);
+}
+
+void SerialLine::sendFmtCmd(const string& cmd, string& resp)
+{
+	write(cmd);
+	string ans;
+	readLine(ans);
+	decodeFmtResp(ans, resp);
+}
+
+int SerialLine::getLastWarning()
+{
+	int last_warn = m_last_warn;
+	m_last_warn = 0;
+	return last_warn;
+}

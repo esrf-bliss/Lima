@@ -16,6 +16,14 @@ class SerialLine : public HwSerialLine
 		MsgSync, MsgCmd, MsgVal, MsgReq, MsgTerm, 
 	};
 	
+	enum AnsPart {
+		AnsResp, AnsWarn, AnsErr,
+	};
+	
+	enum {
+		MaxReadLen = 10000,
+	};
+
 	static const double TimeoutSingle, TimeoutNormal, TimeoutMultiLine, 
 			    TimeoutReset;
 	
@@ -23,16 +31,20 @@ class SerialLine : public HwSerialLine
 	
 	virtual void write(const std::string& buffer, 
 			   bool no_wait = false);
-	virtual void read(std::string& buffer, int max_len, 
+	virtual void read(std::string& buffer, 
+			  int max_len = MaxReadLen, 
 			  double timeout = TimeoutDefault);
 	virtual void readStr(std::string& buffer, int max_len, 
 			     const std::string& term, 
 			     double timeout = TimeoutDefault);
-	virtual void readLine(std::string& buffer, int max_len, 
+	virtual void readLine(std::string& buffer, 
+			      int max_len = MaxReadLen, 
 			      double timeout = TimeoutDefault);
-	virtual void readSingleLine(std::string& buffer, int max_len, 
+	virtual void readSingleLine(std::string& buffer, 
+				    int max_len = MaxReadLen, 
 				    double timeout = TimeoutDefault);
-	virtual void readMultiLine(std::string& buffer, int max_len);
+	virtual void readMultiLine(std::string& buffer, 
+				   int max_len = MaxReadLen);
 	
 	virtual void flush();
 
@@ -43,11 +55,17 @@ class SerialLine : public HwSerialLine
 
 	void splitMsg(const std::string& msg, 
 		      std::map<MsgPart, std::string>& msg_parts) const;
+	void decodeFmtResp(const std::string& ans, std::string& fmt_resp);
+
+	void sendFmtCmd(const std::string& cmd, std::string& resp);
+
+	int getLastWarning();
 
  private:
 	Espia::SerialLine& m_espia_ser_line;
 	bool m_multi_line_cmd;
 	bool m_reset_cmd;
+	int m_last_warn;
 };
 
 
