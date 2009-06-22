@@ -108,7 +108,7 @@ void HwSerialLine::flush()
 	string buf;
 	int len;
 
-	getNumAvailBytes(len);
+	getNbAvailBytes(len);
 	read( buf, len, TimeoutNoBlock );
 }
 

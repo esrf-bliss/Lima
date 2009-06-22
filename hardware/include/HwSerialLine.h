@@ -50,7 +50,7 @@ class HwSerialLine
 
 	virtual void readAvailable( std::string& buffer, int max_len );
 
-	virtual void getNumAvailBytes( int &avail ) = 0;
+	virtual void getNbAvailBytes( int &avail ) = 0;
 
 	virtual void setLineTerm( const std::string& line_term );
 	virtual void getLineTerm( std::string& line_term ) const;

@@ -33,7 +33,7 @@ class SerialLine : public HwSerialLine
 
 	virtual void flush();
 
-	virtual void getNumAvailBytes( int &avail_bytes );
+	virtual void getNbAvailBytes( int &avail_bytes );
 
   private :
 	Dev& m_dev;

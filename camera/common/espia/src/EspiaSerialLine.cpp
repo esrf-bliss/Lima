@@ -69,7 +69,7 @@ void SerialLine::flush()
 }
 
 
-void SerialLine::getNumAvailBytes( int &avail_bytes )
+void SerialLine::getNbAvailBytes( int &avail_bytes )
 {
 	unsigned long ret_bytes = 0;
 

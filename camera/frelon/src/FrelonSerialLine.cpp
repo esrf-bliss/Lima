@@ -106,9 +106,9 @@ void SerialLine::flush()
 	m_espia_ser_line.flush();
 }
 
-void SerialLine::getNumAvailBytes(int &avail)
+void SerialLine::getNbAvailBytes(int &avail)
 {
-	m_espia_ser_line.getNumAvailBytes(avail);
+	m_espia_ser_line.getNbAvailBytes(avail);
 }
 
 void SerialLine::setTimeout(double timeout)

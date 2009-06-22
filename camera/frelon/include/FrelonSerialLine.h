@@ -48,7 +48,7 @@ class SerialLine : public HwSerialLine
 	
 	virtual void flush();
 
-	virtual void getNumAvailBytes(int &avail);
+	virtual void getNbAvailBytes(int &avail);
 	
 	virtual void setTimeout(double timeout);
 	virtual void getTimeout(double& timeout) const;
