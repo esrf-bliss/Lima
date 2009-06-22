@@ -1,4 +1,9 @@
-#include "SoftOpInternalMgr.cpp"
+#include "SoftOpInternalMgr.h"
+using namespace lima;
+
+#include "Flip.h"
+#include "Binning.h"
+#include "SoftRoi.h"
 
 SoftOpInternalMgr::SoftOpInternalMgr() :
   m_reconstruction_task(NULL)
@@ -17,7 +22,7 @@ void SoftOpInternalMgr::setBin(const Bin &aBin)
   m_bin = aBin;
 }
 
-void SoftOpInternalMgr::getBin(const Bin &aBin) const
+void SoftOpInternalMgr::getBin(Bin &aBin) const
 {
   aBin = m_bin;
 }
@@ -61,31 +66,31 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
   aLastStage = 0;
   if(m_reconstruction_task)
     {
-      aTaskMgr.addSinkTask(aLastStage,m_reconstruction_task);
+      aTaskMgr.setLinkTask(aLastStage,m_reconstruction_task);
       ++aLastStage;
     }
-  Flip *aFlipTaskPt = NULL;
+  Tasks::Flip *aFlipTaskPt = NULL;
   if(m_flip.flip_x || m_flip.flip_y)
     {
-      Flip::FLIP_MODE aMode = Flip::FLIP_NONE;
+      Tasks::Flip::FLIP_MODE aMode = Tasks::Flip::FLIP_NONE;
       if(m_flip.flip_x && m_flip.flip_y)
-	aMode = Flip::FLIP_ALL;
+	aMode = Tasks::Flip::FLIP_ALL;
       else if(m_flip.flip_x)
-	aMode = Flip::FLIP_X;
+	aMode = Tasks::Flip::FLIP_X;
       else
-	aMode = Flip::FLIP_Y;
+	aMode = Tasks::Flip::FLIP_Y;
       
-      aFlipTaskPt = new Flip();
-      aFlipTaskPt.setFlip(aMode);
+      aFlipTaskPt = new Tasks::Flip();
+      aFlipTaskPt->setFlip(aMode);
       aTaskMgr.setLinkTask(aLastStage,aFlipTaskPt);
       aFlipTaskPt->unref();
       ++aLastStage;
     }
   
-  Binning *aBinTaskPt = NULL;
+  Tasks::Binning *aBinTaskPt = NULL;
   if(m_bin.bin_x > 1 || m_bin.bin_y > 1)
     {
-      aBinTaskPt = new Binning();
+      aBinTaskPt = new Tasks::Binning();
       aBinTaskPt->mXFactor = m_bin.bin_x;
       aBinTaskPt->mXFactor = m_bin.bin_y;
       aTaskMgr.setLinkTask(aLastStage,aBinTaskPt);
@@ -93,11 +98,11 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
       ++aLastStage;
     }
   
-  SoftRoi *aSoftRoiTaskPt = NULL;
+  Tasks::SoftRoi *aSoftRoiTaskPt = NULL;
   if(m_roi.active)
     {
-      aSoftRoiTaskPt = new SoftRoi();
-      aSoftRoiTaskPt.setRoi(m_roi.x, m_roi.x + m_roi.width,
+      aSoftRoiTaskPt = new Tasks::SoftRoi();
+      aSoftRoiTaskPt->setRoi(m_roi.x, m_roi.x + m_roi.width,
 			    m_roi.y,m_roi.y + m_roi.height);
       aTaskMgr.setLinkTask(aLastStage,aSoftRoiTaskPt);
       aSoftRoiTaskPt->unref();

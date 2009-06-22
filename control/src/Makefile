@@ -10,7 +10,7 @@ all: Ct.o
 depend :
 	makedepend $(INCLUDES) $(SRC)
 
-Ct.o: $(ct-objs)
+Ct.o: $(ct-objs) ../software_operation/src/CtSoftwareOperation.o
 	ld -o $@ -r $+
 
 clean:

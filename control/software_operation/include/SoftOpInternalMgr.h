@@ -35,7 +35,7 @@ namespace lima
     ~SoftOpInternalMgr();
     
     void setBin(const Bin &);
-    void getBin(const Bin &) const;
+    void getBin(Bin &) const;
 
     void setRoi(const Roi &);
     void getRoi(Roi &) const;
@@ -48,10 +48,10 @@ namespace lima
     void addTo(TaskMgr&,int&) const;
 
   private:
-    Bin		m_bin;
-    Flip	m_flip;
-    Roi		m_roi;
-    LinkTask	*m_reconstruction_task;
+    Bin			m_bin;
+    Flip		m_flip;
+    Roi			m_roi;
+    mutable LinkTask	*m_reconstruction_task;
   };
 }
 #endif
