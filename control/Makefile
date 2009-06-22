@@ -5,3 +5,6 @@ all:
 
 clean:
 	$(MAKE_CMD) clean
+
+depend:
+	$(MAKE_CMD) depend

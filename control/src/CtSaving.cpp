@@ -180,12 +180,6 @@ void CtSaving::getFramePerFile(unsigned long& frames_per_file) const
   frames_per_file = m_pars.framesPerFile;
 }
 
-void CtSaving::getStaticHeader(HeaderMap& header) const
-{
-  AutoMutex aLock(m_cond.mutex());
-  header = m_static_header;
-}
-
 void CtSaving::resetCommonHeader()
 {
   AutoMutex aLock(m_cond.mutex());
@@ -215,8 +209,20 @@ void CtSaving::addToCommonHeader(const HeaderValue &value)
   m_common_header.insert(value);
 }
 
+void CtSaving::addToFrameHeader(long frame_nr,const HeaderValue &value)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_frame_headers[frame_nr].insert(value);
+}
 
-void CtSaving::setFrameHeader(long frame_nr, const HeaderMap &header)
+void CtSaving::updateFrameHeader(long frame_nr,const HeaderMap &header)
+{
+  AutoMutex aLock(m_cond.mutex());
+  HeaderMap &frameHeader = m_frame_headers[frame_nr];
+  frameHeader.insert(header.begin(),header.end());
+}
+
+void CtSaving::validateFrameHeader(long frame_nr)
 {
   AutoMutex aLock(m_cond.mutex());
   switch(m_pars.savingMode)
@@ -227,19 +233,27 @@ void CtSaving::setFrameHeader(long frame_nr, const HeaderMap &header)
 	if(frame_iter != m_frame_datas.end() &&
 	   m_ready_flag && m_last_frameid_saved == frame_nr - 1)
 	  {
+	    
 	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
 	    _get_common_header(aSaveTaskPt->m_header);
+	    std::map<long,HeaderMap>::iterator headerIter =
+	      m_frame_headers.find(frame_nr);
+
+	    if(headerIter != m_frame_headers.end())
+	      {
+		aSaveTaskPt->m_header.insert(headerIter->second.begin(),
+					     headerIter->second.end());
+		m_frame_headers.erase(headerIter);
+	      }
 	    Data aData = frame_iter->second;
 	    m_frame_datas.erase(frame_iter);
 	    m_ready_flag = false,m_last_frameid_saved = frame_nr;
 	    aLock.unlock();
-	    aSaveTaskPt->m_header.insert(header.begin(),header.end());
 	    _post_save_task(aData,aSaveTaskPt);
 	    break;
 	  }
       }
     default:
-      m_frame_headers.insert(std::pair<int,HeaderMap>(frame_nr,header));
       break;
     }
 }
@@ -280,7 +294,6 @@ void CtSaving::removeAllFrameHeaders()
 
 void CtSaving::_get_common_header(HeaderMap &header)
 {
-  header.insert(m_static_header.begin(),m_static_header.end());
   header.insert(m_common_header.begin(),m_common_header.end());
 }
 void CtSaving::_takeHeader(std::map<long,HeaderMap>::iterator &headerIter, HeaderMap& header)
@@ -398,7 +411,7 @@ void CtSaving::_save_finnished(Data &aData)
  *  This class manage file saving
  */
 CtSaving::_SaveContainer::_SaveContainer(CtSaving &aCtSaving) :
-  m_saving(aCtSaving),m_written_frames(0)
+  m_saving(aCtSaving),m_written_frames(0),m_statistic_size(16)
 {
 }
 

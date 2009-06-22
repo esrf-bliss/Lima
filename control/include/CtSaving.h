@@ -84,8 +84,6 @@ namespace lima {
 
     // --- common headers
 
-    void getStaticHeader(HeaderMap& header) const;
-
     void resetCommonHeader();
     void setCommonHeader(const HeaderMap &header);
     void updateCommonHeader(const HeaderMap &header);
@@ -94,7 +92,9 @@ namespace lima {
 
     // --- frame headers
 
-    void setFrameHeader(long frame_nr, const HeaderMap &header);
+    void updateFrameHeader(long frame_nr, const HeaderMap &header);
+    void addToFrameHeader(long frame_nr,const HeaderValue &value);
+    void validateFrameHeader(long frame_nr);
     void getFrameHeader(long frame_nr, HeaderMap& header) const;
     void takeFrameHeader(long frame_nr, HeaderMap& header);
 
@@ -112,7 +112,6 @@ namespace lima {
     _SaveContainer		*m_save_cnt;
     _SaveCBK			*m_saving_cbk;
     Parameters			m_pars;
-    HeaderMap			m_static_header;
     HeaderMap			m_common_header;
     std::map<long, HeaderMap>	m_frame_headers;
     FrameMap			m_frame_datas;
