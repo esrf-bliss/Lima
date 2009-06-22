@@ -39,6 +39,31 @@ ostream& lima::operator <<(ostream& os, const Bin& bin)
 
 
 /*******************************************************************
+ * \brief Constant corners
+ *******************************************************************/
+
+const Corner TopLeft    (Left,  Top);
+const Corner TopRight   (Right, Top);
+const Corner BottomLeft (Left,  Bottom);
+const Corner BottomRight(Right, Bottom);
+
+
+/*******************************************************************
+ * \brief Get coordinates relative to specified corner
+ *******************************************************************/
+
+Point Size::getCornerCoords(const Point& p, const Corner& c)
+{
+	Point rel = p;
+	if (c.getX() == Right)
+		rel.x = getWidth()  - 1 - rel.x;
+	if (c.getY() == Bottom)
+		rel.y = getHeight() - 1 - rel.y;
+	return rel;
+}
+
+
+/*******************************************************************
  * \brief Set the roi by giving to arbitrary (diagonal) corners
  *
  * This method works by finding the top-left and bottom-right corners

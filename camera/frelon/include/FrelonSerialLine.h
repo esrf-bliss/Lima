@@ -24,6 +24,8 @@ class SerialLine : public HwSerialLine
 		MaxReadLen = 10000,
 	};
 
+	typedef std::map<MsgPart, std::string> MsgPartStrMapType;
+
 	static const double TimeoutSingle, TimeoutNormal, TimeoutMultiLine, 
 			    TimeoutReset;
 	
@@ -54,7 +56,7 @@ class SerialLine : public HwSerialLine
 	virtual void getTimeout(double& timeout) const;
 
 	void splitMsg(const std::string& msg, 
-		      std::map<MsgPart, std::string>& msg_parts) const;
+		      MsgPartStrMapType& msg_parts) const;
 	void decodeFmtResp(const std::string& ans, std::string& fmt_resp);
 
 	void sendFmtCmd(const std::string& cmd, std::string& resp);

@@ -2,6 +2,7 @@
 #include "Exceptions.h"
 
 #include <sys/time.h>
+#include <unistd.h>
 #include <iostream>
 
 using namespace lima;
@@ -18,3 +19,10 @@ Timestamp Timestamp::now()
 	return t.tv_sec + t.tv_usec * 1e-6;
 }
 
+double lima::Sleep(double sec)
+{
+	Timestamp t0 = Timestamp::now();
+	if (sec > 0)
+		usleep((unsigned long) (sec * 1e6 + 0.1));
+	return Timestamp::now() - t0;
+}

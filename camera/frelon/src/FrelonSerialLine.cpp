@@ -1,5 +1,6 @@
 #include "FrelonSerialLine.h"
 #include "RegEx.h"
+#include "MiscUtils.h"
 #include <sstream>
 
 using namespace lima::Frelon;
@@ -26,14 +27,14 @@ SerialLine::SerialLine(Espia::SerialLine& espia_ser_line)
 
 void SerialLine::write(const string& buffer, bool no_wait)
 {
-	map<MsgPart, string> msg_parts;
+	MsgPartStrMapType msg_parts;
 	splitMsg(buffer, msg_parts);
 	const string& cmd = msg_parts[MsgCmd];
 
 	m_multi_line_cmd = false;
 	m_reset_cmd = (cmd == CmdStrMap[Reset]);
 	if (!m_reset_cmd) {
-		map<MultiLineCmd, string>::const_iterator it, end;
+		MultiLineCmdStrMapType::const_iterator it, end;
 		end = MultiLineCmdStrMap.end();
 		for (it = MultiLineCmdStrMap.begin(); it != end; ++it) {
 			if (it->second == cmd) {
@@ -78,7 +79,6 @@ void SerialLine::readSingleLine(string& buffer, int max_len, double timeout)
 	m_espia_ser_line.readLine(buffer, max_len, timeout);
 }
 
-#include <iostream>
 void SerialLine::readMultiLine(string& buffer, int max_len)
 {
 	Timestamp timeout = Timestamp::now() + Timestamp(TimeoutMultiLine);
@@ -123,7 +123,7 @@ void SerialLine::getTimeout(double& timeout) const
 
 
 void SerialLine::splitMsg(const string& msg, 
-			  map<MsgPart, string>& msg_parts) const
+			  MsgPartStrMapType& msg_parts) const
 {
 	msg_parts.clear();
 
@@ -142,9 +142,7 @@ void SerialLine::splitMsg(const string& msg,
 		KeyPair(MsgVal,  "val"),  KeyPair(MsgReq, "req"),  
 		KeyPair(MsgTerm, "term"),
 	};
-	static int key_len = sizeof(key_list) / sizeof(key_list[0]);
-
-	const KeyPair *it, *end = key_list + key_len;
+	const KeyPair *it, *end = C_LIST_END(key_list);
 	for (it = key_list; it != end; ++it) {
 		const MsgPart& key = it->first;
 		const string&  grp = it->second;

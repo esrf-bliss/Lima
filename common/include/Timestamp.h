@@ -80,6 +80,7 @@ inline Timestamp operator /(Timestamp t, double factor)
 	return t /= factor;
 }
 
+double Sleep(double sec);
 
 }
 

@@ -12,7 +12,7 @@ void print_str(const string& desc, const string& str)
 
 void split_msg(const Frelon::SerialLine& frelon_ser_line, const string& msg)
 {
-	map<Frelon::SerialLine::MsgPart, string> msg_parts;
+	Frelon::SerialLine::MsgPartStrMapType msg_parts;
 
 	frelon_ser_line.splitMsg(msg, msg_parts);
 
@@ -53,6 +53,11 @@ void frelon_read_reg(Frelon::Camera& frelon_cam, Frelon::Reg reg)
 	cout << "Val" << " " << val << endl;
 }
 
+void test_sleep(double sleep_time)
+{
+	cout << "Sleep(" << sleep_time << "): " << Sleep(sleep_time) << endl;
+}
+
 void test_frelon(bool do_reset)
 {
 	Espia::Dev espia(0);
@@ -79,11 +84,33 @@ void test_frelon(bool do_reset)
 	frelon_cam.writeRegister(Frelon::ExpTime, 200);
 	frelon_read_reg(frelon_cam, Frelon::ExpTime);
 
-	msg = ">C\r\n";
-	frelon_cmd(frelon_ser_line, msg);
-
 	frelon_cam.writeRegister(Frelon::ExpTime, 100);
 	frelon_read_reg(frelon_cam, Frelon::ExpTime);
+
+	Frelon::FrameTransferMode ftm;
+	frelon_cam.getFrameTransferMode(ftm);
+	string mode = (ftm == Frelon::FTM) ? "FTM" : "FFM";
+	print_str("Mode", mode);
+
+	Frelon::InputChan input_chan;
+	frelon_cam.getInputChan(input_chan);
+	cout << "Chan " << int(input_chan) << ": ";
+
+	string sep = "";
+	for (int i = 0; i < 4; i++) {
+		Frelon::InputChan chan = Frelon::InputChan(1 << i);
+		if (frelon_cam.isChanActive(chan)) {
+			cout << sep << (i + 1);
+			sep = "&";
+		}
+	}
+	cout << endl;
+
+	test_sleep(0.1);
+	test_sleep(3.5);
+	test_sleep(0.1);
+	test_sleep(0.01);
+	test_sleep(0.001);
 }
 
 int main(int argc, char *argv[])

@@ -99,6 +99,74 @@ inline bool operator !=(const Point& p1, const Point& p2)
 std::ostream& operator <<(std::ostream& os, const Point& p);
 
 
+
+/*******************************************************************
+ * \class Corner
+ * \brief Basic type specifying a corner
+ *
+ * This class helps managing corners and borders
+ *******************************************************************/
+
+enum XBorder {
+	Left        = 0,
+	Right       = 1,
+};
+
+enum YBorder {
+	Top         = 0,
+	Bottom      = 1,
+};
+
+class Corner
+{
+ public:
+	Corner();
+	Corner(XBorder xb, YBorder yb);
+	
+	void set(XBorder xb, YBorder yb);
+
+	XBorder getX() const;
+	YBorder getY() const;
+
+	bool operator ==(const Corner& c);
+
+ private:
+	int m_code;
+};
+
+inline Corner::Corner()
+{
+	set(Left, Top);
+}
+
+inline Corner::Corner(XBorder xb, YBorder yb)
+{
+	set(xb, yb);
+}
+
+inline void Corner::set(XBorder xb, YBorder yb)
+{
+	m_code = (int(xb) << 1) | int(yb);
+}
+
+inline XBorder Corner::getX() const
+{
+	return XBorder(m_code >> 1);
+}
+
+inline YBorder Corner::getY() const
+{
+	return YBorder(m_code & 1);
+}
+
+inline bool Corner::operator ==(const Corner& c)
+{
+	return m_code == c.m_code;
+}
+
+extern const Corner TopLeft, TopRight, BottomLeft, BottomRight;
+
+
 /*******************************************************************
  * \class Size
  * \brief Basic rectangle size class
@@ -143,6 +211,8 @@ class Size
 
 	void alignTo(const Point& p, AlignDir align_dir)
 	{ m_xy.alignTo(p, align_dir); }
+
+	Point getCornerCoords(const Point& p, const Corner& c);
 
  private:
 	static bool isValidCoord(int i);

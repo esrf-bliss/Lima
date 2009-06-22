@@ -1,11 +1,13 @@
 #include "Frelon.h"
+#include "MiscUtils.h"
 
+using namespace lima;
 using namespace lima::Frelon;
 using namespace std;
 
 typedef pair<Reg, string> RegPair;
-static const RegPair RegStrList[] = {
-	RegPair(NrFrames,	"N"),
+static const RegPair RegStrCList[] = {
+	RegPair(NbFrames,	"N"),
 	RegPair(ExpTime,	"I"),
 	RegPair(ShutCloseTime,	"F"),
 	RegPair(LatencyTime,	"T"),
@@ -48,35 +50,56 @@ static const RegPair RegStrList[] = {
 	RegPair(ChanOnCcd,	"COC"),
 
 	RegPair(Version,	"VER"),
-	RegPair(SerNr,		"SN"),
+	RegPair(CompSerNb,	"SN"),
 	RegPair(Warn,		"W"),
 };
-static int RegStrListLen = sizeof(RegStrList) / sizeof(RegStrList[0]);
-map<Reg, string> lima::Frelon::RegStrMap(RegStrList, (RegStrList + 
-						      RegStrListLen));
+RegStrMapType lima::Frelon::RegStrMap(C_LIST_ITERS(RegStrCList));
 
 
 typedef pair<Cmd, string> CmdPair;
-static const CmdPair CmdStrList[] = {
+static const CmdPair CmdStrCList[] = {
 	CmdPair(Reset,		"RST"),
 	CmdPair(Start,		"S"),
 	CmdPair(Stop,		"O"),
 	CmdPair(Save,		"SAV"),
 };
-static int CmdStrListLen = sizeof(CmdStrList) / sizeof(CmdStrList[0]);
-map<Cmd, string> lima::Frelon::CmdStrMap(CmdStrList, (CmdStrList + 
-						      CmdStrListLen));
+CmdStrMapType lima::Frelon::CmdStrMap(C_LIST_ITERS(CmdStrCList));
 
 
 typedef pair<MultiLineCmd, string> MLCmdPair;
-static const MLCmdPair MLCmdStrList[] = {
+static const MLCmdPair MLCmdStrCList[] = {
 	MLCmdPair(Help,		"H"),
 	MLCmdPair(Config,	"C"),
 	MLCmdPair(Dac,		"D"),
 	MLCmdPair(Volt,		"V"),
 	MLCmdPair(Aoi,		"AOI"),
 };
-static int MLCmdStrListLen = sizeof(MLCmdStrList) / sizeof(MLCmdStrList[0]);
-static const MLCmdPair *MLCmdStrEnd = MLCmdStrList + MLCmdStrListLen;
-map<MultiLineCmd, string> lima::Frelon::MultiLineCmdStrMap(MLCmdStrList, 
-							   MLCmdStrEnd);
+MultiLineCmdStrMapType 
+lima::Frelon::MultiLineCmdStrMap(C_LIST_ITERS(MLCmdStrCList));
+
+
+typedef pair<FrameTransferMode, ChanRange> RangePair;
+static const RangePair FTMChanRangeCList[] = {
+	RangePair(FFM, ChanRange(1,  10)),
+	RangePair(FTM, ChanRange(10, 13)),
+};
+FTMChanRangeMapType 
+lima::Frelon::FTMChanRangeMap(C_LIST_ITERS(FTMChanRangeCList));
+
+
+static const InputChan FFMInputChanCList[] = {
+	Chan1, Chan2, Chan3, Chan4, Chan13, Chan24, Chan12, Chan34, Chan1234,
+};
+static const InputChan FTMInputChanCList[] = {
+	Chan1234, Chan34, Chan12,
+};
+typedef pair<FrameTransferMode, InputChanList> InputChanPair;
+static const InputChanPair FTMInputChanListCList[] = {
+	InputChanPair(FFM, InputChanList(C_LIST_ITERS(FFMInputChanCList))),
+	InputChanPair(FTM, InputChanList(C_LIST_ITERS(FTMInputChanCList))),
+};
+FTMInputChanListMapType 
+lima::Frelon::FTMInputChanListMap(C_LIST_ITERS(FTMInputChanListCList));
+
+
+const FrameDim lima::Frelon::MaxFrameDim(2048, 2048, Bpp16);
