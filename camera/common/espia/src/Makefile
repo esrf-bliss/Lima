@@ -1,5 +1,6 @@
 
-espia-objs = EspiaBase.o EspiaDev.o EspiaAcq.o EspiaSerialLine.o
+espia-objs = EspiaBase.o EspiaDev.o EspiaAcq.o EspiaSerialLine.o \
+	     EspiaBufferMgr.o
 
 include ../include/espia.inc
 

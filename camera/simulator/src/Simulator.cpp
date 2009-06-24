@@ -60,7 +60,9 @@ void Simulator::SimuThread::execStartAcq()
 		}
 
 		setStatus(Readout);
-		int buffer_nb = frame_nb % buffer_mgr.getNbBuffers();
+		int nb_buffers;
+		buffer_mgr.getNbBuffers(nb_buffers);
+		int buffer_nb = frame_nb % nb_buffers;
 		typedef unsigned char *BufferPtr;
 		BufferPtr ptr = BufferPtr(buffer_mgr.getBufferPtr(buffer_nb));
 		frame_builder.getNextFrame(ptr);

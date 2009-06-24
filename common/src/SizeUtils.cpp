@@ -42,10 +42,29 @@ ostream& lima::operator <<(ostream& os, const Bin& bin)
  * \brief Constant corners
  *******************************************************************/
 
-const Corner TopLeft    (Left,  Top);
-const Corner TopRight   (Right, Top);
-const Corner BottomLeft (Left,  Bottom);
-const Corner BottomRight(Right, Bottom);
+const Corner lima::TopLeft    (Left,  Top);
+const Corner lima::TopRight   (Right, Top);
+const Corner lima::BottomLeft (Left,  Bottom);
+const Corner lima::BottomRight(Right, Bottom);
+
+/*******************************************************************
+ * \brief X/YBorder and Corner ostream << operators
+ *******************************************************************/
+
+ostream& lima::operator <<(ostream& os, XBorder xb)
+{
+	return os << ((xb == Left) ? "Left" : "Right");
+}
+
+ostream& lima::operator <<(ostream& os, YBorder yb)
+{
+	return os << ((yb == Top)  ? "Top" : "Bottom");
+}
+
+ostream& lima::operator <<(ostream& os, const Corner& c)
+{
+	return os << c.getY() << c.getX();
+}
 
 
 /*******************************************************************

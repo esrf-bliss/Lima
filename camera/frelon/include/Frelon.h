@@ -83,6 +83,14 @@ enum RoiMode {
 	None, Slow, Fast, Kinetic,
 };
 
+enum TimeUnitFactor {
+	Milliseconds, Microseconds,
+};
+
+typedef std::map<TimeUnitFactor, double> TimeUnitFactorMapType;
+extern TimeUnitFactorMapType TimeUnitFactorMap;
+
+
 extern const FrameDim MaxFrameDim;
 
 

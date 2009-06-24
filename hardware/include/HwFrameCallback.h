@@ -24,8 +24,8 @@ class HwFrameCallbackGen
  public:
 	virtual ~HwFrameCallbackGen();
 
-	void registerFrameCallback(HwFrameCallback *frame_cb);
-	void unregisterFrameCallback(HwFrameCallback *frame_cb);
+	void registerFrameCallback(HwFrameCallback& frame_cb);
+	void unregisterFrameCallback(HwFrameCallback& frame_cb);
 
  protected:
 	HwFrameCallbackGen();

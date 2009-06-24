@@ -3,6 +3,7 @@
 
 #include "EspiaDev.h"
 #include "SizeUtils.h"
+#include "HwFrameCallback.h"
 
 namespace lima
 {
@@ -10,26 +11,26 @@ namespace lima
 namespace Espia
 {
 
-class Acq
+class Acq : public HwFrameCallbackGen
 {
  public:
 	Acq(Dev& dev);
 	~Acq();
 
-	typedef struct AcqStatus {
-		bool	acq_started;
-		bool	acq_running;
-		int	acq_run_nb;
-		int	last_acq_frame_nb;
-	} AcqStatusType;
+	typedef struct Status {
+		bool	started;
+		bool	running;
+		int	run_nb;
+		int	last_frame_nb;
+	} StatusType;
 
-	void bufferAlloc(const FrameDim& frame_dim, int& nb_buffers,
-			 int buffer_frames);
+	void bufferAlloc(int& nb_buffers, int nb_buffer_frames, 
+			 const FrameDim& frame_dim);
 	void bufferFree();
 
-	void getFrameDim(FrameDim& frame_dim);
+	const FrameDim& getFrameDim();
 	void getNbBuffers(int& nb_buffers);
-	void getBufferFrames(int& buffer_frames);
+	void getNbBufferFrames(int& nb_buffer_frames);
 
 	void *getBufferFramePtr(int buffer_nb, int frame_nb = 0);
 	void *getAcqFramePtr(int acq_frame_nb);
@@ -38,13 +39,20 @@ class Acq
 	void setNbFrames(int  nb_frames);
 	void getNbFrames(int& nb_frames);
 
-	void startAcq();
-	void stopAcq();
-	void getAcqStatus(AcqStatusType& acq_status);
+	void start();
+	void stop();
+	void getStatus(StatusType& status);
 
 	void getStartTimestamp(Timestamp& start_ts);
 
+ protected:
+	virtual void setFrameCallbackActive(bool cb_active);
+
  private:
+	enum FrameCallback {
+		Last, User,
+	};
+
 	bool hasVirtualBuffers();
 	int realBufferNb(int virt_buffer, int virt_frame);
 	int realFrameNb (int virt_buffer, int virt_frame);
@@ -55,11 +63,13 @@ class Acq
 				HwFrameInfoType& virt_info);
 	void resetFrameInfo(struct img_frame_info& frame_info);
 
-	static int dispatchFrameCb(struct espia_cb_data *cb_data);
+	static int dispatchFrameCallback(struct espia_cb_data *cb_data);
 
-	void registerLastFrameCb();
-	void unregisterLastFrameCb();
-	void lastFrameCb(struct espia_cb_data *cb_data);
+	void enableFrameCallback(FrameCallback frame_cb);
+	void disableFrameCallback(FrameCallback frame_cb);
+	int& getFrameCallbackNb(FrameCallback frame_cb);
+	void lastFrameCallback(struct espia_cb_data *cb_data);
+	void userFrameCallback(struct espia_cb_data *cb_data);
 
 	AutoMutex acqLock();
 
@@ -67,7 +77,7 @@ class Acq
 
 	FrameDim m_frame_dim;
 	int m_nb_buffers;
-	int m_buffer_frames;
+	int m_nb_buffer_frames;
 	int m_real_frame_factor;
 	int m_real_frame_size;
 
@@ -76,6 +86,7 @@ class Acq
 	Timestamp m_start_ts;
 	struct img_frame_info m_last_frame_info;
 	int m_last_frame_cb_nr;
+	int m_user_frame_cb_nr;
 };
 
 inline bool Acq::hasVirtualBuffers()
@@ -96,12 +107,12 @@ inline int Acq::realFrameNb (int virt_buffer, int virt_frame)
 inline int Acq::virtBufferNb(int real_buffer, int real_frame)
 {
 	return (real_buffer * m_real_frame_factor + 
-		real_frame / m_buffer_frames);
+		real_frame / m_nb_buffer_frames);
 }
 
 inline int Acq::virtFrameNb (int real_buffer, int real_frame)
 {
-	return real_frame % m_buffer_frames;
+	return real_frame % m_nb_buffer_frames;
 }
 
 inline void Acq::getStartTimestamp(Timestamp& start_ts)

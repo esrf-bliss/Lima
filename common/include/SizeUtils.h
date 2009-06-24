@@ -117,6 +117,9 @@ enum YBorder {
 	Bottom      = 1,
 };
 
+std::ostream& operator <<(std::ostream& os, XBorder xb);
+std::ostream& operator <<(std::ostream& os, YBorder yb);
+
 class Corner
 {
  public:
@@ -165,6 +168,8 @@ inline bool Corner::operator ==(const Corner& c)
 }
 
 extern const Corner TopLeft, TopRight, BottomLeft, BottomRight;
+
+std::ostream& operator <<(std::ostream& os, const Corner& c);
 
 
 /*******************************************************************

@@ -14,14 +14,14 @@ BufferAllocMgr::~BufferAllocMgr()
 
 void BufferAllocMgr::clearBuffer(int buffer_nb)
 {
-	void *ptr = getBufferPtr(buffer_nb);
-	const FrameDim& frame_dim = getFrameDim();
-	memset(ptr, 0, frame_dim.getMemSize());
+	ClearBuffer(getBufferPtr(buffer_nb), 1, getFrameDim());
 }
 
 void BufferAllocMgr::clearAllBuffers()
 {
-	for (int i = 0; i < getNbBuffers(); i++)
+	int nb_buffers;
+	getNbBuffers(nb_buffers);
+	for (int i = 0; i < nb_buffers; i++)
 		clearBuffer(i);
 }
 
@@ -41,23 +41,19 @@ SoftBufferAllocMgr::~SoftBufferAllocMgr()
 
 int SoftBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
 {
-	int frame_size = frame_dim.getMemSize();
-	if (frame_size <= 0)
-		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
-
-	int tot_buffers;
-	GetSystemMem(frame_size, tot_buffers);
-	return (long long) tot_buffers * 3 / 4;
+	return GetDefMaxNbBuffers(frame_dim);
 }
 
-void SoftBufferAllocMgr::allocBuffers(int nb_buffers, 
-				 const FrameDim& frame_dim)
+void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
+				      const FrameDim& frame_dim)
 {
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
-
-	if ((frame_dim == m_frame_dim) && (nb_buffers == getNbBuffers()))
+       
+	int curr_nb_buffers;
+	getNbBuffers(curr_nb_buffers);
+	if ((frame_dim == m_frame_dim) && (nb_buffers == curr_nb_buffers))
 		return;
 
 	releaseBuffers();
@@ -92,9 +88,9 @@ const FrameDim& SoftBufferAllocMgr::getFrameDim()
 	return m_frame_dim;
 }
 
-int SoftBufferAllocMgr::getNbBuffers()
+void SoftBufferAllocMgr::getNbBuffers(int& nb_buffers)
 {
-	return m_buffer_list.size();
+	nb_buffers = m_buffer_list.size();
 }
 
 void *SoftBufferAllocMgr::getBufferPtr(int buffer_nb)
@@ -110,6 +106,41 @@ void *SoftBufferAllocMgr::getBufferPtr(int buffer_nb)
 BufferCbMgr::~BufferCbMgr()
 {
 }
+
+void BufferCbMgr::clearBuffer(int buffer_nb)
+{
+	int nb_concat_frames;
+	getNbConcatFrames(nb_concat_frames);
+	ClearBuffer(getBufferPtr(buffer_nb, 0), nb_concat_frames, 
+		    getFrameDim());
+}
+
+void BufferCbMgr::clearAllBuffers()
+{
+	int nb_buffers;
+	getNbBuffers(nb_buffers);
+	for (int i = 0; i < nb_buffers; i++)
+		clearBuffer(i);
+}
+
+void BufferCbMgr::setStartTimestamp(Timestamp start_ts)
+{
+	if (!start_ts.isSet())
+		throw LIMA_HW_EXC(InvalidValue, "Invalid start timestamp");
+	m_start_ts = start_ts;
+}
+
+void BufferCbMgr::getStartTimestamp(Timestamp& start_ts) 
+{
+	start_ts = m_start_ts;
+}
+
+BufferCbMgr::Cap lima::operator |(BufferCbMgr::Cap c1, BufferCbMgr::Cap c2)
+{
+	return BufferCbMgr::Cap(int(c1) | int(c2));
+}
+
+
 
 /*******************************************************************
  * \brief StdBufferCbMgr constructor
@@ -136,14 +167,18 @@ int StdBufferCbMgr::getMaxNbBuffers(const FrameDim& frame_dim)
 	return m_alloc_mgr.getMaxNbBuffers(frame_dim);
 }
 
-void StdBufferCbMgr::allocBuffers(int nb_buffers, 
+void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames,
 				  const FrameDim& frame_dim)
 {
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
+	else if (nb_concat_frames != 1)
+		throw LIMA_HW_EXC(NotSupported, "Concat not supported yet");
 
-	if ((frame_dim == getFrameDim()) && (nb_buffers == getNbBuffers()))
+	int curr_nb_buffers;
+	getNbBuffers(curr_nb_buffers);
+	if ((frame_dim == getFrameDim()) && (nb_buffers == curr_nb_buffers))
 		return;
 
 	releaseBuffers();
@@ -166,18 +201,6 @@ void StdBufferCbMgr::releaseBuffers()
 	m_info_list.clear();
 }
 
-void StdBufferCbMgr::setStartTimestamp(Timestamp start_ts)
-{
-	if (!start_ts.isSet())
-		throw LIMA_HW_EXC(InvalidValue, "Invalid start timestamp");
-	m_start_ts = start_ts;
-}
-
-void StdBufferCbMgr::getStartTimestamp(Timestamp& start_ts) 
-{
-	start_ts = m_start_ts;
-}
-
 void StdBufferCbMgr::setFrameCallbackActive(bool cb_active)
 {
 	m_fcb_act = cb_active;
@@ -186,11 +209,15 @@ void StdBufferCbMgr::setFrameCallbackActive(bool cb_active)
 bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 {
 	Timestamp now = Timestamp::now();
+	Timestamp start;
+	getStartTimestamp(start);
 	if (!frame_info.frame_timestamp.isSet())
-		frame_info.frame_timestamp = now - m_start_ts;
+		frame_info.frame_timestamp = now - start;
 
-        int buffer_nb = frame_info.acq_frame_nb % getNbBuffers();
-	void *ptr = getBufferPtr(buffer_nb);
+	int nb_buffers;
+	getNbBuffers(nb_buffers);
+        int buffer_nb = frame_info.acq_frame_nb % nb_buffers;
+	void *ptr = getBufferPtr(buffer_nb, 0);
 	if (!frame_info.frame_ptr)
 		frame_info.frame_ptr = ptr;
 	else if (frame_info.frame_ptr != ptr)
@@ -218,13 +245,20 @@ const FrameDim& StdBufferCbMgr::getFrameDim()
 	return m_alloc_mgr.getFrameDim();
 }
 
-int StdBufferCbMgr::getNbBuffers()
+void StdBufferCbMgr::getNbBuffers(int& nb_buffers)
 {
-	return m_alloc_mgr.getNbBuffers();
+	m_alloc_mgr.getNbBuffers(nb_buffers);
 }
 
-void *StdBufferCbMgr::getBufferPtr(int buffer_nb)
+void StdBufferCbMgr::getNbConcatFrames(int& nb_concat_frames)
 {
+	nb_concat_frames = 1;
+}
+
+void *StdBufferCbMgr::getBufferPtr(int buffer_nb, int concat_frame_nb)
+{
+	if (concat_frame_nb != 0)
+		throw LIMA_HW_EXC(NotSupported, "Concat not supported yet");
 	return m_alloc_mgr.getBufferPtr(buffer_nb);
 }
 
@@ -240,7 +274,9 @@ void StdBufferCbMgr::clearAllBuffers()
 
 void StdBufferCbMgr::getFrameInfo(int acq_frame_nb, HwFrameInfo& info)
 {
-	int buffer_nb = acq_frame_nb % getNbBuffers();
+	int nb_buffers;
+	getNbBuffers(nb_buffers);
+	int buffer_nb = acq_frame_nb % nb_buffers;
 	if (m_info_list[buffer_nb].acq_frame_nb != acq_frame_nb)
 		throw LIMA_HW_EXC(Error, "Frame not available");
 
@@ -278,7 +314,9 @@ void BufferCtrlMgr::getFrameDim(FrameDim& frame_dim)
 
 void BufferCtrlMgr::setNbBuffers(int nb_buffers)
 {
-	if (nb_buffers == m_effect_buffer_mgr->getNbBuffers())
+	int curr_nb_buffers;
+	getNbBuffers(curr_nb_buffers);
+	if (nb_buffers == curr_nb_buffers)
 		return;
 
 	int max_nb_buffers;
@@ -286,12 +324,13 @@ void BufferCtrlMgr::setNbBuffers(int nb_buffers)
 	if (nb_buffers > max_nb_buffers)
 		throw LIMA_HW_EXC(InvalidValue, "Too many buffers");
 
-	m_effect_buffer_mgr->allocBuffers(nb_buffers, m_frame_dim);
+	m_effect_buffer_mgr->allocBuffers(nb_buffers, m_nb_concat_frames,
+					  m_frame_dim);
 }
 
 void BufferCtrlMgr::getNbBuffers(int& nb_buffers)
 {
-	nb_buffers = m_effect_buffer_mgr->getNbBuffers();
+	m_effect_buffer_mgr->getNbBuffers(nb_buffers);
 }
 
 void BufferCtrlMgr::setNbConcatFrames(int nb_concat_frames)
@@ -323,12 +362,12 @@ void BufferCtrlMgr::getMaxNbBuffers(int& max_nb_buffers)
 	max_nb_buffers = m_effect_buffer_mgr->getMaxNbBuffers(m_frame_dim);
 }
 
-void BufferCtrlMgr::registerFrameCallback(HwFrameCallback *frame_cb)
+void BufferCtrlMgr::registerFrameCallback(HwFrameCallback& frame_cb)
 {
 	m_effect_buffer_mgr->registerFrameCallback(frame_cb);
 }
 
-void BufferCtrlMgr::unregisterFrameCallback(HwFrameCallback *frame_cb)
+void BufferCtrlMgr::unregisterFrameCallback(HwFrameCallback& frame_cb)
 {
 	m_effect_buffer_mgr->unregisterFrameCallback(frame_cb);
 }
@@ -355,9 +394,9 @@ void BufferCtrlMgr::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 	m_effect_buffer_mgr->getFrameInfo(acq_frame_nb, info);
 }
 
-void *BufferCtrlMgr::getBufferPtr(int buffer_nb)
+void *BufferCtrlMgr::getBufferPtr(int buffer_nb, int concat_frame_nb)
 {
-	return m_effect_buffer_mgr->getBufferPtr(buffer_nb);
+	return m_effect_buffer_mgr->getBufferPtr(buffer_nb, concat_frame_nb);
 }
 
 void *BufferCtrlMgr::getFramePtr(int acq_frame_nb)

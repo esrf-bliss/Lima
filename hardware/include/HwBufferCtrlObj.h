@@ -26,14 +26,14 @@ public:
 
 	virtual void getMaxNbBuffers(int& max_nb_buffers) = 0;
 
-	virtual void *getBufferPtr(int buffer_nb) = 0;
+	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0) = 0;
 	virtual void *getFramePtr(int acq_frame_nb) = 0;
 
 	virtual void getStartTimestamp(Timestamp& start_ts) = 0;
 	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info) = 0;
 
-	virtual void   registerFrameCallback(HwFrameCallback *frame_cb) = 0;
-	virtual void unregisterFrameCallback(HwFrameCallback *frame_cb) = 0;
+	virtual void   registerFrameCallback(HwFrameCallback& frame_cb) = 0;
+	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb) = 0;
 };
  
 } // namespace lima

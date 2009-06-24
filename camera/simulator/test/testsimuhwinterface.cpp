@@ -69,7 +69,7 @@ void test_simu_hw_interface()
 	FrameDim effect_frame_dim = frame_dim / bin;
 	hw_buffer->setFrameDim(effect_frame_dim);
 	hw_buffer->setNbBuffers(10);
-	hw_buffer->registerFrameCallback(&cb);
+	hw_buffer->registerFrameCallback(cb);
 
 	print_status(simu_hw);
 	simu_hw.startAcq();

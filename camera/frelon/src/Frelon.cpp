@@ -102,4 +102,15 @@ FTMInputChanListMapType
 lima::Frelon::FTMInputChanListMap(C_LIST_ITERS(FTMInputChanListCList));
 
 
+typedef pair<TimeUnitFactor, double> FactorPair;
+static const FactorPair TimeUnitFactorCList[] = {
+	FactorPair(Milliseconds, 1e-3),
+	FactorPair(Microseconds, 1e-6),
+};
+TimeUnitFactorMapType 
+lima::Frelon::TimeUnitFactorMap(C_LIST_ITERS(TimeUnitFactorCList));
+
+
 const FrameDim lima::Frelon::MaxFrameDim(2048, 2048, Bpp16);
+
+

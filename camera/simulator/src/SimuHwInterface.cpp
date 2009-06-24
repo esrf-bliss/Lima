@@ -129,9 +129,9 @@ void SimuBufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers)
 	m_buffer_mgr.getMaxNbBuffers(max_nb_buffers);
 }
 
-void *SimuBufferCtrlObj::getBufferPtr(int buffer_nb)
+void *SimuBufferCtrlObj::getBufferPtr(int buffer_nb, int concat_frame_nb)
 {
-	return m_buffer_mgr.getBufferPtr(buffer_nb);
+	return m_buffer_mgr.getBufferPtr(buffer_nb, concat_frame_nb);
 }
 
 void *SimuBufferCtrlObj::getFramePtr(int acq_frame_nb)
@@ -149,12 +149,12 @@ void SimuBufferCtrlObj::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 	m_buffer_mgr.getFrameInfo(acq_frame_nb, info);
 }
 
-void SimuBufferCtrlObj::registerFrameCallback(HwFrameCallback *frame_cb)
+void SimuBufferCtrlObj::registerFrameCallback(HwFrameCallback& frame_cb)
 {
 	m_buffer_mgr.registerFrameCallback(frame_cb);
 }
 
-void SimuBufferCtrlObj::unregisterFrameCallback(HwFrameCallback *frame_cb)
+void SimuBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
 {
 	m_buffer_mgr.unregisterFrameCallback(frame_cb);
 }

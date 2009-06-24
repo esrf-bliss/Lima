@@ -44,9 +44,9 @@ class Camera
 	void setRoiMode(RoiMode  roi_mode);
 	void getRoiMode(RoiMode& roi_mode);
 
-	void checkRoi(Roi& roi);
-	void setRoi(const Roi& roi);
-	void getRoi(Roi& roi);
+	void checkRoi(const Roi& set_roi, Roi& hw_roi);
+	void setRoi(const Roi& set_roi);
+	void getRoi(Roi& hw_roi);
 
 	void setTriggerMode(TrigMode  trig_mode);
 	void getTriggerMode(TrigMode& trig_mode);
@@ -59,6 +59,9 @@ class Camera
 
 	void setNbFrames(int  nb_frames);
 	void getNbFrames(int& nb_frames);
+
+	void start();
+	void stop();
 
  private:
 	static const double HorzBinSleepTime;
@@ -89,10 +92,16 @@ class Camera
 	void getImageRoiOffset(const Roi& req_roi, const Roi& image_roi,
 			       Point& roi_offset);
         void checkRoiMode(const Roi& roi);
-	void processRoiReq(Roi& roi, Roi& chan_roi, Point& roi_offset);
+	void processSetRoi(const Roi& req_roi, Roi& hw_roi, Roi& chan_roi, 
+			   Point& roi_offset);
+
+	void setTimeUnitFactor(TimeUnitFactor  time_unit_factor);
+	void getTimeUnitFactor(TimeUnitFactor& time_unit_factor);
 
 	SerialLine m_ser_line;
 	Point m_roi_offset;
+	TrigMode m_trig_mode;
+	int m_nb_frames;
 };
 
 inline bool Camera::isChanActive(InputChan chan)

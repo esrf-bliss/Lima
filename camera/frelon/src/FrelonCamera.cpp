@@ -1,5 +1,6 @@
 #include "FrelonCamera.h"
 #include "RegEx.h"
+#include "MiscUtils.h"
 #include <sstream>
 
 using namespace lima::Frelon;
@@ -10,7 +11,8 @@ const double Camera::HorzBinSleepTime = 2;
 Camera::Camera(Espia::SerialLine& espia_ser_line)
 	: m_ser_line(espia_ser_line)
 {
-
+	m_trig_mode = IntTrig;
+	readRegister(NbFrames, m_nb_frames);
 }
 
 SerialLine& Camera::getSerialLine()
@@ -180,6 +182,9 @@ void Camera::setBin(const Bin& bin)
 	getBin(curr_bin);
 	if (bin == curr_bin)
 		return;
+
+	Roi roi;
+	setRoi(roi);
 
 	writeRegister(BinHorz, bin.getX());
 	Sleep(HorzBinSleepTime);
@@ -360,37 +365,39 @@ void Camera::checkRoiMode(const Roi& roi)
 	setRoiMode(roi_mode);
 }
 
-void Camera::checkRoi(Roi& roi)
+void Camera::checkRoi(const Roi& set_roi, Roi& hw_roi)
 {
-	if (!roi.isActive())
+	if (!set_roi.isActive()) {
+		hw_roi = set_roi;
 		return;
+	}
 
 	Roi chan_roi;
 	Point roi_offset;
-	processRoiReq(roi, chan_roi, roi_offset);
+	processSetRoi(set_roi, hw_roi, chan_roi, roi_offset);
 }
 
-void Camera::processRoiReq(Roi& roi, Roi& chan_roi, Point& roi_offset)
+void Camera::processSetRoi(const Roi& set_roi, Roi& hw_roi, 
+			   Roi& chan_roi, Point& roi_offset)
 {
-	roi.alignCornersTo(Point(32, 1), Ceil);
-	getChanRoi(roi, chan_roi);
+	Roi aligned_roi = set_roi;
+	aligned_roi.alignCornersTo(Point(32, 1), Ceil);
+	getChanRoi(aligned_roi, chan_roi);
 	Roi image_roi;
 	getImageRoi(chan_roi, image_roi);
-	getImageRoiOffset(roi, image_roi, roi_offset);
-	getFinalRoi(image_roi, roi_offset, roi);
+	getImageRoiOffset(set_roi, image_roi, roi_offset);
+	getFinalRoi(image_roi, roi_offset, hw_roi);
 }
 
-void Camera::setRoi(const Roi& roi)
+void Camera::setRoi(const Roi& set_roi)
 {
-	checkRoiMode(roi);
-	if (!roi.isActive())
+	checkRoiMode(set_roi);
+	if (!set_roi.isActive())
 		return;
 
-	Roi chan_roi, proc_roi = roi;
+	Roi hw_roi, chan_roi;
 	Point roi_offset;
-	processRoiReq(proc_roi, chan_roi, roi_offset);
-	if (proc_roi != roi)
-		throw LIMA_HW_EXC(InvalidValue, "Requested roi not valid");
+	processSetRoi(set_roi, hw_roi, chan_roi, roi_offset);
 
 	Point tl  = chan_roi.getTopLeft();
 	Size size = chan_roi.getSize();
@@ -403,8 +410,15 @@ void Camera::setRoi(const Roi& roi)
 	m_roi_offset = roi_offset;
 }
 
-void Camera::getRoi(Roi& roi)
+void Camera::getRoi(Roi& hw_roi)
 {
+	hw_roi.reset();
+
+	RoiMode roi_mode;
+	getRoiMode(roi_mode);
+	if (roi_mode == None)
+		return;
+
 	int rpb, rpw, rlb, rlw;
 	readRegister(RoiPixelBegin, rpb);
 	readRegister(RoiPixelWidth, rpw);
@@ -414,6 +428,104 @@ void Camera::getRoi(Roi& roi)
 	Roi chan_roi(Point(rpb, rlb), Size(rpw, rlw));
 	Roi image_roi;
 	getImageRoi(chan_roi, image_roi);
-	getFinalRoi(image_roi, m_roi_offset, roi);
+	getFinalRoi(image_roi, m_roi_offset, hw_roi);
+}
+
+void Camera::setTriggerMode(TrigMode trig_mode)
+{
+	m_trig_mode = trig_mode;
+}
+
+void Camera::getTriggerMode(TrigMode& trig_mode)
+{
+	trig_mode = m_trig_mode;
+}
+
+void Camera::setTimeUnitFactor(TimeUnitFactor time_unit_factor)
+{
+	int time_unit = int(time_unit_factor);
+	writeRegister(TimeUnit, time_unit);
+}
+
+void Camera::getTimeUnitFactor(TimeUnitFactor& time_unit_factor)
+{
+	int time_unit;
+	readRegister(TimeUnit, time_unit);
+	time_unit_factor = TimeUnitFactor(time_unit);
+}
+
+void Camera::setExpTime(double exp_time)
+{
+	const int MaxVal = (1 << 16) - 1;
+
+	bool ok = false;
+	int exp_val;
+	TimeUnitFactor seq_clist[] = { Microseconds, Milliseconds };
+	TimeUnitFactor *it, *end = C_LIST_END(seq_clist);
+	for (it = seq_clist; it != end; ++it) {
+		double factor = TimeUnitFactorMap[*it];
+		exp_val = int(exp_time / factor + 0.1);
+		ok = (exp_val <= MaxVal);
+		if (ok)
+			break;
+	}
+	if (!ok)
+		throw LIMA_HW_EXC(InvalidValue, "Exposure time too high");
+
+	TimeUnitFactor time_unit_factor = (exp_val == 0) ? Milliseconds : *it;
+	setTimeUnitFactor(time_unit_factor);
+	writeRegister(ExpTime, exp_val);
+}
+
+void Camera::getExpTime(double& exp_time)
+{
+	TimeUnitFactor time_unit_factor;
+	getTimeUnitFactor(time_unit_factor);
+	int exp_val;
+	readRegister(ExpTime, exp_val);
+	exp_time = exp_val * TimeUnitFactorMap[time_unit_factor];
+}
+
+void Camera::setLatTime(double lat_time)
+{
+	int lat_val = int(lat_time / TimeUnitFactorMap[Milliseconds] + 0.1);
+	writeRegister(LatencyTime, lat_val);
+}
+
+void Camera::getLatTime(double& lat_time)
+{
+	int lat_val;
+	readRegister(LatencyTime, lat_val);
+	lat_time = lat_val * TimeUnitFactorMap[Milliseconds];
+}
+
+void Camera::setNbFrames(int nb_frames)
+{
+	TrigMode trig_mode;
+	getTriggerMode(trig_mode);
+	int cam_nb_frames = (trig_mode == ExtTrigMult) ? 1 : nb_frames;
+	writeRegister(NbFrames, cam_nb_frames);
+	m_nb_frames = nb_frames;
+}
+
+void Camera::getNbFrames(int& nb_frames)
+{
+	nb_frames = m_nb_frames;
+}
+
+void Camera::start()
+{
+	TrigMode trig_mode;
+	getTriggerMode(trig_mode);
+	if (trig_mode == IntTrig)
+		sendCmd(Start);
+}
+
+void Camera::stop()
+{
+	TrigMode trig_mode;
+	getTriggerMode(trig_mode);
+	if (trig_mode != ExtGate)
+		sendCmd(Stop);
 }
 
