@@ -112,6 +112,7 @@ void test_frelon(bool do_reset)
 	Espia::SerialLine espia_ser_line(espia_dev);
 	Frelon::SerialLine frelon_ser_line(espia_ser_line);
 	Frelon::Camera frelon_cam(espia_ser_line);
+	BufferCtrlMgr buffer_mgr(espia_buffer_mgr);
 
 	string msg;
 
@@ -201,23 +202,29 @@ void test_frelon(bool do_reset)
 	FrameDim frame_dim;
 	frelon_cam.getFrameDim(frame_dim);
 	frame_dim /= bin;
-	int max_nb_buffers = espia_buffer_mgr.getMaxNbBuffers(frame_dim);
-	cout << "MaxNbBuffers " << max_nb_buffers << endl;
 
-	int nb_buffers = max_nb_buffers;
+	buffer_mgr.setFrameDim(frame_dim);
+	int max_nb_buffers;
+	buffer_mgr.getMaxNbBuffers(max_nb_buffers);
+	cout << "MaxNbBuffers " << max_nb_buffers << endl;
 	int nb_concat_frames = 1;
-	espia_buffer_mgr.allocBuffers(nb_buffers, nb_concat_frames, frame_dim);
-	espia_buffer_mgr.getNbBuffers(nb_buffers);
-	espia_buffer_mgr.getNbConcatFrames(nb_concat_frames);
-	cout << "NbBuffers " << nb_buffers << ", "
+	buffer_mgr.setNbConcatFrames(nb_concat_frames);
+	int nb_buffers = max_nb_buffers;
+	buffer_mgr.setNbBuffers(nb_buffers);
+
+	buffer_mgr.getFrameDim(frame_dim);
+	buffer_mgr.getNbBuffers(nb_buffers);
+	buffer_mgr.getNbConcatFrames(nb_concat_frames);
+	cout << "FrameDim " << frame_dim << ", "
+	     << "NbBuffers " << nb_buffers << ", "
 	     << "NbConcatFrames " << nb_concat_frames << endl;
 
 	TrigMode trig_mode;
-	frelon_cam.getTriggerMode(trig_mode);
+	frelon_cam.getTrigMode(trig_mode);
 	cout << "TrigMode " << trig_mode << endl;
 	trig_mode = IntTrig;
-	frelon_cam.setTriggerMode(trig_mode);
-	frelon_cam.getTriggerMode(trig_mode);
+	frelon_cam.setTrigMode(trig_mode);
+	frelon_cam.getTrigMode(trig_mode);
 	cout << "TrigMode " << trig_mode << endl;
 	
 	int nb_frames;
@@ -238,7 +245,7 @@ void test_frelon(bool do_reset)
 	Cond acq_finished;
 
 	FrelonFrameCb frame_cb(nb_frames, acq_finished);
-	espia_buffer_mgr.registerFrameCallback(frame_cb);
+	buffer_mgr.registerFrameCallback(frame_cb);
 
 	espia_acq.start();
 	frelon_cam.start();

@@ -93,6 +93,18 @@ extern TimeUnitFactorMapType TimeUnitFactorMap;
 
 extern const FrameDim MaxFrameDim;
 
+enum ChipType {
+	Atmel,
+	Kodak,
+};
+
+typedef std::map<ChipType, double> ChipPixelSizeMapType;
+extern ChipPixelSizeMapType ChipPixelSizeMap;
+
+enum {
+	MaxBinX = 8,
+	MaxBinY = 1024,
+};
 
 
 } // namespace Frelon

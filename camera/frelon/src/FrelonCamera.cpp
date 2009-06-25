@@ -65,11 +65,30 @@ void Camera::getSerialNbParam(SerNbParam param, int& val)
 	val = complex_ser_nb & int(param);
 }
 
-void Camera::getCameraType(int& type)
+void Camera::getSerialNb(int& ser_nb)
+{
+	getSerialNbParam(SerNb, ser_nb);
+}
+
+void Camera::isFrelon2k16(bool& is_frelon_2k16)
 {
 	int frelon_2k16;
 	getSerialNbParam(F2k16, frelon_2k16);
-	type = frelon_2k16 ? 2016 : 2014;
+	is_frelon_2k16 = bool(frelon_2k16);
+}
+
+void Camera::isFrelon4M(bool& is_frelon_4m)
+{
+	int f4m;
+	getSerialNbParam(F4M, f4m);
+	is_frelon_4m = bool(f4m);
+}
+
+void Camera::hasTaper(bool& has_taper)
+{
+	int taper;
+	getSerialNbParam(Taper, taper);
+	has_taper = bool(taper);
 }
 
 void Camera::setChanMode(int chan_mode)
@@ -178,6 +197,9 @@ void Camera::getFlip(Point& flip)
 
 void Camera::setBin(const Bin& bin)
 {
+	if ((bin.getX() > 8) || (bin.getY() > 1024))
+		throw LIMA_HW_EXC(InvalidValue, "Bin must be <= 8x1024");
+
 	Bin curr_bin;
 	getBin(curr_bin);
 	if (bin == curr_bin)
@@ -431,12 +453,12 @@ void Camera::getRoi(Roi& hw_roi)
 	getFinalRoi(image_roi, m_roi_offset, hw_roi);
 }
 
-void Camera::setTriggerMode(TrigMode trig_mode)
+void Camera::setTrigMode(TrigMode trig_mode)
 {
 	m_trig_mode = trig_mode;
 }
 
-void Camera::getTriggerMode(TrigMode& trig_mode)
+void Camera::getTrigMode(TrigMode& trig_mode)
 {
 	trig_mode = m_trig_mode;
 }
@@ -502,7 +524,7 @@ void Camera::getLatTime(double& lat_time)
 void Camera::setNbFrames(int nb_frames)
 {
 	TrigMode trig_mode;
-	getTriggerMode(trig_mode);
+	getTrigMode(trig_mode);
 	int cam_nb_frames = (trig_mode == ExtTrigMult) ? 1 : nb_frames;
 	writeRegister(NbFrames, cam_nb_frames);
 	m_nb_frames = nb_frames;
@@ -516,7 +538,7 @@ void Camera::getNbFrames(int& nb_frames)
 void Camera::start()
 {
 	TrigMode trig_mode;
-	getTriggerMode(trig_mode);
+	getTrigMode(trig_mode);
 	if (trig_mode == IntTrig)
 		sendCmd(Start);
 }
@@ -524,7 +546,7 @@ void Camera::start()
 void Camera::stop()
 {
 	TrigMode trig_mode;
-	getTriggerMode(trig_mode);
+	getTrigMode(trig_mode);
 	if (trig_mode != ExtGate)
 		sendCmd(Stop);
 }

@@ -1,7 +1,7 @@
 
 include ../../common/espia/include/espia.inc
 
-frelon-objs = FrelonBase.o FrelonSerialLine.o FrelonCamera.o
+frelon-objs = FrelonBase.o FrelonSerialLine.o FrelonCamera.o FrelonInterface.o
 
 CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../hardware/include -I../../../common/include \

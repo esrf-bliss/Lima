@@ -23,7 +23,10 @@ class Camera
 	void getVersion(std::string& ver);
 
 	void getComplexSerialNb(int& complex_ser_nb);
-	void getCameraType(int& type);
+	void getSerialNb(int& ser_nb);
+	void isFrelon2k16(bool& is_frelon_2k16);
+	void isFrelon4M(bool& is_frelon_4m);
+	void hasTaper(bool& has_taper);
 
 	void setInputChan(InputChan  input_chan);
 	void getInputChan(InputChan& input_chan);
@@ -48,8 +51,8 @@ class Camera
 	void setRoi(const Roi& set_roi);
 	void getRoi(Roi& hw_roi);
 
-	void setTriggerMode(TrigMode  trig_mode);
-	void getTriggerMode(TrigMode& trig_mode);
+	void setTrigMode(TrigMode  trig_mode);
+	void getTrigMode(TrigMode& trig_mode);
 	
 	void setExpTime(double  exp_time);
 	void getExpTime(double& exp_time);
@@ -67,6 +70,7 @@ class Camera
 	static const double HorzBinSleepTime;
 
 	void sendCmd(Cmd cmd);
+
 	void getSerialNbParam(SerNbParam param, int& val);
 
 	void setChanMode(int  chan_mode);

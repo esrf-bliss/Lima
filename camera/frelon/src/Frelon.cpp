@@ -114,3 +114,10 @@ lima::Frelon::TimeUnitFactorMap(C_LIST_ITERS(TimeUnitFactorCList));
 const FrameDim lima::Frelon::MaxFrameDim(2048, 2048, Bpp16);
 
 
+typedef pair<ChipType, double> ChipSizePair;
+static const ChipSizePair ChipPixelSizeCList[] = {
+	ChipSizePair(Atmel, 14e-6),
+	ChipSizePair(Kodak, 24e-6),
+};
+ChipPixelSizeMapType 
+lima::Frelon::ChipPixelSizeMap(C_LIST_ITERS(ChipPixelSizeCList));
