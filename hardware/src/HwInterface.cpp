@@ -56,6 +56,18 @@ ostream& lima::operator <<(ostream& os,
 	return os << name;
 }
 
+HwInterface::DetStatus lima::operator |(HwInterface::DetStatus s1,
+					HwInterface::DetStatus s2)
+{
+	return HwInterface::DetStatus(int(s1) | int(s2));
+}
+
+HwInterface::DetStatus& lima::operator |=(HwInterface::DetStatus& s1,
+					  HwInterface::DetStatus  s2)
+{
+	return s1 = s1 | s2;
+}
+
 ostream& lima::operator <<(ostream& os, 
 			   const HwInterface::StatusType& status)
 {

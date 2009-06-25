@@ -31,6 +31,8 @@ class SerialLine : public HwSerialLine
 	
 	SerialLine(Espia::SerialLine& espia_ser_line);
 	
+	Espia::SerialLine& getEspiaSerialLine();
+
 	virtual void write(const std::string& buffer, 
 			   bool no_wait = false);
 	virtual void read(std::string& buffer, 

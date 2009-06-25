@@ -3,10 +3,13 @@
 #include "MiscUtils.h"
 #include <sstream>
 
+using namespace lima;
 using namespace lima::Frelon;
 using namespace std;
 
-const double Camera::HorzBinSleepTime = 2;
+const double Camera::HorzBinChangeTime = 2.0;
+const double Camera::MaxReadoutTime    = 0.7;
+
 
 Camera::Camera(Espia::SerialLine& espia_ser_line)
 	: m_ser_line(espia_ser_line)
@@ -18,6 +21,13 @@ Camera::Camera(Espia::SerialLine& espia_ser_line)
 SerialLine& Camera::getSerialLine()
 {
 	return m_ser_line;
+}
+
+Espia::Dev& Camera::getEspiaDev()
+{
+	Espia::SerialLine ser_line = m_ser_line.getEspiaSerialLine();
+	Espia::Dev& dev = ser_line.getDev();
+	return dev;
 }
 
 void Camera::sendCmd(Cmd cmd)
@@ -44,6 +54,9 @@ void Camera::readRegister(Reg reg, int& val)
 
 void Camera::hardReset()
 {
+	Espia::Dev& dev = getEspiaDev();
+	dev.resetLink();
+
 	sendCmd(Reset);
 }
 
@@ -209,7 +222,7 @@ void Camera::setBin(const Bin& bin)
 	setRoi(roi);
 
 	writeRegister(BinHorz, bin.getX());
-	Sleep(HorzBinSleepTime);
+	Sleep(HorzBinChangeTime);
 	writeRegister(BinVert, bin.getY());
 }
 
@@ -456,6 +469,7 @@ void Camera::getRoi(Roi& hw_roi)
 void Camera::setTrigMode(TrigMode trig_mode)
 {
 	m_trig_mode = trig_mode;
+	setNbFrames(m_nb_frames);
 }
 
 void Camera::getTrigMode(TrigMode& trig_mode)
@@ -535,6 +549,31 @@ void Camera::getNbFrames(int& nb_frames)
 	nb_frames = m_nb_frames;
 }
 
+void Camera::getStatus(Status& status)
+{
+	Espia::Dev& dev = getEspiaDev();
+	int ccd_status;
+	dev.getCcdStatus(ccd_status);
+	status = Status(ccd_status);
+}
+
+bool Camera::waitStatus(Status& status, double timeout)
+{
+	Timestamp end;
+	if (timeout > 0)
+		end = Timestamp::now() + Timestamp(timeout);
+
+	bool good_status = false;
+	Status curr_status;
+	while (!good_status && !end.isSet() || (Timestamp::now() < end)) {
+		getStatus(curr_status);
+		good_status = ((curr_status & status) == status);
+	}
+
+	status = curr_status;
+	return good_status;
+}
+
 void Camera::start()
 {
 	TrigMode trig_mode;
@@ -549,5 +588,13 @@ void Camera::stop()
 	getTrigMode(trig_mode);
 	if (trig_mode != ExtGate)
 		sendCmd(Stop);
+
+	Status status = Wait;
+	waitStatus(status);
+
+	FrameTransferMode ftm;
+	getFrameTransferMode(ftm);
+	if (ftm == FTM)
+		Sleep(MaxReadoutTime);
 }
 

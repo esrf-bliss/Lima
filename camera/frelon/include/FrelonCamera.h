@@ -63,11 +63,17 @@ class Camera
 	void setNbFrames(int  nb_frames);
 	void getNbFrames(int& nb_frames);
 
+	void getStatus(Status& status);
+	bool waitStatus(Status& status, double timeout = 0);
+
 	void start();
 	void stop();
 
  private:
-	static const double HorzBinSleepTime;
+	static const double HorzBinChangeTime;
+	static const double MaxReadoutTime;
+
+	Espia::Dev& getEspiaDev();
 
 	void sendCmd(Cmd cmd);
 

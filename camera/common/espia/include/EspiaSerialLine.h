@@ -19,8 +19,9 @@ class SerialLine : public HwSerialLine
 	SerialLine( Dev& edev, const std::string& line_term="\r", 
 		    double timeout=1.0, int block_size=0, 
 		    double block_delay=0 );
-
 	~SerialLine();
+
+	Dev& getDev();
 
 	virtual void write( const std::string& buffer, bool no_wait=false );
 

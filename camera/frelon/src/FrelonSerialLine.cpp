@@ -3,6 +3,7 @@
 #include "MiscUtils.h"
 #include <sstream>
 
+using namespace lima;
 using namespace lima::Frelon;
 using namespace std;
 
@@ -23,6 +24,11 @@ SerialLine::SerialLine(Espia::SerialLine& espia_ser_line)
 	m_last_warn = 0;
 
 	flush();
+}
+
+Espia::SerialLine& SerialLine::getEspiaSerialLine()
+{
+	return m_espia_ser_line;
 }
 
 void SerialLine::write(const string& buffer, bool no_wait)

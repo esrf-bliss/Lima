@@ -18,7 +18,6 @@ class Acq : public HwFrameCallbackGen
 	~Acq();
 
 	typedef struct Status {
-		bool	started;
 		bool	running;
 		int	run_nb;
 		int	last_frame_nb;

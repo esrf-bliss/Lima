@@ -24,6 +24,12 @@ SerialLine::~SerialLine()
 }
 
 
+Dev& SerialLine::getDev()
+{
+	return m_dev;
+}
+
+
 void SerialLine::write( const string& buffer, bool no_wait )
 {
 	unsigned long len = buffer.size();

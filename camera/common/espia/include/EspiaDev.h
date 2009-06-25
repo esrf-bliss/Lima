@@ -25,9 +25,14 @@ class Dev
 	void registerCallback(struct espia_cb_data& cb_data, int& cb_nr);
 	void unregisterCallback(int& cb_nr);
 
+	void resetLink();
+	void getCcdStatus(int& ccd_status);
+
 	AutoMutex acqLock();
 
  private:
+	static const double ResetLinkTime;
+
 	void open(int dev_nb);
 	void close();
 

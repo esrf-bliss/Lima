@@ -108,8 +108,14 @@ void Acq::lastFrameCallback(struct espia_cb_data *cb_data)
 	AutoMutex l = acqLock();
 
 	struct img_frame_info& cb_finfo = cb_data->info.acq.cb_finfo;
-	if (!finished_espia_frame_info(&cb_finfo, cb_data->ret))
+	if (finished_espia_frame_info(&cb_finfo, cb_data->ret)) {
+		m_started = false;
+	} else {
 		m_last_frame_info = cb_finfo;
+		bool endless = (m_nb_frames == 0);
+		if (!endless && (cb_finfo.acq_frame_nr == m_nb_frames - 1))
+			m_started = false;
+	}
 }
 
 void Acq::userFrameCallback(struct espia_cb_data *cb_data)
@@ -306,8 +312,7 @@ void Acq::getStatus(StatusType& status)
 	int acq_running = espia_acq_active(m_dev, &acq_run_nb);
 	CHECK_CALL(acq_running);
 
-	status.started = m_started;
-	status.running = acq_running;
+	status.running = m_started;
 	status.run_nb  = acq_run_nb;
 	status.last_frame_nb = m_last_frame_info.acq_frame_nr;
 }

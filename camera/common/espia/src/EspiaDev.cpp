@@ -5,6 +5,8 @@ using namespace std;
 
 #define CHECK_CALL(ret)		ESPIA_CHECK_CALL(ret)
 
+const double Dev::ResetLinkTime = 0.5;
+
 Dev::Dev(int dev_nb)
 {
 	m_dev_nb = Invalid;
@@ -61,3 +63,15 @@ void Dev::unregisterCallback(int& cb_nr)
 	cb_nr = Invalid;
 }
 
+void Dev::resetLink()
+{
+	CHECK_CALL(espia_reset_link(m_dev));
+	Sleep(ResetLinkTime);
+}
+
+void Dev::getCcdStatus(int& ccd_status)
+{
+	unsigned char status;
+	CHECK_CALL(espia_ccd_status(m_dev, &status, SCDXIPCI_NO_BLOCK));
+	ccd_status = status;
+}

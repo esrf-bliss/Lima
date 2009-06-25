@@ -69,6 +69,11 @@ bool HwInterface::getHwCtrlObj(CtrlObj *& ctrl_obj) const
 	return false;
 }
 
+HwInterface::DetStatus  operator | (HwInterface::DetStatus  s1,
+				    HwInterface::DetStatus  s2);
+HwInterface::DetStatus& operator |=(HwInterface::DetStatus& s1,
+				    HwInterface::DetStatus  s2);
+
 std::ostream& operator <<(std::ostream& os, 
 			  HwInterface::AcqStatus acq_status);
 std::ostream& operator <<(std::ostream& os, 
