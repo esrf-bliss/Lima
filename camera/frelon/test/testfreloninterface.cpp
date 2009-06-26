@@ -1,5 +1,7 @@
 #include "FrelonInterface.h"
-#include "BufferSave.h"
+#include "PoolThreadMgr.h"
+#include "CtSaving.h"
+#include "Data.h"
 
 #include <iostream>
 
@@ -10,7 +12,7 @@ using namespace std;
 class TestFrameCallback : public HwFrameCallback
 {
 public:
-	TestFrameCallback(Interface& hw_inter, BufferSave& buffer_save,
+	TestFrameCallback(Interface& hw_inter, CtSaving& buffer_save,
 			  Cond& acq_finished) 
 		: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
 		  m_acq_finished(acq_finished) {}
@@ -18,7 +20,7 @@ protected:
 	virtual bool newFrameReady(const HwFrameInfoType& frame_info);
 private:
 	Interface& m_hw_inter;
-	BufferSave& m_buffer_save;
+	CtSaving& m_buffer_save;
 	Cond& m_acq_finished;
 };
 
@@ -32,7 +34,21 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 	     << "  frame_info=" << frame_info << endl
 	     << "  nb_acq_frames=" << nb_acq_frames << endl
 	     << "  status=" << status << endl;
-	m_buffer_save.writeFrame(frame_info);
+
+	Data aNewData = Data();
+	aNewData.frameNumber = frame_info.acq_frame_nb;
+	const Size &aSize = frame_info.frame_dim->getSize();
+	aNewData.width = aSize.getWidth();
+	aNewData.height = aSize.getHeight();
+	aNewData.type = Data::UINT16;
+	
+	Buffer *aNewBuffer = new Buffer();
+	aNewBuffer->owner = Buffer::MAPPED;
+	aNewBuffer->data = (void*)frame_info.frame_ptr;
+	aNewData.setBuffer(aNewBuffer);
+	aNewBuffer->unref();
+
+	m_buffer_save.frameReady(aNewData);
 
 	HwSyncCtrlObj *hw_sync;
 	m_hw_inter.getHwCtrlObj(hw_sync);
@@ -65,8 +81,18 @@ void test_frelon_hw_inter(bool do_reset)
 	Interface hw_inter(acq, buffer_mgr, cam);
 	cout << " Done!" << endl;
 
-	BufferSave buffer_save(BufferSave::EDF);
-	
+	CtControl aControl(NULL);
+	CtSaving buffer_save(aControl);
+	CtSaving::Parameters saving_par;
+	saving_par.directory = ".";
+	saving_par.prefix = "img";
+	saving_par.suffix = ".edf";
+	saving_par.nextNumber = 0;
+	saving_par.savingMode = CtSaving::AutoFrame;
+	saving_par.overwritePolicy = CtSaving::Overwrite;
+	saving_par.framesPerFile = 1;
+	buffer_save.setParameters(saving_par);
+
 	Cond acq_finished;
 	TestFrameCallback cb(hw_inter, buffer_save, acq_finished);
 
@@ -149,6 +175,7 @@ void test_frelon_hw_inter(bool do_reset)
 	print_status(hw_inter);
 	hw_inter.startAcq();
 	acq_finished.wait();
+	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
 	print_status(hw_inter);

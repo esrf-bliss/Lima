@@ -305,7 +305,7 @@ void CtSaving::_takeHeader(std::map<long,HeaderMap>::iterator &headerIter, Heade
 }
 
 
-void CtSaving::_frame_ready(Data &aData)
+void CtSaving::frameReady(Data &aData)
 {
   AutoMutex aLock(m_cond.mutex());
   switch(m_pars.savingMode)

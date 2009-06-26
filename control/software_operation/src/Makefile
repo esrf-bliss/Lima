@@ -1,19 +1,26 @@
 ct-objs := SoftOpInternalMgr.o
 
-SRC=SoftOpInternalMgr.cpp
+SRCS=SoftOpInternalMgr.cpp
 
 INCLUDES=-I../include  -I../../../third-party/Processlib/core/include -I../../../third-party/Processlib/tasks/include
 
-CXXFLAGS += $(INCLUDES) -Wall -pthread
+CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread
 
 all: CtSoftwareOperation.o
 
-depend :
-	makedepend $(INCLUDES) $(SRC)
 
 CtSoftwareOperation.o: $(ct-objs)
 	ld -o $@ -r $+
 
 clean:
-	rm -f CtSoftwareOperation.o $(ct-objs)
+	rm -f CtSoftwareOperation.o $(ct-objs) *.P
+
+%.o : %.cpp
+	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	@cp $*.d $*.P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	rm -f $*.d
+
+-include $(SRCS:.cpp=.P)
 

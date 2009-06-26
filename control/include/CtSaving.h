@@ -8,6 +8,8 @@
 
 #include "ThreadUtils.h"
 
+#include "CtControl.h"
+
 class Data;
 
 namespace lima {
@@ -101,6 +103,7 @@ namespace lima {
     void removeFrameHeader(long frame_nr);
     void removeAllFrameHeaders();
 
+    void frameReady(Data &);
 
   private:
     class _SaveTask;
@@ -122,7 +125,6 @@ namespace lima {
 
     void _get_common_header(HeaderMap&);
     void _takeHeader(std::map<long,HeaderMap>::iterator&, HeaderMap& header);
-    void _frame_ready(Data &);
     void _post_save_task(Data&,_SaveTask*);
     void _save_finnished(Data&);
  };

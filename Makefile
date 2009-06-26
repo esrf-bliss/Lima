@@ -1,3 +1,3 @@
-sub-dirs = common hardware camera control
+sub-dirs = third-party control common hardware camera 
 
 include global.inc

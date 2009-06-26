@@ -12,6 +12,9 @@ namespace lima {
   public:
 
     struct ImageStatus {
+      ImageStatus();
+      void reset();
+
       long	LastImageAcquired;
       long	LastBaseImageReady;
       long	LastImageReady;
@@ -32,7 +35,7 @@ namespace lima {
     void reset();
 
   private:
-    HwInterface		m_hw;
+    HwInterface		*m_hw;
     mutable Cond	m_cond;
     ImageStatus		m_img_status;
     CtSaving		*m_ct_saving;
