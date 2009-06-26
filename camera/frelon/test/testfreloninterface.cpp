@@ -6,20 +6,19 @@
 #include <iostream>
 
 using namespace lima;
-using namespace Frelon;
 using namespace std;
 
 class TestFrameCallback : public HwFrameCallback
 {
 public:
-	TestFrameCallback(Interface& hw_inter, CtSaving& buffer_save,
+	TestFrameCallback(Frelon::Interface& hw_inter, CtSaving& buffer_save,
 			  Cond& acq_finished) 
 		: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
 		  m_acq_finished(acq_finished) {}
 protected:
 	virtual bool newFrameReady(const HwFrameInfoType& frame_info);
 private:
-	Interface& m_hw_inter;
+	Frelon::Interface& m_hw_inter;
 	CtSaving& m_buffer_save;
 	Cond& m_acq_finished;
 };
@@ -60,7 +59,7 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 	return true;
 }
 
-void print_status(Interface& hw_inter)
+void print_status(Frelon::Interface& hw_inter)
 {
 	HwInterface::Status status;
 
@@ -74,11 +73,11 @@ void test_frelon_hw_inter(bool do_reset)
 	Espia::Acq acq(dev);
 	Espia::BufferMgr buffer_cb_mgr(acq);
 	Espia::SerialLine ser_line(dev);
-	Camera cam(ser_line);
+	Frelon::Camera cam(ser_line);
 	BufferCtrlMgr buffer_mgr(buffer_cb_mgr);
 
 	cout << "Creating the Hw Interface ... " << endl;
-	Interface hw_inter(acq, buffer_mgr, cam);
+	Frelon::Interface hw_inter(acq, buffer_mgr, cam);
 	cout << " Done!" << endl;
 
 	CtControl aControl(NULL);

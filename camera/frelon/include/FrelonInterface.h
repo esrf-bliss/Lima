@@ -116,7 +116,7 @@ class SyncCtrlObj : public HwSyncCtrlObj
 
 /*******************************************************************
  * \class BinCtrlObj
- * \brief Control object providing simulator binning interface
+ * \brief Control object providing Frelon binning interface
  *******************************************************************/
 
 class BinCtrlObj : public HwBinCtrlObj
