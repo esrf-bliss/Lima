@@ -10,6 +10,9 @@ namespace lima {
 class CtAcquisition {
 
     public:
+        enum ShutMode {Manual,AutoPerFrame,AutoPerSequence};
+        enum TrigMode {Internal,ExtStart,MultExtStart,Gate,ExtStartStop};
+        enum AcqMode {Single,Accumulation,Concatenation};
 	struct Parameters {
 		AcqMode	acqMode;
 		int	acqNbFrames;

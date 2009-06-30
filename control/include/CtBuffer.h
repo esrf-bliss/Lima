@@ -33,6 +33,7 @@ class CtBuffer {
 	HwBufferCtrlObj	*m_hw_buffer;
 	Parameters	m_pars;
 
+};
 } // namespace lima
 
 #endif // CTBUFFER_H
