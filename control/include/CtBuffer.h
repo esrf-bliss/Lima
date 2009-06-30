@@ -10,7 +10,7 @@ namespace lima {
 class CtBuffer {
 
     public:
-
+        enum Mode {Linear,Circular};
 	struct Parameters {
 		Mode	mode;
 		long	nbBuffers;

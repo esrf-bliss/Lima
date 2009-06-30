@@ -27,36 +27,36 @@ class CtImage {
 	void getImageType(ImageType& type) const;
 	
 	// --- soft
-	void setSoftROI(ROI roi);
-	void getSoftROI(ROI& roi) const;
+	void setSoftRoi(const Roi &roi);
+	void getSoftRoi(Roi& roi) const;
 
-	void setSoftBin(BIN bin);	
-	void getSoftBin(BIN& bin) const;
+	void setSoftBin(const Bin &bin);	
+	void getSoftBin(Bin& bin) const;
 
 	// --- hard
-	void setHardROI(ROI roi);
-	void getHardROI(ROI roi);
+	void setHardRoi(const Roi &roi);
+	void getHardRoi(Roi &roi) const;
 
-	void setHardBin(BIN bin);
-	void getHardBin(BIN& bin) const;
+	void setHardBin(const Bin &bin);
+	void getHardBin(Bin& bin) const;
 
 	// --- wizard
 	void setWizardMode(WizardMode mode);
 	void getWizardMode(WizardMode& mode) const;
 
-	void setWizardROI(ROI roi);
-	void setWizardBin(BIN bin);
+	void setWizardRoi(const Roi &roi);
+	void setWizardBin(const Bin &bin);
 
 	// --- effective
-	void getROI(ROI& roi) const;
-	void setBin(BIN& bin) const;
+	void getRoi(Roi& roi) const;
+	void getBin(Bin& bin) const;
 
     private:
-	ROI	m_soft_roi, m_hard_roi, m_eff_roi;
-	BIN	m_soft_bin, m_hard_bin, n_eff_bin;
+	Roi	m_soft_roi, m_hard_roi, m_eff_roi;
+	Bin	m_soft_bin, m_hard_bin, n_eff_bin;
 	WizardMode	m_wizard_mode;
 
-}
+};
 
 } // namespace lima
 
