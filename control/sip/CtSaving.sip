@@ -13,7 +13,7 @@ if (sipIsErr == NULL)
 
     *sipCppPtr = new HeaderMap();
     PyObject *key, *value;
-    Py_ssize_t pos = 0;
+    int pos = 0;
 
     while (PyDict_Next(sipPy, &pos, &key, &value)) 
     {

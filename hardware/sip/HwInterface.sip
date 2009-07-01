@@ -9,7 +9,7 @@ if(sipIsErr == NULL)
  return PySequence_Check(sipPy);
 
 *sipCppPtr = NULL; // not used in that way.
-
+return 0;
 %End
 
 %ConvertFromTypeCode
