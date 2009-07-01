@@ -120,92 +120,40 @@ using namespace lima;
     // --- file parameters
 
     void setParameters(const Parameters &pars);
-    Parameters getParameters() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new CtSaving::Parameters();
-sipCpp->getParameters(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getParameters(Parameters& pars /Out/) const;
 
     void setDirectory(const std::string &directory);
-    std::string getDirectory() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new std::string();
-sipCpp->getDirectory(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getDirectory(std::string &directory /Out/) const;
 
     void setPrefix(const std::string &prefix);
-    std::string getPrefix() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new std::string();
-sipCpp->getPrefix(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getPrefix(std::string &prefix /Out/) const;
+
     void setSuffix(const std::string &suffix);
-    std::string getSuffix() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new std::string();
-sipCpp->getSuffix(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getSuffix(std::string &suffix /Out/) const;
 
     void setNextNumber(long number);
-    long getNextNumber() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getNextNumber(sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getNextNumber(long& number) const;
+
     void setFormat(const FileFormat &format);
-    FileFormat getFormat() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getFormat(sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getFormat(FileFormat &format /Out/) const;
 
     // --- saving modes
 
     void setSavingMode(SavingMode mode);
-    SavingMode getSavingMode() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getSavingMode(sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getSavingMode(SavingMode& mode /Out/) const;
 
     void setOverwritePolicy(OverwritePolicy policy);
-    OverwritePolicy getOverwritePolicy() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getOverwritePolicy(sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getOverwritePolicy(OverwritePolicy& policy /Out/) const;
 
     void setFramesPerFile(unsigned long frames_per_file);
-    unsigned long getFramePerFile() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getFramePerFile(sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getFramePerFile(unsigned long& frames_per_file /Out/) const;
+
     // --- common headers
 
     void resetCommonHeader();
     void setCommonHeader(const HeaderMap &header);
     void updateCommonHeader(const HeaderMap &header);
-    HeaderMap getCommonHeader() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new HeaderMap();
-sipCpp->getCommonHeader(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getCommonHeader(HeaderMap &header /Out/) const;
 
     void addToCommonHeader(const HeaderValue &value);
 
@@ -214,20 +162,8 @@ Py_END_ALLOW_THREADS
     void updateFrameHeader(long frame_nr, const HeaderMap &header);
     void addToFrameHeader(long frame_nr,const HeaderValue &value);
     void validateFrameHeader(long frame_nr);
-    HeaderMap getFrameHeader(long frame_nr) const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new HeaderMap();
-sipCpp->getFrameHeader(a0,*sipRes);
-Py_END_ALLOW_THREADS
-%End
-    HeaderMap takeFrameHeader(long frame_nr);
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new HeaderMap();
-sipCpp-> takeFrameHeader(a0,*sipRes);
-Py_END_ALLOW_THREADS
-%End
+    void getFrameHeader(long frame_nr,HeaderMap &header /Out/) const;
+    void takeFrameHeader(long frame_nr,HeaderMap &header /Out/);
 
     void removeFrameHeader(long frame_nr);
     void removeAllFrameHeaders();

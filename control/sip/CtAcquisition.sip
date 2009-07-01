@@ -27,125 +27,50 @@ using namespace lima;
 	// --- global
 
 	void setParameters(const Parameters& pars);
-	Parameters getParameters() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new CtAcquisition::Parameters();
-sipCpp->getParameters(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getParameters(Parameters& pars /Out/) const;
 
 	// --- acq modes
 
 	void setAcqMode(AcqMode mode);
-	AcqMode getAcqMode() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getAcqMode(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getAcqMode(AcqMode& mode /Out/) const;
 
 	void setAcqNbFrames(int nframes);
-	int getAcqNbFrames() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getAcqNbFrames(sipRes);
-Py_END_ALLOW_THREADS
-%End
-
+	void getAcqNbFrames(int& nframes /Out/) const;
 
 	void setAcqExposureTime(double acq_time);
-	double getAcqExposureTime() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getAcqExposureTime(sipRes);
-Py_END_ALLOW_THREADS
-%End
-
+	void getAcqExposureTime(double& acq_time /Out/) const;
 
 	void setAccNbFrames(int nframes);
-	int getAccNbFrames();
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getAccNbFrames(sipRes);
-Py_END_ALLOW_THREADS
-%End
-
+	void getAccNbFrames(int& nframes /Out/) const;
 
 	void setAccExposureTime(double acc_time);
-	double getAccExposureTime() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getAccExposureTime(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getAccExposureTime(double& acc_time /Out/) const;
 
 	void setConcatNbFrames(int nframes);
-	int getConcatNbFrames();
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getConcatNbFrames(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getConcatNbFrames(int& nframes /Out/) const;
 
 	// --- common
 
 	void setLatencyTime(double latency_time);
-	double getLatencyTime() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getLatencyTime(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getLatencyTime(double& latency_time /Out/) const;
 
 	void setTriggerMode(TrigMode mode);
-	TrigMode getTriggerMode() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getTriggerMode(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getTriggerMode(TrigMode& mode /Out/) const;
 
 
 	// --- shutter
 
 	void setShutterMode(ShutMode mode);
-	ShutMode getShutterMode() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getShutterMode(sipRes);
-Py_END_ALLOW_THREADS
-%End
-
+	void getShutterMode(ShutMode& mode /Out/) const;
 
 	void setShutterOpenTime(double open_time);
-	double getShutterOpenTime() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getShutterOpenTime(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getShutterOpenTime(double& open_time /Out/) const;
 
 	void setShutterCloseTime(double close_time);
-	double getShutterCloseTime() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getShutterCloseTime(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getShutterCloseTime(double& close_time /Out/) const;
  	// --- read-only
 
-	double getReadoutTime() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getReadoutTime(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getReadoutTime(double& readout /Out/) const;
  
-	double getFrameRate() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getFrameRate(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getFrameRate(double& framerate /Out/) const;
 };

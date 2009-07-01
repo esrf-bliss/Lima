@@ -24,14 +24,7 @@ using namespace lima;
     void stopAcq();
 
     void getAcqStatus(); // from HW
-    ImageStatus getImageStatus() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new CtControl::ImageStatus();
-sipCpp->getImageStatus(*sipRes);
-Py_END_ALLOW_THREADS
-%End
-
+    void getImageStatus(ImageStatus &imageStatus /Out/) const;
 
     void reset();
 };

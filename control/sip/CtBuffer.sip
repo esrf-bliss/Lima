@@ -15,26 +15,11 @@ using namespace lima;
 	~CtBuffer();
 
 	void setMode(BufferMode mode);
-	BufferMode getMode() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getMode(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getMode(BufferMode& mode /Out/) const;
 
 	void setNumber(long nb_buffers);
-	long getNumber() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getNumber(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getNumber(long& nb_buffers /Out/) const;
 
 	void setMaxMemory(short max_memory);
-	short getMaxMemory() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getMaxMemory(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getMaxMemory(short& max_memory /Out/) const;
 };

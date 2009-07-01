@@ -16,94 +16,31 @@ using namespace lima;
 	CtImage(HwInterface *hw);
 	~CtImage();
 
-	Size getMaxImageSize() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Size();
-sipCpp->getMaxImageSize(*sipRes);
-Py_END_ALLOW_THREADS
-%End
-
-	Size getImageSize() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Size();
-sipCpp->getImageSize(*sipRes);
-Py_END_ALLOW_THREADS
-%End
-
-	ImageType getImageType() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getImageType(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getMaxImageSize(Size& size /Out/) const;
+	void getImageSize(Size& size /Out/) const;
+	void getImageType(ImageType& imageType /Out/) const;
 	
 	// --- soft
 	void setSoftRoi(const Roi &roi);
-	Roi getSoftRoi() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Roi();
-sipCpp->getSoftRoi(*sipRes);
-Py_END_ALLOW_THREADS
-%End
-
+	void getSoftRoi(Roi& roi /Out/) const;
 	void setSoftBin(const Bin &bin);	
-	Bin getSoftBin() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Bin();
-sipCpp->getSoftBin(*sipRes);
-Py_END_ALLOW_THREADS
-%End
-
-
+	void getSoftBin(Bin& bin /Out/) const;
 	// --- hard
 	void setHardRoi(const Roi &roi);
-	Roi getHardRoi() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Roi();
-sipCpp->getHardRoi(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getHardRoi(Roi& roi) const;
 
 	void setHardBin(const Bin &bin);
-	Bin getHardBin() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Bin();
-sipCpp->getHardBin(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getHardBin(Bin& bin) const;
 
 	// --- wizard
 	void setWizardMode(WizardMode mode);
-	WizardMode getWizardMode() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipCpp->getWizardMode(sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getWizardMode(WizardMode& mode /Out/) const;
 
 
 	void setWizardRoi(const Roi &roi);
 	void setWizardBin(const Bin &bin);
 
 	// --- effective
-	Roi getRoi() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Roi();
-sipCpp->getRoi(*sipRes);
-Py_END_ALLOW_THREADS
-%End
-	Bin getBin() const;
-%MethodCode
-Py_BEGIN_ALLOW_THREADS
-sipRes = new Bin();
-sipCpp->getBin(*sipRes);
-Py_END_ALLOW_THREADS
-%End
+	void getRoi(Roi& roi /Out/) const;
+	void getBin(Bin& bin /Out/) const;
 };

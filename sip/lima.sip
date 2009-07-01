@@ -8,7 +8,7 @@
 
 %ConvertToTypeCode
 if (sipIsErr == NULL)
-    return 1;
+    return PyString_Check(sipPy);
 
     *sipCppPtr = new std::string(PyString_AsString(sipPy), PyString_Size(sipPy));
 

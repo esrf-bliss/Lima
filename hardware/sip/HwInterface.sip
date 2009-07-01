@@ -6,12 +6,24 @@
 %End
 %ConvertToTypeCode
 if(sipIsErr == NULL)
-	return 1;
-*sipCppPtr = NULL;
+ return PySequence_Check(sipPy);
+
+*sipCppPtr = NULL; // not used in that way.
+
 %End
 
 %ConvertFromTypeCode
-return Py_None;
+
+PyObject *returnList =  PyList_New(sipCpp->size());
+int aPos = 0;
+for(std::vector<HwCap>::iterator i = sipCpp->begin();
+    i != sipCpp->end();++i,++aPos)
+{
+  PyObject *aHwCap = sipConvertFromInstance(&(*i),sipClass_HwCap,NULL); 
+  PyList_SET_ITEM(returnList,aPos,aHwCap);
+  Py_DECREF(aHwCap);
+}
+return returnList;
 %End
 };
 
@@ -60,6 +72,6 @@ using namespace lima;
 	virtual void prepareAcq() = 0;
 	virtual void startAcq() = 0;
 	virtual void stopAcq() = 0;
-	virtual void getStatus(StatusType& status) = 0;
+	virtual void getStatus(StatusType& status /Out/) = 0;
 	virtual int getNbAcquiredFrames() = 0;
 };
