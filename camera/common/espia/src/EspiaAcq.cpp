@@ -113,7 +113,8 @@ void Acq::lastFrameCallback(struct espia_cb_data *cb_data)
 	} else {
 		m_last_frame_info = cb_finfo;
 		bool endless = (m_nb_frames == 0);
-		if (!endless && (cb_finfo.acq_frame_nr == m_nb_frames - 1))
+		if (!endless && 
+		    (cb_finfo.acq_frame_nr == (unsigned long)m_nb_frames - 1))
 			m_started = false;
 	}
 }
