@@ -7,12 +7,17 @@ using namespace std;
 
 const double Dev::ResetLinkTime = 0.5;
 
+map<string, int> lima::Espia::EspiaDrvOptMap;
+
+
 Dev::Dev(int dev_nb)
 {
 	m_dev_nb = Invalid;
 	m_dev = ESPIA_DEV_INVAL;
 
 	open(dev_nb);
+
+	initEspiaDrvOptMap();
 }
 
 Dev::~Dev()
@@ -74,4 +79,48 @@ void Dev::getCcdStatus(int& ccd_status)
 	unsigned char status;
 	CHECK_CALL(espia_ccd_status(m_dev, &status, SCDXIPCI_NO_BLOCK));
 	ccd_status = status;
+}
+
+
+void Dev::initEspiaDrvOptMap()
+{
+	static bool is_init_EspiaDrvOptMap=false;
+
+	if( !is_init_EspiaDrvOptMap ) {
+		int nr_option = -1;
+		CHECK_CALL( espia_get_option_data(m_dev, &nr_option, NULL) );
+
+		struct espia_option *eoption;
+		for( int i=0; i<nr_option; i++ ) {
+			CHECK_CALL(espia_get_option_data(m_dev, &i, &eoption));
+			EspiaDrvOptMap[string(eoption->name)] = 
+			                                       eoption->option;
+		}
+
+		is_init_EspiaDrvOptMap = true;
+	}
+}
+
+
+void Dev::getDrvOption( const string &opt_name, int &val )
+{
+	map<string, int>::iterator pop = EspiaDrvOptMap.find(opt_name);
+	if( pop == EspiaDrvOptMap.end() )
+		throw LIMA_HW_EXC(InvalidValue, "No such Espia driver option");
+
+	int action = SCDXIPCI_OPT_RD;
+	CHECK_CALL( espia_option( m_dev, pop->second, action, &val ) );
+}
+
+
+void Dev::setDrvOption( const string &opt_name, int new_val, int &old_val )
+{
+	map<string, int>::iterator pop = EspiaDrvOptMap.find(opt_name);
+	if( pop == EspiaDrvOptMap.end() )
+		throw LIMA_HW_EXC(InvalidValue, "No such Espia driver option");
+
+	int val=new_val;
+	int action=SCDXIPCI_OPT_RD_WR;
+	CHECK_CALL( espia_option( m_dev, pop->second, action, &val ) );
+	old_val = val;
 }

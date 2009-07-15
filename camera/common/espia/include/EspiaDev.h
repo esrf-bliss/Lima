@@ -1,6 +1,7 @@
 #ifndef ESPIADEV_H
 #define ESPIADEV_H
 
+#include <map>
 #include "Espia.h"
 
 #include "ThreadUtils.h"
@@ -11,6 +12,10 @@ namespace lima
 
 namespace Espia
 {
+
+
+extern std::map<std::string, int> EspiaDrvOptMap;
+
 
 class Dev
 {
@@ -30,11 +35,17 @@ class Dev
 
 	AutoMutex acqLock();
 
+	void getDrvOption( const std::string &opt_name, int &val );
+	void setDrvOption( const std::string &opt_name, int new_val, 
+	                                                        int &old_val );
+
  private:
 	static const double ResetLinkTime;
 
 	void open(int dev_nb);
 	void close();
+
+	void initEspiaDrvOptMap();
 
 	int m_dev_nb;
 	espia_t m_dev;
