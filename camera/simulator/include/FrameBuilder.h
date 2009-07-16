@@ -1,3 +1,12 @@
+/*******************************************************************
+ * @file FrameBuilder.h
+ * @brief This file contains the FrameBuilder class for the Simulator
+ *
+ * @author A.Kirov
+ *
+ * @date 03/06/2009
+ *******************************************************************/
+
 #ifndef FRAMEBUILDER_H
 #define FRAMEBUILDER_H
 
@@ -9,12 +18,16 @@ namespace lima {
 
 
 struct GaussPeak {
-	int x0, y0;
-	unsigned fwhm;
-	double max;
+	int x0, y0;     /// The center of the peak
+	unsigned fwhm;  /// Full Width at Half Maximum
+	double max;     /// The maximum
 };
 
 
+/*******************************************************************
+ * @class FrameBuilder
+ *
+ *******************************************************************/
 class FrameBuilder {
 
   public:
@@ -47,11 +60,11 @@ class FrameBuilder {
 	void getMaxImageSize(Size& max_size);
 
   private:
-	FrameDim m_frame_dim;
-	Bin m_bin;
-	Roi m_roi;
-	std::vector<struct GaussPeak> m_peaks;
-	double m_grow_factor;
+	FrameDim m_frame_dim;                   /// Generated frame dimensions
+	Bin m_bin;                              /// "Hardware" Bin
+	Roi m_roi;                              /// "Hardware" RoI
+	std::vector<struct GaussPeak> m_peaks;  /// Peaks to put in each frame
+	double m_grow_factor;                   /// Peaks grow % with each frame
 
 	unsigned long m_frame_nr;
 
