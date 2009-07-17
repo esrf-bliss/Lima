@@ -1,6 +1,6 @@
 
 espia-objs = EspiaBase.o EspiaDev.o EspiaAcq.o EspiaSerialLine.o \
-	     EspiaBufferMgr.o
+	     EspiaBufferMgr.o EspiaFocla.o FoclaHwInterface.o
 
 include ../include/espia.inc
 

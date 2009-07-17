@@ -1,3 +1,3 @@
-sub-dirs = src
+sub-dirs = src test
 
 include ../../../global.inc
