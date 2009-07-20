@@ -145,6 +145,53 @@ SyncCtrlObj::~SyncCtrlObj()
 }
 
 
+void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
+{
+}
+
+
+void SyncCtrlObj::getTrigMode(TrigMode &trig_mode)
+{
+}
+
+
+void SyncCtrlObj::setExpTime(double exp_time)
+{
+}
+
+
+void SyncCtrlObj::getExpTime(double &exp_time)
+{
+}
+
+
+void SyncCtrlObj::setLatTime(double lat_time)
+{
+}
+
+
+void SyncCtrlObj::getLatTime(double &lat_time)
+{
+}
+
+
+void SyncCtrlObj::setNbFrames(int nb_frames)
+{
+	m_acq.setNbFrames(nb_frames);
+}
+
+
+void SyncCtrlObj::getNbFrames(int &nb_frames)
+{
+	m_acq.getNbFrames(nb_frames);
+}
+
+
+void SyncCtrlObj::getValidRanges(ValidRangesType &valid_ranges)
+{
+}
+
+
 /*******************************************************************
  * @brief Espia::Focla::Interface class constructor
  *
@@ -155,7 +202,7 @@ SyncCtrlObj::~SyncCtrlObj()
 Interface::Interface( Espia::Acq &acq, BufferCtrlMgr &buffer_mgr, 
                       Espia::Focla::Dev &focla )
 	: m_acq(acq), m_buffer_mgr(buffer_mgr), m_focla(focla),
-	  /*m_det_info(focla),*/ m_buffer(buffer_mgr)/*, m_sync(acq, focla)*/
+	  /*m_det_info(focla),*/ m_buffer(buffer_mgr), m_sync(acq, focla)
 {
 /*	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info)); */
@@ -163,8 +210,8 @@ Interface::Interface( Espia::Acq &acq, BufferCtrlMgr &buffer_mgr,
 	HwBufferCtrlObj *buffer = &m_buffer;
 	m_cap_list.push_back(HwCap(buffer));
 
-/*	HwSyncCtrlObj *sync = &m_sync;
-	m_cap_list.push_back(HwCap(sync)); */
+	HwSyncCtrlObj *sync = &m_sync;
+	m_cap_list.push_back(HwCap(sync));
 
 	reset(SoftReset);
 }
@@ -188,9 +235,11 @@ void Interface::reset(ResetLevel reset_level)
 	if( reset_level == HardReset )  // ???
 		m_focla.setParam( "TEST_IMAGE", 0 );
 
+	m_sync.setNbFrames(1);
+
 	m_buffer.setNbConcatFrames(1);
 	m_buffer.setNbAccFrames(1);
-	m_buffer.setNbBuffers(1);
+//	m_buffer.setNbBuffers(1);  // We need to set the FrameDim before this!
 }
 
 

@@ -63,7 +63,7 @@ class BufferCtrlObj : public HwBufferCtrlObj
 
 	virtual void getMaxNbBuffers(int &max_nb_buffers);
 
-	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0);
+	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb=0);
 	virtual void *getFramePtr(int acq_frame_nb);
 
 	virtual void getStartTimestamp(Timestamp &start_ts);
@@ -87,6 +87,20 @@ class SyncCtrlObj : public HwSyncCtrlObj
   public:
 	SyncCtrlObj( Espia::Acq &acq, Dev &focla );
 	virtual ~SyncCtrlObj();
+
+	virtual void setTrigMode(TrigMode  trig_mode);
+	virtual void getTrigMode(TrigMode &trig_mode);
+
+	virtual void setExpTime(double  exp_time);
+	virtual void getExpTime(double &exp_time);
+
+	virtual void setLatTime(double  lat_time);
+	virtual void getLatTime(double &lat_time);
+
+	virtual void setNbFrames(int  nb_frames);
+	virtual void getNbFrames(int &nb_frames);
+
+	virtual void getValidRanges(ValidRangesType &valid_ranges);
 
   private:
 	Espia::Acq &m_acq;
@@ -124,7 +138,7 @@ class Interface : public HwInterface
 	CapList           m_cap_list;
 //	DetInfoCtrlObj    m_det_info;
 	BufferCtrlObj     m_buffer;
-//	SyncCtrlObj       m_sync;
+	SyncCtrlObj       m_sync;
 };
 
 
