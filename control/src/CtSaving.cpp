@@ -537,7 +537,7 @@ void CtSaving::_SaveContainer::_writeEdfHeader(Data &aData,HeaderMap &aHeader)
 
   m_fout << "Size = " << aData.size() << " ;\n";
   m_fout << "Dim_1 = " << aData.width << " ;\n";
-
+  m_fout << "Dim_2 = " << aData.height << " ;\n";
 
   m_fout << "acq_frame_nb = " << aData.frameNumber << " ;\n";
   m_fout << "time = " << time_str << " ;\n";
