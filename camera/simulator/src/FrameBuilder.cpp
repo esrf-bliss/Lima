@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file FrameBuilder.cpp
+ * @brief This file contains the FrameBuilder class implementation
+ *
+ * @author A.Kirov
+ * @date 03/06/2009
+ *******************************************************************/
+
 #include <ctime>
 #include <cmath>
 #include <vector>
@@ -10,6 +18,10 @@ using namespace lima;
 using namespace std;
 
 
+/*******************************************************************
+ * @brief FrameBuilder class default constructor
+ *
+ *******************************************************************/
 FrameBuilder::FrameBuilder()
 {
 	m_frame_dim = FrameDim(1024, 1024, Bpp16);
@@ -22,6 +34,16 @@ FrameBuilder::FrameBuilder()
 }
 
 
+/*******************************************************************
+ * @brief FrameBuilder class constructor setting member variables
+ *
+ * Before setting we check the values for consistency
+ *
+ * @param[in] frame_dim    The frame dimensions
+ * @param[in] roi          RoI in BINNED units
+ * @param[in] peaks        A vector of GaussPeak structures
+ * @param[in] grow_factor  Peaks grow % with each frame
+ *******************************************************************/
 FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
                             vector<struct GaussPeak> &peaks,
                             double grow_factor ):
@@ -39,11 +61,22 @@ FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
 }
 
 
+/*******************************************************************
+ * @brief FrameBuilder class destructor
+ *
+ *******************************************************************/
 FrameBuilder::~FrameBuilder()
 {
 }
 
 
+/*******************************************************************
+ * @brief Checks the consistency of FrameDim, Bin and RoI
+ *
+ * First checks if Binning is valid
+ * Then checks if FrameDim is inside of the MaxImageSize
+ * Finally checks if the RoI is consistent with the binned frame dim
+ *******************************************************************/
 void FrameBuilder::checkValid( const FrameDim &frame_dim, const Bin &bin, 
                                const Roi &roi ) throw(Exception)
 {
@@ -67,6 +100,10 @@ void FrameBuilder::checkValid( const FrameDim &frame_dim, const Bin &bin,
 }
 
 
+/*******************************************************************
+ * @brief Checks if Gauss peak centers are inside the MaxImageSize
+ *
+ *******************************************************************/
 void FrameBuilder::checkPeaks( std::vector<struct GaussPeak> const &peaks )
 {
 	Size max_size;
@@ -83,12 +120,22 @@ void FrameBuilder::checkPeaks( std::vector<struct GaussPeak> const &peaks )
 }
 
 
+/*******************************************************************
+ * @brief Gets frame dimention
+ *
+ * @param[out] dim  FrameDim object reference
+ *******************************************************************/
 void FrameBuilder::getFrameDim( FrameDim &dim ) const
 {
 	dim = m_frame_dim;
 }
 
 
+/*******************************************************************
+ * @brief Sets frame dimention
+ *
+ * @param[in] dim  FrameDim object reference
+ *******************************************************************/
 void FrameBuilder::setFrameDim( const FrameDim &dim )
 {
 	checkValid(dim, m_bin, m_roi);
@@ -99,12 +146,22 @@ void FrameBuilder::setFrameDim( const FrameDim &dim )
 }
 
 
+/*******************************************************************
+ * @brief Gets the Binning
+ *
+ * @param[out] bin  Bin object reference
+ *******************************************************************/
 void FrameBuilder::getBin( Bin &bin ) const
 {
 	bin = m_bin;
 }
 
 
+/*******************************************************************
+ * @brief Sets the Binning
+ *
+ * @param[in] bin  Bin object reference
+ *******************************************************************/
 void FrameBuilder::setBin( const Bin &bin )
 {
 	checkValid(m_frame_dim, bin, m_roi);
@@ -113,6 +170,11 @@ void FrameBuilder::setBin( const Bin &bin )
 }
 
 
+/*******************************************************************
+ * @brief Returns the closest Binning supported by the "hardware"
+ *
+ * @param[in,out] bin  Bin object reference
+ *******************************************************************/
 void FrameBuilder::checkBin( Bin &bin ) const
 {
 	if ((bin == Bin(1,1)) || (bin == Bin(1,2)) || (bin == Bin(2,1)))
@@ -122,12 +184,22 @@ void FrameBuilder::checkBin( Bin &bin ) const
 }
 
 
+/*******************************************************************
+ * @brief Gets the RoI
+ *
+ * @param[out] roi  Roi object reference
+ *******************************************************************/
 void FrameBuilder::getRoi( Roi &roi ) const
 {
 	roi = m_roi;
 }
 
 
+/*******************************************************************
+ * @brief Sets the RoI
+ *
+ * @param[in] roi  Roi object reference
+ *******************************************************************/
 void FrameBuilder::setRoi( const Roi &roi )
 {
 	checkValid(m_frame_dim, m_bin, roi);
@@ -136,18 +208,33 @@ void FrameBuilder::setRoi( const Roi &roi )
 }
 
 
+/*******************************************************************
+ * @brief Returns the closest RoI supported by the "hardware"
+ *
+ * @param[out] roi  Roi object reference
+ *******************************************************************/
 void FrameBuilder::checkRoi( Roi &roi ) const
 {
 	roi.alignCornersTo(8, Ceil);
 }
 
 
+/*******************************************************************
+ * @brief Gets the configured Gauss peaks vector
+ *
+ * @param[out] peaks  GaussPeak vector
+ *******************************************************************/
 void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
 {
 	peaks = m_peaks;
 }
 
 
+/*******************************************************************
+ * @brief Sets Gauss peaks
+ *
+ * @param[in] peaks  GaussPeak vector
+ *******************************************************************/
 void FrameBuilder::setPeaks( const std::vector<struct GaussPeak> &peaks )
 {
 	checkPeaks(peaks);
@@ -156,12 +243,22 @@ void FrameBuilder::setPeaks( const std::vector<struct GaussPeak> &peaks )
 }
 
 
+/*******************************************************************
+ * @brief Gets the configured peaks grow factor
+ *
+ * @param[out] grow_factor  a double
+ *******************************************************************/
 void FrameBuilder::getGrowFactor( double &grow_factor ) const
 {
 	grow_factor = m_grow_factor;
 }
 
 
+/*******************************************************************
+ * @brief Sets the peaks grow factor
+ *
+ * @param[in] grow_factor  a double
+ *******************************************************************/
 void FrameBuilder::setGrowFactor( const double &grow_factor )
 {
 	// Any restrictions?
@@ -171,6 +268,17 @@ void FrameBuilder::setGrowFactor( const double &grow_factor )
 
 #define SGM_FWHM 0.42466090014400952136075141705144  // 1/(2*sqrt(2*ln(2)))
 
+/*******************************************************************
+ * @brief Calculates Gauss(x,y) for given peak parameters
+ *
+ * @param[in] x     double X-coord
+ * @param[in] y     double Y-coord
+ * @param[in] x0    double X-coord of the center
+ * @param[in] y0    double Y-coord of the center
+ * @param[in] fwhm  double Full Width at Half Maximum
+ * @param[in] max   double the central maximum value
+ * @return Gauss(x,y) double 
+ *******************************************************************/
 double gauss2D( double x, double y, double x0, double y0, double fwhm, double max )
 {
 	double sigma = SGM_FWHM * fwhm;
@@ -178,6 +286,13 @@ double gauss2D( double x, double y, double x0, double y0, double fwhm, double ma
 }
 
 
+/*******************************************************************
+ * @brief Calculates the summary intensity at certain point
+ *
+ * @param[in] x  int X-coord
+ * @param[in] y  int Y-coord
+ * @return    intensity  double 
+ *******************************************************************/
 double FrameBuilder::dataXY( int x, int y )
 {
 	double val=0.0;
@@ -191,6 +306,14 @@ double FrameBuilder::dataXY( int x, int y )
 }
 
 
+/*******************************************************************
+ * @brief Calculates and writes the "image" into the buffer
+ *
+ * This function also applies the "hardware" binning
+ *
+ * @todo Support more depths, not only 1, 2, and 4 bytes
+ * @param[in] ptr  an (unsigned char) pointer to an allocated buffer
+ *******************************************************************/
 template <class depth> 
 void FrameBuilder::fillData( unsigned char *ptr )
 {
@@ -229,6 +352,14 @@ void FrameBuilder::fillData( unsigned char *ptr )
 }
 
 
+/*******************************************************************
+ * @fn    void FrameBuilder::getNextFrame( unsigned char *ptr )
+ * @brief Fills the next frame into the buffer
+ *
+ * @param[in] ptr  an (unsigned char) pointer to an allocated buffer
+ *
+ * @exception lima::Exception  The image depth is not 1,2 or 4
+ *******************************************************************/
 void FrameBuilder::getNextFrame( unsigned char *ptr ) throw (Exception)
 {
 	switch( m_frame_dim.getDepth() ) {
@@ -249,18 +380,33 @@ void FrameBuilder::getNextFrame( unsigned char *ptr ) throw (Exception)
 }
 
 
+/*******************************************************************
+ * @brief Sets the internal frame number to a value. Default is 0.
+ *
+ * @param[in] frame_nr  int  The frame number, or nothing
+ *******************************************************************/
 void FrameBuilder::resetFrameNr( int frame_nr )
 {
 	m_frame_nr = frame_nr;
 }
 
 
+/*******************************************************************
+ * @brief Gets the internal frame number
+ *
+ * @return  unsigned long  The frame number.
+ *******************************************************************/
 unsigned long FrameBuilder::getFrameNr()
 {
 	return m_frame_nr;
 }
 
 
+/*******************************************************************
+ * @brief Gets the maximum "hardware" image size
+ *
+ * @param[out]  max_size  Reference to a Size object
+ *******************************************************************/
 void FrameBuilder::getMaxImageSize(Size& max_size)
 {
 	int max_dim = 8 * 1024;

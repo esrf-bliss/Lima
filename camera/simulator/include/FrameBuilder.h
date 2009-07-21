@@ -3,7 +3,6 @@
  * @brief This file contains the FrameBuilder class for the Simulator
  *
  * @author A.Kirov
- *
  * @date 03/06/2009
  *******************************************************************/
 
@@ -20,12 +19,14 @@ namespace lima {
 struct GaussPeak {
 	int x0, y0;     /// The center of the peak
 	unsigned fwhm;  /// Full Width at Half Maximum
-	double max;     /// The maximum
+	double max;     /// The maximum value
 };
 
 
 /*******************************************************************
  * @class FrameBuilder
+ *
+ * @brief This class configures and generates frames for the Simulator
  *
  *******************************************************************/
 class FrameBuilder {
