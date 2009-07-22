@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file   test.cpp
+ * @brief  This file is to test FrameBuilder and BufferSave classes
+ *
+ * @author A.Kirov, A.Homs
+ * @date   03/06/2009
+ *******************************************************************/
+
 #include <vector>
 #include <exception>
 #include <iostream>
