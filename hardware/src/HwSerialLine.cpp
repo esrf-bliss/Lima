@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file   HwSerialLine.cpp
+ * @brief  This file contains HwSerialLine class implementation
+ *
+ * @author A.Kirov, A.Homs
+ * @date   03/06/2009
+ *******************************************************************/
+
 #include "HwSerialLine.h"
 #include "Timestamp.h"
 
@@ -5,6 +13,14 @@ using namespace lima;
 using namespace std;
 
 
+/*******************************************************************
+ * @brief      HwSerialLine class constructor
+ *
+ * @param[in]  line_term    Line terminator string. Default is "\r"
+ * @param[in]  timeout      Input timeout. Default is 1.0 s
+ * @param[in]  block_size   Write block size. Default is 0
+ * @param[in]  block_delay  Block delay. Default is 0
+ *******************************************************************/
 HwSerialLine::HwSerialLine( const string& line_term, double timeout,
                             int block_size, double block_delay ) :
 	m_line_term(line_term),
@@ -20,9 +36,9 @@ HwSerialLine::~HwSerialLine()
 }
 
 
-/**
+/*******************************************************************
  * @brief Read the serial line until term.
- */
+ *******************************************************************/
 void HwSerialLine::readStr( string& buffer, int max_len, 
                             const string& term, double timeout )
 {
@@ -55,18 +71,18 @@ void HwSerialLine::readStr( string& buffer, int max_len,
 }
 
 
-/**
+/*******************************************************************
  * @brief Read the serial line until line term.
- */
+ *******************************************************************/
 void HwSerialLine::readLine( string& buffer, int max_len, double timeout )
 {
 	readStr( buffer, max_len, m_line_term, timeout );
 }
 
 
-/**
+/*******************************************************************
  * @brief Write and then immediately Read the serial line.
- */
+ *******************************************************************/
 void HwSerialLine::writeRead( const string& writebuffer,
 	                      string& readbuffer, int max_len,
 	                      bool wr_no_wait, double rd_timeout )
@@ -77,9 +93,9 @@ void HwSerialLine::writeRead( const string& writebuffer,
 }
 
 
-/**
+/*******************************************************************
  * @brief Write and then immediately Read the serial line until term.
- */
+ *******************************************************************/
 void HwSerialLine::writeReadStr( const string& writebuffer,
                                  string& readbuffer, int max_len, 
                                  const string& term, 
@@ -91,18 +107,18 @@ void HwSerialLine::writeReadStr( const string& writebuffer,
 }
 
 
-/**
+/*******************************************************************
  * @brief Read without blocking from the serial line.
- */
+ *******************************************************************/
 void HwSerialLine::readAvailable( string& buffer, int max_len )
 {
 	read( buffer, max_len, TimeoutNoBlock );
 }
 
 
-/**
+/*******************************************************************
  * @brief Flush the serial RX buffer
- */
+ *******************************************************************/
 void HwSerialLine::flush()
 {
 	string buf;

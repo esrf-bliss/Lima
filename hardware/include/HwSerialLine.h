@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file   HwSerialLine.h
+ * @brief  This file contains the abstract HwSerialLine class
+ *
+ * @author A.Kirov, A.Homs
+ * @date   03/06/2009
+ *******************************************************************/
+
 #ifndef HWSERIALLINE_H
 #define HWSERIALLINE_H
 
@@ -8,12 +16,21 @@
 namespace lima {
 
 
+/*******************************************************************
+ * @class  HwSerialLine
+ * @brief  An abstract class containing common Serial Line operations
+ *
+ * Note: The default timeout for most of the methods is TimeoutDefault.
+ *       This means that the internal variable m_timeout must be used.
+ *       When implementing the pure virtual functions this has to be
+ *       taken into account!
+ *******************************************************************/
 class HwSerialLine
 {
   public :
 
 	enum TimeoutConst {
-		TimeoutDefault = -2,
+		TimeoutDefault = -2,  // The internal timeout must be used
 		TimeoutBlockForever = -1,
 		TimeoutNoBlock = 0
 	};
@@ -68,7 +85,7 @@ class HwSerialLine
 
   private :
 	std::string  m_line_term;
-	double       m_timeout;  /* Will be used with TMOUT_DEFAULT */
+	double       m_timeout;  // Used with TimeoutDefault
 	int          m_block_size;
 	double       m_block_delay;
 };
