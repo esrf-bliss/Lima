@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file   EspiaSerialLine.h
+ * @brief  This file contains the Espia::SerialLine class
+ *
+ * @author A.Kirov, A.Homs
+ * @date   03/06/2009
+ *******************************************************************/
+
 #ifndef ESPIASERIALLINE_H
 #define ESPIASERIALLINE_H
 
@@ -13,6 +21,10 @@ namespace lima
 namespace Espia
 {
 
+/*******************************************************************
+ * @class  Espia::SerialLine : public HwSerialLine
+ * @brief  An implementation of HwSerialLine abstract class for Espia
+ *******************************************************************/
 class SerialLine : public HwSerialLine
 {
   public :
@@ -37,7 +49,7 @@ class SerialLine : public HwSerialLine
 	virtual void getNbAvailBytes( int &avail_bytes );
 
   private :
-	Dev& m_dev;
+	Dev& m_dev;  /// Reference to Espia::Dev object
 };
 
 

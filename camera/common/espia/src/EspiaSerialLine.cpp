@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file   EspiaSerialLine.cpp
+ * @brief  This file contains the Espia::SerialLine class implementation
+ *
+ * @author A.Kirov, A.Homs
+ * @date   03/06/2009
+ *******************************************************************/
+
 #include "EspiaSerialLine.h"
 #include "Espia.h"
 
@@ -14,7 +22,7 @@ SerialLine::SerialLine( Dev& edev, const string& line_term,
 	m_dev(edev)
 {
 	if( edev.isMeta() )
-		throw LIMA_HW_EXC(NotSupported, "Can't create an "
+		throw LIMA_HW_EXC(NotSupported, "Can't create a "
 		                          "SerialLine for a meta-device");
 }
 
