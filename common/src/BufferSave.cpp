@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file BufferSave.cpp
+ * @brief This file contains the BufferSave class implementation
+ *
+ * @author A.Kirov, A.Homs
+ * @date 03/06/2009
+ *******************************************************************/
+
 #include "BufferSave.h"
 
 #include <ctime>
@@ -15,6 +23,16 @@ using namespace std;
 #define EDF_HEADER_BUFFER_LEN	(10 * EDF_HEADER_LEN)
 
 
+/*******************************************************************
+ * @brief BufferSave class constructor setting member variables
+ *
+ * @param[in] format           EDF or Raw file format
+ * @param[in] prefix           File name prefix
+ * @param[in] idx              The starting file index
+ * @param[in] suffix           File name suffix
+ * @param[in] overwrite        Whether to overwrite existing files
+ * @param[in] tot_file_frames  Frames per file
+ *******************************************************************/
 BufferSave::BufferSave( FileFormat format, const string& prefix, int idx,
 			const string& suffix, bool overwrite, 
 			int tot_file_frames ) 
@@ -116,6 +134,12 @@ void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 	m_fout->write(buffer, len);
 }
 
+/*******************************************************************
+ * @fn        writeFrame(const HwFrameInfoType& finfo)
+ * @brief     This method writes a frame into a file
+ *
+ * @param[in] finfo  HwFrameInfoType structure reference
+ *******************************************************************/
 void BufferSave::writeFrame( const HwFrameInfoType& finfo )
 {
 	const FrameDim *fdim = finfo.frame_dim;

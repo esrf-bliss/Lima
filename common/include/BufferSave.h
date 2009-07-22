@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file BufferSave.h
+ * @brief This file contains the BufferSave class used to save frames
+ *
+ * @author A.Kirov, A.Homs
+ * @date 03/06/2009
+ *******************************************************************/
+
 #ifndef BUFFERSAVE_H
 #define BUFFERSAVE_H
 
@@ -9,6 +17,12 @@
 namespace lima {
 
 
+/*******************************************************************
+ * @class BufferSave
+ *
+ * The main method is writeFrame(const HwFrameInfoType& finfo).
+ * The other methods configure the saving parameters.
+ *******************************************************************/
 class BufferSave {
   public :
 	enum FileFormat {
