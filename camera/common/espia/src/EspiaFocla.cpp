@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file EspiaFocla.cpp
+ * @brief Focla::Dev and Focla::SerialLine classes implementation
+ *
+ * @author A.Kirov
+ * @date 25/06/2009
+ *******************************************************************/
+
 #include <utility>
 #include <sstream>
 #include "EspiaFocla.h"
@@ -52,7 +60,6 @@ map<string, int> Espia::Focla::ParamName2IdxMap;
 
 /*******************************************************************
  * @brief Initialize ParamName2IdxMap (once)
- *
  *******************************************************************/
 void Espia::Focla::initParamName2IdxMap()
 {
@@ -119,6 +126,9 @@ const map<string, SignalIdx> Espia::Focla::SigName2IdxMap( SigName2IdxList,
 // Dynamic initialization (if we don't include the enum from focla_lib)
 map<string, int> Espia::Focla::SigName2IdxMap;
 
+/*******************************************************************
+ * @brief Initialize the SigName2IdxMap (once)
+ *******************************************************************/
 void Espia::Focla::initSigName2IdxMap()
 {
 	static bool is_init_SigName2IdxMap=false;
@@ -191,12 +201,20 @@ void Dev::close()
 }
 
 
+/*******************************************************************
+ * @fn      Focla::Dev::getEspiaDev()
+ * @return  Espia::Dev reference
+ *******************************************************************/
 Espia::Dev &Dev::getEspiaDev()
 {
 	return m_edev;
 }
 
 
+/*******************************************************************
+ * @fn      Focla::Dev::getFocla()
+ * @return  focla_t handler
+ *******************************************************************/
 focla_t Dev::getFocla()
 {
 	return m_focla;
@@ -234,6 +252,13 @@ void Dev::checkMeta() throw(Exception)
 }
 
 
+/*******************************************************************
+ * @fn          Focla::Dev::getParam(const string pname, int &value)
+ * @brief       Gets param value from his name
+ *
+ * @param[in]   pname  string parameter name
+ * @param[out]  value  int parameter value
+ *******************************************************************/
 void Dev::getParam( const string pname, int &value )
 {
 	checkMeta();
@@ -241,6 +266,13 @@ void Dev::getParam( const string pname, int &value )
 }
 
 
+/*******************************************************************
+ * @fn          Focla::Dev::getParam(const ParamNb pnum, int &value)
+ * @brief       Gets param value from his enum in ParamNb
+ *
+ * @param[in]   pnum   ParamNb parameter number
+ * @param[out]  value  int parameter value
+ *******************************************************************/
 void Dev::getParam( const ParamNb pnum, int &value )
 {
 	checkMeta();
@@ -248,6 +280,13 @@ void Dev::getParam( const ParamNb pnum, int &value )
 }
 
 
+/*******************************************************************
+ * @fn         Focla::Dev::setParam(const string pname, int value)
+ * @brief      Sets param value based on param name
+ *
+ * @param[in]  pname  string parameter name
+ * @param[in]  value  int parameter new value
+ *******************************************************************/
 void Dev::setParam( const string pname, int value )
 {
 	checkMeta();
@@ -255,6 +294,13 @@ void Dev::setParam( const string pname, int value )
 }
 
 
+/*******************************************************************
+ * @fn         Focla::Dev::setParam(const ParamNb pnum, int value)
+ * @brief      Sets param value based on param enum from ParamNb
+ *
+ * @param[in]  pnum   aramNb parameter number
+ * @param[in]  value  int parameter new value
+ *******************************************************************/
 void Dev::setParam( const ParamNb pnum, int value )
 {
 	checkMeta();
@@ -262,12 +308,24 @@ void Dev::setParam( const ParamNb pnum, int value )
 }
 
 
+/*******************************************************************
+ * @fn         Focla::Dev::disableCache()
+ * @brief      Disables camera number cache
+ *
+ * Sets m_no_cache variable to true
+ *******************************************************************/
 void Dev::disableCache()
 {
 	m_no_cache = true;
 }
 
 
+/*******************************************************************
+ * @fn         Focla::Dev::enableCache()
+ * @brief      Enables camera number cache
+ *
+ * Sets m_no_cache variable to false and calls getSelectedCamera()
+ *******************************************************************/
 void Dev::enableCache()
 {
 	m_no_cache = false;
