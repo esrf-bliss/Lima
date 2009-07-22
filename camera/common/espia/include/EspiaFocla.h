@@ -104,9 +104,6 @@ class Dev
 	Dev( Espia::Dev &espia_dev );
 	~Dev();
 
-	void open();
-	void close();
-
 	Espia::Dev &getEspiaDev();
 	focla_t getFocla();
 
@@ -149,6 +146,9 @@ class Dev
 	void delCLDev( void *cl_dev );
 
   private :
+
+	void open();
+	void close();
 
 	void checkMeta() throw(Exception);
 	int pIdxFromName( const std::string pname );
