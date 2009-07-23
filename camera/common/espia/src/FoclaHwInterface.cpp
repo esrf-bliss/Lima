@@ -1,3 +1,10 @@
+/*******************************************************************
+ * @file   FoclaHwInterface.cpp
+ * @brief  This file contains Focla Hardware Interface implementation
+ *
+ * @author A.Kirov
+ * @date   15/07/2009
+ *******************************************************************/
 #include "FoclaHwInterface.h"
 
 using namespace std;

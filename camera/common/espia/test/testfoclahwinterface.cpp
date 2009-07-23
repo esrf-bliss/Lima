@@ -1,3 +1,13 @@
+/*******************************************************************
+ * @file testfoclahwinterface.cpp
+ * @brief This file is to test Espia::Focla hardware interface
+ *
+ * This test is based on testfreloninterface.cpp by A.Homs
+ *
+ * @author A.Kirov
+ * @date 15/07/2009
+ *******************************************************************/
+
 #include <iostream>
 
 #include "FoclaHwInterface.h"

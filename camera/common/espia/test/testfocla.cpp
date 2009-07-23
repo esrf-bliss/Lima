@@ -1,3 +1,11 @@
+/*******************************************************************
+ * @file testfocla.cpp
+ * @brief This file is to test Espia::Focla::Dev class
+ *
+ * @author A.Kirov
+ * @date 15/07/2009
+ *******************************************************************/
+
 #include <iostream>
 
 #include "EspiaFocla.h"

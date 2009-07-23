@@ -1,10 +1,9 @@
 /*******************************************************************
- * @file FoclaHwInterface.h
- * @brief This file contains Focla Hardware Interface classes
+ * @file   FoclaHwInterface.h
+ * @brief  This file contains Focla Hardware Interface classes
  *
  * @author A.Kirov
- *
- * @date 15/07/2009
+ * @date   15/07/2009
  *******************************************************************/
 
 #ifndef FOCLAHWINTERFACE_H
@@ -25,7 +24,6 @@ namespace Focla
 /*******************************************************************
  * @class DetInfoCtrlObj
  * @brief Focla detector info control object
- *
  *******************************************************************/
 class DetInfoCtrlObj : public HwDetInfoCtrlObj
 {
@@ -41,7 +39,6 @@ class DetInfoCtrlObj : public HwDetInfoCtrlObj
 /*******************************************************************
  * @class BufferCtrlObj
  * @brief Focla buffer control object
- *
  *******************************************************************/
 class BufferCtrlObj : public HwBufferCtrlObj
 {
@@ -80,7 +77,6 @@ class BufferCtrlObj : public HwBufferCtrlObj
 /*******************************************************************
  * @class SyncCtrlObj
  * @brief Focla synchronization control object
- *
  *******************************************************************/
 class SyncCtrlObj : public HwSyncCtrlObj
 {
@@ -111,9 +107,7 @@ class SyncCtrlObj : public HwSyncCtrlObj
 /*******************************************************************
  * @class Interface
  * @brief Focla hardware interface
- *
  *******************************************************************/
-
 class Interface : public HwInterface
 {
  public:
