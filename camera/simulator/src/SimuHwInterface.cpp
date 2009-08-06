@@ -323,7 +323,7 @@ void SimuHwInterface::getStatus(StatusType& status)
 		status.acq = AcqRunning;
 		break;
 	}
-	status.det_mask = DetStatus(Exposure | Readout | Latency);
+	status.det_mask = Exposure | Readout | Latency;
 }
 
 int SimuHwInterface::getNbAcquiredFrames()
