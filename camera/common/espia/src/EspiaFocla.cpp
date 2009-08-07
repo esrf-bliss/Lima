@@ -10,6 +10,7 @@
 #include <sstream>
 #include "EspiaFocla.h"
 #include "EspiaSerialLine.h"
+#include "MiscUtils.h"
 
 using namespace std;
 using namespace lima;
@@ -19,42 +20,32 @@ using namespace Espia::Focla;
 #define CHECK_CALL(ret)		ESPIA_CHECK_CALL(ret)
 
 
-typedef pair<ParamNb,string> Nb2NamePair;
-
-static const Nb2NamePair ParamNb2NameList[] =
-{
-	Nb2NamePair(TRIG_MODE, "TRIG_MODE"),
-	Nb2NamePair(TRIG, "TRIG"),
-	Nb2NamePair(CAM_SEL, "CAM_SEL"),
-	Nb2NamePair(TEST_IMAGE, "TEST_IMAGE"),
-	Nb2NamePair(CL1_PIX_PACK, "CL1_PIX_PACK"),
-	Nb2NamePair(CL2_PIX_PACK, "CL1_PIX_PACK"),
-	Nb2NamePair(CL1_CC1, "CL1_CC1"),
-	Nb2NamePair(CL1_CC2, "CL1_CC2"),
-	Nb2NamePair(CL1_CC3, "CL1_CC3"),
-	Nb2NamePair(CL1_CC4, "CL1_CC4"),
-	Nb2NamePair(CL2_CC1, "CL2_CC1"),
-	Nb2NamePair(CL2_CC2, "CL2_CC2"),
-	Nb2NamePair(CL2_CC3, "CL2_CC3"),
-	Nb2NamePair(CL2_CC4, "CL2_CC4"),
-	Nb2NamePair(CL1_IN1, "CL1_IN1"),
-	Nb2NamePair(CL1_IN2, "CL1_IN2"),
-	Nb2NamePair(CL1_IN3, "CL1_IN3"),
-	Nb2NamePair(CL2_IN1, "CL2_IN1"),
-	Nb2NamePair(CL2_IN2, "CL2_IN2"),
-	Nb2NamePair(CL2_IN3, "CL2_IN3"),
-	Nb2NamePair(CL1_OUT1, "CL1_OUT1"),
-	Nb2NamePair(CL1_OUT2, "CL1_OUT2"),
-	Nb2NamePair(CL1_OUT3, "CL1_OUT3"),
-	Nb2NamePair(CL2_OUT1, "CL2_OUT1"),
-	Nb2NamePair(CL2_OUT2, "CL2_OUT2"),
-	Nb2NamePair(CL2_OUT3, "CL2_OUT3"),
-};
-
-const map<ParamNb, string> Espia::Focla::ParamNb2NameMap = 
-	map<ParamNb, string>( ParamNb2NameList, ParamNb2NameList +
-		(sizeof(ParamNb2NameList)/sizeof(ParamNb2NameList[0])) );
-
+const string Espia::Focla::TRIG_MODE    = "TRIG_MODE";
+const string Espia::Focla::TRIG         = "TRIG";
+const string Espia::Focla::CAM_SEL      = "CAM_SEL";
+const string Espia::Focla::TEST_IMAGE   = "TEST_IMAGE";
+const string Espia::Focla::CL1_PIX_PACK = "CL1_PIX_PACK";
+const string Espia::Focla::CL2_PIX_PACK = "CL2_PIX_PACK";
+const string Espia::Focla::CL1_CC1      = "CL1_CC1";
+const string Espia::Focla::CL1_CC2      = "CL1_CC2";
+const string Espia::Focla::CL1_CC3      = "CL1_CC3";
+const string Espia::Focla::CL1_CC4      = "CL1_CC4";
+const string Espia::Focla::CL2_CC1      = "CL2_CC1";
+const string Espia::Focla::CL2_CC2      = "CL2_CC2";
+const string Espia::Focla::CL2_CC3      = "CL2_CC3";
+const string Espia::Focla::CL2_CC4      = "CL2_CC4";
+const string Espia::Focla::CL1_IN1      = "CL1_IN1";
+const string Espia::Focla::CL1_IN2      = "CL1_IN2";
+const string Espia::Focla::CL1_IN3      = "CL1_IN3";
+const string Espia::Focla::CL2_IN1      = "CL2_IN1";
+const string Espia::Focla::CL2_IN2      = "CL2_IN2";
+const string Espia::Focla::CL2_IN3      = "CL2_IN3";
+const string Espia::Focla::CL1_OUT1     = "CL1_OUT1";
+const string Espia::Focla::CL1_OUT2     = "CL1_OUT2";
+const string Espia::Focla::CL1_OUT3     = "CL1_OUT3";
+const string Espia::Focla::CL2_OUT1     = "CL2_OUT1";
+const string Espia::Focla::CL2_OUT2     = "CL2_OUT2";
+const string Espia::Focla::CL2_OUT3     = "CL2_OUT3";
 
 map<string, int> Espia::Focla::ParamName2IdxMap;
 
@@ -77,8 +68,6 @@ void Espia::Focla::initParamName2IdxMap()
 			ParamName2IdxMap[string(fparam->name)] = i;
 		}
 
-		// Check if ParamNb2NameList is consistent with ParamName2IdxMap?
-
 		is_init_ParamName2IdxMap = true;
 	}
 }
@@ -92,9 +81,7 @@ static const pair<string,int> PixelPackList[] =
 	pair<string,int>("Sarnoff", 6),
 };
 
-const map<string, int> Espia::Focla::PixelPack = 
-	map<string, int>( PixelPackList, PixelPackList +
-		(sizeof(PixelPackList)/sizeof(PixelPackList[0])) );
+const map<string, int> Espia::Focla::PixelPack(C_LIST_ITERS(PixelPackList));
 
 
 /* CL CC Levels: Low, High, Ext */
@@ -105,25 +92,15 @@ const vector<int> Espia::Focla::CCLevel =
 		(sizeof(CCLevelArray)/sizeof(CCLevelArray[0])) );
 
 
-#if 0
-// Static initialization (if we include the enum from focla_lib)
-static const pair<string, SignalIdx> SigName2IdxList[] = {
-	pair<string, SignalIdx>("CC1", FOCLA_SIG_CC1),
-	pair<string, SignalIdx>("CC2", FOCLA_SIG_CC2),
-	pair<string, SignalIdx>("CC3", FOCLA_SIG_CC3),
-	pair<string, SignalIdx>("CC4", FOCLA_SIG_CC4),
-	pair<string, SignalIdx>("OUT1", FOCLA_SIG_OUT1),
-	pair<string, SignalIdx>("OUT2", FOCLA_SIG_OUT2),
-	pair<string, SignalIdx>("OUT3", FOCLA_SIG_OUT3),
-	pair<string, SignalIdx>("TRIG", FOCLA_SIG_TRIG),
-};
+const string Espia::Focla::SIG_CC1  = "CC1";
+const string Espia::Focla::SIG_CC2  = "CC2";
+const string Espia::Focla::SIG_CC3  = "CC3";
+const string Espia::Focla::SIG_CC4  = "CC4";
+const string Espia::Focla::SIG_OUT1 = "OUT1";
+const string Espia::Focla::SIG_OUT2 = "OUT2";
+const string Espia::Focla::SIG_OUT3 = "OUT3";
+const string Espia::Focla::SIG_TRIG = "TRIG";
 
-const map<string, SignalIdx> Espia::Focla::SigName2IdxMap( SigName2IdxList,
-    SigName2IdxList + (sizeof(SigName2IdxList) / sizeof(SigName2IdxList[0])) );
-
-#else
-
-// Dynamic initialization (if we don't include the enum from focla_lib)
 map<string, int> Espia::Focla::SigName2IdxMap;
 
 /*******************************************************************
@@ -148,7 +125,6 @@ void Espia::Focla::initSigName2IdxMap()
 		is_init_SigName2IdxMap = true;
 	}
 }
-#endif /* 0/1 */
 
 
 /*******************************************************************
@@ -160,7 +136,7 @@ Dev::Dev( Espia::Dev &espia_dev ) :
 	m_edev(espia_dev)
 {
 	initParamName2IdxMap();
-	initSigName2IdxMap(); // If we don't have static initialization
+	initSigName2IdxMap();
 
 	m_focla = FOCLA_DEV_INVAL;
 	m_no_cache = false;
@@ -230,19 +206,6 @@ int Dev::pIdxFromName( const string pname )
 }
 
 
-int Dev::pIdxFromNb( const ParamNb pnum )
-{
-#if 1
-	map<ParamNb,string>::const_iterator pnb = ParamNb2NameMap.find(pnum);
-	if( pnb == ParamNb2NameMap.end() )
-		throw LIMA_HW_EXC(InvalidValue, "No such Focla parameter num");
-	return pIdxFromName( pnb->second );
-#else  // pnum==pidx, but we can't be sure if we don't include from focla_lib.h
-	return pnum;
-#endif /* 1/0 */
-}
-
-
 void Dev::checkMeta() throw(Exception)
 {
 	if( m_edev.isMeta() ) {
@@ -267,20 +230,6 @@ void Dev::getParam( const string pname, int &value )
 
 
 /*******************************************************************
- * @fn          Focla::Dev::getParam(const ParamNb pnum, int &value)
- * @brief       Gets param value from his enum in ParamNb
- *
- * @param[in]   pnum   ParamNb parameter number
- * @param[out]  value  int parameter value
- *******************************************************************/
-void Dev::getParam( const ParamNb pnum, int &value )
-{
-	checkMeta();
-	CHECK_CALL( focla_get_param(m_focla, pIdxFromNb(pnum), &value) );
-}
-
-
-/*******************************************************************
  * @fn         Focla::Dev::setParam(const string pname, int value)
  * @brief      Sets param value based on param name
  *
@@ -291,20 +240,6 @@ void Dev::setParam( const string pname, int value )
 {
 	checkMeta();
 	CHECK_CALL( focla_set_param(m_focla, pIdxFromName(pname), value) );
-}
-
-
-/*******************************************************************
- * @fn         Focla::Dev::setParam(const ParamNb pnum, int value)
- * @brief      Sets param value based on param enum from ParamNb
- *
- * @param[in]  pnum   aramNb parameter number
- * @param[in]  value  int parameter new value
- *******************************************************************/
-void Dev::setParam( const ParamNb pnum, int value )
-{
-	checkMeta();
-	CHECK_CALL( focla_set_param(m_focla, pIdxFromNb(pnum), value) );
 }
 
 
@@ -341,7 +276,7 @@ void Dev::enableCache()
  *******************************************************************/
 void Dev::getSelectedCamera( int &curr_cam )
 {
-	getParam( "CAM_SEL", curr_cam );
+	getParam( CAM_SEL, curr_cam );
 }
 
 
@@ -354,7 +289,7 @@ void Dev::getSelectedCamera( int &curr_cam )
 void Dev::selectCamera( int cam_nb )
 {
 	if( m_no_cache || (cam_nb != m_curr_cam) ) {
-		setParam( "CAM_SEL", cam_nb );
+		setParam( CAM_SEL, cam_nb );
 		m_curr_cam = cam_nb;
 	}
 }
@@ -430,7 +365,7 @@ void Dev::setPixelPack( int cam_nb, int pix_pack, string pix_pack_str )
  *******************************************************************/
 void Dev::getTestImage( int &val )
 {
-	getParam( "TEST_IMAGE", val );
+	getParam( TEST_IMAGE, val );
 }
 
 
@@ -442,7 +377,7 @@ void Dev::getTestImage( int &val )
  *******************************************************************/
 void Dev::setTestImage( int val )
 {
-	setParam( "TEST_IMAGE", val );
+	setParam( TEST_IMAGE, val );
 }
 
 
@@ -454,7 +389,7 @@ void Dev::setTestImage( int val )
  *******************************************************************/
 void Dev::getTriggerMode( int &val )
 {
-	getParam( "TRIG_MODE", val );
+	getParam( TRIG_MODE, val );
 }
 
 
@@ -466,7 +401,7 @@ void Dev::getTriggerMode( int &val )
  *******************************************************************/
 void Dev::setTriggerMode( int val )
 {
-	setParam( "TRIG_MODE", val );
+	setParam( TRIG_MODE, val );
 }
 
 
@@ -476,7 +411,7 @@ void Dev::setTriggerMode( int val )
  *******************************************************************/
 void Dev::triggerImage()
 {
-	setParam( "TRIG", 1 );
+	setParam( TRIG, 1 );
 }
 
 

@@ -39,10 +39,10 @@ int main(int argc, char *argv[])
 
 
 	int val;
-	focla.getParam( "TEST_IMAGE", val );
+	focla.getParam( Espia::Focla::TEST_IMAGE, val );
 	cout << endl << "\"TEST_IMAGE\" = " << val << endl;
 
-	focla.setParam( "TEST_IMAGE", 0 );
+	focla.setParam( Espia::Focla::TEST_IMAGE, 0 );
 	cout << endl << "\"TEST_IMAGE\" set to 0" << endl;
 
 	focla.getParam( Espia::Focla::TEST_IMAGE, val );
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	espia_acq.start();
 	cout << "Acquisition started" << endl << flush;
 
-	focla.setParam( "TEST_IMAGE", 1 );
+	focla.setParam( Espia::Focla::TEST_IMAGE, 1 );
 
 	Espia::Acq::StatusType acq_status;
 	Timestamp start = Timestamp::now();

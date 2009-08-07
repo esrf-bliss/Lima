@@ -240,7 +240,7 @@ void Interface::reset(ResetLevel reset_level)
 	m_acq.stop();
 
 	if( reset_level == HardReset )  // ???
-		m_focla.setParam( "TEST_IMAGE", 0 );
+		m_focla.setParam( TEST_IMAGE, 0 );
 
 	m_sync.setNbFrames(1);
 
@@ -258,13 +258,13 @@ void Interface::prepareAcq()
 void Interface::startAcq()
 {
 	m_acq.start();
-	m_focla.setParam( "TEST_IMAGE", 1 );
+	m_focla.setParam( TEST_IMAGE, 1 );
 }
 
 
 void Interface::stopAcq()
 {
-	m_focla.setParam( "TEST_IMAGE", 0 );
+	m_focla.setParam( TEST_IMAGE, 0 );
 	m_acq.stop();
 }
 

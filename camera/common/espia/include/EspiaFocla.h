@@ -26,7 +26,7 @@ namespace Focla
 {
 
 
-enum ParamNb {  // Or move Focla param enum from focla_lib.cpp to focla_lib.h ?
+extern const std::string 
 	TRIG_MODE,
 	TRIG,
 	CAM_SEL,
@@ -52,12 +52,7 @@ enum ParamNb {  // Or move Focla param enum from focla_lib.cpp to focla_lib.h ?
 	CL1_OUT3,
 	CL2_OUT1,
 	CL2_OUT2,
-	CL2_OUT3,
-};
-
-// We don't need this if we include the enum from focla_lib.h
-extern const std::map<ParamNb, std::string> ParamNb2NameMap;
-
+	CL2_OUT3;
 
 extern std::map<std::string, int> ParamName2IdxMap;
 
@@ -70,25 +65,19 @@ extern const std::map<std::string, int> PixelPack;
 extern const std::vector<int> CCLevel;
 
 
-#if 0
-enum SignalIdx {  // Or move FOCLA_SIG enum from focla_lib.cpp to focla_lib.h ?
-	FOCLA_SIG_CC1,
-	FOCLA_SIG_CC2,
-	FOCLA_SIG_CC3,
-	FOCLA_SIG_CC4,
-	FOCLA_SIG_OUT1,
-	FOCLA_SIG_OUT2,
-	FOCLA_SIG_OUT3,
-	FOCLA_SIG_TRIG,
-	FOCLA_NR_SIG,
-};
+extern const std::string
+	SIG_CC1,
+	SIG_CC2,
+	SIG_CC3,
+	SIG_CC4,
+	SIG_OUT1,
+	SIG_OUT2,
+	SIG_OUT3,
+	SIG_TRIG;
 
-extern std::map<std::string, SignalIdx> SigName2IdxMap;
-#else
 extern std::map<std::string, int> SigName2IdxMap;
 
 void initSigName2IdxMap();
-#endif /* 0/1 */
 
 
 /*******************************************************************
@@ -108,10 +97,8 @@ class Dev
 	focla_t getFocla();
 
 	void getParam( const std::string pname, int &value );
-	void getParam( const ParamNb pnum, int &value );
 
 	void setParam( const std::string pname, int value );
-	void setParam( const ParamNb pnum, int value );
 
 	void disableCache();
 	void enableCache();
@@ -152,7 +139,6 @@ class Dev
 
 	void checkMeta() throw(Exception);
 	int pIdxFromName( const std::string pname );
-	int pIdxFromNb( const ParamNb pnum );
 	std::string pixelPackParName( int cam_nb );
 	std::string ccLevelParName( int cam_nb, int cc_nb );
 	std::string ccSignalName( int cam_nb, int cc_nb );
