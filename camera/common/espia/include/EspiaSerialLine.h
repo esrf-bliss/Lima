@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file   EspiaSerialLine.h
  * @brief  This file contains the Espia::SerialLine class
  *
@@ -21,7 +21,7 @@ namespace lima
 namespace Espia
 {
 
-/*******************************************************************
+/***************************************************************//**
  * @class  Espia::SerialLine : public HwSerialLine
  * @brief  An implementation of HwSerialLine abstract class for Espia
  *******************************************************************/

@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file FrameBuilder.h
  * @brief This file contains the FrameBuilder class for the Simulator
  *
@@ -23,7 +23,7 @@ struct GaussPeak {
 };
 
 
-/*******************************************************************
+/***************************************************************//**
  * @class FrameBuilder
  *
  * @brief This class configures and generates frames for the Simulator

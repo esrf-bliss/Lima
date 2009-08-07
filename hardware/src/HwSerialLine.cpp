@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file   HwSerialLine.cpp
  * @brief  This file contains HwSerialLine class implementation
  *
@@ -13,7 +13,7 @@ using namespace lima;
 using namespace std;
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief      HwSerialLine class constructor
  *
  * @param[in]  line_term    Line terminator string. Default is "\r"
@@ -36,7 +36,7 @@ HwSerialLine::~HwSerialLine()
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Read the serial line until term.
  *******************************************************************/
 void HwSerialLine::readStr( string& buffer, int max_len, 
@@ -71,7 +71,7 @@ void HwSerialLine::readStr( string& buffer, int max_len,
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Read the serial line until line term.
  *******************************************************************/
 void HwSerialLine::readLine( string& buffer, int max_len, double timeout )
@@ -80,7 +80,7 @@ void HwSerialLine::readLine( string& buffer, int max_len, double timeout )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Write and then immediately Read the serial line.
  *******************************************************************/
 void HwSerialLine::writeRead( const string& writebuffer,
@@ -93,7 +93,7 @@ void HwSerialLine::writeRead( const string& writebuffer,
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Write and then immediately Read the serial line until term.
  *******************************************************************/
 void HwSerialLine::writeReadStr( const string& writebuffer,
@@ -107,7 +107,7 @@ void HwSerialLine::writeReadStr( const string& writebuffer,
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Read without blocking from the serial line.
  *******************************************************************/
 void HwSerialLine::readAvailable( string& buffer, int max_len )
@@ -116,7 +116,7 @@ void HwSerialLine::readAvailable( string& buffer, int max_len )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Flush the serial RX buffer
  *******************************************************************/
 void HwSerialLine::flush()

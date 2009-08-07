@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file BufferSave.cpp
  * @brief This file contains the BufferSave class implementation
  *
@@ -23,7 +23,7 @@ using namespace std;
 #define EDF_HEADER_BUFFER_LEN	(10 * EDF_HEADER_LEN)
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief BufferSave class constructor setting member variables
  *
  * @param[in] format           EDF or Raw file format
@@ -134,8 +134,7 @@ void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 	m_fout->write(buffer, len);
 }
 
-/*******************************************************************
- * @fn        writeFrame(const HwFrameInfoType& finfo)
+/***************************************************************//**
  * @brief     This method writes a frame into a file
  *
  * @param[in] finfo  HwFrameInfoType structure reference

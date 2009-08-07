@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file testfoclahwinterface.cpp
  * @brief This file is to test Espia::Focla hardware interface
  *

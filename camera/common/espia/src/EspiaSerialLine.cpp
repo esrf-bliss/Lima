@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file   EspiaSerialLine.cpp
  * @brief  This file contains the Espia::SerialLine class implementation
  *

@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file   FoclaHwInterface.cpp
  * @brief  This file contains Focla Hardware Interface implementation
  *
@@ -12,7 +12,7 @@ using namespace lima;
 using namespace Espia::Focla;
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Espia::Focla::DetInfoCtrlObj class constructor
  *
  * @param[in] focla        reference to Espia::Focla::Dev object
@@ -28,7 +28,7 @@ DetInfoCtrlObj::~DetInfoCtrlObj()
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Espia::Focla::BufferCtrlObj class constructor
  *
  * @param[in] buffer_mgr   reference to BufferCtrlMgr object
@@ -135,7 +135,7 @@ void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback &frame_cb)
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Espia::Focla::SyncCtrlObj class constructor
  *
  * @param[in] acq          reference to Espia::Acq object
@@ -199,7 +199,7 @@ void SyncCtrlObj::getValidRanges(ValidRangesType &valid_ranges)
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Espia::Focla::Interface class constructor
  *
  * @param[in] acq          reference to Espia::Acq object

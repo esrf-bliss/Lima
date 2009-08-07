@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file   HwSerialLine.h
  * @brief  This file contains the abstract HwSerialLine class
  *
@@ -16,7 +16,7 @@
 namespace lima {
 
 
-/*******************************************************************
+/***************************************************************//**
  * @class  HwSerialLine
  * @brief  An abstract class containing common Serial Line operations
  *

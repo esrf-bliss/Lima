@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file EspiaFocla.cpp
  * @brief Focla::Dev and Focla::SerialLine classes implementation
  *
@@ -49,7 +49,7 @@ const string Espia::Focla::CL2_OUT3     = "CL2_OUT3";
 
 map<string, int> Espia::Focla::ParamName2IdxMap;
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Initialize ParamName2IdxMap (once)
  *******************************************************************/
 void Espia::Focla::initParamName2IdxMap()
@@ -103,7 +103,7 @@ const string Espia::Focla::SIG_TRIG = "TRIG";
 
 map<string, int> Espia::Focla::SigName2IdxMap;
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Initialize the SigName2IdxMap (once)
  *******************************************************************/
 void Espia::Focla::initSigName2IdxMap()
@@ -127,12 +127,12 @@ void Espia::Focla::initSigName2IdxMap()
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Espia::Focla::Dev class constructor
  *
  * @param[in] espia_dev  reference to Espia::Dev object
  *******************************************************************/
-Dev::Dev( Espia::Dev &espia_dev ) :
+Espia::Focla::Dev::Dev( Espia::Dev &espia_dev ) :
 	m_edev(espia_dev)
 {
 	initParamName2IdxMap();
@@ -152,13 +152,13 @@ Dev::Dev( Espia::Dev &espia_dev ) :
 }
 
 
-Dev::~Dev()
+Espia::Focla::Dev::~Dev()
 {
 	close();
 }
 
 
-void Dev::open()
+void Espia::Focla::Dev::open()
 {
 	if( ! m_dev_open ) {
 		CHECK_CALL( focla_open( m_edev, &m_focla ) );
@@ -167,7 +167,7 @@ void Dev::open()
 }
 
 
-void Dev::close()
+void Espia::Focla::Dev::close()
 {
 	if( m_dev_open ) {
 		CHECK_CALL( focla_close( m_focla ) );
@@ -177,27 +177,25 @@ void Dev::close()
 }
 
 
-/*******************************************************************
- * @fn      Focla::Dev::getEspiaDev()
+/***************************************************************//**
  * @return  Espia::Dev reference
  *******************************************************************/
-Espia::Dev &Dev::getEspiaDev()
+Espia::Dev &Espia::Focla::Dev::getEspiaDev()
 {
 	return m_edev;
 }
 
 
-/*******************************************************************
- * @fn      Focla::Dev::getFocla()
+/***************************************************************//**
  * @return  focla_t handler
  *******************************************************************/
-focla_t Dev::getFocla()
+focla_t Espia::Focla::Dev::getFocla()
 {
 	return m_focla;
 }
 
 
-int Dev::pIdxFromName( const string pname )
+int Espia::Focla::Dev::pIdxFromName( const string pname )
 {
 	map<string, int>::iterator pnm = ParamName2IdxMap.find(pname);
 	if( pnm == ParamName2IdxMap.end() )
@@ -206,7 +204,7 @@ int Dev::pIdxFromName( const string pname )
 }
 
 
-void Dev::checkMeta() throw(Exception)
+void Espia::Focla::Dev::checkMeta() throw(Exception)
 {
 	if( m_edev.isMeta() ) {
 		throw LIMA_HW_EXC(NotSupported, "Operation not permitted on "
@@ -215,78 +213,72 @@ void Dev::checkMeta() throw(Exception)
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::getParam(const string pname, int &value)
+/***************************************************************//**
  * @brief       Gets param value from his name
  *
  * @param[in]   pname  string parameter name
  * @param[out]  value  int parameter value
  *******************************************************************/
-void Dev::getParam( const string pname, int &value )
+void Espia::Focla::Dev::getParam( const string pname, int &value )
 {
 	checkMeta();
 	CHECK_CALL( focla_get_param(m_focla, pIdxFromName(pname), &value) );
 }
 
 
-/*******************************************************************
- * @fn         Focla::Dev::setParam(const string pname, int value)
+/***************************************************************//**
  * @brief      Sets param value based on param name
  *
  * @param[in]  pname  string parameter name
  * @param[in]  value  int parameter new value
  *******************************************************************/
-void Dev::setParam( const string pname, int value )
+void Espia::Focla::Dev::setParam( const string pname, int value )
 {
 	checkMeta();
 	CHECK_CALL( focla_set_param(m_focla, pIdxFromName(pname), value) );
 }
 
 
-/*******************************************************************
- * @fn         Focla::Dev::disableCache()
+/***************************************************************//**
  * @brief      Disables camera number cache
  *
  * Sets m_no_cache variable to true
  *******************************************************************/
-void Dev::disableCache()
+void Espia::Focla::Dev::disableCache()
 {
 	m_no_cache = true;
 }
 
 
-/*******************************************************************
- * @fn         Focla::Dev::enableCache()
+/***************************************************************//**
  * @brief      Enables camera number cache
  *
  * Sets m_no_cache variable to false and calls getSelectedCamera()
  *******************************************************************/
-void Dev::enableCache()
+void Espia::Focla::Dev::enableCache()
 {
 	m_no_cache = false;
 	getSelectedCamera( m_curr_cam );
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::getSelectedCamera(int &curr_cam)
+/***************************************************************//**
  * @brief       Gets Selected camera number
  *
  * @param[out]  curr_cam  int reference to selected camera number
  *******************************************************************/
-void Dev::getSelectedCamera( int &curr_cam )
+void Espia::Focla::Dev::getSelectedCamera( int &curr_cam )
 {
 	getParam( CAM_SEL, curr_cam );
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::selectCamera(int cam_nb)
+/***************************************************************//**
  * @brief       Selects a camera number
  *
  * @param[in]   cam_nb  int number of the camera to select
  *******************************************************************/
-void Dev::selectCamera( int cam_nb )
+void Espia::Focla::Dev::selectCamera( int cam_nb )
 {
 	if( m_no_cache || (cam_nb != m_curr_cam) ) {
 		setParam( CAM_SEL, cam_nb );
@@ -295,7 +287,7 @@ void Dev::selectCamera( int cam_nb )
 }
 
 
-string Dev::pixelPackParName( int cam_nb )
+string Espia::Focla::Dev::pixelPackParName( int cam_nb )
 {
 	ostringstream s;
 	s << "CL" << (cam_nb+1) << "_PIX_PACK";
@@ -303,8 +295,7 @@ string Dev::pixelPackParName( int cam_nb )
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::getPixelPack(int cam_nb, string &pix_pack_str)
+/***************************************************************//**
  * @brief       Gets PixelPack param as a string for a camera
  *
  * @param[in]   cam_nb  int number of the camera
@@ -312,7 +303,7 @@ string Dev::pixelPackParName( int cam_nb )
  *
  * @see         PixelPackList, EspiaAcqLib.py
  *******************************************************************/
-void Dev::getPixelPack( int cam_nb, string &pix_pack_str )
+void Espia::Focla::Dev::getPixelPack( int cam_nb, string &pix_pack_str )
 {
 	int pix_pack;
 	string pname = pixelPackParName( cam_nb );
@@ -330,9 +321,7 @@ void Dev::getPixelPack( int cam_nb, string &pix_pack_str )
 }
 
 
-/*******************************************************************
- * @fn         Focla::Dev::setPixelPack(int cam_nb, int pix_pack,\
- *                                      string pix_pack_str)
+/***************************************************************//**
  * @brief      Sets PixelPack param for a camera
  *
  * @param[in]  cam_nb  int number of the camera
@@ -342,7 +331,8 @@ void Dev::getPixelPack( int cam_nb, string &pix_pack_str )
  *
  * @see        PixelPackList, EspiaAcqLib.py
  *******************************************************************/
-void Dev::setPixelPack( int cam_nb, int pix_pack, string pix_pack_str )
+void Espia::Focla::Dev::setPixelPack( int cam_nb, int pix_pack, 
+                                      string pix_pack_str )
 {
 	string pname = pixelPackParName( cam_nb );
 	if( -1 == pix_pack ) {
@@ -357,65 +347,60 @@ void Dev::setPixelPack( int cam_nb, int pix_pack, string pix_pack_str )
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::getTestImage(int &val)
+/***************************************************************//**
  * @brief       Gets TEST_IMAGE param value
  *
  * @param[out]  val  int reference to TEST_IMAGE value
  *******************************************************************/
-void Dev::getTestImage( int &val )
+void Espia::Focla::Dev::getTestImage( int &val )
 {
 	getParam( TEST_IMAGE, val );
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::setTestImage(int val)
+/***************************************************************//**
  * @brief       Sets TEST_IMAGE param value
  *
  * @param[in]   val  int TEST_IMAGE value
  *******************************************************************/
-void Dev::setTestImage( int val )
+void Espia::Focla::Dev::setTestImage( int val )
 {
 	setParam( TEST_IMAGE, val );
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::getTriggerMode(int &val)
+/***************************************************************//**
  * @brief       Gets TRIG_MODE param value
  *
  * @param[out]  val  int reference to TRIG_MODE value
  *******************************************************************/
-void Dev::getTriggerMode( int &val )
+void Espia::Focla::Dev::getTriggerMode( int &val )
 {
 	getParam( TRIG_MODE, val );
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::setTriggerMode(int val)
+/***************************************************************//**
  * @brief       Sets TRIG_MODE param value
  *
  * @param[out]  val  int TRIG_MODE value
  *******************************************************************/
-void Dev::setTriggerMode( int val )
+void Espia::Focla::Dev::setTriggerMode( int val )
 {
 	setParam( TRIG_MODE, val );
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::triggerImage()
+/***************************************************************//**
  * @brief       Sets TRIG param to 1
  *******************************************************************/
-void Dev::triggerImage()
+void Espia::Focla::Dev::triggerImage()
 {
 	setParam( TRIG, 1 );
 }
 
 
-string Dev::ccLevelParName( int cam_nb, int cc_nb )
+string Espia::Focla::Dev::ccLevelParName( int cam_nb, int cc_nb )
 {
 	ostringstream s;
 	s <<  "CL" << (cam_nb+1) << "_CC" << (cc_nb+1);
@@ -423,9 +408,7 @@ string Dev::ccLevelParName( int cam_nb, int cc_nb )
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::ccLevelGet(int cam_nb, int cc_nb,\
- *                                     unsigned int &cc_level)
+/***************************************************************//**
  * @brief       Gets ccLevel for a camera
  *
  * @param[in]   cam_nb  int number of the camera
@@ -434,7 +417,8 @@ string Dev::ccLevelParName( int cam_nb, int cc_nb )
  *
  * @see         CCLevel vector, EspiaAcqLib.py
  *******************************************************************/
-void Dev::ccLevelGet( int cam_nb, int cc_nb, unsigned int &cc_level )
+void Espia::Focla::Dev::ccLevelGet( int cam_nb, int cc_nb, 
+                                    unsigned int &cc_level )
 {
 	int pval;
 	string pname = ccLevelParName( cam_nb, cc_nb );
@@ -449,9 +433,7 @@ void Dev::ccLevelGet( int cam_nb, int cc_nb, unsigned int &cc_level )
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::ccLevelSet(int cam_nb, int cc_nb,\
- *                                     unsigned int cc_level)
+/***************************************************************//**
  * @brief       Sets ccLevel for a camera
  *
  * @param[in]   cam_nb  int number of the camera
@@ -460,7 +442,8 @@ void Dev::ccLevelGet( int cam_nb, int cc_nb, unsigned int &cc_level )
  *
  * @see         CCLevel vector, EspiaAcqLib.py
  *******************************************************************/
-void Dev::ccLevelSet( int cam_nb, int cc_nb, unsigned int cc_level )
+void Espia::Focla::Dev::ccLevelSet( int cam_nb, int cc_nb, 
+                                    unsigned int cc_level )
 {
 	int pval;
 	string pname = ccLevelParName( cam_nb, cc_nb );
@@ -473,7 +456,7 @@ void Dev::ccLevelSet( int cam_nb, int cc_nb, unsigned int cc_level )
 }
 
 
-string Dev::ccSignalName( int cam_nb, int cc_nb )
+string Espia::Focla::Dev::ccSignalName( int cam_nb, int cc_nb )
 {
 	ostringstream s;
 	s << "CC" << (cc_nb + 1);
@@ -481,7 +464,7 @@ string Dev::ccSignalName( int cam_nb, int cc_nb )
 }
 
 
-int Dev::sigNbFromName( const string sname )
+int Espia::Focla::Dev::sigNbFromName( const string sname )
 {
 	map<string, int>::iterator snm = SigName2IdxMap.find(sname);
 	if( snm == SigName2IdxMap.end() )
@@ -490,9 +473,8 @@ int Dev::sigNbFromName( const string sname )
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::ccPulseStart( int cam_nb, int cc_nb, int polarity,\
- *                                   int width_us, int delay_us, int nb_pulse )
+/***************************************************************//**
+ * @brief       ccPulseStart() function
  *
  * @param[in]   cam_nb    int number of the camera
  * @param[in]   cc_nb     int
@@ -501,8 +483,8 @@ int Dev::sigNbFromName( const string sname )
  * @param[in]   delay_us  int
  * @param[in]   nb_pulse  int
  *******************************************************************/
-void Dev::ccPulseStart( int cam_nb, int cc_nb, int polarity, int width_us,
-                        int delay_us, int nb_pulse )
+void Espia::Focla::Dev::ccPulseStart( int cam_nb, int cc_nb, int polarity, 
+                                      int width_us, int delay_us, int nb_pulse )
 {
 	string sig_name = ccSignalName( cam_nb, cc_nb );
 	int sig_nb = sigNbFromName( sig_name );
@@ -513,13 +495,13 @@ void Dev::ccPulseStart( int cam_nb, int cc_nb, int polarity, int width_us,
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::ccPulseStop(int cam_nb, int cc_nb)
+/***************************************************************//**
+ * @brief       ccPulseStop() function
  *
  * @param[in]   cam_nb    int number of the camera
  * @param[in]   cc_nb     int
  *******************************************************************/
-void Dev::ccPulseStop( int cam_nb, int cc_nb )
+void Espia::Focla::Dev::ccPulseStop( int cam_nb, int cc_nb )
 {
 	string sig_name = ccSignalName( cam_nb, cc_nb );
 	int sig_nb = sigNbFromName( sig_name );
@@ -527,9 +509,8 @@ void Dev::ccPulseStop( int cam_nb, int cc_nb )
 }
 
 
-/*******************************************************************
- * @fn          Focla::Dev::ccPulseStatus( int cam_nb, int cc_nb,\
- *               int &pulse_active, int &curr_pulse, int &curr_stage)
+/***************************************************************//**
+ * @brief       ccPulseStatus() function
  *
  * @param[in]   cam_nb       int number of the camera
  * @param[in]   cc_nb        int
@@ -537,8 +518,8 @@ void Dev::ccPulseStop( int cam_nb, int cc_nb )
  * @param[out]  curr_pulse   int reference
  * @param[out]  curr_stage   int reference
  *******************************************************************/
-void Dev::ccPulseStatus( int cam_nb, int cc_nb, int &pulse_active, 
-                         int &curr_pulse, int &curr_stage )
+void Espia::Focla::Dev::ccPulseStatus( int cam_nb, int cc_nb, int &pulse_active, 
+                                       int &curr_pulse, int &curr_stage )
 {
 	string sig_name = ccSignalName( cam_nb, cc_nb );
 	int sig_nb = sigNbFromName( sig_name );
@@ -547,19 +528,19 @@ void Dev::ccPulseStatus( int cam_nb, int cc_nb, int &pulse_active,
 }
 
 
-void Dev::setCLDev( int cam_nb, void *cl_dev )
+void Espia::Focla::Dev::setCLDev( int cam_nb, void *cl_dev )
 {
 	m_cl_dev[cam_nb] = cl_dev; // XXX What about the del callback in Python?
 }
 
 
-void Dev::getCLDev( int cam_nb, void **cl_dev )
+void Espia::Focla::Dev::getCLDev( int cam_nb, void **cl_dev )
 {
 	*cl_dev = m_cl_dev[cam_nb];  // XXX
 }
 
 
-void Dev::delCLDev( void *cl_dev )  // XXX This function should be called back
+void Espia::Focla::Dev::delCLDev( void *cl_dev )  // XXX Should be called back
 {
 	for( unsigned i=0; i<(sizeof(m_cl_dev)/sizeof(m_cl_dev[0])); i++ ) {
 		if( m_cl_dev[i] == cl_dev )
@@ -568,50 +549,47 @@ void Dev::delCLDev( void *cl_dev )  // XXX This function should be called back
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Espia::Focla::SerialLine class constructor
  *
  * @param[in] focla_dev  refeernce to Focla::Dev object
  *******************************************************************/
-SerialLine::SerialLine( Focla::Dev &focla_dev ) :
+Espia::Focla::SerialLine::SerialLine( Focla::Dev &focla_dev ) :
 	HwSerialLine(),
 	m_fdev( focla_dev )
 {
 }
 
 
-SerialLine::~SerialLine()
+Espia::Focla::SerialLine::~SerialLine()
 {
 }
 
 
-/*******************************************************************
- * @fn      Focla::SerialLine::getFoclaDev()
+/***************************************************************//**
  * @return  Espia::Focla::Dev object reference
  *******************************************************************/
-Espia::Focla::Dev &SerialLine::getFoclaDev()
+Espia::Focla::Dev &Espia::Focla::SerialLine::getFoclaDev()
 {
 	return m_fdev;
 }
 
 
-/*******************************************************************
- * @fn      Focla::SerialLine::getEspiaDev()
+/***************************************************************//**
  * @return  Espia::Dev object reference
  *******************************************************************/
-Espia::Dev &SerialLine::getEspiaDev()
+Espia::Dev &Espia::Focla::SerialLine::getEspiaDev()
 {
 	return m_fdev.getEspiaDev();
 }
 
 
-/*******************************************************************
- * @fn int Focla::SerialLine::getTimeoutUSec(double timeout_s, bool avail)
+/***************************************************************//**
  * @brief Get Focla serial line timeout in us
  *
  * This is just an auxiliary function
  *******************************************************************/
-int SerialLine::getTimeoutUSec( double timeout_s, bool avail )
+int Espia::Focla::SerialLine::getTimeoutUSec( double timeout_s, bool avail )
 {
 	if( timeout_s == TimeoutDefault ) {
 		if( avail ) {
@@ -628,23 +606,21 @@ int SerialLine::getTimeoutUSec( double timeout_s, bool avail )
 }
 
 
-/*******************************************************************
- * @fn Focla::SerialLine::flush()
+/***************************************************************//**
  * @brief Flush Focla serial line - read and discard.
  *******************************************************************/
-void SerialLine::flush()
+void Espia::Focla::SerialLine::flush()
 {
 	CHECK_CALL( focla_ser_flush( m_fdev.getFocla() ) );
 }
 
 
-/*******************************************************************
- * @fn Focla::SerialLine::getNbAvailBytes(int &nb_avail)
+/***************************************************************//**
  * @brief Get the number of bytes available for reading from Focla serial line
  *
  * @param[out]  nb_avail  int reference 
  *******************************************************************/
-void SerialLine::getNbAvailBytes( int &nb_avail )
+void Espia::Focla::SerialLine::getNbAvailBytes( int &nb_avail )
 {
 	unsigned long ret_len=0;
 	CHECK_CALL( focla_ser_read( m_fdev.getFocla(), NULL, &ret_len, 0 ) );
@@ -652,11 +628,11 @@ void SerialLine::getNbAvailBytes( int &nb_avail )
 }
 
 
-/*******************************************************************
- * @fn Focla::SerialLine::read(string& buffer, int max_len, double timeout)
+/***************************************************************//**
  * @brief Read max_len bytest from Focla serial line
  *******************************************************************/
-void SerialLine::read( string& buffer, int max_len, double timeout )
+void Espia::Focla::SerialLine::read( string& buffer, int max_len, 
+                                     double timeout )
 {
 	bool avail = (max_len == Available);
 	if( avail )
@@ -674,12 +650,11 @@ void SerialLine::read( string& buffer, int max_len, double timeout )
 }
 
 
-/*******************************************************************
- * @fn Focla::SerialLine::readLine(std::string& buffer, int max_len,\
- *                                 double timeout)
+/***************************************************************//**
  * @brief Read from Focla serial line until line terminator
  *******************************************************************/
-void SerialLine::readLine( std::string& buffer, int max_len, double timeout )
+void Espia::Focla::SerialLine::readLine( std::string& buffer, int max_len, 
+                                         double timeout )
 {
 	string term;
 	getLineTerm( term );
@@ -697,11 +672,10 @@ void SerialLine::readLine( std::string& buffer, int max_len, double timeout )
 }
 
 
-/*******************************************************************
- * @fn Focla::SerialLine::write(const std::string& buffer, bool no_wait)
+/***************************************************************//**
  * @brief Write buffer to Focla serial line
  *******************************************************************/
-void SerialLine::write( const std::string& buffer, bool no_wait )
+void Espia::Focla::SerialLine::write( const std::string& buffer, bool no_wait )
 {
 	unsigned long nb_wr_bytes = buffer.size();
 

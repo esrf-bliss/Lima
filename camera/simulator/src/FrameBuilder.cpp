@@ -1,4 +1,4 @@
-/*******************************************************************
+/***************************************************************//**
  * @file FrameBuilder.cpp
  * @brief This file contains the FrameBuilder class implementation
  *
@@ -18,7 +18,7 @@ using namespace lima;
 using namespace std;
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief FrameBuilder class default constructor
  *
  *******************************************************************/
@@ -34,7 +34,7 @@ FrameBuilder::FrameBuilder()
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief FrameBuilder class constructor setting member variables
  *
  * Before setting we check the values for consistency
@@ -61,7 +61,7 @@ FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief FrameBuilder class destructor
  *
  *******************************************************************/
@@ -70,7 +70,7 @@ FrameBuilder::~FrameBuilder()
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Checks the consistency of FrameDim, Bin and RoI
  *
  * First checks if Binning is valid
@@ -100,7 +100,7 @@ void FrameBuilder::checkValid( const FrameDim &frame_dim, const Bin &bin,
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Checks if Gauss peak centers are inside the MaxImageSize
  *
  *******************************************************************/
@@ -120,7 +120,7 @@ void FrameBuilder::checkPeaks( std::vector<struct GaussPeak> const &peaks )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Gets frame dimention
  *
  * @param[out] dim  FrameDim object reference
@@ -131,7 +131,7 @@ void FrameBuilder::getFrameDim( FrameDim &dim ) const
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Sets frame dimention
  *
  * @param[in] dim  FrameDim object reference
@@ -146,7 +146,7 @@ void FrameBuilder::setFrameDim( const FrameDim &dim )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Gets the Binning
  *
  * @param[out] bin  Bin object reference
@@ -157,7 +157,7 @@ void FrameBuilder::getBin( Bin &bin ) const
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Sets the Binning
  *
  * @param[in] bin  Bin object reference
@@ -170,7 +170,7 @@ void FrameBuilder::setBin( const Bin &bin )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Returns the closest Binning supported by the "hardware"
  *
  * @param[in,out] bin  Bin object reference
@@ -184,7 +184,7 @@ void FrameBuilder::checkBin( Bin &bin ) const
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Gets the RoI
  *
  * @param[out] roi  Roi object reference
@@ -195,7 +195,7 @@ void FrameBuilder::getRoi( Roi &roi ) const
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Sets the RoI
  *
  * @param[in] roi  Roi object reference
@@ -208,7 +208,7 @@ void FrameBuilder::setRoi( const Roi &roi )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Returns the closest RoI supported by the "hardware"
  *
  * @param[out] roi  Roi object reference
@@ -219,7 +219,7 @@ void FrameBuilder::checkRoi( Roi &roi ) const
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Gets the configured Gauss peaks vector
  *
  * @param[out] peaks  GaussPeak vector
@@ -230,7 +230,7 @@ void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Sets Gauss peaks
  *
  * @param[in] peaks  GaussPeak vector
@@ -243,7 +243,7 @@ void FrameBuilder::setPeaks( const std::vector<struct GaussPeak> &peaks )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Gets the configured peaks grow factor
  *
  * @param[out] grow_factor  a double
@@ -254,7 +254,7 @@ void FrameBuilder::getGrowFactor( double &grow_factor ) const
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Sets the peaks grow factor
  *
  * @param[in] grow_factor  a double
@@ -268,7 +268,7 @@ void FrameBuilder::setGrowFactor( const double &grow_factor )
 
 #define SGM_FWHM 0.42466090014400952136075141705144  // 1/(2*sqrt(2*ln(2)))
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Calculates Gauss(x,y) for given peak parameters
  *
  * @param[in] x     double X-coord
@@ -286,7 +286,7 @@ double gauss2D( double x, double y, double x0, double y0, double fwhm, double ma
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Calculates the summary intensity at certain point
  *
  * @param[in] x  int X-coord
@@ -306,7 +306,7 @@ double FrameBuilder::dataXY( int x, int y )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Calculates and writes the "image" into the buffer
  *
  * This function also applies the "hardware" binning
@@ -352,8 +352,7 @@ void FrameBuilder::fillData( unsigned char *ptr )
 }
 
 
-/*******************************************************************
- * @fn    void FrameBuilder::getNextFrame( unsigned char *ptr )
+/***************************************************************//**
  * @brief Fills the next frame into the buffer
  *
  * @param[in] ptr  an (unsigned char) pointer to an allocated buffer
@@ -380,7 +379,7 @@ void FrameBuilder::getNextFrame( unsigned char *ptr ) throw (Exception)
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Sets the internal frame number to a value. Default is 0.
  *
  * @param[in] frame_nr  int  The frame number, or nothing
@@ -391,7 +390,7 @@ void FrameBuilder::resetFrameNr( int frame_nr )
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Gets the internal frame number
  *
  * @return  unsigned long  The frame number.
@@ -402,7 +401,7 @@ unsigned long FrameBuilder::getFrameNr()
 }
 
 
-/*******************************************************************
+/***************************************************************//**
  * @brief Gets the maximum "hardware" image size
  *
  * @param[out]  max_size  Reference to a Size object
