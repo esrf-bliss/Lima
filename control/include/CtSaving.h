@@ -104,6 +104,7 @@ namespace lima {
     void removeAllFrameHeaders();
 
     void frameReady(Data &);
+    void resetLastFrameNb();
 
   private:
     class _SaveTask;

@@ -63,11 +63,11 @@ private:
 //@brief constructor
 CtSaving::CtSaving(CtControl &aCtrl) :
   m_ctrl(aCtrl),
-  m_ready_flag(true),
-  m_last_frameid_saved(0)
+  m_ready_flag(true)
 {
   m_save_cnt = new _SaveContainer(*this);
   m_saving_cbk = new _SaveCBK(*this);
+  resetLastFrameNb();
 }
 
 //@brief destructor
@@ -304,6 +304,10 @@ void CtSaving::_takeHeader(std::map<long,HeaderMap>::iterator &headerIter, Heade
   m_frame_headers.erase(headerIter);
 }
 
+void CtSaving::resetLastFrameNb()
+{
+  m_last_frameid_saved = -1;
+}
 
 void CtSaving::frameReady(Data &aData)
 {
@@ -558,6 +562,6 @@ void CtSaving::_SaveContainer::_writeEdfHeader(Data &aData,HeaderMap &aHeader)
   
   long lenght = aEndPosition - aStartPosition;
   long finalHeaderLenght = (lenght + 511) & ~511; // 512 alignment
-  snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght - 3),"");
+  snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght - 2),"");
   m_fout << aBuffer;
 }
