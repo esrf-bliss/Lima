@@ -7,10 +7,11 @@
 
 namespace lima {
 
-  class CtSaving;
-  class CtAcquisition;
-  class CtBuffer;
   class CtDebug;
+  class CtAcquisition;
+  class CtImage;
+  class CtBuffer;
+  class CtSaving;
 
   class CtControl {
   public:
@@ -42,7 +43,9 @@ namespace lima {
 
     CtAcquisition* acquisition() { return m_ct_acq; }
     CtSaving* saving() { return m_ct_saving; }
+    CtImage* image() { return m_ct_image; }
     CtBuffer* buffer() { return m_ct_buffer; }
+
 
     void setDebug(short level);
     void getDebug(short& level) const;
@@ -61,9 +64,11 @@ namespace lima {
     ImageStatus		m_img_status;
     CtSaving		*m_ct_saving;
     CtAcquisition	*m_ct_acq;
+    CtImage		*m_ct_image;
     CtBuffer		*m_ct_buffer;
     CtDebug		*m_ct_debug;
     ApplyPolicy		m_policy;
+    bool		m_ready;
   };
 
 } // namespace lima

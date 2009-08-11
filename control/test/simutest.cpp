@@ -25,7 +25,9 @@ void simulator_test()
 	acq->setAcqExpoTime(0.5);
 	acq->setAcqNbFrames(5);
 
-	ct->startAcq();
+	ct->prepareAcq();
+   	ct->startAcq();
+	sleep(2);
 	ct->stopAcq();
 }
 

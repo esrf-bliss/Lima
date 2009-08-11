@@ -3,33 +3,45 @@
 
 using namespace lima;
 
-void BinRoi::setMaxSize(Size& size)
+// ----------------------------------------------------------------------------
+// CLASS SwBinRoi
+// ----------------------------------------------------------------------------
+SwBinRoi::SwBinRoi(Size& size)
+	: m_size(), m_bin(), m_roi(), m_max_roi()
 {
-	m_max_size= size;
-	_updateRoi();
+	m_max_roi= Roi(Point(0,0), size);
+	setMaxSize(size);
 }
 
-void BinRoi::setBin(Bin& bin)
+void SwBinRoi::setMaxSize(Size& size)
+{
+	m_max_size= size;
+	m_max_roi.setSize(m_max_size / m_bin);
+
+	if (!m_max_roi.containsPoint(m_roi.getTopLeft())) {
+		m_roi.reset();
+	}
+	else if (!m_max_roi.containsPoint(m_roi.getBottomRight())) {
+		m_roi.setCorners(m_roi.getTopLeft(), m_max_roi.getBottomRight());
+	}
+}
+
+void SwBinRoi::setBin(Bin& bin)
 {
 	if (bin != m_bin) {
 		m_roi= m_roi.getUnbinned(m_bin);
 		m_bin= bin;
 		if (!m_bin.isOne())
 			m_roi= m_roi.getBinned(m_bin);
+		m_max_roi.setSize(m_max_size / m_bin);
 	}
-	_updateSize();
 }
 
-void BinRoi::setRoi(Roi& roi)
+void SwBinRoi::setRoi(Roi& roi)
 {
-	Size bin_size;
-	_getBinSize(bin_size);
-	Roi max_roi(Point(0,0),bin_size);
-
 	if (roi != m_roi) {
-		if (max_roi.containsRoi(roi)) {
+		if (m_max_roi.containsRoi(roi)) {
 			m_roi= roi;
-			_updateSize();
 		}
 		else {
 			throw LIMA_CTL_EXC(InvalidValue, "Roi out of limts");
@@ -37,27 +49,12 @@ void BinRoi::setRoi(Roi& roi)
 	}
 }
 
-void BinRoi::_updateSize()
+const Size& SwBinRoi::getSize()
 {
 	if (m_roi.isEmpty())
-		_getBinSize(m_size);
+		m_size= m_max_size / m_size;
 	else	m_size= Size(m_roi.getSize());
-}
-
-void BinRoi::_updateRoi()
-{
-	Size bin_size;
-	_getBinSize(bin_size);
-	Roi max_roi(Point(0,0), bin_size);
-
-	if (!max_roi.containsPoint(m_roi.getTopLeft())) {
-		m_roi.reset();
-		_updateSize();
-	}
-	else if (!max_roi.containsPoint(m_roi.getBottomRight())) {
-		m_roi.setCorners(m_roi.getTopLeft(), max_roi.getBottomRight());
-		_updateSize();
-	}
+	return m_size;
 }
 
 // ----------------------------------------------------------------------------
@@ -65,6 +62,7 @@ void BinRoi::_updateRoi()
 // ----------------------------------------------------------------------------
 
 CtImage::CtImage(HwInterface *hw)
+	: m_mode(HardAndSoft)
 {
 	if (!hw->getHwCtrlObj(m_hw_det))
 		throw LIMA_CTL_EXC(Error, "Cannot get detector info object");
@@ -78,8 +76,15 @@ CtImage::CtImage(HwInterface *hw)
 	m_hw_det->getMaxImageSize(m_max_size);
 	m_hw_det->getCurrImageType(m_img_type);
 
+	m_sw= new SwBinRoi(m_max_size);
+
 	m_hw_size= m_max_size;
 	m_sw_size= m_max_size;
+}
+
+CtImage::~CtImage()
+{
+	delete m_sw;
 }
 
 void CtImage::getMaxImageSize(Size& size) const
@@ -91,6 +96,8 @@ void CtImage::setMaxImage(Size size, ImageType type)
 {
 	m_max_size= size;
 	m_img_type= type;
+
+	m_sw->setMaxSize(m_max_size);
 }
 /*
 	Roi maxroi();
@@ -117,38 +124,60 @@ void CtImage::getImageType(ImageType& type) const
 
 void CtImage::getImageDim(FrameDim& dim) const
 {
-	dim= FrameDim(m_sw_size, m_img_type);
+	dim= FrameDim(m_sw->getSize(), m_img_type);
 }
 
 void CtImage::getHwImageDim(FrameDim& dim) const
 {
-	dim= FrameDim(m_hw_size, m_img_type);
-}
-/*
-void CtImage::setSoftBin(Bin bin) const
-{
-	m_soft_bin= bin;
-	m_eff_bin= m_hard_bin * m_soft_bin;
+	dim= FrameDim(m_max_size, m_img_type);
 }
 
-void CtImage::resetSoftBin() const
+void CtImage::getSoft(SwBinRoi *& soft) const
 {
-	m_soft_bin= Bin();
-	m_eff_bin= m_hard_bin;
+	soft= m_sw;
 }
 
-void CtImage::setSoftRoi(Roi roi) const
+void CtImage::setMode(ImageOpMode mode)
 {
-	if (m_hard_roi.containsRoi(roi)) {
-		m_soft_roi= roi;
-		m_eff_roi= m_soft_roi;
+	m_mode= mode;
+	// resets unwanted mode
+}
+
+void CtImage::getMode(ImageOpMode& mode) const
+{
+	mode= m_mode;
+}
+
+void CtImage::setBin(Bin bin)
+{
+	switch (m_mode) {
+		case SoftOnly:
+			m_sw->setBin(bin);
+			break;
+		case HardOnly:
+			break;
+		case HardAndSoft:
+			_setHSBin(bin);
+			break;
 	}
-	else {
-		throw LIMA_CTL_EXC(InvalidValue, "Invalid ROI");
+}
+		
+void CtImage::setRoi(Roi roi)
+{
+	switch (m_mode) {
+		case SoftOnly:
+			m_sw->setRoi(roi);
+			break;
+		case HardOnly:
+			break;
+		case HardAndSoft:
+			_setHSRoi(roi);
+			break;
 	}
 }
 
-void CtImage::resetSoftRoi() const
-{
+void CtImage::_setHSBin(Bin bin) {
 }
-*/
+
+void CtImage::_setHSRoi(Roi roi) {
+}

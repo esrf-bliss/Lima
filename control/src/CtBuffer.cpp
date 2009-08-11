@@ -56,7 +56,7 @@ void CtBuffer::getMaxMemory(short& max_memory) const
 	max_memory= m_pars.maxMemory;
 }
 
-void CtBuffer::setup(CtAcquisition *ct_acq)
+void CtBuffer::setup(CtAcquisition *ct_acq, FrameDim& fdim)
 {
 	AcqMode mode;
 	int acq_nframes, acc_nframes, concat_nframes;
@@ -67,7 +67,7 @@ void CtBuffer::setup(CtAcquisition *ct_acq)
 	switch (mode) {
 		case Single:
 			acc_nframes= 0;
-			concat_nframes= 0;
+			concat_nframes= 1;
 			break;
 		case Accumulation:
 			ct_acq->getAccNbFrames(acc_nframes);
@@ -78,6 +78,7 @@ void CtBuffer::setup(CtAcquisition *ct_acq)
 			ct_acq->getConcatNbFrames(concat_nframes);
 			break;
 	}
+	m_hw_buffer->setFrameDim(fdim);
 	m_hw_buffer->setNbAccFrames(acc_nframes);
 	m_hw_buffer->setNbConcatFrames(concat_nframes);
 	m_hw_buffer->setNbBuffers(acq_nframes);

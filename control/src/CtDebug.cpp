@@ -14,8 +14,8 @@ CtDebug::~CtDebug()
 
 void CtDebug::print(short level, std::string func_name, std::string type, std::string message) {
 	if (m_level & level) {
+		std::cout << type << ": ";
 		std::cout << m_class_name << "::" << func_name << " > ";
-		std::cout << type << " > ";
 		std::cout << message << std::endl;
 	}
 }

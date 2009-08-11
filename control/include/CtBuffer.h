@@ -34,7 +34,7 @@ class CtBuffer {
 	void setMaxMemory(short max_memory);
 	void getMaxMemory(short& max_memory) const;
 
-	void setup(CtAcquisition *ct_acq);
+	void setup(CtAcquisition *ct_acq, FrameDim& fdim);
 
     private:
 	HwBufferCtrlObj	*m_hw_buffer;
