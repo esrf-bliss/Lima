@@ -19,3 +19,6 @@ LDLIBS += -lprocesslib -lespia
 
 liblima.so:	$(lima-objs)
 	$(CXX) -shared -o $@ -fPIC $+ $(LDFLAGS) $(LDLIBS)
+
+clean:
+	rm -f *.o liblima.so
