@@ -127,7 +127,7 @@ namespace lima {
     void _get_common_header(HeaderMap&);
     void _takeHeader(std::map<long,HeaderMap>::iterator&, HeaderMap& header);
     void _post_save_task(Data&,_SaveTask*);
-    void _save_finnished(Data&);
+    void _save_finished(Data&);
  };
 
 } // namespace lima

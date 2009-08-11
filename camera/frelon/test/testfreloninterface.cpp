@@ -20,14 +20,14 @@ public:
 		: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
 		  m_acq_finished(acq_finished) {}
 
-	virtual void finnished(Data& data);
+	virtual void finished(Data& data);
 private:
 	Frelon::Interface& m_hw_inter;
 	CtSaving& m_buffer_save;
 	Cond& m_acq_finished;
 };
 
-void SoftRoiCallback::finnished(Data& data)
+void SoftRoiCallback::finished(Data& data)
 {
 	m_buffer_save.frameReady(data);
 
@@ -108,7 +108,7 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 		cout << "  adding SoftRoi task!" << endl;
 		PoolThreadMgr::get().addProcess(task_mgr);
 	} else {
-		m_roi_cb->finnished(data);
+		m_roi_cb->finished(data);
 	}
 
 	return true;

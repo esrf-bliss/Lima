@@ -52,9 +52,9 @@ class CtSaving::_SaveCBK : public TaskEventCallback
 {
 public:
   _SaveCBK(CtSaving &aCtSaving) : m_saving(aCtSaving) {}
-  virtual void finnished(Data &aData)
+  virtual void finished(Data &aData)
   {
-    m_saving._save_finnished(aData);
+    m_saving._save_finished(aData);
   }
 private:
   CtSaving &m_saving;
@@ -361,7 +361,7 @@ void CtSaving::_post_save_task(Data &aData,_SaveTask *aSaveTaskPt)
   PoolThreadMgr::get().addProcess(aSavingMgrPt);
 }
 
-void CtSaving::_save_finnished(Data &aData)
+void CtSaving::_save_finished(Data &aData)
 {
   //@todo check if the frame is still available
   AutoMutex aLock(m_cond.mutex());
