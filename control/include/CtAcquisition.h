@@ -4,27 +4,26 @@
 #include "Constants.h"
 #include "HwInterface.h"
 #include "HwCap.h"
+#include "CtControl.h"
 
 namespace lima {	
 
 class CtAcquisition {
+	friend class CtControl;
 
     public:
-        enum ShutMode {Manual,AutoPerFrame,AutoPerSequence};
-        enum TrigMode {Internal,ExtStart,MultExtStart,Gate,ExtStartStop};
-        enum AcqMode {Single,Accumulation,Concatenation};
+
 	struct Parameters {
+		Parameters();
+		void reset();
+
 		AcqMode	acqMode;
 		int	acqNbFrames;
 		double	acqExpoTime;
-		int	accNbFrames;
-		double	accExpoTime;
+		double	accMaxExpoTime;
 		int	concatNbFrames;
 		double	latencyTime;
 		TrigMode triggerMode;
-		ShutMode shutMode;
-		double	shutOpenTime;
-		double	shutCloseTime;
 	};
 
 	CtAcquisition(HwInterface *hw);
@@ -32,8 +31,12 @@ class CtAcquisition {
 
 	// --- global
 
-	void setParameters(const Parameters& pars);
-	void getParameters(Parameters& pars) const;
+	void setPars(Parameters pars);
+	void getPars(Parameters& pars) const;
+
+	void reset();
+	void apply(CtControl::ApplyPolicy policy);
+	void sync();
 
 	// --- acq modes
 
@@ -43,17 +46,16 @@ class CtAcquisition {
 	void setAcqNbFrames(int nframes);
 	void getAcqNbFrames(int& nframes) const;
 
-	void setAcqExposureTime(double acq_time);
-	void getAcqExposureTime(double& acq_time) const;
+	void setAcqExpoTime(double acq_time);
+	void getAcqExpoTime(double& acq_time) const;
 
-	void setAccNbFrames(int nframes);
+	void setAccMaxExpoTime(double max_time);
+
 	void getAccNbFrames(int& nframes);
-
-	void setAccExposureTime(double acc_time);
-	void getAccExposureTime(double& acc_time) const;
+	void getAccExpoTime(double& acc_time);
 
 	void setConcatNbFrames(int nframes);
-	void getConcatNbFrames(int& nframes);
+	void getConcatNbFrames(int& nframes) const; 
 
 	// --- common
 
@@ -63,28 +65,34 @@ class CtAcquisition {
 	void setTriggerMode(TrigMode mode);
 	void getTriggerMode(TrigMode& mode) const;
 
-	// --- shutter
-
-	void setShutterMode(ShutMode mode);
-	void getShutterMode(ShutMode& mode) const;
-
-	void setShutterOpenTime(double open_time);
-	void getShutterOpenTime(double& open_time) const;
-
-	void setShutterCloseTime(double close_time);
-	void getShutterCloseTime(double& close_time) const;
-
- 	// --- read-only
-
-	void getReadoutTime(double& readout_time) const;
-	void getFrameRate(double& frame_rate) const;
-
     private:
+
+	struct ChangedPars {
+		ChangedPars();
+		void set(bool);
+		void check(Parameters p1, Parameters p2);
+
+		bool	acqExpoTime;
+		bool	acqNbFrames;
+		bool	latencyTime;
+		bool	triggerMode;
+		bool	accMaxExpoTime;
+	};
+
+	void _updateAccPars();
+	void _setDefaultPars(Parameters* pars);
+	void _apply();
+	void _hwRead();
+
 	HwSyncCtrlObj	*m_hw_sync;
-	HwBufferCtrlObj	*m_hw_buffer;
-	Parameters	m_pars;
+	HwSyncCtrlObj::ValidRangesType	m_valid_ranges;
+	Parameters	m_inpars, m_hwpars;
+	ChangedPars	m_changes;
 	double		m_readout_time;
 	double		m_frame_rate;
+	int		m_acc_nframes;
+	double		m_acc_exptime;
+	bool		m_applied_once;
 };
 
 } // namespace lima

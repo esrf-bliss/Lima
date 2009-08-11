@@ -1,8 +1,12 @@
-ct-objs := CtSaving.o CtControl.o
+ct-objs := CtSaving.o CtControl.o CtAcquisition.o CtBuffer.o \
+		CtDebug.o CtImage.o
 
-SRCS=CtSaving.cpp CtControl.cpp
+SRCS = CtSaving.cpp CtControl.cpp CtAcquisition.cpp CtBuffer.cpp \
+		CtDebug.cpp CtImage.cpp
 
-INCLUDES=-I../include -I../../common/include -I../../third-party/Processlib/core/include -I../../hardware/include
+INCLUDES = -I../include -I../../common/include -I../../hardware/include \
+		-I../../third-party/Processlib/core/include
+
 CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread
 
 
