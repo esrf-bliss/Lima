@@ -5,7 +5,7 @@ frelon-objs = FrelonBase.o FrelonSerialLine.o FrelonCamera.o FrelonInterface.o
 
 CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../hardware/include -I../../../common/include \
-	   -I$(ESPIA_DRV_INCL) -Wall -pthread
+	   -I$(ESPIA_DRV_INCL) -Wall -pthread -fPIC
 
 all:		clean Frelon.o
 

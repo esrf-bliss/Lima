@@ -261,9 +261,36 @@ void BinCtrlObj::getBin(Bin& bin)
 
 void BinCtrlObj::checkBin(Bin& bin)
 {
-	int bin_x = min(bin.getX(), int(MaxBinX));
-	int bin_y = min(bin.getY(), int(MaxBinY));
-	bin = Bin(bin_x, bin_y);
+	m_cam.checkBin(bin);
+}
+
+
+/*******************************************************************
+ * \brief RoiCtrlObj constructor
+ *******************************************************************/
+
+RoiCtrlObj::RoiCtrlObj(Camera& cam)
+	: m_cam(cam)
+{
+}
+
+RoiCtrlObj::~RoiCtrlObj()
+{
+}
+
+void RoiCtrlObj::checkRoi(const Roi& set_roi, Roi& hw_roi)
+{
+	m_cam.checkRoi(set_roi, hw_roi);
+}
+
+void RoiCtrlObj::setRoi(const Roi& roi)
+{
+	m_cam.setRoi(roi);
+}
+
+void RoiCtrlObj::getRoi(Roi& roi)
+{
+	m_cam.getRoi(roi);
 }
 
 
@@ -274,7 +301,8 @@ void BinCtrlObj::checkBin(Bin& bin)
 Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 		     Camera& cam)
 	: m_acq(acq), m_buffer_mgr(buffer_mgr), m_cam(cam),
-	  m_det_info(cam), m_buffer(buffer_mgr), m_sync(acq, cam), m_bin(cam)
+	  m_det_info(cam), m_buffer(buffer_mgr), m_sync(acq, cam), 
+	  m_bin(cam), m_roi(cam)
 {
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));
@@ -287,6 +315,9 @@ Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 
 	HwBinCtrlObj *bin = &m_bin;
 	m_cap_list.push_back(HwCap(bin));
+
+	HwRoiCtrlObj *roi = &m_roi;
+	m_cap_list.push_back(HwCap(roi));
 
 	reset(SoftReset);
 }
@@ -315,6 +346,7 @@ void Interface::reset(ResetLevel reset_level)
 	m_sync.setTrigMode(IntTrig);
 
 	m_bin.setBin(Bin(1));
+	m_roi.setRoi(Roi());
 	
 	Size image_size;
 	m_det_info.getMaxImageSize(image_size);

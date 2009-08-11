@@ -30,7 +30,9 @@ return returnList;
 class HwInterface
 {
 %TypeHeaderCode
+#include <HwCap.h>
 #include <HwInterface.h>
+#include <LimaConvertor.h>
 using namespace lima;
 %End  
  public:
@@ -67,6 +69,18 @@ using namespace lima;
 
 //	template <class CtrlObj>
 //	bool getHwCtrlObj(CtrlObj *& ctrl_obj_ptr) const;
+
+	SIP_PYOBJECT getHwCtrlObj(HwCap::Type cap_type);
+%MethodCode
+	const HwInterface::CapList& cap_list = sipCpp->getCapList();
+
+	typedef HwInterface::CapList::const_iterator It;
+	for (It i = cap_list.begin(); i != cap_list.end(); ++i)
+		if (i->getType() == a0) {
+			SIP_CONVERT_CTRLOBJECT_TO_SIPOBJECT(i);
+			break;
+		}
+%End
 
 	virtual void reset(ResetLevel reset_level) = 0;
 	virtual void prepareAcq() = 0;

@@ -20,15 +20,18 @@ BufferMgr::Cap BufferMgr::getCap()
 	return Basic | Concat;
 }
 
-int BufferMgr::getMaxNbBuffers(const FrameDim& frame_dim)
+int BufferMgr::getMaxNbBuffers(const FrameDim& frame_dim,
+			       int nb_concat_frames)
 {
-	return GetDefMaxNbBuffers(frame_dim);
+	FrameDim buffer_frame_dim;
+	getBufferFrameDim(frame_dim, nb_concat_frames, buffer_frame_dim);
+	return GetDefMaxNbBuffers(buffer_frame_dim);
 }
 
-void BufferMgr::allocBuffers(int nb_buffers, int concat_frames,
+void BufferMgr::allocBuffers(int nb_buffers, int nb_concat_frames, 
 			     const FrameDim& frame_dim)
 {
-	m_acq.bufferAlloc(nb_buffers, concat_frames, frame_dim);
+	m_acq.bufferAlloc(nb_buffers, nb_concat_frames, frame_dim);
 }
 
 const FrameDim& BufferMgr::getFrameDim()

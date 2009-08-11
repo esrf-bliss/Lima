@@ -60,12 +60,13 @@ void Simulator::SimuThread::execStartAcq()
 		}
 
 		setStatus(Readout);
-		int nb_buffers;
-		buffer_mgr.getNbBuffers(nb_buffers);
-		int buffer_nb = frame_nb % nb_buffers;
+		int buffer_nb, concat_frame_nb;
+		buffer_mgr.acqFrameNb2BufferNb(frame_nb, buffer_nb, 
+					       concat_frame_nb);
+		void *ptr = buffer_mgr.getBufferPtr(buffer_nb,
+						    concat_frame_nb);
 		typedef unsigned char *BufferPtr;
-		BufferPtr ptr = BufferPtr(buffer_mgr.getBufferPtr(buffer_nb));
-		frame_builder.getNextFrame(ptr);
+		frame_builder.getNextFrame(BufferPtr(ptr));
 
 		HwFrameInfoType frame_info;
 		frame_info.acq_frame_nb = frame_nb;

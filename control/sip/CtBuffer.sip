@@ -1,3 +1,5 @@
+%If (!tobedeleted)
+
 class CtBuffer {
 %TypeHeaderCode
 #include <CtBuffer.h>
@@ -23,3 +25,4 @@ using namespace lima;
 	void setMaxMemory(short max_memory);
 	void getMaxMemory(short& max_memory /Out/) const;
 };
+%End

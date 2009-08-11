@@ -1,3 +1,4 @@
+%If (!tobedeleted)
 class CtAcquisition {
 %TypeHeaderCode
 #include <CtAcquisition.h>
@@ -74,3 +75,4 @@ using namespace lima;
  
 	void getFrameRate(double& framerate /Out/) const;
 };
+%End

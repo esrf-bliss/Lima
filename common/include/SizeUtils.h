@@ -354,6 +354,9 @@ class Roi
 	void alignSizeTo(const Point& p, AlignDir align_dir);
 	void alignCornersTo(const Point& p, AlignDir align_dir);
 
+	Roi subRoiRel2Abs(const Roi& rel_sub_roi) const;
+	Roi subRoiAbs2Rel(const Roi& abs_sub_roi) const;
+
  private:
 	static bool isValidCoord(int i);
 	static Point checkCorner(const Point& TopLeft);

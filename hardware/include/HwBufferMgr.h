@@ -85,15 +85,16 @@ class BufferCbMgr : public HwFrameCallbackGen
 
 	virtual Cap getCap() = 0;
 
-	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
-	virtual void allocBuffers(int nb_buffers, int nb_concat_frames,
+	virtual int getMaxNbBuffers(const FrameDim& frame_dim, 
+				    int nb_concat_frames) = 0;
+	virtual void allocBuffers(int nb_buffers, int nb_concat_frames, 
 				  const FrameDim& frame_dim) = 0;
 	virtual const FrameDim& getFrameDim() = 0;
 	virtual void getNbBuffers(int& nb_buffers) = 0;
 	virtual void getNbConcatFrames(int& nb_concat_frames) = 0;
 	virtual void releaseBuffers() = 0;
 
-	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0) = 0;
+	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb) = 0;
 
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
@@ -103,11 +104,18 @@ class BufferCbMgr : public HwFrameCallbackGen
 
 	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info) = 0;
 
+	virtual void getBufferFrameDim(const FrameDim& single_frame_dim,
+				       int nb_concat_frames, 
+				       FrameDim& buffer_frame_dim);
+	virtual void acqFrameNb2BufferNb(int acq_frame_nb,int& buffer_nb,
+					 int& concat_frame_nb);
+
  private:
 	Timestamp m_start_ts;
 };
 
 BufferCbMgr::Cap operator |(BufferCbMgr::Cap c1, BufferCbMgr::Cap c2);
+BufferCbMgr::Cap operator &(BufferCbMgr::Cap c1, BufferCbMgr::Cap c2);
 
 
 /*******************************************************************
@@ -126,15 +134,16 @@ class StdBufferCbMgr : public BufferCbMgr
 
 	virtual Cap getCap();
 
-	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
-	virtual void allocBuffers(int nb_buffers, int nb_concat_frames,
+	virtual int getMaxNbBuffers(const FrameDim& frame_dim, 
+				    int nb_concat_frames);
+	virtual void allocBuffers(int nb_buffers, int nb_concat_frames, 
 				  const FrameDim& frame_dim);
 	virtual const FrameDim& getFrameDim();
 	virtual void getNbBuffers(int& nb_buffers);
 	virtual void getNbConcatFrames(int& nb_concat_frames);
 	virtual void releaseBuffers();
 
-	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0);
+	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb);
 
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
@@ -150,6 +159,8 @@ class StdBufferCbMgr : public BufferCbMgr
 	typedef std::vector<HwFrameInfoType> FrameInfoList;
 
 	BufferAllocMgr& m_alloc_mgr;
+	FrameDim m_frame_dim;			  
+	int m_nb_concat_frames;
 	FrameInfoList m_info_list;
 	bool m_fcb_act;
 };
@@ -164,7 +175,7 @@ class StdBufferCbMgr : public BufferCbMgr
  * managers and complement their missing functionality.
  *******************************************************************/
 
-class BufferCtrlMgr
+class BufferCtrlMgr : public HwFrameCallbackGen
 {
  public:
 	enum AcqMode {
@@ -177,14 +188,14 @@ class BufferCtrlMgr
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(      FrameDim& frame_dim);
 
-	void setNbBuffers(int  nb_buffers);
-	void getNbBuffers(int& nb_buffers);
-
 	void setNbConcatFrames(int  nb_concat_frames);
 	void getNbConcatFrames(int& nb_concat_frames);
 
 	void setNbAccFrames(int  nb_acc_frames);
 	void getNbAccFrames(int& nb_acc_frames);
+
+	void setNbBuffers(int  nb_buffers);
+	void getNbBuffers(int& nb_buffers);
 
 	void getMaxNbBuffers(int& max_nb_buffers);
 
@@ -196,13 +207,34 @@ class BufferCtrlMgr
 
 	void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info);
 
-	void   registerFrameCallback(HwFrameCallback& frame_cb);
-	void unregisterFrameCallback(HwFrameCallback& frame_cb);
-
 	BufferCbMgr& getAcqBufferMgr();
 	AcqMode getAcqMode();
 
+ protected:
+	virtual void setFrameCallbackActive(bool cb_active);
+	
  private:
+	class AcqFrameCallback : public HwFrameCallback
+	{
+	public:
+		AcqFrameCallback(BufferCtrlMgr& buffer_mgr)
+			: m_buffer_mgr(buffer_mgr) {}
+	protected:
+		virtual bool newFrameReady(const HwFrameInfoType& frame_info)
+		{
+			return m_buffer_mgr.acqFrameReady(frame_info);
+		}
+	private:
+		BufferCtrlMgr& m_buffer_mgr;
+	};
+	friend class AcqFrameCallback;
+
+	void releaseBuffers();
+	bool acqFrameReady(const HwFrameInfoType& acq_frame_info);
+	void accFrame(void *src_ptr, const FrameDim& src_frame_dim,
+		      void *dst_ptr, const FrameDim& dst_frame_dim,
+		      int& valid_pixels);
+
 	int m_nb_concat_frames;
 	int m_nb_acc_frames;
 	BufferCbMgr& m_acq_buffer_mgr;
@@ -210,6 +242,8 @@ class BufferCtrlMgr
 	StdBufferCbMgr m_aux_buffer_mgr;
 	BufferCbMgr *m_effect_buffer_mgr;
 	FrameDim m_frame_dim;
+	AcqFrameCallback m_frame_cb;
+	bool m_frame_cb_act;
 };
 
 

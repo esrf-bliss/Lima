@@ -6,7 +6,7 @@ include ../include/espia.inc
 
 CXXFLAGS = -I../include \
 	   -I../../../../hardware/include -I../../../../common/include \
-	   -I$(ESPIA_DRV_INCL) -Wall
+	   -I$(ESPIA_DRV_INCL) -Wall -pthread -fPIC
 
 all:		clean Espia.o
 

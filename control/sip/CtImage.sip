@@ -1,3 +1,4 @@
+%If (!tobedeleted)
 class CtImage {
 %TypeHeaderCode
 #include <CtImage.h>
@@ -44,3 +45,4 @@ using namespace lima;
 	void getRoi(Roi& roi /Out/) const;
 	void getBin(Bin& bin /Out/) const;
 };
+%End

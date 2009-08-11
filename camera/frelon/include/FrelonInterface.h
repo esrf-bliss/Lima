@@ -135,6 +135,26 @@ class BinCtrlObj : public HwBinCtrlObj
 
 
 /*******************************************************************
+ * \class RoiCtrlObj
+ * \brief Control object providing Frelon Roi interface
+ *******************************************************************/
+
+class RoiCtrlObj : public HwRoiCtrlObj
+{
+ public:
+	RoiCtrlObj(Camera& cam);
+	virtual ~RoiCtrlObj();
+
+	virtual void checkRoi(const Roi& set_roi, Roi& hw_roi);
+	virtual void setRoi(const Roi& set_roi);
+	virtual void getRoi(Roi& hw_roi);
+
+ private:
+	Camera& m_cam;
+};
+
+
+/*******************************************************************
  * \class Interface
  * \brief Frelon hardware interface
  *******************************************************************/
@@ -164,6 +184,7 @@ class Interface : public HwInterface
 	BufferCtrlObj  m_buffer;
 	SyncCtrlObj    m_sync;
 	BinCtrlObj     m_bin;
+	RoiCtrlObj     m_roi;
 };
 
 

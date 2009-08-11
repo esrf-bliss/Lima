@@ -1,5 +1,7 @@
 %Module lima 0
 
+%Feature tobedeleted
+
 %MappedType std::string
 {
 %TypeHeaderCode

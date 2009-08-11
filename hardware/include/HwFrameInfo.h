@@ -30,6 +30,8 @@ typedef struct HwFrameInfo {
 		    Timestamp timestamp, int pixels) 
 		: acq_frame_nb(frame_nb), frame_ptr(ptr), frame_dim(dim),
 		  frame_timestamp(timestamp), valid_pixels(pixels) {}
+
+	bool isValid() const;
 } HwFrameInfoType;
 
 std::ostream& operator <<(std::ostream& os, const HwFrameInfoType& info);

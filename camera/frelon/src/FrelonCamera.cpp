@@ -208,6 +208,13 @@ void Camera::getFlip(Point& flip)
 	flip.y = (flip_mode >> 0) & 1;
 }
 
+void Camera::checkBin(Bin& bin)
+{
+	int bin_x = min(bin.getX(), int(MaxBinX));
+	int bin_y = min(bin.getY(), int(MaxBinY));
+	bin = Bin(bin_x, bin_y);
+}
+
 void Camera::setBin(const Bin& bin)
 {
 	if ((bin.getX() > 8) || (bin.getY() > 1024))

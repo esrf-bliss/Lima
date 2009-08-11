@@ -4,6 +4,11 @@
 using namespace lima;
 using namespace std;
 
+bool HwFrameInfo::isValid() const
+{
+	return (acq_frame_nb >= 0) && frame_ptr && frame_dim && 
+		frame_timestamp.isSet() && (valid_pixels > 0);
+}
 
 ostream& lima::operator <<(ostream& os, const HwFrameInfoType& info)
 {

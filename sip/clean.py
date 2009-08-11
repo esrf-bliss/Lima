@@ -4,7 +4,7 @@ import os
 import os.path
 if os.access('./Makefile',os.R_OK) :
     os.system('make clean')
-dont_rm_files = ['lima.sip','limaconfig.py.in','configure.py','clean.py']
+dont_rm_files = ['lima.sip','limaconfig.py.in','configure.py','clean.py','LimaConvertor.h']
 
 for root,dirs,files in os.walk('.') :
     for file_name in files :

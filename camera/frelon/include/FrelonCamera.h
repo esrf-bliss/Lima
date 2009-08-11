@@ -41,6 +41,7 @@ class Camera
 	void setFlip(const Point& flip);
 	void getFlip(Point& flip);
 
+	void checkBin(Bin& bin);
 	void setBin(const Bin& bin);
 	void getBin(Bin& bin);
 

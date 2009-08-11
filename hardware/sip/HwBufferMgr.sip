@@ -56,15 +56,16 @@ using namespace lima;
 
 	virtual Cap getCap() = 0;
 
-	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
-	virtual void allocBuffers(int nb_buffers, int nb_concat_frames,
+	virtual int getMaxNbBuffers(const FrameDim& frame_dim, 
+				    int nb_concat_frames) = 0;
+	virtual void allocBuffers(int nb_buffers, int nb_concat_frames, 
 				  const FrameDim& frame_dim) = 0;
 	virtual const FrameDim& getFrameDim() = 0;
 	virtual void getNbBuffers(int& nb_buffers) = 0;
 	virtual void getNbConcatFrames(int& nb_concat_frames) = 0;
 	virtual void releaseBuffers() = 0;
 
-	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0) = 0;
+	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb) = 0;
 
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
@@ -87,15 +88,16 @@ using namespace lima;
 
 	virtual Cap getCap();
 
-	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
-	virtual void allocBuffers(int nb_buffers, int nb_concat_frames,
+	virtual int getMaxNbBuffers(const FrameDim& frame_dim, 
+				    int nb_concat_frames);
+	virtual void allocBuffers(int nb_buffers, int nb_concat_frames, 
 				  const FrameDim& frame_dim);
 	virtual const FrameDim& getFrameDim();
 	virtual void getNbBuffers(int& nb_buffers);
 	virtual void getNbConcatFrames(int& nb_concat_frames);
 	virtual void releaseBuffers();
 
-	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0);
+	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb);
 
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
@@ -125,14 +127,14 @@ using namespace lima;
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(      FrameDim& frame_dim /Out/);
 
-	void setNbBuffers(int  nb_buffers);
-	void getNbBuffers(int& nb_buffers /Out/);
-
 	void setNbConcatFrames(int  nb_concat_frames);
 	void getNbConcatFrames(int& nb_concat_frames /out/);
 
 	void setNbAccFrames(int  nb_acc_frames);
 	void getNbAccFrames(int& nb_acc_frames /Out/);
+
+	void setNbBuffers(int  nb_buffers);
+	void getNbBuffers(int& nb_buffers /Out/);
 
 	void getMaxNbBuffers(int& max_nb_buffers /Out/);
 

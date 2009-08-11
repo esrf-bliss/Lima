@@ -84,6 +84,11 @@ void BufferSave::closeFile()
 	m_idx++;
 }
 
+void BufferSave::getOpenFileName(std::string& file_name) const
+{
+	file_name = m_file_name;
+}
+
 void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 {
 	time_t ctime_now;

@@ -47,6 +47,7 @@ const Corner lima::TopRight   (Right, Top);
 const Corner lima::BottomLeft (Left,  Bottom);
 const Corner lima::BottomRight(Right, Bottom);
 
+
 /*******************************************************************
  * \brief X/YBorder and Corner ostream << operators
  *******************************************************************/
@@ -97,6 +98,23 @@ void Roi::setCorners(const Point& p1, const Point& p2)
 	m_top_left = checkCorner(Point(x1, y1));
 	Point bottom_right = Point(x2, y2);
 	m_size = bottom_right + 1 - m_top_left;
+}
+
+Roi Roi::subRoiRel2Abs(const Roi& rel_sub_roi) const
+{
+	Roi aux(0, getSize());
+	if (!aux.containsRoi(rel_sub_roi))
+		throw LIMA_COM_EXC(InvalidValue, "Given roi is not sub roi");
+	const Point& tl = getTopLeft();
+	return Roi(rel_sub_roi.getTopLeft() + tl, rel_sub_roi.getSize());
+}
+
+Roi Roi::subRoiAbs2Rel(const Roi& abs_sub_roi) const
+{
+	if (!containsRoi(abs_sub_roi))
+		throw LIMA_COM_EXC(InvalidValue, "Given roi is not sub roi");
+	const Point& tl = getTopLeft();
+	return Roi(abs_sub_roi.getTopLeft() - tl, abs_sub_roi.getSize());
 }
 
 ostream& lima::operator <<(ostream& os, const Roi& roi)

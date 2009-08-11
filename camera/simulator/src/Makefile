@@ -3,7 +3,7 @@ simu-objs = FrameBuilder.o Simulator.o SimuHwInterface.o
 	
 CXX = g++
 INC = -I../include -I../../../common/include -I../../../hardware/include 
-CXXFLAGS += $(INC) -Wall -pthread
+CXXFLAGS += $(INC) -Wall -pthread -fPIC
 
 all: 	clean Simu.o
 

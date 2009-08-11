@@ -47,5 +47,6 @@ public:
 #include "HwBufferCtrlObj.h"
 #include "HwSyncCtrlObj.h"
 #include "HwBinCtrlObj.h"
+#include "HwRoiCtrlObj.h"
 
 #endif // HWCAP_H

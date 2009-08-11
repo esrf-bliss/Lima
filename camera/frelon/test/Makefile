@@ -11,6 +11,7 @@ CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../hardware/include -I../../../common/include \
            -I../../../control/include/ \
 	   -I../../../third-party/Processlib/core/include \
+	   -I../../../third-party/Processlib/tasks/include \
 	   -I$(ESPIA_DRV_INCL) -Wall -pthread
 
 all:		clean testfrelon testfreloninterface
