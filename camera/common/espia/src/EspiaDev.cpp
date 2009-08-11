@@ -7,6 +7,10 @@ using namespace std;
 
 const double Dev::ResetLinkTime = 0.5;
 
+
+const string lima::Espia::OPT_DEBUG_LEVEL   = "DEBUG_LEVEL";
+const string lima::Espia::OPT_NO_FIFO_RESET = "NO_FIFO_RESET";
+
 map<string, int> lima::Espia::EspiaDrvOptMap;
 
 

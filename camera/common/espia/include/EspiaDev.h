@@ -14,6 +14,9 @@ namespace Espia
 {
 
 
+extern const std::string OPT_DEBUG_LEVEL, 
+                         OPT_NO_FIFO_RESET;
+
 extern std::map<std::string, int> EspiaDrvOptMap;
 
 
