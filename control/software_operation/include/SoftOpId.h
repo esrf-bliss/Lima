@@ -1,9 +1,13 @@
 #ifndef __SOFTOPID_H
 #define __SOFTOPID_H
+
+#include "BackgroundSubstraction.h"
+
 namespace lima
 {
   enum SoftOpId
     {
+      UNDEF,
       BACKGROUNDSUBSTRACTION,
       BINNING,
       BPM,
@@ -26,7 +30,7 @@ namespace lima
     void*     m_opt;
   };
 
-  void getAvailableOp(const SoftOpKey[]&);
+  void getAvailableOp(const SoftOpKey*&);
   
   class SoftOpBackgroundSubstraction
   {
@@ -36,7 +40,7 @@ namespace lima
     
     void setBackgroundImage(const char* filename);
   private:
-    BackgroundSubstraction *m_opt;
+    Tasks::BackgroundSubstraction *m_opt;
   };
 
 }

@@ -5,8 +5,9 @@ using namespace lima;
 #include "Binning.h"
 #include "SoftRoi.h"
 
+
 SoftOpInternalMgr::SoftOpInternalMgr() :
-  m_reconstruction_task(NULL)
+  m_reconstruction_task(NULL),m_end_callback(NULL)
 {
 }
 
@@ -14,6 +15,8 @@ SoftOpInternalMgr::~SoftOpInternalMgr()
 {
   if(m_reconstruction_task)
     m_reconstruction_task->unref();
+  if(m_end_callback)
+    m_end_callback->unref();
 }
 
 
@@ -103,25 +106,21 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     {
       aSoftRoiTaskPt = new Tasks::SoftRoi();
       aSoftRoiTaskPt->setRoi(m_roi.x, m_roi.x + m_roi.width,
-			    m_roi.y,m_roi.y + m_roi.height);
+			     m_roi.y,m_roi.y + m_roi.height);
       aTaskMgr.setLinkTask(aLastStage,aSoftRoiTaskPt);
       aSoftRoiTaskPt->unref();
       ++aLastStage;
     }
-
+  
   //Check now what is the last task to add a callback
   if(aSoftRoiTaskPt)
-    {
-    }
+    aSoftRoiTaskPt->setEventCallback(m_end_callback);
   else if(aBinTaskPt)
-    {
-    }
+    aBinTaskPt->setEventCallback(m_end_callback);
   else if(aFlipTaskPt)
-    {
-    }
+    aFlipTaskPt->setEventCallback(m_end_callback);
   else if(m_reconstruction_task)
-    {
-    }
+    m_reconstruction_task->setEventCallback(m_end_callback);
 }
 
 
@@ -138,4 +137,3 @@ SoftOpInternalMgr::Roi::Roi() :
 SoftOpInternalMgr::Flip::Flip() :
   flip_x(false),flip_y(false)
 {}
-

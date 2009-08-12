@@ -47,11 +47,22 @@ namespace lima
 
     void addTo(TaskMgr&,int&) const;
 
+    void setEndCallback(TaskEventCallback *aCbk)
+    {
+      if(m_end_callback)
+	m_end_callback->unref();
+      m_end_callback = aCbk;
+      m_end_callback->ref();
+    }
   private:
+    class _EndCbk;
+    friend class _EndCbk;
+
     Bin			m_bin;
     Flip		m_flip;
     Roi			m_roi;
     mutable LinkTask	*m_reconstruction_task;
+    TaskEventCallback	*m_end_callback;
   };
 }
 #endif
