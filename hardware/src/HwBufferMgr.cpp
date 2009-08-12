@@ -544,10 +544,76 @@ bool BufferCtrlMgr::acqFrameReady(const HwFrameInfoType& acq_frame_info)
 	return true;
 }
 
+
+template <class sdepth, class ddepth> 
+void accumulateFrame( void *src_ptr, const FrameDim& src_frame_dim,
+                      void *dst_ptr, const FrameDim& dst_frame_dim )
+{
+	int swidth = src_frame_dim.getSize().getWidth();
+	int sheight = src_frame_dim.getSize().getHeight();
+
+	int dwidth = dst_frame_dim.getSize().getWidth();
+	int dheight = dst_frame_dim.getSize().getHeight();
+
+	if( (dwidth < swidth) || (dheight < sheight) ) { // Do we need this?
+		throw LIMA_HW_EXC(InvalidValue, "Accumulation buffer is too "
+		                                "small");
+	}
+
+	sdepth *sp = (sdepth *) src_ptr;
+	ddepth *dp0 = (ddepth *) dst_ptr, *dp;
+
+	int x0 = (dwidth - swidth)/2;
+	int y0 = (dheight - sheight)/2;
+	for( int y=y0; y<sheight+y0; y++ ) {
+		for( int x=x0; x<swidth+x0; x++ ) {
+			dp = dp0 + y*dwidth + x;
+			*dp += *sp++;
+		}
+	}
+}
+
+
 void BufferCtrlMgr::accFrame(void *src_ptr, const FrameDim& src_frame_dim,
 			     void *dst_ptr, const FrameDim& dst_frame_dim,
 			     int& valid_pixels)
 {
+	ImageType s_type = src_frame_dim.getImageType();
+	ImageType d_type = dst_frame_dim.getImageType();
 
+	if( s_type > d_type ) {
+		throw LIMA_HW_EXC(InvalidValue, "Accumulation buffer is too "
+		                                "small");
+	}
+
+	int type = s_type + d_type;
+	switch( type ) {  // In our specific case the sum is unambiguous!
+		case (Bpp8 + Bpp8):
+			accumulateFrame <unsigned char,unsigned char>(src_ptr,
+			              src_frame_dim, dst_ptr, dst_frame_dim );
+			break;
+		case (Bpp8 + Bpp16):
+			accumulateFrame <unsigned char,unsigned short>(src_ptr,
+			              src_frame_dim, dst_ptr, dst_frame_dim );
+			break;
+		case (Bpp16 + Bpp16):
+			accumulateFrame <unsigned short,unsigned short>(src_ptr,
+			              src_frame_dim, dst_ptr, dst_frame_dim );
+			break;
+		case (Bpp8 + Bpp32):
+			accumulateFrame <unsigned char,unsigned int>(src_ptr,
+			               src_frame_dim, dst_ptr, dst_frame_dim );
+			break;
+		case (Bpp16 + Bpp32):
+			accumulateFrame <unsigned short,unsigned int>(src_ptr,
+			               src_frame_dim, dst_ptr, dst_frame_dim );
+			break;
+		case (Bpp32 + Bpp32):
+			accumulateFrame <unsigned int,unsigned int>(src_ptr,
+			               src_frame_dim, dst_ptr, dst_frame_dim );
+			break;
+		default:
+			throw LIMA_HW_EXC(InvalidValue,"Unsupported image type");
+	}
 }
 
