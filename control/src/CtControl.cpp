@@ -1,9 +1,15 @@
+#include <string>
+#include <sstream>
+
 #include "CtControl.h"
 #include "CtSaving.h"
 #include "CtAcquisition.h"
 #include "CtImage.h"
 #include "CtBuffer.h"
 #include "CtDebug.h"
+
+#include "PoolThreadMgr.h"
+
 
 using namespace lima;
 
@@ -14,6 +20,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_acq= new CtAcquisition(hw);
   m_ct_image= new CtImage(hw);
   m_ct_buffer= new CtBuffer(hw);
+  m_ct_saving= new CtSaving(*this);
+  m_op_int= new SoftOpInternalMgr();
 }
 
 CtControl::~CtControl()
@@ -48,15 +56,20 @@ void CtControl::getApplyPolicy(ApplyPolicy &policy) const
 
 void CtControl::prepareAcq()
 {
-  FrameDim hw_fdim;
   m_img_status.reset();
   m_ct_debug->trace("prepareAcq", "Apply Acquisition Parameters");
   m_ct_acq->apply(m_policy);
   m_ct_debug->trace("prepareAcq", "Setup Acquisition Buffers");
-  m_ct_image->getHwImageDim(hw_fdim);
-  m_ct_buffer->setup(m_ct_acq, hw_fdim);
+  m_ct_buffer->setup(this);
   m_ct_debug->trace("prepareAcq", "Prepare Hardware for Acquisition");
   m_hw->prepareAcq();
+  
+  // set softtop bin/roi
+  // set ext op
+
+  m_autosave= m_ct_saving->hasAutoSaveMode();
+  if (!m_autosave)
+	m_ct_debug->trace("prepareAcq", "No auto save activated");
   m_ready= true;
 }
 
@@ -91,7 +104,49 @@ void CtControl::reset()
 {
 }
 
-//Struct ImageStatus
+void CtControl::newFrameReady(Data& fdata)
+{
+  std::stringstream str;
+  str << "Frame acq.nb " << fdata.frameNumber << " received";
+  m_ct_debug->trace("newFrameReady", str.str());
+  m_img_status.LastImageAcquired= fdata.frameNumber;
+
+  TaskMgr mgr= TaskMgr();
+  mgr.setInputData(fdata);
+
+  m_op_int->addTo(mgr, m_op_stage.internal);
+  // m_ct_extop->addTo(mgr, first_stage, last_link, last_sink);
+
+  m_op_stage.ext_link= 0;
+  m_op_stage.ext_sink= 0;
+
+  if (m_op_stage.getNb())
+  	PoolThreadMgr::get().addProcess(&mgr);
+  if (m_autosave && !m_op_stage.getNbLink())
+	newFrameToSave(fdata);
+}
+
+void CtControl::newFrameToSave(Data& fdata)
+{
+  std::stringstream str;
+  str << "Add frame acq.nr " << fdata.frameNumber << " to saving";
+  m_ct_debug->trace("newFrameToSave", str.str());
+  m_ct_saving->frameReady(fdata);
+}
+
+// ----------------------------------------------------------------------------
+// Struct SoftOpStage
+// ----------------------------------------------------------------------------
+void CtControl::SoftOpStage::reset()
+{
+	internal= 0;
+	ext_link= 0;
+	ext_sink= 0;
+}
+
+// ----------------------------------------------------------------------------
+// Struct ImageStatus
+// ----------------------------------------------------------------------------
 CtControl::ImageStatus::ImageStatus()
 {
   reset();

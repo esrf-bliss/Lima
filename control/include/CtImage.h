@@ -8,9 +8,9 @@
 
 namespace lima {
 
-class SwBinRoi {
+class CtSwBinRoi {
     public:
-	SwBinRoi(Size& size);
+	CtSwBinRoi(Size& size);
 
 	void setMaxSize(Size& size);
 	void setBin(Bin& bin);
@@ -40,8 +40,6 @@ class CtImage {
 		HardAndSoft,
 	};
 
-	// Size, Type, Bin, XY from common
-
 	CtImage(HwInterface *hw);
 	~CtImage();
 
@@ -54,7 +52,7 @@ class CtImage {
 
 
 	// --- soft
-	void getSoft(SwBinRoi *& soft) const;
+	void getSoft(CtSwBinRoi *& soft) const;
 	//bool getHard(HwBinRoi *& hard) const;
 
 /*	void setHardRoi(Roi roi);
@@ -77,7 +75,7 @@ class CtImage {
 	
 	// --- effective
 	void getRoi(Roi& roi) const;
-	void setBin(Bin& bin) const;
+	void getBin(Bin& bin) const;
 
 	void reset();
 
@@ -92,7 +90,7 @@ class CtImage {
 	bool	m_has_hw_bin, m_has_hw_roi, m_has_hw_flip;
 	Size	m_max_size, m_hw_size, m_sw_size;
 	ImageType	m_img_type;
-	SwBinRoi	*m_sw;
+	CtSwBinRoi	*m_sw;
 	ImageOpMode	m_mode;
 
 	// BinRoi	m_hw_binroi, m_sw_binroi;

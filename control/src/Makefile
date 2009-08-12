@@ -5,6 +5,7 @@ SRCS = CtSaving.cpp CtControl.cpp CtAcquisition.cpp CtBuffer.cpp \
 		CtDebug.cpp CtImage.cpp
 
 INCLUDES = -I../include -I../../common/include -I../../hardware/include \
+		-I../software_operation/include \
 		-I../../third-party/Processlib/core/include
 
 CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread

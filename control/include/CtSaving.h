@@ -7,7 +7,6 @@
 #include <fstream>
 
 #include "ThreadUtils.h"
-
 #include "CtControl.h"
 
 class Data;
@@ -77,6 +76,8 @@ namespace lima {
 
     void setSavingMode(SavingMode mode);
     void getSavingMode(SavingMode& mode) const;
+
+    bool hasAutoSaveMode() { return m_pars.savingMode != Manual; };
 
     void setOverwritePolicy(OverwritePolicy policy);
     void getOverwritePolicy(OverwritePolicy& policy) const;

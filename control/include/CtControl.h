@@ -1,9 +1,12 @@
 #ifndef CTCONTROL_H
 #define CTCONTROL_H
 
-#include "HwInterface.h"
-
 #include "ThreadUtils.h"
+
+#include "HwInterface.h"
+#include "SoftOpInternalMgr.h"
+
+#include "Data.h"
 
 namespace lima {
 
@@ -11,9 +14,11 @@ namespace lima {
   class CtAcquisition;
   class CtImage;
   class CtBuffer;
+  class CtBufferFrameCB;
   class CtSaving;
 
   class CtControl {
+  friend class CtBufferFrameCB;
   public:
 
     enum ApplyPolicy {
@@ -58,7 +63,22 @@ namespace lima {
 
     void reset();
 
+  protected:
+    void newFrameReady(Data& data);
+    void newFrameToSave(Data& data);
+
   private:
+    struct SoftOpStage {
+	SoftOpStage()	{ reset(); }
+	void reset();
+	int getNb()	{ return internal+ext_link+ext_sink; };
+	int getNbLink() { return internal+ext_link; };
+
+	int	internal;
+	int	ext_link;
+	int	ext_sink;
+    };
+
     HwInterface		*m_hw;
     mutable Cond	m_cond;
     ImageStatus		m_img_status;
@@ -67,8 +87,12 @@ namespace lima {
     CtImage		*m_ct_image;
     CtBuffer		*m_ct_buffer;
     CtDebug		*m_ct_debug;
+    SoftOpInternalMgr   *m_op_int;
+    SoftOpStage		m_op_stage;
+
     ApplyPolicy		m_policy;
     bool		m_ready;
+    bool		m_autosave;
   };
 
 } // namespace lima

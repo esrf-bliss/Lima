@@ -7,6 +7,7 @@ simutest-ext-objs = $(lima-objs) $(simu-objs)
 
 INC = -I../include -I../../common/include -I../control/include \
 	-I../../hardware/include -I../../camera/simulator/include \
+	-I../software_operation/include \
 	-I../../third-party/Processlib/core/include
 
 CXXFLAGS += $(INC) -Wall -pthread

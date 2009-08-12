@@ -9,7 +9,7 @@
 namespace lima {	
 
 class CtAcquisition {
-	friend class CtControl;
+    friend class CtControl;
 
     public:
 

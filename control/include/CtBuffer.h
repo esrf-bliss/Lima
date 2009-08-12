@@ -2,11 +2,25 @@
 #define CTBUFFER_H
 
 #include "Constants.h"
+#include "SizeUtils.h"
 #include "CtAcquisition.h"
+#include "CtImage.h"
 #include "HwInterface.h"
-#include "HwCap.h"
+#include "HwFrameCallback.h"
+
+#include "Data.h"
 
 namespace lima {
+
+class CtBufferFrameCB : public HwFrameCallback
+{
+    public:
+	CtBufferFrameCB(CtControl *ct): m_ct(ct) {}
+    protected:
+        bool newFrameReady(const HwFrameInfoType& frame_info);
+    private:
+	CtControl *m_ct;
+};
 
 class CtBuffer {
 
@@ -34,10 +48,14 @@ class CtBuffer {
 	void setMaxMemory(short max_memory);
 	void getMaxMemory(short& max_memory) const;
 
-	void setup(CtAcquisition *ct_acq, FrameDim& fdim);
+	void registerFrameCallback(CtControl *ct);
+        void unregisterFrameCallback();
+
+	void setup(CtControl *ct);
 
     private:
 	HwBufferCtrlObj	*m_hw_buffer;
+	CtBufferFrameCB *m_frame_cb;
 	Parameters	m_pars;
 
 };

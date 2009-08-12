@@ -4,16 +4,16 @@
 using namespace lima;
 
 // ----------------------------------------------------------------------------
-// CLASS SwBinRoi
+// CLASS CtSwBinRoi
 // ----------------------------------------------------------------------------
-SwBinRoi::SwBinRoi(Size& size)
+CtSwBinRoi::CtSwBinRoi(Size& size)
 	: m_size(), m_bin(), m_roi(), m_max_roi()
 {
 	m_max_roi= Roi(Point(0,0), size);
 	setMaxSize(size);
 }
 
-void SwBinRoi::setMaxSize(Size& size)
+void CtSwBinRoi::setMaxSize(Size& size)
 {
 	m_max_size= size;
 	m_max_roi.setSize(m_max_size / m_bin);
@@ -26,7 +26,7 @@ void SwBinRoi::setMaxSize(Size& size)
 	}
 }
 
-void SwBinRoi::setBin(Bin& bin)
+void CtSwBinRoi::setBin(Bin& bin)
 {
 	if (bin != m_bin) {
 		m_roi= m_roi.getUnbinned(m_bin);
@@ -37,7 +37,7 @@ void SwBinRoi::setBin(Bin& bin)
 	}
 }
 
-void SwBinRoi::setRoi(Roi& roi)
+void CtSwBinRoi::setRoi(Roi& roi)
 {
 	if (roi != m_roi) {
 		if (m_max_roi.containsRoi(roi)) {
@@ -49,7 +49,7 @@ void SwBinRoi::setRoi(Roi& roi)
 	}
 }
 
-const Size& SwBinRoi::getSize()
+const Size& CtSwBinRoi::getSize()
 {
 	if (m_roi.isEmpty())
 		m_size= m_max_size / m_size;
@@ -76,7 +76,7 @@ CtImage::CtImage(HwInterface *hw)
 	m_hw_det->getMaxImageSize(m_max_size);
 	m_hw_det->getCurrImageType(m_img_type);
 
-	m_sw= new SwBinRoi(m_max_size);
+	m_sw= new CtSwBinRoi(m_max_size);
 
 	m_hw_size= m_max_size;
 	m_sw_size= m_max_size;
@@ -132,7 +132,7 @@ void CtImage::getHwImageDim(FrameDim& dim) const
 	dim= FrameDim(m_max_size, m_img_type);
 }
 
-void CtImage::getSoft(SwBinRoi *& soft) const
+void CtImage::getSoft(CtSwBinRoi *& soft) const
 {
 	soft= m_sw;
 }
