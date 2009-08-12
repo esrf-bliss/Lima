@@ -41,7 +41,7 @@ void CtControl::setApplyPolicy(ApplyPolicy policy)
   m_policy= policy;
 }
 
-void CtControl::getApplyPolicy(ApplyPolicy &policy)
+void CtControl::getApplyPolicy(ApplyPolicy &policy) const
 {
   policy= m_policy;
 }

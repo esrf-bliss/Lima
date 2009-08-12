@@ -1,14 +1,12 @@
-%If (!tobedeleted)
-
 class CtBuffer {
 %TypeHeaderCode
 #include <CtBuffer.h>
+#include <Constants.h>
 using namespace lima;
 %End
     public:
-        enum Mode {Linear,Circular};
 	struct Parameters {
-		CtBuffer::Mode	mode;
+		BufferMode mode;
 		long	nbBuffers;
 		short	maxMemory;
 	};
@@ -25,4 +23,3 @@ using namespace lima;
 	void setMaxMemory(short max_memory);
 	void getMaxMemory(short& max_memory /Out/) const;
 };
-%End

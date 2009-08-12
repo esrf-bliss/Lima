@@ -31,7 +31,7 @@ class CtAcquisition {
 
 	// --- global
 
-	void setPars(Parameters pars);
+	void setPars(const Parameters &pars);
 	void getPars(Parameters& pars) const;
 
 	void reset();
@@ -51,8 +51,8 @@ class CtAcquisition {
 
 	void setAccMaxExpoTime(double max_time);
 
-	void getAccNbFrames(int& nframes);
-	void getAccExpoTime(double& acc_time);
+	void getAccNbFrames(int& nframes) const;
+	void getAccExpoTime(double& acc_time) const;
 
 	void setConcatNbFrames(int nframes);
 	void getConcatNbFrames(int& nframes) const; 
@@ -79,7 +79,7 @@ class CtAcquisition {
 		bool	accMaxExpoTime;
 	};
 
-	void _updateAccPars();
+	void _updateAccPars() const;
 	void _setDefaultPars(Parameters* pars);
 	void _apply();
 	void _hwRead();
@@ -90,8 +90,8 @@ class CtAcquisition {
 	ChangedPars	m_changes;
 	double		m_readout_time;
 	double		m_frame_rate;
-	int		m_acc_nframes;
-	double		m_acc_exptime;
+	mutable int	m_acc_nframes;
+	mutable double	m_acc_exptime;
 	bool		m_applied_once;
 };
 

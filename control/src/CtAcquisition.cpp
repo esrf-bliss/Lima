@@ -18,7 +18,7 @@ CtAcquisition::~CtAcquisition()
 {
 }
 
-void CtAcquisition::setPars(Parameters pars)
+void CtAcquisition::setPars(const Parameters &pars)
 {
 	setAcqMode(pars.acqMode);
 	setAcqNbFrames(pars.acqNbFrames);
@@ -186,7 +186,7 @@ void CtAcquisition::getAcqExpoTime(double& acq_time) const
 	acq_time= m_inpars.acqExpoTime;
 }
 
-void CtAcquisition::getAccNbFrames(int& nframes)
+void CtAcquisition::getAccNbFrames(int& nframes) const
 {
 	_updateAccPars();
 	nframes= m_acc_nframes;
@@ -197,13 +197,13 @@ void CtAcquisition::setAccMaxExpoTime(double acc_time)
 	m_inpars.accMaxExpoTime= acc_time;
 }
 
-void CtAcquisition::getAccExpoTime(double& acc_time)
+void CtAcquisition::getAccExpoTime(double& acc_time) const
 {
 	_updateAccPars();
 	acc_time= m_acc_exptime;
 }
 
-void CtAcquisition::_updateAccPars()
+void CtAcquisition::_updateAccPars() const
 {
 	int acc_div;
 	acc_div= int(m_inpars.acqExpoTime / m_inpars.accMaxExpoTime);

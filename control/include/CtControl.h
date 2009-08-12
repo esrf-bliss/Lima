@@ -51,7 +51,7 @@ namespace lima {
     void getDebug(short& level) const;
 
     void setApplyPolicy(ApplyPolicy policy);
-    void getApplyPolicy(ApplyPolicy &policy);
+    void getApplyPolicy(ApplyPolicy &policy) const;
 
     void getAcqStatus(HwInterface::AcqStatus& status) const; // from HW
     void getImageStatus(ImageStatus& status) const;
