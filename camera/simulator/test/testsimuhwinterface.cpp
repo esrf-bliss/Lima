@@ -117,6 +117,19 @@ void test_simu_hw_interface()
 	print_status(simu_hw);
 	simu_hw.stopAcq();
 	print_status(simu_hw);
+
+
+	cout << "Trying accumulation now..." << endl;
+
+	hw_buffer->setNbAccFrames(5);
+	hw_buffer->setNbBuffers(10);
+	hw_sync->setNbFrames(3);
+
+	print_status(simu_hw);
+	simu_hw.startAcq();
+	print_status(simu_hw);
+	simu_hw.stopAcq();
+	print_status(simu_hw);
 }
 
 int main(int argc, char *argv[])
