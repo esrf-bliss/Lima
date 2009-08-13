@@ -402,6 +402,8 @@ void BufferCtrlMgr::setNbAccFrames(int nb_acc_frames)
 
 	if (nb_acc_frames != m_nb_acc_frames)
 		releaseBuffers();
+
+	m_nb_acc_frames = nb_acc_frames;
 }
 
 void BufferCtrlMgr::getNbAccFrames(int& nb_acc_frames)
