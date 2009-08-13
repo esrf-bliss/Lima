@@ -88,7 +88,7 @@ class SimuBufferCtrlObj : public HwBufferCtrlObj
 class SimuSyncCtrlObj : public HwSyncCtrlObj
 {
  public:
-	SimuSyncCtrlObj(Simulator& simu);
+	SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl);
 	virtual ~SimuSyncCtrlObj();
 
 	virtual void setTrigMode(TrigMode  trig_mode);
@@ -100,8 +100,8 @@ class SimuSyncCtrlObj : public HwSyncCtrlObj
 	virtual void setLatTime(double  lat_time);
 	virtual void getLatTime(double& lat_time);
 
-	virtual void setNbFrames(int  nb_frames);
-	virtual void getNbFrames(int& nb_frames);
+	virtual void setNbHwFrames(int  nb_frames);
+	virtual void getNbHwFrames(int& nb_frames);
 
 	virtual void getValidRanges(ValidRangesType& valid_ranges);
 
@@ -148,7 +148,7 @@ class SimuHwInterface : public HwInterface
 	virtual void startAcq();
 	virtual void stopAcq();
 	virtual void getStatus(StatusType& status);
-	virtual int getNbAcquiredFrames();
+	virtual int getNbHwAcquiredFrames();
 
  private:
 	Simulator& m_simu;

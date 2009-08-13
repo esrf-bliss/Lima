@@ -164,8 +164,8 @@ void SimuBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
  * \brief SimuSyncCtrlObj constructor
  *******************************************************************/
 
-SimuSyncCtrlObj::SimuSyncCtrlObj(Simulator& simu)
-	: m_simu(simu)
+SimuSyncCtrlObj::SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl)
+	: HwSyncCtrlObj(buffer_ctrl), m_simu(simu)
 {
 }
 
@@ -204,12 +204,12 @@ void SimuSyncCtrlObj::getLatTime(double& lat_time)
 	m_simu.getLatTime(lat_time);
 }
 
-void SimuSyncCtrlObj::setNbFrames(int nb_frames)
+void SimuSyncCtrlObj::setNbHwFrames(int nb_frames)
 {
 	m_simu.setNbFrames(nb_frames);
 }
 
-void SimuSyncCtrlObj::getNbFrames(int& nb_frames)
+void SimuSyncCtrlObj::getNbHwFrames(int& nb_frames)
 {
 	m_simu.getNbFrames(nb_frames);
 }
@@ -259,8 +259,8 @@ void SimuBinCtrlObj::checkBin(Bin& bin)
  *******************************************************************/
 
 SimuHwInterface::SimuHwInterface(Simulator& simu)
-	: m_simu(simu), m_det_info(simu), m_buffer(simu), m_sync(simu),
-	  m_bin(simu)
+	: m_simu(simu), m_det_info(simu), m_buffer(simu), 
+	  m_sync(simu, m_buffer), m_bin(simu)
 {
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));
@@ -326,7 +326,7 @@ void SimuHwInterface::getStatus(StatusType& status)
 	status.det_mask = Exposure | Readout | Latency;
 }
 
-int SimuHwInterface::getNbAcquiredFrames()
+int SimuHwInterface::getNbHwAcquiredFrames()
 {
 	return m_simu.getNbAcquiredFrames();
 }

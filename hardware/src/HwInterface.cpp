@@ -11,6 +11,15 @@ HwInterface::~HwInterface()
 {
 }
 
+int HwInterface::getNbAcquiredFrames()
+{
+	HwBufferCtrlObj *buffer_ctrl;
+	getHwCtrlObj(buffer_ctrl);
+	int nb_acc_frames;
+	buffer_ctrl->getNbAccFrames(nb_acc_frames);
+	return  getNbHwAcquiredFrames() / nb_acc_frames;
+}
+
 ostream& lima::operator <<(ostream& os,
 			   HwInterface::AcqStatus acq_status)
 {

@@ -103,15 +103,14 @@ class SyncCtrlObj : public HwSyncCtrlObj
 	virtual void setLatTime(double  lat_time);
 	virtual void getLatTime(double& lat_time);
 
-	virtual void setNbFrames(int  nb_frames);
-	virtual void getNbFrames(int& nb_frames);
+	virtual void setNbHwFrames(int  nb_frames);
+	virtual void getNbHwFrames(int& nb_frames);
 
 	virtual void getValidRanges(ValidRangesType& valid_ranges);
 
  private:
 	Espia::Acq& m_acq;
 	Camera& m_cam;
-	BufferCtrlObj& m_buffer_ctrl;
 };
 
 
@@ -173,7 +172,7 @@ class Interface : public HwInterface
 	virtual void startAcq();
 	virtual void stopAcq();
 	virtual void getStatus(StatusType& status);
-	virtual int getNbAcquiredFrames();
+	virtual int getNbHwAcquiredFrames();
 
  private:
 	Espia::Acq&    m_acq;

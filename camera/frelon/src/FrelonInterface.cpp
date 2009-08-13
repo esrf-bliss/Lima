@@ -182,7 +182,7 @@ void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
  *******************************************************************/
 
 SyncCtrlObj::SyncCtrlObj(Acq& acq, Camera& cam, BufferCtrlObj& buffer_ctrl)
-	: m_acq(acq), m_cam(cam), m_buffer_ctrl(buffer_ctrl)
+	: HwSyncCtrlObj(buffer_ctrl), m_acq(acq), m_cam(cam)
 {
 }
 
@@ -220,21 +220,15 @@ void SyncCtrlObj::getLatTime(double& lat_time)
 	m_cam.getLatTime(lat_time);
 }
 
-void SyncCtrlObj::setNbFrames(int nb_frames)
+void SyncCtrlObj::setNbHwFrames(int nb_frames)
 {
-	int nb_acc_frames;
-	m_buffer_ctrl.getNbAccFrames(nb_acc_frames);
-	int real_nb_frames = nb_frames * nb_acc_frames;
-	m_acq.setNbFrames(real_nb_frames);
-	m_cam.setNbFrames(real_nb_frames);
+	m_acq.setNbFrames(nb_frames);
+	m_cam.setNbFrames(nb_frames);
 }
 
-void SyncCtrlObj::getNbFrames(int& nb_frames)
+void SyncCtrlObj::getNbHwFrames(int& nb_frames)
 {
 	m_acq.getNbFrames(nb_frames);
-	int nb_acc_frames;
-	m_buffer_ctrl.getNbAccFrames(nb_acc_frames);
-	nb_frames /= nb_acc_frames;
 }
 
 void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
@@ -410,13 +404,11 @@ void Interface::getStatus(StatusType& status)
 		status.det |= Latency;
 }
 
-int Interface::getNbAcquiredFrames()
+int Interface::getNbHwAcquiredFrames()
 {
 	Acq::Status acq_status;
 	m_acq.getStatus(acq_status);
-	int nb_acc_frames;
-	m_buffer.getNbAccFrames(nb_acc_frames);
-	return (acq_status.last_frame_nb + 1) / nb_acc_frames;
+	return (acq_status.last_frame_nb + 1);
 }
 
 

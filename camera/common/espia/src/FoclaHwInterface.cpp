@@ -141,8 +141,9 @@ void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback &frame_cb)
  * @param[in] acq          reference to Espia::Acq object
  * @param[in] focla        reference to Espia::Focla::Dev object
  *******************************************************************/
-SyncCtrlObj::SyncCtrlObj( Espia::Acq &acq, Dev &focla )
-	: m_acq(acq), m_focla(focla)
+SyncCtrlObj::SyncCtrlObj( Espia::Acq &acq, Dev &focla, 
+			  HwBufferCtrlObj& buffer_ctrl )
+	: HwSyncCtrlObj( buffer_ctrl ), m_acq(acq), m_focla(focla)
 {
 }
 
@@ -182,13 +183,13 @@ void SyncCtrlObj::getLatTime(double &lat_time)
 }
 
 
-void SyncCtrlObj::setNbFrames(int nb_frames)
+void SyncCtrlObj::setNbHwFrames(int nb_frames)
 {
 	m_acq.setNbFrames(nb_frames);
 }
 
 
-void SyncCtrlObj::getNbFrames(int &nb_frames)
+void SyncCtrlObj::getNbHwFrames(int &nb_frames)
 {
 	m_acq.getNbFrames(nb_frames);
 }
@@ -209,7 +210,8 @@ void SyncCtrlObj::getValidRanges(ValidRangesType &valid_ranges)
 Interface::Interface( Espia::Acq &acq, BufferCtrlMgr &buffer_mgr, 
                       Espia::Focla::Dev &focla )
 	: m_acq(acq), m_buffer_mgr(buffer_mgr), m_focla(focla),
-	  /*m_det_info(focla),*/ m_buffer(buffer_mgr), m_sync(acq, focla)
+	  /*m_det_info(focla),*/ m_buffer(buffer_mgr), 
+	  m_sync(acq, focla, m_buffer)
 {
 /*	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info)); */
@@ -280,7 +282,7 @@ void Interface::getStatus(StatusType& status)
 }
 
 
-int Interface::getNbAcquiredFrames()
+int Interface::getNbHwAcquiredFrames()
 {
 	Acq::Status acq_status;
 	m_acq.getStatus(acq_status);

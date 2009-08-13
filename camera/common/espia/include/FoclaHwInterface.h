@@ -81,7 +81,8 @@ class BufferCtrlObj : public HwBufferCtrlObj
 class SyncCtrlObj : public HwSyncCtrlObj
 {
   public:
-	SyncCtrlObj( Espia::Acq &acq, Dev &focla );
+	SyncCtrlObj( Espia::Acq &acq, Dev &focla, 
+		     HwBufferCtrlObj& buffer_ctrl );
 	virtual ~SyncCtrlObj();
 
 	virtual void setTrigMode(TrigMode  trig_mode);
@@ -93,8 +94,8 @@ class SyncCtrlObj : public HwSyncCtrlObj
 	virtual void setLatTime(double  lat_time);
 	virtual void getLatTime(double &lat_time);
 
-	virtual void setNbFrames(int  nb_frames);
-	virtual void getNbFrames(int &nb_frames);
+	virtual void setNbHwFrames(int  nb_frames);
+	virtual void getNbHwFrames(int &nb_frames);
 
 	virtual void getValidRanges(ValidRangesType &valid_ranges);
 
@@ -122,7 +123,7 @@ class Interface : public HwInterface
 	virtual void startAcq();
 	virtual void stopAcq();
 	virtual void getStatus(StatusType& status);
-	virtual int  getNbAcquiredFrames();
+	virtual int  getNbHwAcquiredFrames();
 
  private:
 	Espia::Acq        &m_acq;
