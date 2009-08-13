@@ -26,7 +26,6 @@ CtControl::CtControl(HwInterface *hw) :
 
 CtControl::~CtControl()
 {
-  delete m_hw;
   delete m_ct_saving;
   delete m_ct_acq;
   delete m_ct_image;

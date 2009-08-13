@@ -1,4 +1,5 @@
-sub-dirs = software_operation src test
+src-dirs  = software_operation src
+test-dirs = test
 
 include ../global.inc
 

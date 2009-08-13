@@ -181,8 +181,8 @@ void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
  * \brief SyncCtrlObj constructor
  *******************************************************************/
 
-SyncCtrlObj::SyncCtrlObj(Acq& acq, Camera& cam)
-	: m_acq(acq), m_cam(cam)
+SyncCtrlObj::SyncCtrlObj(Acq& acq, Camera& cam, BufferCtrlObj& buffer_ctrl)
+	: m_acq(acq), m_cam(cam), m_buffer_ctrl(buffer_ctrl)
 {
 }
 
@@ -222,13 +222,19 @@ void SyncCtrlObj::getLatTime(double& lat_time)
 
 void SyncCtrlObj::setNbFrames(int nb_frames)
 {
-	m_acq.setNbFrames(nb_frames);
-	m_cam.setNbFrames(nb_frames);
+	int nb_acc_frames;
+	m_buffer_ctrl.getNbAccFrames(nb_acc_frames);
+	int real_nb_frames = nb_frames * nb_acc_frames;
+	m_acq.setNbFrames(real_nb_frames);
+	m_cam.setNbFrames(real_nb_frames);
 }
 
 void SyncCtrlObj::getNbFrames(int& nb_frames)
 {
 	m_acq.getNbFrames(nb_frames);
+	int nb_acc_frames;
+	m_buffer_ctrl.getNbAccFrames(nb_acc_frames);
+	nb_frames /= nb_acc_frames;
 }
 
 void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
@@ -301,7 +307,7 @@ void RoiCtrlObj::getRoi(Roi& roi)
 Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 		     Camera& cam)
 	: m_acq(acq), m_buffer_mgr(buffer_mgr), m_cam(cam),
-	  m_det_info(cam), m_buffer(buffer_mgr), m_sync(acq, cam), 
+	  m_det_info(cam), m_buffer(buffer_mgr), m_sync(acq, cam, m_buffer), 
 	  m_bin(cam), m_roi(cam)
 {
 	HwDetInfoCtrlObj *det_info = &m_det_info;
@@ -366,6 +372,7 @@ void Interface::prepareAcq()
 
 void Interface::startAcq()
 {
+	m_buffer_mgr.setStartTimestamp(Timestamp::now());
 	m_acq.start();
 	m_cam.start();
 }

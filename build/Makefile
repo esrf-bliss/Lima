@@ -17,6 +17,11 @@ LDFLAGS += -L../third-party/Processlib/build \
 
 LDLIBS += -lprocesslib -lespia
 
+src:		liblima.so
+
+test:
+	@true
+
 liblima.so:	$(lima-objs)
 	$(CXX) -shared -o $@ -fPIC $+ $(LDFLAGS) $(LDLIBS)
 

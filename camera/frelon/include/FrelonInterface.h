@@ -91,7 +91,7 @@ class BufferCtrlObj : public HwBufferCtrlObj
 class SyncCtrlObj : public HwSyncCtrlObj
 {
  public:
-	SyncCtrlObj(Espia::Acq& acq, Camera& cam);
+	SyncCtrlObj(Espia::Acq& acq, Camera& cam, BufferCtrlObj& buffer_ctrl);
 	virtual ~SyncCtrlObj();
 
 	virtual void setTrigMode(TrigMode  trig_mode);
@@ -111,6 +111,7 @@ class SyncCtrlObj : public HwSyncCtrlObj
  private:
 	Espia::Acq& m_acq;
 	Camera& m_cam;
+	BufferCtrlObj& m_buffer_ctrl;
 };
 
 

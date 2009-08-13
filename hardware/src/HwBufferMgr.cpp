@@ -463,8 +463,8 @@ BufferCbMgr& BufferCtrlMgr::getAcqBufferMgr()
 void BufferCtrlMgr::setStartTimestamp(Timestamp start_ts)
 {
 	m_acq_buffer_mgr.setStartTimestamp(start_ts);
-	if (m_effect_buffer_mgr != &m_acq_buffer_mgr)
-		m_effect_buffer_mgr->setStartTimestamp(start_ts);
+	if (getAcqMode() == Acc)
+		m_aux_buffer_mgr.setStartTimestamp(start_ts);
 }
 
 void BufferCtrlMgr::getStartTimestamp(Timestamp& start_ts)
@@ -531,10 +531,13 @@ bool BufferCtrlMgr::acqFrameReady(const HwFrameInfoType& acq_frame_info)
 			 aux_frame_ptr, aux_frame_dim, valid_pixels);
 		
 		if ((acc_idx == m_nb_acc_frames - 1) && (m_frame_cb_act)) {
+			Timestamp start_ts;
+			aux_mgr.getStartTimestamp(start_ts);
+			Timestamp frame_ts = Timestamp::now() - start_ts;
 			HwFrameInfoType aux_frame_info(aux_frame_nb,
 						       aux_frame_ptr,
 						       &aux_frame_dim,
-						       Timestamp::now(),
+						       frame_ts,
 						       valid_pixels);
 			return newFrameReady(aux_frame_info);
 		}

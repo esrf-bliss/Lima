@@ -153,7 +153,7 @@ void test_frelon_hw_inter(bool do_reset)
 	Frelon::Interface hw_inter(acq, buffer_mgr, cam);
 	cout << " Done!" << endl;
 
-	CtControl aControl(NULL);
+	CtControl aControl(&hw_inter);
 	CtSaving buffer_save(aControl);
 	CtSaving::Parameters saving_par;
 	saving_par.directory = ".";
@@ -282,6 +282,20 @@ void test_frelon_hw_inter(bool do_reset)
 	effect_frame_dim.setSize(real_roi.getSize());
 	hw_buffer->setFrameDim(effect_frame_dim);
 	hw_buffer->setNbBuffers(10);
+
+	print_status(hw_inter);
+	hw_inter.startAcq();
+	acq_finished.wait();
+	PoolThreadMgr::get().wait();
+	print_status(hw_inter);
+	hw_inter.stopAcq();
+	print_status(hw_inter);
+
+	hw_buffer->setFrameDim(effect_frame_dim);
+	hw_buffer->setNbAccFrames(5);
+	hw_buffer->setNbBuffers(10);
+
+	hw_sync->setNbFrames(3);
 
 	print_status(hw_inter);
 	hw_inter.startAcq();

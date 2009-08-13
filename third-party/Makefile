@@ -1,6 +1,10 @@
 
+all:	src test
 
-all:Processlib/sip/Makefile Processlib/sip/processlib.so
+src:	Processlib/sip/Makefile Processlib/sip/processlib.so
+
+test:
+	@echo
 
 Processlib/sip/Makefile:
 	cd Processlib/sip/ && python configure.py
