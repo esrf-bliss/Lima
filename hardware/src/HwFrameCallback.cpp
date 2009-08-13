@@ -10,7 +10,7 @@ HwFrameCallbackGen::HwFrameCallbackGen()
 HwFrameCallbackGen::~HwFrameCallbackGen()
 {
 	if (m_frame_cb)
-		m_frame_cb->setFrameCallbackGen(NULL);
+		unregisterFrameCallback(*m_frame_cb);
 }
 
 HwFrameCallback::~HwFrameCallback()

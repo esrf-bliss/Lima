@@ -564,6 +564,7 @@ inline void FrameDim::setSize(const Size& size)
 inline void FrameDim::setImageType(ImageType image_type)
 {
 	m_type = image_type;
+	m_depth = getImageTypeDepth(m_type);
 }
 
 inline ImageType FrameDim::getImageType() const

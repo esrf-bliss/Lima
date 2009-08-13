@@ -414,7 +414,9 @@ int Interface::getNbAcquiredFrames()
 {
 	Acq::Status acq_status;
 	m_acq.getStatus(acq_status);
-	return acq_status.last_frame_nb + 1;
+	int nb_acc_frames;
+	m_buffer.getNbAccFrames(nb_acc_frames);
+	return (acq_status.last_frame_nb + 1) / nb_acc_frames;
 }
 
 
