@@ -34,6 +34,11 @@ void CtAcquisition::getPars(Parameters& pars) const
 	pars= m_inpars;
 }
 
+void CtAcquisition::reset()
+{
+	// TODO
+}
+
 void CtAcquisition::apply(CtControl::ApplyPolicy policy)
 {
 	CtControl::ApplyPolicy use_policy;

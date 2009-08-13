@@ -13,7 +13,7 @@ public:
 	  double max_lat_time;
 	};
 
-	HwSyncCtrlObj();
+	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);
 	virtual ~HwSyncCtrlObj();
 
 	virtual void setTrigMode(TrigMode  trig_mode) = 0;
@@ -25,8 +25,11 @@ public:
 	virtual void setLatTime(double  lat_time) = 0;
 	virtual void getLatTime(double& lat_time /Out/) = 0;
 
-	virtual void setNbFrames(int  nb_frames) = 0;
-	virtual void getNbFrames(int& nb_frames /Out/) = 0;
+	virtual void setNbFrames(int  nb_frames);
+	virtual void getNbFrames(int& nb_frames /Out/);
+
+	virtual void setNbHwFrames(int  nb_frames) = 0;
+	virtual void getNbHwFrames(int& nb_frames /Out/) = 0;
 
 
 	virtual void getValidRanges(ValidRangesType& range /Out/) = 0;

@@ -67,9 +67,6 @@ using namespace lima;
 
 	virtual const std::vector<HwCap>& getCapList() const = 0;
 
-//	template <class CtrlObj>
-//	bool getHwCtrlObj(CtrlObj *& ctrl_obj_ptr) const;
-
 	SIP_PYOBJECT getHwCtrlObj(HwCap::Type cap_type);
 %MethodCode
 	const HwInterface::CapList& cap_list = sipCpp->getCapList();
@@ -87,5 +84,6 @@ using namespace lima;
 	virtual void startAcq() = 0;
 	virtual void stopAcq() = 0;
 	virtual void getStatus(StatusType& status /Out/) = 0;
-	virtual int getNbAcquiredFrames() = 0;
+	virtual int getNbAcquiredFrames();
+	virtual int getNbHwAcquiredFrames() = 0;
 };

@@ -1,10 +1,10 @@
-class SwBinRoi {
+class CtSwBinRoi {
 %TypeHeaderCode
 #include <CtImage.h>
 using namespace lima;
 %End
     public:
-	SwBinRoi(Size& size);
+	CtSwBinRoi(Size& size);
 
 	void setMaxSize(Size& size);
 	void setBin(Bin& bin);

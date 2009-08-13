@@ -36,7 +36,7 @@ using namespace lima;
 
 	void start();
 	void stop();
-//	void getStatus(StatusType& status);
+//	void getStatus(StatusType& status /Out/);
 
 	void getStartTimestamp(Timestamp& start_ts);
 
