@@ -91,22 +91,24 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     }
   
   Tasks::Binning *aBinTaskPt = NULL;
-  if(m_bin.bin_x > 1 || m_bin.bin_y > 1)
+  if(m_bin.getX() > 1 || m_bin.getY() > 1)
     {
       aBinTaskPt = new Tasks::Binning();
-      aBinTaskPt->mXFactor = m_bin.bin_x;
-      aBinTaskPt->mXFactor = m_bin.bin_y;
+      aBinTaskPt->mXFactor = m_bin.getX();
+      aBinTaskPt->mXFactor = m_bin.getY();
       aTaskMgr.setLinkTask(aLastStage,aBinTaskPt);
       aBinTaskPt->unref();
       ++aLastStage;
     }
   
   Tasks::SoftRoi *aSoftRoiTaskPt = NULL;
-  if(m_roi.active)
+  if(m_roi.isActive())
     {
+      Point topl= m_roi.getTopLeft();
+      Point botr= m_roi.getBottomRight();
+      Size  roi_size= m_roi.getSize();
       aSoftRoiTaskPt = new Tasks::SoftRoi();
-      aSoftRoiTaskPt->setRoi(m_roi.x, m_roi.x + m_roi.width,
-			     m_roi.y,m_roi.y + m_roi.height);
+      aSoftRoiTaskPt->setRoi(topl.x, botr.x, topl.y, botr.y);
       aTaskMgr.setLinkTask(aLastStage,aSoftRoiTaskPt);
       aSoftRoiTaskPt->unref();
       ++aLastStage;
@@ -123,17 +125,3 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     m_reconstruction_task->setEventCallback(m_end_callback);
 }
 
-
-//BIN
-SoftOpInternalMgr::Bin::Bin() :
-  bin_x(1),bin_y(1)
-{}
-
-//ROI
-SoftOpInternalMgr::Roi::Roi() :
-  active(false),x(0),y(0),width(-1),height(-1)
-{}
-
-SoftOpInternalMgr::Flip::Flip() :
-  flip_x(false),flip_y(false)
-{}

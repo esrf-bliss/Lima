@@ -3,30 +3,17 @@
 
 #include "TaskMgr.h"
 #include "LinkTask.h"
+#include "SizeUtils.h"
 
 namespace lima
 {
   class SoftOpInternalMgr
   {
   public:
-    struct Bin
-    {
-      Bin();
-      int bin_x;
-      int bin_y;
-    };
-
-    struct Roi
-    {
-      Roi();
-      bool active;
-      int x,y;
-      int width,height;
-    };
 
     struct Flip
     {
-      Flip();
+      Flip() { flip_x=0; flip_y=0; } ;
       bool flip_x;
       bool flip_y;
     };

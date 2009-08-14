@@ -1,6 +1,8 @@
 #include "SimuHwInterface.h"
 #include "CtControl.h"
 #include "CtAcquisition.h"
+#include "CtSaving.h"
+#include "CtImage.h"
 
 #include <iostream>
 
@@ -13,16 +15,30 @@ void simulator_test(double expo, long nframe)
 	HwInterface *hw;
 	CtControl *ct;
 	CtAcquisition *acq;
+	CtSaving *save;
+	CtImage *image;
 	CtControl::ImageStatus img_status;
 	long frame= -1;
 
 	hw= new SimuHwInterface(simu);
 	ct= new CtControl(hw);
 	ct->setDebug(0xff);
-	acq= ct->acquisition();
+
+	save= ct->saving();
+	save->setDirectory("./data");
+ 	save->setPrefix("test_");
+	save->setSuffix(".edf");
+	save->setNextNumber(100);
+	save->setFormat(CtSaving::EDF);
+	save->setSavingMode(CtSaving::AutoFrame);
+	save->setFramesPerFile(100);
+
+	image= ct->image();
+//	image->setBin(Bin(2,2));
 
 	cout << "SIMUTEST: " << expo <<" sec / " << nframe << " frames" << endl;
 
+	acq= ct->acquisition();
 	acq->setAcqMode(Single);
 	acq->setAcqExpoTime(expo);
 	acq->setAcqNbFrames(nframe);

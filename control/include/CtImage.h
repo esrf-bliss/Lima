@@ -16,15 +16,49 @@ class CtSwBinRoi {
 	void setBin(Bin& bin);
 	void setRoi(Roi& roi);
 
-	void resetBin() { m_bin.reset(); }
-	void resetRoi() { m_roi.reset(); }
-	void reset()	{ m_bin.reset(); m_roi.reset(); }
+	void resetBin();
+	void resetRoi();
+	void reset();
 
 	const Bin& getBin() const { return m_bin; }
 	const Roi& getRoi() const { return m_roi; }
 	const Size& getSize();
 
     private:
+	Size	m_max_size, m_size;
+	Bin	m_bin;
+	Roi	m_roi, m_max_roi;
+};
+
+class CtHwBinRoi {
+    public:
+	CtHwBinRoi(HwInterface *hw, CtSwBinRoi *sw_bin_roi, Size& size);
+	~CtHwBinRoi();
+
+	bool hasBinCapability() { return m_has_bin; }
+	bool hasRoiCapability() { return m_has_roi; }
+
+	void setMaxSize(Size& size);
+	void setBin(Bin& bin, bool round);
+	void setRoi(Roi& roi, bool round);
+
+	void resetBin();
+	void resetRoi();
+	void reset();
+
+	const Bin& getBin() const { return m_bin; }
+	const Roi& getRoi() const { return m_roi; }
+	const Size& getSize() const { return m_size; }
+
+	void apply();
+
+    private:
+	void _updateSize();
+
+	HwBinCtrlObj	*m_hw_bin;
+	HwRoiCtrlObj	*m_hw_roi;
+	CtSwBinRoi	*m_sw_bin_roi;
+	bool	m_has_bin, m_has_roi;
 	Size	m_max_size, m_size;
 	Bin	m_bin;
 	Roi	m_roi, m_max_roi;
@@ -50,19 +84,10 @@ class CtImage {
 	void getHwImageDim(FrameDim& dim) const;
 	void getImageDim(FrameDim& dim) const;
 
-
 	// --- soft
 	void getSoft(CtSwBinRoi *& soft) const;
-	//bool getHard(HwBinRoi *& hard) const;
+	void getHard(CtHwBinRoi *& hard) const;
 
-/*	void setHardRoi(Roi roi);
-	void resetHardRoi();
-	void getHardRoi(Roi roi);
-
-	void setHardBin(Bin bin);
-	void resetHardBin();
-	void getHardBin(Bin& bin) const;
-*/
 	// --- wizard
 	void setMode(ImageOpMode mode);
 	void getMode(ImageOpMode& mode) const;
@@ -84,16 +109,13 @@ class CtImage {
 	void _setHSBin(Bin bin);
 
 	HwDetInfoCtrlObj *m_hw_det;
-	HwBinCtrlObj	*m_hw_bin;
-	// HwRoiCtrlObj	*m_hw_roi;
 	// HwFlipCtrlObj	*m_hw_flip;
-	bool	m_has_hw_bin, m_has_hw_roi, m_has_hw_flip;
-	Size	m_max_size, m_hw_size, m_sw_size;
-	ImageType	m_img_type;
 	CtSwBinRoi	*m_sw;
-	ImageOpMode	m_mode;
+	CtHwBinRoi	*m_hw;
 
-	// BinRoi	m_hw_binroi, m_sw_binroi;
+	Size		m_max_size;
+	ImageType	m_img_type;
+	ImageOpMode	m_mode;
 };
 
 } // namespace lima

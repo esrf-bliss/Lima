@@ -2,7 +2,7 @@ ct-objs := SoftOpInternalMgr.o SoftOpExternalMgr.o SoftOpId.o
 
 SRCS=SoftOpInternalMgr.cpp SoftOpExternalMgr.cpp SoftOpId.cpp
 
-INCLUDES=-I../include  -I../../../third-party/Processlib/core/include -I../../../third-party/Processlib/tasks/include
+INCLUDES=-I../include  -I../../../third-party/Processlib/core/include -I../../../third-party/Processlib/tasks/include -I../../../common/include
 
 CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread
 

@@ -1,4 +1,4 @@
-src-dirs  = software_operation src
+src-dirs  = src software_operation 
 test-dirs = test
 
 include ../global.inc

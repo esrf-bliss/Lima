@@ -31,6 +31,7 @@ namespace lima
   };
 
   void getAvailableOp(const SoftOpKey*&);
+
   
   class SoftOpBackgroundSubstraction
   {
@@ -42,6 +43,7 @@ namespace lima
   private:
     Tasks::BackgroundSubstraction *m_opt;
   };
+
 
 }
 #endif

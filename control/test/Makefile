@@ -10,7 +10,7 @@ INC = -I../include -I../../common/include -I../control/include \
 	-I../software_operation/include \
 	-I../../third-party/Processlib/core/include
 
-CXXFLAGS += $(INC) -Wall -pthread
+CXXFLAGS += $(INC) -g -Wall -pthread
 LDFLAGS = -pthread
 LDLIBS = -L../../third-party/Processlib/build -lprocesslib
 

@@ -28,9 +28,10 @@ CtControl::~CtControl()
 {
   delete m_ct_saving;
   delete m_ct_acq;
+  delete m_ct_debug;
   delete m_ct_image;
   delete m_ct_buffer;
-  delete m_ct_debug;
+  delete m_op_int;
 }
 
 void CtControl::getDebug(short& level) const
@@ -62,8 +63,10 @@ void CtControl::prepareAcq()
   m_ct_buffer->setup(this);
   m_ct_debug->trace("prepareAcq", "Prepare Hardware for Acquisition");
   m_hw->prepareAcq();
-  
-  // set softtop bin/roi
+
+  //m_op_int->setBin(sw_bin_roi->getBin());
+  //m_op_int->setRoi(sw_bin_roi->getRoi());
+ 
   // set ext op
 
   m_autosave= m_ct_saving->hasAutoSaveMode();
@@ -113,7 +116,7 @@ void CtControl::newFrameReady(Data& fdata)
   TaskMgr mgr= TaskMgr();
   mgr.setInputData(fdata);
 
-  m_op_int->addTo(mgr, m_op_stage.internal);
+  //m_op_int->addTo(mgr, m_op_stage.internal);
   // m_ct_extop->addTo(mgr, first_stage, last_link, last_sink);
 
   m_op_stage.ext_link= 0;
