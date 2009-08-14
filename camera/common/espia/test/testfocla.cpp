@@ -50,8 +50,10 @@ int main(int argc, char *argv[])
 
 	espia_dev.getDrvOption( "NO_FIFO_RESET", val );
 	cout << endl << "NO_FIFO_RESET = " << val << endl;
-	espia_dev.setDrvOption( "NO_FIFO_RESET", 1, val );
-	cout << "NO_FIFO_RESET set to 1, previous value = " << val << endl;
+	espia_dev.setDrvOption( "NO_FIFO_RESET", 1 );
+	cout << "NO_FIFO_RESET set to 1" << endl;
+	espia_dev.getDrvOption( "NO_FIFO_RESET", val );
+	cout << endl << "NO_FIFO_RESET = " << val << endl;
 
 
 	FrameDim frame_dim(1024, 1024, Bpp16);

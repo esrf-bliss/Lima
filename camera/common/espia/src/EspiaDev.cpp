@@ -117,14 +117,12 @@ void Dev::getDrvOption( const string &opt_name, int &val )
 }
 
 
-void Dev::setDrvOption( const string &opt_name, int new_val, int &old_val )
+void Dev::setDrvOption( const string &opt_name, int val )
 {
 	map<string, int>::iterator pop = EspiaDrvOptMap.find(opt_name);
 	if( pop == EspiaDrvOptMap.end() )
 		throw LIMA_HW_EXC(InvalidValue, "No such Espia driver option");
 
-	int val=new_val;
 	int action=SCDXIPCI_OPT_RD_WR;
 	CHECK_CALL( espia_option( m_dev, pop->second, action, &val ) );
-	old_val = val;
 }

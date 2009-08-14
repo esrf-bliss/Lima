@@ -39,8 +39,7 @@ class Dev
 	AutoMutex acqLock();
 
 	void getDrvOption( const std::string &opt_name, int &val );
-	void setDrvOption( const std::string &opt_name, int new_val, 
-	                                                        int &old_val );
+	void setDrvOption( const std::string &opt_name, int val );
 
  private:
 	static const double ResetLinkTime;
