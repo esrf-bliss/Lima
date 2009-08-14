@@ -18,8 +18,7 @@ using namespace lima;
 	void getCcdStatus(int& ccd_status);
 
 	void getDrvOption( const std::string &opt_name, int &val /Out/);
-	void setDrvOption( const std::string &opt_name, int new_val, 
-	                                                        int &old_val /Out/);
+	void setDrvOption( const std::string &opt_name, int val );
 };
 
 }; // namespace Espia
