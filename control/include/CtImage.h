@@ -4,9 +4,11 @@
 #include "Constants.h"
 #include "HwInterface.h"
 #include "HwDetInfoCtrlObj.h"
-#include "HwBinCtrlObj.h"
+#include "SoftOpInternalMgr.h"
 
 namespace lima {
+
+class CtImage;
 
 class CtSwBinRoi {
     public:
@@ -23,6 +25,8 @@ class CtSwBinRoi {
 	const Bin& getBin() const { return m_bin; }
 	const Roi& getRoi() const { return m_roi; }
 	const Size& getSize();
+
+	bool apply(SoftOpInternalMgr *op);
 
     private:
 	Size	m_max_size, m_size;
@@ -64,9 +68,23 @@ class CtHwBinRoi {
 	Roi	m_roi, m_max_roi;
 };
 
+/* -- link probleme with this one !?
+class CtMaxImageSizeCB : public HwMaxImageSizeCallback
+{
+    public:
+        CtMaxImageSizeCB(CtImage *ct) : m_ct(ct) {}
+    protected:	
+        void maxImageSizeChanged(const Size& size, ImageType image_type);
+    private:
+        CtImage *m_ct;
+};
+*/
+	
 class CtImage {
 
+
     public:
+        friend class CtMaxImageSizeCB;
 
 	enum ImageOpMode {
 		HardOnly,
@@ -92,8 +110,8 @@ class CtImage {
 	void setMode(ImageOpMode mode);
 	void getMode(ImageOpMode& mode) const;
 
-	void setRoi(Roi &roi);
-	void setBin(Bin &bin);
+	void setRoi(Roi& roi);
+	void setBin(Bin& bin);
 
 	void resetRoi();
 	void resetBin();
@@ -104,12 +122,16 @@ class CtImage {
 
 	void reset();
 
+	void applyHard();
+	bool applySoft(SoftOpInternalMgr *op);
+
     private:
 	void _setHSRoi(const Roi &roi);
 	void _setHSBin(const Bin &bin);
 
 	HwDetInfoCtrlObj *m_hw_det;
 	// HwFlipCtrlObj	*m_hw_flip;
+	// CtMaxImageSizeCB	*m_cb_size;
 	CtSwBinRoi	*m_sw;
 	CtHwBinRoi	*m_hw;
 

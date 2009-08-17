@@ -33,8 +33,9 @@ void simulator_test(double expo, long nframe)
 	save->setSavingMode(CtSaving::AutoFrame);
 	save->setFramesPerFile(100);
 
+	Bin bin(2,2);
 	image= ct->image();
-//	image->setBin(Bin(2,2));
+	image->setBin(bin);
 
 	cout << "SIMUTEST: " << expo <<" sec / " << nframe << " frames" << endl;
 

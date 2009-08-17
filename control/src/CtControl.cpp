@@ -134,17 +134,15 @@ void CtControl::prepareAcq()
   m_img_status.reset();
   m_ct_debug->trace("prepareAcq", "Apply Acquisition Parameters");
   m_ct_acq->apply(m_policy);
+  m_ct_debug->trace("prepareAcq", "Apply hardware bin/roi");
+  m_ct_image->applyHard();
   m_ct_debug->trace("prepareAcq", "Setup Acquisition Buffers");
   m_ct_buffer->setup(this);
   m_ct_debug->trace("prepareAcq", "Prepare Hardware for Acquisition");
   m_hw->prepareAcq();
 
-  CtSwBinRoi *sw_bin_roi;
-  m_ct_image->getSoft(sw_bin_roi);
-  m_op_int->setBin(sw_bin_roi->getBin());
-  m_op_int->setRoi(sw_bin_roi->getRoi());
-  
-  m_op_int_active = !sw_bin_roi->getBin().isOne() || sw_bin_roi->getRoi().isActive();
+  m_ct_debug->trace("prepareAcq", "Apply software bin/roi");
+  m_op_int_active= m_ct_image->applySoft(m_op_int);
   if(m_op_int_active)
     {
       _LastBaseImageReadyCallback *aCbkPt = new _LastBaseImageReadyCallback(*this);

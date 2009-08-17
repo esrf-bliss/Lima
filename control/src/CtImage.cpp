@@ -69,6 +69,14 @@ void CtSwBinRoi::reset()
 	m_bin.reset();
 	m_roi.reset();
 }
+
+bool CtSwBinRoi::apply(SoftOpInternalMgr *op)
+{
+	op->setBin(m_bin);
+	op->setRoi(m_roi);
+
+	return (!m_bin.isOne() || !m_roi.isEmpty());
+}
 	
 // ----------------------------------------------------------------------------
 // CLASS CtSwBinRoi
@@ -156,7 +164,7 @@ void CtHwBinRoi::_updateSize()
 	Size o_size(m_size);
 
 	if (m_roi.isEmpty())
-		m_size= m_max_size / m_size;
+		m_size= m_max_size / m_bin;
 	else	m_size= Size(m_roi.getSize());
 
 	if (o_size != m_size)
@@ -187,12 +195,27 @@ void CtHwBinRoi::reset()
 	m_roi.reset();
 	m_size= m_max_size;
 }
+
+void CtHwBinRoi::apply()
+{
+	if (m_has_bin) 
+		m_hw_bin->setBin(m_bin);
+	if (m_has_roi)
+		m_hw_roi->setRoi(m_roi);
+}
 	
-	
+// ----------------------------------------------------------------------------
+// CLASS CtMaxImageSizeCB
+// ----------------------------------------------------------------------------
+
+//void CtMaxImageSizeCB::maxImageSizeChanged(const Size& size, ImageType image_type)
+//{
+//	m_ct->setMaxImage(size, image_type);
+//}
+
 // ----------------------------------------------------------------------------
 // CLASS CtImage
 // ----------------------------------------------------------------------------
-
 CtImage::CtImage(HwInterface *hw)
 	: m_mode(HardAndSoft)
 {
@@ -204,10 +227,15 @@ CtImage::CtImage(HwInterface *hw)
 
 	m_sw= new CtSwBinRoi(m_max_size);
 	m_hw= new CtHwBinRoi(hw, m_sw, m_max_size);
+
+//	m_cb_size= new CtMaxImageSizeCB(this);
+//	m_hw_det->registerMaxImageSizeCallback(m_cb_size);
 }
 
 CtImage::~CtImage()
 {
+//	m_hw_det->unregisterMaxImageSizeCallback(m_cb_size);
+//	delete m_cb_size;
 	delete m_hw;
 	delete m_sw;
 }
@@ -266,7 +294,7 @@ void CtImage::getMode(ImageOpMode& mode) const
 	mode= m_mode;
 }
 
-void CtImage::setBin(Bin &bin)
+void CtImage::setBin(Bin& bin)
 {
 	switch (m_mode) {
 		case SoftOnly:
@@ -281,7 +309,7 @@ void CtImage::setBin(Bin &bin)
 	}
 }
 		
-void CtImage::setRoi(Roi &roi)
+void CtImage::setRoi(Roi& roi)
 {
 	switch (m_mode) {
 		case SoftOnly:
@@ -375,3 +403,12 @@ void CtImage::getRoi(Roi& roi) const
 	}
 }
 
+void CtImage::applyHard()
+{
+	m_hw->apply();
+}
+
+bool CtImage::applySoft(SoftOpInternalMgr *op)
+{
+	return m_sw->apply(op);
+}
