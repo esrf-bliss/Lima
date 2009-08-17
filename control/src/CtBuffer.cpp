@@ -4,36 +4,10 @@ using namespace lima;
 
 bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 {
-	Data fdata;
-	ImageType ftype;
-	Size fsize;
-
-	ftype= frame_info.frame_dim->getImageType();
-	switch (ftype) {
-            case Bpp8:
-                fdata.type= Data::UINT8; break;
-            case Bpp10:
-            case Bpp12:
-            case Bpp14:
-            case Bpp16:
-                fdata.type= Data::UINT16; break;
-            case Bpp32:
-                fdata.type= Data::UINT32; break;
-	}
-
-	fsize= frame_info.frame_dim->getSize();
-	fdata.width= fsize.getWidth();
-  	fdata.height= fsize.getHeight();
-	fdata.frameNumber= frame_info.acq_frame_nb;
-
-        Buffer *fbuf = new Buffer();
-	fbuf->owner = Buffer::MAPPED;	
-	fbuf->data = frame_info.frame_ptr;
-	fdata.setBuffer(fbuf);
-	fbuf->unref();
-
-	m_ct->newFrameReady(fdata);
-	return true;
+  Data fdata;
+  CtBuffer::getDataFromHwFrameInfo(fdata,frame_info);
+  m_ct->newFrameReady(fdata);
+  return true;
 }
 
 CtBuffer::CtBuffer(HwInterface *hw)
@@ -104,6 +78,12 @@ void CtBuffer::getMaxMemory(short& max_memory) const
 	max_memory= m_pars.maxMemory;
 }
 
+void CtBuffer::getFrame(Data &aReturnData,int frameNumber)
+{
+  HwFrameInfo info;
+  m_hw_buffer->getFrameInfo(frameNumber,info);
+  getDataFromHwFrameInfo(aReturnData,info);
+}
 void CtBuffer::setup(CtControl *ct)
 {
 	CtAcquisition *acq;
@@ -141,6 +121,36 @@ void CtBuffer::setup(CtControl *ct)
 	registerFrameCallback(ct);
 }
 
+void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
+				      const HwFrameInfoType& frame_info)
+{
+  ImageType ftype;
+  Size fsize;
+
+  ftype= frame_info.frame_dim->getImageType();
+  switch (ftype) {
+  case Bpp8:
+    fdata.type= Data::UINT8; break;
+  case Bpp10:
+  case Bpp12:
+  case Bpp14:
+  case Bpp16:
+    fdata.type= Data::UINT16; break;
+  case Bpp32:
+    fdata.type= Data::UINT32; break;
+  }
+
+  fsize= frame_info.frame_dim->getSize();
+  fdata.width= fsize.getWidth();
+  fdata.height= fsize.getHeight();
+  fdata.frameNumber= frame_info.acq_frame_nb;
+
+  Buffer *fbuf = new Buffer();
+  fbuf->owner = Buffer::MAPPED;	
+  fbuf->data = frame_info.frame_ptr;
+  fdata.setBuffer(fbuf);
+  fbuf->unref();
+}
 // -----------------
 // struct Parameters
 // -----------------

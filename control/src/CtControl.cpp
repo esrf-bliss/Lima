@@ -208,6 +208,22 @@ void CtControl::getImageStatus(ImageStatus& status) const
   status= m_img_status;
 }
 
+void CtControl::ReadImage(Data &aReturnData,long frameNumber)
+{
+  ReadBaseImage(aReturnData,frameNumber); // todo change when external op activated
+}
+
+void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
+{
+  AutoMutex aLock(m_cond.mutex());
+  if(frameNumber < 0)
+    frameNumber = m_img_status.LastBaseImageReady;
+  else if(frameNumber > m_img_status.LastBaseImageReady)
+    throw LIMA_CTL_EXC(Error, "Frame not available yet");
+  aLock.unlock();
+  m_ct_buffer->getFrame(aReturnData,frameNumber);
+}
+
 void CtControl::reset()
 {
 }

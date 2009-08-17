@@ -50,10 +50,14 @@ class CtBuffer {
 
 	void registerFrameCallback(CtControl *ct);
         void unregisterFrameCallback();
+	
+	void getFrame(Data&,int frameNumber);
 
 	void setup(CtControl *ct);
 
+	static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);
     private:
+
 	HwBufferCtrlObj	*m_hw_buffer;
 	CtBufferFrameCB *m_frame_cb;
 	Parameters	m_pars;

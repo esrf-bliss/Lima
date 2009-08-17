@@ -43,6 +43,9 @@ using namespace lima;
     void getAcqStatus(HwInterface::AcqStatus& status /Out/) const; // from HW
     void getImageStatus(ImageStatus &imageStatus /Out/) const;
 
+    void ReadImage(Data&,long frameNumber = -1);
+    void ReadBaseImage(Data&,long frameNumber = -1);
+
     void reset();
   protected:
     void newFrameReady(Data& data);

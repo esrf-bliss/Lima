@@ -22,4 +22,13 @@ using namespace lima;
 
 	void setMaxMemory(short max_memory);
 	void getMaxMemory(short& max_memory /Out/) const;
+
+	void registerFrameCallback(CtControl *ct);
+        void unregisterFrameCallback();
+
+	void getFrame(Data&,int frameNumber);
+
+	void setup(CtControl *ct);
+
+	static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);
 };
