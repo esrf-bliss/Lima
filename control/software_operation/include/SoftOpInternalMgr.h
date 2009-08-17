@@ -39,7 +39,8 @@ namespace lima
       if(m_end_callback)
 	m_end_callback->unref();
       m_end_callback = aCbk;
-      m_end_callback->ref();
+      if(m_end_callback)
+	m_end_callback->ref();
     }
   private:
     class _EndCbk;

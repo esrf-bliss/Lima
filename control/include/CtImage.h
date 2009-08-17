@@ -13,8 +13,8 @@ class CtSwBinRoi {
 	CtSwBinRoi(Size& size);
 
 	void setMaxSize(Size& size);
-	void setBin(Bin& bin);
-	void setRoi(Roi& roi);
+	void setBin(const Bin& bin);
+	void setRoi(const Roi& roi);
 
 	void resetBin();
 	void resetRoi();
@@ -38,7 +38,7 @@ class CtHwBinRoi {
 	bool hasBinCapability() { return m_has_bin; }
 	bool hasRoiCapability() { return m_has_roi; }
 
-	void setMaxSize(Size& size);
+	void setMaxSize(const Size& size);
 	void setBin(Bin& bin, bool round);
 	void setRoi(Roi& roi, bool round);
 
@@ -78,7 +78,7 @@ class CtImage {
 	~CtImage();
 
 	void getMaxImageSize(Size& size) const;
-	void setMaxImage(Size size, ImageType type);
+	void setMaxImage(const Size &size, ImageType type);
 
 	void getImageType(ImageType& type) const;
 	void getHwImageDim(FrameDim& dim) const;
@@ -92,8 +92,8 @@ class CtImage {
 	void setMode(ImageOpMode mode);
 	void getMode(ImageOpMode& mode) const;
 
-	void setRoi(Roi roi);
-	void setBin(Bin bin);
+	void setRoi(Roi &roi);
+	void setBin(Bin &bin);
 
 	void resetRoi();
 	void resetBin();
@@ -105,8 +105,8 @@ class CtImage {
 	void reset();
 
     private:
-	void _setHSRoi(Roi roi);
-	void _setHSBin(Bin bin);
+	void _setHSRoi(const Roi &roi);
+	void _setHSBin(const Bin &bin);
 
 	HwDetInfoCtrlObj *m_hw_det;
 	// HwFlipCtrlObj	*m_hw_flip;

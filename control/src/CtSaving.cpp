@@ -2,7 +2,7 @@
 
 #include "CtSaving.h"
 
-//#include "TaskMgr.h"
+#include "TaskMgr.h"
 #include "SinkTask.h"
 
 using namespace lima;
@@ -63,7 +63,8 @@ private:
 //@brief constructor
 CtSaving::CtSaving(CtControl &aCtrl) :
   m_ctrl(aCtrl),
-  m_ready_flag(true)
+  m_ready_flag(true),
+  m_end_cbk(NULL)
 {
   m_save_cnt = new _SaveContainer(*this);
   m_saving_cbk = new _SaveCBK(*this);
@@ -75,6 +76,7 @@ CtSaving::~CtSaving()
 {
   delete m_save_cnt;
   m_saving_cbk->unref();
+  setEndCallback(NULL);
 }
 
 void CtSaving::setParameters(const CtSaving::Parameters &pars)
@@ -309,6 +311,15 @@ void CtSaving::resetLastFrameNb()
   m_last_frameid_saved = -1;
 }
 
+void CtSaving::setEndCallback(TaskEventCallback *aCbkPt)
+{
+  AutoMutex aLock(m_cond.mutex());
+  if(m_end_cbk)
+    m_end_cbk->unref();
+  m_end_cbk = aCbkPt;
+  if(m_end_cbk)
+    m_end_cbk->ref();
+}
 void CtSaving::frameReady(Data &aData)
 {
   AutoMutex aLock(m_cond.mutex());
@@ -365,6 +376,8 @@ void CtSaving::_save_finished(Data &aData)
 {
   //@todo check if the frame is still available
   AutoMutex aLock(m_cond.mutex());
+  if(m_end_cbk)
+    m_end_cbk->finished(aData);
   switch(m_pars.savingMode)
     {
     case CtSaving::AutoFrame:

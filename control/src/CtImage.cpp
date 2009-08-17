@@ -25,7 +25,7 @@ void CtSwBinRoi::setMaxSize(Size& size)
 	}
 }
 
-void CtSwBinRoi::setBin(Bin& bin)
+void CtSwBinRoi::setBin(const Bin& bin)
 {
 	if (bin != m_bin) {
 		m_roi= m_roi.getUnbinned(m_bin);
@@ -36,7 +36,7 @@ void CtSwBinRoi::setBin(Bin& bin)
 	}
 }
 
-void CtSwBinRoi::setRoi(Roi& roi)
+void CtSwBinRoi::setRoi(const Roi& roi)
 {
 	if (roi.isEmpty())
 		throw LIMA_CTL_EXC(InvalidValue, "Hardware roi is empty");
@@ -90,7 +90,7 @@ CtHwBinRoi::~CtHwBinRoi()
 {
 }
 
-void CtHwBinRoi::setMaxSize(Size& size)
+void CtHwBinRoi::setMaxSize(const Size& size)
 {
 	m_max_size= size;
 	m_max_roi.setSize(m_max_size / m_bin);
@@ -217,7 +217,7 @@ void CtImage::getMaxImageSize(Size& size) const
 	size= m_max_size;
 }
 
-void CtImage::setMaxImage(Size size, ImageType type)
+void CtImage::setMaxImage(const Size &size, ImageType type)
 {
 	m_max_size= size;
 	m_img_type= type;
@@ -266,7 +266,7 @@ void CtImage::getMode(ImageOpMode& mode) const
 	mode= m_mode;
 }
 
-void CtImage::setBin(Bin bin)
+void CtImage::setBin(Bin &bin)
 {
 	switch (m_mode) {
 		case SoftOnly:
@@ -281,7 +281,7 @@ void CtImage::setBin(Bin bin)
 	}
 }
 		
-void CtImage::setRoi(Roi roi)
+void CtImage::setRoi(Roi &roi)
 {
 	switch (m_mode) {
 		case SoftOnly:
@@ -296,7 +296,7 @@ void CtImage::setRoi(Roi roi)
 	}
 }
 
-void CtImage::_setHSBin(Bin bin) {
+void CtImage::_setHSBin(const Bin &bin) {
 	if (m_hw->hasBinCapability()) {
 		Bin set_hw_bin(bin);
 		m_hw->setBin(set_hw_bin, true);
@@ -312,7 +312,7 @@ void CtImage::_setHSBin(Bin bin) {
 }
 
 
-void CtImage::_setHSRoi(Roi roi) {
+void CtImage::_setHSRoi(const Roi &roi) {
 	if (m_hw->hasRoiCapability()) {	
 		Roi roi_unbin, roi_by_hw, roi_set_hw, roi_by_sw;
 		Bin bin_total, bin_by_hw, bin_by_sw;

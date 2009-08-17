@@ -31,6 +31,7 @@ using namespace lima;
 
     CtAcquisition* acquisition();
     CtSaving* saving();
+    CtImage* image();
     CtBuffer* buffer();
 
     void setDebug(short level);
@@ -43,4 +44,11 @@ using namespace lima;
     void getImageStatus(ImageStatus &imageStatus /Out/) const;
 
     void reset();
+  protected:
+    void newFrameReady(Data& data);
+    void newFrameToSave(Data& data);
+    void newBaseImageReady(Data &data);
+    void newImageReady(Data &data);
+    void newCounterReady(Data &data);
+    void newImageSaved(Data &data);
 };

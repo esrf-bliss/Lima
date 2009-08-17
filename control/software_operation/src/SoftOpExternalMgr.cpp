@@ -59,7 +59,7 @@ void SoftOpExternalMgr::setEndLinkTaskCallback(TaskEventCallback *aCbk)
 
 }
 
-void SoftOpExternalMgr::setEndSinkTaskCallBback(TaskEventCallback *aCbk)
+void SoftOpExternalMgr::setEndSinkTaskCallback(TaskEventCallback *aCbk)
 {
 
 }

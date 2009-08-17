@@ -10,6 +10,7 @@
 #include "CtControl.h"
 
 class Data;
+class TaskEventCallback;
 
 namespace lima {
 
@@ -107,6 +108,8 @@ namespace lima {
     void frameReady(Data &);
     void resetLastFrameNb();
 
+    void setEndCallback(TaskEventCallback *);
+
   private:
     class _SaveTask;
     class _SaveContainer;
@@ -124,6 +127,8 @@ namespace lima {
     mutable Cond		m_cond;
     bool			m_ready_flag;
     long			m_last_frameid_saved;
+    
+    TaskEventCallback		*m_end_cbk;
 
     void _get_common_header(HeaderMap&);
     void _takeHeader(std::map<long,HeaderMap>::iterator&, HeaderMap& header);

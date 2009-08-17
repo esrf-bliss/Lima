@@ -27,7 +27,7 @@ namespace lima
     void getOpClass(const alias&,
 		    SoftOpInstance&) const;
     void setEndLinkTaskCallback(TaskEventCallback *aCbk);
-    void setEndSinkTaskCallBback(TaskEventCallback *aCbk);
+    void setEndSinkTaskCallback(TaskEventCallback *aCbk);
 
     void addTo(TaskMgr&,int begin_stage,int &last_link_task,int &last_sink_task);
   private:
