@@ -13,11 +13,11 @@ using namespace lima;
 	Acq(Espia::Dev& dev);
 	~Acq();
 
-//	typedef struct Status {
-//		bool	running;
-//		int	run_nb;
-//		int	last_frame_nb;
-//	} StatusType;
+	struct StatusType {  // Instead ot "typedef struct Status {} StatusType"
+		bool	running;
+		int	run_nb;
+		int	last_frame_nb;
+	};
 
 	void bufferAlloc(int& nb_buffers, int nb_buffer_frames, 
 			 const FrameDim& frame_dim);
@@ -36,7 +36,7 @@ using namespace lima;
 
 	void start();
 	void stop();
-//	void getStatus(StatusType& status /Out/);
+	void getStatus(StatusType& status /Out/);
 
 	void getStartTimestamp(Timestamp& start_ts);
 
