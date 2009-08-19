@@ -13,6 +13,9 @@ print "Whether the Acquisition is running : ", acqstat.running
 print "Creating Espia.BufferMgr"
 buffer_cb_mgr = lima.Espia.BufferMgr(acq)
 
+print "Creating BufferCtrlMgr"
+buffer_mgr = lima.BufferCtrlMgr(buffer_cb_mgr)
+
 print "Creating Espia.SerialLine"
 espia_sl = lima.Espia.SerialLine(edev)
 
