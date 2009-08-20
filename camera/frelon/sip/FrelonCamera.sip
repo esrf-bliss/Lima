@@ -16,7 +16,7 @@ class Camera
  public:
 	Camera(Espia::SerialLine& espia_ser_line);
 
-	Espia::SerialLine& getSerialLine();
+	Frelon::SerialLine& getSerialLine();
 
 	void writeRegister(Frelon::Reg reg, int  val);
 	void readRegister (Frelon::Reg reg, int& val /Out/);
