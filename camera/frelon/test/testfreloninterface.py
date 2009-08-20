@@ -17,7 +17,10 @@ print "Creating BufferCtrlMgr"
 buffer_mgr = lima.BufferCtrlMgr(buffer_cb_mgr)
 
 print "Creating Espia.SerialLine"
-espia_sl = lima.Espia.SerialLine(edev)
+eser_line = lima.Espia.SerialLine(edev)
+
+print "Creating Frelon.Camera"
+cam = lima.Frelon.Camera(eser_line);
 
 
 print "This is the End..."
