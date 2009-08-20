@@ -22,5 +22,8 @@ eser_line = lima.Espia.SerialLine(edev)
 print "Creating Frelon.Camera"
 cam = lima.Frelon.Camera(eser_line);
 
+print "Creating the Hw Interface ... "
+hw_inter = lima.Frelon.Interface(acq, buffer_mgr, cam)
+
 
 print "This is the End..."
