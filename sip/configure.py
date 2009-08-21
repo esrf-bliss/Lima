@@ -6,9 +6,10 @@ import numpy
 
 shutil.copyfile("lima.sip","lima_tmp.sip")
 
+sip_processlib = '../third-party/Processlib/sip'
 espia_base = '/segfs/bliss/source/driver/linux-2.6/espia'
 espia_incl = espia_base + '/src'
-extra_includes = ['.', espia_incl]
+extra_includes = ['.', espia_incl,sip_processlib]
 sipFile = file("lima_tmp.sip","a")
 sipFile.write('\n')
 sipFile.write('%Import ../third-party/Processlib/sip/processlib_tmp.sip\n')

@@ -55,12 +55,12 @@ void SoftOpInternalMgr::getFlip(Flip &aFlip) const
  */
 void SoftOpInternalMgr::setReconstructionTask(LinkTask *aTask)
 {
+  if(aTask)
+    aTask->ref();
   if(m_reconstruction_task)
     m_reconstruction_task->unref();
       
   m_reconstruction_task = aTask;
-  if(m_reconstruction_task)
-    m_reconstruction_task->ref();
 }
 
 void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,

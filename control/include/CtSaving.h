@@ -110,6 +110,15 @@ namespace lima {
 
     void setEndCallback(TaskEventCallback *);
 
+    // --- statistic
+
+    void getWriteTimeStatistic(std::list<double>&) const;
+    void setStatisticHistorySize(int aSize);
+
+    // --- misc
+
+    void clear();
+
   private:
     class _SaveTask;
     class _SaveContainer;

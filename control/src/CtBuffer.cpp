@@ -144,6 +144,7 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
   fdata.width= fsize.getWidth();
   fdata.height= fsize.getHeight();
   fdata.frameNumber= frame_info.acq_frame_nb;
+  fdata.timestamp = frame_info.frame_timestamp;
 
   Buffer *fbuf = new Buffer();
   fbuf->owner = Buffer::MAPPED;	

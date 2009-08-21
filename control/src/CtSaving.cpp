@@ -17,7 +17,8 @@ public:
 
   void writeFile(Data&,CtSaving::HeaderMap &);
   void setStatisticSize(int aSize);
-  void getStatistic(std::list<double>&);
+  void getStatistic(std::list<double>&) const;
+  void clear();
 
 private:
   CtSaving		&m_saving;
@@ -361,6 +362,28 @@ void CtSaving::frameReady(Data &aData)
     }
 }
 
+void CtSaving::getWriteTimeStatistic(std::list<double> &aReturnList) const
+{
+  m_save_cnt->getStatistic(aReturnList);
+}
+
+void CtSaving::setStatisticHistorySize(int aSize)
+{
+  m_save_cnt->setStatisticSize(aSize);
+}
+
+void CtSaving::clear()
+{
+  m_save_cnt->clear();
+  AutoMutex aLock(m_cond.mutex());
+  m_frame_headers.clear();
+  m_common_header.clear();	// @fix Should we clear common header???
+  m_frame_datas.clear();
+  while(!m_ready_flag)
+    m_cond.wait();
+  resetLastFrameNb();
+}
+
 void CtSaving::_post_save_task(Data &aData,_SaveTask *aSaveTaskPt)
 {
   aSaveTaskPt->setEventCallback(m_saving_cbk);
@@ -394,7 +417,10 @@ void CtSaving::_save_finished(Data &aData)
 	    _post_save_task(aData,aSaveTaskPt);
 	  }
 	else
-	  m_ready_flag = true;
+	  {
+	    m_ready_flag = true;
+	    m_cond.signal();
+	  }
       }
       break;
     case CtSaving::AutoHeader:
@@ -419,6 +445,7 @@ void CtSaving::_save_finished(Data &aData)
       }
     default:
       m_ready_flag = true;
+      m_cond.signal();
     }
 }
 
@@ -504,12 +531,20 @@ void CtSaving::_SaveContainer::setStatisticSize(int aSize)
     }
   m_statistic_size = aSize;
 }
-void CtSaving::_SaveContainer::getStatistic(std::list<double> &aReturnList)
+
+void CtSaving::_SaveContainer::getStatistic(std::list<double> &aReturnList) const
 {
   AutoMutex aLock = AutoMutex(m_cond.mutex());
-  for(std::list<double>::iterator i = m_statistic_list.begin();
+  for(std::list<double>::const_iterator i = m_statistic_list.begin();
       i != m_statistic_list.end();++i)
     aReturnList.push_back(*i);
+}
+
+void CtSaving::_SaveContainer::clear()
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_statistic_list.clear();
+  _close();
 }
 
 void CtSaving::_SaveContainer::_writeEdfHeader(Data &aData,HeaderMap &aHeader)
@@ -562,15 +597,21 @@ void CtSaving::_SaveContainer::_writeEdfHeader(Data &aData,HeaderMap &aHeader)
   snprintf(aBuffer,sizeof(aBuffer),"time_of_day = %ld.%06ld ;\n",tod_now.tv_sec, tod_now.tv_usec);
   m_fout << aBuffer;
 
-  // @todo snprintf(aBuffer,sizeof(aBuffer),"time_of_frame = %.6f ;\n",aData.frameTimestamp);
-  // m_fout << aBuffer;
+  snprintf(aBuffer,sizeof(aBuffer),"time_of_frame = %.6f ;\n",aData.timestamp);
+  m_fout << aBuffer;
 
   //@todo m_fout << "valid_pixels = " << aData.validPixels << " ;\n";
   
+  
+  aData.header.lock();
+  Data::HeaderContainer::Header &aDataHeader = aData.header.header();
+  for(Data::HeaderContainer::Header::iterator i = aDataHeader.begin();i != aDataHeader.end();++i)
+    m_fout << i->first << " = " << i->second << " ;\n";
+  aData.header.unlock();
 
   for(HeaderMap::iterator i = aHeader.begin(); i != aHeader.end();++i)
     m_fout << i->first << " = " << i->second << " ;\n";
-
+  
   long aEndPosition = m_fout.tellp();
   
   long lenght = aEndPosition - aStartPosition;

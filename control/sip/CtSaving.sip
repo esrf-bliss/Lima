@@ -169,4 +169,15 @@ using namespace lima;
     void removeAllFrameHeaders();
 
     void frameReady(Data &);
+    void resetLastFrameNb();
+
+    void setEndCallback(TaskEventCallback *);
+    // --- statistic
+
+    //void getWriteTimeStatistic(std::list<double>& /Out/) const;
+    void setStatisticHistorySize(int aSize);
+
+    // --- misc
+
+    void clear();
  };

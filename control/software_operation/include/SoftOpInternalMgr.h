@@ -36,11 +36,11 @@ namespace lima
 
     void setEndCallback(TaskEventCallback *aCbk)
     {
+      if(aCbk)
+	aCbk->ref();
       if(m_end_callback)
 	m_end_callback->unref();
       m_end_callback = aCbk;
-      if(m_end_callback)
-	m_end_callback->ref();
     }
   private:
     class _EndCbk;
