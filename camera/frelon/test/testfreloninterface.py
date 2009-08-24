@@ -48,6 +48,23 @@ print "Getting HW RoI"
 hw_roi = hw_inter.getHwCtrlObj(lima.HwCap.Roi)
 print type(hw_roi)
 
+
+class TestFrameCallback( lima.HwFrameCallback ):
+	def __init__(self, hw_inter, soft_roi, buffer_save, acq_finished):
+		self.m_hw_inter = hw_inter
+		self.m_soft_roi = soft_roi
+		self.m_roi_task = lima.SoftRoi()
+		self.m_roi_cb   = lima.SoftRoiCallback(hw_inter, buffer_save, 
+		                                       acq_finished)
+
+	def newFrameReady(self, frame_info):
+		print "newFrameReady!"
+
+soft_roi = lima.Roi()
+#acq_finished = lima.Cond()  # Thread utils are not wrapped!
+#print "Creating a TestFrameCallback"
+#cb = TestFrameCallback(hw_inter, soft_roi, buffer_save, acq_finished)
+
 s = raw_input('Reset the hardware? (y/n):')
 if s[0] == 'y' or s[0] == 'Y':
 	hw_inter.reset(lima.HwInterface.HardReset)
