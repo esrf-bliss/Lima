@@ -23,21 +23,21 @@ enum Reg {
 /*
 typedef std::map<Reg, std::string> RegStrMapType;
 extern RegStrMapType RegStrMap;
-
+*/
 
 enum Cmd {
 	Reset,		Start,		Stop,		Save,
 };
-
+/*
 typedef std::map<Cmd, std::string> CmdStrMapType;
 extern CmdStrMapType CmdStrMap;
-
+*/
 
 enum MultiLineCmd {
 	Help,		Config,		Dac,		Volt,
 	Aoi,
 };
-
+/*
 typedef std::map<MultiLineCmd, std::string> MultiLineCmdStrMapType;
 extern MultiLineCmdStrMapType MultiLineCmdStrMap;
 */
@@ -65,7 +65,7 @@ extern FTMChanRangeMapType FTMChanRangeMap;
 typedef std::vector<InputChan> InputChanList;
 typedef std::map<FrameTransferMode, InputChanList> FTMInputChanListMapType;
 extern FTMInputChanListMapType FTMInputChanListMap;
-
+*/
 
 enum SerNbParam {
 	SerNb = 0x00ff,
@@ -73,34 +73,34 @@ enum SerNbParam {
 	F2k16 = 0x4000,
 	Taper = 0x8000,
 };
-*/
+
 enum RoiMode {
 	None, Slow, Fast, Kinetic,
 };
-/*
+
 enum TimeUnitFactor {
 	Milliseconds, Microseconds,
 };
-
+/*
 typedef std::map<TimeUnitFactor, double> TimeUnitFactorMapType;
 extern TimeUnitFactorMapType TimeUnitFactorMap;
 
 
 extern const FrameDim MaxFrameDim;
-
+*/
 enum ChipType {
 	Atmel,
 	Kodak,
 };
-
+/*
 typedef std::map<ChipType, double> ChipPixelSizeMapType;
 extern ChipPixelSizeMapType ChipPixelSizeMap;
-
+*/
 enum {
 	MaxBinX = 8,
 	MaxBinY = 1024,
 };
-*/
+
 enum Status {
         Wait     = 0x80,
         Transfer = 0x40,
