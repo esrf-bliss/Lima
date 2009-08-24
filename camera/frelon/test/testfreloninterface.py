@@ -25,5 +25,13 @@ cam = lima.Frelon.Camera(eser_line);
 print "Creating the Hw Interface ... "
 hw_inter = lima.Frelon.Interface(acq, buffer_mgr, cam)
 
+print "Creating BufferSave"
+buffer_save = lima.BufferSave(lima.BufferSave.EDF, "img", 0, ".edf", True, 1)
+
+s = raw_input('Reset the hardware? (y/n):')
+if s[0] == 'y' or s[0] == 'Y':
+	hw_inter.reset(lima.HwInterface.HardReset)
+	print "  Done!"
+
 
 print "This is the End..."
