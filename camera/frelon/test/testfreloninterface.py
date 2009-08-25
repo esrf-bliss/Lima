@@ -1,4 +1,5 @@
 import lima
+import time
 
 
 print "Creating Espia.Dev"
@@ -69,6 +70,35 @@ s = raw_input('Reset the hardware? (y/n):')
 if s[0] == 'y' or s[0] == 'Y':
 	hw_inter.reset(lima.HwInterface.HardReset)
 	print "  Done!"
+
+size = hw_det_info.getMaxImageSize()
+image_type = hw_det_info.getCurrImageType()
+frame_dim = lima.FrameDim(size, image_type)
+
+bin = lima.Bin(lima.Point(1))
+hw_bin.setBin(bin)
+
+#Roi set_roi, real_roi;
+#set_hw_roi(hw_roi, set_roi, real_roi, soft_roi);
+
+effect_frame_dim = lima.FrameDim(frame_dim)  # was (frame_dim / bin)
+hw_buffer.setFrameDim(effect_frame_dim)
+hw_buffer.setNbBuffers(10)
+#hw_buffer.registerFrameCallback(cb)
+
+hw_sync.setExpTime(2)
+hw_sync.setNbFrames(3)
+
+print "Starting Acquisition"
+hw_inter.startAcq()
+
+#acq_finished.wait()
+#PoolThreadMgr::get().wait();
+print "Waiting 10 seconds..."
+time.sleep(10)
+
+print "Stopping Acquisition"
+hw_inter.stopAcq()
 
 
 print "This is the End..."
