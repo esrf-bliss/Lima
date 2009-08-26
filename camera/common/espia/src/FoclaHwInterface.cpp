@@ -28,6 +28,62 @@ DetInfoCtrlObj::~DetInfoCtrlObj()
 }
 
 
+const FrameDim lima::Espia::Focla::MaxFrameDim(2048, 2048, Bpp16); // arbitrary?
+
+
+void DetInfoCtrlObj::getMaxImageSize(Size &max_image_size)
+{
+	max_image_size = MaxFrameDim.getSize();
+}
+
+
+void DetInfoCtrlObj::getDetectorImageSize(Size &det_image_size)
+{
+	det_image_size = MaxFrameDim.getSize();
+}
+
+
+void DetInfoCtrlObj::getDefImageType(ImageType &def_image_type)
+{
+	def_image_type = MaxFrameDim.getImageType();
+}
+
+
+void DetInfoCtrlObj::getCurrImageType(ImageType &curr_image_type)
+{
+	curr_image_type = MaxFrameDim.getImageType();
+}
+
+
+void DetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
+{
+	throw LIMA_HW_EXC(NotSupported,"This function is not supported by Focla");
+}
+
+
+void DetInfoCtrlObj::getPixelSize(double &pixel_size)
+{
+	throw LIMA_HW_EXC(NotSupported,"This function is not supported by Focla");
+}
+
+
+void DetInfoCtrlObj::getDetectorType(std::string &det_type)
+{
+	det_type = "Focla";
+}
+
+
+void DetInfoCtrlObj::getDetectorModel(std::string &det_model)
+{
+	det_model = "";
+}
+
+
+void DetInfoCtrlObj::setMaxImageSizeCallbackActive(bool cb_active)
+{
+}
+
+
 /***************************************************************//**
  * @brief Espia::Focla::BufferCtrlObj class constructor
  *
@@ -210,11 +266,11 @@ void SyncCtrlObj::getValidRanges(ValidRangesType &valid_ranges)
 Interface::Interface( Espia::Acq &acq, BufferCtrlMgr &buffer_mgr, 
                       Espia::Focla::Dev &focla )
 	: m_acq(acq), m_buffer_mgr(buffer_mgr), m_focla(focla),
-	  /*m_det_info(focla),*/ m_buffer(buffer_mgr), 
+	  m_det_info(focla), m_buffer(buffer_mgr), 
 	  m_sync(acq, focla, m_buffer)
 {
-/*	HwDetInfoCtrlObj *det_info = &m_det_info;
-	m_cap_list.push_back(HwCap(det_info)); */
+	HwDetInfoCtrlObj *det_info = &m_det_info;
+	m_cap_list.push_back(HwCap(det_info));
 
 	HwBufferCtrlObj *buffer = &m_buffer;
 	m_cap_list.push_back(HwCap(buffer));

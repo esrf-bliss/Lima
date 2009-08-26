@@ -21,6 +21,9 @@ namespace Focla
 {
 
 
+extern const FrameDim MaxFrameDim;
+
+
 /***************************************************************//**
  * @class DetInfoCtrlObj
  * @brief Focla detector info control object
@@ -31,8 +34,23 @@ class DetInfoCtrlObj : public HwDetInfoCtrlObj
 	DetInfoCtrlObj( Dev &focla );
 	virtual ~DetInfoCtrlObj();
 
+	virtual void getMaxImageSize(Size& max_image_size);
+	virtual void getDetectorImageSize(Size& det_image_size);
+
+	virtual void getDefImageType(ImageType& def_image_type);
+	virtual void getCurrImageType(ImageType& curr_image_type);
+	virtual void setCurrImageType(ImageType  curr_image_type);
+
+	virtual void getPixelSize(double& pixel_size);
+	virtual void getDetectorType(std::string& det_type);
+	virtual void getDetectorModel(std::string& det_model);
+
+ protected:
+	virtual void setMaxImageSizeCallbackActive(bool cb_active);
+
   private:
 	Espia::Focla::Dev &m_focla;
+	bool m_iscb_act;
 };
 
 
@@ -131,7 +149,7 @@ class Interface : public HwInterface
 	Espia::Focla::Dev &m_focla;
 
 	CapList           m_cap_list;
-//	DetInfoCtrlObj    m_det_info;
+	DetInfoCtrlObj    m_det_info;
 	BufferCtrlObj     m_buffer;
 	SyncCtrlObj       m_sync;
 };
