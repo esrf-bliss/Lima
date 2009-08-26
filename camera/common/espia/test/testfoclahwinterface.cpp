@@ -120,7 +120,7 @@ void test_focla_hw_interface()
 	     << "NbConcatFrames " << nb_concat_frames << endl << flush;
 
 
-	CtControl aControl(NULL);
+	CtControl aControl(&hw_inter);
 	CtSaving buffer_save(aControl);
 	CtSaving::Parameters saving_par;
 	saving_par.fileFormat = CtSaving::EDF;
