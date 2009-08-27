@@ -172,6 +172,16 @@ void Cond::signal()
 		throw LIMA_COM_EXC(Error, "Error signaling condition");
 }
 
+void Cond::acquire()
+{
+	m_mutex.lock();
+}
+
+void Cond::release()
+{
+	m_mutex.unlock();
+}
+
 void Cond::broadcast()
 {
   if (pthread_cond_broadcast(&m_cond) != 0)

@@ -49,25 +49,31 @@ print "Getting HW RoI"
 hw_roi = hw_inter.getHwCtrlObj(lima.HwCap.Roi)
 print type(hw_roi)
 
-
 class TestFrameCallback( lima.HwFrameCallback ):
 	def __init__(self, hw_inter, soft_roi, buffer_save, acq_finished):
+		lima.HwFrameCallback.__init__(self)
 		self.m_hw_inter = hw_inter
 		self.m_soft_roi = soft_roi
-		self.m_roi_task = lima.SoftRoi()
-		self.m_roi_cb   = lima.SoftRoiCallback(hw_inter, buffer_save, 
-		                                       acq_finished)
+		self.m_acq_finished = acq_finished
+#		self.m_roi_task = lima.SoftRoi()
+#		self.m_roi_cb   = lima.SoftRoiCallback(hw_inter, buffer_save, 
+#		                                       acq_finished)
 
 	def newFrameReady(self, frame_info):
-		print "newFrameReady!"
+		hw_sync = self.m_hw_inter.getHwCtrlObj(lima.HwCap.Sync)
+		nb_frames = hw_sync.getNbFrames()
+		if frame_info.acq_frame_nb == nb_frames - 1:
+			self.m_acq_finished.signalFinished()
+		return True
 
 soft_roi = lima.Roi()
-#acq_finished = lima.Cond()  # Thread utils are not wrapped!
-#print "Creating a TestFrameCallback"
-#cb = TestFrameCallback(hw_inter, soft_roi, buffer_save, acq_finished)
+acq_finished = lima.AcqFinished()
+print "Creating a TestFrameCallback"
+cb = TestFrameCallback(hw_inter, soft_roi, buffer_save, acq_finished)
 
-s = raw_input('Reset the hardware? (y/n):')
-if s[0] == 'y' or s[0] == 'Y':
+do_reset = False
+if do_reset:
+	print "Reseting hardware ..."
 	hw_inter.reset(lima.HwInterface.HardReset)
 	print "  Done!"
 
@@ -84,7 +90,8 @@ hw_bin.setBin(bin)
 effect_frame_dim = lima.FrameDim(frame_dim)  # was (frame_dim / bin)
 hw_buffer.setFrameDim(effect_frame_dim)
 hw_buffer.setNbBuffers(10)
-#hw_buffer.registerFrameCallback(cb)
+print "cb=", cb
+hw_buffer.registerFrameCallback(cb)
 
 hw_sync.setExpTime(2)
 hw_sync.setNbFrames(3)
@@ -92,10 +99,9 @@ hw_sync.setNbFrames(3)
 print "Starting Acquisition"
 hw_inter.startAcq()
 
-#acq_finished.wait()
+print "Waiting acq finished..."
+acq_finished.waitFinished()
 #PoolThreadMgr::get().wait();
-print "Waiting 10 seconds..."
-time.sleep(10)
 
 print "Stopping Acquisition"
 hw_inter.stopAcq()
