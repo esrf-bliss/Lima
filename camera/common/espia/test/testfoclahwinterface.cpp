@@ -154,6 +154,7 @@ void test_focla_hw_interface()
 
 #if 1
 	acq_finished.wait();
+	PoolThreadMgr::get().wait();
 #else
 	Sleep(10);
 #endif /* 0 */
