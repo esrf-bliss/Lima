@@ -38,6 +38,19 @@ cmd = " ".join([config.sip_bin,"-g", "-e","-c", '.',
 print cmd
 os.system(cmd)
 
+#little HACK for adding source
+bfile = file(build_file)
+whole_line = ''
+for line in bfile :
+    if 'sources' in line :
+        begin,end = line.split('=')
+        line = '%s = lima_init_numpy.cpp %s' % (begin,end)
+    whole_line += line
+bfile.close()
+bfile = file(build_file,'w')
+bfile.write(whole_line)
+bfile.close()
+
 # We are going to install the SIP specification file for this module and
 # its configuration module.
 installs = []

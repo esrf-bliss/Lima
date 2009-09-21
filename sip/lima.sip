@@ -20,3 +20,11 @@ return PyString_FromStringAndSize(sipCpp->data(),sipCpp->length());
 %End
 
 };
+
+%ModuleHeaderCode
+extern "C" { void lima_import_array();}
+%End
+
+%PostInitialisationCode
+lima_import_array();
+%End
