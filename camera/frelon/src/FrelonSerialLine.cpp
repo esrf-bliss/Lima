@@ -37,6 +37,8 @@ void SerialLine::write(const string& buffer, bool no_wait)
 	splitMsg(buffer, msg_parts);
 	const string& cmd = msg_parts[MsgCmd];
 
+	m_mutex.lock();
+
 	m_multi_line_cmd = false;
 	m_reset_cmd = (cmd == CmdStrMap[Reset]);
 	if (!m_reset_cmd) {
@@ -70,6 +72,14 @@ void SerialLine::readStr(string& buffer, int max_len,
 
 void SerialLine::readLine(string& buffer, int max_len, double timeout)
 {
+	class AutoUnlock 
+	{
+		Mutex& m;
+	public:
+		AutoUnlock(Mutex& mutex) : m(mutex) {}
+		~AutoUnlock() { m.unlock(); }
+	} ul(m_mutex);
+
 	if ((timeout == TimeoutDefault) && (m_multi_line_cmd))
 		readMultiLine(buffer, max_len);
 	else

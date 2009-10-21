@@ -2,6 +2,7 @@
 #define FRELONSERIALLINE_H
 
 #include "Frelon.h"
+#include "ThreadUtils.h"
 
 namespace lima
 {
@@ -67,6 +68,7 @@ class SerialLine : public HwSerialLine
 
  private:
 	Espia::SerialLine& m_espia_ser_line;
+	Mutex m_mutex;
 	bool m_multi_line_cmd;
 	bool m_reset_cmd;
 	int m_last_warn;
