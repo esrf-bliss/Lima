@@ -48,10 +48,6 @@ class Acq : public HwFrameCallbackGen
 	virtual void setFrameCallbackActive(bool cb_active);
 
  private:
-	enum FrameCallback {
-		Last, User,
-	};
-
 	bool hasVirtualBuffers();
 	int realBufferNb(int virt_buffer, int virt_frame);
 	int realFrameNb (int virt_buffer, int virt_frame);
@@ -62,13 +58,11 @@ class Acq : public HwFrameCallbackGen
 				HwFrameInfoType& virt_info);
 	void resetFrameInfo(struct img_frame_info& frame_info);
 
-	static int dispatchFrameCallback(struct espia_cb_data *cb_data);
+	void enableFrameCallback();
+	void disableFrameCallback();
 
-	void enableFrameCallback(FrameCallback frame_cb);
-	void disableFrameCallback(FrameCallback frame_cb);
-	int& getFrameCallbackNb(FrameCallback frame_cb);
-	void lastFrameCallback(struct espia_cb_data *cb_data);
-	void userFrameCallback(struct espia_cb_data *cb_data);
+	static int dispatchFrameCallback(struct espia_cb_data *cb_data);
+	void processFrameCallback(struct espia_cb_data *cb_data);
 
 	AutoMutex acqLock();
 
@@ -84,8 +78,8 @@ class Acq : public HwFrameCallbackGen
 	bool m_started;
 	Timestamp m_start_ts;
 	struct img_frame_info m_last_frame_info;
-	int m_last_frame_cb_nr;
-	int m_user_frame_cb_nr;
+	int m_frame_cb_nb;
+	bool m_user_frame_cb_act;
 };
 
 inline bool Acq::hasVirtualBuffers()

@@ -19,15 +19,16 @@ Acq::Acq(Dev& dev)
 	m_started = false;
 
 	resetFrameInfo(m_last_frame_info);
-	m_last_frame_cb_nr = m_user_frame_cb_nr = Invalid;
+	m_frame_cb_nb = Invalid;
+	m_user_frame_cb_act = false;
 
-	enableFrameCallback(Last);
+	enableFrameCallback();
 }
 
 Acq::~Acq()
 {
 	bufferFree();
-	disableFrameCallback(Last);
+	disableFrameCallback();
 }
 
 int Acq::dispatchFrameCallback(struct espia_cb_data *cb_data)
@@ -36,27 +37,25 @@ int Acq::dispatchFrameCallback(struct espia_cb_data *cb_data)
 
 	void (Acq::*method)(struct espia_cb_data *cb_data) = NULL;
 
-	int& cb_nr = cb_data->cb_nr;
-	if (cb_nr == espia->m_last_frame_cb_nr)
-		method = &Acq::lastFrameCallback;
-	else if (cb_nr == espia->m_user_frame_cb_nr)
-		method = &Acq::userFrameCallback;
+	int& cb_nb = cb_data->cb_nr;
+	if (cb_nb == espia->m_frame_cb_nb)
+		method = &Acq::processFrameCallback;
 	
 	if (method) {
 		try {
 			(espia->*method)(cb_data);
 		} catch (...) {
-
+			
 		}
 	}
-
+	
 	return ESPIA_OK;
 }
 
-void Acq::enableFrameCallback(FrameCallback frame_cb)
+void Acq::enableFrameCallback()
 {
-	int& cb_nr = getFrameCallbackNb(frame_cb);
-	if (cb_nr != Invalid)
+	int& cb_nb = m_frame_cb_nb;
+	if (cb_nb != Invalid)
 		return;
 
 	struct espia_cb_data cb_data;
@@ -71,61 +70,48 @@ void Acq::enableFrameCallback(FrameCallback frame_cb)
 	req_finfo.round_count  = ESPIA_ACQ_ANY;
 	req_finfo.acq_frame_nr = ESPIA_ACQ_EACH;
 
-	m_dev.registerCallback(cb_data, cb_nr);
+	m_dev.registerCallback(cb_data, cb_nb);
 }
 
-void Acq::disableFrameCallback(FrameCallback frame_cb)
+void Acq::disableFrameCallback()
 {
-	int& cb_nr = getFrameCallbackNb(frame_cb);
-	if (cb_nr == Invalid)
+	int& cb_nb = m_frame_cb_nb;
+	if (cb_nb == Invalid)
 		return;
 
-	m_dev.unregisterCallback(cb_nr);
-}
-
-int& Acq::getFrameCallbackNb(FrameCallback frame_cb)
-{
-	switch (frame_cb) {
-	case Last: 
-		return m_last_frame_cb_nr;
-	case User: 
-		return m_user_frame_cb_nr;
-	default:
-		throw LIMA_HW_EXC(InvalidValue, "Invalid frame cb type");
-	}
+	m_dev.unregisterCallback(cb_nb);
 }
 
 void Acq::setFrameCallbackActive(bool cb_active)
 {
-	if (cb_active)
-		enableFrameCallback(User);
-	else
-		disableFrameCallback(User);
+	m_user_frame_cb_act = cb_active;
 }
 
-void Acq::lastFrameCallback(struct espia_cb_data *cb_data)
+void Acq::processFrameCallback(struct espia_cb_data *cb_data)
 {
 	AutoMutex l = acqLock();
 
 	struct img_frame_info& cb_finfo = cb_data->info.acq.cb_finfo;
-	if (finished_espia_frame_info(&cb_finfo, cb_data->ret)) {
-		m_started = false;
-	} else {
+	bool aborted = finished_espia_frame_info(&cb_finfo, cb_data->ret);
+	bool finished = aborted;
+	if (!aborted) {
 		m_last_frame_info = cb_finfo;
 		bool endless = (m_nb_frames == 0);
-		if (!endless && 
-		    (cb_finfo.acq_frame_nr == (unsigned long)m_nb_frames - 1))
-			m_started = false;
+		unsigned long last_frame = m_nb_frames - 1;
+		finished = (!endless && (cb_finfo.acq_frame_nr == last_frame));
 	}
-}
 
-void Acq::userFrameCallback(struct espia_cb_data *cb_data)
-{
-	struct img_frame_info& cb_finfo = cb_data->info.acq.cb_finfo;
-	HwFrameInfo hw_finfo;
-	if (!finished_espia_frame_info(&cb_finfo, cb_data->ret))
-		real2virtFrameInfo(cb_finfo, hw_finfo);
-	newFrameReady(hw_finfo);
+	if (finished)
+		m_started = false;
+
+	l.unlock();
+
+	if (m_user_frame_cb_act) {
+		HwFrameInfo hw_finfo;
+		if (!aborted)
+			real2virtFrameInfo(cb_finfo, hw_finfo);
+		newFrameReady(hw_finfo);
+	}
 }
 
 void Acq::bufferAlloc(int& nb_buffers, int nb_buffer_frames,
