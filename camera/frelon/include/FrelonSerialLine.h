@@ -66,13 +66,42 @@ class SerialLine : public HwSerialLine
 
 	int getLastWarning();
 
+	void clearCache();
+	void setCacheActive(bool  cache_act);
+	void getCacheActive(bool& cache_act);
+
  private:
+	enum RegOp {
+		None, DoCmd, ReadReg, WriteReg, DoReset, MultiRead
+	};
+
+	typedef std::map<Reg, std::string> RegRespMapType;
+
+	AutoMutex lock(int mode);
+
+	virtual void writeCmd(const std::string& buffer, 
+			      bool no_wait = false);
+	virtual void readResp(std::string& buffer, 
+			      int max_len = MaxReadLen, 
+			      double timeout = TimeoutDefault);
+
 	Espia::SerialLine& m_espia_ser_line;
-	Mutex m_mutex;
-	bool m_multi_line_cmd;
-	bool m_reset_cmd;
+	Cond m_cond;
 	int m_last_warn;
+
+	RegRespMapType m_reg_cache;
+	bool m_cache_act;
+	RegOp m_curr_op;
+	Reg m_curr_reg;
+	bool m_curr_cache;
+	std::string m_curr_resp;
+	std::string m_curr_fmt_resp;
 };
+
+inline AutoMutex SerialLine::lock(int mode)
+{
+	return AutoMutex(m_cond.mutex(), mode);
+}
 
 
 } // namespace Frelon

@@ -36,7 +36,7 @@ template <class M>
 class AutoLock
 {
 public:
-	enum { UnLocked, Locked, TryLocked };
+	enum { UnLocked, Locked, TryLocked, PrevLocked };
 
 	AutoLock(M& mutex, int state=Locked) 
 	{ d = new AutoLockData(mutex, state); }
@@ -62,23 +62,27 @@ public:
 	bool locked() const
 	{ return d->locked(); }
 
+	void leaveLocked()
+	{ d->leaveLocked(); }
+
 private:
 	class AutoLockData
 	{
 	public:
 		AutoLockData(M& mutex, int state=Locked) 
-			: m(mutex), l(false) 
+			: m(mutex), l(false), ul_at_end(true)
 		{
 			switch (state) { 
-			case Locked:    lock();    break;
-			case TryLocked: tryLock(); break;
+			case Locked:     lock();    break;
+			case TryLocked:  tryLock(); break;
+			case PrevLocked: l = true;  break;
 			default: break;
 			}
 		}
 
 		~AutoLockData()
 		{ 
-			if (l) 
+			if (l && ul_at_end) 
 				unlock(); 
 		}
 
@@ -111,6 +115,11 @@ private:
 			return l;
 		}
 
+		void leaveLocked()
+		{
+			ul_at_end = false;
+		}
+
 		M& mutex() const
 		{ return m; }
 
@@ -121,6 +130,7 @@ private:
 		AutoCounter c;
 		M& m;
 		bool l;
+		bool ul_at_end;
 	};
 
 	AutoLockData *getData() const

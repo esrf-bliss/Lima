@@ -73,6 +73,8 @@ static const MLCmdPair MLCmdStrCList[] = {
 	MLCmdPair(Dac,		"D"),
 	MLCmdPair(Volt,		"V"),
 	MLCmdPair(Aoi,		"AOI"),
+	MLCmdPair(Aoi,		"PLL"),
+	MLCmdPair(Aoi,		"TIM"),
 };
 MultiLineCmdStrMapType 
 lima::Frelon::MultiLineCmdStrMap(C_LIST_ITERS(MLCmdStrCList));

@@ -339,6 +339,7 @@ void Interface::reset(ResetLevel reset_level)
 		m_cam.hardReset();
 
 	m_cam.setFrameTransferMode(FFM);
+	m_cam.setInputChan(Chan1234);
 
 	m_sync.setNbFrames(1);
 	m_sync.setExpTime(1.0);

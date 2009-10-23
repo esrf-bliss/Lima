@@ -19,9 +19,11 @@ SerialLine::SerialLine(Espia::SerialLine& espia_ser_line)
 	m_espia_ser_line.setLineTerm("\r\n");
 	m_espia_ser_line.setTimeout(TimeoutNormal);
 
-	m_multi_line_cmd = false;
-	m_reset_cmd = false;
 	m_last_warn = 0;
+
+	m_curr_op = None;
+	m_curr_cache = false;
+	m_cache_act = true;
 
 	flush();
 }
@@ -33,27 +35,63 @@ Espia::SerialLine& SerialLine::getEspiaSerialLine()
 
 void SerialLine::write(const string& buffer, bool no_wait)
 {
+	AutoMutex l = lock(AutoMutex::Locked);
+
+	while (m_curr_op != None)
+		m_cond.wait();
+
+	writeCmd(buffer, no_wait);
+
+	l.leaveLocked();
+}
+
+void SerialLine::writeCmd(const string& buffer, bool no_wait)
+{
 	MsgPartStrMapType msg_parts;
 	splitMsg(buffer, msg_parts);
 	const string& cmd = msg_parts[MsgCmd];
 
-	m_mutex.lock();
-
-	m_multi_line_cmd = false;
-	m_reset_cmd = (cmd == CmdStrMap[Reset]);
-	if (!m_reset_cmd) {
+	if (cmd == CmdStrMap[Reset]) {
+		m_curr_op = DoReset;
+		m_reg_cache.clear();
+	} else {
 		MultiLineCmdStrMapType::const_iterator it, end;
 		end = MultiLineCmdStrMap.end();
-		for (it = MultiLineCmdStrMap.begin(); it != end; ++it) {
-			if (it->second == cmd) {
-				m_multi_line_cmd = true;
-				break;
-			}
-		}
+		it = FindMapValue(MultiLineCmdStrMap, cmd);
+		if (it != end)
+			m_curr_op = MultiRead;
 	}
 
-	string sync = !msg_parts[MsgSync].size() ? ">" : "";
-	string term = !msg_parts[MsgTerm].size() ? "\r\n" : "";
+	bool reg_found = false;
+	if (m_curr_op == None) {
+		RegStrMapType::const_iterator it, end = RegStrMap.end();
+		it = FindMapValue(RegStrMap, cmd);
+		reg_found = (it != end);
+		if (reg_found)
+			m_curr_reg = it->first;
+	}
+
+	m_curr_cache = false;
+	if (m_cache_act && reg_found && (m_curr_reg != Warn)) {
+		bool is_req = !msg_parts[MsgReq].empty();
+		m_curr_op = is_req ? ReadReg : WriteReg;
+		const string& cache_val = m_reg_cache[m_curr_reg];
+		if (is_req) {
+			m_curr_resp = cache_val;
+			m_curr_cache = !m_curr_resp.empty();
+		} else {
+			m_curr_resp = msg_parts[MsgVal];
+			m_curr_cache = (m_curr_resp == cache_val);
+		}
+		if (m_curr_cache)
+			return;
+	}
+
+	if (m_curr_op == None)
+		m_curr_op = DoCmd;
+
+	string sync = msg_parts[MsgSync].empty() ? ">" : "";
+	string term = msg_parts[MsgTerm].empty() ? "\r\n" : "";
 	string msg = sync + buffer + term;
 
 	m_espia_ser_line.write(msg, no_wait);
@@ -72,27 +110,51 @@ void SerialLine::readStr(string& buffer, int max_len,
 
 void SerialLine::readLine(string& buffer, int max_len, double timeout)
 {
-	class AutoUnlock 
-	{
-		Mutex& m;
-	public:
-		AutoUnlock(Mutex& mutex) : m(mutex) {}
-		~AutoUnlock() { m.unlock(); }
-	} ul(m_mutex);
+	AutoMutex l = lock(AutoMutex::PrevLocked);
 
-	if ((timeout == TimeoutDefault) && (m_multi_line_cmd))
+	readResp(buffer, max_len, timeout);
+}
+
+void SerialLine::readResp(string& buffer, int max_len, double timeout)
+{
+	if (m_curr_op == None)
+		throw LIMA_HW_EXC(Error, "readLine without previous write");
+
+	if ((m_curr_op == MultiRead) && (timeout == TimeoutDefault))
 		readMultiLine(buffer, max_len);
 	else
 		readSingleLine(buffer, max_len, timeout);
+
+	m_curr_op = None;
+	m_cond.signal();
 }
 
 void SerialLine::readSingleLine(string& buffer, int max_len, double timeout)
 {
-	if ((timeout == TimeoutDefault) && (m_reset_cmd)) {
-		timeout = TimeoutReset;
-		m_reset_cmd = false;
+	bool is_req = (m_curr_op == ReadReg);
+	if (m_curr_cache) {
+		ostringstream os;
+		os << "!OK";
+		if (is_req)
+			os << ":" << m_curr_resp;
+		os << "\r\n";
+		buffer = os.str();
+		m_curr_fmt_resp = m_curr_resp;
+		return;
 	}
+
+	if ((m_curr_op == DoReset) && (timeout == TimeoutDefault))
+		timeout = TimeoutReset;
 	m_espia_ser_line.readLine(buffer, max_len, timeout);
+
+	decodeFmtResp(buffer, m_curr_fmt_resp);
+	
+	bool reg_op = ((m_curr_op == WriteReg) || (m_curr_op == ReadReg));
+	if (!m_cache_act || !reg_op || (m_curr_reg == Warn))
+		return;
+
+	string& cache_val = m_reg_cache[m_curr_reg];
+	cache_val = is_req ? m_curr_fmt_resp : m_curr_resp;
 }
 
 void SerialLine::readMultiLine(string& buffer, int max_len)
@@ -199,10 +261,15 @@ void SerialLine::decodeFmtResp(const string& ans, string& fmt_resp)
 
 void SerialLine::sendFmtCmd(const string& cmd, string& resp)
 {
-	write(cmd);
+	AutoMutex l = lock(AutoMutex::Locked);
+
+	m_curr_fmt_resp.clear();
+
+	writeCmd(cmd);
 	string ans;
-	readLine(ans);
-	decodeFmtResp(ans, resp);
+	readResp(ans);
+
+	resp = m_curr_fmt_resp;
 }
 
 int SerialLine::getLastWarning()
@@ -210,4 +277,24 @@ int SerialLine::getLastWarning()
 	int last_warn = m_last_warn;
 	m_last_warn = 0;
 	return last_warn;
+}
+
+void SerialLine::clearCache()
+{
+	AutoMutex l = lock(AutoMutex::Locked);
+	m_reg_cache.clear();
+}
+
+void SerialLine::setCacheActive(bool cache_act)
+{
+	AutoMutex l = lock(AutoMutex::Locked);
+	if (cache_act && !m_cache_act)
+		m_reg_cache.clear();
+	m_cache_act = cache_act;
+}
+
+void SerialLine::getCacheActive(bool& cache_act)
+{
+	AutoMutex l = lock(AutoMutex::Locked);
+	cache_act = m_cache_act;
 }

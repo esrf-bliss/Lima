@@ -66,6 +66,10 @@ class SerialLine : HwSerialLine
 
 	int getLastWarning();
 
+	void clearCache();
+	void setCacheActive(bool  cache_act);
+	void getCacheActive(bool& cache_act /Out/);
+
 };
 
 
