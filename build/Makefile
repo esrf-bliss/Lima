@@ -5,16 +5,9 @@ lima-objs := ../common/src/Common.o \
 	     ../camera/common/espia/src/Espia.o \
 	     ../camera/frelon/src/Frelon.o
 
-OS := $(shell /csadmin/common/scripts/get_os.share)
-ifeq ($(OS),redhate5)
-ARCH := $(shell /csadmin/common/scripts/get_esrflinux --architecture)
-else
-ARCH := 
-endif
+include ../camera/common/espia/include/espia.inc
 
-LDFLAGS += -L../third-party/Processlib/build \
-	   -L /users/blissadm/driver/$(OS)/lib/$(ARCH)
-
+LDFLAGS += -L../third-party/Processlib/build -L$(ESPIA_DRV_LIB)
 LDLIBS += -lprocesslib -lespia
 
 src:		liblima.so
