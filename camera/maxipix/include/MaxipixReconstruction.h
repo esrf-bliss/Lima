@@ -19,6 +19,7 @@ namespace lima
       ~MaxipixReconstruction();
       
       void setType(Type);
+      void setModel(Model);
       void setXnYGapSpace(int xSpace,int ySpace);
       virtual Data process(Data &aData);
     private:

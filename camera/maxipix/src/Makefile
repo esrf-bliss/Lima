@@ -1,6 +1,7 @@
+SRCS = MaxipixReconstruction.cpp
+
 maxipix-objs := MaxipixReconstruction.o
 
-SRCS = MaxipixReconstruction.cpp
 
 INCLUDES = -I../include \
 	   -I../../../third-party/Processlib/core/include

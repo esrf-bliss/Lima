@@ -1,3 +1,5 @@
+SRCS = ./src/Frelon.cpp ../../common/espia/src/Espia.cpp \
+	      ../../../hardware/src/Hw.cpp ../../../common/src/Common.cpp
 
 frelon-objs = ../src/Frelon.o ../../common/espia/src/Espia.o \
 	      ../../../hardware/src/Hw.o ../../../common/src/Common.o 
@@ -15,7 +17,7 @@ CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../third-party/Processlib/tasks/include \
 	   -I$(ESPIA_DRV_INCL) -Wall -pthread
 
-all:		clean testfrelon testfreloninterface
+all: testfrelon testfreloninterface
 
 testfrelon:	testfrelon.o $(frelon-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
@@ -25,3 +27,12 @@ testfreloninterface:	testfreloninterface.o $(frelon-objs)
 
 clean:
 	rm -f *.o testfrelon testfreloninterface
+
+%.o : %.cpp
+	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	@cp $*.d $*.P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	rm -f $*.d
+
+-include $(SRCS:.cpp=.P)

@@ -3,7 +3,8 @@ lima-objs := ../common/src/Common.o \
 	     ../control/src/Ct.o \
 	     ../camera/simulator/src/Simu.o \
 	     ../camera/common/espia/src/Espia.o \
-	     ../camera/frelon/src/Frelon.o
+	     ../camera/frelon/src/Frelon.o \
+	     ../camera/maxipix/src/Maxipix.o
 
 include ../camera/common/espia/include/espia.inc
 

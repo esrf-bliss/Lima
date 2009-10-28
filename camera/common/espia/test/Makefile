@@ -1,3 +1,4 @@
+SRCS = testfocla.cpp testfoclahwinterface.cpp
 
 focla-objs = ../src/Espia.o \
 	     ../../../../hardware/src/Hw.o ../../../../common/src/Common.o
@@ -14,7 +15,7 @@ CXXFLAGS = -I../include \
 	   -I../../../../third-party/Processlib/core/include \
 	   -I$(ESPIA_DRV_INCL) -Wall -pthread
 
-all:		clean testfocla testfoclahwinterface
+all: testfocla testfoclahwinterface
 
 testfocla:	testfocla.o $(focla-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
@@ -25,3 +26,11 @@ testfoclahwinterface:	testfoclahwinterface.o $(focla-objs)
 
 clean:
 	rm -f *.o testfocla testfoclahwinterface
+%.o : %.cpp
+	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	@cp $*.d $*.P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	rm -f $*.d
+
+-include $(SRCS:.cpp=.P)

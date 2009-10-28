@@ -1,4 +1,4 @@
-
+SRCS = simutest.cpp
 lima-objs = ../../common/src/Common.o ../../hardware/src/Hw.o ../src/Ct.o
 simu-objs = ../../camera/simulator/src/Simu.o
 
@@ -14,7 +14,7 @@ CXXFLAGS += $(INC) -g -Wall -pthread
 LDFLAGS = -pthread
 LDLIBS = -L../../third-party/Processlib/build -lprocesslib
 
-all: 	clean simutest
+all: 	simutest
 
 simutest: $(simutest-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS) $(simutest-ext-objs) 
@@ -23,3 +23,11 @@ simutest: $(simutest-objs)
 clean: 
 	rm -f $(simutest-objs) simutest
 
+%.o : %.cpp
+	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	@cp $*.d $*.P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	rm -f $*.d
+
+-include $(SRCS:.cpp=.P)

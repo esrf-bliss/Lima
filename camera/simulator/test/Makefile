@@ -1,10 +1,11 @@
+SRCS = test.cpp testsimulator.cpp testsimuhwinterface.cpp
 
 std-objs = ../../../common/src/Common.o ../../../hardware/src/Hw.o
 simu-objs = ../src/Simu.o
 
 test-objs = test.o
 test-ext-objs = $(simu-objs)
-	
+
 testsimulator-objs = testsimulator.o
 testsimulator-ext-objs = $(simu-objs) $(std-objs)
 
@@ -15,7 +16,7 @@ INC = -I../include -I../../../common/include -I../../../hardware/include
 CXXFLAGS += $(INC) -Wall -pthread
 LDFLAGS = -pthread
 
-all: 	clean test testsimulator testsimuhwinterface
+all: test testsimulator testsimuhwinterface
 
 test:	$(test-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(test-ext-objs) $(std-objs)
@@ -31,3 +32,11 @@ clean:
 	rm -f $(testsimulator-objs) testsimulator
 	rm -f $(testsimuhwinterface-objs) testsimuhwinterface
 
+%.o : %.cpp
+	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	@cp $*.d $*.P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	rm -f $*.d
+
+-include $(SRCS:.cpp=.P)

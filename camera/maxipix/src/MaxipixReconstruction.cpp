@@ -111,10 +111,10 @@ COPY_5x1
 //----------------------------------------------------------------------------
 static inline void copy_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 {
+  int aTotalWidth = (MAXIPIX_NB_COLUMN * 2) + xSpace;
+  int aTotalHeight = (MAXIPIX_NB_LINE * 2) + ySpace;
   unsigned short *aSrcPt = (unsigned short*)src.data();
-  unsigned short *aDstPt = ((unsigned short*)dst->data) + 
-    (((MAXIPIX_LINE_SIZE + xSpace) * (MAXIPIX_NB_LINE + (ySpace >> 1))) << 1) -
-    MAXIPIX_LINE_SIZE;
+  unsigned short *aDstPt = ((unsigned short*)dst->data) + (aTotalWidth * aTotalHeight) - aTotalWidth;
 
   int aJump2LeftChip = MAXIPIX_LINE_SIZE + xSpace - 1;
   
@@ -155,7 +155,7 @@ static inline void copy_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 static inline void _raw_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 {
   unsigned short *aDstPt = ((unsigned short*)dst->data) + MAXIPIX_NB_COLUMN;
-  for(int i = MAXIPIX_NB_LINE;i;--i,aDstPt += MAXIPIX_LINE_SIZE)
+  for(int i = MAXIPIX_NB_LINE;i;--i,aDstPt += (MAXIPIX_LINE_SIZE + xSpace))
     for(int k = 0;k < xSpace;++k)
       aDstPt[k] = 0;
   
@@ -281,6 +281,33 @@ static inline void _mean_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
   copy_2x2(src,dst,xSpace,ySpace);
 }
 
+MaxipixReconstruction::MaxipixReconstruction(MaxipixReconstruction::Model aModel,
+					     MaxipixReconstruction::Type aType) :
+  mType(aType),mModel(aModel),mXSpace(4),mYSpace(4)
+{
+}
+
+MaxipixReconstruction::MaxipixReconstruction(const MaxipixReconstruction &other) :
+  mType(other.mType),mModel(other.mModel),
+  mXSpace(other.mXSpace),mYSpace(other.mYSpace)
+{
+}
+
+MaxipixReconstruction::~MaxipixReconstruction()
+{
+}
+
+void MaxipixReconstruction::setType(MaxipixReconstruction::Type aType)
+{
+  mType = aType;
+}
+
+void MaxipixReconstruction::setXnYGapSpace(int xSpace,int ySpace)
+{
+  mXSpace = xSpace,mYSpace = ySpace;
+}
+
+
 Data MaxipixReconstruction::process(Data &aData)
 {
   Data aReturnData;
@@ -288,6 +315,7 @@ Data MaxipixReconstruction::process(Data &aData)
 
   if(mModel == M_5x1)
     {
+      aReturnData.width = MAXIPIX_NB_COLUMN * 5 + 4 * mXSpace;
       if(!_processingInPlaceFlag)
 	{
 	  Buffer *aNewBuffer = new Buffer((MAXIPIX_LINE_SIZE * 5 + (mXSpace << 1) * 4) * 
@@ -310,8 +338,10 @@ Data MaxipixReconstruction::process(Data &aData)
     }
   else			// Model 2x2
     {
-      int aBufferSize = ((MAXIPIX_LINE_SIZE + mXSpace) * 2) * 
-		       ((MAXIPIX_NB_LINE   + mYSpace) * 2);
+      aReturnData.width = MAXIPIX_NB_COLUMN * 2 + mXSpace;
+      aReturnData.height = MAXIPIX_NB_LINE * 2 + mYSpace;
+
+      int aBufferSize = aReturnData.width * aReturnData.height;
       Buffer *aNewBuffer = new Buffer(aBufferSize);
       switch(mType)
 	{
@@ -332,10 +362,10 @@ Data MaxipixReconstruction::process(Data &aData)
 	  unsigned char *aSrcPt = (unsigned char*)aNewBuffer->data;
 	  unsigned char *aDstPt = (unsigned char*)aData.data();
 	  memcpy(aDstPt,aSrcPt,aBufferSize);
-	  aNewBuffer->unref();
 	}
       else
 	aReturnData.setBuffer(aNewBuffer);
+      aNewBuffer->unref();
     }
 
   return aReturnData;
