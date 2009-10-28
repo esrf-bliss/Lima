@@ -12,9 +12,9 @@ namespace lima
     class MaxipixReconstruction : public LinkTask
     {
     public:
-      enum Type {ZERO,DISPATCH,MEAN};
-      enum Model {M_4x4,M_5x1};
-      explicit MaxipixReconstruction(Model = M_5x1,Type = ZERO);
+      enum Type {RAW,ZERO,DISPATCH,MEAN};
+      enum Model {M_2x2,M_5x1};
+      explicit MaxipixReconstruction(Model = M_5x1,Type = RAW);
       MaxipixReconstruction(const MaxipixReconstruction&);
       ~MaxipixReconstruction();
       
