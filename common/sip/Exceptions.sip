@@ -8,17 +8,17 @@ enum ErrorType {
 };
 
 
-class Exception
+%Exception Exception(SIP_Exception)
 {
 %TypeHeaderCode
 #include <Exceptions.h>
 using namespace lima;
 %End
- public:
-	Exception(Layer layer, ErrorType err_type, std::string err_desc,
-		  std::string file_name, std::string funct_name, int line_nr);
+%RaiseCode
+        const char *detail = sipExceptionRef.getErrMsg().c_str();
 
-
-	std::string getErrMsg() const;
-
+        SIP_BLOCK_THREADS
+        PyErr_SetString(sipException_std_exception, detail);
+        SIP_UNBLOCK_THREADS
+%End
 };
