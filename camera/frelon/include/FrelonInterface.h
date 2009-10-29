@@ -109,8 +109,24 @@ class SyncCtrlObj : public HwSyncCtrlObj
 	virtual void getValidRanges(ValidRangesType& valid_ranges);
 
  private:
+	class AcqEndCallback : public Espia::AcqEndCallback
+	{
+	public:
+		AcqEndCallback(Camera& cam) : m_cam(cam) {}
+
+	protected:
+		virtual void acqFinished(const HwFrameInfoType& frame_info)
+		{
+			m_cam.stop();
+		}
+
+	private:
+		Camera& m_cam;
+	};
+
 	Espia::Acq& m_acq;
 	Camera& m_cam;
+	AcqEndCallback m_acq_end_cb;
 };
 
 

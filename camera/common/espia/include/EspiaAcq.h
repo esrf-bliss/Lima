@@ -11,6 +11,28 @@ namespace lima
 namespace Espia
 {
 
+class Acq;
+
+class AcqEndCallback
+{
+ public:
+	AcqEndCallback();
+	virtual ~AcqEndCallback();
+
+	Acq *getAcq() const;
+
+ protected:
+	virtual void acqFinished(const HwFrameInfoType& frame_info) = 0;
+
+ private:
+	friend class Acq;
+
+	void setAcq(Acq *acq);
+
+	Acq *m_acq;
+};
+
+
 class Acq : public HwFrameCallbackGen
 {
  public:
@@ -43,6 +65,9 @@ class Acq : public HwFrameCallbackGen
 	void getStatus(StatusType& status);
 
 	void getStartTimestamp(Timestamp& start_ts);
+
+	void registerAcqEndCallback(AcqEndCallback& acq_end_cb);
+	void unregisterAcqEndCallback(AcqEndCallback& acq_end_cb);
 
  protected:
 	virtual void setFrameCallbackActive(bool cb_active);
@@ -80,6 +105,8 @@ class Acq : public HwFrameCallbackGen
 	struct img_frame_info m_last_frame_info;
 	int m_frame_cb_nb;
 	bool m_user_frame_cb_act;
+
+	AcqEndCallback *m_acq_end_cb;
 };
 
 inline bool Acq::hasVirtualBuffers()

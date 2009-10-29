@@ -182,7 +182,7 @@ void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
  *******************************************************************/
 
 SyncCtrlObj::SyncCtrlObj(Acq& acq, Camera& cam, BufferCtrlObj& buffer_ctrl)
-	: HwSyncCtrlObj(buffer_ctrl), m_acq(acq), m_cam(cam)
+	: HwSyncCtrlObj(buffer_ctrl), m_acq(acq), m_cam(cam), m_acq_end_cb(cam)
 {
 }
 
@@ -223,7 +223,16 @@ void SyncCtrlObj::getLatTime(double& lat_time)
 void SyncCtrlObj::setNbHwFrames(int nb_frames)
 {
 	m_acq.setNbFrames(nb_frames);
-	m_cam.setNbFrames(nb_frames);
+
+	int cam_nb_frames = nb_frames;
+	if (cam_nb_frames > MaxRegVal) {
+		cam_nb_frames = 0;
+		if (!m_acq_end_cb.getAcq())
+			m_acq.registerAcqEndCallback(m_acq_end_cb);
+	} else if (m_acq_end_cb.getAcq())
+		m_acq.unregisterAcqEndCallback(m_acq_end_cb);
+
+	m_cam.setNbFrames(cam_nb_frames);
 }
 
 void SyncCtrlObj::getNbHwFrames(int& nb_frames)

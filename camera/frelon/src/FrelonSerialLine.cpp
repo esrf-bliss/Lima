@@ -72,7 +72,7 @@ void SerialLine::writeCmd(const string& buffer, bool no_wait)
 	}
 
 	m_curr_cache = false;
-	if (m_cache_act && reg_found && (m_curr_reg != Warn)) {
+	if (reg_found && isRegCacheable(m_curr_reg)) {
 		bool is_req = !msg_parts[MsgReq].empty();
 		m_curr_op = is_req ? ReadReg : WriteReg;
 		const string& cache_val = m_reg_cache[m_curr_reg];
@@ -150,7 +150,7 @@ void SerialLine::readSingleLine(string& buffer, int max_len, double timeout)
 	decodeFmtResp(buffer, m_curr_fmt_resp);
 	
 	bool reg_op = ((m_curr_op == WriteReg) || (m_curr_op == ReadReg));
-	if (!m_cache_act || !reg_op || (m_curr_reg == Warn))
+	if (!reg_op || !isRegCacheable(m_curr_reg))
 		return;
 
 	string& cache_val = m_reg_cache[m_curr_reg];
@@ -177,6 +177,15 @@ void SerialLine::readMultiLine(string& buffer, int max_len)
 
 	if (buffer.empty())
 		throw LIMA_HW_EXC(Error, "Timeout reading Frelon multi line");
+}
+
+bool SerialLine::isRegCacheable(Reg reg)
+{
+	if (!m_cache_act)
+		return false;
+
+	const RegListType& list = NonCacheableRegList;
+	return (find(list.begin(), list.end(), reg) == list.end());
 }
 
 void SerialLine::flush()

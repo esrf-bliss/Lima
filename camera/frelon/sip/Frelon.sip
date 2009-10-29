@@ -18,12 +18,20 @@ enum Reg {
 	DarkPixelCalib,	DarkPixelMode,	ChanControl,	Mire,
 	AoiLineBegin,	AoiLineWidth,	AoiPixelBegin,	AoiPixelWidth,
 	AoiImageHeight,	AoiImageWidth,	ChanOnImage,	ChanOnCcd,
-	Version,	CompSerNb,	Warn,
+	Version,	CompSerNb,	Warn,		LastWarn,
+	LineClockPer,	PixelClockPer,	FirstPHIVLen,	PHIHSetupLen,
+	SingleVertXfer,	SingleHorzXfer,	AllVertXfer,	AllHorzXfer,
+	ReadoutTime,	TransferTime,   CcdModesAvail,
 };
 /*
 typedef std::map<Reg, std::string> RegStrMapType;
 extern RegStrMapType RegStrMap;
+
+typedef std::vector<Reg> RegListType;
+extern RegListType NonCacheableRegList;
 */
+
+const int MaxRegVal;
 
 enum Cmd {
 	Reset,		Start,		Stop,		Save,
@@ -35,7 +43,7 @@ extern CmdStrMapType CmdStrMap;
 
 enum MultiLineCmd {
 	Help,		Config,		Dac,		Volt,
-	Aoi,
+	Aoi,		PLL,		Timing,
 };
 /*
 typedef std::map<MultiLineCmd, std::string> MultiLineCmdStrMapType;
@@ -91,6 +99,7 @@ extern const FrameDim MaxFrameDim;
 enum ChipType {
 	Atmel,
 	Kodak,
+	E2V,
 };
 /*
 typedef std::map<ChipType, double> ChipPixelSizeMapType;

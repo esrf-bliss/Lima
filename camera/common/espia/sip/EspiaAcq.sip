@@ -2,6 +2,25 @@
 namespace Espia
 {
 
+class AcqEndCallback
+{
+%TypeHeaderCode
+#include <EspiaDev.h>
+#include <EspiaAcq.h>
+using namespace lima;
+%End
+ public:
+	AcqEndCallback();
+	virtual ~AcqEndCallback();
+
+	Espia::Acq *getAcq() const;
+
+ protected:
+	virtual void acqFinished(const HwFrameInfoType& frame_info) = 0;
+
+};
+
+
 class Acq
 {
 %TypeHeaderCode
@@ -39,6 +58,9 @@ using namespace lima;
 	void getStatus(StatusType& status /Out/);
 
 	void getStartTimestamp(Timestamp& start_ts);
+
+	void registerAcqEndCallback(Espia::AcqEndCallback& acq_end_cb);
+	void unregisterAcqEndCallback(Espia::AcqEndCallback& acq_end_cb);
 
  protected:
 	virtual void setFrameCallbackActive(bool cb_active);

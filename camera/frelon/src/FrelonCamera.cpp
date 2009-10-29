@@ -499,8 +499,6 @@ void Camera::getTimeUnitFactor(TimeUnitFactor& time_unit_factor)
 
 void Camera::setExpTime(double exp_time)
 {
-	const int MaxVal = (1 << 16) - 1;
-
 	bool ok = false;
 	int exp_val;
 	TimeUnitFactor seq_clist[] = { Microseconds, Milliseconds };
@@ -508,7 +506,7 @@ void Camera::setExpTime(double exp_time)
 	for (it = seq_clist; it != end; ++it) {
 		double factor = TimeUnitFactorMap[*it];
 		exp_val = int(exp_time / factor + 0.1);
-		ok = (exp_val <= MaxVal);
+		ok = (exp_val <= MaxRegVal);
 		if (ok)
 			break;
 	}

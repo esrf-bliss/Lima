@@ -52,9 +52,32 @@ static const RegPair RegStrCList[] = {
 	RegPair(Version,	"VER"),
 	RegPair(CompSerNb,	"SN"),
 	RegPair(Warn,		"W"),
+	RegPair(LastWarn,	"LW"),
+
+	RegPair(LineClockPer,	"TLC"),
+	RegPair(PixelClockPer,	"TPC"),
+	RegPair(FirstPHIVLen,	"TFV"),
+	RegPair(PHIHSetupLen,	"THS"),
+	RegPair(SingleVertXfer,	"TOV"),
+	RegPair(SingleHorzXfer,	"TOH"),
+	RegPair(AllVertXfer,	"TAV"),
+	RegPair(AllHorzXfer,	"TAH"),
+	RegPair(ReadoutTime,	"TRD"),
+	RegPair(TransferTime,	"TTR"),
+	RegPair(CcdModesAvail,	"CMA"),
+
 };
 RegStrMapType lima::Frelon::RegStrMap(C_LIST_ITERS(RegStrCList));
 
+static Reg NonCacheableRegCList[] = {
+	Warn, 
+	AoiLineBegin,   AoiLineWidth,  AoiPixelBegin, AoiPixelWidth,
+	AoiImageHeight, AoiImageWidth, ChanOnImage,   ChanOnCcd,
+};
+RegListType 
+lima::Frelon::NonCacheableRegList(C_LIST_ITERS(NonCacheableRegCList));
+
+const int lima::Frelon::MaxRegVal = (1 << 16) - 1;
 
 typedef pair<Cmd, string> CmdPair;
 static const CmdPair CmdStrCList[] = {
@@ -73,8 +96,8 @@ static const MLCmdPair MLCmdStrCList[] = {
 	MLCmdPair(Dac,		"D"),
 	MLCmdPair(Volt,		"V"),
 	MLCmdPair(Aoi,		"AOI"),
-	MLCmdPair(Aoi,		"PLL"),
-	MLCmdPair(Aoi,		"TIM"),
+	MLCmdPair(PLL,		"PLL"),
+	MLCmdPair(Timing,	"TIM"),
 };
 MultiLineCmdStrMapType 
 lima::Frelon::MultiLineCmdStrMap(C_LIST_ITERS(MLCmdStrCList));
@@ -120,6 +143,7 @@ typedef pair<ChipType, double> ChipSizePair;
 static const ChipSizePair ChipPixelSizeCList[] = {
 	ChipSizePair(Atmel, 14e-6),
 	ChipSizePair(Kodak, 24e-6),
+	ChipSizePair(E2V,   15e-6),
 };
 ChipPixelSizeMapType 
 lima::Frelon::ChipPixelSizeMap(C_LIST_ITERS(ChipPixelSizeCList));

@@ -8,6 +8,32 @@ using namespace lima::Espia;
 
 #define ESPIA_MIN_BUFFER_SIZE	(128 * 1024)
 
+AcqEndCallback::AcqEndCallback()
+	: m_acq(NULL)
+{
+}
+
+AcqEndCallback::~AcqEndCallback()
+{
+	if (m_acq)
+		m_acq->unregisterAcqEndCallback(*this);
+}
+
+Acq *AcqEndCallback::getAcq() const
+{ 
+	return m_acq; 
+}
+
+void AcqEndCallback::setAcq(Acq *acq)
+{
+	if (acq && m_acq)
+		throw LIMA_HW_EXC(InvalidValue, "Acq already set");
+	else if (!acq && !m_acq)
+		throw LIMA_HW_EXC(InvalidValue, "Acq already reset");
+
+	m_acq = acq;
+}
+
 
 Acq::Acq(Dev& dev)
 	: m_dev(dev)
@@ -22,11 +48,16 @@ Acq::Acq(Dev& dev)
 	m_frame_cb_nb = Invalid;
 	m_user_frame_cb_act = false;
 
+	m_acq_end_cb = NULL;
+
 	enableFrameCallback();
 }
 
 Acq::~Acq()
 {
+	if (m_acq_end_cb)
+		unregisterAcqEndCallback(*m_acq_end_cb);
+
 	bufferFree();
 	disableFrameCallback();
 }
@@ -106,12 +137,15 @@ void Acq::processFrameCallback(struct espia_cb_data *cb_data)
 
 	l.unlock();
 
-	if (m_user_frame_cb_act) {
-		HwFrameInfo hw_finfo;
-		if (!aborted)
-			real2virtFrameInfo(cb_finfo, hw_finfo);
+	HwFrameInfo hw_finfo;
+	if (!aborted)
+		real2virtFrameInfo(cb_finfo, hw_finfo);
+
+	if (m_user_frame_cb_act)
 		newFrameReady(hw_finfo);
-	}
+
+	if ((m_acq_end_cb != NULL) && finished)
+		m_acq_end_cb->acqFinished(hw_finfo);
 }
 
 void Acq::bufferAlloc(int& nb_buffers, int nb_buffer_frames,
@@ -279,15 +313,14 @@ void Acq::start()
 
 void Acq::stop()
 {
-	{
-		AutoMutex l = acqLock();
-		if (!m_started)
-			return;
-	}
-
-	CHECK_CALL(espia_stop_acq(m_dev));
-	
 	AutoMutex l = acqLock();
+	if (!m_started)
+		return;
+
+	l.unlock();
+	CHECK_CALL(espia_stop_acq(m_dev));
+	l.lock();
+
 	m_started = false;
 }
 
@@ -304,3 +337,24 @@ void Acq::getStatus(StatusType& status)
 	status.last_frame_nb = m_last_frame_info.acq_frame_nr;
 }
 
+void Acq::registerAcqEndCallback(AcqEndCallback& acq_end_cb)
+{
+	if (m_acq_end_cb)
+		throw LIMA_HW_EXC(InvalidValue, 
+				  "AcqEndCallback already registered");
+	
+	acq_end_cb.setAcq(this);
+	m_acq_end_cb = &acq_end_cb;
+}
+
+void Acq::unregisterAcqEndCallback(AcqEndCallback& acq_end_cb)
+{
+	if (m_acq_end_cb != &acq_end_cb)
+		throw LIMA_HW_EXC(InvalidValue, 
+				  "Specified AcqEndCallback not registered");
+	
+	stop();
+
+	m_acq_end_cb = NULL;
+	acq_end_cb.setAcq(NULL);
+}

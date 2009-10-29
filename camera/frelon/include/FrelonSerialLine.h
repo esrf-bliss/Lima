@@ -85,6 +85,8 @@ class SerialLine : public HwSerialLine
 			      int max_len = MaxReadLen, 
 			      double timeout = TimeoutDefault);
 
+	bool isRegCacheable(Reg reg);
+
 	Espia::SerialLine& m_espia_ser_line;
 	Cond m_cond;
 	int m_last_warn;
