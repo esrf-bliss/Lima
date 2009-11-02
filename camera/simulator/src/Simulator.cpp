@@ -8,7 +8,7 @@ using namespace lima;
 using namespace std;
 
 Simulator::SimuThread::SimuThread(Simulator& simu)
-	: m_simu(simu)
+	: m_simu(&simu)
 {
 	m_acq_frame_nb = 0;
 }
@@ -39,19 +39,19 @@ void Simulator::SimuThread::execCmd(int cmd)
 
 void Simulator::SimuThread::execStartAcq()
 {
-	StdBufferCbMgr& buffer_mgr = m_simu.m_buffer_cb_mgr;
+	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_cb_mgr;
 	buffer_mgr.setStartTimestamp(Timestamp::now());
 
-	FrameBuilder& frame_builder = m_simu.m_frame_builder;
+	FrameBuilder& frame_builder = m_simu->m_frame_builder;
 	frame_builder.resetFrameNr();
 
-	int nb_frames = m_simu.m_nb_frames;
+	int nb_frames = m_simu->m_nb_frames;
 	int& frame_nb = m_acq_frame_nb;
 	for (frame_nb = 0; frame_nb < nb_frames; frame_nb++) {
 		struct timespec treq, trem;
 		double req_time;
 
-		req_time = m_simu.m_exp_time;
+		req_time = m_simu->m_exp_time;
 		if (req_time > 0) {	
 			setStatus(Exposure);
 			treq.tv_sec = int(floor(req_time));
@@ -72,7 +72,7 @@ void Simulator::SimuThread::execStartAcq()
 		frame_info.acq_frame_nb = frame_nb;
 		buffer_mgr.newFrameReady(frame_info);
 
-		req_time = m_simu.m_lat_time;
+		req_time = m_simu->m_lat_time;
 		if (req_time > 0) {
 			setStatus(Latency);
 			treq.tv_sec = int(floor(req_time));

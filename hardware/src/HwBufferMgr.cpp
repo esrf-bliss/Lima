@@ -176,7 +176,7 @@ BufferCbMgr::Cap lima::operator &(BufferCbMgr::Cap c1, BufferCbMgr::Cap c2)
  *******************************************************************/
 
 StdBufferCbMgr::StdBufferCbMgr(BufferAllocMgr& alloc_mgr)
-	: m_alloc_mgr(alloc_mgr)
+	: m_alloc_mgr(&alloc_mgr)
 
 {
 	m_nb_concat_frames = 1;
@@ -197,7 +197,7 @@ int StdBufferCbMgr::getMaxNbBuffers(const FrameDim& frame_dim,
 {
 	FrameDim buffer_frame_dim;
 	getBufferFrameDim(frame_dim, nb_concat_frames, buffer_frame_dim);
-	return m_alloc_mgr.getMaxNbBuffers(buffer_frame_dim);
+	return m_alloc_mgr->getMaxNbBuffers(buffer_frame_dim);
 }
 
 void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames, 
@@ -222,7 +222,7 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames,
 		getBufferFrameDim(frame_dim, nb_concat_frames, 
 				  buffer_frame_dim);
 
-		m_alloc_mgr.allocBuffers(nb_buffers, buffer_frame_dim);
+		m_alloc_mgr->allocBuffers(nb_buffers, buffer_frame_dim);
 		m_frame_dim = frame_dim;
 		m_nb_concat_frames = nb_concat_frames;
 
@@ -238,7 +238,7 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames,
 
 void StdBufferCbMgr::releaseBuffers()
 {
-	m_alloc_mgr.releaseBuffers();
+	m_alloc_mgr->releaseBuffers();
 	m_info_list.clear();
 	m_nb_concat_frames = 1;
 	m_frame_dim = FrameDim();
@@ -291,7 +291,7 @@ const FrameDim& StdBufferCbMgr::getFrameDim()
 
 void StdBufferCbMgr::getNbBuffers(int& nb_buffers)
 {
-	m_alloc_mgr.getNbBuffers(nb_buffers);
+	m_alloc_mgr->getNbBuffers(nb_buffers);
 }
 
 void StdBufferCbMgr::getNbConcatFrames(int& nb_concat_frames)
@@ -303,18 +303,18 @@ void *StdBufferCbMgr::getBufferPtr(int buffer_nb, int concat_frame_nb)
 {
 	if (concat_frame_nb >= m_nb_concat_frames)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid concat frame nb");
-	char *ptr = (char *) m_alloc_mgr.getBufferPtr(buffer_nb);
+	char *ptr = (char *) m_alloc_mgr->getBufferPtr(buffer_nb);
 	return ptr + concat_frame_nb * m_frame_dim.getMemSize();
 }
 
 void StdBufferCbMgr::clearBuffer(int buffer_nb)
 {
-	m_alloc_mgr.clearBuffer(buffer_nb);
+	m_alloc_mgr->clearBuffer(buffer_nb);
 }
 
 void StdBufferCbMgr::clearAllBuffers()
 {
-	m_alloc_mgr.clearAllBuffers();
+	m_alloc_mgr->clearAllBuffers();
 }
 
 void StdBufferCbMgr::getFrameInfo(int acq_frame_nb, HwFrameInfo& info)
@@ -335,13 +335,13 @@ void StdBufferCbMgr::getFrameInfo(int acq_frame_nb, HwFrameInfo& info)
 
 BufferCtrlMgr::BufferCtrlMgr(BufferCbMgr& acq_buffer_mgr)
 	: m_nb_concat_frames(1), m_nb_acc_frames(1),
-	  m_acq_buffer_mgr(acq_buffer_mgr), 
+	  m_acq_buffer_mgr(&acq_buffer_mgr), 
 	  m_aux_buffer_mgr(m_aux_alloc_mgr),
 	  m_frame_cb(*this),
 	  m_frame_cb_act(false)
 {
-	m_acq_buffer_mgr.registerFrameCallback(m_frame_cb);
-	m_effect_buffer_mgr = &m_acq_buffer_mgr;
+	m_acq_buffer_mgr->registerFrameCallback(m_frame_cb);
+	m_effect_buffer_mgr = m_acq_buffer_mgr;
 }
 
 BufferCtrlMgr::~BufferCtrlMgr()
@@ -351,7 +351,7 @@ BufferCtrlMgr::~BufferCtrlMgr()
 
 void BufferCtrlMgr::releaseBuffers()
 {
-	m_acq_buffer_mgr.releaseBuffers();
+	m_acq_buffer_mgr->releaseBuffers();
 	m_aux_buffer_mgr.releaseBuffers();
 }
 
@@ -374,7 +374,7 @@ void BufferCtrlMgr::setNbConcatFrames(int nb_concat_frames)
 	if ((getAcqMode() == Acc) && ask_concat)
 		throw LIMA_HW_EXC(InvalidValue, "Frame acc. is active");
 
-	bool can_concat = (m_acq_buffer_mgr.getCap() & BufferCbMgr::Concat);
+	bool can_concat = (m_acq_buffer_mgr->getCap() & BufferCbMgr::Concat);
 	if (ask_concat && !can_concat)
 		throw LIMA_HW_EXC(NotSupported, "Strip concat. not supported");
 
@@ -397,8 +397,8 @@ void BufferCtrlMgr::setNbAccFrames(int nb_acc_frames)
 
 	if (ask_acc && (m_effect_buffer_mgr != &m_aux_buffer_mgr))
 		m_effect_buffer_mgr = &m_aux_buffer_mgr;
-	else if (!ask_acc && (m_effect_buffer_mgr != &m_acq_buffer_mgr))
-		m_effect_buffer_mgr = &m_acq_buffer_mgr;
+	else if (!ask_acc && (m_effect_buffer_mgr != m_acq_buffer_mgr))
+		m_effect_buffer_mgr = m_acq_buffer_mgr;
 
 	if (nb_acc_frames != m_nb_acc_frames)
 		releaseBuffers();
@@ -428,8 +428,8 @@ void BufferCtrlMgr::setNbBuffers(int nb_buffers)
 	bool is_acc = (getAcqMode() == Acc);
 	int acc_nb_buffers = 2 * m_nb_acc_frames;
 	int acq_nb_buffers = is_acc ? acc_nb_buffers : nb_buffers;
-	m_acq_buffer_mgr.allocBuffers(acq_nb_buffers, m_nb_concat_frames, 
-				      m_frame_dim);
+	m_acq_buffer_mgr->allocBuffers(acq_nb_buffers, m_nb_concat_frames, 
+				       m_frame_dim);
 
 	if (is_acc) {
 		FrameDim aux_frame_dim = m_frame_dim;
@@ -457,12 +457,12 @@ void BufferCtrlMgr::setFrameCallbackActive(bool cb_active)
 
 BufferCbMgr& BufferCtrlMgr::getAcqBufferMgr()
 {
-	return m_acq_buffer_mgr;
+	return *m_acq_buffer_mgr;
 }
 
 void BufferCtrlMgr::setStartTimestamp(Timestamp start_ts)
 {
-	m_acq_buffer_mgr.setStartTimestamp(start_ts);
+	m_acq_buffer_mgr->setStartTimestamp(start_ts);
 	if (getAcqMode() == Acc)
 		m_aux_buffer_mgr.setStartTimestamp(start_ts);
 }

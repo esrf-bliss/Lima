@@ -158,7 +158,7 @@ class StdBufferCbMgr : public BufferCbMgr
  private:
 	typedef std::vector<HwFrameInfoType> FrameInfoList;
 
-	BufferAllocMgr& m_alloc_mgr;
+	BufferAllocMgr *m_alloc_mgr;
 	FrameDim m_frame_dim;			  
 	int m_nb_concat_frames;
 	FrameInfoList m_info_list;
@@ -218,14 +218,14 @@ class BufferCtrlMgr : public HwFrameCallbackGen
 	{
 	public:
 		AcqFrameCallback(BufferCtrlMgr& buffer_mgr)
-			: m_buffer_mgr(buffer_mgr) {}
+			: m_buffer_mgr(&buffer_mgr) {}
 	protected:
 		virtual bool newFrameReady(const HwFrameInfoType& frame_info)
 		{
-			return m_buffer_mgr.acqFrameReady(frame_info);
+			return m_buffer_mgr->acqFrameReady(frame_info);
 		}
 	private:
-		BufferCtrlMgr& m_buffer_mgr;
+		BufferCtrlMgr *m_buffer_mgr;
 	};
 	friend class AcqFrameCallback;
 
@@ -237,7 +237,7 @@ class BufferCtrlMgr : public HwFrameCallbackGen
 
 	int m_nb_concat_frames;
 	int m_nb_acc_frames;
-	BufferCbMgr& m_acq_buffer_mgr;
+	BufferCbMgr *m_acq_buffer_mgr;
 	SoftBufferAllocMgr m_aux_alloc_mgr;
 	StdBufferCbMgr m_aux_buffer_mgr;
 	BufferCbMgr *m_effect_buffer_mgr;

@@ -72,7 +72,7 @@ class Simulator
 	private:
 		void execStartAcq();
 
-		Simulator& m_simu;
+		Simulator *m_simu;
 		int m_acq_frame_nb;
 	};
 	friend class SimuThread;
