@@ -7,8 +7,7 @@ enum ErrorType {
 	InvalidValue, NotSupported, Error,
 };
 
-
-%Exception Exception(SIP_Exception)
+%Exception Exception(SIP_Exception) /Default/
 {
 %TypeHeaderCode
 #include <Exceptions.h>
@@ -18,7 +17,7 @@ using namespace lima;
         const char *detail = sipExceptionRef.getErrMsg().c_str();
 
         SIP_BLOCK_THREADS
-        PyErr_SetString(sipException_std_exception, detail);
+	PyErr_SetString(sipException_Exception, detail);
         SIP_UNBLOCK_THREADS
 %End
 };
