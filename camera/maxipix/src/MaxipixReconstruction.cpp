@@ -399,7 +399,10 @@ void MaxipixReconstruction::setType(MaxipixReconstruction::Type aType)
 {
   mType = aType;
 }
-
+void MaxipixReconstruction::setModel(MaxipixReconstruction::Model aModel)
+{
+	mModel = aModel;
+}
 void MaxipixReconstruction::setXnYGapSpace(int xSpace,int ySpace)
 {
   mXSpace = xSpace,mYSpace = ySpace;
