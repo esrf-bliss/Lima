@@ -247,7 +247,7 @@ void *Thread::staticThreadFunction(void *data)
 
 
 CmdThread::AuxThread::AuxThread(CmdThread& master)
-	: m_master(master)
+	: m_master(&master)
 {
 }
 
@@ -257,7 +257,7 @@ CmdThread::AuxThread::~AuxThread()
 
 void CmdThread::AuxThread::threadFunction()
 {
-	m_master.cmdLoop();
+	m_master->cmdLoop();
 }
 
 CmdThread::CmdThread()

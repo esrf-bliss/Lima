@@ -141,7 +141,7 @@ class CmdThread
 		virtual ~AuxThread();
 	protected:
 		void threadFunction();
-		CmdThread& m_master;
+		CmdThread *m_master;
 	};
 	friend class AuxThread;
 	void cmdLoop();
