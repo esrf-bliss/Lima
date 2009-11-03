@@ -66,6 +66,7 @@ makefile = sipconfig.ModuleMakefile(
     configuration=config,
     build_file=build_file,
     installs=installs,
+    export_all = True
   )
 makefile.extra_include_dirs = extra_includes
 makefile.extra_libs = ['pthread','lima']
