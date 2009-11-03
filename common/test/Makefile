@@ -1,6 +1,6 @@
 SRCS = testregex.cpp
 
-CXXFLAGS = -Wall -I ../include -pthread
+CXXFLAGS = -Wall -I ../include -pthread -g
 LDFLAGS = -pthread
 
 all: testregex

@@ -13,7 +13,7 @@ CXXFLAGS = -I../include \
            -I../../../../control/include/ \
            -I../../../../control/software_operation/include/ \
 	   -I../../../../third-party/Processlib/core/include \
-	   -I$(ESPIA_DRV_INCL) -Wall -pthread
+	   -I$(ESPIA_DRV_INCL) -Wall -pthread -g
 
 all: testfocla testfoclahwinterface
 

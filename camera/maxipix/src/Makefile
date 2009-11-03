@@ -6,7 +6,7 @@ maxipix-objs := MaxipixReconstruction.o
 INCLUDES = -I../include \
 	   -I../../../third-party/Processlib/core/include
 
-CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread
+CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread -g
 
 
 all: Maxipix.o

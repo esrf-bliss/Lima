@@ -4,7 +4,7 @@ SRCS=SoftOpInternalMgr.cpp SoftOpExternalMgr.cpp SoftOpId.cpp
 
 INCLUDES=-I../include  -I../../../third-party/Processlib/core/include -I../../../third-party/Processlib/tasks/include -I../../../common/include
 
-CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread
+CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread -g
 
 all: CtSoftwareOperation.o
 

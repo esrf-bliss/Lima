@@ -4,7 +4,7 @@ SRCS = Constants.cpp SizeUtils.cpp Timestamp.cpp ThreadUtils.cpp Exceptions.cpp 
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
                BufferSave.o MemUtils.o RegEx.o AcqFinished.o
 
-CXXFLAGS += -I../include -I../../hardware/include -Wall -pthread -fPIC
+CXXFLAGS += -I../include -I../../hardware/include -Wall -pthread -fPIC -g
 
 all:	Common.o
 

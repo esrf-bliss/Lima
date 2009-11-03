@@ -9,7 +9,7 @@ INCLUDES = -I../include -I../../common/include -I../../hardware/include \
 		-I../../third-party/Processlib/core/include \
 		-I../../third-party/Processlib/tasks/include
 
-CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread
+CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread -g
 
 
 all: Ct.o

@@ -9,7 +9,7 @@ include ../include/espia.inc
 
 CXXFLAGS = -I../include \
 	   -I../../../../hardware/include -I../../../../common/include \
-	   -I$(ESPIA_DRV_INCL) -Wall -pthread -fPIC
+	   -I$(ESPIA_DRV_INCL) -Wall -pthread -fPIC -g
 
 all: Espia.o
 

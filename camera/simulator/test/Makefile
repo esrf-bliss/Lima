@@ -13,7 +13,7 @@ testsimuhwinterface-objs = testsimuhwinterface.o
 testsimuhwinterface-ext-objs = $(simu-objs) $(std-objs)
 
 INC = -I../include -I../../../common/include -I../../../hardware/include 
-CXXFLAGS += $(INC) -Wall -pthread
+CXXFLAGS += $(INC) -Wall -pthread -g
 LDFLAGS = -pthread
 
 all: test testsimulator testsimuhwinterface

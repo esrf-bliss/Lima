@@ -8,7 +8,7 @@ hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 	   HwShutterCtrlObj.o HwDetInfoCtrlObj.o HwBinCtrlObj.o \
 	   HwRoiCtrlObj.o HwSerialLine.o
 
-CXXFLAGS += -I../include -I../../common/include -Wall -pthread -fPIC
+CXXFLAGS += -I../include -I../../common/include -Wall -pthread -fPIC -g
 
 all:	Hw.o
 
