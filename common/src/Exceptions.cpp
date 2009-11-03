@@ -12,7 +12,6 @@ Exception::Exception(Layer layer, ErrorType err_type, string err_desc,
 {
 }
 
-
 string Exception::getErrMsg() const
 {
 	ostringstream os;

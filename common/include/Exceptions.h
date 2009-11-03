@@ -22,7 +22,6 @@ class Exception
 	Exception(Layer layer, ErrorType err_type, std::string err_desc,
 		  std::string file_name, std::string funct_name, int line_nr);
 
-
 	std::string getErrMsg() const;
 
  private:
