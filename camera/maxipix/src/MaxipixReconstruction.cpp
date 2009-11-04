@@ -12,11 +12,10 @@ static const int MAXIPIX_NB_COLUMN = 256;
 #define COPY_5x1 \
   /* set aSrcPt to the last line of the 5th chip */	 \
   unsigned char *aSrcPt = ((unsigned char*)src.data()) + \
-    MAXIPIX_LINE_SIZE * 4 * MAXIPIX_NB_LINE; \
+    (MAXIPIX_LINE_SIZE * 5 * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE; \
   /*set aDstPt to the last line of the 5th chip including the gap */	\
   unsigned char *aDstPt = ((unsigned char*)dst.data()) + \
-    (MAXIPIX_LINE_SIZE * 4 * MAXIPIX_NB_LINE) + \
-    (xSpace * 2 * 4 * MAXIPIX_NB_LINE); \
+    ((MAXIPIX_LINE_SIZE * 5 + xSpace * 2 * 4) * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE; \
  \
   int aNbLine = MAXIPIX_NB_LINE; \
   do \
@@ -38,15 +37,44 @@ static const int MAXIPIX_NB_COLUMN = 256;
     } \
   while(--aNbLine);
 
-static inline void _raw_5x1(Data &src,Data &dst,
-			     int xSpace)
+static void _raw_5x1(Data &src,Data &dst,
+			    int xSpace)
 {
+//   /* set aSrcPt to the last line of the 5th chip */	
+//   unsigned char *aSrcPt = ((unsigned char*)src.data()) +
+//     (MAXIPIX_LINE_SIZE * 5 * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE;
+//   /*set aDstPt to the last line of the 5th chip including the gap */	
+//   unsigned char *aDstPt = ((unsigned char*)dst.data()) +
+//     ((MAXIPIX_LINE_SIZE * 5 + xSpace * 2 * 4) * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE;
+
+//   int aNbLine = MAXIPIX_NB_LINE;
+//   do
+//     {
+//       int MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE;
+      						
+//       int aNbChipCopyWithGap = 4;
+//       do			
+//     	{
+// 	  memcpy(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY);
+// 	  unsigned short *aPixel = ((unsigned short*)aDstPt) - 1;
+// 	  for(int i = xSpace;i;--i,--aPixel)
+// 	    *aPixel = 0;
+
+// 	  aDstPt -= MAXIPIX_LINE_SIZE + xSpace * 2;
+// 	  aSrcPt -= MAXIPIX_LINE_SIZE;
+// 	}
+//       while(--aNbChipCopyWithGap);
+//       memcpy(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY);
+//       aDstPt -= MAXIPIX_LINE_SIZE;
+//       aSrcPt -= MAXIPIX_LINE_SIZE;
+//     }
+//   while(--aNbLine);
 #ifdef GAP_COPY_FUNCTION
 #undef GAP_COPY_FUNCTION
 #endif
 #define GAP_COPY_FUNCTION \
-  unsigned short *aPixel = ((unsigned short*)aDstPt) - 1; \
-  for(int i = xSpace;i;--i,--aPixel) \
+  unsigned short *aPixel = ((unsigned short*)aDstPt) - 1;	\
+  for(int i = xSpace;i;--i,--aPixel)				\
     *aPixel = 0;
 COPY_5x1
 }
@@ -101,7 +129,7 @@ static inline void _mean_5x1(Data &src,Data &dst,
   unsigned short *aSrcPixel = ((unsigned short*)aSrcPt) - 1; \
   unsigned short aSecondPixelValue = *aSrcPixel / nbPixelMean; \
   float aStepValue = (aSecondPixelValue - aFirstPixelValue) / (xSpace + 1); \
-  float aPixelValue = aFirstPixelValue + aSecondPixelValue; \
+  float aPixelValue = aFirstPixelValue + aStepValue; \
   for(int i = xSpace + 1;i;--i,aPixelValue += aStepValue,--aPixel) \
     *aPixel = (unsigned short)aPixelValue;
 COPY_5x1
