@@ -16,7 +16,7 @@ Hw.o:	$(hw-objs)
 	ld -o $@ -r $+
 
 clean:
-	rm -f Hw.o $(hw-objs)
+	rm -f Hw.o *.P $(hw-objs)
 
 %.o : %.cpp
 	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<

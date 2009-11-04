@@ -17,7 +17,7 @@ FrelonBase.o:	Frelon.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o
+	rm -f *.o *.P
 
 %.o : %.cpp
 	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<

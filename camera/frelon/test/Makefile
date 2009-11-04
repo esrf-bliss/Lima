@@ -29,7 +29,7 @@ testfrelonspectroscopy:	testfrelonspectroscopy.o $(frelon-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS) ../../../control/src/Ct.o
 
 clean:
-	rm -f *.o testfrelon testfreloninterface
+	rm -f *.o *.P testfrelon testfreloninterface
 
 %.o : %.cpp
 	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<

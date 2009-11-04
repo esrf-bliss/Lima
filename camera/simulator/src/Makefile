@@ -11,7 +11,7 @@ Simu.o:	$(simu-objs)
 	$(LD) -o $@ -r $+
 
 clean:
-	rm -f Simu.o $(simu-objs)
+	rm -f Simu.o *.P $(simu-objs)
 
 %.o : %.cpp
 	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<

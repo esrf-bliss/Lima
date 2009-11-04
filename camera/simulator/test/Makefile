@@ -31,6 +31,7 @@ clean:
 	rm -f $(test-objs) test *.edf
 	rm -f $(testsimulator-objs) testsimulator
 	rm -f $(testsimuhwinterface-objs) testsimuhwinterface
+	rm -f *.P
 
 %.o : %.cpp
 	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
