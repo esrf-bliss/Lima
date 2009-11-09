@@ -29,14 +29,16 @@ class Acq
 using namespace lima;
 %End
  public:
-	Acq(Espia::Dev& dev);
-	~Acq();
-
 	struct StatusType {  // Instead ot "typedef struct Status {} StatusType"
 		bool	running;
 		int	run_nb;
 		int	last_frame_nb;
 	};
+
+	Acq(Espia::Dev& dev);
+	~Acq();
+
+	Espia::Dev& getDev();
 
 	void bufferAlloc(int& nb_buffers, int nb_buffer_frames, 
 			 const FrameDim& frame_dim);

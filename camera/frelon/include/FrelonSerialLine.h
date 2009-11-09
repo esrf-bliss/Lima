@@ -12,6 +12,8 @@ namespace Frelon
 
 class SerialLine : public HwSerialLine
 {
+	DEB_CLASS_NAMESPC(DebModFrelonSerial, "SerialLine", "Frelon");
+
  public:
 	enum MsgPart {
 		MsgSync, MsgCmd, MsgVal, MsgReq, MsgTerm, 
@@ -31,7 +33,8 @@ class SerialLine : public HwSerialLine
 			    TimeoutReset;
 	
 	SerialLine(Espia::SerialLine& espia_ser_line);
-	
+	virtual ~SerialLine();
+
 	Espia::SerialLine& getEspiaSerialLine();
 
 	virtual void write(const std::string& buffer, 
@@ -74,6 +77,7 @@ class SerialLine : public HwSerialLine
 	enum RegOp {
 		None, DoCmd, ReadReg, WriteReg, DoReset, MultiRead
 	};
+	friend std::ostream& operator <<(std::ostream& os, RegOp op);
 
 	typedef std::map<Reg, std::string> RegRespMapType;
 
@@ -99,6 +103,9 @@ class SerialLine : public HwSerialLine
 	std::string m_curr_resp;
 	std::string m_curr_fmt_resp;
 };
+
+std::ostream& operator <<(std::ostream& os, SerialLine::RegOp op);
+
 
 inline AutoMutex SerialLine::lock(int mode)
 {

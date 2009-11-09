@@ -12,6 +12,8 @@ namespace Espia
 
 class BufferMgr : public BufferCbMgr
 {
+	DEB_CLASS_NAMESPC(DebModEspia, "BufferMgr", "Espia");
+
  public:
 	BufferMgr(Acq& acq);
 	virtual ~BufferMgr();

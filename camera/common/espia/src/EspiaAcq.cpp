@@ -88,6 +88,11 @@ Acq::~Acq()
 	disableFrameCallback();
 }
 
+Dev& Acq::getDev()
+{
+	return m_dev;
+}
+
 int Acq::dispatchFrameCallback(struct espia_cb_data *cb_data)
 {
 	DEB_STATIC_FUNCT();
@@ -460,11 +465,14 @@ void Acq::getStatus(StatusType& status)
 void Acq::registerAcqEndCallback(AcqEndCallback& acq_end_cb)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_PARAM_VAR2(&acq_end_cb, m_acq_end_cb);
 
-	if (m_acq_end_cb)
+	if (m_acq_end_cb) {
+		DEB_ERROR() << "AcqEndCallback already registered";
 		throw LIMA_HW_EXC(InvalidValue, 
 				  "AcqEndCallback already registered");
-	
+	}
+
 	acq_end_cb.setAcq(this);
 	m_acq_end_cb = &acq_end_cb;
 }
@@ -472,11 +480,14 @@ void Acq::registerAcqEndCallback(AcqEndCallback& acq_end_cb)
 void Acq::unregisterAcqEndCallback(AcqEndCallback& acq_end_cb)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_PARAM_VAR2(&acq_end_cb, m_acq_end_cb);
 
-	if (m_acq_end_cb != &acq_end_cb)
+	if (m_acq_end_cb != &acq_end_cb) {
+		DEB_ERROR() << "Specified AcqEndCallback not registered";
 		throw LIMA_HW_EXC(InvalidValue, 
 				  "Specified AcqEndCallback not registered");
-	
+	}
+
 	stop();
 
 	m_acq_end_cb = NULL;

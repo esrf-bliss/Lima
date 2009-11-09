@@ -31,6 +31,7 @@ class SerialLine : HwSerialLine
 //			    TimeoutReset;
 	
 	SerialLine(Espia::SerialLine& espia_ser_line);
+	virtual ~SerialLine();
 	
 	Espia::SerialLine& getEspiaSerialLine();
 

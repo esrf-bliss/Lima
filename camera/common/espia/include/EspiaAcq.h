@@ -40,14 +40,16 @@ class Acq : public HwFrameCallbackGen
 	DEB_CLASS_NAMESPC(DebModEspia, "Acq", "Espia");
 
  public:
-	Acq(Dev& dev);
-	~Acq();
-
 	typedef struct Status {
 		bool	running;
 		int	run_nb;
 		int	last_frame_nb;
 	} StatusType;
+
+	Acq(Dev& dev);
+	~Acq();
+
+	Dev& getDev();
 
 	void bufferAlloc(int& nb_buffers, int nb_buffer_frames, 
 			 const FrameDim& frame_dim);
