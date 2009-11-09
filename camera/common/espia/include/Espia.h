@@ -3,6 +3,7 @@
 
 #include "espia_lib.h"
 #include "Exceptions.h"
+#include "Debug.h"
 
 #include <string>
 

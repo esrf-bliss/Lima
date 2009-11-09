@@ -15,6 +15,8 @@ class Acq;
 
 class AcqEndCallback
 {
+	DEB_CLASS_NAMESPC(DebModEspia, "AcqEndCallback", "Espia");
+
  public:
 	AcqEndCallback();
 	virtual ~AcqEndCallback();
@@ -35,6 +37,8 @@ class AcqEndCallback
 
 class Acq : public HwFrameCallbackGen
 {
+	DEB_CLASS_NAMESPC(DebModEspia, "Acq", "Espia");
+
  public:
 	Acq(Dev& dev);
 	~Acq();
@@ -145,8 +149,10 @@ inline AutoMutex Acq::acqLock()
 	return m_dev.acqLock();
 }
 
-
 } // namespace Espia
+
+std::ostream& operator <<(std::ostream& os, 
+			  const Espia::Acq::StatusType& status);
 
 } // namespace lima
 

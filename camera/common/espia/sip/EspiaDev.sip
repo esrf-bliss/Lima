@@ -12,6 +12,7 @@ using namespace lima;
 	Dev(int dev_nb);
 	~Dev();
 
+	int getDevNb();
 	bool isMeta();
 
 	void resetLink();

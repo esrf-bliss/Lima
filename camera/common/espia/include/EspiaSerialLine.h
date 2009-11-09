@@ -27,26 +27,28 @@ namespace Espia
  *******************************************************************/
 class SerialLine : public HwSerialLine
 {
+	DEB_CLASS_NAMESPC(DebModEspiaSerial, "SerialLine", "Espia");
+
   public :
-	SerialLine( Dev& edev, const std::string& line_term="\r", 
-		    double timeout=1.0, int block_size=0, 
-		    double block_delay=0 );
+	SerialLine(Dev& edev, const std::string& line_term="\r", 
+		   double timeout=1.0, int block_size=0, 
+		   double block_delay=0);
 	~SerialLine();
 
 	Dev& getDev();
 
-	virtual void write( const std::string& buffer, bool no_wait=false );
+	virtual void write(const std::string& buffer, bool no_wait=false);
 
-	virtual void read( std::string& buffer, int max_len, 
-	                   double timeout=TimeoutDefault );
+	virtual void read(std::string& buffer, int max_len, 
+	                   double timeout=TimeoutDefault);
 
-	virtual void readStr( std::string& buffer, int max_len, 
-	                      const std::string& term, 
-	                      double timeout=TimeoutDefault );
+	virtual void readStr(std::string& buffer, int max_len, 
+			     const std::string& term, 
+			     double timeout=TimeoutDefault);
 
 	virtual void flush();
 
-	virtual void getNbAvailBytes( int &avail_bytes );
+	virtual void getNbAvailBytes(int& avail_bytes);
 
   private :
 	Dev& m_dev;  /// Reference to Espia::Dev object

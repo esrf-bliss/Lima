@@ -22,12 +22,15 @@ extern std::map<std::string, int> EspiaDrvOptMap;
 
 class Dev
 {
+	DEB_CLASS_NAMESPC(DebModEspia, "Dev", "Espia");
+
  public:
 	Dev(int dev_nb);
 	~Dev();
 
 	operator espia_t();
 
+	int getDevNb();
 	bool isMeta();
 
 	void registerCallback(struct espia_cb_data& cb_data, int& cb_nr);
@@ -38,8 +41,8 @@ class Dev
 
 	AutoMutex acqLock();
 
-	void getDrvOption( const std::string &opt_name, int &val );
-	void setDrvOption( const std::string &opt_name, int val );
+	void getDrvOption(const std::string& opt_name, int& val);
+	void setDrvOption(const std::string& opt_name, int  val);
 
  private:
 	static const double ResetLinkTime;
@@ -63,6 +66,11 @@ inline Dev::operator espia_t()
 inline bool Dev::isMeta()
 {
 	return (m_dev_nb == MetaDev);
+}
+
+inline int Dev::getDevNb()
+{
+	return m_dev_nb;
 }
 
 inline AutoMutex Dev::acqLock()
