@@ -99,7 +99,7 @@ int Acq::dispatchFrameCallback(struct espia_cb_data *cb_data)
 	DEB_PARAM_VAR1(cb_data->cb_nr);
 
 	Acq *espia = (Acq *) cb_data->data;
-	DEB_TRACE_VAR1(espia->getDebObjName());
+	DEB_TRACE_VAR1(DEB_OBJ_NAME(espia));
 
 	void (Acq::*method)(struct espia_cb_data *cb_data) = NULL;
 

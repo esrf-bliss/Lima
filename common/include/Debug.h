@@ -17,19 +17,37 @@ namespace lima
 // DebParams::checkInit (Debug.cpp) when you change these enums
 
 enum DebType {
-	DebFatal,	DebError,	DebWarning,	DebTrace, 
-	DebFunct,	DebParam,	DebReturn,	DebAlways,
+	DebTypeFatal		= 1 << 0,
+	DebTypeError		= 1 << 1,
+	DebTypeWarning		= 1 << 2,
+	DebTypeTrace		= 1 << 3,
+	DebTypeFunct		= 1 << 4,
+	DebTypeParam		= 1 << 5,
+	DebTypeReturn		= 1 << 6,
+	DebTypeAlways		= 1 << 7,
 };
 
 enum DebFormat {
-	DebFmtDateTime,	DebFmtModule,	DebFmtObj,	DebFmtFunct,	
-	DebFmtFileLine,	DebFmtType,
+	DebFmtDateTime		= 1 << 0,
+	DebFmtModule		= 1 << 1,
+	DebFmtObj		= 1 << 2,
+	DebFmtFunct		= 1 << 3,	
+	DebFmtFileLine		= 1 << 4,
+	DebFmtType		= 1 << 5,
 };
 
 enum DebModule {
-	DebModNone,	DebModCommon,	DebModHardware,	DebModControl,	
-	DebModSimu,	DebModEspia,	DebModEspiaSerial, DebModFocla,	
-	DebModFrelon,	DebModFrelonSerial, DebModMaxipix,
+	DebModNone		= 1 << 0,
+	DebModCommon		= 1 << 1,
+	DebModHardware		= 1 << 2,
+	DebModControl		= 1 << 3,
+	DebModSimu		= 1 << 4,
+	DebModEspia		= 1 << 5,
+	DebModEspiaSerial	= 1 << 6,
+	DebModFocla		= 1 << 7,
+	DebModFrelon		= 1 << 8,
+	DebModFrelonSerial	= 1 << 9,
+	DebModMaxipix		= 1 << 10,
 };
 
 typedef const char *ConstStr;
@@ -92,6 +110,9 @@ class DebParams
 {
  public:
 	typedef long long Flags;
+	typedef std::vector<std::string> NameList;
+
+	static const Flags AllFlags;
 
 	DebParams(DebModule mod = DebModNone, 
 		  ConstStr class_name = NULL, ConstStr name_space = NULL);
@@ -108,14 +129,32 @@ class DebParams
 	bool checkModule() const;
 	bool checkType(DebType type) const;
 
-	static void setModuleFlags(Flags mod_flags);
-	static Flags getModuleFlags();
+	static void setTypeFlags(Flags type_flags);
+	static Flags getTypeFlags();
+
+	static void enableTypeFlags(Flags type_flags);
+	static void disableTypeFlags(Flags type_flags);
 
 	static void setFormatFlags(Flags fmt_flags);
 	static Flags getFormatFlags();
 
-	static void setTypeFlags(Flags type_flags);
-	static Flags getTypeFlags();
+	static void enableFormatFlags(Flags fmt_flags);
+	static void disableFormatFlags(Flags fmt_flags);
+
+	static void setModuleFlags(Flags mod_flags);
+	static Flags getModuleFlags();
+
+	static void enableModuleFlags(Flags mod_flags);
+	static void disableModuleFlags(Flags mod_flags);
+
+	static void setTypeFlagsNameList(const NameList& type_name_list);
+	static NameList getTypeFlagsNameList();
+
+	static void setFormatFlagsNameList(const NameList& fmt_name_list);
+	static NameList getFormatFlagsNameList();
+
+	static void setModuleFlagsNameList(const NameList& mod_name_list);
+	static NameList getModuleFlagsNameList();
 
 	static DebStream& getDebStream();
 	static AutoMutex lock();
@@ -129,6 +168,15 @@ private:
 	friend class DebObj;
 
 	static void checkInit();
+
+	template <class T>
+	static void setFlagsNameList(Flags& flags, 
+				     const std::map<T, std::string>& name_map,
+				     const NameList& name_list);
+	template <class T>
+	static void getFlagsNameList(Flags flags, 
+				     const std::map<T, std::string>& name_map,
+				     NameList& name_list);
 
 	static Flags s_type_flags;
 	static Flags s_fmt_flags;
@@ -146,6 +194,9 @@ private:
 	ConstStr m_class_name;
 	ConstStr m_name_space;
 };
+
+std::ostream& operator <<(std::ostream& os, 
+			  const DebParams::NameList& name_list);
 
 
 /*------------------------------------------------------------------
@@ -210,14 +261,9 @@ class DebObj
  *  global inline functions
  *------------------------------------------------------------------*/
 
-inline DebParams::Flags DebFlag(int val)
-{
-	return (1LL << val);
-}
-
 inline bool DebHasFlag(DebParams::Flags flags, int val)
 {
-	return ((flags & DebFlag(val)) != 0);
+	return ((flags & val) != 0);
 }
 
 /*------------------------------------------------------------------
@@ -327,25 +373,26 @@ inline DebObj::DebObj(DebParams& deb_params, bool destructor,
 	  m_funct_name(funct_name), m_obj_name(obj_name), 
 	  m_file_name(file_name), m_line_nr(line_nr)
 {
-	write(DebFunct, m_file_name, m_line_nr) << "Enter";
+	write(DebTypeFunct, m_file_name, m_line_nr) << "Enter";
 }
 
 inline DebObj::~DebObj()
 {
-	write(DebFunct, m_file_name, m_line_nr) << "Exit";
+	write(DebTypeFunct, m_file_name, m_line_nr) << "Exit";
 }
 
 inline bool DebObj::checkOut(DebType type)
 {
-	return ((type == DebAlways) || (type == DebFatal) || 
-		((type == DebError) && m_deb_params->checkType(DebError)) ||
+	return ((type == DebTypeAlways) || (type == DebTypeFatal) || 
+		((type == DebTypeError) && 
+		 m_deb_params->checkType(DebTypeError)) ||
 		(m_deb_params->checkModule() && 
 		 m_deb_params->checkType(type)));
 }
 
 inline bool DebObj::checkErr(DebType type)
 {
-	return ((type == DebFatal) || (type == DebError));
+	return ((type == DebTypeFatal) || (type == DebTypeError));
 }
 
 inline bool DebObj::checkAny(DebType type)
@@ -434,52 +481,55 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_MSG_VAR6(type, v1, v2, v3, v4, v5, v6) \
 	DEB_MSG_VAR5(type, v1, v2, v3, v4, v5) << ", " #v6 "=" << v6
 
-#define DEB_FATAL()	DEB_MSG(DebFatal)
-#define DEB_ERROR()	DEB_MSG(DebError)
-#define DEB_WARNING()	DEB_MSG(DebWarning)
-#define DEB_TRACE()	DEB_MSG(DebTrace)
-#define DEB_PARAM()	DEB_MSG(DebParam)
-#define DEB_RETURN()	DEB_MSG(DebReturn)
-#define DEB_ALWAYS()	DEB_MSG(DebAlways)
+#define DEB_FATAL()	DEB_MSG(DebTypeFatal)
+#define DEB_ERROR()	DEB_MSG(DebTypeError)
+#define DEB_WARNING()	DEB_MSG(DebTypeWarning)
+#define DEB_TRACE()	DEB_MSG(DebTypeTrace)
+#define DEB_PARAM()	DEB_MSG(DebTypeParam)
+#define DEB_RETURN()	DEB_MSG(DebTypeReturn)
+#define DEB_ALWAYS()	DEB_MSG(DebTypeAlways)
 
 #define DEB_PARAM_VAR1(v1) \
-	DEB_MSG_VAR1(DebParam, v1)
+	DEB_MSG_VAR1(DebTypeParam, v1)
 #define DEB_PARAM_VAR2(v1, v2) \
-	DEB_MSG_VAR2(DebParam, v1, v2)
+	DEB_MSG_VAR2(DebTypeParam, v1, v2)
 #define DEB_PARAM_VAR3(v1, v2, v3) \
-	DEB_MSG_VAR3(DebParam, v1, v2, v3)
+	DEB_MSG_VAR3(DebTypeParam, v1, v2, v3)
 #define DEB_PARAM_VAR4(v1, v2, v3, v4) \
-	DEB_MSG_VAR4(DebParam, v1, v2, v3, v4)
+	DEB_MSG_VAR4(DebTypeParam, v1, v2, v3, v4)
 #define DEB_PARAM_VAR5(v1, v2, v3, v4, v5) \
-	DEB_MSG_VAR5(DebParam, v1, v2, v3, v4, v5)
+	DEB_MSG_VAR5(DebTypeParam, v1, v2, v3, v4, v5)
 #define DEB_PARAM_VAR6(v1, v2, v3, v4, v5, v6) \
-	DEB_MSG_VAR6(DebParam, v1, v2, v3, v4, v5, v6)
+	DEB_MSG_VAR6(DebTypeParam, v1, v2, v3, v4, v5, v6)
 
 #define DEB_TRACE_VAR1(v1) \
-	DEB_MSG_VAR1(DebTrace, v1)
+	DEB_MSG_VAR1(DebTypeTrace, v1)
 #define DEB_TRACE_VAR2(v1, v2) \
-	DEB_MSG_VAR2(DebTrace, v1, v2)
+	DEB_MSG_VAR2(DebTypeTrace, v1, v2)
 #define DEB_TRACE_VAR3(v1, v2, v3) \
-	DEB_MSG_VAR3(DebTrace, v1, v2, v3)
+	DEB_MSG_VAR3(DebTypeTrace, v1, v2, v3)
 #define DEB_TRACE_VAR4(v1, v2, v3, v4) \
-	DEB_MSG_VAR4(DebTrace, v1, v2, v3, v4)
+	DEB_MSG_VAR4(DebTypeTrace, v1, v2, v3, v4)
 #define DEB_TRACE_VAR5(v1, v2, v3, v4, v5) \
-	DEB_MSG_VAR5(DebTrace, v1, v2, v3, v4, v5)
+	DEB_MSG_VAR5(DebTypeTrace, v1, v2, v3, v4, v5)
 #define DEB_TRACE_VAR6(v1, v2, v3, v4, v5, v6) \
-	DEB_MSG_VAR6(DebTrace, v1, v2, v3, v4, v5, v6)
+	DEB_MSG_VAR6(DebTypeTrace, v1, v2, v3, v4, v5, v6)
 
 #define DEB_RETURN_VAR1(v1) \
-	DEB_MSG_VAR1(DebReturn, v1)
+	DEB_MSG_VAR1(DebTypeReturn, v1)
 #define DEB_RETURN_VAR2(v1, v2) \
-	DEB_MSG_VAR2(DebReturn, v1, v2)
+	DEB_MSG_VAR2(DebTypeReturn, v1, v2)
 #define DEB_RETURN_VAR3(v1, v2, v3) \
-	DEB_MSG_VAR3(DebReturn, v1, v2, v3)
+	DEB_MSG_VAR3(DebTypeReturn, v1, v2, v3)
 #define DEB_RETURN_VAR4(v1, v2, v3, v4) \
-	DEB_MSG_VAR4(DebReturn, v1, v2, v3, v4)
+	DEB_MSG_VAR4(DebTypeReturn, v1, v2, v3, v4)
 #define DEB_RETURN_VAR5(v1, v2, v3, v4, v5) \
-	DEB_MSG_VAR5(DebReturn, v1, v2, v3, v4, v5)
+	DEB_MSG_VAR5(DebTypeReturn, v1, v2, v3, v4, v5)
 #define DEB_RETURN_VAR6(v1, v2, v3, v4, v5, v6) \
-	DEB_MSG_VAR6(DebReturn, v1, v2, v3, v4, v5, v6)
+	DEB_MSG_VAR6(DebTypeReturn, v1, v2, v3, v4, v5, v6)
+
+#define DEB_OBJ_NAME(o) \
+	((o)->getDebObjName())
 
 } // namespace lima
 

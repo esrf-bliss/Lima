@@ -88,6 +88,8 @@ void DebStream::RemoveError(ostream *os)
  *  DebParams functions 
  *------------------------------------------------------------------*/
 
+const DebParams::Flags DebParams::AllFlags = 0xffffffff;
+
 DebParams::Flags DebParams::s_type_flags;
 DebParams::Flags DebParams::s_fmt_flags;
 DebParams::Flags DebParams::s_mod_flags;
@@ -112,6 +114,18 @@ DebParams::Flags DebParams::getTypeFlags()
 	return s_type_flags; 
 }
 
+void DebParams::enableTypeFlags(Flags type_flags)
+{
+	checkInit();
+	s_type_flags |= type_flags;
+}
+
+void DebParams::disableTypeFlags(Flags type_flags)
+{
+	checkInit();
+	s_type_flags &= ~type_flags;
+}
+
 void DebParams::setFormatFlags(Flags fmt_flags)
 { 
 	checkInit();
@@ -124,6 +138,18 @@ DebParams::Flags DebParams::getFormatFlags()
 	return s_fmt_flags; 
 }
 
+void DebParams::enableFormatFlags(Flags fmt_flags)
+{
+	checkInit();
+	s_fmt_flags |= fmt_flags;
+}
+
+void DebParams::disableFormatFlags(Flags fmt_flags)
+{
+	checkInit();
+	s_fmt_flags &= ~fmt_flags;
+}
+
 void DebParams::setModuleFlags(Flags mod_flags)
 {
 	checkInit();
@@ -134,6 +160,94 @@ DebParams::Flags DebParams::getModuleFlags()
 { 
 	checkInit();
 	return s_mod_flags; 
+}
+
+void DebParams::enableModuleFlags(Flags mod_flags)
+{
+	checkInit();
+	s_mod_flags |= mod_flags;
+}
+
+void DebParams::disableModuleFlags(Flags mod_flags)
+{
+	checkInit();
+	s_mod_flags &= ~mod_flags;
+}
+
+template <class T>
+void DebParams::setFlagsNameList(Flags& flags, 
+				 const map<T, string>& name_map,
+				 const NameList& name_list)
+{
+	checkInit();
+
+	flags = 0;
+
+	typename NameList::const_iterator lit, lend = name_list.end();
+	typename map<T, string>::const_iterator mit, mend = name_map.end();
+	for (lit = name_list.begin(); lit != lend; ++lit) {
+		const string& name = *lit;
+		mit = FindMapValue(name_map, name);
+		if (mit == mend) {
+			string err_desc = string("Invalid name: ") + name;
+			throw LIMA_COM_EXC(InvalidValue, err_desc);
+		}
+		flags |= mit->first;
+	}
+}
+
+template <class T>
+void DebParams::getFlagsNameList(Flags flags, 
+				 const map<T, string>& name_map,
+				 NameList& name_list)
+{
+	checkInit();
+
+	name_list.clear();
+
+	typename map<T, string>::const_iterator it, end = name_map.end();
+	for (it = name_map.begin(); it != end; ++it) {
+		if (DebHasFlag(flags, it->first)) {
+			const string& name = it->second;
+			name_list.push_back(name);
+		}
+	}
+}
+
+void DebParams::setTypeFlagsNameList(const NameList& type_name_list)
+{
+	setFlagsNameList(s_type_flags, *s_type_name_map, type_name_list);
+}
+
+DebParams::NameList DebParams::getTypeFlagsNameList()
+{
+	NameList type_name_list;
+	getFlagsNameList(s_type_flags, *s_type_name_map, type_name_list);
+	return type_name_list;
+}
+
+void DebParams::setFormatFlagsNameList(const NameList& fmt_name_list)
+{
+	setFlagsNameList(s_fmt_flags, *s_fmt_name_map, fmt_name_list);
+}
+
+DebParams::NameList DebParams::getFormatFlagsNameList()
+{
+	NameList fmt_name_list;
+	getFlagsNameList(s_fmt_flags, *s_fmt_name_map, fmt_name_list);
+	return fmt_name_list;
+}
+
+void DebParams::setModuleFlagsNameList(const NameList& mod_name_list)
+{
+	setFlagsNameList(s_mod_flags, *s_mod_name_map, mod_name_list);
+}
+
+DebParams::NameList DebParams::getModuleFlagsNameList()
+{
+	NameList mod_name_list;
+	getFlagsNameList(s_mod_flags, *s_mod_name_map, mod_name_list);
+	return mod_name_list;
 }
 
 DebStream& DebParams::getDebStream()
@@ -183,12 +297,12 @@ void DebParams::checkInit()
 	if (s_deb_stream != NULL)
 		return;
 
-	s_type_flags = s_fmt_flags = s_mod_flags = 0xffffffff;
+	s_type_flags = s_fmt_flags = s_mod_flags = AllFlags;
 
 	s_deb_stream = new DebStream();
 
 	typedef pair<DebType, string> TypeNamePair;
-#define TYPE_NAME(x) TypeNamePair(Deb##x, #x)
+#define TYPE_NAME(x) TypeNamePair(DebType##x, #x)
 	TypeNamePair type_names[] = {
 		TYPE_NAME(Fatal),
 		TYPE_NAME(Error),
@@ -231,6 +345,21 @@ void DebParams::checkInit()
 	s_mod_name_map = new map<DebModule, string>(C_LIST_ITERS(mod_names));
 
 	s_mutex = new Mutex();
+}
+
+ostream& lima::operator <<(ostream& os, 
+			   const DebParams::NameList& name_list)
+{
+	os << "[";
+
+	DebParams::NameList::const_iterator it;
+	ConstStr sep = "";
+	for (it = name_list.begin(); it != name_list.end(); ++it) {
+		os << sep << *it;
+		sep = ",";
+	}
+
+	return os << "]";
 }
 
 

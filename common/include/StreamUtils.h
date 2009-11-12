@@ -66,11 +66,17 @@ class OCopyStream : public std::ostream
 	typedef CopyStreamBuf::StreamList StreamList;
 
 	OCopyStream(StreamList *slist, std::ostream *altstream = NULL)
-		: std::ostream(&sb), sb(slist, altstream) {}
+		: std::ostream(NULL), sb(slist, altstream) 
+	{
+		init(&sb);
+	}
 	
-	OCopyStream::OCopyStream(const OCopyStream& other)
-		: std::ostream(&sb),
-		sb(other.sb.getStreamList(), other.sb.getAltStream()) {}
+	OCopyStream(const OCopyStream& other)
+		: std::ios(), std::ostream(NULL),
+		sb(other.sb.getStreamList(), other.sb.getAltStream()) 
+	{
+		init(&sb);
+	}
 
  private:
 	CopyStreamBuf sb;

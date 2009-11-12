@@ -15,6 +15,7 @@ class Camera
 
  public:
 	Camera(Espia::SerialLine& espia_ser_line);
+	~Camera();
 
 	Frelon::SerialLine& getSerialLine();
 

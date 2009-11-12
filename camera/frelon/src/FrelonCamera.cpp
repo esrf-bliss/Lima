@@ -14,8 +14,16 @@ const double Camera::MaxReadoutTime    = 0.7;
 Camera::Camera(Espia::SerialLine& espia_ser_line)
 	: m_ser_line(espia_ser_line)
 {
+	DEB_CONSTRUCTOR();
+
 	m_trig_mode = IntTrig;
 	readRegister(NbFrames, m_nb_frames);
+}
+
+Camera::~Camera()
+{
+	DEB_DESTRUCTOR();
+
 }
 
 SerialLine& Camera::getSerialLine()
@@ -25,38 +33,64 @@ SerialLine& Camera::getSerialLine()
 
 Espia::Dev& Camera::getEspiaDev()
 {
-	Espia::SerialLine ser_line = m_ser_line.getEspiaSerialLine();
+	Espia::SerialLine& ser_line = m_ser_line.getEspiaSerialLine();
 	Espia::Dev& dev = ser_line.getDev();
 	return dev;
 }
 
 void Camera::sendCmd(Cmd cmd)
 {
+	DEB_MEMBER_FUNCT();
+	const string& cmd_str = CmdStrMap[cmd];
+	DEB_PARAM_VAR2(int(cmd), cmd_str);
+	if (cmd_str.empty()) {
+		DEB_ERROR() << "Invalid command cmd=" << cmd;
+		throw LIMA_HW_EXC(InvalidValue, "Invalid command");
+	}
+
 	string resp;
-	m_ser_line.sendFmtCmd(CmdStrMap[cmd], resp);
+	m_ser_line.sendFmtCmd(cmd_str, resp);
 }
 
 void Camera::writeRegister(Reg reg, int val)
 {
+	DEB_MEMBER_FUNCT();
+	const string& reg_str = RegStrMap[reg];
+	DEB_PARAM_VAR3(int(reg), reg_str, val);
+	if (reg_str.empty()) {
+		DEB_ERROR() << "Invalid register reg=" << reg;
+		throw LIMA_HW_EXC(InvalidValue, "Invalid register");
+	}
+
 	ostringstream cmd;
-	cmd << RegStrMap[reg] << val;
+	cmd << reg_str << val;
 	string resp;
 	m_ser_line.sendFmtCmd(cmd.str(), resp);
 }
 
 void Camera::readRegister(Reg reg, int& val)
 {
-	string resp, cmd = RegStrMap[reg] + "?";
-	m_ser_line.sendFmtCmd(cmd, resp);
+	DEB_MEMBER_FUNCT();
+	const string& reg_str = RegStrMap[reg];
+	DEB_PARAM_VAR2(int(reg), reg_str);
+	if (reg_str.empty()) {
+		DEB_ERROR() << "Invalid register reg=" << reg;
+		throw LIMA_HW_EXC(InvalidValue, "Invalid register");
+	}
+
+	string resp;
+	m_ser_line.sendFmtCmd(reg_str + "?", resp);
 	istringstream is(resp);
 	is >> val;
 }
 
 void Camera::hardReset()
 {
+	DEB_MEMBER_FUNCT();
 	Espia::Dev& dev = getEspiaDev();
 	dev.resetLink();
 
+	DEB_TRACE() << "Reseting the camera";
 	sendCmd(Reset);
 }
 

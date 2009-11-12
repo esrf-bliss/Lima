@@ -11,8 +11,11 @@ namespace Frelon
 
 class Camera
 {
+	DEB_CLASS_NAMESPC(DebModFrelon, "Camera", "Frelon");
+
  public:
 	Camera(Espia::SerialLine& espia_ser_line);
+	~Camera();
 
 	SerialLine& getSerialLine();
 

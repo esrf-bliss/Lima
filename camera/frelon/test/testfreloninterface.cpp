@@ -197,14 +197,40 @@ void set_hw_roi(HwRoiCtrlObj *hw_roi, const Roi& set_roi, Roi& real_roi,
 	     << "soft_roi=" << soft_roi << endl;
 }
 
+void print_deb_flags()
+{
+	DebParams::Flags deb_flags;
+	cout << hex << showbase;
+	deb_flags = DebParams::getTypeFlags();
+	cout << "TypeFlags=" << deb_flags << endl;
+	deb_flags = DebParams::getFormatFlags();
+	cout << "FormatFlags=" << deb_flags << endl;
+	deb_flags = DebParams::getModuleFlags();
+	cout << "ModuleFlags=" << deb_flags << endl;
+	cout << dec << noshowbase;
+
+	DebParams::NameList name_list;
+	name_list = DebParams::getTypeFlagsNameList();
+	cout << "TypeFlagsNameList=" << name_list << endl;
+	name_list = DebParams::getFormatFlagsNameList();
+	cout << "FormatFlagsNameList=" << name_list << endl;
+	name_list = DebParams::getModuleFlagsNameList();
+	cout << "ModuleFlagsNameList=" << name_list << endl;
+}
+
 void test_frelon_hw_inter(bool do_reset)
 {
+	print_deb_flags();
+	
 	Espia::Dev dev(0);
 	Espia::Acq acq(dev);
 	Espia::BufferMgr buffer_cb_mgr(acq);
 	Espia::SerialLine ser_line(dev);
 	Frelon::Camera cam(ser_line);
 	BufferCtrlMgr buffer_mgr(buffer_cb_mgr);
+
+	DebParams::disableModuleFlags(DebModEspiaSerial);
+	print_deb_flags();
 
 	cout << "Creating the Hw Interface ... " << endl;
 	Frelon::Interface hw_inter(acq, buffer_mgr, cam);
@@ -328,6 +354,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_inter.stopAcq();
 	print_status(hw_inter);
 
+	DebParams::disableTypeFlags(DebTypeFunct);
+	print_deb_flags();
+
 	set_roi = Roi(Point(267, 267), Size(501, 501));
 	set_hw_roi(hw_roi, set_roi, real_roi, soft_roi);
 	effect_frame_dim.setSize(real_roi.getSize());
@@ -349,6 +378,9 @@ void test_frelon_hw_inter(bool do_reset)
 
 	hw_sync->setNbFrames(3);
 
+	DebParams::disableModuleFlags(DebModEspia);
+	print_deb_flags();
+
 	print_status(hw_inter);
 	acq_finished.resetFinished();
 	hw_inter.startAcq();
@@ -357,6 +389,11 @@ void test_frelon_hw_inter(bool do_reset)
 	print_status(hw_inter);
 	hw_inter.stopAcq();
 	print_status(hw_inter);
+
+	DebParams::enableTypeFlags  (DebParams::AllFlags);
+	DebParams::enableFormatFlags(DebParams::AllFlags);
+	DebParams::enableModuleFlags(DebParams::AllFlags);
+	print_deb_flags();
 }
 
 int main(int argc, char *argv[])
