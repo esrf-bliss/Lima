@@ -28,13 +28,11 @@ enum DebModule {
 	DebModCommon,		// = 1 << 1,
 	DebModHardware,		// = 1 << 2,
 	DebModControl,		// = 1 << 3,
-	DebModSimu,		// = 1 << 4,
-	DebModEspia,		// = 1 << 5,
-	DebModEspiaSerial,	// = 1 << 6,
-	DebModFocla,		// = 1 << 7,
-	DebModFrelon,		// = 1 << 8,
-	DebModFrelonSerial,	// = 1 << 9,
-	DebModMaxipix,		// = 1 << 10,
+	DebModEspia,		// = 1 << 4,
+	DebModEspiaSerial,	// = 1 << 5,
+	DebModFocla,		// = 1 << 6,
+	DebModCamera,		// = 1 << 7,
+	DebModCameraCom,	// = 1 << 8,
 };
 
 typedef const char *ConstStr;

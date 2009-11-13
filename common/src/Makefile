@@ -1,8 +1,7 @@
-SRCS = Constants.cpp SizeUtils.cpp Timestamp.cpp ThreadUtils.cpp Exceptions.cpp \
-               BufferSave.cpp MemUtils.cpp RegEx.cpp AcqFinished.cpp
-
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
                BufferSave.o MemUtils.o RegEx.o AcqFinished.o Debug.o
+
+SRCS = $(common-objs:.o=.cpp)
 
 CXXFLAGS += -I../include -I../../hardware/include -Wall -pthread -fPIC -g
 

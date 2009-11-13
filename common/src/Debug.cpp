@@ -334,7 +334,6 @@ void DebParams::checkInit()
 		MODULE_NAME(Common),
 		MODULE_NAME(Hardware),
 		MODULE_NAME(Control),
-		MODULE_NAME(Simu),
 		MODULE_NAME(Espia),
 		MODULE_NAME(EspiaSerial),
 		MODULE_NAME(Focla),
