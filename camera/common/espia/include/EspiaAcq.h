@@ -120,7 +120,7 @@ inline bool Acq::hasVirtualBuffers()
 	return m_real_frame_factor != 1;
 }
 
-inline int Acq::realBufferNb(int virt_buffer, int virt_frame)
+inline int Acq::realBufferNb(int virt_buffer, int /*virt_frame*/)
 {
 	return virt_buffer / m_real_frame_factor;
 }
@@ -136,7 +136,7 @@ inline int Acq::virtBufferNb(int real_buffer, int real_frame)
 		real_frame / m_nb_buffer_frames);
 }
 
-inline int Acq::virtFrameNb (int real_buffer, int real_frame)
+inline int Acq::virtFrameNb (int /*real_buffer*/, int real_frame)
 {
 	return real_frame % m_nb_buffer_frames;
 }

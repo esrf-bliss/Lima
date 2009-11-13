@@ -115,7 +115,7 @@ class SyncCtrlObj : public HwSyncCtrlObj
 		AcqEndCallback(Camera& cam) : m_cam(cam) {}
 
 	protected:
-		virtual void acqFinished(const HwFrameInfoType& frame_info)
+		virtual void acqFinished(const HwFrameInfoType& /*frame_info*/)
 		{
 			m_cam.stop();
 		}
