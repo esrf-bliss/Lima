@@ -45,9 +45,8 @@ enum DebModule {
 	DebModEspia		= 1 << 5,
 	DebModEspiaSerial	= 1 << 6,
 	DebModFocla		= 1 << 7,
-	DebModFrelon		= 1 << 8,
-	DebModFrelonSerial	= 1 << 9,
-	DebModMaxipix		= 1 << 10,
+	DebModCamera		= 1 << 8,
+	DebModCameraCom		= 1 << 9,
 };
 
 typedef const char *ConstStr;
@@ -258,6 +257,30 @@ class DebObj
 
 
 /*------------------------------------------------------------------
+ *  class DebHex
+ *------------------------------------------------------------------*/
+
+class DebHex
+{
+ public:
+	DebHex(unsigned long val) : m_val(val) 
+	{}
+
+	unsigned long getVal() const
+	{ return m_val; }
+
+ private:
+	unsigned long m_val;
+};
+
+inline std::ostream& operator <<(std::ostream& os, const DebHex& deb_hex)
+{
+	return os << std::hex << std::showbase << deb_hex.getVal()
+		  << std::dec << std::noshowbase;
+}
+
+
+/*------------------------------------------------------------------
  *  global inline functions
  *------------------------------------------------------------------*/
 
@@ -413,6 +436,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 		return DebProxy();
 }
 
+
 /*------------------------------------------------------------------
  *  debug macros
  *------------------------------------------------------------------*/
@@ -463,24 +487,6 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 #define DEB_MSG(type)	deb.write(type, __FILE__, __LINE__)
 
-#define DEB_MSG_VAR1(type, v1) \
-	DEB_MSG(type) << #v1 "=" << v1
-
-#define DEB_MSG_VAR2(type, v1, v2) \
-	DEB_MSG_VAR1(type, v1) << ", " #v2 "=" << v2
-
-#define DEB_MSG_VAR3(type, v1, v2, v3) \
-	DEB_MSG_VAR2(type, v1, v2) << ", " #v3 "=" << v3
-
-#define DEB_MSG_VAR4(type, v1, v2, v3, v4) \
-	DEB_MSG_VAR3(type, v1, v2, v3) << ", " #v4 "=" << v4
-
-#define DEB_MSG_VAR5(type, v1, v2, v3, v4, v5) \
-	DEB_MSG_VAR4(type, v1, v2, v3, v4) << ", " #v5 "=" << v5
-
-#define DEB_MSG_VAR6(type, v1, v2, v3, v4, v5, v6) \
-	DEB_MSG_VAR5(type, v1, v2, v3, v4, v5) << ", " #v6 "=" << v6
-
 #define DEB_FATAL()	DEB_MSG(DebTypeFatal)
 #define DEB_ERROR()	DEB_MSG(DebTypeError)
 #define DEB_WARNING()	DEB_MSG(DebTypeWarning)
@@ -489,44 +495,20 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_RETURN()	DEB_MSG(DebTypeReturn)
 #define DEB_ALWAYS()	DEB_MSG(DebTypeAlways)
 
-#define DEB_PARAM_VAR1(v1) \
-	DEB_MSG_VAR1(DebTypeParam, v1)
-#define DEB_PARAM_VAR2(v1, v2) \
-	DEB_MSG_VAR2(DebTypeParam, v1, v2)
-#define DEB_PARAM_VAR3(v1, v2, v3) \
-	DEB_MSG_VAR3(DebTypeParam, v1, v2, v3)
-#define DEB_PARAM_VAR4(v1, v2, v3, v4) \
-	DEB_MSG_VAR4(DebTypeParam, v1, v2, v3, v4)
-#define DEB_PARAM_VAR5(v1, v2, v3, v4, v5) \
-	DEB_MSG_VAR5(DebTypeParam, v1, v2, v3, v4, v5)
-#define DEB_PARAM_VAR6(v1, v2, v3, v4, v5, v6) \
-	DEB_MSG_VAR6(DebTypeParam, v1, v2, v3, v4, v5, v6)
+#define DEB_HEX(x)	DebHex(x)
 
-#define DEB_TRACE_VAR1(v1) \
-	DEB_MSG_VAR1(DebTypeTrace, v1)
-#define DEB_TRACE_VAR2(v1, v2) \
-	DEB_MSG_VAR2(DebTypeTrace, v1, v2)
-#define DEB_TRACE_VAR3(v1, v2, v3) \
-	DEB_MSG_VAR3(DebTypeTrace, v1, v2, v3)
-#define DEB_TRACE_VAR4(v1, v2, v3, v4) \
-	DEB_MSG_VAR4(DebTypeTrace, v1, v2, v3, v4)
-#define DEB_TRACE_VAR5(v1, v2, v3, v4, v5) \
-	DEB_MSG_VAR5(DebTypeTrace, v1, v2, v3, v4, v5)
-#define DEB_TRACE_VAR6(v1, v2, v3, v4, v5, v6) \
-	DEB_MSG_VAR6(DebTypeTrace, v1, v2, v3, v4, v5, v6)
-
-#define DEB_RETURN_VAR1(v1) \
-	DEB_MSG_VAR1(DebTypeReturn, v1)
-#define DEB_RETURN_VAR2(v1, v2) \
-	DEB_MSG_VAR2(DebTypeReturn, v1, v2)
-#define DEB_RETURN_VAR3(v1, v2, v3) \
-	DEB_MSG_VAR3(DebTypeReturn, v1, v2, v3)
-#define DEB_RETURN_VAR4(v1, v2, v3, v4) \
-	DEB_MSG_VAR4(DebTypeReturn, v1, v2, v3, v4)
-#define DEB_RETURN_VAR5(v1, v2, v3, v4, v5) \
-	DEB_MSG_VAR5(DebTypeReturn, v1, v2, v3, v4, v5)
-#define DEB_RETURN_VAR6(v1, v2, v3, v4, v5, v6) \
-	DEB_MSG_VAR6(DebTypeReturn, v1, v2, v3, v4, v5, v6)
+#define DEB_VAR1(v1)	\
+	#v1 << "=" << v1
+#define DEB_VAR2(v1, v2)	\
+	DEB_VAR1(v1) << ", " << #v2 << "=" << v2
+#define DEB_VAR3(v1, v2, v3)	\
+	DEB_VAR2(v1, v2) << ", " << #v3 << "=" << v3
+#define DEB_VAR4(v1, v2, v3, v4)	\
+	DEB_VAR3(v1, v2, v3) << ", " << #v4 << "=" << v4
+#define DEB_VAR5(v1, v2, v3, v4, v5)	\
+	DEB_VAR4(v1, v2, v3, v4) << ", " << #v5 << "=" << v5
+#define DEB_VAR6(v1, v2, v3, v4, v5, v6)	\
+	DEB_VAR5(v1, v2, v3, v4, v5) << ", " << #v6 << "=" << v6
 
 #define DEB_OBJ_NAME(o) \
 	((o)->getDebObjName())

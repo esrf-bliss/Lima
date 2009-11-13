@@ -62,7 +62,7 @@ void SerialLine::write(const string& buffer, bool no_wait)
 void SerialLine::writeCmd(const string& buffer, bool no_wait)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(no_wait);
+	DEB_PARAM() << DEB_VAR1(no_wait);
 
 	MsgPartStrMapType msg_parts;
 	splitMsg(buffer, msg_parts);
@@ -111,7 +111,7 @@ void SerialLine::writeCmd(const string& buffer, bool no_wait)
 	if (m_curr_op == None)
 		m_curr_op = DoCmd;
 
-	DEB_TRACE_VAR1(m_curr_op);
+	DEB_TRACE() << DEB_VAR1(m_curr_op);
 
 	string sync = msg_parts[MsgSync].empty() ? ">" : "";
 	string term = msg_parts[MsgTerm].empty() ? "\r\n" : "";
@@ -144,7 +144,7 @@ void SerialLine::readLine(string& buffer, int max_len, double timeout)
 void SerialLine::readResp(string& buffer, int max_len, double timeout)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR3(max_len, timeout, m_curr_op);
+	DEB_PARAM() << DEB_VAR3(max_len, timeout, m_curr_op);
 
 	if (m_curr_op == None) {
 		DEB_FATAL() << "readLine without previous write!";
@@ -174,7 +174,7 @@ void SerialLine::readSingleLine(string& buffer, int max_len, double timeout)
 		os << "\r\n";
 		buffer = os.str();
 		m_curr_fmt_resp = m_curr_resp;
-		DEB_TRACE_VAR1(m_curr_fmt_resp);
+		DEB_TRACE() << DEB_VAR1(m_curr_fmt_resp);
 		return;
 	}
 
@@ -190,13 +190,13 @@ void SerialLine::readSingleLine(string& buffer, int max_len, double timeout)
 
 	string& cache_val = m_reg_cache[m_curr_reg];
 	cache_val = is_req ? m_curr_fmt_resp : m_curr_resp;
-	DEB_TRACE_VAR1(cache_val);
+	DEB_TRACE() << "New " << DEB_VAR1(cache_val);
 }
 
 void SerialLine::readMultiLine(string& buffer, int max_len)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(max_len);
+	DEB_PARAM() << DEB_VAR1(max_len);
 
 	Timestamp timeout = Timestamp::now() + Timestamp(TimeoutMultiLine);
 
@@ -205,8 +205,8 @@ void SerialLine::readMultiLine(string& buffer, int max_len)
 	while (Timestamp::now() < timeout) {
 		string ans;
 		int len = max_len - buffer.size();
-		DEB_TRACE_VAR1(len);
 		try {
+			DEB_TRACE() << "Atempting to read: " << DEB_VAR1(len);
 			m_espia_ser_line.readLine(ans, len, TimeoutSingle);
 			buffer += ans;
 		} catch (Exception e) {
@@ -232,7 +232,7 @@ bool SerialLine::isRegCacheable(Reg reg)
 
 	const RegListType& list = NonCacheableRegList;
 	bool cacheable = (find(list.begin(), list.end(), reg) == list.end());
-	DEB_RETURN_VAR1(cacheable);
+	DEB_RETURN() << DEB_VAR1(cacheable);
 	return cacheable;
 }
 
@@ -246,13 +246,13 @@ void SerialLine::getNbAvailBytes(int &avail)
 {
 	DEB_MEMBER_FUNCT();
 	m_espia_ser_line.getNbAvailBytes(avail);
-	DEB_RETURN_VAR1(avail);
+	DEB_RETURN() << DEB_VAR1(avail);
 }
 
 void SerialLine::setTimeout(double timeout)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(timeout);
+	DEB_PARAM() << DEB_VAR1(timeout);
 	m_espia_ser_line.setTimeout(timeout);
 }
 
@@ -260,7 +260,7 @@ void SerialLine::getTimeout(double& timeout) const
 {
 	DEB_MEMBER_FUNCT();
 	m_espia_ser_line.getTimeout(timeout);
-	DEB_RETURN_VAR1(timeout);
+	DEB_RETURN() << DEB_VAR1(timeout);
 }
 
 
@@ -268,7 +268,7 @@ void SerialLine::splitMsg(const string& msg,
 			  MsgPartStrMapType& msg_parts) const
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(msg);
+	DEB_PARAM() << DEB_VAR1(msg);
 
 	msg_parts.clear();
 
@@ -294,14 +294,14 @@ void SerialLine::splitMsg(const string& msg,
 		msg_parts[key] = string(match[grp].start, match[grp].end);
 	}
 
-	DEB_RETURN_VAR2(msg_parts[MsgSync], msg_parts[MsgCmd]);
-	DEB_RETURN_VAR2(msg_parts[MsgReq], msg_parts[MsgVal]);
+	DEB_RETURN() << DEB_VAR2(msg_parts[MsgSync], msg_parts[MsgCmd]);
+	DEB_RETURN() << DEB_VAR2(msg_parts[MsgReq], msg_parts[MsgVal]);
 }
 
 void SerialLine::decodeFmtResp(const string& ans, string& fmt_resp)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(ans);
+	DEB_PARAM() << DEB_VAR1(ans);
 
 	fmt_resp.clear();
 
@@ -335,7 +335,7 @@ void SerialLine::decodeFmtResp(const string& ans, string& fmt_resp)
 	RegEx::SingleMatchType& resp = match["resp"];
 	fmt_resp = string(resp.start, resp.end);
 	if (!fmt_resp.empty())
-		DEB_RETURN_VAR1(fmt_resp);
+		DEB_RETURN() << DEB_VAR1(fmt_resp);
 }
 
 void SerialLine::sendFmtCmd(const string& cmd, string& resp)
@@ -358,7 +358,7 @@ int SerialLine::getLastWarning()
 	DEB_MEMBER_FUNCT();
 	int last_warn = m_last_warn;
 	m_last_warn = 0;
-	DEB_RETURN_VAR1(last_warn);
+	DEB_RETURN() << DEB_VAR1(last_warn);
 	return last_warn;
 }
 
@@ -373,7 +373,7 @@ void SerialLine::clearCache()
 void SerialLine::setCacheActive(bool cache_act)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR2(cache_act, m_cache_act);
+	DEB_PARAM() << DEB_VAR2(cache_act, m_cache_act);
 	AutoMutex l = lock(AutoMutex::Locked);
 	if (cache_act && !m_cache_act) {
 		DEB_TRACE() << "Clearing reg cache";
@@ -387,7 +387,7 @@ void SerialLine::getCacheActive(bool& cache_act)
 	DEB_MEMBER_FUNCT();
 	AutoMutex l = lock(AutoMutex::Locked);
 	cache_act = m_cache_act;
-	DEB_RETURN_VAR1(cache_act);
+	DEB_RETURN() << DEB_VAR1(cache_act);
 }
 
 

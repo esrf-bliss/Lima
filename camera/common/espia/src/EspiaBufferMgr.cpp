@@ -13,7 +13,7 @@ BufferMgr::BufferMgr(Acq& acq)
 	DEB_CONSTRUCTOR();
        
 	Dev& dev = acq.getDev();
-	DEB_PARAM_VAR1(dev.getDevNb());
+	DEB_PARAM() << DEB_VAR1(dev.getDevNb());
 
 	ostringstream os;
 	if (dev.isMeta())
@@ -37,14 +37,14 @@ int BufferMgr::getMaxNbBuffers(const FrameDim& frame_dim,
 			       int nb_concat_frames)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR2(frame_dim, nb_concat_frames);
+	DEB_PARAM() << DEB_VAR2(frame_dim, nb_concat_frames);
 
 	FrameDim buffer_frame_dim;
 	getBufferFrameDim(frame_dim, nb_concat_frames, buffer_frame_dim);
-	DEB_TRACE_VAR1(buffer_frame_dim);
+	DEB_TRACE() << DEB_VAR1(buffer_frame_dim);
 
 	int max_nb_buffers = GetDefMaxNbBuffers(buffer_frame_dim);
-	DEB_RETURN_VAR1(max_nb_buffers);
+	DEB_RETURN() << DEB_VAR1(max_nb_buffers);
 	return max_nb_buffers;
 }
 
@@ -105,7 +105,7 @@ void BufferMgr::getStartTimestamp(Timestamp& start_ts)
 void BufferMgr::setFrameCallbackActive(bool cb_active)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(cb_active);
+	DEB_PARAM() << DEB_VAR1(cb_active);
 
 	if (cb_active)
 		m_acq.registerFrameCallback(m_frame_cb);

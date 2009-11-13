@@ -338,9 +338,8 @@ void DebParams::checkInit()
 		MODULE_NAME(Espia),
 		MODULE_NAME(EspiaSerial),
 		MODULE_NAME(Focla),
-		MODULE_NAME(Frelon),
-		MODULE_NAME(FrelonSerial),
-		MODULE_NAME(Maxipix),
+		MODULE_NAME(Camera),
+		MODULE_NAME(CameraCom),
 	};
 	s_mod_name_map = new map<DebModule, string>(C_LIST_ITERS(mod_names));
 

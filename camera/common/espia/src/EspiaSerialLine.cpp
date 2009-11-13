@@ -22,7 +22,7 @@ SerialLine::SerialLine(Dev& edev, const string& line_term,
 	  m_dev(edev)
 {
 	DEB_CONSTRUCTOR();
-	DEB_PARAM_VAR1(edev.getDevNb());
+	DEB_PARAM() << DEB_VAR1(edev.getDevNb());
 
 	if (edev.isMeta()) {
 		DEB_ERROR() << "Specified Dev is a meta-device";
@@ -51,7 +51,7 @@ Dev& SerialLine::getDev()
 void SerialLine::write(const string& buffer, bool no_wait)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR2(buffer, no_wait);
+	DEB_PARAM() << DEB_VAR2(buffer, no_wait);
 
 	unsigned long len = buffer.size();
 	char *ptr = len ? (char *) buffer.data() : NULL;
@@ -67,7 +67,7 @@ void SerialLine::write(const string& buffer, bool no_wait)
 void SerialLine::read(string& buffer, int max_len, double timeout)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR2(max_len, timeout);
+	DEB_PARAM() << DEB_VAR2(max_len, timeout);
 
 	buffer.resize(max_len);
 	char *ptr = max_len ? (char *) buffer.data() : NULL;
@@ -78,7 +78,7 @@ void SerialLine::read(string& buffer, int max_len, double timeout)
 	CHECK_CALL(espia_ser_read(m_dev, ptr, &ret_len, tmout));
 	buffer.resize(ret_len);
 
-	DEB_RETURN_VAR1(buffer);
+	DEB_RETURN() << DEB_VAR1(buffer);
 }
 
 
@@ -86,7 +86,7 @@ void SerialLine::readStr(string& buffer, int max_len,
 			 const string& term, double timeout)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR3(max_len, term, timeout);
+	DEB_PARAM() << DEB_VAR3(max_len, term, timeout);
 
 	buffer.resize(max_len);
 	char *ptr = max_len ? (char *) buffer.data() : NULL;
@@ -99,7 +99,7 @@ void SerialLine::readStr(string& buffer, int max_len,
 				      term.size(), tmout));
 	buffer.resize(ret_len);
 
-	DEB_RETURN_VAR1(buffer);
+	DEB_RETURN() << DEB_VAR1(buffer);
 }
 
 
@@ -118,5 +118,5 @@ void SerialLine::getNbAvailBytes(int& avail_bytes)
 	unsigned long ret_bytes = 0;
 	CHECK_CALL(espia_ser_read(m_dev, NULL, &ret_bytes, 0));
 	avail_bytes = ret_bytes;
-	DEB_RETURN_VAR1(avail_bytes);
+	DEB_RETURN() << DEB_VAR1(avail_bytes);
 }

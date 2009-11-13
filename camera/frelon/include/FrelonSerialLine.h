@@ -12,7 +12,7 @@ namespace Frelon
 
 class SerialLine : public HwSerialLine
 {
-	DEB_CLASS_NAMESPC(DebModFrelonSerial, "SerialLine", "Frelon");
+	DEB_CLASS_NAMESPC(DebModCameraCom, "SerialLine", "Frelon");
 
  public:
 	enum MsgPart {

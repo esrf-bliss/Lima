@@ -17,7 +17,11 @@ Camera::Camera(Espia::SerialLine& espia_ser_line)
 	DEB_CONSTRUCTOR();
 
 	m_trig_mode = IntTrig;
-	readRegister(NbFrames, m_nb_frames);
+
+	string ver;
+	getVersion(ver);
+	int ser_nb;
+	getSerialNb(ser_nb);
 }
 
 Camera::~Camera()
@@ -42,7 +46,7 @@ void Camera::sendCmd(Cmd cmd)
 {
 	DEB_MEMBER_FUNCT();
 	const string& cmd_str = CmdStrMap[cmd];
-	DEB_PARAM_VAR2(int(cmd), cmd_str);
+	DEB_PARAM() << DEB_VAR2(cmd, cmd_str);
 	if (cmd_str.empty()) {
 		DEB_ERROR() << "Invalid command cmd=" << cmd;
 		throw LIMA_HW_EXC(InvalidValue, "Invalid command");
@@ -56,7 +60,7 @@ void Camera::writeRegister(Reg reg, int val)
 {
 	DEB_MEMBER_FUNCT();
 	const string& reg_str = RegStrMap[reg];
-	DEB_PARAM_VAR3(int(reg), reg_str, val);
+	DEB_PARAM() << DEB_VAR3(reg, reg_str, val);
 	if (reg_str.empty()) {
 		DEB_ERROR() << "Invalid register reg=" << reg;
 		throw LIMA_HW_EXC(InvalidValue, "Invalid register");
@@ -71,8 +75,9 @@ void Camera::writeRegister(Reg reg, int val)
 void Camera::readRegister(Reg reg, int& val)
 {
 	DEB_MEMBER_FUNCT();
+
 	const string& reg_str = RegStrMap[reg];
-	DEB_PARAM_VAR2(int(reg), reg_str);
+	DEB_PARAM() << DEB_VAR2(reg, reg_str);
 	if (reg_str.empty()) {
 		DEB_ERROR() << "Invalid register reg=" << reg;
 		throw LIMA_HW_EXC(InvalidValue, "Invalid register");
@@ -82,6 +87,8 @@ void Camera::readRegister(Reg reg, int& val)
 	m_ser_line.sendFmtCmd(reg_str + "?", resp);
 	istringstream is(resp);
 	is >> val;
+
+	DEB_RETURN() << DEB_VAR1(val);
 }
 
 void Camera::hardReset()
@@ -96,17 +103,23 @@ void Camera::hardReset()
 
 void Camera::getVersion(string& ver)
 {
+	DEB_MEMBER_FUNCT();
 	string cmd = RegStrMap[Version] + "?";
 	m_ser_line.sendFmtCmd(cmd, ver);
+	DEB_RETURN() << DEB_VAR1(ver);
 }
 
 void Camera::getComplexSerialNb(int& complex_ser_nb)
 {
+	DEB_MEMBER_FUNCT();
 	readRegister(CompSerNb, complex_ser_nb);
+	DEB_RETURN() << DEB_VAR1(DEB_HEX(complex_ser_nb));
 }
 
 void Camera::getSerialNbParam(SerNbParam param, int& val)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(DEB_HEX(param));
 	int complex_ser_nb;
 	getComplexSerialNb(complex_ser_nb);
 	val = complex_ser_nb & int(param);
@@ -114,48 +127,65 @@ void Camera::getSerialNbParam(SerNbParam param, int& val)
 
 void Camera::getSerialNb(int& ser_nb)
 {
+	DEB_MEMBER_FUNCT();
 	getSerialNbParam(SerNb, ser_nb);
+	DEB_RETURN() << DEB_VAR1(ser_nb);
 }
 
 void Camera::isFrelon2k16(bool& is_frelon_2k16)
 {
+	DEB_MEMBER_FUNCT();
 	int frelon_2k16;
 	getSerialNbParam(F2k16, frelon_2k16);
 	is_frelon_2k16 = bool(frelon_2k16);
+	DEB_RETURN() << DEB_VAR1(is_frelon_2k16);
 }
 
 void Camera::isFrelon4M(bool& is_frelon_4m)
 {
+	DEB_MEMBER_FUNCT();
 	int f4m;
 	getSerialNbParam(F4M, f4m);
 	is_frelon_4m = bool(f4m);
+	DEB_RETURN() << DEB_VAR1(is_frelon_4m);
 }
 
 void Camera::hasTaper(bool& has_taper)
 {
+	DEB_MEMBER_FUNCT();
 	int taper;
 	getSerialNbParam(Taper, taper);
 	has_taper = bool(taper);
+	DEB_RETURN() << DEB_VAR1(has_taper);
 }
 
 void Camera::setChanMode(int chan_mode)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(chan_mode);
 	writeRegister(ChanMode, chan_mode);
 }
 
 void Camera::getChanMode(int& chan_mode)
 {
+	DEB_MEMBER_FUNCT();
 	readRegister(ChanMode, chan_mode);
+	DEB_RETURN() << DEB_VAR1(chan_mode);
 }
 
 void Camera::getBaseChanMode(FrameTransferMode ftm, int& base_chan_mode)
 {
+	DEB_MEMBER_FUNCT();
 	base_chan_mode = FTMChanRangeMap[ftm].first;
+	DEB_RETURN() << DEB_VAR1(base_chan_mode);
 }
 
 void Camera::getInputChanMode(FrameTransferMode ftm, InputChan input_chan,
 			      int& chan_mode)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(ftm, DEB_HEX(input_chan));
+
 	getBaseChanMode(ftm, chan_mode);
 	const InputChanList& chan_list = FTMInputChanListMap[ftm];
 	InputChanList::const_iterator it;
@@ -163,10 +193,15 @@ void Camera::getInputChanMode(FrameTransferMode ftm, InputChan input_chan,
 	if (it == chan_list.end())
 		throw LIMA_HW_EXC(InvalidValue, "Invalid input channel");
 	chan_mode += it - chan_list.begin();
+
+	DEB_RETURN() << DEB_VAR1(chan_mode);
 }
 
 void Camera::setInputChan(InputChan input_chan)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(DEB_HEX(input_chan));
+
 	FrameTransferMode ftm;
 	getFrameTransferMode(ftm);
 	int chan_mode;
@@ -176,16 +211,23 @@ void Camera::setInputChan(InputChan input_chan)
 
 void Camera::getInputChan(InputChan& input_chan)
 {
+	DEB_MEMBER_FUNCT();
+
 	FrameTransferMode ftm;
 	getFrameTransferMode(ftm);
 	int chan_mode, base_chan_mode;
 	getChanMode(chan_mode);
 	getBaseChanMode(ftm, base_chan_mode);
 	input_chan = FTMInputChanListMap[ftm][chan_mode - base_chan_mode];
+
+	DEB_RETURN() << DEB_VAR1(DEB_HEX(input_chan));
 }
 
 void Camera::setFrameTransferMode(FrameTransferMode ftm)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(ftm);
+	
 	InputChan input_chan;
 	getInputChan(input_chan);
 	int chan_mode;
@@ -195,6 +237,8 @@ void Camera::setFrameTransferMode(FrameTransferMode ftm)
 
 void Camera::getFrameTransferMode(FrameTransferMode& ftm)
 {
+	DEB_MEMBER_FUNCT();
+
 	int chan_mode;
 	getChanMode(chan_mode);
 
@@ -202,8 +246,10 @@ void Camera::getFrameTransferMode(FrameTransferMode& ftm)
 	for (it = FTMChanRangeMap.begin(); it != end; ++it) {
 		ftm = it->first;
 		const ChanRange& range = it->second;
-		if ((chan_mode >= range.first) && (chan_mode < range.second))
+		if ((chan_mode >= range.first) && (chan_mode < range.second)) {
+			DEB_RETURN() << DEB_VAR1(ftm);
 			return;
+		}
 	}
 
 	throw LIMA_HW_EXC(Error, "Invalid chan mode");
@@ -211,75 +257,108 @@ void Camera::getFrameTransferMode(FrameTransferMode& ftm)
 
 void Camera::getFrameDim(FrameDim& frame_dim)
 {
+	DEB_MEMBER_FUNCT();
+
 	frame_dim = MaxFrameDim;
 	FrameTransferMode ftm;
 	getFrameTransferMode(ftm);
 	if (ftm == FTM)
 		frame_dim /= Point(1, 2);
+
+	DEB_RETURN() << DEB_VAR1(frame_dim);
 }
 
 void Camera::setFlipMode(int flip_mode)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(flip_mode);
 	writeRegister(Flip, flip_mode);
 }
 
 void Camera::getFlipMode(int& flip_mode)
 {
+	DEB_MEMBER_FUNCT();
 	readRegister(Flip, flip_mode);
+	DEB_RETURN() << DEB_VAR1(flip_mode);
 }
 
 void Camera::setFlip(const Point& flip)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(flip);
 	int flip_mode = (bool(flip.x) << 1) | (bool(flip.y) << 0);
 	setFlipMode(flip_mode);
 }
 
 void Camera::getFlip(Point& flip)
 {
+	DEB_MEMBER_FUNCT();
+
 	int flip_mode;
 	getFlipMode(flip_mode);
 	flip.x = (flip_mode >> 1) & 1;
 	flip.y = (flip_mode >> 0) & 1;
+
+	DEB_RETURN() << DEB_VAR1(flip);
 }
 
 void Camera::checkBin(Bin& bin)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(bin);
+	
 	int bin_x = min(bin.getX(), int(MaxBinX));
 	int bin_y = min(bin.getY(), int(MaxBinY));
 	bin = Bin(bin_x, bin_y);
+
+	DEB_RETURN() << DEB_VAR1(bin);
 }
 
 void Camera::setBin(const Bin& bin)
 {
-	if ((bin.getX() > 8) || (bin.getY() > 1024))
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(bin);
+	
+	if ((bin.getX() > 8) || (bin.getY() > 1024)) {
+		DEB_ERROR() << "Invalid bin: " << bin << ". Must be <= 8x1024";
 		throw LIMA_HW_EXC(InvalidValue, "Bin must be <= 8x1024");
+	}
 
 	Bin curr_bin;
 	getBin(curr_bin);
-	if (bin == curr_bin)
+	DEB_TRACE() << DEB_VAR1(curr_bin);
+	if (bin == curr_bin) 
 		return;
 
+	DEB_TRACE() << "Reseting Roi";
 	Roi roi;
 	setRoi(roi);
 
 	writeRegister(BinHorz, bin.getX());
+	DEB_TRACE() << "Sleeping " << DEB_VAR1(HorzBinChangeTime);
 	Sleep(HorzBinChangeTime);
 	writeRegister(BinVert, bin.getY());
 }
 
 void Camera::getBin(Bin& bin)
 {
+	DEB_MEMBER_FUNCT();
 	int bin_x, bin_y;
 	readRegister(BinHorz, bin_x);
 	readRegister(BinVert, bin_y);
 	bin = Bin(bin_x, bin_y);
+	DEB_RETURN() << DEB_VAR1(bin);
 }
 
 void Camera::setRoiMode(RoiMode roi_mode)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(roi_mode);
+
 	bool roi_hw   = (roi_mode == Slow) || (roi_mode == Fast);
 	bool roi_fast = (roi_mode == Fast) || (roi_mode == Kinetic);
 	bool roi_kin  = (roi_mode == Kinetic);
+	DEB_TRACE() << DEB_VAR3(roi_hw, roi_fast, roi_kin);
 
 	writeRegister(RoiEnable,  roi_hw);
 	writeRegister(RoiFast,    roi_fast);
@@ -288,10 +367,13 @@ void Camera::setRoiMode(RoiMode roi_mode)
 
 void Camera::getRoiMode(RoiMode& roi_mode)
 {
+	DEB_MEMBER_FUNCT();
+
 	int roi_hw, roi_fast, roi_kin;
 	readRegister(RoiEnable,  roi_hw);
 	readRegister(RoiFast,    roi_fast);
 	readRegister(RoiKinetic, roi_kin);
+	DEB_TRACE() << DEB_VAR3(roi_hw, roi_fast, roi_kin);
 
 	if (roi_fast && roi_kin)
 		roi_mode = Kinetic;
@@ -301,38 +383,51 @@ void Camera::getRoiMode(RoiMode& roi_mode)
 		roi_mode = Slow;
 	else
 		roi_mode = None;
+
+	DEB_RETURN() << DEB_VAR1(roi_mode);
 }
 
 void Camera::getMirror(Point& mirror)
 {
+	DEB_MEMBER_FUNCT();
 	mirror.x = isChanActive(Chan12) || isChanActive(Chan34);
 	mirror.y = isChanActive(Chan13) || isChanActive(Chan24);
+	DEB_RETURN() << DEB_VAR1(mirror);
 }
 
 void Camera::getNbChan(Point& nb_chan)
 {
+	DEB_MEMBER_FUNCT();
 	getMirror(nb_chan);
 	nb_chan += 1;
+	DEB_RETURN() << DEB_VAR1(nb_chan);
 }
 
 void Camera::getCcdSize(Size& ccd_size)
 {
+	DEB_MEMBER_FUNCT();
 	FrameDim frame_dim;
 	getFrameDim(frame_dim);
 	ccd_size = frame_dim.getSize();
+	DEB_RETURN() << DEB_VAR1(ccd_size);
 }
 
 void Camera::getChanSize(Size& chan_size)
 {
+	DEB_MEMBER_FUNCT();
 	getCcdSize(chan_size);
 	Point nb_chan;
 	getNbChan(nb_chan);
 	chan_size /= nb_chan;
+	DEB_RETURN() << DEB_VAR1(chan_size);
 }
 
 void Camera::xformChanCoords(const Point& point, Point& chan_point, 
 			     Corner& ref_corner)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(point);
+
 	Size chan_size;
 	getChanSize(chan_size);
 
@@ -356,10 +451,14 @@ void Camera::xformChanCoords(const Point& point, Point& chan_point,
 	getCcdSize(ccd_size);
 
 	chan_point = ccd_size.getCornerCoords(point, ref_corner);
+	DEB_RETURN() << DEB_VAR2(chan_point, ref_corner);
 }
 
 void Camera::getImageRoi(const Roi& chan_roi, Roi& image_roi)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(chan_roi);
+
 	Point img_tl, chan_tl = chan_roi.getTopLeft();
 	Point img_br, chan_br = chan_roi.getBottomRight();
 	Corner c_tl, c_br;
@@ -370,20 +469,30 @@ void Camera::getImageRoi(const Roi& chan_roi, Roi& image_roi)
 	Bin bin;
 	getBin(bin);
 	image_roi = unbinned_roi.getBinned(bin);
+
+	DEB_RETURN() << DEB_VAR1(image_roi);
 }
 
 void Camera::getFinalRoi(const Roi& image_roi, const Point& roi_offset,
 			 Roi& final_roi)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(image_roi, roi_offset);
+
 	Point tl = image_roi.getTopLeft() + roi_offset;
 	Point nb_chan;
 	getNbChan(nb_chan);
 	Size size = image_roi.getSize() * nb_chan;
 	final_roi = Roi(tl, size);
+
+	DEB_RETURN() << DEB_VAR1(final_roi);
 }
 
 void Camera::getChanRoi(const Roi& image_roi, Roi& chan_roi)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(image_roi);
+
 	Bin bin;
 	getBin(bin);
 	Roi unbinned_roi = image_roi.getUnbinned(bin);
@@ -399,7 +508,8 @@ void Camera::getChanRoi(const Roi& image_roi, Roi& chan_roi)
 
 	bool two_xchan = (c_tl.getX() != c_br.getX());
 	bool two_ychan = (c_tl.getY() != c_br.getY());
-	
+	DEB_TRACE() << DEB_VAR2(two_xchan, two_ychan);
+
 	Size chan_size;
 	getChanSize(chan_size);
 	if (two_xchan)
@@ -408,6 +518,7 @@ void Camera::getChanRoi(const Roi& image_roi, Roi& chan_roi)
 		chan_br.y = chan_size.getHeight() - 1;
 
 	chan_roi.setCorners(chan_tl, chan_br);
+	DEB_RETURN() << DEB_VAR1(chan_roi);
 }
 
 void Camera::getImageRoiOffset(const Roi& req_roi, const Roi& image_roi,

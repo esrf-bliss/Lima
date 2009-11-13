@@ -35,7 +35,7 @@ Acq *AcqEndCallback::getAcq() const
 void AcqEndCallback::setAcq(Acq *acq)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(acq);
+	DEB_PARAM() << DEB_VAR1(acq);
 
 	if (acq && m_acq) {
 		DEB_ERROR() << "Acquisition already set";
@@ -53,7 +53,7 @@ Acq::Acq(Dev& dev)
 	: m_dev(dev)
 {
 	DEB_CONSTRUCTOR();
-	DEB_PARAM_VAR1(dev.getDevNb());
+	DEB_PARAM() << DEB_VAR1(dev.getDevNb());
 
 	ostringstream os;
 	if (dev.isMeta())
@@ -96,10 +96,10 @@ Dev& Acq::getDev()
 int Acq::dispatchFrameCallback(struct espia_cb_data *cb_data)
 {
 	DEB_STATIC_FUNCT();
-	DEB_PARAM_VAR1(cb_data->cb_nr);
+	DEB_PARAM() << DEB_VAR1(cb_data->cb_nr);
 
 	Acq *espia = (Acq *) cb_data->data;
-	DEB_TRACE_VAR1(DEB_OBJ_NAME(espia));
+	DEB_TRACE() << DEB_VAR1(DEB_OBJ_NAME(espia));
 
 	void (Acq::*method)(struct espia_cb_data *cb_data) = NULL;
 
@@ -165,7 +165,7 @@ void Acq::disableFrameCallback()
 void Acq::setFrameCallbackActive(bool cb_active)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(cb_active);
+	DEB_PARAM() << DEB_VAR1(cb_active);
 	m_user_frame_cb_act = cb_active;
 }
 
@@ -185,7 +185,7 @@ void Acq::processFrameCallback(struct espia_cb_data *cb_data)
 		finished = (!endless && (cb_finfo.acq_frame_nr == last_frame));
 	}
 
-	DEB_TRACE_VAR2(aborted, finished);
+	DEB_TRACE() << DEB_VAR2(aborted, finished);
 
 	if (finished)
 		m_started = false;
@@ -196,7 +196,7 @@ void Acq::processFrameCallback(struct espia_cb_data *cb_data)
 	if (!aborted)
 		real2virtFrameInfo(cb_finfo, hw_finfo);
 
-	DEB_TRACE_VAR1(hw_finfo);
+	DEB_TRACE() << DEB_VAR1(hw_finfo);
 
 	if (m_user_frame_cb_act) {
 		DEB_TRACE() << "Calling user FrameCallback";
@@ -213,7 +213,7 @@ void Acq::bufferAlloc(int& nb_buffers, int nb_buffer_frames,
 		      const FrameDim& frame_dim)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR3(nb_buffers, nb_buffer_frames, frame_dim);
+	DEB_PARAM() << DEB_VAR3(nb_buffers, nb_buffer_frames, frame_dim);
 
 	if (!frame_dim.isValid() || (nb_buffers <= 0) || 
 	    (nb_buffer_frames <= 0)) {
@@ -252,11 +252,12 @@ void Acq::bufferAlloc(int& nb_buffers, int nb_buffer_frames,
 		real_buffers /= frame_factor;
 		virt_buffers  = real_buffers * frame_factor;
 
-		DEB_TRACE_VAR3(frame_factor, virt_buffers, virt_frames);
+		DEB_TRACE() << DEB_VAR3(frame_factor, virt_buffers, 
+					virt_frames);
 	}
 
 	DEB_TRACE() << "Calling espia_buffer_alloc";
-	DEB_TRACE_VAR3(real_buffers, real_frames, real_frame_size); 
+	DEB_TRACE() << DEB_VAR3(real_buffers, real_frames, real_frame_size); 
 	CHECK_CALL(espia_buffer_alloc(m_dev, real_buffers, real_frames,
 				      real_frame_size));
 
@@ -266,7 +267,7 @@ void Acq::bufferAlloc(int& nb_buffers, int nb_buffer_frames,
 	m_real_frame_factor = frame_factor;
 	m_real_frame_size   = real_frame_size;
 
-	DEB_RETURN_VAR1(nb_buffers);
+	DEB_RETURN() << DEB_VAR1(nb_buffers);
 }
 
 void Acq::bufferFree()
@@ -291,55 +292,55 @@ void Acq::bufferFree()
 const FrameDim& Acq::getFrameDim()
 {
 	DEB_MEMBER_FUNCT();
-	DEB_RETURN_VAR1(m_frame_dim);
+	DEB_RETURN() << DEB_VAR1(m_frame_dim);
 	return m_frame_dim;
 }
 
 void Acq::getNbBuffers(int& nb_buffers)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_RETURN_VAR1(nb_buffers);
+	DEB_RETURN() << DEB_VAR1(nb_buffers);
 	nb_buffers = m_nb_buffers;
 }
 
 void Acq::getNbBufferFrames(int& nb_buffer_frames)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_RETURN_VAR1(nb_buffer_frames);
+	DEB_RETURN() << DEB_VAR1(nb_buffer_frames);
 	nb_buffer_frames = m_nb_buffer_frames;
 }
 
 void *Acq::getBufferFramePtr(int buffer_nb, int frame_nb)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR2(buffer_nb, frame_nb);
+	DEB_PARAM() << DEB_VAR2(buffer_nb, frame_nb);
 
 	int real_buffer = realBufferNb(buffer_nb, frame_nb);
 	int real_frame  = realFrameNb(buffer_nb, frame_nb);
 	void *ptr;
 	DEB_TRACE() << "Calling espia_frame_address";
 	CHECK_CALL(espia_frame_address(m_dev, real_buffer, real_frame, &ptr));
-	DEB_RETURN_VAR1(ptr);
+	DEB_RETURN() << DEB_VAR1(ptr);
 	return ptr;
 }
 
 void *Acq::getAcqFramePtr(int acq_frame_nb)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(acq_frame_nb);
+	DEB_PARAM() << DEB_VAR1(acq_frame_nb);
 
 	unsigned long buffer_nb = ESPIA_ACQ_ANY;
 	void *ptr;
 	DEB_TRACE() << "Calling espia_frame_address";
 	CHECK_CALL(espia_frame_address(m_dev, buffer_nb, acq_frame_nb, &ptr));
-	DEB_RETURN_VAR1(ptr);
+	DEB_RETURN() << DEB_VAR1(ptr);
 	return ptr;
 }
 
 void Acq::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(acq_frame_nb);
+	DEB_PARAM() << DEB_VAR1(acq_frame_nb);
 
 	struct img_frame_info finfo;
 	finfo.buffer_nr    = ESPIA_ACQ_ANY;
@@ -357,7 +358,7 @@ void Acq::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 	CHECK_CALL(ret);
 
 	real2virtFrameInfo(finfo, info);
-	DEB_RETURN_VAR1(info);
+	DEB_RETURN() << DEB_VAR1(info);
 }
 
 void Acq::real2virtFrameInfo(const struct img_frame_info& real_info, 
@@ -391,10 +392,10 @@ void Acq::resetFrameInfo(struct img_frame_info& frame_info)
 void Acq::setNbFrames(int nb_frames)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR1(nb_frames);
+	DEB_PARAM() << DEB_VAR1(nb_frames);
 
 	if (nb_frames < 0) {
-		DEB_ERROR() << "Invalid nb_frames=" << nb_frames;
+		DEB_ERROR() << "Invalid " << DEB_VAR1(nb_frames);
 		throw LIMA_HW_EXC(InvalidValue, "Invalid nb of frames");
 	}
 
@@ -405,7 +406,7 @@ void Acq::getNbFrames(int& nb_frames)
 {
 	DEB_MEMBER_FUNCT();
 	nb_frames = m_nb_frames;
-	DEB_RETURN_VAR1(nb_frames);
+	DEB_RETURN() << DEB_VAR1(nb_frames);
 }
 
 void Acq::start()
@@ -459,13 +460,13 @@ void Acq::getStatus(StatusType& status)
 	status.run_nb  = acq_run_nb;
 	status.last_frame_nb = m_last_frame_info.acq_frame_nr;
 
-	DEB_RETURN_VAR1(status);
+	DEB_RETURN() << DEB_VAR1(status);
 }
 
 void Acq::registerAcqEndCallback(AcqEndCallback& acq_end_cb)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR2(&acq_end_cb, m_acq_end_cb);
+	DEB_PARAM() << DEB_VAR2(&acq_end_cb, m_acq_end_cb);
 
 	if (m_acq_end_cb) {
 		DEB_ERROR() << "AcqEndCallback already registered";
@@ -480,7 +481,7 @@ void Acq::registerAcqEndCallback(AcqEndCallback& acq_end_cb)
 void Acq::unregisterAcqEndCallback(AcqEndCallback& acq_end_cb)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM_VAR2(&acq_end_cb, m_acq_end_cb);
+	DEB_PARAM() << DEB_VAR2(&acq_end_cb, m_acq_end_cb);
 
 	if (m_acq_end_cb != &acq_end_cb) {
 		DEB_ERROR() << "Specified AcqEndCallback not registered";
