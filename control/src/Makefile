@@ -1,8 +1,7 @@
 ct-objs := CtSaving.o CtControl.o CtAcquisition.o CtBuffer.o \
 		CtDebug.o CtImage.o
 
-SRCS = CtSaving.cpp CtControl.cpp CtAcquisition.cpp CtBuffer.cpp \
-		CtDebug.cpp CtImage.cpp
+SRCS = $(ct-objs:.o=.cpp)
 
 INCLUDES = -I../include -I../../common/include -I../../hardware/include \
 		-I../software_operation/include \

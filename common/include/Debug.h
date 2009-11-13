@@ -508,6 +508,8 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 	DEB_VAR4(v1, v2, v3, v4) << ", " << #v5 << "=" << v5
 #define DEB_VAR6(v1, v2, v3, v4, v5, v6)	\
 	DEB_VAR5(v1, v2, v3, v4, v5) << ", " << #v6 << "=" << v6
+#define DEB_VAR7(v1, v2, v3, v4, v5, v6, v7)	\
+	DEB_VAR6(v1, v2, v3, v4, v5, v6) << ", " << #v7 << "=" << v7
 
 #define DEB_OBJ_NAME(o) \
 	((o)->getDebObjName())

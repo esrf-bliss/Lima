@@ -5,96 +5,120 @@
 #include "HwInterface.h"
 #include "HwCap.h"
 #include "CtControl.h"
+#include "Debug.h"
 
-namespace lima {	
+namespace lima 
+{	
 
-class CtAcquisition {
+  class CtAcquisition 
+  {
+    DEB_CLASS_NAMESPC(DebModControl,"Acquisition","Control");
     friend class CtControl;
 
+  public:
+
+    struct Parameters {
+      DEB_CLASS_NAMESPC(DebModControl,"Acquisition::Parameters","Control");
     public:
+      Parameters();
+      void reset();
 
-	struct Parameters {
-		Parameters();
-		void reset();
+      AcqMode	acqMode;
+      int	acqNbFrames;
+      double	acqExpoTime;
+      double	accMaxExpoTime;
+      int	concatNbFrames;
+      double	latencyTime;
+      TrigMode triggerMode;
+      
+    };
 
-		AcqMode	acqMode;
-		int	acqNbFrames;
-		double	acqExpoTime;
-		double	accMaxExpoTime;
-		int	concatNbFrames;
-		double	latencyTime;
-		TrigMode triggerMode;
-	};
+    CtAcquisition(HwInterface *hw);
+    ~CtAcquisition();
 
-	CtAcquisition(HwInterface *hw);
-	~CtAcquisition();
+    // --- global
 
-	// --- global
+    void setPars(const Parameters &pars);
+    void getPars(Parameters& pars) const;
 
-	void setPars(const Parameters &pars);
-	void getPars(Parameters& pars) const;
+    void reset();
+    void apply(CtControl::ApplyPolicy policy);
+    void sync();
 
-	void reset();
-	void apply(CtControl::ApplyPolicy policy);
-	void sync();
+    // --- acq modes
 
-	// --- acq modes
+    void setAcqMode(AcqMode mode);
+    void getAcqMode(AcqMode& mode) const;
 
-	void setAcqMode(AcqMode mode);
-	void getAcqMode(AcqMode& mode) const;
+    void setAcqNbFrames(int nframes);
+    void getAcqNbFrames(int& nframes) const;
 
-	void setAcqNbFrames(int nframes);
-	void getAcqNbFrames(int& nframes) const;
+    void setAcqExpoTime(double acq_time);
+    void getAcqExpoTime(double& acq_time) const;
 
-	void setAcqExpoTime(double acq_time);
-	void getAcqExpoTime(double& acq_time) const;
+    void setAccMaxExpoTime(double max_time);
 
-	void setAccMaxExpoTime(double max_time);
+    void getAccNbFrames(int& nframes) const;
+    void getAccExpoTime(double& acc_time) const;
 
-	void getAccNbFrames(int& nframes) const;
-	void getAccExpoTime(double& acc_time) const;
+    void setConcatNbFrames(int nframes);
+    void getConcatNbFrames(int& nframes) const; 
 
-	void setConcatNbFrames(int nframes);
-	void getConcatNbFrames(int& nframes) const; 
+    // --- common
 
-	// --- common
+    void setLatencyTime(double latency_time);
+    void getLatencyTime(double& latency_time) const;
 
-	void setLatencyTime(double latency_time);
-	void getLatencyTime(double& latency_time) const;
+    void setTriggerMode(TrigMode mode);
+    void getTriggerMode(TrigMode& mode) const;
 
-	void setTriggerMode(TrigMode mode);
-	void getTriggerMode(TrigMode& mode) const;
+  private:
 
-    private:
+    struct ChangedPars {
+      DEB_CLASS_NAMESPC(DebModControl,"Acquisition::ChangedPars","Control");
+    public:
+      ChangedPars();
+      void set(bool);
+      void check(Parameters p1, Parameters p2);
 
-	struct ChangedPars {
-		ChangedPars();
-		void set(bool);
-		void check(Parameters p1, Parameters p2);
+      bool	acqExpoTime;
+      bool	acqNbFrames;
+      bool	latencyTime;
+      bool	triggerMode;
+      bool	accMaxExpoTime;
+    };
 
-		bool	acqExpoTime;
-		bool	acqNbFrames;
-		bool	latencyTime;
-		bool	triggerMode;
-		bool	accMaxExpoTime;
-	};
+    void _updateAccPars() const;
+    void _setDefaultPars(Parameters* pars);
+    void _apply();
+    void _hwRead();
 
-	void _updateAccPars() const;
-	void _setDefaultPars(Parameters* pars);
-	void _apply();
-	void _hwRead();
+    HwSyncCtrlObj	*m_hw_sync;
+    HwSyncCtrlObj::ValidRangesType	m_valid_ranges;
+    Parameters	m_inpars, m_hwpars;
+    ChangedPars	m_changes;
+    double		m_readout_time;
+    double		m_frame_rate;
+    mutable int	m_acc_nframes;
+    mutable double	m_acc_exptime;
+    bool		m_applied_once;
 
-	HwSyncCtrlObj	*m_hw_sync;
-	HwSyncCtrlObj::ValidRangesType	m_valid_ranges;
-	Parameters	m_inpars, m_hwpars;
-	ChangedPars	m_changes;
-	double		m_readout_time;
-	double		m_frame_rate;
-	mutable int	m_acc_nframes;
-	mutable double	m_acc_exptime;
-	bool		m_applied_once;
-};
+  };
 
+  inline std::ostream& operator<<(std::ostream &os,const CtAcquisition::Parameters &params)
+  {
+    os << "<"
+       << "acqMode=" << params.acqMode << ", "
+       << "acqNbFrames=" << params.acqNbFrames << ", "
+       << "acqExpoTime=" << params.acqExpoTime << ", "
+       << "accMaxExpoTime=" << params.accMaxExpoTime << ", "
+       << "concatNbFrames=" << params.concatNbFrames << ", "
+       << "latencyTime=" << params.latencyTime << ", "
+       << "triggerMode=" << params.triggerMode << ", "
+       << ">";
+    return os; 
+  }
+  
 } // namespace lima
 
 #endif // CTACQUISITION_H
