@@ -2,7 +2,7 @@
 #define HWBUFFERMGR_H
 
 #include "HwFrameCallback.h"
-#include "SizeUtils.h"
+#include "MemUtils.h"
 
 #include <vector>
 
@@ -18,7 +18,10 @@ namespace lima
 
 class BufferAllocMgr
 {
+	DEB_CLASS(DebModHardware, "BufferAllocMgr");
+
  public:
+	BufferAllocMgr();
 	virtual ~BufferAllocMgr();
 
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
@@ -44,6 +47,8 @@ class BufferAllocMgr
 
 class SoftBufferAllocMgr : public BufferAllocMgr
 {
+	DEB_CLASS(DebModHardware, "SoftBufferAllocMgr");
+
  public:
 	SoftBufferAllocMgr();
 	virtual ~SoftBufferAllocMgr();
@@ -58,7 +63,7 @@ class SoftBufferAllocMgr : public BufferAllocMgr
 	virtual void *getBufferPtr(int buffer_nb);
 	
  private:
-	typedef std::vector<char *> BufferList;
+	typedef std::vector<MemBuffer *> BufferList;
 	typedef BufferList::const_iterator BufferListCIt;
 
 	FrameDim m_frame_dim;
@@ -76,11 +81,14 @@ class SoftBufferAllocMgr : public BufferAllocMgr
 
 class BufferCbMgr : public HwFrameCallbackGen
 {
+	DEB_CLASS(DebModHardware, "BufferCbMgr");
+
  public:
 	enum Cap {
 		Basic=0, Concat=1, Acc=2, // bit mask
 	};
 
+	BufferCbMgr();
 	virtual ~BufferCbMgr();
 
 	virtual Cap getCap() = 0;
@@ -128,6 +136,8 @@ BufferCbMgr::Cap operator &(BufferCbMgr::Cap c1, BufferCbMgr::Cap c2);
 
 class StdBufferCbMgr : public BufferCbMgr
 {
+	DEB_CLASS(DebModHardware, "StdBufferCbMgr");
+
  public:
 	StdBufferCbMgr(BufferAllocMgr& alloc_mgr);
 	virtual ~StdBufferCbMgr();
@@ -177,6 +187,8 @@ class StdBufferCbMgr : public BufferCbMgr
 
 class BufferCtrlMgr : public HwFrameCallbackGen
 {
+	DEB_CLASS(DebModHardware, "BufferCtrlMgr");
+
  public:
 	enum AcqMode {
 		Normal, Concat, Acc,
@@ -216,14 +228,15 @@ class BufferCtrlMgr : public HwFrameCallbackGen
  private:
 	class AcqFrameCallback : public HwFrameCallback
 	{
+		DEB_CLASS(DebModHardware, "BufferCtrlMgr::AcqFrameCallback");
+
 	public:
-		AcqFrameCallback(BufferCtrlMgr& buffer_mgr)
-			: m_buffer_mgr(&buffer_mgr) {}
+		AcqFrameCallback(BufferCtrlMgr& buffer_mgr);
+		~AcqFrameCallback();
+
 	protected:
-		virtual bool newFrameReady(const HwFrameInfoType& frame_info)
-		{
-			return m_buffer_mgr->acqFrameReady(frame_info);
-		}
+		virtual bool newFrameReady(const HwFrameInfoType& finfo);
+
 	private:
 		BufferCtrlMgr *m_buffer_mgr;
 	};

@@ -1,12 +1,13 @@
 #include "MemUtils.h"
 #include "Exceptions.h"
 
+#include <sstream>
 #include <sys/sysinfo.h>
 #include <limits.h>
 #include <unistd.h>
 
 using namespace lima;
-
+using namespace std;
 
 void lima::GetSystemMem(int& mem_unit, int& system_mem)
 {
@@ -58,4 +59,75 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 		       const FrameDim& frame_dim)
 {
 	memset(ptr, 0, nb_concat_frames * frame_dim.getMemSize());
+}
+
+
+MemBuffer::MemBuffer()
+	: m_size(0), m_ptr(NULL)
+{
+}
+
+MemBuffer::MemBuffer(int size)
+	: m_size(0), m_ptr(NULL)
+{
+	alloc(size);
+	memset(getPtr(), 0, size);
+}
+
+MemBuffer::MemBuffer(const MemBuffer& buffer)
+	: m_size(0), m_ptr(NULL)
+{
+	copy(buffer);
+}
+
+MemBuffer::~MemBuffer()
+{
+	release();
+}
+
+
+void MemBuffer::alloc(int size)
+{
+	if (m_size == size)
+		return;
+
+	release();
+
+	int ret = posix_memalign(&m_ptr, Alignment, size);
+	if (ret != 0) {
+		ostringstream os;
+		os << "Error in posix_memalign: " << strerror(ret);
+		const string& err_desc = os.str();
+		throw LIMA_COM_EXC(Error, err_desc);
+	}
+
+	m_size = size;
+}
+
+void MemBuffer::copy(const MemBuffer& buffer)
+{
+	int size = buffer.getSize();
+	alloc(size);
+	memcpy(getPtr(), buffer.getConstPtr(), size);
+}
+
+void MemBuffer::release()
+{
+	if (!m_size)
+		return;
+
+	free(m_ptr);
+	m_ptr = NULL;
+	m_size = 0;
+}
+
+MemBuffer& MemBuffer::operator =(const MemBuffer& buffer)
+{
+	copy(buffer);
+	return *this;
+}
+
+void MemBuffer::clear()
+{
+	ClearBuffer(getPtr(), 1, FrameDim(getSize(), 1, Bpp8));
 }

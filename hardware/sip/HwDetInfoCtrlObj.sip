@@ -5,6 +5,7 @@ class HwDetInfoCtrlObj
 using namespace lima;
 %End
  public:
+	HwDetInfoCtrlObj();
 	virtual ~HwDetInfoCtrlObj();
 	virtual void getMaxImageSize(Size& size /Out/) = 0;
 	virtual void getDetectorImageSize(Size& size /Out/) = 0;

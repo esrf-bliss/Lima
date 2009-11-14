@@ -13,14 +13,17 @@ using namespace std;
 DetInfoCtrlObj::DetInfoCtrlObj(Camera& cam)
 	: m_cam(cam)
 {
+	DEB_CONSTRUCTOR();
 }
 
 DetInfoCtrlObj::~DetInfoCtrlObj()
 {
+	DEB_DESTRUCTOR();
 }
 
 void DetInfoCtrlObj::getMaxImageSize(Size& max_image_size)
 {
+	DEB_MEMBER_FUNCT();
 	FrameDim max_frame_dim;
 	m_cam.getFrameDim(max_frame_dim);
 	max_image_size = max_frame_dim.getSize();
@@ -28,16 +31,19 @@ void DetInfoCtrlObj::getMaxImageSize(Size& max_image_size)
 
 void DetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
 {
+	DEB_MEMBER_FUNCT();
 	det_image_size = MaxFrameDim.getSize();
 }
 
 void DetInfoCtrlObj::getDefImageType(ImageType& def_image_type)
 {
+	DEB_MEMBER_FUNCT();
 	def_image_type = MaxFrameDim.getImageType();
 }
 
 void DetInfoCtrlObj::getCurrImageType(ImageType& curr_image_type)
 {
+	DEB_MEMBER_FUNCT();
 	FrameDim max_frame_dim;
 	m_cam.getFrameDim(max_frame_dim);
 	curr_image_type = max_frame_dim.getImageType();
@@ -45,27 +51,35 @@ void DetInfoCtrlObj::getCurrImageType(ImageType& curr_image_type)
 
 void DetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
 {
+	DEB_MEMBER_FUNCT();
 	ImageType unique_image_type;
 	getCurrImageType(unique_image_type);
-	if (curr_image_type != unique_image_type)
+	if (curr_image_type != unique_image_type) {
+		DEB_ERROR() << "Only " << unique_image_type << "allowed";
 		throw LIMA_HW_EXC(InvalidValue, "Only one image type allowed");
+	}
 }
 
 void DetInfoCtrlObj::getPixelSize(double& pixel_size)
 {
+	DEB_MEMBER_FUNCT();
 	bool is_frelon_4m;
 	m_cam.isFrelon4M(is_frelon_4m);
 	ChipType chip_type = is_frelon_4m ? Kodak : Atmel;
 	pixel_size = ChipPixelSizeMap[chip_type];
+	DEB_RETURN() << DEB_VAR1(pixel_size);
 }
 
 void DetInfoCtrlObj::getDetectorType(std::string& det_type)
 {
+	DEB_MEMBER_FUNCT();
 	det_type = "Frelon";
+	DEB_RETURN() << DEB_VAR1(det_type);
 }
 
 void DetInfoCtrlObj::getDetectorModel(std::string& det_model)
 {
+	DEB_MEMBER_FUNCT();
 	bool is_frelon_4m;
 	m_cam.isFrelon4M(is_frelon_4m);
 
@@ -80,10 +94,16 @@ void DetInfoCtrlObj::getDetectorModel(std::string& det_model)
 	m_cam.hasTaper(has_taper);
 	if (has_taper)
 		det_model += "T";
+
+	DEB_RETURN() << DEB_VAR1(det_model);
 }
 
 void DetInfoCtrlObj::setMaxImageSizeCallbackActive(bool cb_active)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(cb_active);
+
+	DEB_ERROR() << "Not implemented yet!";
 }
 
 
@@ -94,85 +114,102 @@ void DetInfoCtrlObj::setMaxImageSizeCallbackActive(bool cb_active)
 BufferCtrlObj::BufferCtrlObj(BufferCtrlMgr& buffer_mgr)
 	: m_buffer_mgr(buffer_mgr)
 {
+	DEB_CONSTRUCTOR();
 }
 
 BufferCtrlObj::~BufferCtrlObj()
 {
+	DEB_DESTRUCTOR();
 }
 
 void BufferCtrlObj::setFrameDim(const FrameDim& frame_dim)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.setFrameDim(frame_dim);
 }
 
 void BufferCtrlObj::getFramedim(FrameDim& frame_dim)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getFrameDim(frame_dim);
 }
 
 void BufferCtrlObj::setNbBuffers(int nb_buffers)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.setNbBuffers(nb_buffers);
 }
 
 void BufferCtrlObj::getNbBuffers(int& nb_buffers)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getNbBuffers(nb_buffers);
 }
 
 void BufferCtrlObj::setNbConcatFrames(int nb_concat_frames)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.setNbConcatFrames(nb_concat_frames);
 }
 
 void BufferCtrlObj::getNbConcatFrames(int& nb_concat_frames)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getNbConcatFrames(nb_concat_frames);
 }
 
 void BufferCtrlObj::setNbAccFrames(int nb_acc_frames)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.setNbAccFrames(nb_acc_frames);
 }
 
 void BufferCtrlObj::getNbAccFrames(int& nb_acc_frames)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getNbAccFrames(nb_acc_frames);
 }
 
 void BufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getMaxNbBuffers(max_nb_buffers);
 
 }
 
 void *BufferCtrlObj::getBufferPtr(int buffer_nb, int concat_frame_nb)
 {
+	DEB_MEMBER_FUNCT();
 	return m_buffer_mgr.getBufferPtr(buffer_nb, concat_frame_nb);
 }
 
 void *BufferCtrlObj::getFramePtr(int acq_frame_nb)
 {
+	DEB_MEMBER_FUNCT();
 	return m_buffer_mgr.getFramePtr(acq_frame_nb);
 }
 
 void BufferCtrlObj::getStartTimestamp(Timestamp& start_ts)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getStartTimestamp(start_ts);
 }
 
 void BufferCtrlObj::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getFrameInfo(acq_frame_nb, info);
 }
 
 void BufferCtrlObj::registerFrameCallback(HwFrameCallback& frame_cb)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.registerFrameCallback(frame_cb);
 }
 
 void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.unregisterFrameCallback(frame_cb);
 }
 
@@ -184,64 +221,102 @@ void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
 SyncCtrlObj::SyncCtrlObj(Acq& acq, Camera& cam, BufferCtrlObj& buffer_ctrl)
 	: HwSyncCtrlObj(buffer_ctrl), m_acq(acq), m_cam(cam), m_acq_end_cb(cam)
 {
+	DEB_CONSTRUCTOR();
 }
 
 SyncCtrlObj::~SyncCtrlObj()
 {
+	DEB_DESTRUCTOR();
 }
 
 void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.setTrigMode(trig_mode);
 }
 
 void SyncCtrlObj::getTrigMode(TrigMode& trig_mode)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.getTrigMode(trig_mode);
 }
 
 void SyncCtrlObj::setExpTime(double exp_time)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.setExpTime(exp_time);
 }
 
 void SyncCtrlObj::getExpTime(double& exp_time)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.getExpTime(exp_time);
 }
 
 void SyncCtrlObj::setLatTime(double lat_time)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.setLatTime(lat_time);
 }
 
 void SyncCtrlObj::getLatTime(double& lat_time)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.getLatTime(lat_time);
 }
 
 void SyncCtrlObj::setNbHwFrames(int nb_frames)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(nb_frames);
+
 	m_acq.setNbFrames(nb_frames);
 
 	int cam_nb_frames = nb_frames;
 	if (cam_nb_frames > MaxRegVal) {
+		DEB_TRACE() << "Too many frames: setting camera endless acq";
 		cam_nb_frames = 0;
 		if (!m_acq_end_cb.getAcq())
 			m_acq.registerAcqEndCallback(m_acq_end_cb);
 	} else if (m_acq_end_cb.getAcq())
-		m_acq.unregisterAcqEndCallback(m_acq_end_cb);
+			m_acq.unregisterAcqEndCallback(m_acq_end_cb);
 
 	m_cam.setNbFrames(cam_nb_frames);
 }
 
 void SyncCtrlObj::getNbHwFrames(int& nb_frames)
 {
+	DEB_MEMBER_FUNCT();
 	m_acq.getNbFrames(nb_frames);
 }
 
 void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 {
+	DEB_MEMBER_FUNCT();
+
+	DEB_ERROR() << "Not implemented yet!";
+}
+
+
+/*******************************************************************
+ * \brief SyncCtrlObj::AcqEndCallback constructor
+ *******************************************************************/
+
+SyncCtrlObj::AcqEndCallback::AcqEndCallback(Camera& cam) 
+	: m_cam(cam) 
+{
+	DEB_CONSTRUCTOR();
+}
+
+SyncCtrlObj::AcqEndCallback::~AcqEndCallback()
+{
+	DEB_DESTRUCTOR();
+}
+
+void SyncCtrlObj::AcqEndCallback::acqFinished(const HwFrameInfoType& /*finfo*/)
+{
+	DEB_MEMBER_FUNCT();
+	m_cam.stop();
 }
 
 
@@ -252,24 +327,29 @@ void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 BinCtrlObj::BinCtrlObj(Camera& cam)
 	: m_cam(cam)
 {
+	DEB_CONSTRUCTOR();
 }
 
 BinCtrlObj::~BinCtrlObj()
 {
+	DEB_DESTRUCTOR();
 }
 
 void BinCtrlObj::setBin(const Bin& bin)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.setBin(bin);
 }
 
 void BinCtrlObj::getBin(Bin& bin)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.getBin(bin);
 }
 
 void BinCtrlObj::checkBin(Bin& bin)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.checkBin(bin);
 }
 
@@ -281,24 +361,29 @@ void BinCtrlObj::checkBin(Bin& bin)
 RoiCtrlObj::RoiCtrlObj(Camera& cam)
 	: m_cam(cam)
 {
+	DEB_CONSTRUCTOR();
 }
 
 RoiCtrlObj::~RoiCtrlObj()
 {
+	DEB_DESTRUCTOR();
 }
 
 void RoiCtrlObj::checkRoi(const Roi& set_roi, Roi& hw_roi)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.checkRoi(set_roi, hw_roi);
 }
 
 void RoiCtrlObj::setRoi(const Roi& roi)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.setRoi(roi);
 }
 
 void RoiCtrlObj::getRoi(Roi& roi)
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.getRoi(roi);
 }
 
@@ -313,6 +398,8 @@ Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 	  m_det_info(cam), m_buffer(buffer_mgr), m_sync(acq, cam, m_buffer), 
 	  m_bin(cam), m_roi(cam)
 {
+	DEB_CONSTRUCTOR();
+
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));
 
@@ -333,22 +420,30 @@ Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 
 Interface::~Interface()
 {
+	DEB_DESTRUCTOR();
 }
 
 const HwInterface::CapList& Interface::getCapList() const
 {
+	DEB_MEMBER_FUNCT();
 	return m_cap_list;
 }
 
 void Interface::reset(ResetLevel reset_level)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(reset_level);
+
 	m_acq.stop();
 
-	if (reset_level == HardReset)
+	if (reset_level == HardReset) {
+		DEB_TRACE() << "Performing camera hard reset";
 		m_cam.hardReset();
+	}
 
 	m_cam.setFrameTransferMode(FFM);
 	m_cam.setInputChan(Chan1234);
+	m_cam.setFlip(Point(0));
 
 	m_sync.setNbFrames(1);
 	m_sync.setExpTime(1.0);
@@ -372,10 +467,12 @@ void Interface::reset(ResetLevel reset_level)
 
 void Interface::prepareAcq()
 {
+	DEB_MEMBER_FUNCT();
 }
 
 void Interface::startAcq()
 {
+	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.setStartTimestamp(Timestamp::now());
 	m_acq.start();
 	m_cam.start();
@@ -383,12 +480,14 @@ void Interface::startAcq()
 
 void Interface::stopAcq()
 {
+	DEB_MEMBER_FUNCT();
 	m_cam.stop();
 	m_acq.stop();
 }
 
 void Interface::getStatus(StatusType& status)
 {
+	DEB_MEMBER_FUNCT();
 	Acq::Status acq;
 	m_acq.getStatus(acq);
 	status.acq = acq.running ? AcqRunning : AcqReady;
@@ -412,13 +511,18 @@ void Interface::getStatus(StatusType& status)
 		status.det |= Readout;
 	if (cam & Frelon::Latency)
 		status.det |= Latency;
+
+	DEB_RETURN() << DEB_VAR1(status);
 }
 
 int Interface::getNbHwAcquiredFrames()
 {
+	DEB_MEMBER_FUNCT();
 	Acq::Status acq_status;
 	m_acq.getStatus(acq_status);
-	return (acq_status.last_frame_nb + 1);
+	int nb_hw_acq_frames = acq_status.last_frame_nb + 1;
+	DEB_RETURN() << DEB_VAR1(nb_hw_acq_frames);
+	return nb_hw_acq_frames;
 }
 
 

@@ -10,6 +10,7 @@
 #define HWSERIALLINE_H
 
 #include <string>
+#include "Debug.h"
 #include "Exceptions.h"
 
 
@@ -27,6 +28,8 @@ namespace lima {
  *******************************************************************/
 class HwSerialLine
 {
+	DEB_CLASS(DebModHardwareSerial, "HwSerialLine");
+
   public :
 
 	enum TimeoutConst {

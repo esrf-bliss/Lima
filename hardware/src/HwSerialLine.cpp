@@ -28,11 +28,13 @@ HwSerialLine::HwSerialLine( const string& line_term, double timeout,
 	m_block_size(block_size),
 	m_block_delay(block_delay)
 {
+	DEB_CONSTRUCTOR();
 }
 
 
 HwSerialLine::~HwSerialLine()
 {
+	DEB_DESTRUCTOR();
 }
 
 
@@ -42,6 +44,8 @@ HwSerialLine::~HwSerialLine()
 void HwSerialLine::readStr( string& buffer, int max_len, 
                             const string& term, double timeout )
 {
+	DEB_MEMBER_FUNCT();
+
 	Timestamp start=Timestamp::now();
 	int match=0, n, term_len=term.length(), len=0;
 	bool have_timeout=(timeout > 0), have_maxlen=(max_len > 0);
@@ -76,6 +80,7 @@ void HwSerialLine::readStr( string& buffer, int max_len,
  *******************************************************************/
 void HwSerialLine::readLine( string& buffer, int max_len, double timeout )
 {
+	DEB_MEMBER_FUNCT();
 	readStr( buffer, max_len, m_line_term, timeout );
 }
 
@@ -88,6 +93,7 @@ void HwSerialLine::writeRead( const string& writebuffer,
 	                      bool wr_no_wait, double rd_timeout )
 
 {
+	DEB_MEMBER_FUNCT();
 	write( writebuffer, wr_no_wait );
 	read( readbuffer, max_len, rd_timeout );
 }
@@ -102,6 +108,7 @@ void HwSerialLine::writeReadStr( const string& writebuffer,
                                  bool wr_no_wait, double rd_timeout )
 
 {
+	DEB_MEMBER_FUNCT();
 	write( writebuffer, wr_no_wait );
 	readStr( readbuffer, max_len, term, rd_timeout );
 }
@@ -112,6 +119,7 @@ void HwSerialLine::writeReadStr( const string& writebuffer,
  *******************************************************************/
 void HwSerialLine::readAvailable( string& buffer, int max_len )
 {
+	DEB_MEMBER_FUNCT();
 	read( buffer, max_len, TimeoutNoBlock );
 }
 
@@ -121,6 +129,7 @@ void HwSerialLine::readAvailable( string& buffer, int max_len )
  *******************************************************************/
 void HwSerialLine::flush()
 {
+	DEB_MEMBER_FUNCT();
 	string buf;
 	int len;
 
@@ -131,43 +140,59 @@ void HwSerialLine::flush()
 
 void HwSerialLine::setLineTerm( const string& line_term )
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(line_term);
 	m_line_term = line_term;
 }
 
 void HwSerialLine::getLineTerm( string& line_term ) const
 {
+	DEB_MEMBER_FUNCT();
 	line_term = m_line_term;
+	DEB_RETURN() << DEB_VAR1(line_term);
 }
 
 
 void HwSerialLine::setTimeout( double timeout )
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(timeout);
 	m_timeout = timeout;
 }
 
 void HwSerialLine::getTimeout( double& timeout ) const
 {
+	DEB_MEMBER_FUNCT();
 	timeout = m_timeout;
+	DEB_RETURN() << DEB_VAR1(timeout);
 }
 
 
 void HwSerialLine::setBlockSize( int block_size )
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(block_size);
 	m_block_size = block_size;
 }
 
 void HwSerialLine::getBlockSize( int& block_size ) const
 {
+	DEB_MEMBER_FUNCT();
 	block_size = m_block_size;
+	DEB_RETURN() << DEB_VAR1(block_size);
 }
 
 
 void HwSerialLine::setBlockDelay( double block_delay )
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(block_delay);
 	m_block_delay = block_delay;
 }
 
 void HwSerialLine::getBlockDelay( double& block_delay ) const
 {
+	DEB_MEMBER_FUNCT();
 	block_delay = m_block_delay;
+	DEB_RETURN() << DEB_VAR1(block_delay);
 }

@@ -16,23 +16,28 @@ enum DebType {
 
 enum DebFormat {
 	DebFmtDateTime,		// = 1 << 0,
-	DebFmtModule,		// = 1 << 1,
-	DebFmtObj,		// = 1 << 2,
-	DebFmtFunct,		// = 1 << 3,	
-	DebFmtFileLine,		// = 1 << 4,
-	DebFmtType,		// = 1 << 5,
+	DebFmtThread,		// = 1 << 1,
+	DebFmtModule,		// = 1 << 2,
+	DebFmtObj,		// = 1 << 3,
+	DebFmtFunct,		// = 1 << 4,	
+	DebFmtFileLine,		// = 1 << 5,
+	DebFmtType,		// = 1 << 6,
+	DebFmtIndent,		// = 1 << 7,
+	DebFmtColor,		// = 1 << 8,
 };
 
 enum DebModule {
 	DebModNone,		// = 1 << 0,
 	DebModCommon,		// = 1 << 1,
 	DebModHardware,		// = 1 << 2,
-	DebModControl,		// = 1 << 3,
-	DebModEspia,		// = 1 << 4,
-	DebModEspiaSerial,	// = 1 << 5,
-	DebModFocla,		// = 1 << 6,
-	DebModCamera,		// = 1 << 7,
-	DebModCameraCom,	// = 1 << 8,
+	DebModHardwareSerial,	// = 1 << 3,
+	DebModControl,		// = 1 << 4,
+	DebModEspia,		// = 1 << 5,
+	DebModEspiaSerial,	// = 1 << 6,
+	DebModFocla,		// = 1 << 7,
+	DebModCamera,		// = 1 << 8,
+	DebModCameraCom,	// = 1 << 9,
+	DebModTest,		// = 1 << 10,
 };
 
 typedef const char *ConstStr;

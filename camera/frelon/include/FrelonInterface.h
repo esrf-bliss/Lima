@@ -20,6 +20,8 @@ class Interface;
 
 class DetInfoCtrlObj : public HwDetInfoCtrlObj
 {
+	DEB_CLASS_NAMESPC(DebModCamera, "DetInfoCtrlObj", "Frelon");
+
  public:
 	DetInfoCtrlObj(Camera& cam);
 	virtual ~DetInfoCtrlObj();
@@ -51,6 +53,8 @@ class DetInfoCtrlObj : public HwDetInfoCtrlObj
 
 class BufferCtrlObj : public HwBufferCtrlObj
 {
+	DEB_CLASS_NAMESPC(DebModCamera, "BufferCtrlObj", "Frelon");
+
  public:
 	BufferCtrlObj(BufferCtrlMgr& buffer_mgr);
 	virtual ~BufferCtrlObj();
@@ -90,6 +94,8 @@ class BufferCtrlObj : public HwBufferCtrlObj
 
 class SyncCtrlObj : public HwSyncCtrlObj
 {
+	DEB_CLASS_NAMESPC(DebModCamera, "SyncCtrlObj", "Frelon");
+
  public:
 	SyncCtrlObj(Espia::Acq& acq, Camera& cam, BufferCtrlObj& buffer_ctrl);
 	virtual ~SyncCtrlObj();
@@ -111,15 +117,15 @@ class SyncCtrlObj : public HwSyncCtrlObj
  private:
 	class AcqEndCallback : public Espia::AcqEndCallback
 	{
+		DEB_CLASS_NAMESPC(DebModCamera, "SyncCtrlObj::AcqEndCallback", 
+				  "Frelon");
+
 	public:
-		AcqEndCallback(Camera& cam) : m_cam(cam) {}
+		AcqEndCallback(Camera& cam);
+		virtual ~AcqEndCallback();
 
 	protected:
-		virtual void acqFinished(const HwFrameInfoType& /*frame_info*/)
-		{
-			m_cam.stop();
-		}
-
+		virtual void acqFinished(const HwFrameInfoType& /*finfo*/);
 	private:
 		Camera& m_cam;
 	};
@@ -137,6 +143,8 @@ class SyncCtrlObj : public HwSyncCtrlObj
 
 class BinCtrlObj : public HwBinCtrlObj
 {
+	DEB_CLASS_NAMESPC(DebModCamera, "BinCtrlObj", "Frelon");
+
  public:
 	BinCtrlObj(Camera& cam);
 	virtual ~BinCtrlObj();
@@ -157,6 +165,8 @@ class BinCtrlObj : public HwBinCtrlObj
 
 class RoiCtrlObj : public HwRoiCtrlObj
 {
+	DEB_CLASS_NAMESPC(DebModCamera, "RoiCtrlObj", "Frelon");
+
  public:
 	RoiCtrlObj(Camera& cam);
 	virtual ~RoiCtrlObj();
@@ -177,6 +187,8 @@ class RoiCtrlObj : public HwRoiCtrlObj
 
 class Interface : public HwInterface
 {
+	DEB_CLASS_NAMESPC(DebModCamera, "Interface", "Frelon");
+
  public:
 	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, Camera& cam);
 	virtual ~Interface();

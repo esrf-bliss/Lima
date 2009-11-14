@@ -8,6 +8,8 @@ namespace lima
 
 class HwBufferCtrlObj
 {
+	DEB_CLASS(DebModHardware, "HwBufferCtrlObj");
+
 public:
 	HwBufferCtrlObj();
 	virtual ~HwBufferCtrlObj();

@@ -39,14 +39,14 @@ class BufferMgr : public BufferCbMgr
  protected:
 	class FrameCallback : public HwFrameCallback
 	{
-	public:
-		FrameCallback(BufferMgr& buffer_mgr) 
-			: m_buffer_mgr(buffer_mgr) {}
+		DEB_CLASS_NAMESPC(DebModEspia, "BufferMgr::FrameCallback", 
+				  "Espia");
 
-		virtual bool newFrameReady(const HwFrameInfoType& frame_info)
-		{
-			return m_buffer_mgr.newFrameReady(frame_info);
-		}
+	public:
+		FrameCallback(BufferMgr& buffer_mgr);
+		virtual ~FrameCallback();
+
+		virtual bool newFrameReady(const HwFrameInfoType& frame_info);
 			
 	protected:
 		BufferMgr& m_buffer_mgr;

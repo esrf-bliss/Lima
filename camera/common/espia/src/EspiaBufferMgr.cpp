@@ -113,3 +113,21 @@ void BufferMgr::setFrameCallbackActive(bool cb_active)
 		m_acq.unregisterFrameCallback(m_frame_cb);
 }
 	
+
+BufferMgr::FrameCallback::FrameCallback(BufferMgr& buffer_mgr) 
+	: m_buffer_mgr(buffer_mgr) 
+{
+	DEB_CONSTRUCTOR();
+}
+
+BufferMgr::FrameCallback::~FrameCallback() 
+{
+	DEB_DESTRUCTOR();
+}
+
+bool BufferMgr::FrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
+{
+	DEB_MEMBER_FUNCT();
+	return m_buffer_mgr.newFrameReady(frame_info);
+}
+		

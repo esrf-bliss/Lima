@@ -5,13 +5,13 @@ class HwFrameCallbackGen
 using namespace lima;
 %End
  public:
+	HwFrameCallbackGen();
 	virtual ~HwFrameCallbackGen();
 
 	void registerFrameCallback(HwFrameCallback& frame_cb);
 	void unregisterFrameCallback(HwFrameCallback& frame_cb);
 
  protected:
-	HwFrameCallbackGen();
 	virtual void setFrameCallbackActive(bool cb_active) = 0;
 	bool newFrameReady(const HwFrameInfoType& frame_info);
 	

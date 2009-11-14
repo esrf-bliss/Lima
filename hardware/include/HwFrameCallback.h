@@ -4,6 +4,7 @@
 #include "SizeUtils.h"
 #include "Timestamp.h"
 #include "HwFrameInfo.h"
+#include "Debug.h"
 
 namespace lima
 {
@@ -21,14 +22,16 @@ class HwFrameCallback;
 
 class HwFrameCallbackGen
 {
+	DEB_CLASS(DebModHardware, "HwFrameCallbackGen");
+
  public:
+	HwFrameCallbackGen();
 	virtual ~HwFrameCallbackGen();
 
 	void registerFrameCallback(HwFrameCallback& frame_cb);
 	void unregisterFrameCallback(HwFrameCallback& frame_cb);
 
  protected:
-	HwFrameCallbackGen();
 	virtual void setFrameCallbackActive(bool cb_active) = 0;
 	bool newFrameReady(const HwFrameInfoType& frame_info);
 	
@@ -45,8 +48,10 @@ class HwFrameCallbackGen
 
 class HwFrameCallback
 {
+	DEB_CLASS(DebModHardware, "HwFrameCallback");
+
  public:
-	HwFrameCallback() : m_frame_cb_gen(NULL) {}
+	HwFrameCallback();
 	virtual ~HwFrameCallback();
 
 	HwFrameCallbackGen *getFrameCallbackGen() const;

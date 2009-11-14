@@ -2,12 +2,15 @@
 #define HWROICTRLOBJ_H
 
 #include "SizeUtils.h"
+#include "Debug.h"
 
 namespace lima
 {
 
 class HwRoiCtrlObj
 {
+	DEB_CLASS(DebModHardware, "HwRoiCtrlObj");
+
  public:
 	HwRoiCtrlObj();
 	virtual ~HwRoiCtrlObj();

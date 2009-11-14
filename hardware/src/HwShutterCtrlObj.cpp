@@ -4,9 +4,11 @@ using namespace lima;
 
 HwShutterCtrlObj::HwShutterCtrlObj()
 {
+	DEB_CONSTRUCTOR();
 }
 
 HwShutterCtrlObj::~HwShutterCtrlObj()
 {
+	DEB_DESTRUCTOR();
 }
 

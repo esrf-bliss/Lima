@@ -5,6 +5,7 @@ class BufferAllocMgr
 using namespace lima;
 %End
  public:
+	BufferAllocMgr();
 	virtual ~BufferAllocMgr();
 
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
@@ -52,6 +53,7 @@ using namespace lima;
 		Basic=0, Concat=1, Acc=2, // bit mask
 	};
 
+	BufferCbMgr();
 	virtual ~BufferCbMgr();
 
 	virtual Cap getCap() = 0;

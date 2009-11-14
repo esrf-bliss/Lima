@@ -13,13 +13,16 @@ using namespace lima;
 using namespace std;
 using namespace Tasks;
 
+DEB_GLOBAL(DebModTest);
+
 class SoftRoiCallback : public TaskEventCallback
 {
+	DEB_CLASS(DebModTest, "SoftRoiCallback");
+
 public:
 	SoftRoiCallback(Frelon::Interface& hw_inter, BufferSave& buffer_save,
-			AcqFinished& acq_finished)
-		: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
-		  m_acq_finished(acq_finished) {}
+			AcqFinished& acq_finished);
+	~SoftRoiCallback();
 
 	virtual void finished(Data& data);
 private:
@@ -31,9 +34,25 @@ private:
 	AcqFinished& m_acq_finished;
 };
 
+SoftRoiCallback::SoftRoiCallback(Frelon::Interface& hw_inter, 
+				 BufferSave& buffer_save,
+				 AcqFinished& acq_finished)
+	: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
+	  m_acq_finished(acq_finished) 
+{
+	DEB_CONSTRUCTOR();
+}
+
+SoftRoiCallback::~SoftRoiCallback()
+{
+	DEB_DESTRUCTOR();
+}
+
 void SoftRoiCallback::data2FrameInfo(Data& data, HwFrameInfoType& finfo,
 				     FrameDim& fdim)
 {
+	DEB_MEMBER_FUNCT();
+
 	ImageType image_type;
 	switch (data.type) {
 	case Data::INT8:
@@ -63,6 +82,8 @@ void SoftRoiCallback::data2FrameInfo(Data& data, HwFrameInfoType& finfo,
 
 void SoftRoiCallback::finished(Data& data)
 {
+	DEB_MEMBER_FUNCT();
+
 	HwFrameInfoType finfo;
 	FrameDim fdim;
 	data2FrameInfo(data, finfo, fdim);
@@ -80,21 +101,12 @@ void SoftRoiCallback::finished(Data& data)
 
 class TestFrameCallback : public HwFrameCallback
 {
+	DEB_CLASS(DebModTest, "TestFrameCallback");
+
 public:
 	TestFrameCallback(Frelon::Interface& hw_inter, Roi& soft_roi,
-			  BufferSave& buffer_save, AcqFinished& acq_finished) 
-		: m_hw_inter(hw_inter), m_soft_roi(soft_roi)
-	{
-		m_roi_cb = new SoftRoiCallback(hw_inter, buffer_save, 
-					       acq_finished);
-		m_roi_task = new SoftRoi();
-	}
-
-	~TestFrameCallback()
-	{
-		m_roi_task->unref();
-		m_roi_cb->unref();
-	}
+			  BufferSave& buffer_save, AcqFinished& acq_finished);
+	~TestFrameCallback();
 
 protected:
 	virtual bool newFrameReady(const HwFrameInfoType& frame_info);
@@ -108,9 +120,26 @@ private:
 	SoftRoiCallback *m_roi_cb;
 };
 
+TestFrameCallback::TestFrameCallback(Frelon::Interface& hw_inter, 
+				     Roi& soft_roi, BufferSave& buffer_save, 
+				     AcqFinished& acq_finished) 
+	: m_hw_inter(hw_inter), m_soft_roi(soft_roi)
+{
+	DEB_CONSTRUCTOR();
+	m_roi_cb = new SoftRoiCallback(hw_inter, buffer_save, acq_finished);
+	m_roi_task = new SoftRoi();
+}
+
+TestFrameCallback::~TestFrameCallback()
+{
+	DEB_DESTRUCTOR();
+}
+
 void TestFrameCallback::frameInfo2Data(const HwFrameInfoType& frame_info, 
 				       Data& data)
 {
+	DEB_MEMBER_FUNCT();
+
 	data.frameNumber = frame_info.acq_frame_nb;
 	const Size &aSize = frame_info.frame_dim->getSize();
 	data.width = aSize.getWidth();
@@ -125,6 +154,7 @@ void TestFrameCallback::frameInfo2Data(const HwFrameInfoType& frame_info,
 	case Bpp32:
 		data.type = Data::UINT32; break;
 	default:
+		DEB_ERROR() << "Invalid frame image type";
 		throw LIMA_HW_EXC(InvalidValue, "Invalid frame image type");
 	}
 	
@@ -139,14 +169,13 @@ void TestFrameCallback::frameInfo2Data(const HwFrameInfoType& frame_info,
 
 bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 {
+	DEB_MEMBER_FUNCT();
+
 	int nb_acq_frames = m_hw_inter.getNbAcquiredFrames();
 	HwInterface::Status status;
 	m_hw_inter.getStatus(status);
 
-	cout << "In callback:" << endl
-	     << "  frame_info=" << frame_info << endl
-	     << "  nb_acq_frames=" << nb_acq_frames << endl
-	     << "  status=" << status << endl;
+	DEB_TRACE() << DEB_VAR3(frame_info, nb_acq_frames, status);
 
 	Data data;
 	frameInfo2Data(frame_info, data);
@@ -162,7 +191,7 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 		task_mgr->setLinkTask(0, m_roi_task);
 		task_mgr->setInputData(data);
 
-		cout << "  adding SoftRoi task!" << endl;
+		DEB_TRACE() << "adding SoftRoi task!";
 		PoolThreadMgr::get().addProcess(task_mgr);
 	} else {
 		m_roi_cb->finished(data);
@@ -173,15 +202,19 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 
 void print_status(Frelon::Interface& hw_inter)
 {
-	HwInterface::Status status;
+	DEB_GLOBAL_FUNCT();
 
+	HwInterface::Status status;
 	hw_inter.getStatus(status);
-	cout << "status=" << status << endl;
+
+	DEB_PARAM() << DEB_VAR1(status);
 }
 
 void set_hw_roi(HwRoiCtrlObj *hw_roi, const Roi& set_roi, Roi& real_roi,
 		Roi& soft_roi)
 {
+	DEB_GLOBAL_FUNCT();
+
 	hw_roi->setRoi(set_roi);
 	hw_roi->getRoi(real_roi);
 
@@ -193,33 +226,33 @@ void set_hw_roi(HwRoiCtrlObj *hw_roi, const Roi& set_roi, Roi& real_roi,
 		soft_roi = real_roi.subRoiAbs2Rel(set_roi);
 	}
 
-	cout << "set_roi=" << set_roi << ", real_roi=" << real_roi << ", "
-	     << "soft_roi=" << soft_roi << endl;
+	DEB_TRACE() << DEB_VAR3(set_roi, real_roi, soft_roi);
 }
 
 void print_deb_flags()
 {
-	DebParams::Flags deb_flags;
-	cout << hex << showbase;
-	deb_flags = DebParams::getTypeFlags();
-	cout << "TypeFlags=" << deb_flags << endl;
-	deb_flags = DebParams::getFormatFlags();
-	cout << "FormatFlags=" << deb_flags << endl;
-	deb_flags = DebParams::getModuleFlags();
-	cout << "ModuleFlags=" << deb_flags << endl;
-	cout << dec << noshowbase;
+	DEB_GLOBAL_FUNCT();
 
-	DebParams::NameList name_list;
-	name_list = DebParams::getTypeFlagsNameList();
-	cout << "TypeFlagsNameList=" << name_list << endl;
-	name_list = DebParams::getFormatFlagsNameList();
-	cout << "FormatFlagsNameList=" << name_list << endl;
-	name_list = DebParams::getModuleFlagsNameList();
-	cout << "ModuleFlagsNameList=" << name_list << endl;
+	DebParams::Flags TypeFlags   = DebParams::getTypeFlags();
+	DEB_PARAM() << DEB_VAR1(DEB_HEX(TypeFlags));
+	DebParams::Flags FormatFlags = DebParams::getFormatFlags();
+	DEB_PARAM() << DEB_VAR1(DEB_HEX(FormatFlags));
+	DebParams::Flags ModuleFlags = DebParams::getModuleFlags();
+	DEB_PARAM() << DEB_VAR1(DEB_HEX(ModuleFlags));
+
+	typedef DebParams::NameList NameList;
+	NameList TypeFlagsNameList   = DebParams::getTypeFlagsNameList();
+	DEB_PARAM() << DEB_VAR1(TypeFlagsNameList);
+	NameList FormatFlagsNameList = DebParams::getFormatFlagsNameList();
+	DEB_PARAM() << DEB_VAR1(FormatFlagsNameList);
+	NameList ModuleFlagsNameList = DebParams::getModuleFlagsNameList();
+	DEB_PARAM() << DEB_VAR1(ModuleFlagsNameList);
 }
 
 void test_frelon_hw_inter(bool do_reset)
 {
+	DEB_GLOBAL_FUNCT();
+
 	print_deb_flags();
 	
 	Espia::Dev dev(0);
@@ -232,9 +265,9 @@ void test_frelon_hw_inter(bool do_reset)
 	DebParams::disableModuleFlags(DebModEspiaSerial);
 	print_deb_flags();
 
-	cout << "Creating the Hw Interface ... " << endl;
+	DEB_TRACE() << "Creating the Hw Interface ... ";
 	Frelon::Interface hw_inter(acq, buffer_mgr, cam);
-	cout << " Done!" << endl;
+	DEB_TRACE() << "Done!";
 
 	BufferSave buffer_save(BufferSave::EDF, "img", 0, ".edf", true, 1);
 
@@ -258,9 +291,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_inter.getHwCtrlObj(hw_roi);
 
 	if (do_reset) {
-		cout << "Reseting the hardware ... " << endl;
+		DEB_TRACE() << "Reseting the hardware ... ";
 		hw_inter.reset(HwInterface::HardReset);
-		cout << "  Done!" << endl;
+		DEB_TRACE() << "Done!";
 	}
 
 	Size size;
@@ -319,10 +352,12 @@ void test_frelon_hw_inter(bool do_reset)
 	} catch (Exception) {
 		raised_exception = true;
 	}
-	if (raised_exception)
-		cout << "Exception was raised OK!" << endl;
-	else
+	if (raised_exception) {
+		DEB_TRACE() << "Exception was raised OK!";
+	} else {
+		DEB_ERROR() << "Did not raise bad bin exception";
 		throw LIMA_HW_EXC(Error, "Did not raise bad bin exception");
+	}
 
 	bin = Bin(2, 2);
 	hw_bin->setBin(bin);
@@ -398,11 +433,13 @@ void test_frelon_hw_inter(bool do_reset)
 
 int main(int argc, char *argv[])
 {
+	DEB_GLOBAL_FUNCT();
+
 	try {
 		bool do_reset = (argc > 1) && (string(argv[1]) == "reset");
 		test_frelon_hw_inter(do_reset);
 	} catch (Exception e) {
-		cerr << "LIMA Exception:" << e << endl;
+		DEB_ERROR() << "LIMA Exception:" << e;
 	}
 
 	return 0;

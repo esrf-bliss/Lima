@@ -10,6 +10,8 @@ namespace lima
 
 class HwInterface
 {
+	DEB_CLASS(DebModHardware, "HwInterface");
+
  public:
 	typedef std::vector<HwCap> CapList;
 
@@ -82,6 +84,8 @@ std::ostream& operator <<(std::ostream& os,
 			  HwInterface::DetStatus det_status);
 std::ostream& operator <<(std::ostream& os, 
 			  const HwInterface::StatusType& status);
+std::ostream& operator <<(std::ostream& os, 
+			  HwInterface::ResetLevel reset_level);
 
 
 } // namespace lima

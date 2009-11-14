@@ -79,6 +79,8 @@ class Camera
 
 	Espia::Dev& getEspiaDev();
 
+	void sync();
+
 	void sendCmd(Cmd cmd);
 
 	void getSerialNbParam(SerNbParam param, int& val);

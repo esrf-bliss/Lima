@@ -25,27 +25,36 @@ enum DebType {
 	DebTypeParam		= 1 << 5,
 	DebTypeReturn		= 1 << 6,
 	DebTypeAlways		= 1 << 7,
+
+	// this is for internal use (no name), keep it last
+	DebTypeExit		= 1 << 8,
 };
+
 
 enum DebFormat {
 	DebFmtDateTime		= 1 << 0,
-	DebFmtModule		= 1 << 1,
-	DebFmtObj		= 1 << 2,
-	DebFmtFunct		= 1 << 3,	
-	DebFmtFileLine		= 1 << 4,
-	DebFmtType		= 1 << 5,
+	DebFmtThread		= 1 << 1,
+	DebFmtModule		= 1 << 2,
+	DebFmtObj		= 1 << 3,
+	DebFmtFunct		= 1 << 4,	
+	DebFmtFileLine		= 1 << 5,
+	DebFmtType		= 1 << 6,
+	DebFmtIndent		= 1 << 7,
+	DebFmtColor		= 1 << 8,
 };
 
 enum DebModule {
 	DebModNone		= 1 << 0,
 	DebModCommon		= 1 << 1,
 	DebModHardware		= 1 << 2,
-	DebModControl		= 1 << 3,
-	DebModEspia		= 1 << 4,
-	DebModEspiaSerial	= 1 << 5,
-	DebModFocla		= 1 << 6,
-	DebModCamera		= 1 << 7,
-	DebModCameraCom		= 1 << 8,
+	DebModHardwareSerial	= 1 << 3,
+	DebModControl		= 1 << 4,
+	DebModEspia		= 1 << 5,
+	DebModEspiaSerial	= 1 << 6,
+	DebModFocla		= 1 << 7,
+	DebModCamera		= 1 << 8,
+	DebModCameraCom		= 1 << 9,
+	DebModTest		= 1 << 10,
 };
 
 typedef const char *ConstStr;
@@ -227,6 +236,10 @@ class DebProxy
 class DebObj
 {
  public:
+	enum {
+		IndentSize = 4,
+	};
+
 	DebObj(DebParams& deb_params, bool destructor = false,
 	       ConstStr funct_name = NULL, ConstStr obj_name = NULL, 
 	       ConstStr file_name = NULL, int line_nr = 0);
@@ -244,7 +257,16 @@ class DebObj
  private:
 	friend class DebProxy;
 
-	void heading(DebType, ConstStr file_name, int line_nr);
+	typedef struct ThreadData {
+		int indent;
+		bool prev_was_exit;
+		ThreadData();
+	} ThreadData;
+	
+	typedef std::map<pthread_t, ThreadData *> ThreadMap;
+		
+	void heading(DebType type, ConstStr file_name, int line_nr);
+	void headingIndent(DebType type, bool is_exit, std::ostream& os);
 
 	DebParams *m_deb_params;
 	bool m_destructor;
@@ -395,16 +417,19 @@ inline DebObj::DebObj(DebParams& deb_params, bool destructor,
 	  m_funct_name(funct_name), m_obj_name(obj_name), 
 	  m_file_name(file_name), m_line_nr(line_nr)
 {
-	write(DebTypeFunct, m_file_name, m_line_nr) << "Enter";
+	DebType type = DebTypeFunct;
+	write(type, m_file_name, m_line_nr) << "Enter";
 }
 
 inline DebObj::~DebObj()
 {
-	write(DebTypeFunct, m_file_name, m_line_nr) << "Exit";
+	DebType type = DebType(DebTypeFunct | DebTypeExit);
+	write(type, m_file_name, m_line_nr) << "Exit";
 }
 
 inline bool DebObj::checkOut(DebType type)
 {
+	type = DebType(type & ~DebTypeExit);
 	return ((type == DebTypeAlways) || (type == DebTypeFatal) || 
 		((type == DebTypeError) && 
 		 m_deb_params->checkType(DebTypeError)) ||
@@ -435,10 +460,33 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 		return DebProxy();
 }
 
+inline DebObj::ThreadData::ThreadData()
+	: indent(-1), prev_was_exit(false) 
+{
+}
+
 
 /*------------------------------------------------------------------
  *  debug macros
  *------------------------------------------------------------------*/
+
+#define DEB_GLOBAL_NAMESPC(mod, name_space)				\
+	DebParams& getDebParams()					\
+	{								\
+		static DebParams *deb_params = NULL;			\
+		if (!deb_params)					\
+			deb_params = new DebParams(mod, NULL,		\
+						   name_space);		\
+		return *deb_params;					\
+	}
+
+#define DEB_GLOBAL(mod)							\
+	DEB_GLOBAL_NAMESPC(mod, NULL)
+
+#define DEB_GLOBAL_FUNCT()						\
+	DebObj deb(getDebParams(), false, __FUNCTION__,			\
+		   NULL, __FILE__, __LINE__)
+
 
 #define DEB_CLASS_NAMESPC(mod, class_name, name_space)			\
   private:								\
@@ -465,14 +513,8 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 									\
 	std::string m_deb_obj_name
 
-
-#define DEB_MEMBER_FUNCT()						\
-	DebObj deb(getDebParams(), false, __FUNCTION__,			\
-		   getDebObjName(), __FILE__, __LINE__)
-
-#define DEB_STATIC_FUNCT()						\
-	DebObj deb(getDebParams(), false, __FUNCTION__,			\
-		   NULL, __FILE__, __LINE__)
+#define DEB_CLASS(mod, class_name)					\
+	DEB_CLASS_NAMESPC(mod, class_name, NULL)
 
 #define DEB_CONSTRUCTOR()						\
 	DEB_MEMBER_FUNCT()
@@ -481,8 +523,16 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 	DebObj deb(getDebParams(), true, __FUNCTION__,			\
 		   getDebObjName(), __FILE__, __LINE__)
 
+#define DEB_MEMBER_FUNCT()						\
+	DebObj deb(getDebParams(), false, __FUNCTION__,			\
+		   getDebObjName(), __FILE__, __LINE__)
+
+#define DEB_STATIC_FUNCT()						\
+	DEB_GLOBAL_FUNCT()
+
 #define DEB_SET_OBJ_NAME(n) \
 	setDebObjName(n)
+
 
 #define DEB_MSG(type)	deb.write(type, __FILE__, __LINE__)
 

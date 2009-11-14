@@ -10,6 +10,8 @@ namespace lima
 
 class HwSyncCtrlObj
 {
+	DEB_CLASS(DebModHardware, "HwSyncCtrlObj");
+
 public:
 	typedef struct ValidRanges {
 		double min_exp_time, max_exp_time;

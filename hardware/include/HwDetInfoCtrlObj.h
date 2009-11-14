@@ -2,6 +2,7 @@
 #define HWDETINFOCTRLOBJ_H
 
 #include "SizeUtils.h"
+#include "Debug.h"
 #include <string>
 
 namespace lima
@@ -11,8 +12,10 @@ class HwDetInfoCtrlObj;
 
 class HwMaxImageSizeCallback
 {
+	DEB_CLASS(DebModHardware, "HwMaxImageSizeCallback");
+
  public:
-	HwMaxImageSizeCallback() : m_det_info_ctrl_obj(NULL) {}
+	HwMaxImageSizeCallback();
 	virtual ~HwMaxImageSizeCallback();
 
 	HwDetInfoCtrlObj *getDetInfoCtrlObj() const;
@@ -36,7 +39,10 @@ inline HwDetInfoCtrlObj *HwMaxImageSizeCallback::getDetInfoCtrlObj() const
 
 class HwDetInfoCtrlObj
 {
+	DEB_CLASS(DebModHardware, "HwDetInfoCtrlObj");
+
  public:
+	HwDetInfoCtrlObj();
 	virtual ~HwDetInfoCtrlObj();
 
 	virtual void getMaxImageSize(Size& max_image_size) = 0;
@@ -50,8 +56,8 @@ class HwDetInfoCtrlObj
 	virtual void getDetectorType(std::string& det_type) = 0;
 	virtual void getDetectorModel(std::string& det_model) = 0;
 
-	void registerMaxImageSizeCallback(HwMaxImageSizeCallback *cb);
-	void unregisterMaxImageSizeCallback(HwMaxImageSizeCallback *cb);
+	void registerMaxImageSizeCallback(HwMaxImageSizeCallback& cb);
+	void unregisterMaxImageSizeCallback(HwMaxImageSizeCallback& cb);
 
  protected:
 	virtual void setMaxImageSizeCallbackActive(bool cb_active) = 0;

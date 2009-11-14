@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <unistd.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 using namespace lima;
 using namespace std;
@@ -179,8 +180,6 @@ void DebParams::setFlagsNameList(Flags& flags,
 				 const map<T, string>& name_map,
 				 const NameList& name_list)
 {
-	checkInit();
-
 	flags = 0;
 
 	typename NameList::const_iterator lit, lend = name_list.end();
@@ -201,8 +200,6 @@ void DebParams::getFlagsNameList(Flags flags,
 				 const map<T, string>& name_map,
 				 NameList& name_list)
 {
-	checkInit();
-
 	name_list.clear();
 
 	typename map<T, string>::const_iterator it, end = name_map.end();
@@ -216,11 +213,13 @@ void DebParams::getFlagsNameList(Flags flags,
 
 void DebParams::setTypeFlagsNameList(const NameList& type_name_list)
 {
+	checkInit();
 	setFlagsNameList(s_type_flags, *s_type_name_map, type_name_list);
 }
 
 DebParams::NameList DebParams::getTypeFlagsNameList()
 {
+	checkInit();
 	NameList type_name_list;
 	getFlagsNameList(s_type_flags, *s_type_name_map, type_name_list);
 	return type_name_list;
@@ -228,11 +227,13 @@ DebParams::NameList DebParams::getTypeFlagsNameList()
 
 void DebParams::setFormatFlagsNameList(const NameList& fmt_name_list)
 {
+	checkInit();
 	setFlagsNameList(s_fmt_flags, *s_fmt_name_map, fmt_name_list);
 }
 
 DebParams::NameList DebParams::getFormatFlagsNameList()
 {
+	checkInit();
 	NameList fmt_name_list;
 	getFlagsNameList(s_fmt_flags, *s_fmt_name_map, fmt_name_list);
 	return fmt_name_list;
@@ -240,11 +241,13 @@ DebParams::NameList DebParams::getFormatFlagsNameList()
 
 void DebParams::setModuleFlagsNameList(const NameList& mod_name_list)
 {
+	checkInit();
 	setFlagsNameList(s_mod_flags, *s_mod_name_map, mod_name_list);
 }
 
 DebParams::NameList DebParams::getModuleFlagsNameList()
 {
+	checkInit();
 	NameList mod_name_list;
 	getFlagsNameList(s_mod_flags, *s_mod_name_map, mod_name_list);
 	return mod_name_list;
@@ -319,11 +322,14 @@ void DebParams::checkInit()
 #define FORMAT_NAME(x) FormatNamePair(DebFmt##x, #x)
 	FormatNamePair fmt_names[] = {
 		FORMAT_NAME(DateTime),
+		FORMAT_NAME(Thread),
 		FORMAT_NAME(Module),
 		FORMAT_NAME(Obj),
 		FORMAT_NAME(Funct),
 		FORMAT_NAME(FileLine),
 		FORMAT_NAME(Type),
+		FORMAT_NAME(Indent),
+		FORMAT_NAME(Color),
 	};
 	s_fmt_name_map = new map<DebFormat, string>(C_LIST_ITERS(fmt_names));
 
@@ -333,12 +339,14 @@ void DebParams::checkInit()
 		MODULE_NAME(None),
 		MODULE_NAME(Common),
 		MODULE_NAME(Hardware),
+		MODULE_NAME(HardwareSerial),
 		MODULE_NAME(Control),
 		MODULE_NAME(Espia),
 		MODULE_NAME(EspiaSerial),
 		MODULE_NAME(Focla),
 		MODULE_NAME(Camera),
 		MODULE_NAME(CameraCom),
+		MODULE_NAME(Test),
 	};
 	s_mod_name_map = new map<DebModule, string>(C_LIST_ITERS(mod_names));
 
@@ -367,7 +375,7 @@ ostream& lima::operator <<(ostream& os,
 
 void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 {
-	std::ostream& os = *DebParams::s_deb_stream;
+	ostream& os = *DebParams::s_deb_stream;
 	DebParams::Flags& flags = DebParams::s_fmt_flags;
 
 	ConstStr m, sep = "";
@@ -386,6 +394,17 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		   << setw(6) << setfill('0') << tod.tv_usec 
 		   << setw(0) << setfill(' ') << "]";
 		sep = " ";
+	}
+
+	if (DebHasFlag(flags, DebFmtThread)) {
+		os << sep << setw(6) << pthread_self() << setw(0);
+		sep = " ";
+	}
+
+	bool is_exit = (type & DebTypeExit);
+	type = DebType(type & ~DebTypeExit);
+	if (DebHasFlag(flags, DebFmtIndent)) {
+		headingIndent(type, is_exit, os);
 	}
 
 	if (DebHasFlag(flags, DebFmtModule)) {
@@ -434,3 +453,55 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		os << ": ";
 }
 
+void DebObj::headingIndent(DebType type, bool is_exit, std::ostream& os)
+{
+	static ThreadMap *thread_map = NULL;
+	if (!thread_map)
+		thread_map = new ThreadMap();
+
+	pthread_t self = pthread_self();
+
+	typedef vector<pthread_t> ThreadList;
+	ThreadList old_thread_list;
+
+	ThreadMap::iterator mit, mend = thread_map->end();
+	for (mit = thread_map->begin(); mit != mend; ++mit) {
+		if (mit->first == self)
+			continue;
+		ThreadData *data = mit->second;
+		if (data->prev_was_exit) {
+			data->indent--;
+			data->prev_was_exit = false;
+		}
+		bool old_thread = (data->indent == -1);
+		if (old_thread) {
+			delete data;
+			old_thread_list.push_back(mit->first);
+		}
+	}
+	
+	ThreadList::const_iterator lit, lend = old_thread_list.end();
+	for (lit = old_thread_list.begin(); lit != lend; ++lit)
+		thread_map->erase(*lit);
+	
+	mend = thread_map->end();
+	mit = thread_map->find(self);
+	bool in_map = (mit != mend);
+	ThreadData *data = in_map ? mit->second : new ThreadData();
+	os << (in_map ? " " : "+");
+	
+	if ((type == DebTypeFunct) && !is_exit)
+		data->indent++;
+	if (data->prev_was_exit)
+		data->indent--;
+	if (data->indent < 0)
+		data->indent = 0;
+	
+	int indent = data->indent * IndentSize;
+	os << setw(indent) << "" << setw(0);
+	
+	data->prev_was_exit = is_exit;
+	
+	if (!in_map)
+		(*thread_map)[self] = data;
+}

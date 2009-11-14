@@ -5,6 +5,7 @@ class HwBinCtrlObj
 using namespace lima;
 %End
  public:
+	HwBinCtrlObj();
 	virtual ~HwBinCtrlObj();
 
 	virtual void setBin(const Bin& bin) = 0;
