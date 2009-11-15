@@ -394,7 +394,8 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 	}
 
 	if (DebHasFlag(flags, DebFmtThread)) {
-		os << sep << setw(6) << pthread_self() << setw(0);
+		unsigned int thread_id = (unsigned int) pthread_self();
+		os << sep << setw(8) << hex << thread_id << setw(0) << dec;
 		sep = " ";
 	}
 
