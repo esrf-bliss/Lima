@@ -483,8 +483,7 @@ void Camera::getImageRoi(const Roi& chan_roi, Roi& image_roi)
 	xformChanCoords(chan_tl, img_tl, c_tl);
 	xformChanCoords(chan_br, img_br, c_br);
 
-	Roi unbinned_roi;
-	unbinned_roi.setCorners(img_tl, img_br);
+	Roi unbinned_roi(img_tl, img_br);
 	DEB_TRACE() << DEB_VAR1(unbinned_roi);
 
 	Bin bin;

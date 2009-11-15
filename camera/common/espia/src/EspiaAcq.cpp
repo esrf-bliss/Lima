@@ -292,22 +292,23 @@ void Acq::bufferFree()
 const FrameDim& Acq::getFrameDim()
 {
 	DEB_MEMBER_FUNCT();
-	DEB_RETURN() << DEB_VAR1(m_frame_dim);
-	return m_frame_dim;
+	const FrameDim& frame_dim = m_frame_dim;
+	DEB_RETURN() << DEB_VAR1(frame_dim);
+	return frame_dim;
 }
 
 void Acq::getNbBuffers(int& nb_buffers)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_RETURN() << DEB_VAR1(nb_buffers);
 	nb_buffers = m_nb_buffers;
+	DEB_RETURN() << DEB_VAR1(nb_buffers);
 }
 
 void Acq::getNbBufferFrames(int& nb_buffer_frames)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_RETURN() << DEB_VAR1(nb_buffer_frames);
 	nb_buffer_frames = m_nb_buffer_frames;
+	DEB_RETURN() << DEB_VAR1(nb_buffer_frames);
 }
 
 void *Acq::getBufferFramePtr(int buffer_nb, int frame_nb)

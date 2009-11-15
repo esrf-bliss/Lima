@@ -89,7 +89,7 @@ void SimuBufferCtrlObj::setFrameDim(const FrameDim& frame_dim)
 	m_buffer_mgr.setFrameDim(frame_dim);
 }
 
-void SimuBufferCtrlObj::getFramedim(FrameDim& frame_dim)
+void SimuBufferCtrlObj::getFrameDim(FrameDim& frame_dim)
 {
 	m_buffer_mgr.getFrameDim(frame_dim);
 }

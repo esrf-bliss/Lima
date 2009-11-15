@@ -112,7 +112,7 @@ void test_focla_hw_interface()
 	hw_buffer->setNbBuffers(nb_buffers);
 	cout << "Allocated " << nb_buffers << " buffers" << endl << flush;
 
-	hw_buffer->getFramedim(frame_dim);
+	hw_buffer->getFrameDim(frame_dim);
 	hw_buffer->getNbBuffers(nb_buffers);
 	hw_buffer->getNbConcatFrames(nb_concat_frames);
 	cout << "FrameDim " << frame_dim << ", "

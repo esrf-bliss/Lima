@@ -5,7 +5,7 @@
 #include "TaskMgr.h"
 #include "TaskEventCallback.h"
 #include "SoftRoi.h"
-#include "AcqFinished.h"
+#include "AcqState.h"
 
 #include <iostream>
 
@@ -21,7 +21,7 @@ class SoftRoiCallback : public TaskEventCallback
 
 public:
 	SoftRoiCallback(Frelon::Interface& hw_inter, BufferSave& buffer_save,
-			AcqFinished& acq_finished);
+			AcqState& acq_state);
 	~SoftRoiCallback();
 
 	virtual void finished(Data& data);
@@ -31,14 +31,14 @@ private:
 
 	Frelon::Interface& m_hw_inter;
 	BufferSave& m_buffer_save;
-	AcqFinished& m_acq_finished;
+	AcqState& m_acq_state;
 };
 
 SoftRoiCallback::SoftRoiCallback(Frelon::Interface& hw_inter, 
 				 BufferSave& buffer_save,
-				 AcqFinished& acq_finished)
+				 AcqState& acq_state)
 	: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
-	  m_acq_finished(acq_finished) 
+	  m_acq_state(acq_state) 
 {
 	DEB_CONSTRUCTOR();
 }
@@ -94,7 +94,7 @@ void SoftRoiCallback::finished(Data& data)
 	int nb_frames;
 	hw_sync->getNbFrames(nb_frames);
 	if (data.frameNumber == nb_frames - 1)
-		m_acq_finished.signalFinished();
+		m_acq_state.set(AcqState::Finished);
 
 }
 
@@ -105,7 +105,7 @@ class TestFrameCallback : public HwFrameCallback
 
 public:
 	TestFrameCallback(Frelon::Interface& hw_inter, Roi& soft_roi,
-			  BufferSave& buffer_save, AcqFinished& acq_finished);
+			  BufferSave& buffer_save, AcqState& acq_state);
 	~TestFrameCallback();
 
 protected:
@@ -122,11 +122,11 @@ private:
 
 TestFrameCallback::TestFrameCallback(Frelon::Interface& hw_inter, 
 				     Roi& soft_roi, BufferSave& buffer_save, 
-				     AcqFinished& acq_finished) 
+				     AcqState& acq_state) 
 	: m_hw_inter(hw_inter), m_soft_roi(soft_roi)
 {
 	DEB_CONSTRUCTOR();
-	m_roi_cb = new SoftRoiCallback(hw_inter, buffer_save, acq_finished);
+	m_roi_cb = new SoftRoiCallback(hw_inter, buffer_save, acq_state);
 	m_roi_task = new SoftRoi();
 }
 
@@ -272,8 +272,8 @@ void test_frelon_hw_inter(bool do_reset)
 	BufferSave buffer_save(BufferSave::EDF, "img", 0, ".edf", true, 1);
 
 	Roi soft_roi;
-	AcqFinished acq_finished;
-	TestFrameCallback cb(hw_inter, soft_roi, buffer_save, acq_finished);
+	AcqState acq_state;
+	TestFrameCallback cb(hw_inter, soft_roi, buffer_save, acq_state);
 
 	HwDetInfoCtrlObj *hw_det_info;
 	hw_inter.getHwCtrlObj(hw_det_info);
@@ -314,9 +314,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->registerFrameCallback(cb);
 
 	print_status(hw_inter);
-	acq_finished.resetFinished();
+	acq_state.set(AcqState::Running);
 	hw_inter.startAcq();
-	acq_finished.waitFinished();
+	acq_state.waitNot(AcqState::Running);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -325,9 +325,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_sync->setExpTime(5);
 
 	print_status(hw_inter);
-	acq_finished.resetFinished();
+	acq_state.set(AcqState::Running);
 	hw_inter.startAcq();
-	acq_finished.waitFinished();
+	acq_state.waitNot(AcqState::Running);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -337,9 +337,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_sync->setNbFrames(3);
 
 	print_status(hw_inter);
-	acq_finished.resetFinished();
+	acq_state.set(AcqState::Running);
 	hw_inter.startAcq();
-	acq_finished.waitFinished();
+	acq_state.waitNot(AcqState::Running);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -366,9 +366,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setNbBuffers(10);
 
 	print_status(hw_inter);
-	acq_finished.resetFinished();
+	acq_state.set(AcqState::Running);
 	hw_inter.startAcq();
-	acq_finished.waitFinished();
+	acq_state.waitNot(AcqState::Running);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -381,9 +381,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setNbBuffers(10);
 
 	print_status(hw_inter);
-	acq_finished.resetFinished();
+	acq_state.set(AcqState::Running);
 	hw_inter.startAcq();
-	acq_finished.waitFinished();
+	acq_state.waitNot(AcqState::Running);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -399,9 +399,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setNbBuffers(10);
 
 	print_status(hw_inter);
-	acq_finished.resetFinished();
+	acq_state.set(AcqState::Running);
 	hw_inter.startAcq();
-	acq_finished.waitFinished();
+	acq_state.waitNot(AcqState::Running);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -417,9 +417,9 @@ void test_frelon_hw_inter(bool do_reset)
 	print_deb_flags();
 
 	print_status(hw_inter);
-	acq_finished.resetFinished();
+	acq_state.set(AcqState::Running);
 	hw_inter.startAcq();
-	acq_finished.waitFinished();
+	acq_state.waitNot(AcqState::Running);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();

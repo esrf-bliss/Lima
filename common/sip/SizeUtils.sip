@@ -128,8 +128,7 @@ using namespace lima;
  public:
 	Roi();
 	Roi(const Point& top_left, const Size& size);
-
-        Roi(const Point& top_left, const Point& bottom_right);
+        Roi(const Point& p1, const Point& p2);
 	Roi(const Roi& r);
 
 	const Point& getTopLeft() const;
@@ -186,10 +185,10 @@ using namespace lima;
 	static int getImageTypeBpp(ImageType type);
 	static int getImageTypeDepth(ImageType type);
 
-	FrameDim& operator *=(const Bin& bin);
-	FrameDim& operator /=(const Bin& bin);
+	FrameDim& operator *=(const Point& point);
+	FrameDim& operator /=(const Point& point);
 
-	void checkValidBin(const Bin& bin);
+	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
 };
 

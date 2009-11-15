@@ -48,7 +48,7 @@ class BufferCtrlObj : HwBufferCtrlObj
 	virtual ~BufferCtrlObj();
 
 	virtual void setFrameDim(const FrameDim& frame_dim);
-	virtual void getFramedim(      FrameDim& frame_dim /Out/);
+	virtual void getFrameDim(      FrameDim& frame_dim /Out/);
 
 	virtual void setNbBuffers(int  nb_buffers);
 	virtual void getNbBuffers(int& nb_buffers /Out/);

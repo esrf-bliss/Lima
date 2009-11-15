@@ -28,11 +28,11 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 		N.uint32: lima.Bpp32
 	}
 		
-	def __init__(self, hw_inter, buffer_save, acq_finished):
+	def __init__(self, hw_inter, buffer_save, acq_state):
 		processlib.TaskEventCallback.__init__(self)
 		self.m_hw_inter = hw_inter
 		self.m_buffer_save = buffer_save
-		self.m_acq_finished = acq_finished
+		self.m_acq_state = acq_state
 
 	def finished(self, data):
 		finfo, fdim = self.data2FrameInfo(data)
@@ -41,7 +41,7 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 		hw_sync = self.m_hw_inter.getHwCtrlObj(lima.HwCap.Sync)
 		nb_frames = hw_sync.getNbFrames()
 		if finfo.acq_frame_nb == nb_frames - 1:
-			self.m_acq_finished.signalFinished()
+			self.m_acq_state.set(lima.AcqState.Finished)
 
 	def data2FrameInfo(self, data):
 		arr = data.buffer
@@ -70,14 +70,14 @@ class TestFrameCallback( lima.HwFrameCallback ):
 		lima.Bpp32: Data_UINT32
 	}
 	
-	def __init__(self, hw_inter, soft_roi, buffer_save, acq_finished):
+	def __init__(self, hw_inter, soft_roi, buffer_save, acq_state):
 		lima.HwFrameCallback.__init__(self)
 		self.m_hw_inter = hw_inter
 		self.m_soft_roi = soft_roi
-		self.m_acq_finished = acq_finished
+		self.m_acq_state = acq_state
 		self.m_roi_task = processlib.Tasks.SoftRoi()
 		self.m_roi_cb   = SoftRoiCallback(hw_inter, buffer_save, 
-						  acq_finished)
+						  acq_state)
 
 	def newFrameReady(self, frame_info):
 		msg  = 'acq_frame_nb=%d, ' % frame_info.acq_frame_nb
@@ -152,9 +152,9 @@ def main(argv):
 	hw_roi = hw_inter.getHwCtrlObj(lima.HwCap.Roi)
 
 	soft_roi = lima.Roi()
-	acq_finished = lima.AcqFinished()
+	acq_state = lima.AcqState()
 	print "Creating a TestFrameCallback"
-	cb = TestFrameCallback(hw_inter, soft_roi, buffer_save, acq_finished)
+	cb = TestFrameCallback(hw_inter, soft_roi, buffer_save, acq_state)
 
 	do_reset = False
 	if do_reset:
@@ -181,11 +181,11 @@ def main(argv):
 	hw_sync.setNbFrames(3)
 
 	print "Starting Acquisition"
-	acq_finished.resetFinished()
+	acq_state.set(lima.AcqState.Running)
 	hw_inter.startAcq()
 
 	print "Waiting acq finished..."
-	acq_finished.waitFinished()
+	acq_state.waitNot(lima.AcqState.Running)
 	print "Acq finished!!"
 
 	print "Stopping Acquisition"

@@ -128,7 +128,7 @@ void BufferCtrlObj::setFrameDim(const FrameDim& frame_dim)
 	m_buffer_mgr.setFrameDim(frame_dim);
 }
 
-void BufferCtrlObj::getFramedim(FrameDim& frame_dim)
+void BufferCtrlObj::getFrameDim(FrameDim& frame_dim)
 {
 	DEB_MEMBER_FUNCT();
 	m_buffer_mgr.getFrameDim(frame_dim);

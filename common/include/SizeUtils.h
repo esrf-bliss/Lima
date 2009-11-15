@@ -319,9 +319,7 @@ class Roi
 		: m_top_left(checkCorner(top_left)),
 		  m_size(size) {}
 
-        Roi(const Point& top_left, const Point& bottom_right)
-		: m_top_left(checkCorner(top_left)),
-		  m_size(bottom_right + 1 - top_left) {}
+        Roi(const Point& p1, const Point& p2);
 
 	Roi(const Roi& r)
 		: m_top_left(r.m_top_left),
@@ -364,6 +362,11 @@ class Roi
 	Point m_top_left;
 	Size m_size;
 };
+
+inline Roi::Roi(const Point& p1, const Point& p2)
+{
+	setCorners(p1, p2);
+}
 
 inline bool Roi::isEmpty() const
 {
@@ -516,10 +519,10 @@ class FrameDim
 	static int getImageTypeBpp(ImageType type);
 	static int getImageTypeDepth(ImageType type);
 
-	FrameDim& operator *=(const Bin& bin);
-	FrameDim& operator /=(const Bin& bin);
+	FrameDim& operator *=(const Point& point);
+	FrameDim& operator /=(const Point& point);
 
-	void checkValidBin(const Bin& bin);
+	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
 
  private:
@@ -582,12 +585,15 @@ inline int FrameDim::getMemSize() const
 	return Point(m_size).getArea() * m_depth;
 }
 
-inline void FrameDim::checkValidBin(const Bin& bin)
+inline void FrameDim::checkValidPoint(const Point& point, bool for_div)
 {
-	if ((m_size.getWidth()  % bin.getX() != 0) ||
-	    (m_size.getHeight() % bin.getY() != 0))
+	if ((point.x <= 0) || (point.y <= 0))
+		throw LIMA_COM_EXC(InvalidValue, "Invalid point");
+
+	if (for_div && ((m_size.getWidth()  % point.x != 0) ||
+			(m_size.getHeight() % point.y != 0)))
 		throw LIMA_COM_EXC(InvalidValue, "FrameDim size not multiple "
-				   "of bin");
+						 "of point");
 }
 
 inline void FrameDim::checkValidRoi(const Roi& roi)
@@ -598,16 +604,17 @@ inline void FrameDim::checkValidRoi(const Roi& roi)
 				   "FrameDim");
 }
 
-inline FrameDim& FrameDim::operator *=(const Bin& bin)
+inline FrameDim& FrameDim::operator *=(const Point& point)
 {
-	m_size *= bin;
+	checkValidPoint(point, false);
+	m_size *= point;
 	return *this;
 }
 
-inline FrameDim& FrameDim::operator /=(const Bin& bin)
+inline FrameDim& FrameDim::operator /=(const Point& point)
 {
-	checkValidBin(bin);
-	m_size /= bin;
+	checkValidPoint(point, true);
+	m_size /= point;
 	return *this;
 }
 
@@ -622,16 +629,16 @@ inline bool operator !=(const FrameDim& f1, const FrameDim& f2)
 	return !(f1 == f2);
 }
 
-inline FrameDim operator *(const FrameDim& fdim, const Bin& bin)
+inline FrameDim operator *(const FrameDim& fdim, const Point& point)
 {
-	FrameDim bin_fdim = fdim;
-	return bin_fdim *= bin;
+	FrameDim point_fdim = fdim;
+	return point_fdim *= point;
 }
 
-inline FrameDim operator /(const FrameDim& fdim, const Bin& bin)
+inline FrameDim operator /(const FrameDim& fdim, const Point& point)
 {
-	FrameDim bin_fdim = fdim;
-	return bin_fdim /= bin;
+	FrameDim point_fdim = fdim;
+	return point_fdim /= point;
 }
 
 std::ostream& operator <<(std::ostream& os, const FrameDim& fdim);

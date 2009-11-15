@@ -8,7 +8,7 @@ public:
 	virtual ~HwBufferCtrlObj();
 
 	virtual void setFrameDim(const FrameDim& frame_dim) = 0;
-	virtual void getFramedim(FrameDim& frame_dim /Out/) = 0;
+	virtual void getFrameDim(FrameDim& frame_dim /Out/) = 0;
 
 	virtual void setNbBuffers(int  nb_buffers) = 0;
 	virtual void getNbBuffers(int& nb_buffers /Out/) = 0;

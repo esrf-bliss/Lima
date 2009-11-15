@@ -460,10 +460,14 @@ void BufferCtrlMgr::releaseBuffers()
 void BufferCtrlMgr::setFrameDim(const FrameDim& frame_dim)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(frame_dim, m_frame_dim);
 
-	if (frame_dim != m_frame_dim)
-		releaseBuffers();
+	if (frame_dim == m_frame_dim) {
+		DEB_TRACE() << "Nothing to do";
+		return;
+	}
 
+	releaseBuffers();
 	m_frame_dim = frame_dim;
 }
 
