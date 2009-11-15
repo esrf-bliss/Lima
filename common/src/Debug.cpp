@@ -295,11 +295,8 @@ ConstStr DebParams::getModuleName(DebModule mod)
 	return name.c_str();
 }
 
-void DebParams::checkInit()
+void DebParams::doInit()
 {
-	if (s_deb_stream != NULL)
-		return;
-
 	s_type_flags = s_fmt_flags = s_mod_flags = AllFlags;
 
 	s_deb_stream = new DebStream();
@@ -401,10 +398,13 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		sep = " ";
 	}
 
-	bool is_exit = (type & DebTypeExit);
-	type = DebType(type & ~DebTypeExit);
 	if (DebHasFlag(flags, DebFmtIndent)) {
-		headingIndent(type, is_exit, os);
+		ThreadData *thread_data = getThreadData();
+		if (thread_data->indent < 0)
+			thread_data->indent = 0;
+		int indent = thread_data->indent * IndentSize;
+		os << sep << setw(indent) << "" << setw(0);
+		sep = " ";
 	}
 
 	if (DebHasFlag(flags, DebFmtModule)) {
@@ -453,55 +453,22 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		os << ": ";
 }
 
-void DebObj::headingIndent(DebType type, bool is_exit, std::ostream& os)
+DebObj::ThreadData *DebObj::getThreadData()
 {
-	static ThreadMap *thread_map = NULL;
-	if (!thread_map)
-		thread_map = new ThreadMap();
+	static pthread_key_t thread_data_key;
+	EXEC_ONCE(pthread_key_create(&thread_data_key, &deleteThreadData));
 
-	pthread_t self = pthread_self();
-
-	typedef vector<pthread_t> ThreadList;
-	ThreadList old_thread_list;
-
-	ThreadMap::iterator mit, mend = thread_map->end();
-	for (mit = thread_map->begin(); mit != mend; ++mit) {
-		if (mit->first == self)
-			continue;
-		ThreadData *data = mit->second;
-		if (data->prev_was_exit) {
-			data->indent--;
-			data->prev_was_exit = false;
-		}
-		bool old_thread = (data->indent == -1);
-		if (old_thread) {
-			delete data;
-			old_thread_list.push_back(mit->first);
-		}
+	ThreadData *d = (ThreadData *) pthread_getspecific(thread_data_key);
+	if (d == NULL) {
+		d = new ThreadData();
+		pthread_setspecific(thread_data_key, d);
 	}
-	
-	ThreadList::const_iterator lit, lend = old_thread_list.end();
-	for (lit = old_thread_list.begin(); lit != lend; ++lit)
-		thread_map->erase(*lit);
-	
-	mend = thread_map->end();
-	mit = thread_map->find(self);
-	bool in_map = (mit != mend);
-	ThreadData *data = in_map ? mit->second : new ThreadData();
-	os << (in_map ? " " : "+");
-	
-	if ((type == DebTypeFunct) && !is_exit)
-		data->indent++;
-	if (data->prev_was_exit)
-		data->indent--;
-	if (data->indent < 0)
-		data->indent = 0;
-	
-	int indent = data->indent * IndentSize;
-	os << setw(indent) << "" << setw(0);
-	
-	data->prev_was_exit = is_exit;
-	
-	if (!in_map)
-		(*thread_map)[self] = data;
+
+	return d;
+}
+
+void DebObj::deleteThreadData(void *thread_data)
+{
+	ThreadData *d = (ThreadData *) thread_data;
+	delete d;
 }

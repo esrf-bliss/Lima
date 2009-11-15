@@ -25,9 +25,6 @@ enum DebType {
 	DebTypeParam		= 1 << 5,
 	DebTypeReturn		= 1 << 6,
 	DebTypeAlways		= 1 << 7,
-
-	// this is for internal use (no name), keep it last
-	DebTypeExit		= 1 << 8,
 };
 
 
@@ -170,11 +167,13 @@ class DebParams
 	static ConstStr getFormatName(DebFormat fmt);
 	static ConstStr getModuleName(DebModule mod);
 
+	static void checkInit();
+
 private:
 	friend class DebProxy;
 	friend class DebObj;
 
-	static void checkInit();
+	static void doInit();
 
 	template <class T>
 	static void setFlagsNameList(Flags& flags, 
@@ -259,14 +258,12 @@ class DebObj
 
 	typedef struct ThreadData {
 		int indent;
-		bool prev_was_exit;
-		ThreadData();
+		ThreadData() : indent(-1) {}
 	} ThreadData;
 	
-	typedef std::map<pthread_t, ThreadData *> ThreadMap;
-		
 	void heading(DebType type, ConstStr file_name, int line_nr);
-	void headingIndent(DebType type, bool is_exit, std::ostream& os);
+	static ThreadData *getThreadData();
+	static void deleteThreadData(void *thread_data);
 
 	DebParams *m_deb_params;
 	bool m_destructor;
@@ -322,6 +319,12 @@ inline DebParams::DebParams(DebModule mod, ConstStr class_name,
 	m_class_name = class_name;
 	m_name_space = name_space;
 }
+
+inline void DebParams::checkInit()
+{
+	EXEC_ONCE(doInit());
+}
+
 
 inline void DebParams::setModule(DebModule mod)
 {
@@ -417,19 +420,18 @@ inline DebObj::DebObj(DebParams& deb_params, bool destructor,
 	  m_funct_name(funct_name), m_obj_name(obj_name), 
 	  m_file_name(file_name), m_line_nr(line_nr)
 {
-	DebType type = DebTypeFunct;
-	write(type, m_file_name, m_line_nr) << "Enter";
+	getThreadData()->indent++;
+	write(DebTypeFunct, m_file_name, m_line_nr) << "Enter";
 }
 
 inline DebObj::~DebObj()
 {
-	DebType type = DebType(DebTypeFunct | DebTypeExit);
-	write(type, m_file_name, m_line_nr) << "Exit";
+	write(DebTypeFunct, m_file_name, m_line_nr) << "Exit";
+	getThreadData()->indent--;
 }
 
 inline bool DebObj::checkOut(DebType type)
 {
-	type = DebType(type & ~DebTypeExit);
 	return ((type == DebTypeAlways) || (type == DebTypeFatal) || 
 		((type == DebTypeError) && 
 		 m_deb_params->checkType(DebTypeError)) ||
@@ -460,11 +462,6 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 		return DebProxy();
 }
 
-inline DebObj::ThreadData::ThreadData()
-	: indent(-1), prev_was_exit(false) 
-{
-}
-
 
 /*------------------------------------------------------------------
  *  debug macros
@@ -474,9 +471,8 @@ inline DebObj::ThreadData::ThreadData()
 	DebParams& getDebParams()					\
 	{								\
 		static DebParams *deb_params = NULL;			\
-		if (!deb_params)					\
-			deb_params = new DebParams(mod, NULL,		\
-						   name_space);		\
+		EXEC_ONCE(deb_params = new DebParams(mod, NULL,		\
+						     name_space));	\
 		return *deb_params;					\
 	}
 
@@ -493,9 +489,8 @@ inline DebObj::ThreadData::ThreadData()
 	static DebParams& getDebParams()				\
 	{								\
 		static DebParams *deb_params = NULL;			\
-		if (!deb_params)					\
-			deb_params = new DebParams(mod, class_name,	\
-						   name_space);		\
+		EXEC_ONCE(deb_params = new DebParams(mod, class_name,	\
+						     name_space));	\
 		return *deb_params;					\
 	}								\
 									\

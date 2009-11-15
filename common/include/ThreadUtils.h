@@ -152,7 +152,21 @@ class CmdThread
 	int m_cmd;
 };
 
+#define EXEC_ONCE(statement)						\
+	do {								\
+		class RunOnce						\
+		{							\
+		public:							\
+			static void run()				\
+			{						\
+				statement;				\
+			}						\
+		};							\
+		static pthread_once_t init_once = PTHREAD_ONCE_INIT;	\
+		pthread_once(&init_once, &RunOnce::run);		\
+	} while (0)
 
-}
+
+} // namespace lima
 
 #endif // THREADUTILS_H
