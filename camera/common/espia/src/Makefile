@@ -1,9 +1,8 @@
 
-SRCS = EspiaBase.cpp EspiaDev.cpp EspiaAcq.cpp EspiaSerialLine.cpp \
-	EspiaBufferMgr.cpp EspiaFocla.cpp FoclaHwInterface.cpp
-
 espia-objs = EspiaBase.o EspiaDev.o EspiaAcq.o EspiaSerialLine.o \
 	     EspiaBufferMgr.o EspiaFocla.o FoclaHwInterface.o
+
+SRCS = $(espia-objs:.o=.cpp)
 
 include ../include/espia.inc
 

@@ -171,9 +171,31 @@ class RoiCtrlObj : public HwRoiCtrlObj
 	RoiCtrlObj(Camera& cam);
 	virtual ~RoiCtrlObj();
 
-	virtual void checkRoi(const Roi& set_roi, Roi& hw_roi);
 	virtual void setRoi(const Roi& set_roi);
 	virtual void getRoi(Roi& hw_roi);
+	virtual void checkRoi(const Roi& set_roi, Roi& hw_roi);
+
+ private:
+	Camera& m_cam;
+};
+
+
+/*******************************************************************
+ * \class FlipCtrlObj
+ * \brief Control object providing Frelon flip interface
+ *******************************************************************/
+
+class FlipCtrlObj : public HwFlipCtrlObj
+{
+	DEB_CLASS_NAMESPC(DebModCamera, "FlipCtrlObj", "Frelon");
+
+ public:
+	FlipCtrlObj(Camera& cam);
+	virtual ~FlipCtrlObj();
+
+	virtual void setFlip(const Flip& flip);
+	virtual void getFlip(Flip& flip);
+	virtual void checkFlip(Flip& flip);
 
  private:
 	Camera& m_cam;
@@ -213,6 +235,7 @@ class Interface : public HwInterface
 	SyncCtrlObj    m_sync;
 	BinCtrlObj     m_bin;
 	RoiCtrlObj     m_roi;
+	FlipCtrlObj    m_flip;
 };
 
 

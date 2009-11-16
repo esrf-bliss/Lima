@@ -13,7 +13,7 @@ enum Reg {
 	ChanMode,	TimeUnit,	RoiEnable,	RoiFast, 
 	AntiBloom,	BinVert,	BinHorz,	ConfigHD,
 	RoiKinetic,	ShutEnable,	HardTrigDisable,
-	PixelFreq,	LineFreq,	Flip,		IntCalib,
+	PixelFreq,	LineFreq,	FlipMode,	IntCalib,
 	DisplayImage,	AdcFloatDiode,	AdcSignal,	
 	DarkPixelCalib,	DarkPixelMode,	ChanControl,	Mire,
 	AoiLineBegin,	AoiLineWidth,	AoiPixelBegin,	AoiPixelWidth,

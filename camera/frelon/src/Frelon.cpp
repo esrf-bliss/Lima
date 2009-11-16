@@ -30,7 +30,7 @@ static const RegPair RegStrCList[] = {
 	RegPair(PixelFreq,	"P"),
 	RegPair(LineFreq,	"L"),
 
-	RegPair(Flip,		"FLI"),
+	RegPair(FlipMode,	"FLI"),
 	RegPair(IntCalib,	"IE"),
 	RegPair(DisplayImage,	"X"),
 	RegPair(AdcFloatDiode,	"ADS"),

@@ -32,6 +32,8 @@ inline bool IsPowerOf2(int x)
 class Point
 {
  public:
+	int x, y;
+
 	Point()               : x(0),   y(0)   {}
 	Point(int i)          : x(i),   y(i)   {}
 	Point(int x0, int y0) : x(x0),  y(y0)  {}
@@ -62,8 +64,6 @@ class Point
 	{ return (p.x <= x) && (p.y <= y); }
 
 	void alignTo(const Point& p, AlignDir align_dir);
-
-	int x, y;
 };
 
 inline Point operator +(const Point& p1, const Point& p2)
@@ -300,6 +300,39 @@ inline Point Bin::checkValid(const Point& p)
 }
 
 std::ostream& operator <<(std::ostream& os, const Bin& bin);
+
+
+/*******************************************************************
+ * \class Flip
+ * \brief Class specifying horizontal and vertical flip modes
+ *
+ *******************************************************************/
+
+class Flip
+{
+ public:
+	bool x, y;
+
+	Flip()                 : x(false), y(false) {}
+	Flip(bool b)           : x(b),     y(b)     {}
+	Flip(bool x0, bool y0) : x(x0),    y(y0)    {}
+	Flip(const Flip& f)    : x(f.x),   y(f.y)   {}
+
+	operator Point() const
+	{ return Point(x, y); }
+
+	Corner getRefCorner() const
+	{ return Corner(x ? Right : Left, y ? Bottom : Top); }
+
+	Flip& operator &=(const Flip& f)
+	{ x ^= f.x; y ^= f.y; return *this; }
+};
+
+inline Flip operator &(const Flip& f1, const Flip& f2)
+{
+	Flip flip = f1;
+	return flip &= f2;
+}
 
 
 /*******************************************************************

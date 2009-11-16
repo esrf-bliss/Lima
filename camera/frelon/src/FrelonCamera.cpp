@@ -286,25 +286,33 @@ void Camera::setFlipMode(int flip_mode)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(flip_mode);
-	writeRegister(Flip, flip_mode);
+	writeRegister(FlipMode, flip_mode);
 }
 
 void Camera::getFlipMode(int& flip_mode)
 {
 	DEB_MEMBER_FUNCT();
-	readRegister(Flip, flip_mode);
+	readRegister(FlipMode, flip_mode);
 	DEB_RETURN() << DEB_VAR1(flip_mode);
 }
 
-void Camera::setFlip(const Point& flip)
+void Camera::checkFlip(Flip& flip)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(flip);
-	int flip_mode = (bool(flip.x) << 1) | (bool(flip.y) << 0);
+	DEB_TRACE() << "All standard flip modes are supported";
+	DEB_RETURN() << DEB_VAR1(flip);
+}
+
+void Camera::setFlip(const Flip& flip)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(flip);
+	int flip_mode = (flip.x << 1) | (flip.y << 0);
 	setFlipMode(flip_mode);
 }
 
-void Camera::getFlip(Point& flip)
+void Camera::getFlip(Flip& flip)
 {
 	DEB_MEMBER_FUNCT();
 
@@ -442,28 +450,28 @@ void Camera::xformChanCoords(const Point& point, Point& chan_point,
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(point);
 
-	Point flip;
-	getFlip(flip);
+	Flip chan_flip;
+	getFlip(chan_flip);
 	Point mirror;
 	getMirror(mirror);
 	Size chan_size;
 	getChanSize(chan_size);
 
-	bool good_xchan = isChanActive(Chan1) || isChanActive(Chan3);
-	bool good_ychan = isChanActive(Chan1) || isChanActive(Chan2);
-	DEB_TRACE() << DEB_VAR2(good_xchan, good_ychan);
+	Flip readout_flip;
+	readout_flip.x = !(isChanActive(Chan1) || isChanActive(Chan3));
+	readout_flip.y = !(isChanActive(Chan1) || isChanActive(Chan2));
+	DEB_TRACE() << DEB_VAR2(chan_flip, readout_flip);
 
-	XBorder ref_xb = (bool(flip.x) == !good_xchan) ? Left : Right;
-	YBorder ref_yb = (bool(flip.y) == !good_ychan) ? Top  : Bottom;
-	DEB_TRACE() << "After flip: " << DEB_VAR2(ref_xb, ref_yb);
+	Flip effect_flip = chan_flip & readout_flip;
+	DEB_TRACE() << "After flip: " << DEB_VAR1(effect_flip);
 
 	if (mirror.x)
-		ref_xb = (point.x < chan_size.getWidth())  ? Left : Right;
+		effect_flip.x = (point.x >= chan_size.getWidth());
 	if (mirror.y)
-		ref_yb = (point.y < chan_size.getHeight()) ? Top  : Bottom;
-	DEB_TRACE() << "After mirror: " << DEB_VAR2(ref_xb, ref_yb);
+		effect_flip.y = (point.y >= chan_size.getHeight());
+	DEB_TRACE() << "After mirror: " << DEB_VAR1(effect_flip);
 
-	ref_corner.set(ref_xb, ref_yb);
+	ref_corner = effect_flip.getRefCorner();
 
 	Size ccd_size;
 	getCcdSize(ccd_size);

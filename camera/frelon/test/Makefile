@@ -1,8 +1,7 @@
-SRCS = ./src/Frelon.cpp ../../common/espia/src/Espia.cpp \
-	      ../../../hardware/src/Hw.cpp ../../../common/src/Common.cpp
-
 frelon-objs = ../src/Frelon.o ../../common/espia/src/Espia.o \
 	      ../../../hardware/src/Hw.o ../../../common/src/Common.o 
+
+SRCS = testfrelon.cpp testfreloninterface.cpp testfrelonspectroscopy.cpp
 
 include ../../common/espia/include/espia.inc
 
@@ -23,13 +22,13 @@ testfrelon:	testfrelon.o $(frelon-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 testfreloninterface:	testfreloninterface.o $(frelon-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS) ../../../control/src/Ct.o
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 testfrelonspectroscopy:	testfrelonspectroscopy.o $(frelon-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS) ../../../control/src/Ct.o
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 clean:
-	rm -f *.o *.P testfrelon testfreloninterface
+	rm -f *.o *.P testfrelon testfreloninterface testfrelonspectroscopy
 
 %.o : %.cpp
 	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<

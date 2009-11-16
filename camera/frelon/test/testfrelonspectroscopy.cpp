@@ -140,10 +140,17 @@ void test_frelon_spectroscopy()
 	HwRoiCtrlObj *hw_roi;
 	hw_inter.getHwCtrlObj(hw_roi);
 
+	HwFlipCtrlObj *hw_flip;
+	hw_inter.getHwCtrlObj(hw_flip);
+
 	hw_buffer->registerFrameCallback(cb);
 
 	DEB_ALWAYS() << "Setting Chans 3 & 4";
 	cam.setInputChan(Frelon::Chan34);
+
+	Flip flip(true, true);
+	DEB_ALWAYS() << "Setting flip mode to " << flip;
+	hw_flip->setFlip(flip);
 
 	Bin bin(1, 64);
 	DEB_ALWAYS() << "Setting binning to " << bin;

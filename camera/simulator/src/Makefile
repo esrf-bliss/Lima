@@ -1,5 +1,6 @@
-SRCS = FrameBuilder.cpp Simulator.cpp SimuHwInterface.cpp
 simu-objs = FrameBuilder.o Simulator.o SimuHwInterface.o
+
+SRCS = $(simu-objs:.o=.cpp)
 
 CXX = g++
 INC = -I../include -I../../../common/include -I../../../hardware/include 

@@ -41,8 +41,9 @@ class Camera
 
 	bool isChanActive(Frelon::InputChan chan);
 
-	void setFlip(const Point& flip);
-	void getFlip(Point& flip /Out/);
+	void checkFlip(Flip& flip /InOut/);
+	void setFlip(const Flip& flip);
+	void getFlip(Flip& flip /Out/);
 
 	void checkBin(Bin& bin /InOut/);
 	void setBin(const Bin& bin);

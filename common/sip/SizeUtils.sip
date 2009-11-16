@@ -6,6 +6,9 @@ class Point
 #include <SizeUtils.h>
 %End
  public:
+	int x;
+	int y;
+
 	Point();
 	Point(int i);
 	Point(int x0, int y0);
@@ -26,9 +29,6 @@ class Point
 	bool contains(const Point& p) const;
 
 	void alignTo(const Point& p, AlignDir align_dir);
-
-	int x;
-	int y;
 };
 
 enum XBorder {
@@ -118,6 +118,29 @@ using namespace lima;
 
 	Bin& operator /=(const Point& p);
 };
+
+class Flip
+{
+%TypeHeaderCode
+#include <SizeUtils.h>
+using namespace lima;
+%End
+ public:
+	bool x;
+	bool y;
+
+	Flip();
+	Flip(bool b);
+	Flip(bool x0, bool y0);
+	Flip(const Flip& f);
+
+	operator Point() const;
+
+	Corner getRefCorner() const;
+
+	Flip& operator &=(const Flip& f);
+};
+
 
 class Roi
 {

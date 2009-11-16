@@ -389,6 +389,40 @@ void RoiCtrlObj::getRoi(Roi& roi)
 
 
 /*******************************************************************
+ * \brief FlipCtrlObj constructor
+ *******************************************************************/
+
+FlipCtrlObj::FlipCtrlObj(Camera& cam)
+	: m_cam(cam)
+{
+	DEB_CONSTRUCTOR();
+}
+
+FlipCtrlObj::~FlipCtrlObj()
+{
+	DEB_DESTRUCTOR();
+}
+
+void FlipCtrlObj::setFlip(const Flip& flip)
+{
+	DEB_MEMBER_FUNCT();
+	m_cam.setFlip(flip);
+}
+
+void FlipCtrlObj::getFlip(Flip& flip)
+{
+	DEB_MEMBER_FUNCT();
+	m_cam.getFlip(flip);
+}
+
+void FlipCtrlObj::checkFlip(Flip& flip)
+{
+	DEB_MEMBER_FUNCT();
+	m_cam.checkFlip(flip);
+}
+
+
+/*******************************************************************
  * \brief Hw Interface constructor
  *******************************************************************/
 
@@ -396,7 +430,7 @@ Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 		     Camera& cam)
 	: m_acq(acq), m_buffer_mgr(buffer_mgr), m_cam(cam),
 	  m_det_info(cam), m_buffer(buffer_mgr), m_sync(acq, cam, m_buffer), 
-	  m_bin(cam), m_roi(cam)
+	  m_bin(cam), m_roi(cam), m_flip(cam)
 {
 	DEB_CONSTRUCTOR();
 
@@ -414,6 +448,9 @@ Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 
 	HwRoiCtrlObj *roi = &m_roi;
 	m_cap_list.push_back(HwCap(roi));
+
+	HwFlipCtrlObj *flip = &m_flip;
+	m_cap_list.push_back(HwCap(flip));
 
 	reset(SoftReset);
 }
@@ -443,7 +480,8 @@ void Interface::reset(ResetLevel reset_level)
 
 	m_cam.setFrameTransferMode(FFM);
 	m_cam.setInputChan(Chan1234);
-	m_cam.setFlip(Point(0));
+
+	m_flip.setFlip(Flip(false));
 
 	m_sync.setNbFrames(1);
 	m_sync.setExpTime(1.0);

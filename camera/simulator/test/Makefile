@@ -1,4 +1,3 @@
-SRCS = test.cpp testsimulator.cpp testsimuhwinterface.cpp
 
 std-objs = ../../../common/src/Common.o ../../../hardware/src/Hw.o
 simu-objs = ../src/Simu.o
@@ -12,20 +11,24 @@ testsimulator-ext-objs = $(simu-objs) $(std-objs)
 testsimuhwinterface-objs = testsimuhwinterface.o
 testsimuhwinterface-ext-objs = $(simu-objs) $(std-objs)
 
+SRCS = $(test-objs:.o=.cpp) $(testsimulator-objs:.o=.cpp) \
+       $(testsimuhwinterface-objs:.o=.cpp)
+
 INC = -I../include -I../../../common/include -I../../../hardware/include 
 CXXFLAGS += $(INC) -Wall -pthread -g
 LDFLAGS = -pthread
 
 all: test testsimulator testsimuhwinterface
 
-test:	$(test-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(test-ext-objs) $(std-objs)
+test:	$(test-objs) $(test-ext-objs) $(std-objs)
+	$(CXX) $(LDFLAGS) -o $@ $+
 
-testsimulator: $(testsimulator-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(testsimulator-ext-objs) 
+testsimulator: $(testsimulator-objs) $(testsimulator-ext-objs) 
+	$(CXX) $(LDFLAGS) -o $@ $+
 
-testsimuhwinterface: $(testsimuhwinterface-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(testsimuhwinterface-ext-objs) 
+testsimuhwinterface: $(testsimuhwinterface-objs) \
+		     $(testsimuhwinterface-ext-objs) 
+	$(CXX) $(LDFLAGS) -o $@ $+
 
 clean: 
 	rm -f $(test-objs) test *.edf

@@ -1,8 +1,9 @@
 
 include ../../common/espia/include/espia.inc
 
-SRCS = FrelonBase.cpp FrelonSerialLine.cpp FrelonCamera.cpp FrelonInterface.cpp
 frelon-objs = FrelonBase.o FrelonSerialLine.o FrelonCamera.o FrelonInterface.o
+
+SRCS = $(frelon-objs:.o=.cpp) 
 
 CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../hardware/include -I../../../common/include \

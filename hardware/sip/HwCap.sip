@@ -25,6 +25,7 @@ public:
 	HwCap(HwSyncCtrlObj*);
 	HwCap(HwBinCtrlObj*);
 	HwCap(HwRoiCtrlObj*);
+	HwCap(HwFlipCtrlObj*);
 	Type getType() const;
 	SIP_PYOBJECT getCtrlObj();
 %MethodCode

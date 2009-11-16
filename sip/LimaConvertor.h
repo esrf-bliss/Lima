@@ -38,6 +38,13 @@ case HwCap::Roi:\
     sipRes = sipConvertFromInstance(aCtrlObjPt,sipClass_HwRoiCtrlObj,NULL); \
   break;\
 }\
+case HwCap::Flip:\
+{\
+  HwFlipCtrlObj *aCtrlObjPt = NULL;\
+  if(cppObject->getCtrlObj(aCtrlObjPt))\
+    sipRes = sipConvertFromInstance(aCtrlObjPt,sipClass_HwFlipCtrlObj,NULL); \
+  break;\
+}\
 default:\
 std::cerr << "HwCap getCtrlObj : sip wrapping Type -> " << cppObject->getType() << " not yet managed" << std::endl;break;\
 }\

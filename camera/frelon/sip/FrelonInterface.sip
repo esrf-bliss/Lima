@@ -139,6 +139,24 @@ class RoiCtrlObj : HwRoiCtrlObj
 };
 
 
+class FlipCtrlObj : HwFlipCtrlObj
+{
+
+%TypeHeaderCode
+#include "FrelonInterface.h"
+#include <algorithm>
+%End
+
+ public:
+	FlipCtrlObj(Frelon::Camera& cam);
+	virtual ~FlipCtrlObj();
+
+	virtual void setFlip(const Flip& flip);
+	virtual void getFlip(Flip& flip);
+	virtual void checkFlip(Flip& flip);
+};
+
+
 class Interface : HwInterface
 {
 
@@ -148,7 +166,8 @@ class Interface : HwInterface
 %End
 
  public:
-	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, Frelon::Camera& cam);
+	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, 
+		  Frelon::Camera& cam);
 	virtual ~Interface();
 
 //	virtual const HwInterface::CapList& getCapList() const;

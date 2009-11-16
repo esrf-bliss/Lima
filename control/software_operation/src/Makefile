@@ -1,6 +1,6 @@
 ct-objs := SoftOpInternalMgr.o SoftOpExternalMgr.o SoftOpId.o
 
-SRCS=SoftOpInternalMgr.cpp SoftOpExternalMgr.cpp SoftOpId.cpp
+SRCS = $(ct-objs:.o=.cpp) 
 
 INCLUDES=-I../include  -I../../../third-party/Processlib/core/include -I../../../third-party/Processlib/tasks/include -I../../../common/include
 

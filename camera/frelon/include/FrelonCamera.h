@@ -41,8 +41,9 @@ class Camera
 
 	bool isChanActive(InputChan chan);
 
-	void setFlip(const Point& flip);
-	void getFlip(Point& flip);
+	void checkFlip(Flip& flip);
+	void setFlip(const Flip& flip);
+	void getFlip(Flip& flip);
 
 	void checkBin(Bin& bin);
 	void setBin(const Bin& bin);

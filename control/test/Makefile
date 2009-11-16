@@ -1,9 +1,10 @@
-SRCS = simutest.cpp
 lima-objs = ../../common/src/Common.o ../../hardware/src/Hw.o ../src/Ct.o
 simu-objs = ../../camera/simulator/src/Simu.o
 
 simutest-objs = simutest.o
 simutest-ext-objs = $(lima-objs) $(simu-objs)
+
+SRCS = $(simutest-objs:.o=.cpp) 
 
 INC = -I../include -I../../common/include -I../control/include \
 	-I../../hardware/include -I../../camera/simulator/include \
@@ -16,8 +17,8 @@ LDLIBS = -L../../third-party/Processlib/build -lprocesslib
 
 all: 	simutest
 
-simutest: $(simutest-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS) $(simutest-ext-objs) 
+simutest: $(simutest-objs) $(simutest-ext-objs) 
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 	cp ../../third-party/Processlib/build/libprocesslib.so .
 
 clean: 

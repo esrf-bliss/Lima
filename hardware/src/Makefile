@@ -1,12 +1,9 @@
-SRCS = HwInterface.cpp HwCap.cpp HwSyncCtrlObj.cpp HwFrameInfo.cpp \
-	HwFrameCallback.cpp HwBufferCtrlObj.cpp HwBufferMgr.cpp \
-	HwShutterCtrlObj.cpp HwDetInfoCtrlObj.cpp HwBinCtrlObj.cpp \
-	HwRoiCtrlObj.cpp HwSerialLine.cpp
-
 hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 	   HwFrameCallback.o HwBufferCtrlObj.o HwBufferMgr.o \
 	   HwShutterCtrlObj.o HwDetInfoCtrlObj.o HwBinCtrlObj.o \
-	   HwRoiCtrlObj.o HwSerialLine.o
+	   HwRoiCtrlObj.o HwFlipCtrlObj.o HwSerialLine.o
+
+SRCS = $(hw-objs:.o=.cpp)
 
 CXXFLAGS += -I../include -I../../common/include -Wall -pthread -fPIC -g
 

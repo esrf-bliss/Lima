@@ -48,5 +48,6 @@ public:
 #include "HwSyncCtrlObj.h"
 #include "HwBinCtrlObj.h"
 #include "HwRoiCtrlObj.h"
+#include "HwFlipCtrlObj.h"
 
 #endif // HWCAP_H

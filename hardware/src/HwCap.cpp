@@ -34,5 +34,11 @@ HwCap::Type HwCap::getTypeFromCtrlObj<>(HwRoiCtrlObj *p)
 	return Roi;
 }
 
+template <>
+HwCap::Type HwCap::getTypeFromCtrlObj<>(HwFlipCtrlObj *p)
+{
+	return Flip;
+}
+
 
 } // namespace lima
