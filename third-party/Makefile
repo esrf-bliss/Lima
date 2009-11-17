@@ -9,11 +9,11 @@ test:
 Processlib/sip/Makefile:
 	cd Processlib/sip/ && python configure.py
 
-Processlib/build/libprocesslib.so:
+Processlib_build_libprocesslib.so:
 	make -C Processlib/build -j2
 
 
-Processlib/sip/processlib.so: Processlib/build/libprocesslib.so
+Processlib/sip/processlib.so: Processlib_build_libprocesslib.so
 	make -C Processlib/sip -j2
 clean:
 	cd Processlib/sip/ && python clean.py

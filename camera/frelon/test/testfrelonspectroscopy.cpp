@@ -148,7 +148,7 @@ void test_frelon_spectroscopy()
 	DEB_ALWAYS() << "Setting Chans 3 & 4";
 	cam.setInputChan(Frelon::Chan34);
 
-	Flip flip(true, true);
+	Flip flip(true, false);
 	DEB_ALWAYS() << "Setting flip mode to " << flip;
 	hw_flip->setFlip(flip);
 
@@ -208,11 +208,6 @@ void test_frelon_spectroscopy()
 int main(int argc, char *argv[])
 {
 	DEB_GLOBAL_FUNCT();
-
-	int nb_threads = 1;
-	DEB_TRACE() << "Setting Proccesslib NbPoolThreads to " << nb_threads;
-	PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
-	pool_thread_mgr.setNumberOfThread(nb_threads);
 
 	try {
 		test_frelon_spectroscopy();
