@@ -31,12 +31,20 @@ class SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
 	virtual void getDetectorType(std::string& det_type);
 	virtual void getDetectorModel(std::string& det_model);
 
- protected:
-	virtual void setMaxImageSizeCallbackActive(bool cb_active);
+	virtual void registerMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
+	virtual void unregisterMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
 
  private:
+	class MaxImageSizeCallbackGen: public HwMaxImageSizeCallbackGen
+	{
+	protected:
+		virtual void setMaxImageSizeCallbackActive(bool cb_active);
+	};
+
 	Simulator& m_simu;
-	bool m_iscb_act;
+	MaxImageSizeCallbackGen m_mis_cb_gen;
 };
 
 

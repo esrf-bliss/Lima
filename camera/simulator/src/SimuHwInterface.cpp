@@ -10,7 +10,6 @@ using namespace std;
 SimuDetInfoCtrlObj::SimuDetInfoCtrlObj(Simulator& simu)
 	: m_simu(simu)
 {
-	m_iscb_act = false;
 }
 
 SimuDetInfoCtrlObj::~SimuDetInfoCtrlObj()
@@ -64,9 +63,22 @@ void SimuDetInfoCtrlObj::getDetectorModel(string& det_model)
 	det_model = "PeakGenerator";
 }
 
-void SimuDetInfoCtrlObj::setMaxImageSizeCallbackActive(bool cb_active)
+void SimuDetInfoCtrlObj::registerMaxImageSizeCallback(
+						HwMaxImageSizeCallback& cb)
 {
-	m_iscb_act = cb_active;
+	m_mis_cb_gen.registerMaxImageSizeCallback(cb);
+}
+
+void SimuDetInfoCtrlObj::unregisterMaxImageSizeCallback(
+						HwMaxImageSizeCallback& cb)
+{
+	m_mis_cb_gen.unregisterMaxImageSizeCallback(cb);
+}
+
+
+void SimuDetInfoCtrlObj::
+     MaxImageSizeCallbackGen::setMaxImageSizeCallbackActive(bool cb_active)
+{
 }
 
 

@@ -107,6 +107,16 @@ class TestFrameCallback( lima.HwFrameCallback ):
 		return data
 
 
+class MaxImageSizeCallback( lima.HwMaxImageSizeCallback ):
+
+	def maxImageSizeChanged(self, size, image_type):
+		fdim = lima.FrameDim(size, image_type)
+		msg = "size=%sx%s, image_type=%s, depth=%d" % \
+		      (size.getWidth(), size.getHeight(), image_type, \
+		       fdim.getDepth())
+		print "MaxImageSizeChanged:", msg
+
+
 def main(argv):
 	print "Creating Espia.Dev"
 	edev = lima.Espia.Dev(0)
@@ -127,7 +137,7 @@ def main(argv):
 	eser_line = lima.Espia.SerialLine(edev)
 
 	print "Creating Frelon.Camera"
-	cam = lima.Frelon.Camera(eser_line);
+	cam = lima.Frelon.Camera(eser_line)
 
 	print "Creating the Hw Interface ... "
 	hw_inter = lima.Frelon.Interface(acq, buffer_mgr, cam)
@@ -151,6 +161,14 @@ def main(argv):
 	print "Getting HW RoI"
 	hw_roi = hw_inter.getHwCtrlObj(lima.HwCap.Roi)
 
+	mis_cb = MaxImageSizeCallback()
+	hw_det_info.registerMaxImageSizeCallback(mis_cb);
+
+	print "Setting FTM";
+	cam.setFrameTransferMode(lima.Frelon.FTM)
+	print "Setting FFM";
+	cam.setFrameTransferMode(lima.Frelon.FFM)
+	
 	soft_roi = lima.Roi()
 	acq_state = lima.AcqState()
 	print "Creating a TestFrameCallback"

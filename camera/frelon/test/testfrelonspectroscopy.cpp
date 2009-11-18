@@ -3,8 +3,6 @@
 #include "AcqState.h"
 #include "PoolThreadMgr.h"
 
-#include <iostream>
-
 using namespace lima;
 using namespace std;
 

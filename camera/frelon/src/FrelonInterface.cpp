@@ -98,12 +98,18 @@ void DetInfoCtrlObj::getDetectorModel(std::string& det_model)
 	DEB_RETURN() << DEB_VAR1(det_model);
 }
 
-void DetInfoCtrlObj::setMaxImageSizeCallbackActive(bool cb_active)
+void DetInfoCtrlObj::registerMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(cb_active);
+	m_cam.registerMaxImageSizeCallback(cb);
+}
 
-	DEB_ERROR() << "Not implemented yet!";
+void DetInfoCtrlObj::unregisterMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb)
+{
+	DEB_MEMBER_FUNCT();
+	m_cam.unregisterMaxImageSizeCallback(cb);
 }
 
 
@@ -294,7 +300,20 @@ void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 {
 	DEB_MEMBER_FUNCT();
 
-	DEB_ERROR() << "Not implemented yet!";
+	const double MinTimeUnit = TimeUnitFactorMap[Microseconds];
+	const double MaxTimeUnit = TimeUnitFactorMap[Milliseconds];
+	const double LatTimeUnit = TimeUnitFactorMap[Milliseconds];
+
+	valid_ranges.min_exp_time = 1 * MinTimeUnit;
+	valid_ranges.max_exp_time = MaxRegVal * MaxTimeUnit;
+
+	valid_ranges.min_lat_time = 0 * LatTimeUnit;
+	valid_ranges.max_lat_time = MaxRegVal * LatTimeUnit;
+
+	DEB_RETURN() << DEB_VAR2(valid_ranges.min_exp_time, 
+				 valid_ranges.max_exp_time);
+	DEB_RETURN() << DEB_VAR2(valid_ranges.min_lat_time, 
+				 valid_ranges.max_lat_time);
 }
 
 

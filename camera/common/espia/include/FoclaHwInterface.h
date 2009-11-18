@@ -28,7 +28,7 @@ extern const FrameDim MaxFrameDim;
  * @class DetInfoCtrlObj
  * @brief Focla detector info control object
  *******************************************************************/
-class DetInfoCtrlObj : public HwDetInfoCtrlObj
+class DetInfoCtrlObj : public HwDetInfoCtrlObj 
 {
   public:
 	DetInfoCtrlObj( Dev &focla );
@@ -45,12 +45,20 @@ class DetInfoCtrlObj : public HwDetInfoCtrlObj
 	virtual void getDetectorType(std::string& det_type);
 	virtual void getDetectorModel(std::string& det_model);
 
- protected:
-	virtual void setMaxImageSizeCallbackActive(bool cb_active);
+	virtual void registerMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
+	virtual void unregisterMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
 
   private:
+	class MaxImageSizeCallbackGen: public HwMaxImageSizeCallbackGen
+	{
+	protected:
+		virtual void setMaxImageSizeCallbackActive(bool cb_active);
+	};
+
 	Espia::Focla::Dev &m_focla;
-	bool m_iscb_act;
+	MaxImageSizeCallbackGen m_mis_cb_gen;
 };
 
 

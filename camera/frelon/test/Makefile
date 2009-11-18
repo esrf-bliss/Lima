@@ -1,7 +1,10 @@
 frelon-objs = ../src/Frelon.o ../../common/espia/src/Espia.o \
 	      ../../../hardware/src/Hw.o ../../../common/src/Common.o 
 
-SRCS = testfrelon.cpp testfreloninterface.cpp testfrelonspectroscopy.cpp
+ct-objs = ../../../control/src/Ct.o
+
+SRCS = testfrelon.cpp testfreloninterface.cpp testfrelonspectroscopy.cpp \
+       testfreloncontrol.cpp
 
 include ../../common/espia/include/espia.inc
 
@@ -16,15 +19,21 @@ CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../third-party/Processlib/tasks/include \
 	   -I$(ESPIA_DRV_INCL) -Wall -pthread -g
 
-all: testfrelon testfreloninterface testfrelonspectroscopy
+test-progs = testfrelon testfreloninterface testfrelonspectroscopy \
+	     testfreloncontrol
 
-testfrelon:	testfrelon.o $(frelon-objs)
+all: 	$(test-progs)
+
+testfrelon:		testfrelon.o $(frelon-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 testfreloninterface:	testfreloninterface.o $(frelon-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 testfrelonspectroscopy:	testfrelonspectroscopy.o $(frelon-objs)
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
+
+testfreloncontrol:	testfreloncontrol.o $(frelon-objs) $(ct-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 clean:

@@ -74,6 +74,9 @@ class Camera
 	void start();
 	void stop();
 
+ protected:
+	virtual void setMaxImageSizeCallbackActive(bool cb_active);
+
 };
 
 

@@ -37,12 +37,13 @@ class DetInfoCtrlObj : public HwDetInfoCtrlObj
 	virtual void getDetectorType(std::string& det_type);
 	virtual void getDetectorModel(std::string& det_model);
 
- protected:
-	virtual void setMaxImageSizeCallbackActive(bool cb_active);
+	virtual void registerMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
+	virtual void unregisterMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
 
  private:
 	Camera& m_cam;
-	bool m_iscb_act;
 };
 
 

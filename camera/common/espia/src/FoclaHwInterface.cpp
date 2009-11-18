@@ -79,7 +79,19 @@ void DetInfoCtrlObj::getDetectorModel(std::string &det_model)
 }
 
 
-void DetInfoCtrlObj::setMaxImageSizeCallbackActive(bool cb_active)
+void DetInfoCtrlObj::registerMaxImageSizeCallback(HwMaxImageSizeCallback& cb)
+{
+	m_mis_cb_gen.registerMaxImageSizeCallback(cb);
+}
+
+void DetInfoCtrlObj::unregisterMaxImageSizeCallback(HwMaxImageSizeCallback& cb)
+{
+	m_mis_cb_gen.unregisterMaxImageSizeCallback(cb);
+}
+
+
+void DetInfoCtrlObj::MaxImageSizeCallbackGen::setMaxImageSizeCallbackActive(
+							    bool cb_active)
 {
 }
 

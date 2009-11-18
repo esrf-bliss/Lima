@@ -12,7 +12,7 @@ const double Camera::MaxReadoutTime    = 0.7;
 
 
 Camera::Camera(Espia::SerialLine& espia_ser_line)
-	: m_ser_line(espia_ser_line)
+	: m_ser_line(espia_ser_line), m_mis_cb_act(false)
 {
 	DEB_CONSTRUCTOR();
 
@@ -242,11 +242,26 @@ void Camera::setFrameTransferMode(FrameTransferMode ftm)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(ftm);
 	
+	FrameTransferMode prev_ftm;
+	getFrameTransferMode(prev_ftm);
+	if (ftm == prev_ftm) {
+		DEB_TRACE() << "Nothing to do";
+		return;
+	}
+
 	InputChan input_chan;
 	getInputChan(input_chan);
 	int chan_mode;
 	getInputChanMode(ftm, input_chan, chan_mode);
 	setChanMode(chan_mode);
+
+	if (!m_mis_cb_act) 
+		return;
+
+	FrameDim frame_dim;
+	getFrameDim(frame_dim);
+	DEB_TRACE() << "MaxImageSizeChanged: " << DEB_VAR1(frame_dim);
+	maxImageSizeChanged(frame_dim.getSize(), frame_dim.getImageType());
 }
 
 void Camera::getFrameTransferMode(FrameTransferMode& ftm)
@@ -849,3 +864,7 @@ void Camera::stop()
 	}
 }
 
+void Camera::setMaxImageSizeCallbackActive(bool cb_active)
+{
+	m_mis_cb_act = cb_active;
+}

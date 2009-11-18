@@ -15,6 +15,11 @@ using namespace Tasks;
 
 DEB_GLOBAL(DebModTest);
 
+
+//*********************************************************************
+// SoftRoiCallback
+//*********************************************************************
+
 class SoftRoiCallback : public TaskEventCallback
 {
 	DEB_CLASS(DebModTest, "SoftRoiCallback");
@@ -98,6 +103,10 @@ void SoftRoiCallback::finished(Data& data)
 
 }
 
+
+//*********************************************************************
+// TestFrameCallback
+//*********************************************************************
 
 class TestFrameCallback : public HwFrameCallback
 {
@@ -200,6 +209,46 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 	return true;
 }
 
+
+//*********************************************************************
+// MaxImageSizeCallback
+//*********************************************************************
+
+class MaxImageSizeCallback : public HwMaxImageSizeCallback
+{
+	DEB_CLASS(DebModTest, "MaxImageSizeCallback");
+
+public:
+	MaxImageSizeCallback();
+	virtual ~MaxImageSizeCallback();
+
+protected:
+	virtual void maxImageSizeChanged(const Size& size,
+					 ImageType image_type);
+};
+
+MaxImageSizeCallback::MaxImageSizeCallback()
+{
+	DEB_CONSTRUCTOR();
+}
+
+MaxImageSizeCallback::~MaxImageSizeCallback()
+{
+	DEB_DESTRUCTOR();
+}
+
+void MaxImageSizeCallback::maxImageSizeChanged(const Size& size,
+					       ImageType image_type)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(size, image_type);
+}
+
+
+//*********************************************************************
+// print_status
+//*********************************************************************
+
 void print_status(Frelon::Interface& hw_inter)
 {
 	DEB_GLOBAL_FUNCT();
@@ -209,6 +258,10 @@ void print_status(Frelon::Interface& hw_inter)
 
 	DEB_PARAM() << DEB_VAR1(status);
 }
+
+//*********************************************************************
+// set_hw_roi
+//*********************************************************************
 
 void set_hw_roi(HwRoiCtrlObj *hw_roi, const Roi& set_roi, Roi& real_roi,
 		Roi& soft_roi)
@@ -229,6 +282,11 @@ void set_hw_roi(HwRoiCtrlObj *hw_roi, const Roi& set_roi, Roi& real_roi,
 	DEB_TRACE() << DEB_VAR3(set_roi, real_roi, soft_roi);
 }
 
+
+//*********************************************************************
+// print_deb_flags
+//*********************************************************************
+
 void print_deb_flags()
 {
 	DEB_GLOBAL_FUNCT();
@@ -248,6 +306,11 @@ void print_deb_flags()
 	NameList ModuleFlagsNameList = DebParams::getModuleFlagsNameList();
 	DEB_PARAM() << DEB_VAR1(ModuleFlagsNameList);
 }
+
+
+//*********************************************************************
+// test_frelon_hw_inter
+//*********************************************************************
 
 void test_frelon_hw_inter(bool do_reset)
 {
@@ -271,10 +334,12 @@ void test_frelon_hw_inter(bool do_reset)
 
 	BufferSave buffer_save(BufferSave::EDF, "img", 0, ".edf", true, 1);
 
+	MaxImageSizeCallback mis_cb;
+
 	Roi soft_roi;
 	AcqState acq_state;
 	TestFrameCallback cb(hw_inter, soft_roi, buffer_save, acq_state);
-
+	
 	HwDetInfoCtrlObj *hw_det_info;
 	hw_inter.getHwCtrlObj(hw_det_info);
 
@@ -301,7 +366,13 @@ void test_frelon_hw_inter(bool do_reset)
 	ImageType image_type;
 	hw_det_info->getCurrImageType(image_type);
 	FrameDim frame_dim(size, image_type);
+	hw_det_info->registerMaxImageSizeCallback(mis_cb);
 
+	DEB_TRACE() << "Setting FTM";
+	cam.setFrameTransferMode(Frelon::FTM);
+	DEB_TRACE() << "Setting FFM";
+	cam.setFrameTransferMode(Frelon::FFM);
+	
 	Bin bin(1);
 	hw_bin->setBin(bin);
 
@@ -430,6 +501,11 @@ void test_frelon_hw_inter(bool do_reset)
 	DebParams::enableModuleFlags(DebParams::AllFlags);
 	print_deb_flags();
 }
+
+
+//*********************************************************************
+// main
+//*********************************************************************
 
 int main(int argc, char *argv[])
 {

@@ -11,6 +11,8 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 }
 
 CtBuffer::CtBuffer(HwInterface *hw)
+	: m_frame_cb(NULL)
+
 {
 	if (!hw->getHwCtrlObj(m_hw_buffer))
                 throw LIMA_CTL_EXC(Error, "Cannot get hardware buffer object");

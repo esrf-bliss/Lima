@@ -2,6 +2,7 @@
 #define FRELONCAMERA_H
 
 #include "FrelonSerialLine.h"
+#include "HwMaxImageSizeCallback.h"
 
 namespace lima
 {
@@ -9,7 +10,7 @@ namespace lima
 namespace Frelon
 {
 
-class Camera
+class Camera : public HwMaxImageSizeCallbackGen
 {
 	DEB_CLASS_NAMESPC(DebModCamera, "Camera", "Frelon");
 
@@ -74,6 +75,9 @@ class Camera
 	void start();
 	void stop();
 
+ protected:
+	virtual void setMaxImageSizeCallbackActive(bool cb_active);
+
  private:
 	static const double HorzBinChangeTime;
 	static const double MaxReadoutTime;
@@ -119,6 +123,7 @@ class Camera
 	Point m_roi_offset;
 	TrigMode m_trig_mode;
 	int m_nb_frames;
+	bool m_mis_cb_act;
 };
 
 inline bool Camera::isChanActive(InputChan chan)
