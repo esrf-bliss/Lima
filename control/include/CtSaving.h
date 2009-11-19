@@ -14,31 +14,41 @@ class TaskEventCallback;
 
 namespace lima {
 
-  class CtSaving {
+  class CtSaving 
+  {
+    DEB_CLASS_NAMESPC(DebModControl,"Saving","Control");
+
     friend class CtControl;
   public:
 
     CtSaving(CtControl&);
     ~CtSaving();
   
-    enum FileFormat {
-      RAW,
-      EDF,
-    };
+    enum FileFormat 
+      {
+	RAW,
+	EDF,
+      };
 
-    enum SavingMode {
-      Manual,
-      AutoFrame,
-      AutoHeader,
-    };
+    enum SavingMode 
+      {
+	Manual,
+	AutoFrame,
+	AutoHeader,
+      };
 	
-    enum OverwritePolicy {
-      Abort,
-      Overwrite,
-      Append,
-    };	
+    enum OverwritePolicy 
+      {
+	Abort,
+	Overwrite,
+	Append,
+      };	
 
-    struct Parameters {
+    struct Parameters 
+    {
+      DEB_CLASS_NAMESPC(DebModControl,"Saving parameters",
+			"Control");
+    public:
       std::string directory;
       std::string prefix;
       std::string suffix;
@@ -143,8 +153,35 @@ namespace lima {
     void _takeHeader(std::map<long,HeaderMap>::iterator&, HeaderMap& header);
     void _post_save_task(Data&,_SaveTask*);
     void _save_finished(Data&);
- };
-
+  };
+  inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
+  {
+    os << "<"
+       << "directory=" << params.directory << ", "
+       << "prefix=" << params.prefix << ", "
+       << "suffix=" << params.suffix << ", "
+       << "nextNumber=" << params.nextNumber << ", "
+       << "fileFormat=" << params.fileFormat << ", "
+       << "savingMode=" << params.savingMode << ", "
+       << "overwritePolicy=" << params.overwritePolicy << ", "
+       << "framesPerFile=" << params.framesPerFile
+       << ">";
+    return os;
+  }
+  inline std::ostream& operator<<(std::ostream &os,const CtSaving::HeaderMap &header)
+  {
+    os << "< ";
+    for(CtSaving::HeaderMap::const_iterator i = header.begin();
+	i != header.end();++i)
+      os << "(" << i->first << "," << i->second << ") ";
+    os << ">";
+    return os;
+  }
+  inline std::ostream& operator<<(std::ostream &os,const CtSaving::HeaderValue &value)
+  {
+    os << "< (" << value.first << "," << value.second << ") >";
+    return os;
+  }
 } // namespace lima
 
 #endif // CTSAVING_H

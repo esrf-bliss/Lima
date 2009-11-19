@@ -10,9 +10,9 @@
 #include "Data.h"
 
 
-namespace lima {
+namespace lima 
+{
 
-  class CtDebug;
   class CtAcquisition;
   class CtImage;
   class CtBuffer;
@@ -23,7 +23,9 @@ namespace lima {
   class SoftOpExternalMgr;
 
   class CtControl {
-  friend class CtBufferFrameCB;
+    DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
+
+    friend class CtBufferFrameCB;
   public:
 
     enum ApplyPolicy {
@@ -34,6 +36,8 @@ namespace lima {
 
 
     struct ImageStatus {
+      DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatus","Control");
+    public:
       ImageStatus();
       void reset();
 
@@ -55,10 +59,6 @@ namespace lima {
     CtSaving* saving() { return m_ct_saving; }
     CtImage* image() { return m_ct_image; }
     CtBuffer* buffer() { return m_ct_buffer; }
-
-
-    void setDebug(short level);
-    void getDebug(short& level) const;
 
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;
@@ -104,7 +104,6 @@ namespace lima {
     CtAcquisition	*m_ct_acq;
     CtImage		*m_ct_image;
     CtBuffer		*m_ct_buffer;
-    CtDebug		*m_ct_debug;
     SoftOpInternalMgr   *m_op_int;
     SoftOpExternalMgr	*m_op_ext;
 
@@ -119,7 +118,18 @@ namespace lima {
     bool		m_ready;
     bool		m_autosave;
   };
-
+  inline std::ostream& operator<<(std::ostream &os,
+				  const CtControl::ImageStatus &status)
+  {
+    os << "<"
+       << "LastImageAcquired=" << status.LastImageAcquired << ", "
+       << "LastBaseImageReady=" << status.LastBaseImageReady << ", "
+       << "LastImageReady=" << status.LastImageReady << ", "
+       << "LastImageSaved=" << status.LastImageSaved << ", "
+       << "LastCounterReady=" << status.LastCounterReady
+       << ">";
+    return os;
+  }
 } // namespace lima
 
 #endif // CTCONTROL_H

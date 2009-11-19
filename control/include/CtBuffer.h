@@ -12,57 +12,74 @@
 
 namespace lima {
 
-class CtBufferFrameCB : public HwFrameCallback
-{
+  class CtBufferFrameCB : public HwFrameCallback
+  {
+    DEB_CLASS_NAMESPC(DebModControl,"BufferFrameCB","Control");
+  public:
+    CtBufferFrameCB(CtControl *ct): m_ct(ct) {}
+  protected:
+    bool newFrameReady(const HwFrameInfoType& frame_info);
+  private:
+    CtControl *m_ct;
+  };
+
+  class CtBuffer 
+  {
+    DEB_CLASS_NAMESPC(DebModControl,"Buffer","Control");
+
+  public:
+    struct Parameters 
+    {
+      DEB_CLASS_NAMESPC(DebModControl,"Buffer::Parameters","Control");
     public:
-	CtBufferFrameCB(CtControl *ct): m_ct(ct) {}
-    protected:
-        bool newFrameReady(const HwFrameInfoType& frame_info);
-    private:
-	CtControl *m_ct;
-};
+      Parameters();
+      void reset();
+      BufferMode mode;
+      long	nbBuffers;
+      short	maxMemory;
+    };
 
-class CtBuffer {
+    CtBuffer(HwInterface *hw);
+    ~CtBuffer();
 
-    public:
-	struct Parameters {
-		Parameters();
-		void reset();
-		BufferMode mode;
-		long	nbBuffers;
-		short	maxMemory;
-	};
+    void setPars(Parameters pars);
+    void getPars(Parameters& pars) const;
 
-	CtBuffer(HwInterface *hw);
-	~CtBuffer();
+    void setMode(BufferMode mode);
+    void getMode(BufferMode& mode) const;
 
-	void setPars(Parameters pars);
-	void getPars(Parameters& pars) const;
+    void setNumber(long nb_buffers);
+    void getNumber(long& nb_buffers) const;
 
-	void setMode(BufferMode mode);
-	void getMode(BufferMode& mode) const;
+    void setMaxMemory(short max_memory);
+    void getMaxMemory(short& max_memory) const;
 
-	void setNumber(long nb_buffers);
-	void getNumber(long& nb_buffers) const;
-
-	void setMaxMemory(short max_memory);
-	void getMaxMemory(short& max_memory) const;
-
-	void registerFrameCallback(CtControl *ct);
-        void unregisterFrameCallback();
+    void registerFrameCallback(CtControl *ct);
+    void unregisterFrameCallback();
 	
-	void getFrame(Data&,int frameNumber);
+    void getFrame(Data&,int frameNumber);
 
-	void setup(CtControl *ct);
+    void setup(CtControl *ct);
 
-	static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);
-    private:
+    static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);
+  private:
 
-	HwBufferCtrlObj	*m_hw_buffer;
-	CtBufferFrameCB *m_frame_cb;
-	Parameters	m_pars;
+    HwBufferCtrlObj	*m_hw_buffer;
+    CtBufferFrameCB *m_frame_cb;
+    Parameters	m_pars;
 
-};
+  };
+
+  inline std::ostream& operator<<(std::ostream &os,
+				  const CtBuffer::Parameters &params)
+  {
+    os << "<"
+       << "mode=" << params.mode << ", "
+       << "nbBuffers=" << params.nbBuffers << ", "
+       << "maxMemory=" << params.maxMemory << ", "
+       << ">";
+    return os;
+  }
 } // namespace lima
 
 #endif // CTBUFFER_H

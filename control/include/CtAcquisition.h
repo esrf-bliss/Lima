@@ -114,7 +114,7 @@ namespace lima
        << "accMaxExpoTime=" << params.accMaxExpoTime << ", "
        << "concatNbFrames=" << params.concatNbFrames << ", "
        << "latencyTime=" << params.latencyTime << ", "
-       << "triggerMode=" << params.triggerMode << ", "
+       << "triggerMode=" << params.triggerMode
        << ">";
     return os; 
   }

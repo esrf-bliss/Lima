@@ -22,7 +22,6 @@ void simulator_test(double expo, long nframe)
 
 	hw= new SimuHwInterface(simu);
 	ct= new CtControl(hw);
-	ct->setDebug(0xff);
 
 	save= ct->saving();
 	save->setDirectory("./data");

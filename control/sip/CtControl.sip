@@ -34,9 +34,6 @@ using namespace lima;
     CtImage* image();
     CtBuffer* buffer();
 
-    void setDebug(short level);
-    void getDebug(short& level /Out/) const;
-
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy /Out/) const;
 

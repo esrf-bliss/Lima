@@ -1,5 +1,5 @@
 ct-objs := CtSaving.o CtControl.o CtAcquisition.o CtBuffer.o \
-		CtDebug.o CtImage.o
+	   CtImage.o
 
 SRCS = $(ct-objs:.o=.cpp)
 

@@ -6,7 +6,6 @@
 #include "CtAcquisition.h"
 #include "CtImage.h"
 #include "CtBuffer.h"
-#include "CtDebug.h"
 
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
@@ -83,7 +82,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_policy(All), m_ready(false),
   m_autosave(false)
 {
-  m_ct_debug= new CtDebug("CtControl");
+  DEB_CONSTRUCTOR();
+
   m_ct_acq= new CtAcquisition(hw);
   m_ct_image= new CtImage(hw);
   m_ct_buffer= new CtBuffer(hw);
@@ -100,48 +100,50 @@ CtControl::CtControl(HwInterface *hw) :
 
 CtControl::~CtControl()
 {
+  DEB_DESTRUCTOR();
+
   delete m_ct_saving;
   delete m_ct_acq;
-  delete m_ct_debug;
   delete m_ct_image;
   delete m_ct_buffer;
   delete m_op_int;
   delete m_op_ext;
 }
 
-void CtControl::getDebug(short& level) const
-{
-  m_ct_debug->getLevel(level);
-}
-
-void CtControl::setDebug(short level)
-{
-  m_ct_debug->setLevel(level);
-}
-
 void CtControl::setApplyPolicy(ApplyPolicy policy)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(policy);
+
   m_policy= policy;
 }
 
 void CtControl::getApplyPolicy(ApplyPolicy &policy) const
 {
+  DEB_MEMBER_FUNCT();
+
   policy= m_policy;
+
+  DEB_RETURN() << DEB_VAR1(policy);
 }
 
 void CtControl::prepareAcq()
 {
+  DEB_MEMBER_FUNCT();
   m_img_status.reset();
-  m_ct_debug->trace("prepareAcq", "Apply Acquisition Parameters");
+  DEB_TRACE() << "Apply Acquisition Parameters";
+  
   m_ct_acq->apply(m_policy);
-  m_ct_debug->trace("prepareAcq", "Apply hardware bin/roi");
+  DEB_TRACE() << "Apply hardware bin/roi";
   m_ct_image->applyHard();
-  m_ct_debug->trace("prepareAcq", "Setup Acquisition Buffers");
+
+  DEB_TRACE() << "Setup Acquisition Buffers";
   m_ct_buffer->setup(this);
-  m_ct_debug->trace("prepareAcq", "Prepare Hardware for Acquisition");
+
+  DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();
 
-  m_ct_debug->trace("prepareAcq", "Apply software bin/roi");
+  DEB_TRACE() << "Apply software bin/roi";
   m_op_int_active= m_ct_image->applySoft(m_op_int);
   if(m_op_int_active)
     {
@@ -175,46 +177,69 @@ void CtControl::prepareAcq()
 
   m_autosave= m_ct_saving->hasAutoSaveMode();
   if (!m_autosave)
-	m_ct_debug->trace("prepareAcq", "No auto save activated");
+    DEB_TRACE() << "No auto save activated";
   m_ready= true;
 }
 
 void CtControl::startAcq()
 {
+  DEB_MEMBER_FUNCT();
+
   if (!m_ready)
 	throw LIMA_CTL_EXC(Error, "Run prepareAcq before starting acquisition");
   m_ready = false;
   m_hw->startAcq();
-  m_ct_debug->trace("startAcq", "Hardware Acquisition started");
+
+  DEB_TRACE() << "Hardware Acquisition started";
 }
  
 void CtControl::stopAcq()
 {
+  DEB_MEMBER_FUNCT();
+
   m_hw->stopAcq();
-  m_ct_debug->trace("stopAcq", "Hardware Acquisition Stopped");
+
+  DEB_TRACE() << "Hardware Acquisition Stopped";
 }
 
 void CtControl::getAcqStatus(HwInterface::AcqStatus& status) const
 {
+  DEB_MEMBER_FUNCT();
+  
   HwInterface::StatusType hw_status;
 
   m_hw->getStatus(hw_status);
+  
   status= hw_status.acq;
+  
+  DEB_RETURN() << DEB_VAR1(status);
 }
 
 void CtControl::getImageStatus(ImageStatus& status) const
 {
+  DEB_MEMBER_FUNCT();
+  
   AutoMutex aLock(m_cond.mutex());
   status= m_img_status;
+  
+  DEB_RETURN() << DEB_VAR1(status);
 }
 
 void CtControl::ReadImage(Data &aReturnData,long frameNumber)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(frameNumber);
+
   ReadBaseImage(aReturnData,frameNumber); // todo change when external op activated
+
+  DEB_RETURN() << DEB_VAR1(aReturnData);
 }
 
 void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(frameNumber);
+
   AutoMutex aLock(m_cond.mutex());
   if(frameNumber < 0)
     frameNumber = m_img_status.LastBaseImageReady;
@@ -222,17 +247,21 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
     throw LIMA_CTL_EXC(Error, "Frame not available yet");
   aLock.unlock();
   m_ct_buffer->getFrame(aReturnData,frameNumber);
+  
+  DEB_RETURN() << DEB_VAR1(aReturnData);
 }
 
 void CtControl::reset()
 {
+  DEB_MEMBER_FUNCT();
 }
 
 void CtControl::newFrameReady(Data& fdata)
 {
-  std::stringstream str;
-  str << "Frame acq.nb " << fdata.frameNumber << " received";
-  m_ct_debug->trace("newFrameReady", str.str());
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(fdata);
+
+  DEB_TRACE() << "Frame acq.nb " << fdata.frameNumber << " received";
 
   AutoMutex aLock(m_cond.mutex());
   m_img_status.LastImageAcquired= fdata.frameNumber;
@@ -262,6 +291,9 @@ void CtControl::newFrameReady(Data& fdata)
 
 void CtControl::newBaseImageReady(Data &aData)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData);
+
   AutoMutex aLock(m_cond.mutex());
   long expectedImageReady = m_img_status.LastBaseImageReady + 1;
   if(aData.frameNumber == expectedImageReady)
@@ -294,6 +326,9 @@ void CtControl::newBaseImageReady(Data &aData)
 
 void CtControl::newImageReady(Data &aData)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData);
+
   AutoMutex aLock(m_cond.mutex());
   long expectedImageReady = m_img_status.LastImageReady + 1;
   if(aData.frameNumber == expectedImageReady)
@@ -324,6 +359,7 @@ void CtControl::newImageReady(Data &aData)
 
 void CtControl::newCounterReady(Data&)
 {
+  DEB_MEMBER_FUNCT();
   //@todo
 }
 
@@ -333,15 +369,18 @@ void CtControl::newCounterReady(Data&)
 */
 void CtControl::newImageSaved(Data&)
 {
+  DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
   ++m_img_status.LastImageSaved;
 }
 
 void CtControl::newFrameToSave(Data& fdata)
 {
-  std::stringstream str;
-  str << "Add frame acq.nr " << fdata.frameNumber << " to saving";
-  m_ct_debug->trace("newFrameToSave", str.str());
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(fdata);
+
+  DEB_TRACE() << "Add frame acq.nr " << fdata.frameNumber 
+	      << " to saving";
   m_ct_saving->frameReady(fdata);
 }
 
@@ -350,14 +389,19 @@ void CtControl::newFrameToSave(Data& fdata)
 // ----------------------------------------------------------------------------
 CtControl::ImageStatus::ImageStatus()
 {
+  DEB_CONSTRUCTOR();
   reset();
 }
 
 void CtControl::ImageStatus::reset()
 {
+  DEB_MEMBER_FUNCT();
+
   LastImageAcquired	= -1;
   LastBaseImageReady	= -1;
   LastImageReady	= -1;
   LastImageSaved	= -1;
   LastCounterReady	= -1;
+  
+  DEB_TRACE() << *this;
 }
