@@ -36,26 +36,10 @@ class HwInterface
 using namespace lima;
 %End  
  public:
-	enum AcqStatus {
-		AcqReady, AcqRunning, AcqFault,
-	};
-
-	enum DetStatus {
-		DetIdle		= 0x00,
-		DetFault	= 0x01, 
-		WaitForTrigger	= 0x02,
-		ShutterOpen	= 0x04,
-		Exposure	= 0x08,
-		ShutterClose	= 0x10,
-		ChargeShift	= 0x20,
-		Readout		= 0x40,
-		Latency		= 0x80,
-	};
-
         struct StatusType {
-		HwInterface::AcqStatus acq;
-		HwInterface::DetStatus det;
-		HwInterface::DetStatus det_mask;
+		AcqStatus acq;
+		DetStatus det;
+		DetStatus det_mask;
 	};
 
 	enum ResetLevel {

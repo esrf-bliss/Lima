@@ -15,22 +15,6 @@ class HwInterface
  public:
 	typedef std::vector<HwCap> CapList;
 
-	enum AcqStatus {
-		AcqReady, AcqRunning, AcqFault,
-	};
-
-	enum DetStatus {
-		DetIdle		= 0x00,
-		DetFault	= 0x01, 
-		WaitForTrigger	= 0x02,
-		ShutterOpen	= 0x04,
-		Exposure	= 0x08,
-		ShutterClose	= 0x10,
-		ChargeShift	= 0x20,
-		Readout		= 0x40,
-		Latency		= 0x80,
-	};
-
 	typedef struct Status {
 		AcqStatus acq;
 		DetStatus det;
@@ -73,15 +57,6 @@ bool HwInterface::getHwCtrlObj(CtrlObj *& ctrl_obj) const
 	return false;
 }
 
-HwInterface::DetStatus  operator | (HwInterface::DetStatus  s1,
-				    HwInterface::DetStatus  s2);
-HwInterface::DetStatus& operator |=(HwInterface::DetStatus& s1,
-				    HwInterface::DetStatus  s2);
-
-std::ostream& operator <<(std::ostream& os, 
-			  HwInterface::AcqStatus acq_status);
-std::ostream& operator <<(std::ostream& os, 
-			  HwInterface::DetStatus det_status);
 std::ostream& operator <<(std::ostream& os, 
 			  const HwInterface::StatusType& status);
 std::ostream& operator <<(std::ostream& os, 

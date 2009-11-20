@@ -61,3 +61,56 @@ ostream& lima::operator <<(ostream& os, BufferMode buffer_mode)
 	return os << name;
 }
 
+ostream& lima::operator <<(ostream& os, AcqStatus acq_status)
+{
+	string name = "Unknown";
+	switch (acq_status) {
+	case AcqReady:   name = "AcqReady";	break;
+	case AcqRunning: name = "AcqRunning";	break;
+	case AcqFault:   name = "AcqFault";	break;
+	}
+	return os << name;
+}
+
+void AddToken(string& str, const string& token, const string& sep)
+{
+	if (str.length() > 0)
+		str += sep;
+	str += token;
+}
+
+ostream& lima::operator <<(ostream& os, DetStatus det_status)
+{
+	if (det_status == DetIdle)
+		return os << "Idle";
+
+	string name, sep = "+";
+	if (det_status & DetFault)
+		AddToken(name, "Fault", sep);
+	if (det_status & DetWaitForTrigger)
+		AddToken(name, "WaitForTrigger", sep);
+	if (det_status & DetShutterOpen)
+		AddToken(name, "ShutterOpen", sep);
+	if (det_status & DetExposure)
+		AddToken(name, "Exposure", sep);
+	if (det_status & DetShutterClose)
+		AddToken(name, "ShutterClose", sep);
+	if (det_status & DetChargeShift)
+		AddToken(name, "ChargeShift", sep);
+	if (det_status & DetReadout)
+		AddToken(name, "Readout", sep);
+	if (det_status & DetLatency)
+		AddToken(name, "Latency", sep);
+	return os << name;
+}
+
+DetStatus lima::operator |(DetStatus s1, DetStatus s2)
+{
+	return DetStatus(int(s1) | int(s2));
+}
+
+DetStatus& lima::operator |=(DetStatus& s1, DetStatus  s2)
+{
+	return s1 = s1 | s2;
+}
+

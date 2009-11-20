@@ -22,6 +22,15 @@ using namespace lima;
       long	LastCounterReady;
     };
 
+    class ImageStatusCallback 
+    {
+    public:
+      ImageStatusCallback();
+      virtual ~ImageStatusCallback();
+    protected:
+      virtual void imageStatusChanged(const CtControl::ImageStatus& status)=0;
+    };
+
     CtControl(HwInterface *hw);
     ~CtControl();
 
@@ -37,13 +46,17 @@ using namespace lima;
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy /Out/) const;
 
-    void getAcqStatus(HwInterface::AcqStatus& status /Out/) const; // from HW
+    void getAcqStatus(AcqStatus& status /Out/) const; // from HW
     void getImageStatus(ImageStatus &imageStatus /Out/) const;
 
     void ReadImage(Data&,long frameNumber = -1);
     void ReadBaseImage(Data&,long frameNumber = -1);
 
     void reset();
+
+    void registerImageStatusCallback(ImageStatusCallback& cb);
+    void unregisterImageStatusCallback(ImageStatusCallback& cb);
+
   protected:
     void newFrameReady(Data& data);
     void newFrameToSave(Data& data);

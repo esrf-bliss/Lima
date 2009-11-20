@@ -324,18 +324,18 @@ void SimuHwInterface::getStatus(StatusType& status)
 		status.det = DetIdle;
 		break;
 	case Simulator::Exposure:
-		status.det = Exposure;
+		status.det = DetExposure;
 		goto Running;
 	case Simulator::Readout:
-		status.det = Readout;
+		status.det = DetReadout;
 		goto Running;
 	case Simulator::Latency:
-		status.det = Latency;
+		status.det = DetLatency;
 	Running:
 		status.acq = AcqRunning;
 		break;
 	}
-	status.det_mask = Exposure | Readout | Latency;
+	status.det_mask = DetExposure | DetReadout | DetLatency;
 }
 
 int SimuHwInterface::getNbHwAcquiredFrames()

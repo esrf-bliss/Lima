@@ -48,6 +48,22 @@ namespace lima
       long	LastCounterReady;
     };
 
+
+    class ImageStatusCallback 
+    {
+      DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatusCallback", 
+			"Control");
+    public:
+      ImageStatusCallback();
+      virtual ~ImageStatusCallback();
+    protected:
+      virtual void imageStatusChanged(const ImageStatus& img_status) = 0;
+    private:
+      friend class CtControl;
+      void setImageStatusCallbackGen(CtControl *cb_gen);
+      CtControl *m_cb_gen;
+    };
+
     CtControl(HwInterface *hw);
     ~CtControl();
 
@@ -63,13 +79,16 @@ namespace lima
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;
 
-    void getAcqStatus(HwInterface::AcqStatus& status) const; // from HW
+    void getAcqStatus(AcqStatus& status) const; // from HW
     void getImageStatus(ImageStatus& status) const;
 
     void ReadImage(Data&,long frameNumber = -1);
     void ReadBaseImage(Data&,long frameNumber = -1);
 
     void reset();
+
+    void registerImageStatusCallback(ImageStatusCallback& cb);
+    void unregisterImageStatusCallback(ImageStatusCallback& cb);
 
   protected:
     void newFrameReady(Data& data);
@@ -117,7 +136,10 @@ namespace lima
     ApplyPolicy		m_policy;
     bool		m_ready;
     bool		m_autosave;
+
+    ImageStatusCallback *m_img_status_cb;
   };
+
   inline std::ostream& operator<<(std::ostream &os,
 				  const CtControl::ImageStatus &status)
   {

@@ -38,6 +38,29 @@ enum BufferMode {
 
 std::ostream& operator <<(std::ostream& os, BufferMode buffer_mode);
 
+enum AcqStatus {
+	AcqReady, AcqRunning, AcqFault,
+};
+
+std::ostream& operator <<(std::ostream& os, AcqStatus acq_status);
+
+enum DetStatus {
+	DetIdle			= 0x00,
+	DetFault		= 0x01, 
+	DetWaitForTrigger	= 0x02,
+	DetShutterOpen		= 0x04,
+	DetExposure		= 0x08,
+	DetShutterClose		= 0x10,
+	DetChargeShift		= 0x20,
+	DetReadout		= 0x40,
+	DetLatency		= 0x80,
+};
+
+DetStatus  operator | (DetStatus  s1, DetStatus  s2);
+DetStatus& operator |=(DetStatus& s1, DetStatus  s2);
+
+std::ostream& operator <<(std::ostream& os, DetStatus det_status);
+
 } // namespace lima
 
 #endif // CONSTANTS_H

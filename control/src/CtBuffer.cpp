@@ -34,20 +34,21 @@ void CtBuffer::registerFrameCallback(CtControl *ct)
 {
   DEB_MEMBER_FUNCT();
 
-  m_frame_cb= new CtBufferFrameCB(ct);
-  m_hw_buffer->registerFrameCallback(*m_frame_cb);
+  if (m_frame_cb == NULL) {
+    m_frame_cb= new CtBufferFrameCB(ct);
+    m_hw_buffer->registerFrameCallback(*m_frame_cb);
+  }
 }
 
 void CtBuffer::unregisterFrameCallback() 
 {
   DEB_MEMBER_FUNCT();
   
-  if (m_frame_cb != NULL) 
-    {
-      m_hw_buffer->unregisterFrameCallback(*m_frame_cb);
-      delete m_frame_cb;
-      m_frame_cb= NULL;
-    }
+  if (m_frame_cb != NULL) {
+    m_hw_buffer->unregisterFrameCallback(*m_frame_cb);
+    delete m_frame_cb;
+    m_frame_cb= NULL;
+  }
 }
 
 void CtBuffer::setPars(Parameters pars) 

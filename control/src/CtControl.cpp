@@ -80,7 +80,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_base_images_ready(CtControl::ltData()),
   m_images_ready(CtControl::ltData()),
   m_policy(All), m_ready(false),
-  m_autosave(false)
+  m_autosave(false),
+  m_img_status_cb(NULL)
 {
   DEB_CONSTRUCTOR();
 
@@ -101,6 +102,9 @@ CtControl::CtControl(HwInterface *hw) :
 CtControl::~CtControl()
 {
   DEB_DESTRUCTOR();
+
+  if (m_img_status_cb)
+    unregisterImageStatusCallback(*m_img_status_cb);
 
   delete m_ct_saving;
   delete m_ct_acq;
@@ -202,7 +206,7 @@ void CtControl::stopAcq()
   DEB_TRACE() << "Hardware Acquisition Stopped";
 }
 
-void CtControl::getAcqStatus(HwInterface::AcqStatus& status) const
+void CtControl::getAcqStatus(AcqStatus& status) const
 {
   DEB_MEMBER_FUNCT();
   
@@ -287,6 +291,9 @@ void CtControl::newFrameReady(Data& fdata)
       m_img_status.LastBaseImageReady = m_img_status.LastImageAcquired = fdata.frameNumber;
       
     }
+
+  if (m_img_status_cb)
+    m_img_status_cb->imageStatusChanged(m_img_status);
 }
 
 void CtControl::newBaseImageReady(Data &aData)
@@ -296,6 +303,7 @@ void CtControl::newBaseImageReady(Data &aData)
 
   AutoMutex aLock(m_cond.mutex());
   long expectedImageReady = m_img_status.LastBaseImageReady + 1;
+  bool img_status_changed = false;
   if(aData.frameNumber == expectedImageReady)
     {
       while(!m_base_images_ready.empty())
@@ -313,6 +321,8 @@ void CtControl::newBaseImageReady(Data &aData)
       m_img_status.LastBaseImageReady = expectedImageReady;
       if(!m_op_ext_link_task_active)
 	m_img_status.LastImageReady = expectedImageReady;
+      
+      img_status_changed = true;
     }
   else
     m_base_images_ready.insert(aData);
@@ -322,6 +332,11 @@ void CtControl::newBaseImageReady(Data &aData)
       aLock.unlock();
       newFrameToSave(aData);
     }
+
+  aLock.unlock();
+  if (img_status_changed && m_img_status_cb)
+    m_img_status_cb->imageStatusChanged(m_img_status);
+
 }
 
 void CtControl::newImageReady(Data &aData)
@@ -331,6 +346,7 @@ void CtControl::newImageReady(Data &aData)
 
   AutoMutex aLock(m_cond.mutex());
   long expectedImageReady = m_img_status.LastImageReady + 1;
+  bool img_status_changed = false;
   if(aData.frameNumber == expectedImageReady)
     {
       while(!m_images_ready.empty())
@@ -346,6 +362,8 @@ void CtControl::newImageReady(Data &aData)
 	    break;
 	}
       m_img_status.LastImageReady = expectedImageReady;
+
+      img_status_changed = true;
     }
   else
     m_images_ready.insert(aData);
@@ -355,6 +373,11 @@ void CtControl::newImageReady(Data &aData)
       aLock.unlock();
       newFrameToSave(aData);
     }
+
+  aLock.unlock();
+  if (m_img_status_cb && img_status_changed)
+    m_img_status_cb->imageStatusChanged(m_img_status);
+
 }
 
 void CtControl::newCounterReady(Data&)
@@ -372,6 +395,10 @@ void CtControl::newImageSaved(Data&)
   DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
   ++m_img_status.LastImageSaved;
+  aLock.unlock();
+
+  if (m_img_status_cb)
+    m_img_status_cb->imageStatusChanged(m_img_status);
 }
 
 void CtControl::newFrameToSave(Data& fdata)
@@ -383,6 +410,35 @@ void CtControl::newFrameToSave(Data& fdata)
 	      << " to saving";
   m_ct_saving->frameReady(fdata);
 }
+
+void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_cb);
+
+  if (m_img_status_cb) {
+    DEB_ERROR() << "ImageStatusCallback already registered";
+    throw LIMA_CTL_EXC(InvalidValue, "ImageStatusCallback already registered");
+  }
+
+  cb.setImageStatusCallbackGen(this);
+  m_img_status_cb = &cb;
+}
+
+void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_cb);
+
+  if (m_img_status_cb != &cb) {
+    DEB_ERROR() << "ImageStatusCallback not registered";
+    throw LIMA_CTL_EXC(InvalidValue, "ImageStatusCallback not registered");
+  }
+  
+  m_img_status_cb = NULL;
+  cb.setImageStatusCallbackGen(NULL);
+}
+
 
 // ----------------------------------------------------------------------------
 // Struct ImageStatus
@@ -404,4 +460,28 @@ void CtControl::ImageStatus::reset()
   LastCounterReady	= -1;
   
   DEB_TRACE() << *this;
+}
+
+
+// ----------------------------------------------------------------------------
+// class ImageStatus
+// ----------------------------------------------------------------------------
+CtControl::ImageStatusCallback::ImageStatusCallback()
+  : m_cb_gen(NULL)
+{
+  DEB_CONSTRUCTOR();
+}
+
+CtControl::ImageStatusCallback::~ImageStatusCallback()
+{
+  DEB_DESTRUCTOR();
+  if (m_cb_gen)
+    m_cb_gen->unregisterImageStatusCallback(*this);
+}
+
+void 
+CtControl::ImageStatusCallback::setImageStatusCallbackGen(CtControl *cb_gen)
+{
+  DEB_MEMBER_FUNCT();
+  m_cb_gen = cb_gen;
 }

@@ -549,25 +549,26 @@ void Interface::getStatus(StatusType& status)
 	m_acq.getStatus(acq);
 	status.acq = acq.running ? AcqRunning : AcqReady;
 
-	static const DetStatus det_mask = (WaitForTrigger | Exposure    | 
-					   ShutterClose   | ChargeShift | 
-					   Readout        | Latency);
+	static const DetStatus det_mask = 
+		(DetWaitForTrigger | DetExposure    | DetShutterClose   | 
+		 DetChargeShift    | DetReadout     | DetLatency);
+
 	status.det_mask = det_mask;
 	status.det = DetIdle;
 	Frelon::Status cam;
 	m_cam.getStatus(cam);
 	if (cam & Frelon::Wait)
-		status.det |= WaitForTrigger;
+		status.det |= DetWaitForTrigger;
 	if (cam & Frelon::Exposure)
-		status.det |= Exposure;
+		status.det |= DetExposure;
 	if (cam & Frelon::Shutter)
-		status.det |= ShutterClose;
+		status.det |= DetShutterClose;
 	if (cam & Frelon::Transfer)
-		status.det |= ChargeShift;
+		status.det |= DetChargeShift;
 	if (cam & Frelon::Readout)
-		status.det |= Readout;
+		status.det |= DetReadout;
 	if (cam & Frelon::Latency)
-		status.det |= Latency;
+		status.det |= DetLatency;
 
 	DEB_RETURN() << DEB_VAR1(status);
 }
