@@ -154,22 +154,31 @@ void CtBuffer::setup(CtControl *ct)
 
   switch (mode) {
   case Single:
-    acc_nframes= 0;
+    acc_nframes= 1;
     concat_nframes= 1;
     break;
   case Accumulation:
     acq->getAccNbFrames(acc_nframes);
-    concat_nframes= 0;
+    m_hw_buffer->getNbConcatFrames(concat_nframes);
+    if (concat_nframes > 1)
+      m_hw_buffer->setNbConcatFrames(1);
+    concat_nframes= 1;
     break;
   case Concatenation:
-    acc_nframes= 0;
+    acc_nframes= 1;
     acq->getConcatNbFrames(concat_nframes);
     break;
   }
   m_hw_buffer->setFrameDim(fdim);
   m_hw_buffer->setNbAccFrames(acc_nframes);
   m_hw_buffer->setNbConcatFrames(concat_nframes);
-  m_hw_buffer->setNbBuffers(acq_nframes);
+
+  int nbuffers = acq_nframes;
+  int max_nbuffers;
+  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
+  if (nbuffers > max_nbuffers)
+    nbuffers = max_nbuffers;
+  m_hw_buffer->setNbBuffers(nbuffers);
 
   registerFrameCallback(ct);
 }
