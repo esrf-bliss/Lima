@@ -46,9 +46,6 @@ namespace lima {
 
     struct Parameters 
     {
-      DEB_CLASS_NAMESPC(DebModControl,"Saving parameters",
-			"Control");
-    public:
       std::string directory;
       std::string prefix;
       std::string suffix;

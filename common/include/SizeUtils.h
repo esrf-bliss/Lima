@@ -408,9 +408,8 @@ inline bool Roi::isEmpty() const
 
 inline void Roi::reset()
 {
-	m_top_left.x= 0;
-	m_top_left.y= 0;
-	m_size= Size(0,0);
+	m_top_left = Point(0, 0);
+	m_size = Size(0, 0);
 }
 
 inline Roi& Roi::operator =(const Roi& r)

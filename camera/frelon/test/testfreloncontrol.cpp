@@ -1,5 +1,7 @@
 #include "FrelonInterface.h"
+#include "CtControl.h"
 #include "CtAcquisition.h"
+#include "CtImage.h"
 
 using namespace lima;
 
@@ -25,12 +27,31 @@ void test_frelon_control()
 	DEB_TRACE() << "Done!";
 
 	CtControl control(&hw_inter);
-	CtAcquisition* ct_acq = control.acquisition();
+	CtAcquisition *ct_acq = control.acquisition();
+	CtSaving *ct_saving = control.saving();
+	CtImage *ct_image = control.image();
+	CtBuffer *ct_buffer = control.buffer();
 
 	AcqMode acq_mode;
 	ct_acq->getAcqMode(acq_mode);
 	DEB_TRACE() << "Default " << DEB_VAR1(acq_mode);
 
+	ImageType image_type;
+	ct_image->getImageType(image_type);
+	DEB_TRACE() << "Default " << DEB_VAR1(image_type);
+
+	Size max_size;
+	ct_image->getMaxImageSize(max_size);
+	DEB_TRACE() << "Default " << DEB_VAR1(max_size);
+
+	Bin bin;
+	ct_image->getBin(bin);
+	DEB_TRACE() << "Default " << DEB_VAR1(bin);
+
+	Roi roi;
+	ct_image->getRoi(roi);
+	DEB_TRACE() << "Default " << DEB_VAR1(roi);
+	
 	double exp_time;
 	ct_acq->getAcqExpoTime(exp_time);
 	DEB_TRACE() << "Default " << DEB_VAR1(exp_time);
@@ -38,11 +59,6 @@ void test_frelon_control()
 	int nb_frame;
 	ct_acq->getAcqNbFrames(nb_frame);
 	DEB_TRACE() << "Default " << DEB_VAR1(nb_frame);
-
-
-//	ct_acq->setAcqMode(Single);
-//	ct_acq->setAcqExpoTime(exp_time);
-//	ct_acq->setAcqNbFrames(nframe);
 
 }
 
