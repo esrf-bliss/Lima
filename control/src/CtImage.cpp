@@ -23,12 +23,16 @@ void CtSwBinRoi::setMaxSize(Size& size)
 	m_max_size= size;
 	m_max_roi.setSize(m_max_size / m_bin);
 
-	if (!m_max_roi.containsPoint(m_roi.getTopLeft())) {
-		m_roi.reset();
-	} 
-	else if (!m_max_roi.containsPoint(m_roi.getBottomRight())) {
-		m_roi.setCorners(m_roi.getTopLeft(), m_max_roi.getBottomRight());
-	}
+	if (!m_roi.isEmpty()) {
+		Point roi_tl = m_roi.getTopLeft();
+		Point roi_br = m_roi.getBottomRight();
+		if (!m_max_roi.containsPoint(roi_tl)) {
+			m_roi.reset();
+		}
+		else if (!m_max_roi.containsPoint(roi_br)) {
+			m_roi = Roi(roi_tl, m_max_roi.getBottomRight());
+		}
+	}		
 }
 
 void CtSwBinRoi::setBin(const Bin& bin)
@@ -140,12 +144,17 @@ void CtHwBinRoi::setMaxSize(const Size& size)
 	m_max_size= size;
 	m_max_roi.setSize(m_max_size / m_bin);
 	
-	if (!m_max_roi.containsPoint(m_roi.getTopLeft())) {
-		m_roi.reset();
+	if (!m_set_roi.isEmpty()) {
+		Point roi_tl = m_set_roi.getTopLeft();
+		Point roi_br = m_set_roi.getBottomRight();
+		if (!m_max_roi.containsPoint(roi_tl)) {
+			m_set_roi.reset();
+		}
+		else if (!m_max_roi.containsPoint(roi_br)) {
+			m_set_roi = Roi(roi_tl, m_max_roi.getBottomRight());
+		}
 	}
-	else if (!m_max_roi.containsPoint(m_roi.getBottomRight())) {
-		m_roi.setCorners(m_roi.getTopLeft(), m_max_roi.getBottomRight());
-	}
+
 	_updateSize();
 }
 
@@ -165,10 +174,11 @@ void CtHwBinRoi::setBin(Bin& bin, bool round)
 		if ((!round)&&(set_bin!=bin))
 			throw LIMA_CTL_EXC(InvalidValue, "Given hardware binning not possible");
 		if (set_bin != m_bin) {
-			m_roi= m_roi.getUnbinned(m_bin);
+			if (!m_set_roi.isEmpty())
+				m_set_roi= m_set_roi.getUnbinned(m_bin);
 			m_bin= set_bin;
-			if (!m_bin.isOne())
-				m_roi= m_roi.getBinned(m_bin);
+			if (!m_bin.isOne() && !m_set_roi.isEmpty())
+				m_set_roi= m_set_roi.getBinned(m_bin);
 			m_max_roi.setSize(m_max_size / m_bin);
 			_updateSize();
 		}
@@ -191,15 +201,15 @@ void CtHwBinRoi::setRoi(Roi& roi, bool round)
 			throw LIMA_CTL_EXC(NotSupported, "No hardware roi available");
 	}
 	else {
-		Roi set_roi(roi);
-		m_hw_roi->checkRoi(roi, set_roi);
-		if ((!round)&&(set_roi!=roi))
+		Roi real_roi;
+		m_hw_roi->checkRoi(roi, real_roi);
+		if ((!round)&&(real_roi!=roi))
 			throw LIMA_CTL_EXC(InvalidValue, "Given hardware roi not possible");
-		if (set_roi != m_roi) {
-			m_roi= set_roi;
+		if (roi != m_set_roi) {
+			m_set_roi= roi;
 			_updateSize();
 		}
-		roi= set_roi;
+		roi= real_roi;
 	}
 }
 
@@ -209,10 +219,13 @@ void CtHwBinRoi::_updateSize()
 
 	Size o_size(m_size);
 
-	if (m_roi.isEmpty())
+	if (m_set_roi.isEmpty()) {
+		m_real_roi.reset();
 		m_size= m_max_size / m_bin;
-	else	
-		m_size= Size(m_roi.getSize());
+	} else {
+		m_hw_roi->checkRoi(m_set_roi, m_real_roi);
+		m_size= Size(m_real_roi.getSize());
+	}
 
 	if (o_size != m_size)
 		m_sw_bin_roi->setMaxSize(m_size);
@@ -222,8 +235,8 @@ void CtHwBinRoi::resetBin()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (m_has_roi && !m_roi.isEmpty()) {
-		Roi new_roi= m_roi.getUnbinned(m_bin);
+	if (m_has_roi && !m_set_roi.isEmpty()) {
+		Roi new_roi= m_set_roi.getUnbinned(m_bin);
 		m_bin.reset();
 		setRoi(new_roi, true);
 	}
@@ -236,7 +249,7 @@ void CtHwBinRoi::resetRoi()
 {
 	DEB_MEMBER_FUNCT();
 
-	m_roi.reset();
+	m_set_roi.reset();
 	_updateSize();
 }
 
@@ -245,7 +258,8 @@ void CtHwBinRoi::reset()
 	DEB_MEMBER_FUNCT();
 
 	m_bin.reset();
-	m_roi.reset();
+	m_set_roi.reset();
+	m_real_roi.reset();
 	m_size= m_max_size;
 }
 
@@ -256,7 +270,7 @@ void CtHwBinRoi::apply()
 	if (m_has_bin) 
 		m_hw_bin->setBin(m_bin);
 	if (m_has_roi)
-		m_hw_roi->setRoi(m_roi);
+		m_hw_roi->setRoi(m_set_roi);
 }
 	
 // ----------------------------------------------------------------------------
@@ -294,7 +308,6 @@ CtImage::~CtImage()
 {
 	DEB_DESTRUCTOR();
 
-	m_hw_det->unregisterMaxImageSizeCallback(*m_cb_size);
 	delete m_cb_size;
 	delete m_hw;
 	delete m_sw;
@@ -433,8 +446,9 @@ void CtImage::_setHSBin(const Bin &bin)
 	DEB_PARAM() << DEB_VAR1(bin);
 
 	if (m_hw->hasBinCapability()) {
-		Bin set_hw_bin(bin);
+		Bin set_hw_bin = bin;
 		m_hw->setBin(set_hw_bin, true);
+		DEB_TRACE() << DEB_VAR2(bin, set_hw_bin);
 		if (set_hw_bin == bin) {
 			m_sw->resetBin();
 		} else {
@@ -459,12 +473,15 @@ void CtImage::_setHSRoi(const Roi &roi)
 		bin_by_hw= m_hw->getBin();
 		bin_by_sw= m_sw->getBin();
 		bin_total= bin_by_hw * bin_by_sw;
+		DEB_TRACE() << DEB_VAR3(bin_by_hw, bin_by_sw, bin_total);
 
 		roi_unbin= roi.getUnbinned(bin_total);
 		roi_by_hw= roi_unbin.getBinned(bin_by_hw);
 		roi_set_hw= roi_by_hw;
 
 		m_hw->setRoi(roi_set_hw, true);
+		DEB_TRACE() << DEB_VAR2(roi_by_hw, roi_set_hw);
+
 		if (roi_set_hw==roi_by_hw) {
 			m_sw->resetRoi();
 		} else {
@@ -518,7 +535,7 @@ void CtImage::getRoi(Roi& roi) const
 	DEB_MEMBER_FUNCT();
 
 	if (m_hw->hasRoiCapability()) {
-		Roi roi_by_hw= m_hw->getRoi();
+		Roi roi_by_hw= m_hw->getRealRoi();
 		Roi roi_by_sw= m_sw->getRoi();
 		Bin bin_by_sw= m_sw->getBin();
 

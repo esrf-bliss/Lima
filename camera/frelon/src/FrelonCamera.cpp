@@ -7,8 +7,8 @@ using namespace lima;
 using namespace lima::Frelon;
 using namespace std;
 
-const double Camera::HorzBinChangeTime = 2.0;
-const double Camera::MaxReadoutTime    = 0.7;
+const double Camera::BinChangeTime  = 2.0;
+const double Camera::MaxReadoutTime = 0.7;
 
 
 Camera::Camera(Espia::SerialLine& espia_ser_line)
@@ -372,9 +372,10 @@ void Camera::setBin(const Bin& bin)
 	setRoi(roi);
 
 	writeRegister(BinHorz, bin.getX());
-	DEB_TRACE() << "Sleeping " << DEB_VAR1(HorzBinChangeTime);
-	Sleep(HorzBinChangeTime);
 	writeRegister(BinVert, bin.getY());
+
+	DEB_TRACE() << "Sleeping " << DEB_VAR1(BinChangeTime);
+	Sleep(BinChangeTime);
 }
 
 void Camera::getBin(Bin& bin)

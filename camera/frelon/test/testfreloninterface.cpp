@@ -385,9 +385,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->registerFrameCallback(cb);
 
 	print_status(hw_inter);
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -396,9 +396,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_sync->setExpTime(5);
 
 	print_status(hw_inter);
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -408,9 +408,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_sync->setNbFrames(3);
 
 	print_status(hw_inter);
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -437,9 +437,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setNbBuffers(10);
 
 	print_status(hw_inter);
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -452,9 +452,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setNbBuffers(10);
 
 	print_status(hw_inter);
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -470,9 +470,9 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setNbBuffers(10);
 
 	print_status(hw_inter);
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();
@@ -488,9 +488,9 @@ void test_frelon_hw_inter(bool do_reset)
 	print_deb_flags();
 
 	print_status(hw_inter);
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	PoolThreadMgr::get().wait();
 	print_status(hw_inter);
 	hw_inter.stopAcq();

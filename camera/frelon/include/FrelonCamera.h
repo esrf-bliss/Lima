@@ -79,7 +79,7 @@ class Camera : public HwMaxImageSizeCallbackGen
 	virtual void setMaxImageSizeCallbackActive(bool cb_active);
 
  private:
-	static const double HorzBinChangeTime;
+	static const double BinChangeTime;
 	static const double MaxReadoutTime;
 
 	Espia::Dev& getEspiaDev();

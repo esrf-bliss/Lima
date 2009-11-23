@@ -28,14 +28,14 @@ AcqState::State AcqState::get()
 void AcqState::wait(State state)
 {
 	AutoMutex l = lock();
-	while (m_state != state)
+	while ((m_state & state) == 0)
 		m_cond.wait();
 }
 
 void AcqState::waitNot(State state)
 {
 	AutoMutex l = lock();
-	while (m_state == state)
+	while ((m_state & state) != 0)
 		m_cond.wait();
 }
 

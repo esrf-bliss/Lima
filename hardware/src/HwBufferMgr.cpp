@@ -447,7 +447,6 @@ BufferCtrlMgr::BufferCtrlMgr(BufferCbMgr& acq_buffer_mgr)
 BufferCtrlMgr::~BufferCtrlMgr()
 {
 	DEB_DESTRUCTOR();
-	releaseBuffers();
 }
 
 void BufferCtrlMgr::releaseBuffers()

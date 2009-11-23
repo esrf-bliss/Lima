@@ -6,7 +6,11 @@ using namespace lima;
 %End
 public:
 	enum State {
-		Idle, Running, Finished, Aborted,
+		Idle,		// = 1 << 0, 
+		Acquiring,	// = 1 << 1, 
+		Saving,		// = 1 << 2,
+		Finished,	// = 1 << 3, 
+		Aborted,	// = 1 << 4,
 	};
 
 	AcqState();

@@ -12,7 +12,7 @@ using namespace lima;
 	void unregisterFrameCallback(HwFrameCallback& frame_cb);
 
  protected:
-	virtual void setFrameCallbackActive(bool cb_active) = 0;
+	virtual void setFrameCallbackActive(bool cb_active);
 	bool newFrameReady(const HwFrameInfoType& frame_info);
 	
 };

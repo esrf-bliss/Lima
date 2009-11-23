@@ -55,9 +55,10 @@ class CtHwBinRoi {
 	void resetRoi();
 	void reset();
 
-	const Bin& getBin() const { return m_bin; }
-	const Roi& getRoi() const { return m_roi; }
-	const Size& getSize() const { return m_size; }
+	const Bin& getBin()     const { return m_bin; }
+	const Roi& getSetRoi()  const { return m_set_roi; }
+	const Roi& getRealRoi() const { return m_real_roi; }
+	const Size& getSize()   const { return m_size; }
 
 	void apply();
 
@@ -71,7 +72,7 @@ class CtHwBinRoi {
 	bool	m_has_bin, m_has_roi, m_has_flip;
 	Size	m_max_size, m_size;
 	Bin	m_bin;
-	Roi	m_roi, m_max_roi;
+	Roi	m_set_roi, m_real_roi, m_max_roi;
 };
 
 
@@ -144,7 +145,7 @@ class CtImage {
 	ImageOpMode	m_mode;
 };
  
-inline std::ostream& operator<<(std::ostream &os,const CtSwBinRoi &binroi)
+inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoi &binroi)
 {
 	os << "<"
 	   << "m_max_size=" << binroi.m_max_size << ", "
@@ -155,6 +156,19 @@ inline std::ostream& operator<<(std::ostream &os,const CtSwBinRoi &binroi)
 	   << ">";
 	return os;
 }
+
+inline std::ostream& operator <<(std::ostream& os, CtImage::ImageOpMode mode)
+{
+	const char *name = "Unknown";
+	switch (mode) {
+	case CtImage::HardOnly:    name = "HardOnly";    break;
+	case CtImage::SoftOnly:    name = "SoftOnly";    break;
+	case CtImage::HardAndSoft: name = "HardAndSoft"; break;
+	}
+	return os << name;
+
+}
+
 
 } // namespace lima
 

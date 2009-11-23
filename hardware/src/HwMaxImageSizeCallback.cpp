@@ -87,3 +87,8 @@ HwMaxImageSizeCallbackGen::maxImageSizeChanged(const Size& size,
 	m_mis_cb->maxImageSizeChanged(size, image_type);
 }
 
+void HwMaxImageSizeCallbackGen::setMaxImageSizeCallbackActive(bool cb_active)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(cb_active);
+}

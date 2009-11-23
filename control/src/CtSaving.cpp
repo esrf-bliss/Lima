@@ -420,6 +420,11 @@ void CtSaving::resetLastFrameNb()
 {
   DEB_MEMBER_FUNCT();
 
+  AutoMutex aLock(m_cond.mutex());
+
+  while(!m_ready_flag)
+    m_cond.wait();
+
   m_last_frameid_saved = -1;
 }
 
@@ -498,14 +503,14 @@ void CtSaving::clear()
 {
   DEB_MEMBER_FUNCT();
 
+  resetLastFrameNb();
+
   m_save_cnt->clear();
   AutoMutex aLock(m_cond.mutex());
   m_frame_headers.clear();
   m_common_header.clear();	// @fix Should we clear common header???
   m_frame_datas.clear();
-  while(!m_ready_flag)
-    m_cond.wait();
-  resetLastFrameNb();
+  
 }
 
 void CtSaving::_post_save_task(Data &aData,_SaveTask *aSaveTaskPt)
@@ -531,12 +536,14 @@ void CtSaving::_save_finished(Data &aData)
   AutoMutex aLock(m_cond.mutex());
   if(m_end_cbk)
     m_end_cbk->finished(aData);
+
+  int next_frame = m_last_frameid_saved + 1;
   switch(m_pars.savingMode)
     {
     case CtSaving::AutoFrame:
       {
-	FrameMap::iterator nextDataIter = m_frame_datas.begin();
-	if(nextDataIter != m_frame_datas.end() && m_last_frameid_saved == nextDataIter->first - 1)
+	FrameMap::iterator nextDataIter = m_frame_datas.find(next_frame);
+	if(nextDataIter != m_frame_datas.end())
 	  {
 	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
 	    _get_common_header(aSaveTaskPt->m_header);
@@ -555,9 +562,8 @@ void CtSaving::_save_finished(Data &aData)
       break;
     case CtSaving::AutoHeader:
       {
-	FrameMap::iterator nextDataIter = m_frame_datas.begin();
-	if(nextDataIter != m_frame_datas.end() && 
-	   m_last_frameid_saved == nextDataIter->first - 1)
+	FrameMap::iterator nextDataIter = m_frame_datas.find(next_frame);
+	if(nextDataIter != m_frame_datas.end())
 	  {
 	    std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(nextDataIter->first);
 	    if(aHeaderIter != m_frame_headers.end())

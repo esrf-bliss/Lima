@@ -199,11 +199,11 @@ def main(argv):
 	hw_sync.setNbFrames(3)
 
 	print "Starting Acquisition"
-	acq_state.set(lima.AcqState.Running)
+	acq_state.set(lima.AcqState.Acquiring)
 	hw_inter.startAcq()
 
 	print "Waiting acq finished..."
-	acq_state.waitNot(lima.AcqState.Running)
+	acq_state.waitNot(lima.AcqState.Acquiring)
 	print "Acq finished!!"
 
 	print "Stopping Acquisition"

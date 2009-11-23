@@ -10,7 +10,11 @@ class AcqState
 {
 public:
 	enum State {
-		Idle, Running, Finished, Aborted,
+		Idle		= 1 << 0, 
+		Acquiring	= 1 << 1, 
+		Saving		= 1 << 2,
+		Finished	= 1 << 3, 
+		Aborted		= 1 << 4,
 	};
 
 	AcqState();
@@ -25,6 +29,16 @@ private:
 	Cond m_cond;
 	State m_state;
 };
+
+inline AcqState::State operator |(AcqState::State s1, AcqState::State s2)
+{
+	return AcqState::State(int(s1) | int(s2));
+}
+
+inline AcqState::State operator &(AcqState::State s1, AcqState::State s2)
+{
+	return AcqState::State(int(s1) & int(s2));
+}
 
 std::ostream& operator <<(std::ostream& os, AcqState::State state);
 

@@ -188,9 +188,9 @@ void test_frelon_spectroscopy()
 
 	DEB_ALWAYS() << "Starting acquisition";
 	t0 = Timestamp::now();
-	acq_state.set(AcqState::Running);
+	acq_state.set(AcqState::Acquiring);
 	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Running);
+	acq_state.waitNot(AcqState::Acquiring);
 	t1 = Timestamp::now();
 	if (acq_state.get() == AcqState::Aborted) {
 		DEB_ERROR() << "Acquisition aborted!";

@@ -93,3 +93,9 @@ void HwFrameCallback::setFrameCallbackGen(HwFrameCallbackGen *frame_cb_gen)
 
 	m_frame_cb_gen = frame_cb_gen;
 }
+
+void HwFrameCallbackGen::setFrameCallbackActive(bool cb_active)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(cb_active);
+}

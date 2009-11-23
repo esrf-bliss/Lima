@@ -377,6 +377,8 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 
 	ConstStr m, sep = "";
 
+	int w = os.width();
+
 	if (DebHasFlag(flags, DebFmtDateTime)) {
 		struct timeval tod;
 		gettimeofday(&tod, NULL);
@@ -387,15 +389,17 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		char buffer[256];
 		strftime(buffer, sizeof(buffer), "%Y/%m/%d %H:%M:%S", tm_info);
 
+		char f = os.fill();
+
 		os << sep << "[" << buffer << "." 
 		   << setw(6) << setfill('0') << tod.tv_usec 
-		   << setw(0) << setfill(' ') << "]";
+		   << setw(w) << setfill(f) << "]";
 		sep = " ";
 	}
 
 	if (DebHasFlag(flags, DebFmtThread)) {
 		unsigned int thread_id = (unsigned int) pthread_self();
-		os << sep << setw(8) << hex << thread_id << setw(0) << dec;
+		os << sep << setw(8) << hex << thread_id << setw(w) << dec;
 		sep = " ";
 	}
 
@@ -404,7 +408,7 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		if (thread_data->indent < 0)
 			thread_data->indent = 0;
 		int indent = thread_data->indent * IndentSize;
-		os << sep << setw(indent) << "" << setw(0);
+		os << sep << setw(indent) << "" << setw(w);
 		sep = " ";
 	}
 

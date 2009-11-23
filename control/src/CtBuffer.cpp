@@ -45,7 +45,6 @@ void CtBuffer::unregisterFrameCallback()
   DEB_MEMBER_FUNCT();
   
   if (m_frame_cb != NULL) {
-    m_hw_buffer->unregisterFrameCallback(*m_frame_cb);
     delete m_frame_cb;
     m_frame_cb= NULL;
   }

@@ -180,7 +180,9 @@ void CtControl::prepareAcq()
     m_op_ext->setEndSinkTaskCallback(NULL);
 
   m_autosave= m_ct_saving->hasAutoSaveMode();
-  if (!m_autosave)
+  if (m_autosave)
+    m_ct_saving->resetLastFrameNb();
+  else
     DEB_TRACE() << "No auto save activated";
   m_ready= true;
 }

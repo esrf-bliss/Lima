@@ -41,7 +41,8 @@ using namespace lima;
 	void reset();
 
 	const Bin& getBin() const;
-	const Roi& getRoi() const;
+	const Roi& getSetRoi() const;
+	const Roi& getRealRoi() const;
 	const Size& getSize() const;
 
 	void apply();

@@ -49,7 +49,7 @@ class HwMaxImageSizeCallbackGen
 	void unregisterMaxImageSizeCallback(HwMaxImageSizeCallback& cb);
 
  protected:
-	virtual void setMaxImageSizeCallbackActive(bool cb_active) = 0;
+	virtual void setMaxImageSizeCallbackActive(bool cb_active);
 	void maxImageSizeChanged(const Size& size, ImageType image_type);
 
  private:
