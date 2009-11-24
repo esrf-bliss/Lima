@@ -26,6 +26,7 @@ namespace lima
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
 
     friend class CtBufferFrameCB;
+    friend class CtSaving;	// just to set saving error in stat
   public:
 
     enum ApplyPolicy {
@@ -64,6 +65,26 @@ namespace lima
       CtControl *m_cb_gen;
     };
 
+    enum ErrorCode {NoError,
+		    SaveUnknownError,SaveAccessError,SaveOverwriteError,SaveDiskFull,SaveOverun,
+		    ProcessingOverun,
+		    CameraError};
+    
+    enum CameraErrorCode {NoCameraError}; /* @todo fix this */
+
+    struct Status
+    {
+      DEB_CLASS_NAMESPC(DebModControl,"Control::Status","Control");
+    public:
+      Status();
+      void reset();
+
+      AcqStatus		AcquisitionStatus;
+      ErrorCode		Error;
+      CameraErrorCode	CameraStatus;
+      ImageStatus	ImageCounters;
+    };
+
     CtControl(HwInterface *hw);
     ~CtControl();
 
@@ -79,7 +100,7 @@ namespace lima
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;
 
-    void getAcqStatus(AcqStatus& status) const; // from HW
+    void getStatus(Status& status) const; // from HW
     void getImageStatus(ImageStatus& status) const;
 
     void ReadImage(Data&,long frameNumber = -1);
@@ -117,8 +138,8 @@ namespace lima
 
     HwInterface		*m_hw;
     mutable Cond	m_cond;
-    ImageStatus		m_img_status;
-
+    mutable Status      m_status;
+    
     CtSaving		*m_ct_saving;
     CtAcquisition	*m_ct_acq;
     CtImage		*m_ct_image;
@@ -138,6 +159,8 @@ namespace lima
     bool		m_autosave;
 
     ImageStatusCallback *m_img_status_cb;
+
+    inline bool _checkOverun(Data&) const;
   };
 
   inline std::ostream& operator<<(std::ostream &os,
@@ -150,6 +173,39 @@ namespace lima
        << "LastImageSaved=" << status.LastImageSaved << ", "
        << "LastCounterReady=" << status.LastCounterReady
        << ">";
+    return os;
+  }
+
+  inline std::ostream& operator<<(std::ostream &os,
+				  const CtControl::Status &status)
+  {
+    os << "<";
+    switch(status.AcquisitionStatus)
+      {
+      case AcqReady:
+	os << "AcquisitionStatus=" << "Ready";break;
+      case AcqRunning:
+	os << "AcquisitionStatus=" << "Running";break;
+      default:
+	os << "AcquisitionStatus=" << "Failed";break;
+      }
+    if(status.AcquisitionStatus == AcqFault)
+      {
+	os << ", ";
+	switch(status.Error)
+	  {
+	  case(CtControl::SaveUnknownError): os << "Error=" << "Saving  error";break;
+	  case(CtControl::SaveAccessError): os << "Error=" << "Save access error";break;
+	  case(CtControl::SaveOverwriteError): os << "Error=" << "Save overwrite error";break;
+	  case(CtControl::SaveDiskFull): os << "Error=" << "Save disk full";break;
+	  case(CtControl::SaveOverun): os << "Error=" << "Save overrun";break;
+	  case(CtControl::ProcessingOverun): os << "Error=" << "Soft Processing overrun";break;
+	  // should read CameraStatus instead @todo fix me
+	  case(CtControl::CameraError): os << "Error=" << "Camera Error";break;
+	  default: break;
+	  }
+      }
+    os << status.ImageCounters;
     return os;
   }
 } // namespace lima

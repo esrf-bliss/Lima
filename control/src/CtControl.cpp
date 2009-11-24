@@ -138,7 +138,7 @@ void CtControl::getApplyPolicy(ApplyPolicy &policy) const
 void CtControl::prepareAcq()
 {
   DEB_MEMBER_FUNCT();
-  m_img_status.reset();
+  m_status.reset();
   DEB_TRACE() << "Apply Acquisition Parameters";
   
   m_ct_acq->apply(m_policy);
@@ -197,6 +197,7 @@ void CtControl::startAcq()
 
   if (!m_ready)
 	throw LIMA_CTL_EXC(Error, "Run prepareAcq before starting acquisition");
+
   m_ready = false;
   m_hw->startAcq();
 
@@ -212,15 +213,39 @@ void CtControl::stopAcq()
   DEB_TRACE() << "Hardware Acquisition Stopped";
 }
 
-void CtControl::getAcqStatus(AcqStatus& status) const
+void CtControl::getStatus(Status& status) const
 {
   DEB_MEMBER_FUNCT();
-  
-  HwInterface::StatusType hw_status;
 
-  m_hw->getStatus(hw_status);
+  AutoMutex aLock(m_cond.mutex());
+  if(m_status.AcquisitionStatus != AcqFault)
+    {
+      const ImageStatus &anImageCnt = m_status.ImageCounters;
+
+      // Check if save has finnished
+      CtSaving::SavingMode aSavemode;
+      m_ct_saving->getSavingMode(aSavemode);
+      
+      bool aSavingIdleFlag = true;
+      if(aSavemode != CtSaving::Manual)
+	aSavingIdleFlag = anImageCnt.LastImageAcquired == anImageCnt.LastImageSaved;
+      // End Check Save
+
+      // Check if processing has finnished
+      bool aProcessingIdle = anImageCnt.LastImageAcquired == anImageCnt.LastImageReady;
+
+      if(aSavingIdleFlag && aProcessingIdle)
+	{
+	  HwInterface::Status aHwStatus;
+	  m_hw->getStatus(aHwStatus);
+	  m_status.AcquisitionStatus = aHwStatus.acq; // set the status to hw acquisition status
+	}
+      else
+	m_status.AcquisitionStatus = (aSavingIdleFlag || aProcessingIdle) ? AcqRunning : AcqReady;
+    }
   
-  status= hw_status.acq;
+  
+  status= m_status;
   
   DEB_RETURN() << DEB_VAR1(status);
 }
@@ -230,7 +255,7 @@ void CtControl::getImageStatus(ImageStatus& status) const
   DEB_MEMBER_FUNCT();
   
   AutoMutex aLock(m_cond.mutex());
-  status= m_img_status;
+  status= m_status.ImageCounters;
   
   DEB_RETURN() << DEB_VAR1(status);
 }
@@ -251,9 +276,10 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
   DEB_PARAM() << DEB_VAR1(frameNumber);
 
   AutoMutex aLock(m_cond.mutex());
+  ImageStatus &imgStatus = m_status.ImageCounters;
   if(frameNumber < 0)
-    frameNumber = m_img_status.LastBaseImageReady;
-  else if(frameNumber > m_img_status.LastBaseImageReady)
+    frameNumber = imgStatus.LastBaseImageReady;
+  else if(frameNumber > imgStatus.LastBaseImageReady)
     throw LIMA_CTL_EXC(Error, "Frame not available yet");
   aLock.unlock();
   m_ct_buffer->getFrame(aReturnData,frameNumber);
@@ -274,7 +300,13 @@ void CtControl::newFrameReady(Data& fdata)
   DEB_TRACE() << "Frame acq.nb " << fdata.frameNumber << " received";
 
   AutoMutex aLock(m_cond.mutex());
-  m_img_status.LastImageAcquired= fdata.frameNumber;
+  if(_checkOverun(fdata))
+    {
+      aLock.unlock();
+      stopAcq();		// Stop Acquisition on overun
+      return;
+    }
+  m_status.ImageCounters.LastImageAcquired= fdata.frameNumber;
   aLock.unlock();
   
   TaskMgr *mgr = new TaskMgr();
@@ -294,12 +326,13 @@ void CtControl::newFrameReady(Data& fdata)
     {
       newFrameToSave(fdata);
       AutoMutex aLock(m_cond.mutex());
-      m_img_status.LastBaseImageReady = m_img_status.LastImageAcquired = fdata.frameNumber;
+      ImageStatus &imgStatus = m_status.ImageCounters;
+      imgStatus.LastBaseImageReady = imgStatus.LastImageAcquired = fdata.frameNumber;
       
     }
 
   if (m_img_status_cb)
-    m_img_status_cb->imageStatusChanged(m_img_status);
+    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 }
 
 void CtControl::newBaseImageReady(Data &aData)
@@ -308,7 +341,7 @@ void CtControl::newBaseImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
-  long expectedImageReady = m_img_status.LastBaseImageReady + 1;
+  long expectedImageReady = m_status.ImageCounters.LastBaseImageReady + 1;
   bool img_status_changed = false;
   if(aData.frameNumber == expectedImageReady)
     {
@@ -324,9 +357,10 @@ void CtControl::newBaseImageReady(Data &aData)
 	  else
 	    break;
 	}
-      m_img_status.LastBaseImageReady = expectedImageReady;
+      ImageStatus &imgStatus = m_status.ImageCounters;
+      imgStatus.LastBaseImageReady = expectedImageReady;
       if(!m_op_ext_link_task_active)
-	m_img_status.LastImageReady = expectedImageReady;
+	imgStatus.LastImageReady = expectedImageReady;
       
       img_status_changed = true;
     }
@@ -341,7 +375,7 @@ void CtControl::newBaseImageReady(Data &aData)
 
   aLock.unlock();
   if (img_status_changed && m_img_status_cb)
-    m_img_status_cb->imageStatusChanged(m_img_status);
+    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 
 }
 
@@ -351,7 +385,7 @@ void CtControl::newImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
-  long expectedImageReady = m_img_status.LastImageReady + 1;
+  long expectedImageReady = m_status.ImageCounters.LastImageReady + 1;
   bool img_status_changed = false;
   if(aData.frameNumber == expectedImageReady)
     {
@@ -367,7 +401,7 @@ void CtControl::newImageReady(Data &aData)
 	  else
 	    break;
 	}
-      m_img_status.LastImageReady = expectedImageReady;
+      m_status.ImageCounters.LastImageReady = expectedImageReady;
 
       img_status_changed = true;
     }
@@ -382,7 +416,7 @@ void CtControl::newImageReady(Data &aData)
 
   aLock.unlock();
   if (m_img_status_cb && img_status_changed)
-    m_img_status_cb->imageStatusChanged(m_img_status);
+    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 
 }
 
@@ -400,11 +434,11 @@ void CtControl::newImageSaved(Data&)
 {
   DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
-  ++m_img_status.LastImageSaved;
+  ++m_status.ImageCounters.LastImageSaved;
   aLock.unlock();
 
   if (m_img_status_cb)
-    m_img_status_cb->imageStatusChanged(m_img_status);
+    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 }
 
 void CtControl::newFrameToSave(Data& fdata)
@@ -445,7 +479,46 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
   cb.setImageStatusCallbackGen(NULL);
 }
 
+/** @brief this methode check if an overrun 
+ *  @warning this methode is call under lock
+ */
+bool CtControl::_checkOverun(Data &aData) const
+{
+  DEB_MEMBER_FUNCT();
+  if(m_status.AcquisitionStatus == AcqFault) return true;
 
+  const ImageStatus &imageStatus = m_status.ImageCounters;
+
+  long imageToProcess = imageStatus.LastImageAcquired - 
+    imageStatus.LastBaseImageReady;
+
+  long imageToSave =	imageStatus.LastImageAcquired -
+    imageStatus.LastImageSaved;
+
+  long nb_buffers;
+  m_ct_buffer->getNumber(nb_buffers);
+  
+  bool overrunFlag = false;
+  if(imageToProcess >= nb_buffers) // Process overrun
+    {
+      overrunFlag = true;
+
+      m_status.AcquisitionStatus = AcqFault;
+      m_status.Error = ProcessingOverun;
+      
+      DEB_ERROR() << DEB_VAR1(m_status);
+    }
+  else if(imageToSave >= nb_buffers) // Save overrun
+    {
+      overrunFlag = true;
+      
+      m_status.AcquisitionStatus = AcqFault;
+      m_status.Error = SaveOverun;
+
+      DEB_ERROR() << DEB_VAR1(m_status);
+    }
+  return overrunFlag;
+}
 // ----------------------------------------------------------------------------
 // Struct ImageStatus
 // ----------------------------------------------------------------------------
@@ -467,7 +540,28 @@ void CtControl::ImageStatus::reset()
   
   DEB_TRACE() << *this;
 }
+// ----------------------------------------------------------------------------
+// Struct Status
+// ----------------------------------------------------------------------------
 
+CtControl::Status::Status() :
+  AcquisitionStatus(AcqReady),
+  Error(NoError),
+  CameraStatus(NoCameraError),
+  ImageCounters()
+{
+  DEB_CONSTRUCTOR();
+}
+
+void CtControl::Status::reset()
+{
+  DEB_MEMBER_FUNCT();
+
+  AcquisitionStatus = AcqReady;
+  Error = NoError;
+  CameraStatus = NoCameraError;
+  ImageCounters.reset();
+}
 
 // ----------------------------------------------------------------------------
 // class ImageStatus

@@ -1,4 +1,9 @@
 #include <sstream>
+#include <unistd.h>
+
+#ifdef __linux__ 
+#include <sys/statvfs.h>
+#endif
 
 #include "CtSaving.h"
 
@@ -444,7 +449,13 @@ void CtSaving::frameReady(Data &aData)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
-
+  CtControl::Status status;
+  m_ctrl.getStatus(status);
+  if(status.AcquisitionStatus == AcqFault)
+    {
+      DEB_WARNING() << "Skip saving data: " << aData;
+      return;
+    }
   AutoMutex aLock(m_cond.mutex());
   switch(m_pars.savingMode)
     {
@@ -584,8 +595,26 @@ void CtSaving::_save_finished(Data &aData)
       m_cond.signal();
     }
 }
+/** @brief this methode set the error saving status in CtControl
+ */
+void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
+{
+  DEB_MEMBER_FUNCT();
+  AutoMutex aLock(m_ctrl.m_cond.mutex());
+  if(m_ctrl.m_status.AcquisitionStatus != AcqFault)
+    {
+      m_ctrl.m_status.AcquisitionStatus = AcqFault;
+      m_ctrl.m_status.Error = anErrorCode;
+      
+      DEB_ERROR() << DEB_VAR1(m_ctrl.m_status);
+    }
+  aLock.unlock();
 
+  m_ctrl.stopAcq();
 
+  
+
+}
 /** @brief saving container
  *
  *  This class manage file saving
@@ -617,10 +646,45 @@ void CtSaving::_SaveContainer::_open()
 
       std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix + idx.str() + pars.suffix;
 
-      DEB_TRACE() << "Open file: " << aFileName;
+      if(pars.overwritePolicy == Abort && 
+	 !access(aFileName.c_str(),R_OK))
+	{
+	  m_saving._setSavingError(CtControl::SaveOverwriteError);
+	  std::string output;
+	  output = "Try to over write file: " + aFileName;
+	  DEB_ERROR() << output;
+	  throw LIMA_CTL_EXC(Error, output.c_str());
+	}
+      std::_Ios_Openmode openFlags = std::ios_base::out | std::ios_base::binary;
+      if(pars.overwritePolicy == Append)
+	openFlags |= std::ios_base::app;
+      else if(pars.overwritePolicy == Overwrite)
+	openFlags |= std::ios_base::trunc;
 
-      m_fout.open(aFileName.c_str(),
-		  std::ios_base::out | std::ios_base::binary);
+      for(int nbTry = 0;nbTry < 5;++nbTry)
+	{
+	  m_fout.exceptions(std::ios_base::goodbit);
+	  m_fout.open(aFileName.c_str(),openFlags);
+	  m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
+
+	  if(m_fout.fail())
+	    {
+	      std::string output;
+
+	      if(access(pars.directory.c_str(),W_OK))
+		{
+		  m_saving._setSavingError(CtControl::SaveAccessError);
+		  output = "Can not write in directory: " + pars.directory;
+		  DEB_ERROR() << output;
+		  throw LIMA_CTL_EXC(Error,output.c_str());
+		}
+	    }
+	  else
+	    {
+	      DEB_TRACE() << "Open file: " << aFileName;
+	      break;
+	    }
+	}
     }
 }
 
@@ -649,12 +713,51 @@ void CtSaving::_SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
   m_saving.getParameters(pars);
 
   _open();
+  try
+    {
 
-  if(pars.fileFormat == CtSaving::EDF)
-    _writeEdfHeader(aData,aHeader);
+      if(pars.fileFormat == CtSaving::EDF)
+	_writeEdfHeader(aData,aHeader);
   
-  m_fout.write((char*)aData.data(),aData.size());
+      m_fout.write((char*)aData.data(),aData.size());
+    }
+  catch(std::ios_base::failure &error)
+    {
+      DEB_ERROR() << "Write failed :" << error.what();
+#ifdef __linux__ 
+      /**       struct statvfs {
+		unsigned long  f_bsize;    // file system block size 
+		unsigned long  f_frsize;   //fragment size
+		fsblkcnt_t     f_blocks;   // size of fs in f_frsize units
+		fsblkcnt_t     f_bfree;    // # free blocks 
+		fsblkcnt_t     f_bavail;   // # free blocks for non-root
+		fsfilcnt_t     f_files;    // # inodes
+		fsfilcnt_t     f_ffree;    // # free inodes
+		fsfilcnt_t     f_favail;   // # free inodes for non-root
+		unsigned long  f_fsid;     // file system ID
+		unsigned long  f_flag;     //mount flags
+		unsigned long  f_namemax;  // maximum filename length 
+      */
+      //Check if disk full
+      struct statvfs vfs;
+      if(!statvfs(pars.directory.c_str(),&vfs))
+	{
+	  if(vfs.f_favail < 1024 || vfs.f_bavail < 1024)
+	    {
+	      m_saving._setSavingError(CtControl::SaveDiskFull);
+	      DEB_ERROR() << "Disk full!!!";
+	      m_fout.close();
+	      return;
+	    }
+	};
+
   
+#endif
+      m_saving._setSavingError(CtControl::SaveUnknownError);
+      m_fout.close();
+      return;
+    }
+
   if(++m_written_frames == pars.framesPerFile)
     _close();
 

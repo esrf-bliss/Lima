@@ -31,6 +31,24 @@ using namespace lima;
       virtual void imageStatusChanged(const CtControl::ImageStatus& status)=0;
     };
 
+    enum ErrorCode {NoError,
+		    SaveAccessError,SaveDiskFull,SaveOverun,
+		    ProcessingOverun,
+		    CameraError};
+    
+    enum CameraErrorCode {NoCameraError}; /* @todo fix this */
+
+    struct Status
+    {
+      Status();
+      void reset();
+
+      AcqStatus		         AcquisitionStatus;
+      CtControl::ErrorCode       Error;
+      CtControl::CameraErrorCode CameraStatus;
+      CtControl::ImageStatus	 ImageCounters;
+    };
+
     CtControl(HwInterface *hw);
     ~CtControl();
 
@@ -46,7 +64,7 @@ using namespace lima;
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy /Out/) const;
 
-    void getAcqStatus(AcqStatus& status /Out/) const; // from HW
+    void getStatus(Status& status /Out/) const;
     void getImageStatus(ImageStatus &imageStatus /Out/) const;
 
     void ReadImage(Data&,long frameNumber = -1);

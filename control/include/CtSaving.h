@@ -131,6 +131,7 @@ namespace lima {
     class _SaveContainer;
     class _SaveCBK;
     friend class _SaveCBK;
+    friend class _SaveContainer;
 
     CtControl			&m_ctrl;
     _SaveContainer		*m_save_cnt;
@@ -150,6 +151,7 @@ namespace lima {
     void _takeHeader(std::map<long,HeaderMap>::iterator&, HeaderMap& header);
     void _post_save_task(Data&,_SaveTask*);
     void _save_finished(Data&);
+    void _setSavingError(CtControl::ErrorCode);
   };
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
   {
