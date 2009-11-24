@@ -2,10 +2,17 @@ import os, sys, string, gc, time
 import lima
 import processlib
 
+deb_params = lima.DebParams(lima.DebModTest)
+
 class ImageStatusCallback(lima.CtControl.ImageStatusCallback):
 
+    deb_params = lima.DebParams(lima.DebModTest, "ImageStatusCallback")
+    
     def __init__(self, ct, acq_state, print_time=1):
+        deb_params = lima.DebObj(self.deb_params, "__init__")
+
         lima.CtControl.ImageStatusCallback.__init__(self)
+
         self.m_ct = ct
         self.m_acq_state = acq_state
         self.m_nb_frames = 0
@@ -14,6 +21,8 @@ class ImageStatusCallback(lima.CtControl.ImageStatusCallback):
         self.m_print_time = print_time
         
     def imageStatusChanged(self, img_status):
+        deb_params = lima.DebObj(self.deb_params, "imageStatusChanged")
+        
         last_acq_frame_nb = img_status.LastImageAcquired;
         last_saved_frame_nb = img_status.LastImageSaved;
 
@@ -37,17 +46,23 @@ class ImageStatusCallback(lima.CtControl.ImageStatusCallback):
         now = time.time()
         if ((now - self.m_last_print_ts >= self.m_print_time) or
             acq_state_changed):
-            print "Last Acquired: %8d, Last Saved: %8d" % (last_acq_frame_nb, \
-                                                           last_saved_frame_nb)
+            deb_msg = ("Last Acquired: %8d, Last Saved: %8d" % 
+                       (last_acq_frame_nb, last_saved_frame_nb))
+            print >> deb_obj.Always(), deb_msg
+                      
             self.m_last_print_ts = now
 
         if msg:
-            print msg
+            print >> deb_obj.Always(), msg
 
 
 class FrelonAcq:
 
+    deb_params = lima.DebParams(lima.DebModTest, "FrelonAcq")
+    
     def __init__(self, espia_dev_nb, use_events=False, print_time=1):
+        deb_obj = lima.DebObj(self.deb_params, "__init__")
+        
         self.m_edev          = lima.Espia.Dev(espia_dev_nb)
         self.m_acq           = lima.Espia.Acq(self.m_edev)
         self.m_buffer_cb_mgr = lima.Espia.BufferMgr(self.m_acq)
@@ -75,6 +90,8 @@ class FrelonAcq:
             self.m_poll_time = 0.1
 
     def __del__(self):
+        deb_obj = lima.DebObj(self.deb_params, "__del__")
+
         if self.m_use_events:
             del self.m_img_status_cb;	gc.collect()
             
@@ -90,11 +107,15 @@ class FrelonAcq:
         del self.m_edev;		gc.collect()
 
     def start(self):
+        deb_obj = lima.DebObj(self.deb_params, "start")
+
         self.m_ct.prepareAcq()
         self.m_acq_state.set(lima.AcqState.Acquiring)
         self.m_ct.startAcq()
 
     def wait(self):
+        deb_obj = lima.DebObj(self.deb_params, "wait")
+
         if self.m_use_events:
             state_mask = lima.AcqState.Acquiring | lima.AcqState.Saving
             self.m_acq_state.waitNot(state_mask)
@@ -123,8 +144,9 @@ class FrelonAcq:
                 now = time.time()
                 if ((now - last_print_ts >= self.m_print_time) or
                     acq_state_changed):
-                    print "Last Acquired: %8d, Last Saved: %8d" % \
-                          (last_acq_frame_nb, last_saved_frame_nb)
+                    deb_msg = ("Last Acquired: %8d, Last Saved: %8d" % 
+                               (last_acq_frame_nb, last_saved_frame_nb))
+                    print >> deb_obj.Always(), deb_msg
                     last_print_ts = now
 
                 if msg:
@@ -136,10 +158,14 @@ class FrelonAcq:
         pool_thread_mgr.wait()
 
     def run(self):
+        deb_obj = lima.DebObj(self.deb_params, "run")
+        
         self.start()
         self.wait()
 
     def initSaving(self, dir, prefix, suffix, idx, fmt, mode, frames_per_file):
+        deb_obj = lima.DebObj(self.deb_params, "initSaving")
+
         self.m_ct_saving.setDirectory(dir)
         self.m_ct_saving.setPrefix(prefix)
         self.m_ct_saving.setSuffix(suffix)
@@ -149,35 +175,41 @@ class FrelonAcq:
         self.m_ct_saving.setFramesPerFile(frames_per_file)
         
     def setExpTime(self, exp_time):
+        deb_obj = lima.DebObj(self.deb_params, "setExpTime")
         self.m_ct_acq.setAcqExpoTime(exp_time)
 
     def setNbAcqFrames(self, nb_acq_frames):
+        deb_obj = lima.DebObj(self.deb_params, "setNbAcqFrames")
         self.m_ct_acq.setAcqNbFrames(nb_acq_frames)
 
     def setBin(self, bin):
+        deb_obj = lima.DebObj(self.deb_params, "setBin")
         self.m_ct_image.setBin(bin)
 
     def setRoi(self, roi):
+        deb_obj = lima.DebObj(self.deb_params, "setRoi")
         self.m_ct_image.setRoi(roi)
 
         
 def test_frelon_control(enable_debug):
 
+    deb_obj = lima.DebObj(deb_params, "test_frelon_control")
+    
     if not enable_debug:
         lima.DebParams.disableModuleFlags(lima.DebParams.AllFlags)
 
-    print "Crating FrelonAcq"
+    print >> deb_obj.Always(), "Creating FrelonAcq"
     espia_dev_nb = 0
     use_events = False
     acq = FrelonAcq(espia_dev_nb, use_events)
-    print "Done!"
+    print >> deb_obj.Always(), "Done!"
     
     acq.initSaving("data", "img", ".edf", 0, lima.CtSaving.EDF, 
                    lima.CtSaving.AutoFrame, 1);
 
-    print "First run with default pars"
+    print >> deb_obj.Always(), "First run with default pars"
     acq.run()
-    print "Done!"
+    print >> deb_obj.Always(), "Done!"
     
     exp_time = 1e-6
     acq.setExpTime(exp_time)
@@ -185,9 +217,10 @@ def test_frelon_control(enable_debug):
     nb_acq_frames = 500
     acq.setNbAcqFrames(nb_acq_frames)
 
-    print "Run exp_time=%s, nb_acq_frames=%s" % (exp_time, nb_acq_frames)
+    print >> deb_obj.Always(), ("Run exp_time=%s, nb_acq_frames=%s" % 
+                                (exp_time, nb_acq_frames))
     acq.run()
-    print "Done!"
+    print >> deb_obj.Always(), "Done!"
     
     bin = lima.Bin(2, 2)
     acq.setBin(bin)
@@ -195,30 +228,30 @@ def test_frelon_control(enable_debug):
     nb_acq_frames = 5
     acq.setNbAcqFrames(nb_acq_frames)
 
-    print "Run bin=<%sx%s>, nb_acq_frames=%s" % (bin.getX(), bin.getY(),
-                                                 nb_acq_frames)
+    print >> deb_obj.Always(), ("Run bin=<%sx%s>, nb_acq_frames=%s" % 
+                                (bin.getX(), bin.getY(), nb_acq_frames))
     acq.run()
-    print "Done!"
+    print >> deb_obj.Always(), "Done!"
     
     roi = lima.Roi(lima.Point(256, 256), lima.Size(512, 512));
     acq.setRoi(roi);
 
     roi_tl, roi_size = roi.getTopLeft(), roi.getSize()
-    print "Run roi=<%s,%s>-<%sx%s>" % (roi_tl.x, roi_tl.y,
-                                       roi_size.getWidth(),
-                                       roi_size.getHeight())
+    print >> deb_obj.Always(), ("Run roi=<%s,%s>-<%sx%s>" %
+                                (roi_tl.x, roi_tl.y,
+                                 roi_size.getWidth(), roi_size.getHeight()))
     acq.run()
-    print "Done!"
+    print >> deb_obj.Always(), "Done!"
     
     roi = lima.Roi(lima.Point(267, 267), lima.Size(501, 501));
     acq.setRoi(roi);
 
     roi_tl, roi_size = roi.getTopLeft(), roi.getSize()
-    print "Run roi=<%s,%s>-<%sx%s>" % (roi_tl.x, roi_tl.y,
-                                       roi_size.getWidth(),
-                                       roi_size.getHeight())
+    print >> deb_obj.Always(), ("Run roi=<%s,%s>-<%sx%s>" %
+                                (roi_tl.x, roi_tl.y,
+                                 roi_size.getWidth(), roi_size.getHeight()))
     acq.run()
-    print "Done!"
+    print >> deb_obj.Always(), "Done!"
     
 
 def main(argv):

@@ -17,7 +17,11 @@ Data_FLOAT  = 9
 Data_DOUBLE = 10
 	
 
+deb_params = lima.DebParams(lima.DebModTest)
+
 class SoftRoiCallback( processlib.TaskEventCallback ):
+
+	deb_params = lima.DebParams(lima.DebModTest, "SoftRoiCallback")
 
 	DataType2ImageType = {
 		N.int8:   lima.Bpp8,
@@ -29,12 +33,16 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 	}
 		
 	def __init__(self, hw_inter, buffer_save, acq_state):
+		deb_obj = lima.DebObj(self.deb_params, "__init__")
+		
 		processlib.TaskEventCallback.__init__(self)
 		self.m_hw_inter = hw_inter
 		self.m_buffer_save = buffer_save
 		self.m_acq_state = acq_state
 
 	def finished(self, data):
+		deb_obj = lima.DebObj(self.deb_params, "finished")
+		
 		finfo, fdim = self.data2FrameInfo(data)
 		self.m_buffer_save.writeFrame(finfo)
 
@@ -44,6 +52,8 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 			self.m_acq_state.set(lima.AcqState.Finished)
 
 	def data2FrameInfo(self, data):
+		deb_obj = lima.DebObj(self.deb_params, "data2FrameInfo")
+		
 		arr = data.buffer
 		arr_type = arr.dtype.type
 		arr_height, arr_width = arr.shape
@@ -64,6 +74,8 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 	
 class TestFrameCallback( lima.HwFrameCallback ):
 
+	deb_params = lima.DebParams(lima.DebModTest, "TestFrameCallback")
+
 	ImageType2DataType = {
 		lima.Bpp8:  Data_UINT8,
 		lima.Bpp16: Data_UINT16,
@@ -71,6 +83,8 @@ class TestFrameCallback( lima.HwFrameCallback ):
 	}
 	
 	def __init__(self, hw_inter, soft_roi, buffer_save, acq_state):
+		deb_obj = lima.DebObj(self.deb_params, "__init__")
+		
 		lima.HwFrameCallback.__init__(self)
 		self.m_hw_inter = hw_inter
 		self.m_soft_roi = soft_roi
@@ -80,6 +94,8 @@ class TestFrameCallback( lima.HwFrameCallback ):
 						  acq_state)
 
 	def newFrameReady(self, frame_info):
+		deb_obj = lima.DebObj(self.deb_params, "newFrameReady")
+		
 		msg  = 'acq_frame_nb=%d, ' % frame_info.acq_frame_nb
 		fdim = frame_info.frame_dim
 		size = fdim.getSize()
@@ -87,7 +103,7 @@ class TestFrameCallback( lima.HwFrameCallback ):
 		       (size.getWidth(), size.getHeight(), fdim.getDepth())
 		msg += 'frame_timestamp=%.6f, ' % frame_info.frame_timestamp
 		msg += 'valid_pixels=%d' % frame_info.valid_pixels
-		print 'newFrameReady:', msg
+		print >> deb_obj.Always(), "newFrameReady: %s" % msg
 
 		data = self.frameInfo2Data(frame_info)
 		
@@ -99,6 +115,8 @@ class TestFrameCallback( lima.HwFrameCallback ):
 		return True
 
 	def frameInfo2Data(self, frame_info):
+		deb_obj = lima.DebObj(self.deb_params, "frameInfo2Data")
+		
 		data = processlib.Data()
 		data.buffer = frame_info.frame_ptr
 		data.frameNumber = frame_info.acq_frame_nb
@@ -109,76 +127,84 @@ class TestFrameCallback( lima.HwFrameCallback ):
 
 class MaxImageSizeCallback( lima.HwMaxImageSizeCallback ):
 
+	deb_params = lima.DebParams(lima.DebModTest, "MaxImageSizeCallback")
+	
 	def maxImageSizeChanged(self, size, image_type):
+		deb_obj = lima.DebObj(self.deb_params, "maxImageSizeChanged")
+		
 		fdim = lima.FrameDim(size, image_type)
 		msg = "size=%sx%s, image_type=%s, depth=%d" % \
 		      (size.getWidth(), size.getHeight(), image_type, \
 		       fdim.getDepth())
-		print "MaxImageSizeChanged:", msg
+		print >> deb_obj.Always(), "MaxImageSizeChanged: " % msg
 
 
 def main(argv):
-	print "Creating Espia.Dev"
+
+	deb_obj = lima.DebObj(deb_params, "main")
+	
+	print >> deb_obj.Always(), "Creating Espia.Dev"
 	edev = lima.Espia.Dev(0)
 
-	print "Creating Espia.Acq"
+	print >> deb_obj.Always(), "Creating Espia.Acq"
 	acq = lima.Espia.Acq(edev)
 
 	acqstat = acq.getStatus()
-	print "Whether the Acquisition is running : ", acqstat.running
+	print >> deb_obj.Always(), ("Whether the Acquisition is running : ",
+				    acqstat.running)
 
-	print "Creating Espia.BufferMgr"
+	print >> deb_obj.Always(), "Creating Espia.BufferMgr"
 	buffer_cb_mgr = lima.Espia.BufferMgr(acq)
 
-	print "Creating BufferCtrlMgr"
+	print >> deb_obj.Always(), "Creating BufferCtrlMgr"
 	buffer_mgr = lima.BufferCtrlMgr(buffer_cb_mgr)
 
-	print "Creating Espia.SerialLine"
+	print >> deb_obj.Always(), "Creating Espia.SerialLine"
 	eser_line = lima.Espia.SerialLine(edev)
 
-	print "Creating Frelon.Camera"
+	print >> deb_obj.Always(), "Creating Frelon.Camera"
 	cam = lima.Frelon.Camera(eser_line)
 
-	print "Creating the Hw Interface ... "
+	print >> deb_obj.Always(), "Creating the Hw Interface ... "
 	hw_inter = lima.Frelon.Interface(acq, buffer_mgr, cam)
 
-	print "Creating BufferSave"
+	print >> deb_obj.Always(), "Creating BufferSave"
 	buffer_save = lima.BufferSave(lima.BufferSave.EDF, "img", 0, ".edf",
 				      True, 1)
 
-	print "Getting HW detector info"
+	print >> deb_obj.Always(), "Getting HW detector info"
 	hw_det_info = hw_inter.getHwCtrlObj(lima.HwCap.DetInfo)
 
-	print "Getting HW buffer"
+	print >> deb_obj.Always(), "Getting HW buffer"
 	hw_buffer = hw_inter.getHwCtrlObj(lima.HwCap.Buffer)
 
-	print "Getting HW Sync"
+	print >> deb_obj.Always(), "Getting HW Sync"
 	hw_sync = hw_inter.getHwCtrlObj(lima.HwCap.Sync)
 
-	print "Getting HW Bin"
+	print >> deb_obj.Always(), "Getting HW Bin"
 	hw_bin = hw_inter.getHwCtrlObj(lima.HwCap.Bin)
 
-	print "Getting HW RoI"
+	print >> deb_obj.Always(), "Getting HW RoI"
 	hw_roi = hw_inter.getHwCtrlObj(lima.HwCap.Roi)
 
 	mis_cb = MaxImageSizeCallback()
 	hw_det_info.registerMaxImageSizeCallback(mis_cb);
 
-	print "Setting FTM";
+	print >> deb_obj.Always(), "Setting FTM";
 	cam.setFrameTransferMode(lima.Frelon.FTM)
-	print "Setting FFM";
+	print >> deb_obj.Always(), "Setting FFM";
 	cam.setFrameTransferMode(lima.Frelon.FFM)
 	
 	soft_roi = lima.Roi()
 	acq_state = lima.AcqState()
-	print "Creating a TestFrameCallback"
+	print >> deb_obj.Always(), "Creating a TestFrameCallback"
 	cb = TestFrameCallback(hw_inter, soft_roi, buffer_save, acq_state)
 
 	do_reset = False
 	if do_reset:
-		print "Reseting hardware ..."
+		print >> deb_obj.Always(), "Reseting hardware ..."
 		hw_inter.reset(lima.HwInterface.HardReset)
-		print "  Done!"
+		print >> deb_obj.Always(), "  Done!"
 
 	size = hw_det_info.getMaxImageSize()
 	image_type = hw_det_info.getCurrImageType()
@@ -198,18 +224,18 @@ def main(argv):
 	hw_sync.setExpTime(2)
 	hw_sync.setNbFrames(3)
 
-	print "Starting Acquisition"
+	print >> deb_obj.Always(), "Starting Acquisition"
 	acq_state.set(lima.AcqState.Acquiring)
 	hw_inter.startAcq()
 
-	print "Waiting acq finished..."
+	print >> deb_obj.Always(), "Waiting acq finished..."
 	acq_state.waitNot(lima.AcqState.Acquiring)
-	print "Acq finished!!"
+	print >> deb_obj.Always(), "Acq finished!!"
 
-	print "Stopping Acquisition"
+	print >> deb_obj.Always(), "Stopping Acquisition"
 	hw_inter.stopAcq()
 
-	print "This is the End..."
+	print >> deb_obj.Always(), "This is the End..."
 
 
 if __name__ == '__main__':
