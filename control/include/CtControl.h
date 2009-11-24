@@ -160,7 +160,7 @@ namespace lima
 
     ImageStatusCallback *m_img_status_cb;
 
-    inline bool _checkOverun(Data&) const;
+    inline bool _checkOverrun(Data&) const;
   };
 
   inline std::ostream& operator<<(std::ostream &os,
