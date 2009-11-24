@@ -300,7 +300,7 @@ void CtControl::newFrameReady(Data& fdata)
   DEB_TRACE() << "Frame acq.nb " << fdata.frameNumber << " received";
 
   AutoMutex aLock(m_cond.mutex());
-  if(_checkOverun(fdata))
+  if(_checkOverrun(fdata))
     {
       aLock.unlock();
       stopAcq();		// Stop Acquisition on overun
@@ -482,7 +482,7 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
 /** @brief this methode check if an overrun 
  *  @warning this methode is call under lock
  */
-bool CtControl::_checkOverun(Data &aData) const
+bool CtControl::_checkOverrun(Data &aData) const
 {
   DEB_MEMBER_FUNCT();
   if(m_status.AcquisitionStatus == AcqFault) return true;
@@ -498,6 +498,9 @@ bool CtControl::_checkOverun(Data &aData) const
   long nb_buffers;
   m_ct_buffer->getNumber(nb_buffers);
   
+  CtSaving::SavingMode mode;
+  m_ct_saving->getSavingMode(mode) ;
+
   bool overrunFlag = false;
   if(imageToProcess >= nb_buffers) // Process overrun
     {
@@ -508,7 +511,7 @@ bool CtControl::_checkOverun(Data &aData) const
       
       DEB_ERROR() << DEB_VAR1(m_status);
     }
-  else if(imageToSave >= nb_buffers) // Save overrun
+  else if(mode != CtSaving::Manual && imageToSave >= nb_buffers) // Save overrun
     {
       overrunFlag = true;
       
