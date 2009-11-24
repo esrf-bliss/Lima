@@ -1,35 +1,53 @@
-import os, sys, string
+import os, sys, string, gc, time
 import lima
+import processlib
 
 class ImageStatusCallback(lima.CtControl.ImageStatusCallback):
 
-    def __init__(self, ct, acq_state):
-        lima.CtControl.ImageStatusCallback(self)
+    def __init__(self, ct, acq_state, print_time=1):
+        lima.CtControl.ImageStatusCallback.__init__(self)
         self.m_ct = ct
         self.m_acq_state = acq_state
         self.m_nb_frames = 0
-
+        
+        self.m_last_print_ts = 0
+        self.m_print_time = print_time
+        
     def imageStatusChanged(self, img_status):
         last_acq_frame_nb = img_status.LastImageAcquired;
         last_saved_frame_nb = img_status.LastImageSaved;
 
         if last_acq_frame_nb == 0:
-            ct_acq = m_ct.acquisition()
+            ct_acq = self.m_ct.acquisition()
             self.m_nb_frames = ct_acq.getAcqNbFrames()
 
-        if (last_acq_frame_nb == m_nb_frames - 1) and \
-           (self.m_acq_state.get() == lima.AcqState.Acquiring):
-            print "All frames acquired!"
-            m_acq_state.set(lima.AcqState.Saving)
+        acq_state_changed = False
+        msg = ''
+        if ((last_acq_frame_nb == self.m_nb_frames - 1) and 
+            (self.m_acq_state.get() == lima.AcqState.Acquiring)):
+            msg = 'All frames acquired!'
+            self.m_acq_state.set(lima.AcqState.Saving)
+            acq_state_changed = True
 
-        if last_saved_frame_nb == nb_frames - 1:
-            print "All frames saved!"
-            m_acq_state.set(lima.AcqState.Finished)
+        if last_saved_frame_nb == self.m_nb_frames - 1:
+            msg = 'All frames saved!'
+            self.m_acq_state.set(lima.AcqState.Finished)
+            acq_state_changed = True
             
-            
+        now = time.time()
+        if ((now - self.m_last_print_ts >= self.m_print_time) or
+            acq_state_changed):
+            print "Last Acquired: %8d, Last Saved: %8d" % (last_acq_frame_nb, \
+                                                           last_saved_frame_nb)
+            self.m_last_print_ts = now
+
+        if msg:
+            print msg
+
+
 class FrelonAcq:
 
-    def __init__(self, espia_dev_nb):
+    def __init__(self, espia_dev_nb, use_events=False, print_time=1):
         self.m_edev          = lima.Espia.Dev(espia_dev_nb)
         self.m_acq           = lima.Espia.Acq(self.m_edev)
         self.m_buffer_cb_mgr = lima.Espia.BufferMgr(self.m_acq)
@@ -46,12 +64,162 @@ class FrelonAcq:
         self.m_ct_image      = self.m_ct.image()
         self.m_ct_buffer     = self.m_ct.buffer()
 
+        self.m_use_events    = use_events
+        self.m_print_time    = print_time
+        
+        if self.m_use_events:
+            cb = ImageStatusCallback(self.m_ct, self.m_acq_state, print_time)
+            self.m_img_status_cb = cb
+            self.m_ct.registerImageStatusCallback(self.m_img_status_cb)
+        else:
+            self.m_poll_time = 0.1
+
+    def __del__(self):
+        if self.m_use_events:
+            del self.m_img_status_cb;	gc.collect()
+            
+        del self.m_ct_buffer, self.m_ct_image, self.m_ct_saving, self.m_ct_acq
+        del self.m_ct;			gc.collect()
+        del self.m_acq_state;		gc.collect()
+        del self.m_hw_inter;		gc.collect()
+        del self.m_buffer_mgr;		gc.collect()
+        del self.m_cam;			gc.collect()
+        del self.m_eserline;		gc.collect()
+        del self.m_buffer_cb_mgr;	gc.collect()
+        del self.m_acq;			gc.collect()
+        del self.m_edev;		gc.collect()
+
+    def start(self):
+        self.m_ct.prepareAcq()
+        self.m_acq_state.set(lima.AcqState.Acquiring)
+        self.m_ct.startAcq()
+
+    def wait(self):
+        if self.m_use_events:
+            state_mask = lima.AcqState.Acquiring | lima.AcqState.Saving
+            self.m_acq_state.waitNot(state_mask)
+        else:
+            nb_frames = self.m_ct_acq.getAcqNbFrames()
+            last_print_ts = 0
+            running_states = [lima.AcqState.Acquiring, lima.AcqState.Saving]
+            while self.m_acq_state.get() in running_states:
+                img_status = self.m_ct.getImageStatus()
+                last_acq_frame_nb = img_status.LastImageAcquired;
+                last_saved_frame_nb = img_status.LastImageSaved;
+
+                acq_state_changed = False
+                msg = ''
+                if ((last_acq_frame_nb == nb_frames - 1) and 
+                    (self.m_acq_state.get() == lima.AcqState.Acquiring)):
+                    msg = 'All frames acquired!'
+                    self.m_acq_state.set(lima.AcqState.Saving)
+                    acq_state_changed = True
+
+                if last_saved_frame_nb == nb_frames - 1:
+                    msg = 'All frames saved!'
+                    self.m_acq_state.set(lima.AcqState.Finished)
+                    acq_state_changed = True
+            
+                now = time.time()
+                if ((now - last_print_ts >= self.m_print_time) or
+                    acq_state_changed):
+                    print "Last Acquired: %8d, Last Saved: %8d" % \
+                          (last_acq_frame_nb, last_saved_frame_nb)
+                    last_print_ts = now
+
+                if msg:
+                    print msg
+
+                time.sleep(self.m_poll_time)
+
+        pool_thread_mgr = processlib.PoolThreadMgr.get()
+        pool_thread_mgr.wait()
+
+    def run(self):
+        self.start()
+        self.wait()
+
+    def initSaving(self, dir, prefix, suffix, idx, fmt, mode, frames_per_file):
+        self.m_ct_saving.setDirectory(dir)
+        self.m_ct_saving.setPrefix(prefix)
+        self.m_ct_saving.setSuffix(suffix)
+        self.m_ct_saving.setNextNumber(idx)
+        self.m_ct_saving.setFormat(fmt)
+        self.m_ct_saving.setSavingMode(mode)
+        self.m_ct_saving.setFramesPerFile(frames_per_file)
+        
+    def setExpTime(self, exp_time):
+        self.m_ct_acq.setAcqExpoTime(exp_time)
+
+    def setNbAcqFrames(self, nb_acq_frames):
+        self.m_ct_acq.setAcqNbFrames(nb_acq_frames)
+
+    def setBin(self, bin):
+        self.m_ct_image.setBin(bin)
+
+    def setRoi(self, roi):
+        self.m_ct_image.setRoi(roi)
+
         
 def test_frelon_control(enable_debug):
 
-    acq = FrelonAcq(0)
-    
+    if not enable_debug:
+        lima.DebParams.disableModuleFlags(lima.DebParams.AllFlags)
 
+    print "Crating FrelonAcq"
+    espia_dev_nb = 0
+    use_events = False
+    acq = FrelonAcq(espia_dev_nb, use_events)
+    print "Done!"
+    
+    acq.initSaving("data", "img", ".edf", 0, lima.CtSaving.EDF, 
+                   lima.CtSaving.AutoFrame, 1);
+
+    print "First run with default pars"
+    acq.run()
+    print "Done!"
+    
+    exp_time = 1e-6
+    acq.setExpTime(exp_time)
+
+    nb_acq_frames = 500
+    acq.setNbAcqFrames(nb_acq_frames)
+
+    print "Run exp_time=%s, nb_acq_frames=%s" % (exp_time, nb_acq_frames)
+    acq.run()
+    print "Done!"
+    
+    bin = lima.Bin(2, 2)
+    acq.setBin(bin)
+
+    nb_acq_frames = 5
+    acq.setNbAcqFrames(nb_acq_frames)
+
+    print "Run bin=<%sx%s>, nb_acq_frames=%s" % (bin.getX(), bin.getY(),
+                                                 nb_acq_frames)
+    acq.run()
+    print "Done!"
+    
+    roi = lima.Roi(lima.Point(256, 256), lima.Size(512, 512));
+    acq.setRoi(roi);
+
+    roi_tl, roi_size = roi.getTopLeft(), roi.getSize()
+    print "Run roi=<%s,%s>-<%sx%s>" % (roi_tl.x, roi_tl.y,
+                                       roi_size.getWidth(),
+                                       roi_size.getHeight())
+    acq.run()
+    print "Done!"
+    
+    roi = lima.Roi(lima.Point(267, 267), lima.Size(501, 501));
+    acq.setRoi(roi);
+
+    roi_tl, roi_size = roi.getTopLeft(), roi.getSize()
+    print "Run roi=<%s,%s>-<%sx%s>" % (roi_tl.x, roi_tl.y,
+                                       roi_size.getWidth(),
+                                       roi_size.getHeight())
+    acq.run()
+    print "Done!"
+    
 
 def main(argv):
 

@@ -103,6 +103,10 @@ CtControl::~CtControl()
 {
   DEB_DESTRUCTOR();
 
+  DEB_TRACE() << "Waiting for all threads to finish their tasks";
+  PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
+  pool_thread_mgr.wait();
+
   if (m_img_status_cb)
     unregisterImageStatusCallback(*m_img_status_cb);
 
