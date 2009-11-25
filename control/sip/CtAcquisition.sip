@@ -16,6 +16,13 @@ using namespace lima;
 		int	concatNbFrames;
 		double	latencyTime;
 		TrigMode triggerMode;
+
+		const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 	};
 
 	CtAcquisition(HwInterface *hw);

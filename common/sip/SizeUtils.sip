@@ -29,6 +29,12 @@ class Point
 	bool contains(const Point& p) const;
 
 	void alignTo(const Point& p, AlignDir align_dir);
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 
 enum XBorder {
@@ -57,6 +63,12 @@ using namespace lima;
 	YBorder getY() const;
 
 	bool operator ==(const Corner& c);
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 
 class Size
@@ -90,6 +102,12 @@ using namespace lima;
 	void alignTo(const Point& p, AlignDir align_dir);
 
 	Point getCornerCoords(const Point& p, const Corner& c);
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 
 class Bin
@@ -117,6 +135,12 @@ using namespace lima;
 	Bin& operator *=(const Point& p);
 
 	Bin& operator /=(const Point& p);
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 
 class Flip
@@ -178,6 +202,12 @@ using namespace lima;
 
 	void alignSizeTo(const Point& p, AlignDir align_dir);
 	void alignCornersTo(const Point& p, AlignDir align_dir);
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 
 bool operator ==(const Roi& r1, const Roi& r2);
@@ -213,5 +243,11 @@ using namespace lima;
 
 	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 

@@ -2,6 +2,7 @@ class CtBuffer {
 %TypeHeaderCode
 #include <CtBuffer.h>
 #include <Constants.h>
+#include <sstream>
 using namespace lima;
 %End
     public:
@@ -9,6 +10,13 @@ using namespace lima;
 		BufferMode mode;
 		long	nbBuffers;
 		short	maxMemory;
+
+		const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 	};
 
 	CtBuffer(HwInterface *hw);

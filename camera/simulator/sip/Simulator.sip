@@ -44,5 +44,11 @@ class Simulator
 
 	void reset();
 
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 

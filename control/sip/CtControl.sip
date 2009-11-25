@@ -20,6 +20,13 @@ using namespace lima;
       long	LastImageReady;
       long	LastImageSaved;
       long	LastCounterReady;
+
+      const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
     };
 
     class ImageStatusCallback 
@@ -47,6 +54,13 @@ using namespace lima;
       CtControl::ErrorCode       Error;
       CtControl::CameraErrorCode CameraStatus;
       CtControl::ImageStatus	 ImageCounters;
+
+      const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
     };
 
     CtControl(HwInterface *hw);

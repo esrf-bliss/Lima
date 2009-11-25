@@ -1,6 +1,7 @@
 class CtSwBinRoi {
 %TypeHeaderCode
 #include <CtImage.h>
+#include <sstream>
 using namespace lima;
 %End
     public:
@@ -17,6 +18,13 @@ using namespace lima;
 	const Bin& getBin() const;
 	const Roi& getRoi() const;
 	const Size& getSize() const;
+
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 };
 
 class CtHwBinRoi 

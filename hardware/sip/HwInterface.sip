@@ -40,6 +40,12 @@ using namespace lima;
 		AcqStatus acq;
 		DetStatus det;
 		DetStatus det_mask;
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 	};
 
 	enum ResetLevel {

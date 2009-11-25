@@ -5,6 +5,7 @@ struct HwFrameInfoType
 #define PY_ARRAY_UNIQUE_SYMBOL _LimaNumPy
 #include "numpy/arrayobject.h"
 #include <HwFrameInfo.h>
+#include <sstream>
 using namespace lima;
 %End
 
@@ -49,6 +50,12 @@ using namespace lima;
 	if (!arr) 
 		return NULL; //should throw an error
 	sipCpp = new HwFrameInfoType(a0, PyArray_DATA(a1), a2, *a3, a4);
+%End
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
 %End
 };
 

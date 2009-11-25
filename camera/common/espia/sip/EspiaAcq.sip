@@ -33,6 +33,12 @@ using namespace lima;
 		bool	running;
 		int	run_nb;
 		int	last_frame_nb;
+		const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
 	};
 
 	Acq(Espia::Dev& dev);

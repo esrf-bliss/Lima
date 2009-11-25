@@ -81,6 +81,7 @@ class CtSaving
 {
 %TypeHeaderCode
 #include <CtSaving.h>
+#include <sstream>
 using namespace lima;
 %End
   public:
@@ -114,6 +115,13 @@ using namespace lima;
       CtSaving::SavingMode savingMode;
       CtSaving::OverwritePolicy overwritePolicy;
       long framesPerFile;
+
+      const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End
     };
 
 
