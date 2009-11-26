@@ -38,6 +38,7 @@ enum DebModule {
 	DebModCamera,		// = 1 << 8,
 	DebModCameraCom,	// = 1 << 9,
 	DebModTest,		// = 1 << 10,
+	DebModApplication,	// = 1 << 11,
 };
 
 typedef const char *ConstStr;
@@ -331,6 +332,61 @@ public:
 	void write(const std::string& msg);
 %MethodCode
 	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->write(*a0);	
+%End
+
+	void __lshift__(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) a0;
+	deb_obj_sip->write(*a1);	
+%End
+
+	void Fatal(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->Fatal();
+	deb_obj_sip->write(*a0);	
+%End
+
+	void Error(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->Error();
+	deb_obj_sip->write(*a0);	
+%End
+
+	void Warning(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->Warning();
+	deb_obj_sip->write(*a0);	
+%End
+
+	void Param(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->Param();
+	deb_obj_sip->write(*a0);	
+%End
+
+	void Trace(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->Trace();
+	deb_obj_sip->write(*a0);	
+%End
+
+	void Return(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->Return();
+	deb_obj_sip->write(*a0);	
+%End
+
+	void Always(const std::string& msg);
+%MethodCode
+	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
+	deb_obj_sip->Always();
 	deb_obj_sip->write(*a0);	
 %End
 };

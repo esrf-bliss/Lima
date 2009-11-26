@@ -344,6 +344,7 @@ void DebParams::doInit()
 		MODULE_NAME(Camera),
 		MODULE_NAME(CameraCom),
 		MODULE_NAME(Test),
+		MODULE_NAME(Application),
 	};
 	s_mod_name_map = new map<DebModule, string>(C_LIST_ITERS(mod_names));
 
@@ -434,7 +435,8 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 			csep = "::";
 		}
 		if ((m = m_funct_name)) {
-			ConstStr destruct = m_destructor ? "~" : "";
+			bool need_tilde = m_destructor && (m[0] != '~');
+			ConstStr destruct = need_tilde ? "~" : "";
 			os << csep << destruct << m;
 			csep = "::";
 		}

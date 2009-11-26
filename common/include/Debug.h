@@ -52,6 +52,7 @@ enum DebModule {
 	DebModCamera		= 1 << 8,
 	DebModCameraCom		= 1 << 9,
 	DebModTest		= 1 << 10,
+	DebModApplication	= 1 << 11,
 };
 
 typedef const char *ConstStr;
