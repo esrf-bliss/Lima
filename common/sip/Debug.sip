@@ -214,9 +214,11 @@ static ConstStr getConstStr(const std::string *s)
 class DebObjSip : public DebObj
 {
 public:
-	DebObjSip(DebParams *db, std::string *fn, std::string *on) 
-		: DebObj(*db, false, getConstStr(fn), getConstStr(on)),
-		  deb_params(db), funct_name(fn), obj_name(on), 
+	DebObjSip(DebParams *db, std::string *fn, std::string *on,
+		  std::string *fin, int line_nr) 
+		: DebObj(*db, false, getConstStr(fn), getConstStr(on),
+			 getConstStr(fin), line_nr),
+		  deb_params(db), funct_name(fn), obj_name(on), file_name(fin),
 		  next_type(DebTypeAlways)
 	{}
 
@@ -259,6 +261,7 @@ public:
 	DebParams *deb_params;
 	std::string *funct_name;
 	std::string *obj_name;
+	std::string *file_name;
         DebType next_type;
 };
 
@@ -267,12 +270,15 @@ public:
  public:
 	DebObj(DebParams& deb_params,
 	       const std::string& funct_name = "", 
-	       const std::string& obj_name = "");
+	       const std::string& obj_name = "",
+	       const std::string& file_name = "", int line_nr = 0);
 %MethodCode
 	DebParams *deb_params   = new DebParams(*a0);
 	std::string *funct_name = new std::string(*a1);
 	std::string *obj_name   = new std::string(*a2);
-	sipCpp = new DebObjSip(deb_params, funct_name, obj_name);
+	std::string *file_name   = new std::string(*a3);
+	sipCpp = new DebObjSip(deb_params, funct_name, obj_name, 
+			       file_name, a4);
 %End
 
 	~DebObj();
@@ -281,7 +287,9 @@ public:
 	DebParams *deb_params   = deb_obj_sip->deb_params;
 	std::string *funct_name = deb_obj_sip->funct_name;
 	std::string *obj_name   = deb_obj_sip->obj_name;
+	std::string *file_name  = deb_obj_sip->file_name;
 	delete deb_obj_sip;
+	delete file_name;
 	delete obj_name;
 	delete funct_name;
 	delete deb_params;

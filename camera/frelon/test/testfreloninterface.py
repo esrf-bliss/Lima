@@ -1,5 +1,6 @@
 import sys
 from lima import *
+from Debug import *
 import processlib
 import time
 import numpy as N
@@ -17,11 +18,11 @@ Data_FLOAT  = 9
 Data_DOUBLE = 10
 	
 
-glob_deb_params = DebParams(DebModTest)
+DEB_GLOBAL(DebModTest)
 
 class SoftRoiCallback( processlib.TaskEventCallback ):
 
-	deb_params = DebParams(DebModTest, "SoftRoiCallback")
+	DEB_CLASS(DebModTest, "SoftRoiCallback")
 
 	DataType2ImageType = {
 		N.int8:   Bpp8,
@@ -31,18 +32,16 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 		N.int32:  Bpp32,
 		N.uint32: Bpp32
 	}
-		
+
+	@DEB_MEMBER_FUNCT
 	def __init__(self, hw_inter, buffer_save, acq_state):
-		deb_obj = DebObj(self.deb_params, "__init__")
-		
 		processlib.TaskEventCallback.__init__(self)
 		self.m_hw_inter = hw_inter
 		self.m_buffer_save = buffer_save
 		self.m_acq_state = acq_state
 
+	@DEB_MEMBER_FUNCT
 	def finished(self, data):
-		deb_obj = DebObj(self.deb_params, "finished")
-		
 		finfo, fdim = self.data2FrameInfo(data)
 		self.m_buffer_save.writeFrame(finfo)
 
@@ -51,9 +50,8 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 		if finfo.acq_frame_nb == nb_frames - 1:
 			self.m_acq_state.set(AcqState.Finished)
 
+	@DEB_MEMBER_FUNCT
 	def data2FrameInfo(self, data):
-		deb_obj = DebObj(self.deb_params, "data2FrameInfo")
-		
 		arr = data.buffer
 		arr_type = arr.dtype.type
 		arr_height, arr_width = arr.shape
@@ -74,7 +72,7 @@ class SoftRoiCallback( processlib.TaskEventCallback ):
 	
 class TestFrameCallback( HwFrameCallback ):
 
-	deb_params = DebParams(DebModTest, "TestFrameCallback")
+	DEB_CLASS(DebModTest, "TestFrameCallback")
 
 	ImageType2DataType = {
 		Bpp8:  Data_UINT8,
@@ -82,9 +80,8 @@ class TestFrameCallback( HwFrameCallback ):
 		Bpp32: Data_UINT32
 	}
 	
+	@DEB_MEMBER_FUNCT
 	def __init__(self, hw_inter, soft_roi, buffer_save, acq_state):
-		deb_obj = DebObj(self.deb_params, "__init__")
-		
 		HwFrameCallback.__init__(self)
 		self.m_hw_inter = hw_inter
 		self.m_soft_roi = soft_roi
@@ -93,9 +90,8 @@ class TestFrameCallback( HwFrameCallback ):
 		self.m_roi_cb   = SoftRoiCallback(hw_inter, buffer_save, 
 						  acq_state)
 
+	@DEB_MEMBER_FUNCT
 	def newFrameReady(self, frame_info):
-		deb_obj = DebObj(self.deb_params, "newFrameReady")
-		
 		msg  = 'acq_frame_nb=%d, ' % frame_info.acq_frame_nb
 		fdim = frame_info.frame_dim
 		size = fdim.getSize()
@@ -103,7 +99,7 @@ class TestFrameCallback( HwFrameCallback ):
 		       (size.getWidth(), size.getHeight(), fdim.getDepth())
 		msg += 'frame_timestamp=%.6f, ' % frame_info.frame_timestamp
 		msg += 'valid_pixels=%d' % frame_info.valid_pixels
-		deb_obj.Always("newFrameReady: %s" % msg)
+		deb.Always("newFrameReady: %s" % msg)
 
 		data = self.frameInfo2Data(frame_info)
 		
@@ -114,9 +110,8 @@ class TestFrameCallback( HwFrameCallback ):
 			
 		return True
 
+	@DEB_MEMBER_FUNCT
 	def frameInfo2Data(self, frame_info):
-		deb_obj = DebObj(self.deb_params, "frameInfo2Data")
-		
 		data = processlib.Data()
 		data.buffer = frame_info.frame_ptr
 		data.frameNumber = frame_info.acq_frame_nb
@@ -127,83 +122,81 @@ class TestFrameCallback( HwFrameCallback ):
 
 class MaxImageSizeCallback( HwMaxImageSizeCallback ):
 
-	deb_params = DebParams(DebModTest, "MaxImageSizeCallback")
+	DEB_CLASS(DebModTest, "MaxImageSizeCallback")
 	
+	@DEB_MEMBER_FUNCT
 	def maxImageSizeChanged(self, size, image_type):
-		deb_obj = DebObj(self.deb_params, "maxImageSizeChanged")
-		
 		fdim = FrameDim(size, image_type)
 		msg = "size=%sx%s, image_type=%s, depth=%d" % \
 		      (size.getWidth(), size.getHeight(), image_type, \
 		       fdim.getDepth())
-		deb_obj.Always("MaxImageSizeChanged: " % msg)
+		deb.Always("MaxImageSizeChanged: %s" % msg)
 
 
+@DEB_GLOBAL_FUNCT
 def main(argv):
 
-	deb_obj = DebObj(glob_deb_params, "main")
-	
-	deb_obj.Always("Creating Espia.Dev")
+	deb.Always("Creating Espia.Dev")
 	edev = Espia.Dev(0)
 
-	deb_obj.Always("Creating Espia.Acq")
+	deb.Always("Creating Espia.Acq")
 	acq = Espia.Acq(edev)
 
 	acqstat = acq.getStatus()
-	deb_obj.Always("Whether the Acquisition is running : %s" %
+	deb.Always("Whether the Acquisition is running : %s" %
 		       acqstat.running)
 
-	deb_obj.Always("Creating Espia.BufferMgr")
+	deb.Always("Creating Espia.BufferMgr")
 	buffer_cb_mgr = Espia.BufferMgr(acq)
 
-	deb_obj.Always("Creating BufferCtrlMgr")
+	deb.Always("Creating BufferCtrlMgr")
 	buffer_mgr = BufferCtrlMgr(buffer_cb_mgr)
 
-	deb_obj.Always("Creating Espia.SerialLine")
+	deb.Always("Creating Espia.SerialLine")
 	eser_line = Espia.SerialLine(edev)
 
-	deb_obj.Always("Creating Frelon.Camera")
+	deb.Always("Creating Frelon.Camera")
 	cam = Frelon.Camera(eser_line)
 
-	deb_obj.Always("Creating the Hw Interface ... ")
+	deb.Always("Creating the Hw Interface ... ")
 	hw_inter = Frelon.Interface(acq, buffer_mgr, cam)
 
-	deb_obj.Always("Creating BufferSave")
+	deb.Always("Creating BufferSave")
 	buffer_save = BufferSave(BufferSave.EDF, "img", 0, ".edf", True, 1)
 
-	deb_obj.Always("Getting HW detector info")
+	deb.Always("Getting HW detector info")
 	hw_det_info = hw_inter.getHwCtrlObj(HwCap.DetInfo)
 
-	deb_obj.Always("Getting HW buffer")
+	deb.Always("Getting HW buffer")
 	hw_buffer = hw_inter.getHwCtrlObj(HwCap.Buffer)
 
-	deb_obj.Always("Getting HW Sync")
+	deb.Always("Getting HW Sync")
 	hw_sync = hw_inter.getHwCtrlObj(HwCap.Sync)
 
-	deb_obj.Always("Getting HW Bin")
+	deb.Always("Getting HW Bin")
 	hw_bin = hw_inter.getHwCtrlObj(HwCap.Bin)
 
-	deb_obj.Always("Getting HW RoI")
+	deb.Always("Getting HW RoI")
 	hw_roi = hw_inter.getHwCtrlObj(HwCap.Roi)
 
 	mis_cb = MaxImageSizeCallback()
 	hw_det_info.registerMaxImageSizeCallback(mis_cb)
 
-	deb_obj.Always("Setting FTM")
+	deb.Always("Setting FTM")
 	cam.setFrameTransferMode(Frelon.FTM)
-	deb_obj.Always("Setting FFM")
+	deb.Always("Setting FFM")
 	cam.setFrameTransferMode(Frelon.FFM)
 	
 	soft_roi = Roi()
 	acq_state = AcqState()
-	deb_obj.Always("Creating a TestFrameCallback")
+	deb.Always("Creating a TestFrameCallback")
 	cb = TestFrameCallback(hw_inter, soft_roi, buffer_save, acq_state)
 
 	do_reset = False
 	if do_reset:
-		deb_obj.Always("Reseting hardware ...")
+		deb.Always("Reseting hardware ...")
 		hw_inter.reset(HwInterface.HardReset)
-		deb_obj.Always("  Done!")
+		deb.Always("  Done!")
 
 	size = hw_det_info.getMaxImageSize()
 	image_type = hw_det_info.getCurrImageType()
@@ -223,18 +216,18 @@ def main(argv):
 	hw_sync.setExpTime(2)
 	hw_sync.setNbFrames(3)
 
-	deb_obj.Always("Starting Acquisition")
+	deb.Always("Starting Acquisition")
 	acq_state.set(AcqState.Acquiring)
 	hw_inter.startAcq()
 
-	deb_obj.Always("Waiting acq finished...")
+	deb.Always("Waiting acq finished...")
 	acq_state.waitNot(AcqState.Acquiring)
-	deb_obj.Always("Acq finished!!")
+	deb.Always("Acq finished!!")
 
-	deb_obj.Always("Stopping Acquisition")
+	deb.Always("Stopping Acquisition")
 	hw_inter.stopAcq()
 
-	deb_obj.Always("This is the End...")
+	deb.Always("This is the End...")
 
 
 if __name__ == '__main__':

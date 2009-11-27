@@ -1,16 +1,16 @@
 import os, sys, string, gc, time
 from lima import *
+from Debug import *
 import processlib
 
-glob_deb_params = DebParams(DebModTest)
+DEB_GLOBAL(DebModTest)
 
 class ImageStatusCallback(CtControl.ImageStatusCallback):
 
-    deb_params = DebParams(DebModTest, "ImageStatusCallback")
-    
-    def __init__(self, ct, acq_state, print_time=1):
-        deb_params = DebObj(self.deb_params, "__init__")
+    DEB_CLASS(DebModTest, "ImageStatusCallback")
 
+    @DEB_MEMBER_FUNCT
+    def __init__(self, ct, acq_state, print_time=1):
         CtControl.ImageStatusCallback.__init__(self)
 
         self.m_ct = ct
@@ -20,9 +20,8 @@ class ImageStatusCallback(CtControl.ImageStatusCallback):
         self.m_last_print_ts = 0
         self.m_print_time = print_time
         
+    @DEB_MEMBER_FUNCT
     def imageStatusChanged(self, img_status):
-        deb_params = DebObj(self.deb_params, "imageStatusChanged")
-        
         last_acq_frame_nb = img_status.LastImageAcquired;
         last_saved_frame_nb = img_status.LastImageSaved;
 
@@ -46,22 +45,21 @@ class ImageStatusCallback(CtControl.ImageStatusCallback):
         now = time.time()
         if ((now - self.m_last_print_ts >= self.m_print_time) or
             acq_state_changed):
-            deb_obj.Always("Last Acquired: %8d, Last Saved: %8d" % 
-                           (last_acq_frame_nb, last_saved_frame_nb))
+            deb.Always("Last Acquired: %8d, Last Saved: %8d" % 
+                       (last_acq_frame_nb, last_saved_frame_nb))
                       
             self.m_last_print_ts = now
 
         if msg:
-            deb_obj.Always(msg)
+            deb.Always(msg)
 
 
 class FrelonAcq:
 
-    deb_params = DebParams(DebModTest, "FrelonAcq")
+    DEB_CLASS(DebModTest, "FrelonAcq")
     
+    @DEB_MEMBER_FUNCT
     def __init__(self, espia_dev_nb, use_events=False, print_time=1):
-        deb_obj = DebObj(self.deb_params, "__init__")
-        
         self.m_edev          = Espia.Dev(espia_dev_nb)
         self.m_acq           = Espia.Acq(self.m_edev)
         self.m_buffer_cb_mgr = Espia.BufferMgr(self.m_acq)
@@ -88,9 +86,8 @@ class FrelonAcq:
         else:
             self.m_poll_time = 0.1
 
+    @DEB_MEMBER_FUNCT
     def __del__(self):
-        deb_obj = DebObj(self.deb_params, "__del__")
-
         if self.m_use_events:
             del self.m_img_status_cb;	gc.collect()
             
@@ -105,16 +102,14 @@ class FrelonAcq:
         del self.m_acq;			gc.collect()
         del self.m_edev;		gc.collect()
 
+    @DEB_MEMBER_FUNCT
     def start(self):
-        deb_obj = DebObj(self.deb_params, "start")
-
         self.m_ct.prepareAcq()
         self.m_acq_state.set(AcqState.Acquiring)
         self.m_ct.startAcq()
 
+    @DEB_MEMBER_FUNCT
     def wait(self):
-        deb_obj = DebObj(self.deb_params, "wait")
-
         if self.m_use_events:
             state_mask = AcqState.Acquiring | AcqState.Saving
             self.m_acq_state.waitNot(state_mask)
@@ -143,8 +138,8 @@ class FrelonAcq:
                 now = time.time()
                 if ((now - last_print_ts >= self.m_print_time) or
                     acq_state_changed):
-                    deb_obj.Always("Last Acquired: %8d, Last Saved: %8d" % 
-                                   (last_acq_frame_nb, last_saved_frame_nb))
+                    deb.Always("Last Acquired: %8d, Last Saved: %8d" % 
+                               (last_acq_frame_nb, last_saved_frame_nb))
                     last_print_ts = now
 
                 if msg:
@@ -155,15 +150,13 @@ class FrelonAcq:
         pool_thread_mgr = processlib.PoolThreadMgr.get()
         pool_thread_mgr.wait()
 
+    @DEB_MEMBER_FUNCT
     def run(self):
-        deb_obj = DebObj(self.deb_params, "run")
-        
         self.start()
         self.wait()
 
+    @DEB_MEMBER_FUNCT
     def initSaving(self, dir, prefix, suffix, idx, fmt, mode, frames_per_file):
-        deb_obj = DebObj(self.deb_params, "initSaving")
-
         self.m_ct_saving.setDirectory(dir)
         self.m_ct_saving.setPrefix(prefix)
         self.m_ct_saving.setSuffix(suffix)
@@ -172,42 +165,41 @@ class FrelonAcq:
         self.m_ct_saving.setSavingMode(mode)
         self.m_ct_saving.setFramesPerFile(frames_per_file)
         
+    @DEB_MEMBER_FUNCT
     def setExpTime(self, exp_time):
-        deb_obj = DebObj(self.deb_params, "setExpTime")
         self.m_ct_acq.setAcqExpoTime(exp_time)
 
+    @DEB_MEMBER_FUNCT
     def setNbAcqFrames(self, nb_acq_frames):
-        deb_obj = DebObj(self.deb_params, "setNbAcqFrames")
         self.m_ct_acq.setAcqNbFrames(nb_acq_frames)
 
+    @DEB_MEMBER_FUNCT
     def setBin(self, bin):
-        deb_obj = DebObj(self.deb_params, "setBin")
         self.m_ct_image.setBin(bin)
 
+    @DEB_MEMBER_FUNCT
     def setRoi(self, roi):
-        deb_obj = DebObj(self.deb_params, "setRoi")
         self.m_ct_image.setRoi(roi)
 
-        
+
+@DEB_GLOBAL_FUNCT
 def test_frelon_control(enable_debug):
 
-    deb_obj = DebObj(glob_deb_params, "test_frelon_control")
-    
     if not enable_debug:
         DebParams.disableModuleFlags(DebParams.AllFlags)
 
-    deb_obj.Always("Creating FrelonAcq")
+    deb.Always("Creating FrelonAcq")
     espia_dev_nb = 0
     use_events = False
     acq = FrelonAcq(espia_dev_nb, use_events)
-    deb_obj.Always("Done!")
+    deb.Always("Done!")
     
     acq.initSaving("data", "img", ".edf", 0, CtSaving.EDF, 
                    CtSaving.AutoFrame, 1);
 
-    deb_obj.Always("First run with default pars")
+    deb.Always("First run with default pars")
     acq.run()
-    deb_obj.Always("Done!")
+    deb.Always("Done!")
     
     exp_time = 1e-6
     acq.setExpTime(exp_time)
@@ -215,10 +207,9 @@ def test_frelon_control(enable_debug):
     nb_acq_frames = 500
     acq.setNbAcqFrames(nb_acq_frames)
 
-    deb_obj.Always("Run exp_time=%s, nb_acq_frames=%s" %
-                   (exp_time, nb_acq_frames))
+    deb.Always("Run exp_time=%s, nb_acq_frames=%s" % (exp_time, nb_acq_frames))
     acq.run()
-    deb_obj.Always("Done!")
+    deb.Always("Done!")
     
     bin = Bin(2, 2)
     acq.setBin(bin)
@@ -226,30 +217,30 @@ def test_frelon_control(enable_debug):
     nb_acq_frames = 5
     acq.setNbAcqFrames(nb_acq_frames)
 
-    deb_obj.Always("Run bin=<%sx%s>, nb_acq_frames=%s" % 
-                   (bin.getX(), bin.getY(), nb_acq_frames))
+    deb.Always("Run bin=<%sx%s>, nb_acq_frames=%s" % 
+               (bin.getX(), bin.getY(), nb_acq_frames))
     acq.run()
-    deb_obj.Always("Done!")
+    deb.Always("Done!")
     
     roi = Roi(Point(256, 256), Size(512, 512));
     acq.setRoi(roi);
 
     roi_tl, roi_size = roi.getTopLeft(), roi.getSize()
-    deb_obj.Always("Run roi=<%s,%s>-<%sx%s>" %
-                   (roi_tl.x, roi_tl.y,
-                    roi_size.getWidth(), roi_size.getHeight()))
+    deb.Always("Run roi=<%s,%s>-<%sx%s>" %
+               (roi_tl.x, roi_tl.y,
+                roi_size.getWidth(), roi_size.getHeight()))
     acq.run()
-    deb_obj.Always("Done!")
+    deb.Always("Done!")
     
     roi = Roi(Point(267, 267), Size(501, 501));
     acq.setRoi(roi);
 
     roi_tl, roi_size = roi.getTopLeft(), roi.getSize()
-    deb_obj.Always("Run roi=<%s,%s>-<%sx%s>" %
-                   (roi_tl.x, roi_tl.y,
-                    roi_size.getWidth(), roi_size.getHeight()))
+    deb.Always("Run roi=<%s,%s>-<%sx%s>" %
+               (roi_tl.x, roi_tl.y,
+                roi_size.getWidth(), roi_size.getHeight()))
     acq.run()
-    deb_obj.Always("Done!")
+    deb.Always("Done!")
     
 
 def main(argv):

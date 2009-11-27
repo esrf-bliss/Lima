@@ -290,6 +290,22 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
 void CtControl::reset()
 {
   DEB_MEMBER_FUNCT();
+
+  DEB_TRACE() << "Stopping acquisition";
+  stopAcq();
+
+  DEB_TRACE() << "Throwing waiting save tasks";
+  m_ct_saving->clear();
+
+  DEB_TRACE() << "Suspending task threads";
+  PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
+  pool_thread_mgr.abort();
+ 
+  DEB_TRACE() << "Reseting hardware";
+  m_hw->reset(HwInterface::SoftReset);
+
+  DEB_TRACE() << "Reseting image";
+  m_ct_image->reset();
 }
 
 void CtControl::newFrameReady(Data& fdata)
