@@ -284,6 +284,11 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
   aLock.unlock();
   m_ct_buffer->getFrame(aReturnData,frameNumber);
   
+  FrameDim img_dim;
+  m_ct_image->getImageDim(img_dim);
+  aReturnData.width = img_dim.getSize().getWidth();
+  aReturnData.height = img_dim.getSize().getHeight();
+
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }
 

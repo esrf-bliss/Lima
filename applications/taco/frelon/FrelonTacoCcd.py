@@ -97,8 +97,14 @@ class FrelonTacoAcq(TacoCcdAcq):
     @DEB_MEMBER_FUNCT
     def getState(self):
         deb.Trace('Query device state ...')
-        self.state = DevCcdReady
-        deb.Return('Device state: 0x%08x (%d)' % (state, state))
+        ct = self.m_acq.getGlobalControl()
+        ct_status = ct.getStatus()
+        acq_status = ct_status.AcquisitionStatus
+        if acq_status == AcqRunning:
+            self.state = DevCcdAcquiring
+        else:
+            self.state = DevCcdReady
+        deb.Return('Device state: 0x%08x (%d)' % (self.state, self.state))
         return self.state
 
     @DEB_MEMBER_FUNCT
@@ -123,7 +129,8 @@ class FrelonTacoAcq(TacoCcdAcq):
     
     @DEB_MEMBER_FUNCT
     def getType(self):
-        type_nb = 0
+        cam = self.m_acq.getFrelonCamera()
+        type_nb = (cam.isFrelon2k16() and 2016) or 2014
         deb.Return('Getting type: %s (#%s)' % (ccd_type, type_nb))
         return type_nb
 
@@ -146,21 +153,26 @@ class FrelonTacoAcq(TacoCcdAcq):
     @DEB_MEMBER_FUNCT
     def setNbFrames(self, nb_frames):
         deb.Param('Setting nb. frames: %s' % nb_frames)
+        ct_acq = self.m_acq.getAcqControl()
+        ct_acq.setAcqNbFrames(nb_frames)
     
     @DEB_MEMBER_FUNCT
     def getNbFrames(self):
-        nb_frames = 1
+        ct_acq = self.m_acq.getAcqControl()
+        nb_frames = ct_acq.getAcqNbFrames()
         deb.Return('Getting nb. frames: %s' % nb_frames)
         return nb_frames
     
     @DEB_MEMBER_FUNCT
     def setExpTime(self, exp_time):
         deb.Param('Setting exp. time: %s' % exp_time)
-        pass
+        ct_acq = self.m_acq.getAcqControl()
+        ct_acq.setAcqExpoTime(exp_time)
     
     @DEB_MEMBER_FUNCT
     def getExpTime(self):
-        exp_time = 1
+        ct_acq = self.m_acq.getAcqControl()
+        exp_time = ct_acq.getAcqExpoTime()
         deb.Return('Getting exp. time: %s' % exp_time)
         return exp_time
 
@@ -169,47 +181,83 @@ class FrelonTacoAcq(TacoCcdAcq):
         # SPEC format Y,X -> incompat. with getBin ...
         bin = Bin(bin[1], bin[0])
         deb.Param('Setting binning: %s' % bin)
+        ct_image = self.m_acq.getImageControl()
+        ct_image.setBin(bin)
 
     @DEB_MEMBER_FUNCT
     def getBin(self):
-        bin = Bin(1, 1)
+        ct_image = self.m_acq.getImageControl()
+        bin = ct_image.getBin()
         deb.Return('Getting binning: %s' % bin)
         return [bin.getX(), bin.getY()]
 
     @DEB_MEMBER_FUNCT
+    def getMaxRoi(self):
+        ct_image = self.m_acq.getImageControl()
+        max_roi_size = ct_image.getMaxImageSize()
+        max_roi_size /= Point(ct_image.getBin())
+        max_roi = Roi(Point(0, 0), max_roi_size)
+        deb.Return('Max roi: %s' % max_roi)
+        return max_roi
+        
+    @DEB_MEMBER_FUNCT
     def setRoi(self, roi):
         roi = Roi(Point(roi[0], roi[1]), Point(roi[2], roi[3]))
         deb.Param('Setting roi: %s' % roi)
+        if roi == self.getMaxRoi():
+            roi = Roi()
+        ct_image = self.m_acq.getImageControl()
+        ct_image.setRoi(roi)
 
     @DEB_MEMBER_FUNCT
     def getRoi(self):
-        roi = Roi()
+        ct_image = self.m_acq.getImageControl()
+        roi = ct_image.getRoi()
+        if roi.isEmpty():
+            roi = self.getMaxRoi()
         deb.Return('Getting roi: %s' % roi)
         tl = roi.getTopLeft()
         br = roi.getBottomRight()
-        return [tl.getX(), tl.getY(), br.getX(), br.getY()]
+        return [tl.x, tl.y, br.x, br.y]
             
     @DEB_MEMBER_FUNCT
-    def setFilePar(self, file_par_arr):
-        file_par = CcdFilePar(from_arr=file_par_arr)
-        config = self.getConfig()
-        config.setParam('FilePar', file_par)
-        config.apply()
+    def setFilePar(self, par_arr):
+        deb.Param('Setting file pars: %s' % pars)
+        pars = CtSaving.Parameters()
+        pars.directory  = par_arr[0]
+        pars.prefix     = par_arr[1]
+        pars.suffix     = par_arr[2]
+        pars.nextNumber = par_arr[3]
+        pars.format     = CtSaving.EDF
+        if par_arr[5] in ['y', 'yes']:
+            pars.overwrite = CtSaving.Overwrite
+        else:
+            pars.overwrite = CtSaving.Abort
+        ct_saving = self.m_acq.getSavingControl()
+        ct_saving.setParameters(pars)
 
     @DEB_MEMBER_FUNCT
     def getFilePar(self):
-        config = self.getConfig()
-        file_par = config.getParam('FilePar')
-        return file_par.strArray()
+        ct_saving = self.m_acq.getSavingControl()
+        pars = ct_saving.getParameters()
+        overwrite = (pars.overwritePolicy == CtSaving.Overwrite)
+        over_str = (overwrite and 'yes') or 'no'
+        arr = [pars.directory, pars.prefix, pars.suffix, pars.nextNumber,
+               pars.format, over_str]
+        par_arr = map(str, par_arr)
+        deb.Return('File pars: %s' % par_arr)
+        return par_arr
 
     @DEB_MEMBER_FUNCT
     def setChannel(self, input_chan):
         deb.Param('Setting input channel: %s' % input_chan)
-        pass
+        cam = self.m_acq.getFrelonCamera()
+        cam.getInputChan(input_chan)
     
     @DEB_MEMBER_FUNCT
     def getChannel(self):
-        input_chan = 0
+        cam = self.m_acq.getFrelonCamera()
+        input_chan = cam.getInputChan()
         deb.Return('Getting input channel: %s' % input_chan)
         return input_chan
         
@@ -217,10 +265,11 @@ class FrelonTacoAcq(TacoCcdAcq):
     def setMode(self, mode):
         deb.Param('Setting mode: %s (0x%x)' % (mode, mode))
         auto_save = (mode & self.AutoSave) != 0
+        self.setAutosave(auto_save)
         
     @DEB_MEMBER_FUNCT
     def getMode(self):
-        auto_save = False
+        auto_save = self.getAutosave()
         mode = (auto_save and self.AutoSave) or 0
         deb.Return('Getting mode: %s (0x%x)' % (mode, mode))
         return mode
@@ -240,32 +289,50 @@ class FrelonTacoAcq(TacoCcdAcq):
     @DEB_MEMBER_FUNCT
     def setKinetics(self, kinetics):
         deb.Param('Setting the profile: %s' % kinetics)
-        pass
-    
+        if kinetics == 0:
+            ftm = FFM
+        elif kinetics == 3:
+            ftm = FTM
+        else:
+            raise 'Invalid kinetics value: %s' % kinetics
+        cam = self.m_acq.getFrelonCamera()
+        cam.setFrameTransferMode(ftm)
+        
     @DEB_MEMBER_FUNCT
     def getKinetics(self):
-        kinetics = 0
+        cam = self.m_acq.getFrelonCamera()
+        ftm = cam.getFrameTransferMode()
+        if ftm == FTM:
+            kinetics = 3
+        else:
+            kinetics = 0
         deb.Return('Getting the profile: %s' % kinetics)
         return kinetics
     
     @DEB_MEMBER_FUNCT
     def startAcq(self):
         deb.Trace('Starting the device')
-        pass
-    
+        ct = self.m_acq.getGlobalControl()
+        ct.prepareAcq()
+        ct.startAcq()
+        
     @DEB_MEMBER_FUNCT
     def stopAcq(self):
         deb.Trace('Stopping the device')
-        pass
+        ct = self.m_acq.getGlobalControl()
+        ct.stopAcq()
     
     @DEB_MEMBER_FUNCT
     def readFrame(self, frame_data):
         frame_nb, frame_size = frame_data
+        deb.Param('frame_nb=%s, frame_size=%s' % (frame_nb, frame_size))
         frame_dim = self.getFrameDim()
         if frame_size != frame_dim.getMemSize():
             raise ValueError, ('Client expects %d bytes, frame has %d' % \
                                (frame_size, frame_dim.getMemSize()))
-        data = N.zeros((frame_dim.getHeight(), frame_dim.getWidth()), N.int16)
+        ct = self.m_acq.getGlobalControl()
+        img_data = ct.ReadImage(frame_nb)
+        data = img_data.buffer
         s = data.tostring()
         if len(s) != frame_size:
             raise ValueError, ('Client expects %d bytes, data str has %d' % \
@@ -274,11 +341,35 @@ class FrelonTacoAcq(TacoCcdAcq):
 
     @DEB_MEMBER_FUNCT
     def startLive(self):
-        pass
+        deb.Trace('Starting live mode')
+        self.setNbFrames(0)
+        self.startAcq()
+        
+    @DEB_MEMBER_FUNCT
+    def setAutosave(self, autosave_act):
+        deb.Param('Setting autosave active: %s' % autosave_act)
+        saving_mode = (autosave_act and CtSaving.AutoFrame) or CtSaving.Manual
+        ct_saving = self.m_acq.getSavingControl()
+        ct_saving.setSavingMode(saving_mode)
+    
+    @DEB_MEMBER_FUNCT
+    def getAutosave(self):
+        ct_saving = self.m_acq.getSavingControl()
+        autosave_act = (ct_saving.getSavingMode() == CtSaving.AutoFrame)
+        deb.Return('Getting autosave active: %s' % autosave_act)
+        return autosave_act
     
     @DEB_MEMBER_FUNCT
     def getCurrent(self):
-        last_frame_nb = 0
+        ct = self.m_acq.getGlobalControl()
+        ct_status = ct.getStatus()
+        img_counters = ct_status.ImageCounters
+        if self.getAutosave():
+            last_frame_nb = img_counters.LastImageSaved
+        else:
+            last_frame_nb = img_counters.LastImageAcquired
+        last_frame_nb += 1
+        deb.Return('Last frame nb: %s' % last_frame_nb)
         return last_frame_nb
 
     @DEB_MEMBER_FUNCT

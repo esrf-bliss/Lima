@@ -68,6 +68,14 @@ private:
   CtSaving &m_saving;
 };
 
+/** @brief Parameters default constructor
+ */
+CtSaving::Parameters::Parameters()
+  : nextNumber(0), fileFormat(RAW), savingMode(Manual), 
+    overwritePolicy(Abort), framesPerFile(1)
+{
+}
+
 //@brief constructor
 CtSaving::CtSaving(CtControl &aCtrl) :
   m_ctrl(aCtrl),

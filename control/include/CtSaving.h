@@ -54,6 +54,7 @@ namespace lima {
       SavingMode savingMode;
       OverwritePolicy overwritePolicy;
       long framesPerFile;
+      Parameters();
     };
 
     typedef std::pair<std::string, std::string> HeaderValue;

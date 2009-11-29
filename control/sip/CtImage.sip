@@ -79,7 +79,7 @@ using namespace lima;
 
 	void getImageType(ImageType& imageType /Out/) const;
 	void getHwImageDim(FrameDim& dim /Out/) const;
-	void getImageDim(FrameDim& dim) const;
+	void getImageDim(FrameDim& dim /Out/) const;
 	// --- soft
 	void getSoft(CtSwBinRoi *& soft /Out/) const;
 	void getHard(CtHwBinRoi *& hard /Out/) const;

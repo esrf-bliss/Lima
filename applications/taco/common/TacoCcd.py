@@ -326,17 +326,18 @@ class TacoCcdAcq(TacoServer):
         return [tl.getX(), tl.getY(), br.getX(), br.getY()]
             
     @DEB_MEMBER_FUNCT
-    def setFilePar(self, file_par_arr):
-        file_par = CcdFilePar(from_arr=file_par_arr)
-        config = self.getConfig()
-        config.setParam('FilePar', file_par)
-        config.apply()
+    def setFilePar(self, pars):
+        deb.Param('Setting file pars: %s' % pars)
 
     @DEB_MEMBER_FUNCT
     def getFilePar(self):
-        config = self.getConfig()
-        file_par = config.getParam('FilePar')
-        return file_par.strArray()
+        pars = CtSaving.Parameters()
+        overwrite = pars.overwritePolicy == CtSaving.Overwrite
+        arr = [pars.directory, pars.prefix, pars.suffix, pars.nextNumber,
+               pars.format, overwrite]
+        par_arr = map(str, arr)
+        deb.Return('File pars: %s' % par_arr)
+        return par_arr
 
     @DEB_MEMBER_FUNCT
     def setChannel(self, input_chan):

@@ -115,7 +115,7 @@ using namespace lima;
       CtSaving::SavingMode savingMode;
       CtSaving::OverwritePolicy overwritePolicy;
       long framesPerFile;
-
+      Parameters();
       const char* __repr__();
 %MethodCode
 	std::ostringstream str;

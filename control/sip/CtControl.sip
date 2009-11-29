@@ -81,8 +81,8 @@ using namespace lima;
     void getStatus(Status& status /Out/) const;
     void getImageStatus(ImageStatus &imageStatus /Out/) const;
 
-    void ReadImage(Data&,long frameNumber = -1);
-    void ReadBaseImage(Data&,long frameNumber = -1);
+    void ReadImage(Data& data /Out/,long frameNumber = -1);
+    void ReadBaseImage(Data& data /Out/,long frameNumber = -1);
 
     void reset();
 
