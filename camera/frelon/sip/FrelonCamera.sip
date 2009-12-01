@@ -39,7 +39,7 @@ class Camera
 
 	void getFrameDim(FrameDim& frame_dim /Out/);
 
-	bool isChanActive(Frelon::InputChan chan);
+	bool isChanActive(Frelon::InputChan curr, Frelon::InputChan chan);
 
 	void checkFlip(Flip& flip /InOut/);
 	void setFlip(const Flip& flip);
