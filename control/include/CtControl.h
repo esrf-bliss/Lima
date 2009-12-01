@@ -112,7 +112,7 @@ namespace lima
     void unregisterImageStatusCallback(ImageStatusCallback& cb);
 
   protected:
-    void newFrameReady(Data& data);
+    bool newFrameReady(Data& data);
     void newFrameToSave(Data& data);
     void newBaseImageReady(Data &data);
     void newImageReady(Data &data);

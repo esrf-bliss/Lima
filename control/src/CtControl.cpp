@@ -322,41 +322,42 @@ void CtControl::reset()
   m_ct_image->reset();
 }
 
-void CtControl::newFrameReady(Data& fdata)
+bool CtControl::newFrameReady(Data& fdata)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(fdata);
 
   DEB_TRACE() << "Frame acq.nb " << fdata.frameNumber << " received";
 
+  bool aContinueFlag = true;
   AutoMutex aLock(m_cond.mutex());
   if(_checkOverrun(fdata))
-    {
-      aLock.unlock();
-      stopAcq();		// Stop Acquisition on overun
-      return;
-    }
-  m_status.ImageCounters.LastImageAcquired= fdata.frameNumber;
-  aLock.unlock();
-  
-  TaskMgr *mgr = new TaskMgr();
-  mgr->setInputData(fdata);
-
-  int internal_stage;
-  m_op_int->addTo(*mgr, internal_stage);
-  
-  int last_link,last_sink;
-  m_op_ext->addTo(*mgr, internal_stage, last_link, last_sink);
-
-  if (internal_stage || last_link || last_sink)
-    PoolThreadMgr::get().addProcess(mgr);
+    aContinueFlag = false;// Stop Acquisition on overun
   else
-    delete mgr;
-  if (!internal_stage && !last_link)
-    newBaseImageReady(fdata);
+    {
+      m_status.ImageCounters.LastImageAcquired= fdata.frameNumber;
+      aLock.unlock();
+  
+      TaskMgr *mgr = new TaskMgr();
+      mgr->setInputData(fdata);
 
-  if (m_img_status_cb)
-    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+      int internal_stage;
+      m_op_int->addTo(*mgr, internal_stage);
+  
+      int last_link,last_sink;
+      m_op_ext->addTo(*mgr, internal_stage, last_link, last_sink);
+
+      if (internal_stage || last_link || last_sink)
+	PoolThreadMgr::get().addProcess(mgr);
+      else
+	delete mgr;
+      if (!internal_stage && !last_link)
+	newBaseImageReady(fdata);
+
+      if (m_img_status_cb)
+	m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+    }
+  return aContinueFlag;
 }
 
 void CtControl::newBaseImageReady(Data &aData)

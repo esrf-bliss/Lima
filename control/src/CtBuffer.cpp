@@ -9,8 +9,7 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 
   Data fdata;
   CtBuffer::getDataFromHwFrameInfo(fdata,frame_info);
-  m_ct->newFrameReady(fdata);
-  return true;
+  return m_ct->newFrameReady(fdata);
 }
 
 CtBuffer::CtBuffer(HwInterface *hw)
