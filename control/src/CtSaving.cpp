@@ -653,6 +653,7 @@ void CtSaving::_SaveContainer::_open()
       idx << pars.nextNumber;
 
       std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix + idx.str() + pars.suffix;
+      DEB_TRACE() << DEB_VAR1(aFileName);
 
       if(pars.overwritePolicy == Abort && 
 	 !access(aFileName.c_str(),R_OK))
@@ -671,9 +672,14 @@ void CtSaving::_SaveContainer::_open()
 
       for(int nbTry = 0;nbTry < 5;++nbTry)
 	{
-	  m_fout.exceptions(std::ios_base::goodbit);
-	  m_fout.open(aFileName.c_str(),openFlags);
-	  m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
+	  try {
+	    m_fout.clear();
+	    m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
+	    m_fout.open(aFileName.c_str(),openFlags);
+	  } catch (std::ios_base::failure &error) {
+	    DEB_ERROR() << "Failure opening " << aFileName << ":" 
+			<< error.what();
+	  }
 
 	  if(m_fout.fail())
 	    {

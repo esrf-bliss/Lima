@@ -334,7 +334,7 @@ class TacoCcdAcq(TacoServer):
         pars = CtSaving.Parameters()
         overwrite = pars.overwritePolicy == CtSaving.Overwrite
         arr = [pars.directory, pars.prefix, pars.suffix, pars.nextNumber,
-               pars.format, overwrite]
+               pars.fileFormat, overwrite]
         par_arr = map(str, arr)
         deb.Return('File pars: %s' % par_arr)
         return par_arr

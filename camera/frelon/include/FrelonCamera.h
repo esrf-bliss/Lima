@@ -40,7 +40,7 @@ class Camera : public HwMaxImageSizeCallbackGen
 
 	void getFrameDim(FrameDim& frame_dim);
 
-	bool isChanActive(InputChan chan);
+	bool isChanActive(InputChan curr, InputChan chan);
 
 	void checkFlip(Flip& flip);
 	void setFlip(const Flip& flip);
@@ -126,11 +126,9 @@ class Camera : public HwMaxImageSizeCallbackGen
 	bool m_mis_cb_act;
 };
 
-inline bool Camera::isChanActive(InputChan chan)
+inline bool Camera::isChanActive(InputChan curr, InputChan chan)
 {
-	InputChan curr_chan;
-	getInputChan(curr_chan);
-	return (curr_chan & chan) == chan;
+	return (curr & chan) == chan;
 };
 
 

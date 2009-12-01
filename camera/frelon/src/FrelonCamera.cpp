@@ -428,8 +428,10 @@ void Camera::getRoiMode(RoiMode& roi_mode)
 void Camera::getMirror(Point& mirror)
 {
 	DEB_MEMBER_FUNCT();
-	mirror.x = isChanActive(Chan12) || isChanActive(Chan34);
-	mirror.y = isChanActive(Chan13) || isChanActive(Chan24);
+	InputChan curr;
+	getInputChan(curr);
+	mirror.x = isChanActive(curr, Chan12) || isChanActive(curr, Chan34);
+	mirror.y = isChanActive(curr, Chan13) || isChanActive(curr, Chan24);
 	DEB_RETURN() << DEB_VAR1(mirror);
 }
 
@@ -473,9 +475,11 @@ void Camera::xformChanCoords(const Point& point, Point& chan_point,
 	Size chan_size;
 	getChanSize(chan_size);
 
-	Flip readout_flip;
-	readout_flip.x = !(isChanActive(Chan1) || isChanActive(Chan3));
-	readout_flip.y = !(isChanActive(Chan1) || isChanActive(Chan2));
+	InputChan curr;
+	getInputChan(curr);
+	bool right  = !isChanActive(curr, Chan1) && !isChanActive(curr, Chan3);
+	bool bottom = !isChanActive(curr, Chan1) && !isChanActive(curr, Chan2);
+	Flip readout_flip(right, bottom);
 	DEB_TRACE() << DEB_VAR2(chan_flip, readout_flip);
 
 	Flip effect_flip = chan_flip & readout_flip;
@@ -579,6 +583,10 @@ void Camera::getImageRoiOffset(const Roi& req_roi, const Roi& image_roi,
 
 	Size ccd_size, image_size;
 	getCcdSize(ccd_size);
+	Bin bin;
+	getBin(bin);
+	ccd_size /= bin;
+
 	image_size = image_roi.getSize();
 	Point image_br = image_roi.getBottomRight() + 1;
 

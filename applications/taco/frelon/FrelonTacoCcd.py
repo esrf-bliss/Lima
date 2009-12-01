@@ -222,17 +222,21 @@ class FrelonTacoAcq(TacoCcdAcq):
             
     @DEB_MEMBER_FUNCT
     def setFilePar(self, par_arr):
-        deb.Param('Setting file pars: %s' % pars)
+        deb.Param('Setting file pars: %s' % par_arr)
         pars = CtSaving.Parameters()
         pars.directory  = par_arr[0]
         pars.prefix     = par_arr[1]
         pars.suffix     = par_arr[2]
-        pars.nextNumber = par_arr[3]
-        pars.format     = CtSaving.EDF
+        pars.nextNumber = int(par_arr[3])
+        index_format    = par_arr[4]
         if par_arr[5] in ['y', 'yes']:
-            pars.overwrite = CtSaving.Overwrite
+            pars.overwritePolicy = CtSaving.Overwrite
         else:
-            pars.overwrite = CtSaving.Abort
+            pars.overwritePolicy = CtSaving.Abort
+        if pars.suffix.lower()[-3:] == 'edf':
+            pars.fileFormat = CtSaving.EDF
+        else:
+            pars.fileFormat = CtSaving.RAW
         ct_saving = self.m_acq.getSavingControl()
         ct_saving.setParameters(pars)
 
@@ -242,9 +246,10 @@ class FrelonTacoAcq(TacoCcdAcq):
         pars = ct_saving.getParameters()
         overwrite = (pars.overwritePolicy == CtSaving.Overwrite)
         over_str = (overwrite and 'yes') or 'no'
+        index_format = '%04d'
         arr = [pars.directory, pars.prefix, pars.suffix, pars.nextNumber,
-               pars.format, over_str]
-        par_arr = map(str, par_arr)
+               index_format, over_str]
+        par_arr = map(str, arr)
         deb.Return('File pars: %s' % par_arr)
         return par_arr
 
@@ -252,7 +257,7 @@ class FrelonTacoAcq(TacoCcdAcq):
     def setChannel(self, input_chan):
         deb.Param('Setting input channel: %s' % input_chan)
         cam = self.m_acq.getFrelonCamera()
-        cam.getInputChan(input_chan)
+        cam.setInputChan(int(input_chan))
     
     @DEB_MEMBER_FUNCT
     def getChannel(self):
@@ -348,7 +353,10 @@ class FrelonTacoAcq(TacoCcdAcq):
     @DEB_MEMBER_FUNCT
     def setAutosave(self, autosave_act):
         deb.Param('Setting autosave active: %s' % autosave_act)
-        saving_mode = (autosave_act and CtSaving.AutoFrame) or CtSaving.Manual
+        if autosave_act:
+            saving_mode = CtSaving.AutoFrame
+        else:
+            saving_mode = CtSaving.Manual
         ct_saving = self.m_acq.getSavingControl()
         ct_saving.setSavingMode(saving_mode)
     

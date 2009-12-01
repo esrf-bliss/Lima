@@ -148,7 +148,7 @@ void test_frelon(bool do_reset)
 	string sep = "";
 	for (int i = 0; i < 4; i++) {
 		Frelon::InputChan chan = Frelon::InputChan(1 << i);
-		if (frelon_cam.isChanActive(chan)) {
+		if (frelon_cam.isChanActive(input_chan, chan)) {
 			cout << sep << (i + 1);
 			sep = "&";
 		}

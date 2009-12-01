@@ -126,8 +126,13 @@ CtHwBinRoi::CtHwBinRoi(HwInterface *hw, CtSwBinRoi *sw_bin_roi, Size& size)
 	m_has_roi= hw->getHwCtrlObj(m_hw_roi);
 	m_has_flip= hw->getHwCtrlObj(m_hw_flip);
 
+	if (m_has_bin)
+		m_hw_bin->setBin(m_bin);
+	if (m_has_roi)
+		m_hw_roi->setRoi(m_set_roi);
+
 	m_max_size= size;
-	m_max_roi= Roi(Point(0,0), m_max_size);
+	m_max_roi= Roi(Point(0,0), m_max_size / m_bin);
 	m_size= m_max_size;
 }
 
@@ -168,7 +173,7 @@ void CtHwBinRoi::setBin(Bin& bin, bool round)
 			throw LIMA_CTL_EXC(NotSupported, "No hardware binning available");
 	}
 	else {
-		Bin set_bin(bin);
+		Bin set_bin= bin;
 		if (!set_bin.isOne())
 			m_hw_bin->checkBin(set_bin);
 		if ((!round)&&(set_bin!=bin))
@@ -176,7 +181,10 @@ void CtHwBinRoi::setBin(Bin& bin, bool round)
 		if (set_bin != m_bin) {
 			if (!m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getUnbinned(m_bin);
+
+			m_hw_bin->setBin(set_bin);
 			m_bin= set_bin;
+
 			if (!m_bin.isOne() && !m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getBinned(m_bin);
 			m_max_roi.setSize(m_max_size / m_bin);
@@ -206,6 +214,7 @@ void CtHwBinRoi::setRoi(Roi& roi, bool round)
 		if ((!round)&&(real_roi!=roi))
 			throw LIMA_CTL_EXC(InvalidValue, "Given hardware roi not possible");
 		if (roi != m_set_roi) {
+			m_hw_roi->setRoi(roi);
 			m_set_roi= roi;
 			_updateSize();
 		}

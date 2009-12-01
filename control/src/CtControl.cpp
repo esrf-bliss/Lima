@@ -218,6 +218,8 @@ void CtControl::getStatus(Status& status) const
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
+
+  DEB_TRACE() << DEB_VAR1(m_status.AcquisitionStatus);
   if(m_status.AcquisitionStatus != AcqFault)
     {
       const ImageStatus &anImageCnt = m_status.ImageCounters;
@@ -238,10 +240,17 @@ void CtControl::getStatus(Status& status) const
 	{
 	  HwInterface::Status aHwStatus;
 	  m_hw->getStatus(aHwStatus);
-	  m_status.AcquisitionStatus = aHwStatus.acq; // set the status to hw acquisition status
+	  // set the status to hw acquisition status
+	  m_status.AcquisitionStatus = aHwStatus.acq; 
+
+	  int last_hw_frame = m_hw->getNbAcquiredFrames() - 1;
+	  bool aFalseIdle = ((aHwStatus.acq == AcqReady) && 
+			     (anImageCnt.LastImageAcquired != last_hw_frame));
+	  if (aFalseIdle)
+	    m_status.AcquisitionStatus = AcqRunning;
 	}
       else
-	m_status.AcquisitionStatus = (aSavingIdleFlag || aProcessingIdle) ? AcqRunning : AcqReady;
+	m_status.AcquisitionStatus = AcqRunning;
     }
   
   
@@ -343,14 +352,8 @@ void CtControl::newFrameReady(Data& fdata)
     PoolThreadMgr::get().addProcess(mgr);
   else
     delete mgr;
-  if (m_autosave && (!internal_stage && !last_link))
-    {
-      newFrameToSave(fdata);
-      AutoMutex aLock(m_cond.mutex());
-      ImageStatus &imgStatus = m_status.ImageCounters;
-      imgStatus.LastBaseImageReady = imgStatus.LastImageAcquired = fdata.frameNumber;
-      
-    }
+  if (!internal_stage && !last_link)
+    newBaseImageReady(fdata);
 
   if (m_img_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
