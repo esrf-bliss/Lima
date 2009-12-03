@@ -22,6 +22,8 @@ class Point
 
 	Point& operator/=(const Point& p);
 
+	Point& operator%=(const Point& p);
+
 	int getArea() const;
 
 	bool isNull() const;
@@ -58,9 +60,13 @@ using namespace lima;
 	Corner(XBorder xb, YBorder yb);
 	
 	void set(XBorder xb, YBorder yb);
+	void setX(XBorder xb);
+	void setY(YBorder yb);
 
 	XBorder getX() const;
 	YBorder getY() const;
+
+	Point getDir() const;
 
 	bool operator ==(const Corner& c);
 	const char* __repr__();

@@ -425,44 +425,55 @@ void Camera::getRoiMode(RoiMode& roi_mode)
 	DEB_RETURN() << DEB_VAR1(roi_mode);
 }
 
-void Camera::getMirror(Point& mirror)
+Flip Camera::getMirror()
 {
 	DEB_MEMBER_FUNCT();
+
 	InputChan curr;
 	getInputChan(curr);
+	Flip mirror;
 	mirror.x = isChanActive(curr, Chan12) || isChanActive(curr, Chan34);
 	mirror.y = isChanActive(curr, Chan13) || isChanActive(curr, Chan24);
+
 	DEB_RETURN() << DEB_VAR1(mirror);
+	return mirror;
 }
 
-void Camera::getNbChan(Point& nb_chan)
+Point Camera::getNbChan()
 {
 	DEB_MEMBER_FUNCT();
-	getMirror(nb_chan);
-	nb_chan += 1;
+	Point nb_chan = Point(getMirror()) + 1;
 	DEB_RETURN() << DEB_VAR1(nb_chan);
+	return nb_chan;
 }
 
-void Camera::getCcdSize(Size& ccd_size)
+Size Camera::getCcdSize()
 {
 	DEB_MEMBER_FUNCT();
 	FrameDim frame_dim;
 	getFrameDim(frame_dim);
-	ccd_size = frame_dim.getSize();
+	Size ccd_size = frame_dim.getSize();
 	DEB_RETURN() << DEB_VAR1(ccd_size);
+	return ccd_size;
 }
 
-void Camera::getChanSize(Size& chan_size)
+Size Camera::getChanSize()
 {
 	DEB_MEMBER_FUNCT();
-	getCcdSize(chan_size);
-	Point nb_chan;
-	getNbChan(nb_chan);
-	chan_size /= nb_chan;
+	Size chan_size = getCcdSize() / getNbChan();
 	DEB_RETURN() << DEB_VAR1(chan_size);
+	return chan_size;
 }
 
-void Camera::xformChanCoords(const Point& point, Point& chan_point, 
+Flip Camera::getRoiInsideMirror()
+{
+	DEB_MEMBER_FUNCT();
+	Flip roi_inside_mirror(m_roi_offset.x > 0, m_roi_offset.y > 0);
+	DEB_RETURN() << DEB_VAR1(roi_inside_mirror);
+	return roi_inside_mirror;
+}
+
+void Camera::xformChanCoords(const Point& point, Point& xform_point, 
 			     Corner& ref_corner)
 {
 	DEB_MEMBER_FUNCT();
@@ -470,10 +481,8 @@ void Camera::xformChanCoords(const Point& point, Point& chan_point,
 
 	Flip chan_flip;
 	getFlip(chan_flip);
-	Point mirror;
-	getMirror(mirror);
-	Size chan_size;
-	getChanSize(chan_size);
+	Flip mirror = getMirror();
+	Size chan_size = getChanSize();
 
 	InputChan curr;
 	getInputChan(curr);
@@ -493,50 +502,62 @@ void Camera::xformChanCoords(const Point& point, Point& chan_point,
 
 	ref_corner = effect_flip.getRefCorner();
 
-	Size ccd_size;
-	getCcdSize(ccd_size);
-
-	chan_point = ccd_size.getCornerCoords(point, ref_corner);
-	DEB_RETURN() << DEB_VAR2(chan_point, ref_corner);
+	Size ccd_size = getCcdSize();
+	xform_point = ccd_size.getCornerCoords(point, ref_corner);
+	DEB_RETURN() << DEB_VAR2(xform_point, ref_corner);
 }
 
-void Camera::getImageRoi(const Roi& chan_roi, Roi& image_roi)
+void Camera::calcImageRoi(const Roi& chan_roi, const Flip& roi_inside_mirror,
+			  Roi& image_roi, Point& roi_bin_offset)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(chan_roi);
 
-	Point img_tl, chan_tl = chan_roi.getTopLeft();
-	Point img_br, chan_br = chan_roi.getBottomRight();
+	Point image_tl, chan_tl = chan_roi.getTopLeft();
+	Point image_br, chan_br = chan_roi.getBottomRight();
 	Corner c_tl, c_br;
-	xformChanCoords(chan_tl, img_tl, c_tl);
-	xformChanCoords(chan_br, img_br, c_br);
-
-	Roi unbinned_roi(img_tl, img_br);
-	DEB_TRACE() << DEB_VAR1(unbinned_roi);
+	xformChanCoords(chan_tl, image_tl, c_tl);
+	xformChanCoords(chan_br, image_br, c_br);
+	Roi unbinned_roi(image_tl, image_br);
+	DEB_TRACE() << "Before mirror shift " << DEB_VAR1(unbinned_roi);
 
 	Bin bin;
 	getBin(bin);
+	Size bin_size = Point(bin);
+	Point mirr_shift = roi_inside_mirror * (bin_size - 1);
+	DEB_TRACE() << DEB_VAR1(mirr_shift);
+
+	image_tl = unbinned_roi.getTopLeft() + mirr_shift;
+	unbinned_roi.setTopLeft(image_tl);
+	DEB_TRACE() << "Before mirror shift " << DEB_VAR1(unbinned_roi);
+
 	image_roi = unbinned_roi.getBinned(bin);
 
-	DEB_RETURN() << DEB_VAR1(image_roi);
+	image_tl %= bin_size;
+	c_tl = roi_inside_mirror.getRefCorner();
+	DEB_TRACE() << DEB_VAR2(image_tl, c_tl);
+
+	roi_bin_offset = bin_size.getCornerCoords(image_tl, c_tl) % bin_size;
+
+	DEB_RETURN() << DEB_VAR2(image_roi, roi_bin_offset);
 }
 
-void Camera::getFinalRoi(const Roi& image_roi, const Point& roi_offset,
-			 Roi& final_roi)
+void Camera::calcFinalRoi(const Roi& image_roi, const Point& roi_offset,
+			  Roi& final_roi)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(image_roi, roi_offset);
 
 	Point tl = image_roi.getTopLeft() + roi_offset;
-	Point nb_chan;
-	getNbChan(nb_chan);
+	Point nb_chan = getNbChan();
 	Size size = image_roi.getSize() * nb_chan;
 	final_roi = Roi(tl, size);
 
 	DEB_RETURN() << DEB_VAR1(final_roi);
 }
 
-void Camera::getChanRoi(const Roi& image_roi, Roi& chan_roi)
+void Camera::calcChanRoi(const Roi& image_roi, Roi& chan_roi,
+			 Flip& roi_inside_mirror)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(image_roi);
@@ -546,11 +567,11 @@ void Camera::getChanRoi(const Roi& image_roi, Roi& chan_roi)
 	Roi unbinned_roi = image_roi.getUnbinned(bin);
 	DEB_TRACE() << DEB_VAR1(unbinned_roi);
 
-	Point chan_tl, img_tl = unbinned_roi.getTopLeft();
-	Point chan_br, img_br = unbinned_roi.getBottomRight();
+	Point chan_tl, image_tl = unbinned_roi.getTopLeft();
+	Point chan_br, image_br = unbinned_roi.getBottomRight();
 	Corner c_tl, c_br;
-	xformChanCoords(img_tl, chan_tl, c_tl);
-	xformChanCoords(img_br, chan_br, c_br);
+	xformChanCoords(image_tl, chan_tl, c_tl);
+	xformChanCoords(image_br, chan_br, c_br);
 
 	chan_roi.setCorners(chan_tl, chan_br);
 	DEB_TRACE() << "xformChanCoords: " << DEB_VAR3(chan_roi, c_tl, c_br);
@@ -562,39 +583,41 @@ void Camera::getChanRoi(const Roi& image_roi, Roi& chan_roi)
 	bool two_ychan = (c_tl.getY() != c_br.getY());
 	DEB_TRACE() << DEB_VAR2(two_xchan, two_ychan);
 
-	Size chan_size;
-	getChanSize(chan_size);
+	Size chan_size = getChanSize();
 	if (two_xchan)
 		chan_br.x = chan_size.getWidth() - 1;
 	if (two_ychan)
 		chan_br.y = chan_size.getHeight() - 1;
 
 	chan_roi.setCorners(chan_tl, chan_br);
-	DEB_RETURN() << DEB_VAR1(chan_roi);
+
+	roi_inside_mirror.x = (image_tl.x > chan_br.x);
+	roi_inside_mirror.y = (image_tl.y > chan_br.y);
+
+	DEB_RETURN() << DEB_VAR2(chan_roi, roi_inside_mirror);
 }
 
-void Camera::getImageRoiOffset(const Roi& req_roi, const Roi& image_roi,
-			       Point& roi_offset)
+void Camera::calcImageRoiOffset(const Roi& req_roi, const Roi& image_roi,
+				Point& roi_offset)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(req_roi, image_roi);
 
 	Point virt_tl = image_roi.getTopLeft();
 
-	Size ccd_size, image_size;
-	getCcdSize(ccd_size);
+	Size image_size, ccd_size = getCcdSize();
 	Bin bin;
 	getBin(bin);
 	ccd_size /= bin;
 
 	image_size = image_roi.getSize();
-	Point image_br = image_roi.getBottomRight() + 1;
+	Point image_br = image_roi.getBottomRight();
 
-	Point mirror_tl = ccd_size - image_br - image_size;
+	Point mirror_tl = ccd_size - (image_br + 1) - image_size;
 	Point req_tl = req_roi.getTopLeft();
-	if (req_tl.x >= image_br.x)
+	if (req_tl.x > image_br.x)
 		virt_tl.x = mirror_tl.x;
-	if (req_tl.y >= image_br.y)
+	if (req_tl.y > image_br.y)
 		virt_tl.y = mirror_tl.y;
 
 	roi_offset = virt_tl - image_roi.getTopLeft();
@@ -638,11 +661,13 @@ void Camera::processSetRoi(const Roi& set_roi, Roi& hw_roi,
 
 	Roi aligned_roi = set_roi;
 	aligned_roi.alignCornersTo(Point(32, 1), Ceil);
-	getChanRoi(aligned_roi, chan_roi);
+	Flip roi_inside_mirror;
+	calcChanRoi(aligned_roi, chan_roi, roi_inside_mirror);
 	Roi image_roi;
-	getImageRoi(chan_roi, image_roi);
-	getImageRoiOffset(set_roi, image_roi, roi_offset);
-	getFinalRoi(image_roi, roi_offset, hw_roi);
+	Point roi_bin_offset;
+	calcImageRoi(chan_roi, roi_inside_mirror, image_roi, roi_bin_offset);
+	calcImageRoiOffset(set_roi, image_roi, roi_offset);
+	calcFinalRoi(image_roi, roi_offset, hw_roi);
 
 	DEB_RETURN() << DEB_VAR3(hw_roi, chan_roi, roi_offset);
 }
@@ -662,14 +687,7 @@ void Camera::setRoi(const Roi& set_roi)
 	Point roi_offset;
 	processSetRoi(set_roi, hw_roi, chan_roi, roi_offset);
 
-	Point tl  = chan_roi.getTopLeft();
-	Size size = chan_roi.getSize();
-	
-	writeRegister(RoiPixelBegin, tl.x);
-	writeRegister(RoiPixelWidth, size.getWidth());
-	writeRegister(RoiLineBegin,  tl.y);
-	writeRegister(RoiLineWidth,  size.getHeight());
-
+	writeChanRoi(chan_roi);
 	m_roi_offset = roi_offset;
 }
 
@@ -684,22 +702,121 @@ void Camera::getRoi(Roi& hw_roi)
 	if (roi_mode == None)
 		return;
 
+	Roi chan_roi, image_roi;
+	readChanRoi(chan_roi);
+
+	Flip roi_inside_mirror = getRoiInsideMirror();
+	Point roi_bin_offset;
+	calcImageRoi(chan_roi, roi_inside_mirror, image_roi, roi_bin_offset);
+
+	calcFinalRoi(image_roi, m_roi_offset, hw_roi);
+	DEB_RETURN() << DEB_VAR1(hw_roi);
+}
+
+void Camera::writeChanRoi(const Roi& chan_roi)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(chan_roi);
+	
+	Point tl  = chan_roi.getTopLeft();
+	Size size = chan_roi.getSize();
+	
+	writeRegister(RoiPixelBegin, tl.x);
+	writeRegister(RoiPixelWidth, size.getWidth());
+	writeRegister(RoiLineBegin,  tl.y);
+	writeRegister(RoiLineWidth,  size.getHeight());
+}
+
+void Camera::readChanRoi(Roi& chan_roi)
+{
+	DEB_MEMBER_FUNCT();
+
 	int rpb, rpw, rlb, rlw;
 	readRegister(RoiPixelBegin, rpb);
 	readRegister(RoiPixelWidth, rpw);
 	readRegister(RoiLineBegin,  rlb);
 	readRegister(RoiLineWidth,  rlw);
 
-	Roi chan_roi(Point(rpb, rlb), Size(rpw, rlw));
-	DEB_TRACE() << DEB_VAR1(chan_roi);
+	chan_roi = Roi(Point(rpb, rlb), Size(rpw, rlw));
+	DEB_RETURN() << DEB_VAR1(chan_roi);
+}
 
-	Roi image_roi;
-	getImageRoi(chan_roi, image_roi);
+
+void Camera::setRoiBinOffset(const Point& roi_bin_offset)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(roi_bin_offset);
+
+	Bin bin;
+	getBin(bin);
+	Size bin_size = Point(bin);
+	Roi valid_offset_range(Point(0), bin_size);
+	if (!valid_offset_range.containsPoint(roi_bin_offset)) {
+		string err_msg = "Invalid unaligned ";
+		DEB_ERROR() << err_msg << DEB_VAR1(roi_bin_offset);
+		throw LIMA_HW_EXC(InvalidValue, err_msg + "roi_bin_offset");
+	} else if (roi_bin_offset.x != 0) {
+		string err_msg = "Roi must be horizontally aligned to bin";
+		DEB_ERROR() << err_msg;
+		throw LIMA_HW_EXC(InvalidValue, err_msg);
+	}
+
+	Roi chan_roi;
+	readChanRoi(chan_roi);
+
+	Point image_tl, image_br;
+	Corner c_tl, c_br;
+	xformChanCoords(chan_roi.getTopLeft(),     image_tl, c_tl);
+	xformChanCoords(chan_roi.getBottomRight(), image_br, c_br);
+	Roi image_roi(image_tl, image_br);
 	DEB_TRACE() << DEB_VAR1(image_roi);
 
-	getFinalRoi(image_roi, m_roi_offset, hw_roi);
-	DEB_RETURN() << DEB_VAR1(hw_roi);
+	Flip roi_inside_mirror = getRoiInsideMirror();
+	Point mirr_shift = roi_inside_mirror * (bin_size - 1);
+	DEB_TRACE() << DEB_VAR1(mirr_shift);
+
+	image_tl = image_roi.getTopLeft() + mirr_shift;
+	image_tl -= image_tl % bin_size;
+	DEB_TRACE() << "After alignment " << DEB_VAR1(image_tl);
+
+	c_tl = roi_inside_mirror.getRefCorner();
+	image_tl += roi_bin_offset * c_tl.getDir();
+	DEB_TRACE() << "After roi_bin_offset " << DEB_VAR1(image_tl);
+
+	Roi max_chan_roi(Point(0), getChanSize());
+	bool ok = max_chan_roi.containsPoint(image_tl);
+	if (ok) {
+		DEB_TRACE() << "Image top-left is OK";
+		image_roi.setTopLeft(image_tl);
+		ok = max_chan_roi.containsRoi(image_roi);
+	}
+	if (!ok) {
+		string err_msg = "Cannot apply requested ";
+		DEB_ERROR() << err_msg << DEB_VAR1(roi_bin_offset);
+		throw LIMA_HW_EXC(InvalidValue, err_msg + "roi_bin_offset");
+	}
+
+	Point chan_tl, chan_br;
+	xformChanCoords(image_roi.getTopLeft(),     chan_tl, c_tl);
+	xformChanCoords(image_roi.getBottomRight(), chan_br, c_br);
+	chan_roi = Roi(chan_tl, chan_br);
+
+	writeChanRoi(chan_roi);
 }
+
+void Camera::getRoiBinOffset(Point& roi_bin_offset)
+{
+	DEB_MEMBER_FUNCT();
+
+	Roi chan_roi, image_roi;
+	readChanRoi(chan_roi);
+
+	Flip roi_inside_mirror = getRoiInsideMirror();
+	calcImageRoi(chan_roi, roi_inside_mirror, image_roi, roi_bin_offset);
+
+	DEB_RETURN() << DEB_VAR1(roi_bin_offset);
+}
+
 
 void Camera::setTrigMode(TrigMode trig_mode)
 {
@@ -768,6 +885,23 @@ void Camera::getExpTime(double& exp_time)
 	readRegister(ExpTime, exp_val);
 	exp_time = exp_val * TimeUnitFactorMap[time_unit_factor];
 	DEB_RETURN() << DEB_VAR1(exp_time);
+}
+
+void Camera::setShutCloseTime(double shut_time)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(shut_time);
+	int shut_val = int(shut_time / TimeUnitFactorMap[Milliseconds] + 0.1);
+	writeRegister(ShutCloseTime, shut_val);
+}
+
+void Camera::getShutCloseTime(double& shut_time)
+{
+	DEB_MEMBER_FUNCT();
+	int shut_val;
+	readRegister(ShutCloseTime, shut_val);
+	shut_time = shut_val * TimeUnitFactorMap[Milliseconds];
+	DEB_RETURN() << DEB_VAR1(shut_time);
 }
 
 void Camera::setLatTime(double lat_time)

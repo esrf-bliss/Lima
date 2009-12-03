@@ -507,6 +507,8 @@ void Interface::reset(ResetLevel reset_level)
 	m_sync.setLatTime(0.0);
 	m_sync.setTrigMode(IntTrig);
 
+	m_cam.setShutCloseTime(0.0);
+
 	m_bin.setBin(Bin(1));
 	m_roi.setRoi(Roi());
 	

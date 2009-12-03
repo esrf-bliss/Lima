@@ -54,6 +54,9 @@ class Point
 	Point& operator /=(const Point& p)
 	{ x /= p.x, y /= p.y; return *this; }
 
+	Point& operator %=(const Point& p)
+	{ x %= p.x, y %= p.y; return *this; }
+
 	int getArea() const
 	{ return x * y; }
 
@@ -84,6 +87,11 @@ inline Point operator *(const Point& p1, const Point& p2)
 inline Point operator /(const Point& p1, const Point& p2)
 {
 	return Point(p1) /= p2;
+}
+
+inline Point operator %(const Point& p1, const Point& p2)
+{
+	return Point(p1) %= p2;
 }
 
 inline bool operator ==(const Point& p1, const Point& p2)
@@ -127,9 +135,13 @@ class Corner
 	Corner(XBorder xb, YBorder yb);
 	
 	void set(XBorder xb, YBorder yb);
+	void setX(XBorder xb);
+	void setY(YBorder yb);
 
 	XBorder getX() const;
 	YBorder getY() const;
+
+	Point getDir() const;
 
 	bool operator ==(const Corner& c);
 
@@ -152,6 +164,18 @@ inline void Corner::set(XBorder xb, YBorder yb)
 	m_code = (int(xb) << 1) | int(yb);
 }
 
+inline void Corner::setX(XBorder xb)
+{
+	m_code &= ~(1 << 1);
+	m_code |= (xb << 1);
+}
+
+inline void Corner::setY(YBorder yb)
+{
+	m_code &= ~1;
+	m_code |= yb;
+}
+
 inline XBorder Corner::getX() const
 {
 	return XBorder(m_code >> 1);
@@ -160,6 +184,11 @@ inline XBorder Corner::getX() const
 inline YBorder Corner::getY() const
 {
 	return YBorder(m_code & 1);
+}
+
+inline Point Corner::getDir() const
+{
+	return Point((getX() == Left) ? 1 : -1, (getY() == Top) ? 1 : -1);
 }
 
 inline bool Corner::operator ==(const Corner& c)

@@ -57,11 +57,17 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void setRoi(const Roi& set_roi);
 	void getRoi(Roi& hw_roi);
 
+	void setRoiBinOffset(const Point& roi_bin_offset);
+	void getRoiBinOffset(Point& roi_bin_offset);
+
 	void setTrigMode(TrigMode  trig_mode);
 	void getTrigMode(TrigMode& trig_mode);
 	
 	void setExpTime(double  exp_time);
 	void getExpTime(double& exp_time);
+
+	void setShutCloseTime(double  shut_time);
+	void getShutCloseTime(double& shut_time);
 
 	void setLatTime(double  lat_time);
 	void getLatTime(double& lat_time);
@@ -100,21 +106,29 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void setFlipMode(int  flip_mode);
 	void getFlipMode(int& flip_mode);
 
-	void getMirror(Point& mirror);
-	void getNbChan(Point& nb_chan);
-	void getCcdSize(Size& ccd_size);
-	void getChanSize(Size& chan_size);
+	Flip  getMirror();
+	Point getNbChan();
+	Size  getCcdSize();
+	Size  getChanSize();
+        Flip  getRoiInsideMirror();
+
+	void writeChanRoi(const Roi& chan_roi);
+	void readChanRoi(Roi& chan_roi);
+
 	void xformChanCoords(const Point& point, Point& chan_point, 
 			     Corner& ref_corner);
-	void getImageRoi(const Roi& chan_roi, Roi& image_roi);
-	void getFinalRoi(const Roi& image_roi, const Point& roi_offset,
-			 Roi& final_roi);
-	void getChanRoi(const Roi& image_roi, Roi& chan_roi);
-	void getImageRoiOffset(const Roi& req_roi, const Roi& image_roi,
-			       Point& roi_offset);
+	void calcImageRoi(const Roi& chan_roi, const Flip& roi_inside_mirror,
+			  Roi& image_roi, Point& roi_bin_offset);
+	void calcFinalRoi(const Roi& image_roi, const Point& roi_offset,
+			  Roi& final_roi);
+	void calcChanRoi(const Roi& image_roi, Roi& chan_roi,
+			 Flip& roi_inside_mirror);
+	void calcImageRoiOffset(const Roi& req_roi, const Roi& image_roi,
+				Point& roi_offset);
         void checkRoiMode(const Roi& roi);
 	void processSetRoi(const Roi& req_roi, Roi& hw_roi, Roi& chan_roi, 
 			   Point& roi_offset);
+
 
 	void setTimeUnitFactor(TimeUnitFactor  time_unit_factor);
 	void getTimeUnitFactor(TimeUnitFactor& time_unit_factor);

@@ -56,11 +56,17 @@ class Camera
 	void setRoi(const Roi& set_roi);
 	void getRoi(Roi& hw_roi /Out/);
 
+	void setRoiBinOffset(const Point& roi_bin_offset);
+	void getRoiBinOffset(Point& roi_bin_offset /Out/);
+
 	void setTrigMode(TrigMode  trig_mode);
 	void getTrigMode(TrigMode& trig_mode /Out/);
 	
 	void setExpTime(double  exp_time);
 	void getExpTime(double& exp_time /Out/);
+
+	void setShutCloseTime(double  shut_time);
+	void getShutCloseTime(double& shut_time /Out/);
 
 	void setLatTime(double  lat_time);
 	void getLatTime(double& lat_time /Out/);
