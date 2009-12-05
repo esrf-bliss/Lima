@@ -155,6 +155,10 @@ class TacoCcdAcq(TacoServer):
                                  'setFilePar', 'DevCcdSetFilePar'],
         DevCcdGetFilePar:	[D_VOID_TYPE, D_VAR_STRINGARR, 
                                  'getFilePar', 'DevCcdGetFilePar'],
+        DevCcdHeader:		[D_STRING_TYPE, D_VOID_TYPE, 
+                                 'setFileHeader', 'DevCcdHeader'],
+        DevCcdWriteFile:	[D_LONG_TYPE, D_VOID_TYPE, 
+                                 'writeFile', 'DevCcdWriteFile'],
         DevCcdSetChannel:	[D_LONG_TYPE, D_VOID_TYPE,
                                  'setChannel', 'DevCcdSetChannel'],
         DevCcdGetChannel:	[D_VOID_TYPE, D_LONG_TYPE, 
@@ -339,6 +343,14 @@ class TacoCcdAcq(TacoServer):
         deb.Return('File pars: %s' % par_arr)
         return par_arr
 
+    @DEB_MEMBER_FUNCT
+    def setFileHeader(self, header_str):
+        deb.Param('Setting file header: %s' % header_str)
+      
+    @DEB_MEMBER_FUNCT
+    def writeFile(self, frame_nb):
+        deb.Param('Writing frame %s to file' % frame_nb)
+      
     @DEB_MEMBER_FUNCT
     def setChannel(self, input_chan):
         deb.Param('Setting input channel: %s' % input_chan)

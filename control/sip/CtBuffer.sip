@@ -36,6 +36,7 @@ using namespace lima;
 
 	void getFrame(Data&,int frameNumber);
 
+	void reset();
 	void setup(CtControl *ct);
 
 	static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);

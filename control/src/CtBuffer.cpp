@@ -133,6 +133,13 @@ void CtBuffer::getFrame(Data &aReturnData,int frameNumber)
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }
 
+void CtBuffer::reset()
+{
+  DEB_MEMBER_FUNCT();
+
+  m_pars.reset();
+}
+
 void CtBuffer::setup(CtControl *ct)
 {
   DEB_MEMBER_FUNCT();

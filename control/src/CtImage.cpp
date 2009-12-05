@@ -64,7 +64,9 @@ void CtSwBinRoi::setRoi(const Roi& roi)
 const Size& CtSwBinRoi::getSize()
 {
 	DEB_MEMBER_FUNCT();
-  
+
+	DEB_TRACE() << DEB_VAR3(m_max_size, m_bin, m_roi);
+
 	if (m_roi.isEmpty())
 		m_size= m_max_size / m_bin;
 	else	
@@ -252,6 +254,7 @@ void CtHwBinRoi::resetBin()
 	else {
 		m_bin.reset();
 	}
+	_updateSize();
 }
 
 void CtHwBinRoi::resetRoi()
@@ -268,8 +271,7 @@ void CtHwBinRoi::reset()
 
 	m_bin.reset();
 	m_set_roi.reset();
-	m_real_roi.reset();
-	m_size= m_max_size;
+	_updateSize();
 }
 
 void CtHwBinRoi::apply()

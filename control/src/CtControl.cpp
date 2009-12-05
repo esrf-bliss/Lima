@@ -320,6 +320,12 @@ void CtControl::reset()
 
   DEB_TRACE() << "Reseting image";
   m_ct_image->reset();
+
+  DEB_TRACE() << "Reseting buffer";
+  m_ct_buffer->reset();
+
+  DEB_TRACE() << "Reseting acquisition";
+  m_ct_acq->reset();
 }
 
 bool CtControl::newFrameReady(Data& fdata)

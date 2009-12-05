@@ -60,7 +60,7 @@ class FrelonTacoAcq(TacoCcdAcq):
     def getType(self):
         cam = self.m_acq.getFrelonCamera()
         type_nb = (cam.isFrelon2k16() and 2016) or 2014
-        deb.Return('Getting type: %s (#%s)' % (ccd_type, type_nb))
+        deb.Return('Getting type: %s' % type_nb)
         return type_nb
 
     @DEB_MEMBER_FUNCT
@@ -72,10 +72,34 @@ class FrelonTacoAcq(TacoCcdAcq):
     @DEB_MEMBER_FUNCT
     def setTrigger(self, ext_trig):
         deb.Param('Setting trigger: %s' % ext_trig)
+        ct_acq = self.m_acq.getAcqControl()
+        exp_time = prev_exp_time = ct_acq.getAcqExpoTime()
+        if ext_trig == 0:
+            trig_mode = IntTrig
+            if exp_time == 0:
+                exp_time = 1
+        elif ext_trig == 1:
+            trig_mode = ((exp_time == 0) and ExtGate) or ExtTrigSingle
+        elif ext_trig == 2:
+            trig_mode = ExtTrigMult
+        else:
+            raise 'Invalid ext. trig: %s' % ext_trig
+        ct_acq.setTriggerMode(trig_mode)
+        if exp_time != prev_exp_time:
+            ct_acq.setAcqExpoTime(exp_time)
     
     @DEB_MEMBER_FUNCT
     def getTrigger(self):
-        ext_trig = 0
+        ct_acq = self.m_acq.getAcqControl()
+        trig_mode = ct_acq.getTriggerMode()
+        if trig_mode == IntTrig:
+            ext_trig = 0
+        elif trig_mode in [ExtTrigSingle, ExtGate]:
+            ext_trig = 1
+        elif trig_mode == ExtTrigMult:
+            ext_trig = 2
+        else:
+            raise 'Invalid trigger mode: %s' % trig_mode
         deb.Return('Getting trigger: %s' % ext_trig)
         return ext_trig
     
@@ -96,6 +120,11 @@ class FrelonTacoAcq(TacoCcdAcq):
     def setExpTime(self, exp_time):
         deb.Param('Setting exp. time: %s' % exp_time)
         ct_acq = self.m_acq.getAcqControl()
+        trig_mode = ct_acq.getTriggerMode()
+        if exp_time == 0 and trig_mode == ExtTrigSingle:
+            ct_acq.setTriggerMode(ExtGate)
+        elif exp_time > 0 and trig_mode == ExtGate:
+            ct_acq.setTriggerMode(ExtTrigSingle)
         ct_acq.setAcqExpoTime(exp_time)
     
     @DEB_MEMBER_FUNCT
@@ -162,7 +191,7 @@ class FrelonTacoAcq(TacoCcdAcq):
             pars.overwritePolicy = CtSaving.Overwrite
         else:
             pars.overwritePolicy = CtSaving.Abort
-        if pars.suffix.lower()[-3:] == 'edf':
+        if pars.suffix.lower()[-4:] == '.edf':
             pars.fileFormat = CtSaving.EDF
         else:
             pars.fileFormat = CtSaving.RAW
@@ -182,6 +211,26 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('File pars: %s' % par_arr)
         return par_arr
 
+    @DEB_MEMBER_FUNCT
+    def setFileHeader(self, header_str):
+        deb.Param('Setting file header: %s' % header_str)
+        header_map = {}
+        for line in header_str.split('\n'):
+            token = line.split('=')
+            key = token[0].strip()
+            if not key:
+                continue
+            val = string.join(token[1:], '=').strip()
+            if val[-1] == ';':
+                val = val[:-1].strip()
+            header_map[key] = val
+        ct_saving = self.m_acq.getSavingControl()
+        ct_saving.setCommonHeader(header_map)
+        
+    @DEB_MEMBER_FUNCT
+    def writeFile(self, frame_nb):
+        deb.Param('Writing frame %s to file' % frame_nb)
+        
     @DEB_MEMBER_FUNCT
     def setChannel(self, input_chan):
         deb.Param('Setting input channel: %s' % input_chan)
@@ -212,21 +261,71 @@ class FrelonTacoAcq(TacoCcdAcq):
     def setHwPar(self, hw_par_str):
         hw_par = map(int, string.split(hw_par_str))
         deb.Param('Setting hw par: %s' % hw_par)
+        flip_mode, kin_line_beg, kin_stripes, d0, roi_mode = hw_par
+        cam = self.m_acq.getFrelonCamera()
+        flip = Flip(flip_mode >> 1, flip_mode & 1)
+        cam.setFlip(flip)
+        cam.setRoiMode(roi_mode)
+        if roi_mode == Frelon.Kinetic:
+            self.setKinPars(kin_line_beg, kin_stripes)
+        else:
+            deb.Warning("Ingoring Kinetic parameters")
         
     @DEB_MEMBER_FUNCT
     def getHwPar(self):
-        hw_par = []
+        cam = self.m_acq.getFrelonCamera()
+        flip = cam.getFlip()
+        flip_mode = flip.x << 1 | flip.y
+        roi_mode = cam.getRoiMode()
+        kin_line_beg, kin_stripes = self.getKinPars()
+        hw_par = [flip_mode, kin_line_beg, kin_stripes, 0, roi_mode]
         deb.Return('Getting hw par: %s' % hw_par)
         hw_par_str = string.join(map(str, hw_par))
         return hw_par_str
+
+    @DEB_MEMBER_FUNCT
+    def setKinPars(self, kin_line_beg, kin_stripes):
+        deb.Param('Setting kin pars: kin_line_beg=%s, kin_stripes=%s' % \
+                  (kin_line_beg, kin_stripes))
+        if kin_stripes > 1:
+            deb.Warning('Ignoring kin_stripes=%d' % kin_stripes)
+            
+        ct_image = self.m_acq.getImageControl()
+        bin = ct_image.getBin()
+        roi = ct_image.getRoi()
+        if roi.isEmpty():
+            roi = self.getMaxRoi()
+        roi = roi.getUnbinned(bin)
+        roi_bin_offset  = Point(roi.getTopLeft().x, kin_line_beg)
+        roi_bin_offset -= roi.getTopLeft()
+        cam = self.m_acq.getFrelonCamera()
+        cam.setRoiBinOffset(roi_bin_offset)
         
+    @DEB_MEMBER_FUNCT
+    def getKinPars(self):
+        ct_image = self.m_acq.getImageControl()
+        bin = ct_image.getBin()
+        roi = ct_image.getRoi()
+        if roi.isEmpty():
+            roi = self.getMaxRoi()
+        roi = roi.getUnbinned(bin)
+        cam = self.m_acq.getFrelonCamera()
+        tl  = roi.getTopLeft()
+        tl += cam.getRoiBinOffset()
+        kin_line_beg = tl.y
+        kin_stripes = 1
+        deb.Return('Getting kin pars: kin_line_beg=%s, kin_stripes=%s' % \
+                   (kin_line_beg, kin_stripes))
+        return kin_line_beg, kin_stripes
+
+    
     @DEB_MEMBER_FUNCT
     def setKinetics(self, kinetics):
         deb.Param('Setting the profile: %s' % kinetics)
         if kinetics == 0:
-            ftm = FFM
+            ftm = Frelon.FFM
         elif kinetics == 3:
-            ftm = FTM
+            ftm = Frelon.FTM
         else:
             raise 'Invalid kinetics value: %s' % kinetics
         cam = self.m_acq.getFrelonCamera()
@@ -236,7 +335,7 @@ class FrelonTacoAcq(TacoCcdAcq):
     def getKinetics(self):
         cam = self.m_acq.getFrelonCamera()
         ftm = cam.getFrameTransferMode()
-        if ftm == FTM:
+        if ftm == Frelon.FTM:
             kinetics = 3
         else:
             kinetics = 0

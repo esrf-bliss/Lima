@@ -47,7 +47,8 @@ void CtAcquisition::getPars(Parameters& pars) const
 void CtAcquisition::reset()
 {
   DEB_MEMBER_FUNCT();
-	// TODO
+  
+  m_inpars.reset();
 }
 
 void CtAcquisition::apply(CtControl::ApplyPolicy policy)
@@ -231,10 +232,21 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(acq_time);
 
-  if (acq_time < m_valid_ranges.min_exp_time)
-    throw LIMA_CTL_EXC(InvalidValue, "Exposure time too short");
-  if (acq_time > m_valid_ranges.max_exp_time)
+  if (acq_time < 0) {
+    DEB_ERROR() << "Invalid " << DEB_VAR1(acq_time);
+    throw LIMA_CTL_EXC(InvalidValue, "Invalid exposure time");
+  } else if (acq_time == 0) {
+    DEB_TRACE() << "Setting GATE mode";
+  } else if (acq_time < m_valid_ranges.min_exp_time) {
+    DEB_WARNING() << "Exposure time too short, setting to " 
+		  << DEB_VAR1(m_valid_ranges.min_exp_time);
+    acq_time = m_valid_ranges.min_exp_time;
+  } else if (acq_time > m_valid_ranges.max_exp_time) {
+    DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too long: " 
+		<< DEB_VAR1(m_valid_ranges.max_exp_time);
     throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");
+  }
+
   m_inpars.acqExpoTime= acq_time;
 }
 

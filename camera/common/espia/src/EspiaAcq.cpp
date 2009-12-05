@@ -192,10 +192,11 @@ void Acq::processFrameCallback(struct espia_cb_data *cb_data)
 
 	l.unlock();
 
-	HwFrameInfo hw_finfo;
-	if (!aborted)
-		real2virtFrameInfo(cb_finfo, hw_finfo);
+	if (aborted)
+		return;
 
+	HwFrameInfo hw_finfo;
+	real2virtFrameInfo(cb_finfo, hw_finfo);
 	DEB_TRACE() << DEB_VAR1(hw_finfo);
 
 	if (m_user_frame_cb_act) {
