@@ -5,6 +5,7 @@
 #include "TaskMgr.h"
 #include "TaskEventCallback.h"
 #include "SoftRoi.h"
+#include "CtSpsImage.h"
 #include "AcqState.h"
 
 #include <iostream>
@@ -25,8 +26,8 @@ class SoftRoiCallback : public TaskEventCallback
 	DEB_CLASS(DebModTest, "SoftRoiCallback");
 
 public:
-	SoftRoiCallback(Frelon::Interface& hw_inter, BufferSave& buffer_save,
-			AcqState& acq_state);
+	SoftRoiCallback(Frelon::Interface& hw_inter, CtSpsImage& m_sps_image, 
+			BufferSave& buffer_save, AcqState& acq_state);
 	~SoftRoiCallback();
 
 	virtual void finished(Data& data);
@@ -35,15 +36,17 @@ private:
 			    FrameDim& fdim);
 
 	Frelon::Interface& m_hw_inter;
+	CtSpsImage& m_sps_image;
 	BufferSave& m_buffer_save;
 	AcqState& m_acq_state;
 };
 
 SoftRoiCallback::SoftRoiCallback(Frelon::Interface& hw_inter, 
+				 CtSpsImage& sps_image,
 				 BufferSave& buffer_save,
 				 AcqState& acq_state)
-	: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
-	  m_acq_state(acq_state) 
+	: m_hw_inter(hw_inter), m_sps_image(sps_image), 
+	  m_buffer_save(buffer_save), m_acq_state(acq_state) 
 {
 	DEB_CONSTRUCTOR();
 }
@@ -89,6 +92,8 @@ void SoftRoiCallback::finished(Data& data)
 {
 	DEB_MEMBER_FUNCT();
 
+	m_sps_image.frameReady(data);
+
 	HwFrameInfoType finfo;
 	FrameDim fdim;
 	data2FrameInfo(data, finfo, fdim);
@@ -114,7 +119,8 @@ class TestFrameCallback : public HwFrameCallback
 
 public:
 	TestFrameCallback(Frelon::Interface& hw_inter, Roi& soft_roi,
-			  BufferSave& buffer_save, AcqState& acq_state);
+			  CtSpsImage& sps_image, BufferSave& buffer_save, 
+			  AcqState& acq_state);
 	~TestFrameCallback();
 
 protected:
@@ -130,12 +136,14 @@ private:
 };
 
 TestFrameCallback::TestFrameCallback(Frelon::Interface& hw_inter, 
-				     Roi& soft_roi, BufferSave& buffer_save, 
+				     Roi& soft_roi, CtSpsImage& sps_image,
+				     BufferSave& buffer_save, 
 				     AcqState& acq_state) 
 	: m_hw_inter(hw_inter), m_soft_roi(soft_roi)
 {
 	DEB_CONSTRUCTOR();
-	m_roi_cb = new SoftRoiCallback(hw_inter, buffer_save, acq_state);
+	m_roi_cb = new SoftRoiCallback(hw_inter, sps_image, buffer_save, 
+				       acq_state);
 	m_roi_task = new SoftRoi();
 }
 
@@ -284,6 +292,36 @@ void set_hw_roi(HwRoiCtrlObj *hw_roi, const Roi& set_roi, Roi& real_roi,
 
 
 //*********************************************************************
+// check_sps_image_frame_dim
+//*********************************************************************
+
+void check_sps_image_frame_dim(HwInterface& hw_inter, 
+			    Bin& bin, Roi& set_roi, CtSpsImage& sps_image)
+{
+	DEB_GLOBAL_FUNCT();
+
+	Size size;
+	if (set_roi.isEmpty()) {
+		HwDetInfoCtrlObj *hw_det_info;
+		hw_inter.getHwCtrlObj(hw_det_info);
+		hw_det_info->getMaxImageSize(size);
+		size /= bin;
+	} else {
+		size = set_roi.getSize();
+	}
+
+	HwBufferCtrlObj *hw_buffer;
+	hw_inter.getHwCtrlObj(hw_buffer);
+	FrameDim frame_dim;
+	hw_buffer->getFrameDim(frame_dim);
+	frame_dim.setSize(size);
+	DEB_TRACE() << DEB_VAR1(frame_dim);
+
+	sps_image.prepare(frame_dim);
+}
+
+
+//*********************************************************************
 // print_deb_flags
 //*********************************************************************
 
@@ -334,11 +372,15 @@ void test_frelon_hw_inter(bool do_reset)
 
 	BufferSave buffer_save(BufferSave::EDF, "img", 0, ".edf", true, 1);
 
+	CtSpsImage sps_image;
+	sps_image.setNames("_ccd_ds_", "frelon_live");
+
 	MaxImageSizeCallback mis_cb;
 
 	Roi soft_roi;
 	AcqState acq_state;
-	TestFrameCallback cb(hw_inter, soft_roi, buffer_save, acq_state);
+	TestFrameCallback cb(hw_inter, soft_roi, sps_image, buffer_save, 
+			     acq_state);
 	
 	HwDetInfoCtrlObj *hw_det_info;
 	hw_inter.getHwCtrlObj(hw_det_info);
@@ -383,6 +425,7 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setFrameDim(effect_frame_dim);
 	hw_buffer->setNbBuffers(10);
 	hw_buffer->registerFrameCallback(cb);
+	check_sps_image_frame_dim(hw_inter, bin, set_roi, sps_image);
 
 	print_status(hw_inter);
 	acq_state.set(AcqState::Acquiring);
@@ -435,6 +478,7 @@ void test_frelon_hw_inter(bool do_reset)
 	effect_frame_dim = frame_dim / bin;
 	hw_buffer->setFrameDim(effect_frame_dim);
 	hw_buffer->setNbBuffers(10);
+	check_sps_image_frame_dim(hw_inter, bin, set_roi, sps_image);
 
 	print_status(hw_inter);
 	acq_state.set(AcqState::Acquiring);
@@ -450,6 +494,7 @@ void test_frelon_hw_inter(bool do_reset)
 	effect_frame_dim.setSize(real_roi.getSize());
 	hw_buffer->setFrameDim(effect_frame_dim);
 	hw_buffer->setNbBuffers(10);
+	check_sps_image_frame_dim(hw_inter, bin, set_roi, sps_image);
 
 	print_status(hw_inter);
 	acq_state.set(AcqState::Acquiring);
@@ -468,6 +513,7 @@ void test_frelon_hw_inter(bool do_reset)
 	effect_frame_dim.setSize(real_roi.getSize());
 	hw_buffer->setFrameDim(effect_frame_dim);
 	hw_buffer->setNbBuffers(10);
+	check_sps_image_frame_dim(hw_inter, bin, set_roi, sps_image);
 
 	print_status(hw_inter);
 	acq_state.set(AcqState::Acquiring);
@@ -481,6 +527,7 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_buffer->setFrameDim(effect_frame_dim);
 	hw_buffer->setNbAccFrames(5);
 	hw_buffer->setNbBuffers(10);
+	check_sps_image_frame_dim(hw_inter, bin, set_roi, sps_image);
 
 	hw_sync->setNbFrames(3);
 

@@ -17,6 +17,7 @@ CXXFLAGS = -I../include -I../../common/espia/include \
            -I../../../control/software_operation/include/ \
 	   -I../../../third-party/Processlib/core/include \
 	   -I../../../third-party/Processlib/tasks/include \
+	   -I../../../third-party/Sps/Include \
 	   -I$(ESPIA_DRV_INCL) -Wall -pthread -g
 
 test-progs = testfrelon testfreloninterface testfrelonspectroscopy \
@@ -27,7 +28,7 @@ all: 	$(test-progs)
 testfrelon:		testfrelon.o $(frelon-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
-testfreloninterface:	testfreloninterface.o $(frelon-objs)
+testfreloninterface:	testfreloninterface.o $(frelon-objs) $(ct-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 testfrelonspectroscopy:	testfrelonspectroscopy.o $(frelon-objs)

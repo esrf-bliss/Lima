@@ -3,12 +3,17 @@
 #include "CtAcquisition.h"
 #include "CtImage.h"
 #include "CtSaving.h"
+#include "CtSpsImage.h"
 #include "AcqState.h"
 
 using namespace lima;
 using namespace std;
 
 DEB_GLOBAL(DebModTest);
+
+//*********************************************************************
+//* ImageStatusCallback
+//*********************************************************************
 
 class ImageStatusCallback : public CtControl::ImageStatusCallback
 {
@@ -66,6 +71,11 @@ void ImageStatusCallback::imageStatusChanged(
 	}
 }
 
+
+//*********************************************************************
+//* FrelonAcq
+//*********************************************************************
+
 class FrelonAcq
 {
 	DEB_CLASS(DebModTest, "FrelonAcq");
@@ -104,6 +114,7 @@ private:
 	CtSaving		*m_ct_saving;
 	CtImage			*m_ct_image;
 	CtBuffer		*m_ct_buffer;
+	CtSpsImage		*m_ct_display;
 
 	ImageStatusCallback	*m_img_status_cb;
 };
@@ -122,16 +133,20 @@ FrelonAcq::FrelonAcq(int espia_dev_nb)
 
 	AutoPtr<CtControl> ct = new CtControl(&m_hw_inter);
 
-	m_ct_acq    = ct->acquisition();
-	m_ct_saving = ct->saving();
-	m_ct_image  = ct->image();
-	m_ct_buffer = ct->buffer();
+	m_ct_acq     = ct->acquisition();
+	m_ct_saving  = ct->saving();
+	m_ct_image   = ct->image();
+	m_ct_buffer  = ct->buffer();
+	m_ct_display = ct->display();
 
 	printDefaults();
 
 	AutoPtr<ImageStatusCallback> img_status_cb;
 	img_status_cb = new ImageStatusCallback(*ct, m_acq_state);
 	ct->registerImageStatusCallback(*img_status_cb);
+
+	m_ct_display->setNames("_ccd_ds_", "frelon_live");
+	m_ct_display->setActive(true);
 
 	DEB_TRACE() << "All is OK!";
 	m_ct = ct.forget();
@@ -221,7 +236,6 @@ void FrelonAcq::initSaving(string dir, string prefix, string suffix, int idx,
 	m_ct_saving->setFormat(fmt);
 	m_ct_saving->setSavingMode(mode);
 	m_ct_saving->setFramesPerFile(frames_per_file);
-
 }
 
 void FrelonAcq::setExpTime(double exp_time)
@@ -256,6 +270,10 @@ void FrelonAcq::setRoi(Roi& roi)
 	m_ct_image->setRoi(roi);
 
 }
+
+//*********************************************************************
+//* test_frelon_control
+//*********************************************************************
 
 void test_frelon_control(bool enable_debug = false)
 {
@@ -312,6 +330,11 @@ void test_frelon_control(bool enable_debug = false)
 	DEB_ALWAYS() << "Done!";
 
 }
+
+
+//*********************************************************************
+//* main
+//*********************************************************************
 
 int main(int argc, char *argv[])
 {

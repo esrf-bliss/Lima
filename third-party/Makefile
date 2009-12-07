@@ -1,10 +1,9 @@
 
 all:	src test
 
-src:	Processlib/sip/Makefile Processlib/sip/processlib.so
+src:	processlib.src sps.src
 
-test:
-	@echo
+processlib.src:	Processlib/sip/Makefile Processlib/sip/processlib.so
 
 Processlib/sip/Makefile:
 	cd Processlib/sip/ && python configure.py
@@ -12,9 +11,17 @@ Processlib/sip/Makefile:
 Processlib_build_libprocesslib.so:
 	make -C Processlib/build -j2
 
-
 Processlib/sip/processlib.so: Processlib_build_libprocesslib.so
 	make -C Processlib/sip -j2
+
+sps.src:	Sps/Src/sps.o
+
+Sps/Src/sps.o:	Sps/Src/sps.c Sps/Include/sps.h
+	make -C Sps/Src CPPFLAGS=-I../Include sps.o
+
+test:
+	@echo
+
 clean:
 	cd Processlib/sip/ && python clean.py
 	make -C Processlib/build clean

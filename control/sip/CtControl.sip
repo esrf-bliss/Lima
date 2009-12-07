@@ -72,9 +72,10 @@ using namespace lima;
 
     CtAcquisition* acquisition();
     CtSaving* saving();
+    CtSpsImage* display();
     CtImage* image();
     CtBuffer* buffer();
-
+    
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy /Out/) const;
 

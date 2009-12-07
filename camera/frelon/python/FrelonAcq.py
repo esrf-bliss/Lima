@@ -21,7 +21,8 @@ class FrelonAcq:
         self.m_ct_saving     = self.m_ct.saving()
         self.m_ct_image      = self.m_ct.image()
         self.m_ct_buffer     = self.m_ct.buffer()
-
+        self.m_ct_display    = self.m_ct.display()
+        
 
     @DEB_MEMBER_FUNCT
     def __del__(self):
@@ -72,4 +73,5 @@ class FrelonAcq:
     def getBufferControl(self):
         return self.m_ct_buffer
 
-
+    def getDisplayControl(self):
+        return self.m_ct_display

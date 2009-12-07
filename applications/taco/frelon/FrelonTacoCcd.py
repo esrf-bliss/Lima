@@ -247,13 +247,18 @@ class FrelonTacoAcq(TacoCcdAcq):
     @DEB_MEMBER_FUNCT
     def setMode(self, mode):
         deb.Param('Setting mode: %s (0x%x)' % (mode, mode))
+        live_display = (mode & self.LiveDisplay) != 0
+        self.setLiveDisplay(live_display)
         auto_save = (mode & self.AutoSave) != 0
         self.setAutosave(auto_save)
         
     @DEB_MEMBER_FUNCT
     def getMode(self):
-        auto_save = self.getAutosave()
-        mode = (auto_save and self.AutoSave) or 0
+        mode = 0
+        if self.getLiveDisplay():
+            mode |= self.LiveDisplay
+        if self.getAutosave():
+            mode |= self.AutoSave
         deb.Return('Getting mode: %s (0x%x)' % (mode, mode))
         return mode
 
@@ -394,7 +399,21 @@ class FrelonTacoAcq(TacoCcdAcq):
         autosave_act = (ct_saving.getSavingMode() == CtSaving.AutoFrame)
         deb.Return('Getting autosave active: %s' % autosave_act)
         return autosave_act
-    
+
+    @DEB_MEMBER_FUNCT
+    def setLiveDisplay(self, livedisplay_act):
+        deb.Param('Setting live display active: %s' % livedisplay_act)
+        ct_display = self.m_acq.getDisplayControl()
+        ct_display.setNames('_ccd_ds_', 'frelon_live')
+        ct_display.setActive(livedisplay_act)
+        
+    @DEB_MEMBER_FUNCT
+    def getLiveDisplay(self):
+        ct_display = self.m_acq.getDisplayControl()
+        livedisplay_act = ct_display.isActive()
+        deb.Return('Getting live display active: %s' % livedisplay_act)
+        return livedisplay_act
+
     @DEB_MEMBER_FUNCT
     def getCurrent(self):
         ct = self.m_acq.getGlobalControl()

@@ -36,7 +36,10 @@ void Camera::sync()
 	int ser_nb;
 	getSerialNb(ser_nb);
 
-	m_trig_mode = IntTrig;
+	double exp_time;
+	getExpTime(exp_time);
+	m_trig_mode = (exp_time == 0) ? ExtGate : IntTrig;
+
 	readRegister(NbFrames, m_nb_frames);
 
 	m_roi_offset = 0;

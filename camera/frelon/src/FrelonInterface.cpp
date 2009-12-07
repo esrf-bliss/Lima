@@ -490,7 +490,7 @@ void Interface::reset(ResetLevel reset_level)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(reset_level);
 
-	m_acq.stop();
+	stopAcq();
 
 	if (reset_level == HardReset) {
 		DEB_TRACE() << "Performing camera hard reset";

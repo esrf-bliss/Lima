@@ -3,6 +3,7 @@
 
 #include "CtControl.h"
 #include "CtSaving.h"
+#include "CtSpsImage.h"
 #include "CtAcquisition.h"
 #include "CtImage.h"
 #include "CtBuffer.h"
@@ -95,6 +96,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_saving->setEndCallback(aSaveCbkPt);
   aSaveCbkPt->unref();
 
+  //Sps image
+  m_ct_sps_image = new CtSpsImage();
   m_op_int = new SoftOpInternalMgr();
   m_op_ext = new SoftOpExternalMgr();
 }
@@ -111,6 +114,7 @@ CtControl::~CtControl()
     unregisterImageStatusCallback(*m_img_status_cb);
 
   delete m_ct_saving;
+  delete m_ct_sps_image;
   delete m_ct_acq;
   delete m_ct_image;
   delete m_ct_buffer;
@@ -189,6 +193,17 @@ void CtControl::prepareAcq()
   else
     DEB_TRACE() << "No auto save activated";
   m_ready= true;
+
+  m_display_active_flag = m_ct_sps_image->isActive();
+  if(m_display_active_flag)
+  {
+    FrameDim dim;
+    m_ct_image->getImageDim(dim);
+    
+    m_ct_sps_image->prepare(dim);
+  }
+
+  
 }
 
 void CtControl::startAcq()
@@ -326,6 +341,9 @@ void CtControl::reset()
 
   DEB_TRACE() << "Reseting acquisition";
   m_ct_acq->reset();
+
+  DEB_TRACE() << "Reseting display";
+  m_ct_sps_image->reset();
 }
 
 bool CtControl::newFrameReady(Data& fdata)
@@ -404,6 +422,9 @@ void CtControl::newBaseImageReady(Data &aData)
       newFrameToSave(aData);
     }
 
+  if(m_display_active_flag)
+	  m_ct_sps_image->frameReady(aData);
+  
   aLock.unlock();
   if (img_status_changed && m_img_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);

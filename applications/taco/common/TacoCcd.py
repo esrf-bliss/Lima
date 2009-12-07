@@ -191,7 +191,9 @@ class TacoCcdAcq(TacoServer):
                                  'getChanges', 'DevCcdGetChanges'],
     }
 
-    AutoSave = 8
+    LiveDisplay  = 1
+    StripeConcat = 4
+    AutoSave     = 8
 
     DEB_CLASS(DebModApplication, 'TacoCcdAcq')
 
@@ -364,6 +366,7 @@ class TacoCcdAcq(TacoServer):
     @DEB_MEMBER_FUNCT
     def setMode(self, mode):
         deb.Param('Setting mode: %s (0x%x)' % (mode, mode))
+        live_display = (mode & self.LiveDisplay) != 0
         auto_save = (mode & self.AutoSave) != 0
         
     @DEB_MEMBER_FUNCT

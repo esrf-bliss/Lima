@@ -18,6 +18,7 @@ namespace lima
   class CtBuffer;
   class CtBufferFrameCB;
   class CtSaving;
+  class CtSpsImage;
 
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
@@ -94,6 +95,7 @@ namespace lima
 
     CtAcquisition* acquisition() { return m_ct_acq; }
     CtSaving* saving() { return m_ct_saving; }
+    CtSpsImage* display() { return m_ct_sps_image; }
     CtImage* image() { return m_ct_image; }
     CtBuffer* buffer() { return m_ct_buffer; }
 
@@ -141,6 +143,7 @@ namespace lima
     mutable Status      m_status;
     
     CtSaving		*m_ct_saving;
+    CtSpsImage		*m_ct_sps_image;
     CtAcquisition	*m_ct_acq;
     CtImage		*m_ct_image;
     CtBuffer		*m_ct_buffer;
@@ -157,6 +160,7 @@ namespace lima
     ApplyPolicy		m_policy;
     bool		m_ready;
     bool		m_autosave;
+    bool		m_display_active_flag;
 
     ImageStatusCallback *m_img_status_cb;
 
