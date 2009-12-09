@@ -25,6 +25,7 @@ namespace Espia
 namespace Focla
 {
 
+DEB_GLOBAL_NAMESPC(DebModFocla, "Espia::Focla");
 
 extern const std::string 
 	TRIG_MODE,
@@ -87,6 +88,7 @@ void initSigName2IdxMap();
  *******************************************************************/
 class Dev 
 {
+	DEB_CLASS_NAMESPC(DebModFocla, "Dev", "Espia::Focla");
 
   public :
 
@@ -160,6 +162,7 @@ class Dev
  *******************************************************************/
 class SerialLine : public HwSerialLine
 {
+	DEB_CLASS_NAMESPC(DebModFocla, "SerialLine", "Espia::Focla");
 
   public :
 

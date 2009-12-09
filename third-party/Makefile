@@ -17,7 +17,7 @@ Processlib/sip/processlib.so: Processlib_build_libprocesslib.so
 sps.src:	Sps/Src/sps.o
 
 Sps/Src/sps.o:	Sps/Src/sps.c Sps/Include/sps.h
-	make -C Sps/Src CPPFLAGS=-I../Include sps.o
+	make -C Sps/Src CPPFLAGS=-I../Include CFLAGS=-fPIC sps.o
 
 test:
 	@echo

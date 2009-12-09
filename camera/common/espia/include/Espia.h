@@ -40,9 +40,12 @@ void ThrowError(int ret, std::string file, std::string func, int line);
 #define ESPIA_CHECK_CALL(espia_ret)					\
 	do {								\
 		int aux_ret = (espia_ret);				\
-		if (aux_ret < 0)					\
+		if (aux_ret < 0) {					\
+			DEB_ERROR() << "Espia error: " 			\
+				    << espia_strerror(aux_ret);		\
 			Espia::ThrowError(aux_ret, __FILE__,		\
 					  __FUNCTION__, __LINE__);	\
+		}							\
 	} while (0)
 
 

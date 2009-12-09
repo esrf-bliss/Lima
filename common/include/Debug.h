@@ -469,7 +469,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
  *------------------------------------------------------------------*/
 
 #define DEB_GLOBAL_NAMESPC(mod, name_space)				\
-	DebParams& getDebParams()					\
+	inline DebParams& getDebParams()				\
 	{								\
 		static DebParams *deb_params = NULL;			\
 		EXEC_ONCE(deb_params = new DebParams(mod, NULL,		\

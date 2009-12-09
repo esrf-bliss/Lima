@@ -49,11 +49,14 @@ const string Espia::Focla::CL2_OUT3     = "CL2_OUT3";
 
 map<string, int> Espia::Focla::ParamName2IdxMap;
 
+
 /***************************************************************//**
  * @brief Initialize ParamName2IdxMap (once)
  *******************************************************************/
 void Espia::Focla::initParamName2IdxMap()
 {
+	DEB_GLOBAL_FUNCT();
+
 	static bool is_init_ParamName2IdxMap=false;
 
 	if( !is_init_ParamName2IdxMap ) {
@@ -108,6 +111,8 @@ map<string, int> Espia::Focla::SigName2IdxMap;
  *******************************************************************/
 void Espia::Focla::initSigName2IdxMap()
 {
+	DEB_GLOBAL_FUNCT();
+
 	static bool is_init_SigName2IdxMap=false;
 
 	if( !is_init_SigName2IdxMap ) {
@@ -135,6 +140,8 @@ void Espia::Focla::initSigName2IdxMap()
 Espia::Focla::Dev::Dev( Espia::Dev &espia_dev ) :
 	m_edev(espia_dev)
 {
+	DEB_CONSTRUCTOR();
+
 	initParamName2IdxMap();
 	initSigName2IdxMap();
 
@@ -154,12 +161,16 @@ Espia::Focla::Dev::Dev( Espia::Dev &espia_dev ) :
 
 Espia::Focla::Dev::~Dev()
 {
+	DEB_DESTRUCTOR();
+
 	close();
 }
 
 
 void Espia::Focla::Dev::open()
 {
+	DEB_MEMBER_FUNCT();
+
 	if( ! m_dev_open ) {
 		CHECK_CALL( focla_open( m_edev, &m_focla ) );
 		m_dev_open = true;
@@ -169,6 +180,8 @@ void Espia::Focla::Dev::open()
 
 void Espia::Focla::Dev::close()
 {
+	DEB_MEMBER_FUNCT();
+
 	if( m_dev_open ) {
 		CHECK_CALL( focla_close( m_focla ) );
 		m_dev_open = false;
@@ -182,6 +195,7 @@ void Espia::Focla::Dev::close()
  *******************************************************************/
 Espia::Dev &Espia::Focla::Dev::getEspiaDev()
 {
+	DEB_MEMBER_FUNCT();
 	return m_edev;
 }
 
@@ -191,12 +205,15 @@ Espia::Dev &Espia::Focla::Dev::getEspiaDev()
  *******************************************************************/
 focla_t Espia::Focla::Dev::getFocla()
 {
+	DEB_MEMBER_FUNCT();
 	return m_focla;
 }
 
 
 int Espia::Focla::Dev::pIdxFromName( const string pname )
 {
+	DEB_MEMBER_FUNCT();
+
 	map<string, int>::iterator pnm = ParamName2IdxMap.find(pname);
 	if( pnm == ParamName2IdxMap.end() )
 		throw LIMA_HW_EXC(InvalidValue, "No such Focla parameter name");
@@ -206,6 +223,8 @@ int Espia::Focla::Dev::pIdxFromName( const string pname )
 
 void Espia::Focla::Dev::checkMeta() throw(Exception)
 {
+	DEB_MEMBER_FUNCT();
+
 	if( m_edev.isMeta() ) {
 		throw LIMA_HW_EXC(NotSupported, "Operation not permitted on "
 		                                "meta-devices!");
@@ -221,6 +240,8 @@ void Espia::Focla::Dev::checkMeta() throw(Exception)
  *******************************************************************/
 void Espia::Focla::Dev::getParam( const string pname, int &value )
 {
+	DEB_MEMBER_FUNCT();
+
 	checkMeta();
 	CHECK_CALL( focla_get_param(m_focla, pIdxFromName(pname), &value) );
 }
@@ -234,6 +255,8 @@ void Espia::Focla::Dev::getParam( const string pname, int &value )
  *******************************************************************/
 void Espia::Focla::Dev::setParam( const string pname, int value )
 {
+	DEB_MEMBER_FUNCT();
+
 	checkMeta();
 	CHECK_CALL( focla_set_param(m_focla, pIdxFromName(pname), value) );
 }
@@ -246,6 +269,8 @@ void Espia::Focla::Dev::setParam( const string pname, int value )
  *******************************************************************/
 void Espia::Focla::Dev::disableCache()
 {
+	DEB_MEMBER_FUNCT();
+
 	m_no_cache = true;
 }
 
@@ -257,6 +282,8 @@ void Espia::Focla::Dev::disableCache()
  *******************************************************************/
 void Espia::Focla::Dev::enableCache()
 {
+	DEB_MEMBER_FUNCT();
+
 	m_no_cache = false;
 	getSelectedCamera( m_curr_cam );
 }
@@ -269,6 +296,8 @@ void Espia::Focla::Dev::enableCache()
  *******************************************************************/
 void Espia::Focla::Dev::getSelectedCamera( int &curr_cam )
 {
+	DEB_MEMBER_FUNCT();
+
 	getParam( CAM_SEL, curr_cam );
 }
 
@@ -280,6 +309,8 @@ void Espia::Focla::Dev::getSelectedCamera( int &curr_cam )
  *******************************************************************/
 void Espia::Focla::Dev::selectCamera( int cam_nb )
 {
+	DEB_MEMBER_FUNCT();
+
 	if( m_no_cache || (cam_nb != m_curr_cam) ) {
 		setParam( CAM_SEL, cam_nb );
 		m_curr_cam = cam_nb;
@@ -289,6 +320,8 @@ void Espia::Focla::Dev::selectCamera( int cam_nb )
 
 string Espia::Focla::Dev::pixelPackParName( int cam_nb )
 {
+	DEB_MEMBER_FUNCT();
+
 	ostringstream s;
 	s << "CL" << (cam_nb+1) << "_PIX_PACK";
 	return s.str();
@@ -305,6 +338,8 @@ string Espia::Focla::Dev::pixelPackParName( int cam_nb )
  *******************************************************************/
 void Espia::Focla::Dev::getPixelPack( int cam_nb, string &pix_pack_str )
 {
+	DEB_MEMBER_FUNCT();
+
 	int pix_pack;
 	string pname = pixelPackParName( cam_nb );
 	getParam( pname, pix_pack );
@@ -334,6 +369,8 @@ void Espia::Focla::Dev::getPixelPack( int cam_nb, string &pix_pack_str )
 void Espia::Focla::Dev::setPixelPack( int cam_nb, int pix_pack, 
                                       string pix_pack_str )
 {
+	DEB_MEMBER_FUNCT();
+
 	string pname = pixelPackParName( cam_nb );
 	if( -1 == pix_pack ) {
 		map<string,int>::const_iterator p = 
@@ -354,6 +391,8 @@ void Espia::Focla::Dev::setPixelPack( int cam_nb, int pix_pack,
  *******************************************************************/
 void Espia::Focla::Dev::getTestImage( int &val )
 {
+	DEB_MEMBER_FUNCT();
+
 	getParam( TEST_IMAGE, val );
 }
 
@@ -365,6 +404,8 @@ void Espia::Focla::Dev::getTestImage( int &val )
  *******************************************************************/
 void Espia::Focla::Dev::setTestImage( int val )
 {
+	DEB_MEMBER_FUNCT();
+
 	setParam( TEST_IMAGE, val );
 }
 
@@ -376,6 +417,8 @@ void Espia::Focla::Dev::setTestImage( int val )
  *******************************************************************/
 void Espia::Focla::Dev::getTriggerMode( int &val )
 {
+	DEB_MEMBER_FUNCT();
+
 	getParam( TRIG_MODE, val );
 }
 
@@ -387,6 +430,8 @@ void Espia::Focla::Dev::getTriggerMode( int &val )
  *******************************************************************/
 void Espia::Focla::Dev::setTriggerMode( int val )
 {
+	DEB_MEMBER_FUNCT();
+
 	setParam( TRIG_MODE, val );
 }
 
@@ -396,12 +441,16 @@ void Espia::Focla::Dev::setTriggerMode( int val )
  *******************************************************************/
 void Espia::Focla::Dev::triggerImage()
 {
+	DEB_MEMBER_FUNCT();
+
 	setParam( TRIG, 1 );
 }
 
 
 string Espia::Focla::Dev::ccLevelParName( int cam_nb, int cc_nb )
 {
+	DEB_MEMBER_FUNCT();
+
 	ostringstream s;
 	s <<  "CL" << (cam_nb+1) << "_CC" << (cc_nb+1);
 	return s.str();
@@ -420,6 +469,8 @@ string Espia::Focla::Dev::ccLevelParName( int cam_nb, int cc_nb )
 void Espia::Focla::Dev::ccLevelGet( int cam_nb, int cc_nb, 
                                     unsigned int &cc_level )
 {
+	DEB_MEMBER_FUNCT();
+
 	int pval;
 	string pname = ccLevelParName( cam_nb, cc_nb );
 	getParam( pname, pval );
@@ -445,6 +496,8 @@ void Espia::Focla::Dev::ccLevelGet( int cam_nb, int cc_nb,
 void Espia::Focla::Dev::ccLevelSet( int cam_nb, int cc_nb, 
                                     unsigned int cc_level )
 {
+	DEB_MEMBER_FUNCT();
+
 	int pval;
 	string pname = ccLevelParName( cam_nb, cc_nb );
 	if( cc_level < Espia::Focla::CCLevel.size() ) {
@@ -458,6 +511,8 @@ void Espia::Focla::Dev::ccLevelSet( int cam_nb, int cc_nb,
 
 string Espia::Focla::Dev::ccSignalName( int cam_nb, int cc_nb )
 {
+	DEB_MEMBER_FUNCT();
+
 	ostringstream s;
 	s << "CC" << (cc_nb + 1);
 	return s.str();
@@ -466,6 +521,8 @@ string Espia::Focla::Dev::ccSignalName( int cam_nb, int cc_nb )
 
 int Espia::Focla::Dev::sigNbFromName( const string sname )
 {
+	DEB_MEMBER_FUNCT();
+
 	map<string, int>::iterator snm = SigName2IdxMap.find(sname);
 	if( snm == SigName2IdxMap.end() )
 		throw LIMA_HW_EXC(InvalidValue, "No such Focla signal name");
@@ -486,6 +543,8 @@ int Espia::Focla::Dev::sigNbFromName( const string sname )
 void Espia::Focla::Dev::ccPulseStart( int cam_nb, int cc_nb, int polarity, 
                                       int width_us, int delay_us, int nb_pulse )
 {
+	DEB_MEMBER_FUNCT();
+
 	string sig_name = ccSignalName( cam_nb, cc_nb );
 	int sig_nb = sigNbFromName( sig_name );
 	int width_arr[2] = {width_us, delay_us};
@@ -503,6 +562,8 @@ void Espia::Focla::Dev::ccPulseStart( int cam_nb, int cc_nb, int polarity,
  *******************************************************************/
 void Espia::Focla::Dev::ccPulseStop( int cam_nb, int cc_nb )
 {
+	DEB_MEMBER_FUNCT();
+
 	string sig_name = ccSignalName( cam_nb, cc_nb );
 	int sig_nb = sigNbFromName( sig_name );
 	CHECK_CALL( focla_sig_pulse_stop( m_focla, cam_nb, sig_nb ) );
@@ -521,6 +582,8 @@ void Espia::Focla::Dev::ccPulseStop( int cam_nb, int cc_nb )
 void Espia::Focla::Dev::ccPulseStatus( int cam_nb, int cc_nb, int &pulse_active, 
                                        int &curr_pulse, int &curr_stage )
 {
+	DEB_MEMBER_FUNCT();
+
 	string sig_name = ccSignalName( cam_nb, cc_nb );
 	int sig_nb = sigNbFromName( sig_name );
 	CHECK_CALL( focla_sig_pulse_status( m_focla, cam_nb, sig_nb, 
@@ -530,18 +593,24 @@ void Espia::Focla::Dev::ccPulseStatus( int cam_nb, int cc_nb, int &pulse_active,
 
 void Espia::Focla::Dev::setCLDev( int cam_nb, void *cl_dev )
 {
+	DEB_MEMBER_FUNCT();
+
 	m_cl_dev[cam_nb] = cl_dev; // XXX What about the del callback in Python?
 }
 
 
 void Espia::Focla::Dev::getCLDev( int cam_nb, void **cl_dev )
 {
+	DEB_MEMBER_FUNCT();
+
 	*cl_dev = m_cl_dev[cam_nb];  // XXX
 }
 
 
 void Espia::Focla::Dev::delCLDev( void *cl_dev )  // XXX Should be called back
 {
+	DEB_MEMBER_FUNCT();
+
 	for( unsigned i=0; i<(sizeof(m_cl_dev)/sizeof(m_cl_dev[0])); i++ ) {
 		if( m_cl_dev[i] == cl_dev )
 			m_cl_dev[i] = NULL;
@@ -558,11 +627,13 @@ Espia::Focla::SerialLine::SerialLine( Focla::Dev &focla_dev ) :
 	HwSerialLine(),
 	m_fdev( focla_dev )
 {
+	DEB_CONSTRUCTOR();
 }
 
 
 Espia::Focla::SerialLine::~SerialLine()
 {
+	DEB_DESTRUCTOR();
 }
 
 
@@ -591,6 +662,8 @@ Espia::Dev &Espia::Focla::SerialLine::getEspiaDev()
  *******************************************************************/
 int Espia::Focla::SerialLine::getTimeoutUSec( double timeout_s, bool avail )
 {
+	DEB_MEMBER_FUNCT();
+
 	if( timeout_s == TimeoutDefault ) {
 		if( avail ) {
 			timeout_s = TimeoutNoBlock;
@@ -611,6 +684,8 @@ int Espia::Focla::SerialLine::getTimeoutUSec( double timeout_s, bool avail )
  *******************************************************************/
 void Espia::Focla::SerialLine::flush()
 {
+	DEB_MEMBER_FUNCT();
+
 	CHECK_CALL( focla_ser_flush( m_fdev.getFocla() ) );
 }
 
@@ -622,6 +697,8 @@ void Espia::Focla::SerialLine::flush()
  *******************************************************************/
 void Espia::Focla::SerialLine::getNbAvailBytes( int &nb_avail )
 {
+	DEB_MEMBER_FUNCT();
+
 	unsigned long ret_len=0;
 	CHECK_CALL( focla_ser_read( m_fdev.getFocla(), NULL, &ret_len, 0 ) );
 	nb_avail = (int) ret_len;
@@ -634,6 +711,8 @@ void Espia::Focla::SerialLine::getNbAvailBytes( int &nb_avail )
 void Espia::Focla::SerialLine::read( string& buffer, int max_len, 
                                      double timeout )
 {
+	DEB_MEMBER_FUNCT();
+
 	bool avail = (max_len == Available);
 	if( avail )
 		getNbAvailBytes( max_len );
@@ -656,6 +735,8 @@ void Espia::Focla::SerialLine::read( string& buffer, int max_len,
 void Espia::Focla::SerialLine::readLine( std::string& buffer, int max_len, 
                                          double timeout )
 {
+	DEB_MEMBER_FUNCT();
+
 	string term;
 	getLineTerm( term );
 
@@ -677,6 +758,8 @@ void Espia::Focla::SerialLine::readLine( std::string& buffer, int max_len,
  *******************************************************************/
 void Espia::Focla::SerialLine::write( const std::string& buffer, bool no_wait )
 {
+	DEB_MEMBER_FUNCT();
+
 	unsigned long nb_wr_bytes = buffer.size();
 
 	char *ptr = nb_wr_bytes ? (char *) buffer.data() : NULL;

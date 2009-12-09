@@ -270,6 +270,9 @@ class FrelonTacoAcq(TacoCcdAcq):
         cam = self.m_acq.getFrelonCamera()
         flip = Flip(flip_mode >> 1, flip_mode & 1)
         cam.setFlip(flip)
+        roi_modes = [Frelon.None, Frelon.Slow, Frelon.Fast, Frelon.Kinetic]
+        roi_modes_int = map(int, roi_modes)
+        roi_mode = roi_modes[roi_modes_int.index(roi_mode)]
         cam.setRoiMode(roi_mode)
         if roi_mode == Frelon.Kinetic:
             self.setKinPars(kin_line_beg, kin_stripes)
