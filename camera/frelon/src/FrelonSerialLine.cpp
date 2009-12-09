@@ -273,7 +273,7 @@ void SerialLine::splitMsg(const string& msg,
 	msg_parts.clear();
 
 	const static RegEx re("^(?P<sync>>)?"
-			      "(?P<cmd>[A-Z]+)"
+			      "(?P<cmd>[A-Za-z]+)"
 			      "((?P<req>\\?)|(?P<val>[0-9]+))?"
 			      "(?P<term>[\r\n]+)?$");
 
