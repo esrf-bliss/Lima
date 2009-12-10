@@ -181,7 +181,8 @@ class FrelonTacoAcq(TacoCcdAcq):
     @DEB_MEMBER_FUNCT
     def setFilePar(self, par_arr):
         deb.Param('Setting file pars: %s' % par_arr)
-        pars = CtSaving.Parameters()
+        ct_saving = self.m_acq.getSavingControl()
+        pars = ct_saving.getParameters()
         pars.directory  = par_arr[0]
         pars.prefix     = par_arr[1]
         pars.suffix     = par_arr[2]
@@ -195,7 +196,6 @@ class FrelonTacoAcq(TacoCcdAcq):
             pars.fileFormat = CtSaving.EDF
         else:
             pars.fileFormat = CtSaving.RAW
-        ct_saving = self.m_acq.getSavingControl()
         ct_saving.setParameters(pars)
 
     @DEB_MEMBER_FUNCT
