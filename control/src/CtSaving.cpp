@@ -552,9 +552,10 @@ void CtSaving::_save_finished(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   //@todo check if the frame is still available
-  AutoMutex aLock(m_cond.mutex());
   if(m_end_cbk)
     m_end_cbk->finished(aData);
+
+  AutoMutex aLock(m_cond.mutex());
 
   int next_frame = m_last_frameid_saved + 1;
   switch(m_pars.savingMode)
