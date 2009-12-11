@@ -65,6 +65,9 @@ class SerialLine : HwSerialLine
 
 	void sendFmtCmd(const std::string& cmd, std::string& resp /Out/);
 
+	void writeRegister(Frelon::Reg reg, int  val);
+	void readRegister (Frelon::Reg reg, int& val /Out/);
+
 	int getLastWarning();
 
 	void clearCache();

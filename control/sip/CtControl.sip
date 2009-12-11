@@ -86,6 +86,7 @@ using namespace lima;
     void ReadBaseImage(Data& data /Out/,long frameNumber = -1);
 
     void reset();
+    void resetStatus(bool only_acq_status);
 
     void registerImageStatusCallback(ImageStatusCallback& cb);
     void unregisterImageStatusCallback(ImageStatusCallback& cb);

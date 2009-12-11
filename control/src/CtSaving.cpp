@@ -616,11 +616,15 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
       
       DEB_ERROR() << DEB_VAR1(m_ctrl.m_status);
     }
+
   aLock.unlock();
 
   m_ctrl.stopAcq();
 
-  
+  DEB_TRACE() << "Setting ready flag";
+  aLock = AutoMutex(m_cond.mutex());
+  m_ready_flag = true;
+  m_cond.signal();
 
 }
 /** @brief saving container
@@ -706,6 +710,11 @@ void CtSaving::_SaveContainer::_close()
 {
   DEB_MEMBER_FUNCT();
   
+  if (!m_fout.is_open()) {
+    DEB_TRACE() << "Nothing to do";
+    return;
+  }
+
   DEB_TRACE() << "Close current file";
 
   m_fout.close();

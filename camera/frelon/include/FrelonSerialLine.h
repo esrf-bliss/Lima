@@ -67,6 +67,9 @@ class SerialLine : public HwSerialLine
 
 	void sendFmtCmd(const std::string& cmd, std::string& resp);
 
+	void writeRegister(Reg reg, int  val);
+	void readRegister (Reg reg, int& val);
+
 	int getLastWarning();
 
 	void clearCache();
@@ -79,7 +82,7 @@ class SerialLine : public HwSerialLine
 	};
 	friend std::ostream& operator <<(std::ostream& os, RegOp op);
 
-	typedef std::map<Reg, std::string> RegRespMapType;
+	typedef std::map<Reg, int> RegValMapType;
 
 	AutoMutex lock(int mode);
 
@@ -90,12 +93,13 @@ class SerialLine : public HwSerialLine
 			      double timeout = TimeoutDefault);
 
 	bool isRegCacheable(Reg reg);
+	bool getRegCacheVal(Reg reg, int& val);
 
 	Espia::SerialLine& m_espia_ser_line;
 	Cond m_cond;
 	int m_last_warn;
 
-	RegRespMapType m_reg_cache;
+	RegValMapType m_reg_cache;
 	bool m_cache_act;
 	RegOp m_curr_op;
 	Reg m_curr_reg;

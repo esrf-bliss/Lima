@@ -33,7 +33,7 @@ typedef std::map<Reg, std::string> RegStrMapType;
 extern RegStrMapType RegStrMap;
 
 typedef std::vector<Reg> RegListType;
-extern RegListType NonCacheableRegList;
+extern RegListType CacheableRegList;
 
 extern const int MaxRegVal;
 

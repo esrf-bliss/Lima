@@ -74,36 +74,13 @@ void Camera::sendCmd(Cmd cmd)
 void Camera::writeRegister(Reg reg, int val)
 {
 	DEB_MEMBER_FUNCT();
-	const string& reg_str = RegStrMap[reg];
-	DEB_PARAM() << DEB_VAR3(reg, reg_str, val);
-	if (reg_str.empty()) {
-		DEB_ERROR() << "Invalid register reg=" << reg;
-		throw LIMA_HW_EXC(InvalidValue, "Invalid register");
-	}
-
-	ostringstream cmd;
-	cmd << reg_str << val;
-	string resp;
-	m_ser_line.sendFmtCmd(cmd.str(), resp);
+	m_ser_line.writeRegister(reg, val);
 }
 
 void Camera::readRegister(Reg reg, int& val)
 {
 	DEB_MEMBER_FUNCT();
-
-	const string& reg_str = RegStrMap[reg];
-	DEB_PARAM() << DEB_VAR2(reg, reg_str);
-	if (reg_str.empty()) {
-		DEB_ERROR() << "Invalid register reg=" << reg;
-		throw LIMA_HW_EXC(InvalidValue, "Invalid register");
-	}
-
-	string resp;
-	m_ser_line.sendFmtCmd(reg_str + "?", resp);
-	istringstream is(resp);
-	is >> val;
-
-	DEB_RETURN() << DEB_VAR1(val);
+	m_ser_line.readRegister(reg, val);
 }
 
 void Camera::hardReset()

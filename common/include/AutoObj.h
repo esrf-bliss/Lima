@@ -65,6 +65,14 @@ public:
 	void leaveLocked()
 	{ d->leaveLocked(); }
 
+	AutoLock& operator =(const AutoLock& o)
+	{ 
+		AutoLockData *od = o.getData(); // protects against "a = a"
+		putData(); 
+		d = od;
+		return *this;
+	}
+
 private:
 	class AutoLockData
 	{

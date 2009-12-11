@@ -93,13 +93,18 @@ void SerialLine::writeCmd(const string& buffer, bool no_wait)
 	if (reg_found && isRegCacheable(m_curr_reg)) {
 		bool is_req = !msg_parts[MsgReq].empty();
 		m_curr_op = is_req ? ReadReg : WriteReg;
-		const string& cache_val = m_reg_cache[m_curr_reg];
-		if (is_req) {
-			m_curr_resp = cache_val;
-			m_curr_cache = !m_curr_resp.empty();
-		} else {
-			m_curr_resp = msg_parts[MsgVal];
-			m_curr_cache = (m_curr_resp == cache_val);
+		int cache_val;
+		m_curr_cache = getRegCacheVal(m_curr_reg, cache_val);
+		if (m_curr_cache) {
+			ostringstream os;
+			os << cache_val;
+			const string& cache_str = os.str();
+			if (is_req) {
+				m_curr_resp = cache_str;
+			} else {
+				m_curr_resp = msg_parts[MsgVal];
+				m_curr_cache = (m_curr_resp == cache_str);
+			}
 		}
 		if (m_curr_cache) {
 			DEB_TRACE() << "Skipping " << m_curr_op 
@@ -188,8 +193,11 @@ void SerialLine::readSingleLine(string& buffer, int max_len, double timeout)
 	if (!reg_op || !isRegCacheable(m_curr_reg))
 		return;
 
-	string& cache_val = m_reg_cache[m_curr_reg];
-	cache_val = is_req ? m_curr_fmt_resp : m_curr_resp;
+	const string& cache_str = is_req ? m_curr_fmt_resp : m_curr_resp;
+	int cache_val;
+	istringstream is(cache_str);
+	is >> cache_val;
+	m_reg_cache[m_curr_reg] = cache_val;
 	DEB_TRACE() << "New " << DEB_VAR1(cache_val);
 }
 
@@ -230,10 +238,20 @@ bool SerialLine::isRegCacheable(Reg reg)
 		return false;
 	}
 
-	const RegListType& list = NonCacheableRegList;
-	bool cacheable = (find(list.begin(), list.end(), reg) == list.end());
+	const RegListType& list = CacheableRegList;
+	bool cacheable = (find(list.begin(), list.end(), reg) != list.end());
 	DEB_RETURN() << DEB_VAR1(cacheable);
 	return cacheable;
+}
+
+bool SerialLine::getRegCacheVal(Reg reg, int& val)
+{
+	DEB_MEMBER_FUNCT();
+	RegValMapType::const_iterator it = m_reg_cache.find(reg);
+	bool in_cache = (it != m_reg_cache.end());
+	val = in_cache ? it->second : 0;
+	DEB_RETURN() << DEB_VAR2(in_cache, val);
+	return in_cache;
 }
 
 void SerialLine::flush()
@@ -388,6 +406,59 @@ void SerialLine::getCacheActive(bool& cache_act)
 	AutoMutex l = lock(AutoMutex::Locked);
 	cache_act = m_cache_act;
 	DEB_RETURN() << DEB_VAR1(cache_act);
+}
+
+void SerialLine::writeRegister(Reg reg, int  val)
+{
+	DEB_MEMBER_FUNCT();
+	const string& reg_str = RegStrMap[reg];
+	DEB_PARAM() << DEB_VAR3(reg, reg_str, val);
+
+	int cache_val;
+	AutoMutex l = lock(AutoMutex::Locked);
+	bool ok = (isRegCacheable(reg) && getRegCacheVal(reg, cache_val));
+	l.unlock();
+	
+	if (ok && (cache_val == val)) {
+		DEB_TRACE() << "Value already in cache";
+	} else {
+		if (reg_str.empty()) {
+			DEB_ERROR() << "Invalid register reg=" << reg;
+			throw LIMA_HW_EXC(InvalidValue, "Invalid register");
+		}
+
+		ostringstream cmd;
+		cmd << reg_str << val;
+		string resp;
+		sendFmtCmd(cmd.str(), resp);
+	}
+}
+
+void SerialLine::readRegister(Reg reg, int& val)
+{
+	DEB_MEMBER_FUNCT();
+	const string& reg_str = RegStrMap[reg];
+	DEB_PARAM() << DEB_VAR2(reg, reg_str);
+
+	AutoMutex l = lock(AutoMutex::Locked);
+	bool ok = (isRegCacheable(reg) && getRegCacheVal(reg, val));
+	l.unlock();
+
+	if (ok) {
+		DEB_TRACE() << "Using cache value";
+	} else {
+		if (reg_str.empty()) {
+			DEB_ERROR() << "Invalid register reg=" << reg;
+			throw LIMA_HW_EXC(InvalidValue, "Invalid register");
+		}
+		
+		string resp;
+		sendFmtCmd(reg_str + "?", resp);
+		istringstream is(resp);
+		is >> val;
+	}
+
+	DEB_RETURN() << DEB_VAR1(val);
 }
 
 

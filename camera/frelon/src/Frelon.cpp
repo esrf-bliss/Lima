@@ -69,13 +69,15 @@ static const RegPair RegStrCList[] = {
 };
 RegStrMapType lima::Frelon::RegStrMap(C_LIST_ITERS(RegStrCList));
 
-static Reg NonCacheableRegCList[] = {
-	Warn, 
-	AoiLineBegin,   AoiLineWidth,  AoiPixelBegin, AoiPixelWidth,
-	AoiImageHeight, AoiImageWidth, ChanOnImage,   ChanOnCcd,
+static Reg CacheableRegCList[] = {
+	NbFrames,	ExpTime,	ShutCloseTime,	LatencyTime,
+	RoiLineBegin,	RoiLineWidth,	RoiPixelBegin,	RoiPixelWidth,
+	ChanMode,	TimeUnit,	RoiEnable,	RoiFast,
+	RoiKinetic,	BinVert,	BinHorz,	ConfigHD,
+	ShutEnable,	HardTrigDisable, FlipMode,	CompSerNb,
 };
 RegListType 
-lima::Frelon::NonCacheableRegList(C_LIST_ITERS(NonCacheableRegCList));
+lima::Frelon::CacheableRegList(C_LIST_ITERS(CacheableRegCList));
 
 const int lima::Frelon::MaxRegVal = (1 << 16) - 1;
 

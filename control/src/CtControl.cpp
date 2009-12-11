@@ -142,9 +142,10 @@ void CtControl::getApplyPolicy(ApplyPolicy &policy) const
 void CtControl::prepareAcq()
 {
   DEB_MEMBER_FUNCT();
-  m_status.reset();
+
+  resetStatus(false);
+
   DEB_TRACE() << "Apply Acquisition Parameters";
-  
   m_ct_acq->apply(m_policy);
   DEB_TRACE() << "Apply hardware bin/roi";
   m_ct_image->applyHard();
@@ -344,6 +345,18 @@ void CtControl::reset()
 
   DEB_TRACE() << "Reseting display";
   m_ct_sps_image->reset();
+
+  resetStatus(false);
+}
+
+void CtControl::resetStatus(bool only_acq_status)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_TRACE() << "Reseting the status";
+  if (only_acq_status)
+    m_status.AcquisitionStatus = AcqReady;
+  else
+    m_status.reset();
 }
 
 bool CtControl::newFrameReady(Data& fdata)

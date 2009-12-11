@@ -31,8 +31,14 @@ class FrelonTacoAcq(TacoCcdAcq):
         acq_status = ct_status.AcquisitionStatus
         if acq_status == AcqRunning:
             self.state = DevCcdAcquiring
-        else:
+        elif acq_status == AcqReady:
             self.state = DevCcdReady
+        else:
+            msg = 'Acquisition error: %s' % (ct_status)
+            end = index(msg, ', ImageCounters')
+            msg = msg[:end] + '>'
+            ct.resetStatus(True)
+            raise Exception, msg
         deb.Return('Device state: 0x%08x (%d)' % (self.state, self.state))
         return self.state
 

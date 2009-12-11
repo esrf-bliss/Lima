@@ -109,6 +109,7 @@ namespace lima
     void ReadBaseImage(Data&,long frameNumber = -1);
 
     void reset();
+    void resetStatus(bool only_acq_status);
 
     void registerImageStatusCallback(ImageStatusCallback& cb);
     void unregisterImageStatusCallback(ImageStatusCallback& cb);
@@ -180,36 +181,34 @@ namespace lima
     return os;
   }
 
+  
+  inline std::ostream& operator<<(std::ostream &os,
+				  const CtControl::ErrorCode &err_code)
+  {
+    const char *desc = "Unknown";
+    switch (err_code)
+    {
+    case CtControl::NoError:           desc = "No error"; break;
+    case CtControl::SaveUnknownError:  desc = "Saving  error"; break;
+    case CtControl::SaveAccessError:   desc = "Save access error"; break;
+    case CtControl::SaveOverwriteError: desc = "Save overwrite error"; break;
+    case CtControl::SaveDiskFull:      desc = "Save disk full"; break;
+    case CtControl::SaveOverun:        desc = "Save overrun"; break;
+    case CtControl::ProcessingOverun:  desc = "Soft Processing overrun"; break;
+      // should read CameraStatus instead @todo fix me
+    case CtControl::CameraError:       desc = "Camera Error"; break;
+    }
+    return os << desc;
+  }
+    
   inline std::ostream& operator<<(std::ostream &os,
 				  const CtControl::Status &status)
   {
     os << "<";
-    switch(status.AcquisitionStatus)
-      {
-      case AcqReady:
-	os << "AcquisitionStatus=" << "Ready";break;
-      case AcqRunning:
-	os << "AcquisitionStatus=" << "Running";break;
-      default:
-	os << "AcquisitionStatus=" << "Failed";break;
-      }
+    os << "AcquisitionStatus=" << status.AcquisitionStatus;
     if(status.AcquisitionStatus == AcqFault)
-      {
-	os << ", ";
-	switch(status.Error)
-	  {
-	  case(CtControl::SaveUnknownError): os << "Error=" << "Saving  error";break;
-	  case(CtControl::SaveAccessError): os << "Error=" << "Save access error";break;
-	  case(CtControl::SaveOverwriteError): os << "Error=" << "Save overwrite error";break;
-	  case(CtControl::SaveDiskFull): os << "Error=" << "Save disk full";break;
-	  case(CtControl::SaveOverun): os << "Error=" << "Save overrun";break;
-	  case(CtControl::ProcessingOverun): os << "Error=" << "Soft Processing overrun";break;
-	  // should read CameraStatus instead @todo fix me
-	  case(CtControl::CameraError): os << "Error=" << "Camera Error";break;
-	  default: break;
-	  }
-      }
-    os << status.ImageCounters;
+	os << ", Error=" << status.Error;
+    os << ", ImageCounters=" << status.ImageCounters;
     return os;
   }
 } // namespace lima

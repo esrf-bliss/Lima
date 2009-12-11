@@ -19,6 +19,7 @@ def DEB_FUNCT(fn, in_global=True, frame=1):
     filename =  os.path.basename(code.co_filename)
     lineno = frame.f_lineno
     def real_fn(*arg, **kw):
+        sys.exc_clear()
         fn_globals = dict(fn.func_globals)
         fn_globals['deb'] = DebObj(deb_params, fn.func_name, '',
                                    filename, lineno)
