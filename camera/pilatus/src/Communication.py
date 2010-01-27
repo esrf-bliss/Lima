@@ -188,7 +188,10 @@ class Communication:
         with self.__cond:
             self._error_message = None
             self._state = self.OK
-        
+    def hard_reset(self) :
+        with self.__cond:
+            self.__asynSock.send('resetcam')
+
     def connect(self,host,port) :
 	self._init_variable()
 

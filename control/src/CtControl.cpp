@@ -433,12 +433,17 @@ void CtControl::newBaseImageReady(Data &aData)
     {
       aLock.unlock();
       newFrameToSave(aData);
+      aLock.lock();
     }
 
   if(m_display_active_flag)
-	  m_ct_sps_image->frameReady(aData);
-  
-  aLock.unlock();
+    {
+      aLock.unlock();
+      m_ct_sps_image->frameReady(aData);
+    }
+  else
+    aLock.unlock();
+
   if (img_status_changed && m_img_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 
@@ -478,8 +483,9 @@ void CtControl::newImageReady(Data &aData)
       aLock.unlock();
       newFrameToSave(aData);
     }
+  else
+    aLock.unlock();
 
-  aLock.unlock();
   if (m_img_status_cb && img_status_changed)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 
