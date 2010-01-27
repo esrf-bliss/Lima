@@ -1,5 +1,6 @@
 from TacoCcd import *
 from FrelonAcq import FrelonAcq
+from processlib.Tasks import BpmManager, BpmTask
 import gc
 
 class FrelonTacoAcq(TacoCcdAcq):
@@ -12,7 +13,9 @@ class FrelonTacoAcq(TacoCcdAcq):
         
         espia_dev_nb = 0
         self.m_acq = FrelonAcq(espia_dev_nb)
-
+        self.m_bpm_mgr  = BpmManager()
+        self.m_bpm_task = BpmTask(self.m_bpm_mgr)
+        
     @DEB_MEMBER_FUNCT
     def __del__(self):
         pass
@@ -89,7 +92,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         elif ext_trig == 2:
             trig_mode = ExtTrigMult
         else:
-            raise 'Invalid ext. trig: %s' % ext_trig
+            raise Exception, 'Invalid ext. trig: %s' % ext_trig
         ct_acq.setTriggerMode(trig_mode)
         if exp_time != prev_exp_time:
             ct_acq.setAcqExpoTime(exp_time)
@@ -105,7 +108,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         elif trig_mode == ExtTrigMult:
             ext_trig = 2
         else:
-            raise 'Invalid trigger mode: %s' % trig_mode
+            raise Exception, 'Invalid trigger mode: %s' % trig_mode
         deb.Return('Getting trigger: %s' % ext_trig)
         return ext_trig
     
@@ -341,7 +344,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         elif kinetics == 3:
             ftm = Frelon.FTM
         else:
-            raise 'Invalid kinetics value: %s' % kinetics
+            raise Exception, 'Invalid kinetics value: %s' % kinetics
         cam = self.m_acq.getFrelonCamera()
         cam.setFrameTransferMode(ftm)
         
@@ -432,9 +435,9 @@ class FrelonTacoAcq(TacoCcdAcq):
             last_frame_nb = img_counters.LastImageSaved
         else:
             last_frame_nb = img_counters.LastImageAcquired
-        last_frame_nb += 1
-        deb.Return('Last frame nb: %s' % last_frame_nb)
-        return last_frame_nb
+        nb_frames = last_frame_nb + 1
+        deb.Return('Nb of frames: %s' % nb_frames)
+        return nb_frames
 
     @DEB_MEMBER_FUNCT
     def execCommand(self, cmd):
@@ -454,7 +457,80 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Trace('Getting changes: %s' % changes)
         return changes
 
-    
+    @DEB_MEMBER_FUNCT
+    def readCcdParams(self):
+        exp_time = self.getExpTime()
+        threshold = 0
+        calib_intensity = -1
+        max_frame_dim = self.getFrameDim(max_frame=True)
+        roi = self.getRoi()
+        is_live = -1
+
+        ccd_params = [exp_time,
+                      threshold,
+                      calib_intensity,
+                      max_frame_dim.getSize().getWidth(),
+                      max_frame_dim.getSize().getHeight(),
+                      roi[0], roi[1], roi[2], roi[3],
+                      is_live]
+        
+        beam_params = self.readBeamParams()
+        ccd_params += beam_params
+        deb.Return('Getting CCD params: %s' % ccd_params)
+        return ccd_params
+
+    @DEB_MEMBER_FUNCT
+    def readBeamParams(self):
+        frame_nb = -1
+        ct = self.m_acq.getGlobalControl()
+        img_data = ct.ReadImage(frame_nb)
+        beam_params = self.calcBeamParams(img_data)
+        deb.Return('Beam params: %s' % beam_params)
+        return beam_params
+
+    @DEB_MEMBER_FUNCT
+    def calcBeamParams(self, img_data):
+        self.m_bpm_task.process(img_data)
+        timeout = 1
+        bpm_pars = self.m_bpm_mgr.getResult(timeout)
+        if bpm_pars.errorCode != self.m_bpm_mgr.OK:
+            msg = 'Error calculating beam params: %d' % bpm_pars.errorCode
+            deb.Error(msg)
+            raise Exception, msg
+        
+        nr_spots = 1
+        auto_cal = -1
+        exp_time = self.getExpTime()
+        if exp_time > 0:
+            norm_intensity = bpm_pars.beam_intensity / exp_time
+        else:
+            norm_intensity = 0
+
+        beam_params = [nr_spots,
+                       bpm_pars.beam_intensity,
+                       bpm_pars.beam_center_x,
+                       bpm_pars.beam_center_y,
+                       bpm_pars.beam_fwhm_x,
+                       bpm_pars.beam_fwhm_y,
+                       bpm_pars.AOI_max_x - bpm_pars.AOI_min_x,
+                       bpm_pars.AOI_max_y - bpm_pars.AOI_min_y,
+                       bpm_pars.max_pixel_value,
+                       bpm_pars.max_pixel_x,
+                       bpm_pars.max_pixel_y,
+                       bpm_pars.AOI_min_x,
+                       bpm_pars.AOI_min_y,
+                       bpm_pars.AOI_max_x,
+                       bpm_pars.AOI_max_y,
+                       bpm_pars.beam_center_x - bpm_pars.beam_fwhm_x / 2,
+                       bpm_pars.beam_center_y - bpm_pars.beam_fwhm_y / 2,
+                       bpm_pars.beam_center_x + bpm_pars.beam_fwhm_x / 2,
+                       bpm_pars.beam_center_y + bpm_pars.beam_fwhm_y / 2,
+                       norm_intensity,
+                       auto_cal]
+        deb.Return('Getting beam params: %s' % beam_params)
+        return beam_params
+
+
 class FrelonServer(CcdServer):
 
     DEB_CLASS(DebModApplication, "FrelonServer")

@@ -189,6 +189,10 @@ class TacoCcdAcq(TacoServer):
                                  'execCommand', 'DevCcdCommand'],
         DevCcdGetChanges:	[D_VOID_TYPE, D_LONG_TYPE, 
                                  'getChanges', 'DevCcdGetChanges'],
+        DevReadValues:		[D_VOID_TYPE, D_VAR_FLOATARR,
+                                 'readBeamParams', 'DevReadValues'],
+        DevReadSigValues:	[D_VOID_TYPE, D_VAR_FLOATARR,
+                                 'readCcdParams', 'DevReadSigValues'],
     }
 
     LiveDisplay  = 1
@@ -442,6 +446,19 @@ class TacoCcdAcq(TacoServer):
         changes = 0
         deb.Return('Getting changes: %s' % changes)
         return changes
+
+    @DEB_MEMBER_FUNCT
+    def readCcdParams(self):
+        beam_params = self.readBeamParams()
+        ccd_params = [0] * 10 + beam_params
+        deb.Return('Getting CCD params: %s' % ccd_params)
+        return ccd_params
+
+    @DEB_MEMBER_FUNCT
+    def readBeamParams(self):
+        beam_params = [0] * 21
+        deb.Return('Getting beam params: %s' % beam_params)
+        return beam_params
 
     
 class CcdServer:
