@@ -1,7 +1,22 @@
+from __future__ import with_statement
+
 import weakref
+import threading
 
 import lima
 
+class _ImageReader(threading.Thread) :
+    def __init__(self,buffer_ctrl) :
+        _ImageReader.__init__(self)
+
+        self.__cond = threading.Condition()
+        self.__continue = True
+        
+    def run(self) :
+        with self.__cond:
+            while(self.__continue) :
+                pass
+            
 class BufferCtrlObj(lima.HwBufferCtrlObj):
 	DEB_CLASS(DebModCamera,"BufferCtrlObj","Pilatus")
 
@@ -11,6 +26,7 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
             self.__com = weakref.ref(comm_object)
             self.__det_info = weakref.ref(det_info)
             self.__cbk = None
+            self.__nb_buffer = 1
             
         @DEB_MEMBER_FUNCT
 	def setFrameDim(self,frame_dim) :
@@ -24,12 +40,11 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
         
         @DEB_MEMBER_FUNCT
         def setNbBuffers(self,nb_buffers) :
-            if nb_buffers != 1:
-                raise lima.Exceptions(lima.Hardware,lima.NotSupported)
+           self.__nb_buffer = nb_buffers
             
         @DEB_MEMBER_FUNCT
 	def getNbBuffers(self) :
-            return 1
+            return self.__nb_buffer
 
         @DEB_MEMBER_FUNCT
         def setNbConcatFrames(self,nb_concat_frames) :
@@ -52,7 +67,11 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
         
         @DEB_MEMBER_FUNCT
         def getMaxNbBuffers(self) :
-            return 1
+            com = self.__com()
+            det_info = self.__det_info()
+            imageFormat = det_info.getMaxImageSize()
+            imageSize = imageFormat.getWidth() * imageFormat.getHeight() * 4 # 4 == image 32bits
+            return com.DEFAULT_TMPFS_SIZE / imageSize
 
         @DEB_MEMBER_FUNCT
         def getBufferPtr(self,buffer_nb,concat_frame_nb = 0) :

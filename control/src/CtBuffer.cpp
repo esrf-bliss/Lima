@@ -216,9 +216,18 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
   fdata.frameNumber= frame_info.acq_frame_nb;
   fdata.timestamp = frame_info.frame_timestamp;
 
-  Buffer *fbuf = new Buffer();
-  fbuf->owner = Buffer::MAPPED;	
-  fbuf->data = frame_info.frame_ptr;
+  Buffer *fbuf = NULL;
+  if(frame_info.owner_ship == HwFrameInfoType::TRANSFERT)
+    {
+      fbuf = new Buffer(fdata.size());
+      memcpy(fbuf->data,frame_info.frame_ptr,fdata.size());
+    }
+  else
+    {
+      fbuf = new Buffer();
+      fbuf->owner = Buffer::MAPPED;	
+      fbuf->data = frame_info.frame_ptr;
+    }
   fdata.setBuffer(fbuf);
   fbuf->unref();
   
