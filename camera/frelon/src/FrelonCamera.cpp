@@ -29,6 +29,10 @@ void Camera::sync()
 {
 	DEB_MEMBER_FUNCT();
 
+	DEB_TRACE() << "Forcing a link reset";
+	Espia::Dev& dev = getEspiaDev();
+	dev.resetLink();
+
 	DEB_TRACE() << "Synchronizing with the camera";
 
 	string ver;
@@ -86,8 +90,6 @@ void Camera::readRegister(Reg reg, int& val)
 void Camera::hardReset()
 {
 	DEB_MEMBER_FUNCT();
-	Espia::Dev& dev = getEspiaDev();
-	dev.resetLink();
 
 	DEB_TRACE() << "Reseting the camera";
 	sendCmd(Reset);

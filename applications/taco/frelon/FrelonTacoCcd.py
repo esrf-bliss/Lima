@@ -1,6 +1,6 @@
 from TacoCcd import *
 from FrelonAcq import FrelonAcq
-from processlib.Tasks import BpmManager, BpmTask
+from processlib import Tasks
 import gc
 
 class FrelonTacoAcq(TacoCcdAcq):
@@ -13,8 +13,8 @@ class FrelonTacoAcq(TacoCcdAcq):
         
         espia_dev_nb = 0
         self.m_acq = FrelonAcq(espia_dev_nb)
-        self.m_bpm_mgr  = BpmManager()
-        self.m_bpm_task = BpmTask(self.m_bpm_mgr)
+        self.m_bpm_mgr  = Tasks.BpmManager()
+        self.m_bpm_task = Tasks.BpmTask(self.m_bpm_mgr)
         
     @DEB_MEMBER_FUNCT
     def __del__(self):
@@ -462,7 +462,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         exp_time = self.getExpTime()
         threshold = 0
         calib_intensity = -1
-        max_frame_dim = self.getFrameDim(max_frame=True)
+        max_frame_dim = self.getFrameDim(max_dim=True)
         roi = self.getRoi()
         is_live = -1
 
