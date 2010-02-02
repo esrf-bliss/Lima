@@ -350,10 +350,10 @@ bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 	}
 
 	const FrameDim& frame_dim = getFrameDim();
-	if (!frame_info.frame_dim) {
-		frame_info.frame_dim = &frame_dim;
-	} else if (*frame_info.frame_dim != frame_dim) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(*frame_info.frame_dim);
+	if (!frame_info.frame_dim.isValid()) {
+		frame_info.frame_dim = frame_dim;
+	} else if (frame_info.frame_dim != frame_dim) {
+		DEB_ERROR() << "Invalid " << DEB_VAR1(frame_info.frame_dim);
 		throw LIMA_HW_EXC(InvalidValue, "Invalid frame dim");
 	}
 	if (frame_info.valid_pixels == 0)
@@ -701,7 +701,7 @@ bool BufferCtrlMgr::acqFrameReady(const HwFrameInfoType& acq_frame_info)
 	void *aux_frame_ptr = aux_mgr.getBufferPtr(aux_buffer_nb,
 						   aux_buffer_frame);
 
-	const FrameDim& acq_frame_dim = *acq_frame_info.frame_dim;
+	const FrameDim& acq_frame_dim = acq_frame_info.frame_dim;
 	const FrameDim& aux_frame_dim = aux_mgr.getFrameDim();
 
 	int valid_pixels = acq_frame_info.valid_pixels;
@@ -717,7 +717,8 @@ bool BufferCtrlMgr::acqFrameReady(const HwFrameInfoType& acq_frame_info)
 	aux_mgr.getStartTimestamp(start_ts);
 	Timestamp frame_ts = Timestamp::now() - start_ts;
 	HwFrameInfoType aux_frame_info(aux_frame_nb, aux_frame_ptr,
-				       &aux_frame_dim, frame_ts, valid_pixels);
+				       &aux_frame_dim, frame_ts, valid_pixels,
+				       HwFrameInfoType::Managed);
 	return newFrameReady(aux_frame_info);
 }
 

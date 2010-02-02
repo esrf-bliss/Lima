@@ -101,7 +101,7 @@ void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 	ctime_r(&ctime_now, time_str);
 	time_str[strlen(time_str) - 1] = '\0';
 
-	const FrameDim *fdim = finfo.frame_dim;
+	const FrameDim *fdim = &finfo.frame_dim;
 	const Size& frame_size = fdim->getSize();
 	int depth = fdim->getDepth();
 	int image_nb = m_written_frames + 1;
@@ -146,7 +146,7 @@ void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
  *******************************************************************/
 void BufferSave::writeFrame( const HwFrameInfoType& finfo )
 {
-	const FrameDim *fdim = finfo.frame_dim;
+	const FrameDim *fdim = &finfo.frame_dim;
 	if (!fdim)
 		throw LIMA_HW_EXC(InvalidValue, "Null finfo.fdim");
 

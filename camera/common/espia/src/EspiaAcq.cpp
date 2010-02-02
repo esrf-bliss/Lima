@@ -373,7 +373,7 @@ void Acq::real2virtFrameInfo(const struct img_frame_info& real_info,
 
 	virt_info.acq_frame_nb    = real_info.acq_frame_nr;
 	virt_info.frame_ptr       = buffer_ptr + frame_offset;
-	virt_info.frame_dim       = &m_frame_dim;
+	virt_info.frame_dim       = m_frame_dim;
 	virt_info.frame_timestamp = USec2Sec(real_info.time_us);
 	virt_info.valid_pixels    = real_info.pixels;
 }

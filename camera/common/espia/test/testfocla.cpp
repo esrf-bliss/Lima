@@ -96,7 +96,8 @@ int main(int argc, char *argv[])
 		Timestamp t = Timestamp::now() - start;
 		int pixels = Point(frame_dim.getSize()).getArea();
 		void *buffer = buffer_mgr.getBufferPtr(0);
-		HwFrameInfoType finfo(i, buffer, &frame_dim, t, pixels);
+		HwFrameInfoType finfo(i, buffer, &frame_dim, t, pixels,
+				      HwFrameInfoType::Managed);
 		bs.writeFrame(finfo);
 		cout << "Written frame number " << i << endl << flush;
 	}

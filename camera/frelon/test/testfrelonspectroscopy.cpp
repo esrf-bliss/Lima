@@ -80,10 +80,10 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 
 	if (((acq_frame_nb + 1) % m_nb_stripes) == 0) {
 		Point factor(1, m_nb_stripes);
-		m_buffer_dim = *frame_info.frame_dim * factor;
+		m_buffer_dim = frame_info.frame_dim * factor;
 		m_buffer_info = frame_info;
 		m_buffer_info.frame_ptr = m_buffer_ptr;
-		m_buffer_info.frame_dim = &m_buffer_dim;
+		m_buffer_info.frame_dim = m_buffer_dim;
 		m_buffer_info.valid_pixels *= m_nb_stripes;
 
 		DEB_ALWAYS() << "Buffer ready: " << m_buffer_info;

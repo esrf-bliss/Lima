@@ -197,7 +197,7 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
   ImageType ftype;
   Size fsize;
 
-  ftype= frame_info.frame_dim->getImageType();
+  ftype= frame_info.frame_dim.getImageType();
   switch (ftype) {
   case Bpp8:
     fdata.type= Data::UINT8; break;
@@ -210,14 +210,14 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
     fdata.type= Data::UINT32; break;
   }
 
-  fsize= frame_info.frame_dim->getSize();
+  fsize= frame_info.frame_dim.getSize();
   fdata.width= fsize.getWidth();
   fdata.height= fsize.getHeight();
   fdata.frameNumber= frame_info.acq_frame_nb;
   fdata.timestamp = frame_info.frame_timestamp;
 
   Buffer *fbuf = NULL;
-  if(frame_info.owner_ship == HwFrameInfoType::TRANSFERT)
+  if(frame_info.buffer_owner_ship == HwFrameInfoType::Transfer)
     {
       fbuf = new Buffer(fdata.size());
       memcpy(fbuf->data,frame_info.frame_ptr,fdata.size());

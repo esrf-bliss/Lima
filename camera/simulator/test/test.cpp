@@ -53,7 +53,8 @@ int main( void )
 
 		Timestamp t = Timestamp::now() - start;
 		int pixels = Point(fd.getSize()).getArea();
-		HwFrameInfoType finfo(frame_nb, buffer, &fd, t, pixels);
+		HwFrameInfoType finfo(frame_nb, buffer, &fd, t, pixels,
+				      HwFrameInfoType::Managed);
 		bs.writeFrame(finfo);
 	}
 

@@ -85,7 +85,8 @@ void SoftRoiCallback::data2FrameInfo(Data& data, HwFrameInfoType& finfo,
 	int valid_pixels = Point(fdim.getSize()).getArea();
 
 	finfo = HwFrameInfoType(data.frameNumber, data.data(), &fdim,
-				start_ts - Timestamp::now(), valid_pixels);
+				start_ts - Timestamp::now(), valid_pixels,
+				HwFrameInfoType::Managed);
 }
 
 void SoftRoiCallback::finished(Data& data)
@@ -158,11 +159,11 @@ void TestFrameCallback::frameInfo2Data(const HwFrameInfoType& frame_info,
 	DEB_MEMBER_FUNCT();
 
 	data.frameNumber = frame_info.acq_frame_nb;
-	const Size &aSize = frame_info.frame_dim->getSize();
+	const Size &aSize = frame_info.frame_dim.getSize();
 	data.width = aSize.getWidth();
 	data.height = aSize.getHeight();
 
-	ImageType image_type = frame_info.frame_dim->getImageType();
+	ImageType image_type = frame_info.frame_dim.getImageType();
 	switch (image_type) {
 	case Bpp8:
 		data.type = Data::UINT8; break;
