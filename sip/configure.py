@@ -6,14 +6,38 @@ import numpy
 
 shutil.copyfile("lima.sip","lima_tmp.sip")
 
+confFile = file('../config.inc')
+excludeDirs = set()
+
+for line in confFile:
+    line = line.strip('\n ')
+    if line.startswith('COMPILE_') :
+        var,value = line.split('=')
+        try:
+            value = int(value)
+        except ValueError:
+            continue
+        if not value:
+            excludeDirs.add(var.split('_')[-1].lower())
+
 sip_processlib = '../third-party/Processlib/sip'
-espia_base = '/segfs/bliss/source/driver/linux-2.6/espia'
-espia_incl = espia_base + '/src'
-extra_includes = ['.', espia_incl,sip_processlib]
+extra_includes = ['.',sip_processlib]
+
+if 'espia' not in excludeDirs:
+    espia_base = '/segfs/bliss/source/driver/linux-2.6/espia'
+    espia_incl = espia_base + '/src'
+    extra_includes += [espia_incl]
+
+
+    
 sipFile = file("lima_tmp.sip","a")
 sipFile.write('\n')
 sipFile.write('%Import ../third-party/Processlib/sip/processlib_tmp.sip\n')
 for root,dirs,files in os.walk('..') :
+    dir2rmove = excludeDirs.intersection(dirs)
+    for dname in dir2rmove:
+        dirs.remove(dname)
+        
     for dirname in dirs:
         if dirname == 'include':
             extra_includes.append(os.path.join(root,dirname))
