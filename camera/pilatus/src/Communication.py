@@ -153,6 +153,8 @@ class Communication:
 
     DEFAULT_PATH = '/lima_data'
     DEFAULT_TMPFS_SIZE = 8 * 1024 * 1024 * 1024 # 8Go
+    DEFAULT_FILE_BASE = 'tmp_img_'
+    DEFAULT_FILE_EXTENTION = '.edf'
     DEFAULT_FILE_NAME = 'tmp_img_00000.edf'
     
     def __init__(self, host = None, port = None):

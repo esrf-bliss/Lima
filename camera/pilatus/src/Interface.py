@@ -43,6 +43,8 @@ class Interface(lima.HwInterface) :
         camserverStatus = self.__comm.status()
         if camserverStatus == self.__comm.DISCONNECTED:
             self.__comm.connect('localhost',self.__port)
+
+        self.__buffer.reset()
             
     @DEB_MEMBER_FUNCT
     def startAcq(self) :
