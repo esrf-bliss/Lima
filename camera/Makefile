@@ -14,7 +14,7 @@ ifndef COMPILE_MAXIPIX
 COMPILE_MAXIPIX = 0
 endif
 
-ifndef ($(COMPILE_MAXIPIX),0)
+ifneq ($(COMPILE_MAXIPIX),0)
 sub-dirs += maxipix
 endif
 
