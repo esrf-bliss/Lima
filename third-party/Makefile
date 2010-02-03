@@ -25,3 +25,4 @@ test:
 clean:
 	cd Processlib/sip/ && python clean.py
 	make -C Processlib/build clean
+	rm -f Sps/Src/sps.o

@@ -54,11 +54,11 @@ class _ImageReader(threading.Thread) :
         lastDirectoryTime = None
         with self.__cond:
             while(self.__continue) :
-                newDirectoryTime = os.fstat(self.__dirFd)[8]
+                newDirectoryTime = os.fstat(self.__dirFd).st_mtime
                 while(not self.__continue and not self.__waitFlag and
                       lastDirectoryTime == newDirectoryTime):
                     self.__cond.wait(0.5)
-                    newDirectoryTime = os.fstat(self.__dirFd)[8]
+                    newDirectoryTime = os.fstat(self.__dirFd).st_mtime
 
                 while(self.__continue and not self.__waitFlag) :
                     nextFrameId = self.__lastImageRead + 1
