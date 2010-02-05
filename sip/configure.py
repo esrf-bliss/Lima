@@ -21,7 +21,7 @@ for line in confFile:
             excludeDirs.add(var.split('_')[-1].lower())
 
 sip_processlib = '../third-party/Processlib/sip'
-extra_includes = ['.',sip_processlib]
+extra_includes = ['.',sip_processlib,numpy.get_include()]
 
 if 'espia' not in excludeDirs:
     espia_base = '/segfs/bliss/source/driver/linux-2.6/espia'

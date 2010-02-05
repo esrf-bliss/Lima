@@ -47,7 +47,7 @@ class _AsyncSocket(threading.Thread) :
 	self.__init()
         self.send('nimages')
         
-    def stop(self) :
+    def quit(self) :
         with self.__cond:
             self.__stop = True
             if self.__socket:
@@ -167,7 +167,13 @@ class Communication:
         self._error_message = None
 	
         self._trigger_mode = Communication.INTERNAL
-        self.connect(host,port)
+        try:
+            self.connect(host,port)
+        except socket.error:
+            pass
+
+    def __del__(self) :
+        self.quit()
 
     ##@brief init all variable of the Pilatus server (camserv)
     def _init_variable(self) :
@@ -202,8 +208,8 @@ class Communication:
 	    self._init_variable()
             self.__asynSock.connect(host,port)
     
-    def stop(self) :
-        self.__asynSock.stop()
+    def quit(self) :
+        self.__asynSock.quit()
         
     def threshold(self) :
         with self.__cond:

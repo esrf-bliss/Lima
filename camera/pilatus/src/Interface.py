@@ -3,27 +3,37 @@ import lima
 from DetInfoCtrlObj import DetInfoCtrlObj
 from SyncCtrlObj import SyncCtrlObj
 from BufferCtrlObj import BufferCtrlObj
+from Communication import Communication
 
 DEFAULT_SERVER_PORT = 41234
 
 class Interface(lima.HwInterface) :
-    DEB_CLASS(DebModCamera, "Interface","Pilatus")
+    #lima.Debug.DEB_CLASS(lima.DebModCamera, "Interface")
 
     def __init__(self,port = DEFAULT_SERVER_PORT) :
 	lima.HwInterface.__init__(self)
         self.__port = port
 
         self.__comm = Communication('localhost',self.__port)
-        self.__detInfo = DetInfoCtrlObj(self)
-        self.__syncObj = SyncCtrlObj(self.__comm,self.__detInfo)
+        self.__detInfo = DetInfoCtrlObj()
+        self.__detInfo.init()
         self.__buffer = BufferCtrlObj(self.__comm,self.__detInfo)
+        self.__syncObj = SyncCtrlObj(self.__buffer,self.__comm,self.__detInfo)
+
+    def __del__(self) :
+        self.__comm.quit()
+        self.__buffer.quit()
+
+    def quit(self) :
+        self.__comm.quit()
+        self.__buffer.quit()
         
-    @DEB_MEMBER_FUNCT
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def getCapList(self) :
         return [self.__detInfo,self.__syncObj,self.__buffer]
 
-    @DEB_MEMBER_FUNCT
-    def getHwCtrlObj(cap_type) :
+    #@lima.Debug.DEB_MEMBER_FUNCT
+    def getHwCtrlObj(self,cap_type) :
         if cap_type == lima.HwCap.DetInfo:
             return self.__detInfo
         elif cap_type == lima.HwCap.Sync:
@@ -31,34 +41,36 @@ class Interface(lima.HwInterface) :
         elif cap_type == lima.HwCap.Buffer:
             return self.__buffer
  
-    @DEB_MEMBER_FUNCT
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def reset(self,reset_level):
         if reset_level == self.HardReset:
             self.__comm.hard_reset()
 
         self.__comm.soft_reset()
     
-    @DEB_MEMBER_FUNCT
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def prepareAcq(self):
         camserverStatus = self.__comm.status()
         if camserverStatus == self.__comm.DISCONNECTED:
             self.__comm.connect('localhost',self.__port)
 
         self.__buffer.reset()
-            
-    @DEB_MEMBER_FUNCT
+        self.__syncObj.prepareAcq()
+        
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def startAcq(self) :
         self.__comm.start_acquisition()
-    
-    @DEB_MEMBER_FUNCT
+        self.__buffer.start()
+        
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def stopAcq(self) :
         self.__comm.stop_acquisition()
-    
-    @DEB_MEMBER_FUNCT
+        self.__buffer.stop()
+        
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def getStatus(self) :
         camserverStatus = self.__comm.status()
-        lima.AcqReady, lima.AcqRunning, lima.AcqFault
-        status = lima.HwInterface.Status()
+        status = lima.HwInterface.StatusType()
 
         if camserverStatus == self.__comm.ERROR:
             status.det = lima.DetFault
@@ -75,10 +87,10 @@ class Interface(lima.HwInterface) :
         
         return status
     
-    @DEB_MEMBER_FUNCT
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def getNbAcquiredFrames(self) :
         return self.__buffer.getLastAcquiredFrame()
     
-    @DEB_MEMBER_FUNCT
+    #@lima.Debug.DEB_MEMBER_FUNCT
     def getNbHwAcquiredFrames(self):
-        pass
+        return self.getLastAcquiredFrame()

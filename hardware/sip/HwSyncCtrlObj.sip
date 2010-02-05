@@ -11,6 +11,12 @@ public:
 	  double max_exp_time;
 	  double min_lat_time;
 	  double max_lat_time;
+	  const char* __repr__();
+%MethodCode
+std::ostringstream str;
+str << *sipCpp;
+sipRes = str.str().c_str();
+%End
 	};
 
 	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);

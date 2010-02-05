@@ -16,7 +16,7 @@ def _invert_sort_file(a,b) :
 
 class _ImageReader(threading.Thread) :
     def __init__(self,buffer_ctrl) :
-        _ImageReader.__init__(self)
+        threading.Thread.__init__(self)
 
         self.__cond = threading.Condition()
         self.__continue = True
@@ -38,33 +38,48 @@ class _ImageReader(threading.Thread) :
             self.__numberOfNewFile = 0
             self.__lastImageRead = -1
             
+            buffer_ctrl = self.__buffer_ctrl()
             com = buffer_ctrl._com()
             #Remove all images in the tmp buffer
             for filename in os.listdir(com.DEFAULT_PATH) :
                 base,ext = os.path.splitext(filename)
-                if ext.tolower() == com.DEFAULT_FILE_EXTENTION :
+                if ext.lower() == com.DEFAULT_FILE_EXTENTION :
                     os.unlink(os.path.join(com.DEFAULT_PATH,filename))
                     
     def start_read(self) :
         with self.__cond:
             self.__waitFlag = False
             self.__cond.notify()
+
+    def stop_read(self) :
+        with self.__cond:
+            self.__waitFlag = True
             
+    def quit(self) :
+        with self.__cond:
+            self.__waitFlag = False
+            self.__continue = False
+            self.__cond.notify()
+        self.join()
+
+    def getLastAcquiredFrame(self) :
+        with self.__cond:
+            return self.__lastImageRead + 1
+        
     def run(self) :
         lastDirectoryTime = None
         with self.__cond:
             while(self.__continue) :
                 newDirectoryTime = os.fstat(self.__dirFd).st_mtime
-                while(not self.__continue and not self.__waitFlag and
-                      lastDirectoryTime == newDirectoryTime):
+                while(self.__waitFlag or
+                      (self.__continue and lastDirectoryTime == newDirectoryTime)):
                     self.__cond.wait(0.5)
                     newDirectoryTime = os.fstat(self.__dirFd).st_mtime
-
                 while(self.__continue and not self.__waitFlag) :
                     nextFrameId = self.__lastImageRead + 1
                     self.__cond.release()
                     nextFullPath = os.path.join(self.__basePath,
-                                                '%s%.5d%s' % (self.__basePath,self.__fileBase,
+                                                '%s%.5d%s' % (self.__fileBase,nextFrameId,
                                                               self.__fileExt))
                     if os.access(nextFullPath,os.R_OK) :
                         try:
@@ -75,14 +90,25 @@ class _ImageReader(threading.Thread) :
                             break
                         else:
                             buffer_ctrl = self.__buffer_ctrl()
-
+                            
                             hw_frame_info = lima.HwFrameInfoType()
                             hw_frame_info.frame_data = data
-                            hw_frame_info.buffer_owner_ship = Transfer
+                            hw_frame_info.buffer_owner_ship = hw_frame_info.Transfer
                             hw_frame_info.acq_frame_nb = nextFrameId
                             if buffer_ctrl._cbk:
                                 buffer_ctrl._cbk.newFrameReady(hw_frame_info)
+
+                            #remove old image from buffer (tmp_fs)
+                            idImage2remove = nextFrameId - buffer_ctrl.getNbBuffers()
+                            if idImage2remove >= 0 :
+                                fullImagePath2remove = os.path.join(self.__basePath,
+                                                '%s%.5d%s' % (self.__fileBase,idImage2remove,
+                                                              self.__fileExt))
+                                print 'we will remove',fullImagePath2remove
+                                os.unlink(fullImagePath2remove)
+                                
                             self.__cond.acquire()
+                            print 'lastImageRead is',nextFrameId
                             self.__lastImageRead = nextFrameId
                     else:               # We didn't managed to access the file
                         lastDirectoryTime = newDirectoryTime
@@ -103,9 +129,8 @@ class _ImageReader(threading.Thread) :
                 
             
 class BufferCtrlObj(lima.HwBufferCtrlObj):
-	DEB_CLASS(DebModCamera,"BufferCtrlObj","Pilatus")
+	#lima.Debug.DEB_CLASS(lima.DebModCamera,"BufferCtrlObj")
 
-        @DEB_MEMBER_FUNCT
         def __init__(self,comm_object,det_info) :
             lima.HwBufferCtrlObj.__init__(self)
             self._com = weakref.ref(comm_object)
@@ -114,45 +139,57 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
             self.__nb_buffer = 1
             self.__imageReader = _ImageReader(self)
             self.__imageReader.start()
+
+        def __del__(self) :
+            self.__imageReader.quit()
+
+        def quit(self) :
+            self.__imageReader.quit()
+
+        def start(self) :
+            self.__imageReader.start_read()
+
+        def stop(self) :
+            self.__imageReader.stop_read()
             
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
 	def setFrameDim(self,frame_dim) :
             pass
             
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getFrameDim(self) :
             det_info = self.__det_info()
             return lima.FrameDim(det_info.getDetectorImageSize(),
                                  det_info.getDefImageType())
         
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def setNbBuffers(self,nb_buffers) :
            self.__nb_buffer = nb_buffers
             
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
 	def getNbBuffers(self) :
             return self.__nb_buffer
 
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def setNbConcatFrames(self,nb_concat_frames) :
             if nb_concat_frames != 1:
                 raise lima.Exceptions(lima.Hardware,lima.NotSupported)
 
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getNbConcatFrames(self) :
             return 1
 
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def setNbAccFrames(self,nb_acc_frames) :
             com = self._com()
             com.set_nb_exposure_per_frame(nb_acc_frames)
             
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
 	def getNbAccFrames(self) :
             com = self._com()
             return com.nb_exposure_per_frame()
         
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getMaxNbBuffers(self) :
             com = self._com()
             det_info = self.__det_info()
@@ -160,34 +197,54 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
             imageSize = imageFormat.getWidth() * imageFormat.getHeight() * 4 # 4 == image 32bits
             return com.DEFAULT_TMPFS_SIZE / imageSize
 
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getBufferPtr(self,buffer_nb,concat_frame_nb = 0) :
             pass
         
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getFramePtr(self,acq_frame_nb) :
             pass
 
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getStartTimestamp(self,start_ts) :
             pass
         
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getFrameInfo(self,acq_frame_nb) :
-            pass
+            hw_frame_info = lima.HwFrameInfoType()
+            com = self._com()            
+            fileBase = com.DEFAULT_FILE_BASE
+            fileExt = com.DEFAULT_FILE_EXTENTION
+            fullPath = os.path.join(com.DEFAULT_PATH,
+                                    '%s%.5d%s' % (fileBase,acq_frame_nb,
+                                                  fileExt))
+            print fullPath
+            if os.access(fullPath,os.R_OK) :
+                try:
+                    f = EdfFile.EdfFile(fullPath)
+                    data = f.GetData(0)
+                except:
+                    pass
+                else:
+                    hw_frame_info.frame_data = data
+                    hw_frame_info.buffer_owner_ship = hw_frame_info.Transfer
+                    hw_frame_info.acq_frame_nb = acq_frame_nb
+                    hw_frame_info._data_keept = data
 
-        @DEB_MEMBER_FUNCT
+            return hw_frame_info
+
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def registerFrameCallback(self,frame_cb) :
             self._cbk = frame_cb
             
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
 	def unregisterFrameCallback(self,frame_cb) :
             self._cbk = None
 
 
-        @DEB_MEMBER_FUNCT
+        #@lima.Debug.DEB_MEMBER_FUNCT
         def getLastAcquiredFrame(self) :
-            pass
+            return self.__imageReader.getLastAcquiredFrame()
 
         def reset(self) :
             self.__imageReader.reset()

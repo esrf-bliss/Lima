@@ -49,8 +49,11 @@ if(!sipErr)
     ImageType image_type;
     switch(tmpObject->descr->type_num)
     {
+    case NPY_BYTE:
     case NPY_UBYTE:  image_type = Bpp8;  break;
+    case NPY_SHORT:
     case NPY_USHORT: image_type = Bpp16; break;
+    case NPY_INT32:
     case NPY_UINT32: image_type = Bpp32; break;
     default:
     sipErr = 1;
@@ -88,9 +91,12 @@ Py_DECREF(tmpObject);
  	    ImageType image_type;
     	    switch(tmpObject->descr->type_num)
     	    {
+	      case NPY_BYTE:
     	      case NPY_UBYTE:  image_type = Bpp8;  break;
+    	      case NPY_SHORT:
     	      case NPY_USHORT: image_type = Bpp16; break;
-    	      case NPY_UINT32: image_type = Bpp32; break;
+    	      case NPY_INT32:
+              case NPY_UINT32: image_type = Bpp32; break;
     	      default:
 		goto clean;
             }

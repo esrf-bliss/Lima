@@ -41,7 +41,9 @@ public:
  private:
 	HwBufferCtrlObj& m_buffer_ctrl;
 };
- 
+
+std::ostream& operator <<(std::ostream& os, const HwSyncCtrlObj::ValidRangesType&);
+
 } // namespace lima
 
 #endif // HWSYNCCTRLOBJ_H
