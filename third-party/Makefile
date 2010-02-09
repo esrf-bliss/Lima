@@ -6,7 +6,7 @@ src:	processlib.src sps.src
 processlib.src:	Processlib/sip/Makefile Processlib/sip/processlib.so
 
 Processlib/sip/Makefile:
-	cd Processlib/sip/ && python2.6 configure.py
+	cd Processlib/sip/ && python configure.py
 
 Processlib_build_libprocesslib.so:
 	make -C Processlib/build -j2
