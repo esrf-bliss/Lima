@@ -13,6 +13,7 @@ using namespace lima;
 %End
 public:
 	enum Type {
+	        Undef,
 		DetInfo, Buffer, Sync, 	// Standard: these are mandatory
 		Roi, Bin, Flip,		// Image operations
 		Kinetics, FrameTransfer,// Acquisition modes
@@ -20,6 +21,8 @@ public:
 		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
 	};
+	HwCap();
+	HwCap(const HwCap&);
         HwCap(HwDetInfoCtrlObj*);
 	HwCap(HwBufferCtrlObj*);
 	HwCap(HwSyncCtrlObj*);

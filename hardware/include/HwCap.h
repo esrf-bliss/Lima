@@ -10,6 +10,7 @@ class HwCap
 {
 public:
 	enum Type {
+	        Undef,
 		DetInfo, Buffer, Sync, 	// Standard: these are mandatory
 		Roi, Bin, Flip,		// Image operations
 		Kinetics, FrameTransfer,// Acquisition modes
@@ -17,10 +18,13 @@ public:
 		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
 	};
-
+	HwCap() : m_type(Undef),m_ctrl_obj(NULL) {}
+	
 	template <class CtrlObj>
 	HwCap(CtrlObj *ctrl_obj) : m_ctrl_obj(ctrl_obj)
 	{ m_type = getTypeFromCtrlObj(ctrl_obj); }
+
+	HwCap(const HwCap &cap) : m_type(cap.m_type),m_ctrl_obj(cap.m_ctrl_obj) {}
 
 	Type getType() const
 	{ return m_type; }

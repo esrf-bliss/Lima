@@ -30,17 +30,8 @@ class Interface(lima.HwInterface) :
         
     #@lima.Debug.DEB_MEMBER_FUNCT
     def getCapList(self) :
-        return [self.__detInfo,self.__syncObj,self.__buffer]
+        return [lima.HwCap(x) for x in [self.__detInfo,self.__syncObj,self.__buffer]]
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
-    def getHwCtrlObj(self,cap_type) :
-        if cap_type == lima.HwCap.DetInfo:
-            return self.__detInfo
-        elif cap_type == lima.HwCap.Sync:
-            return self.__syncObj
-        elif cap_type == lima.HwCap.Buffer:
-            return self.__buffer
- 
     #@lima.Debug.DEB_MEMBER_FUNCT
     def reset(self,reset_level):
         if reset_level == self.HardReset:

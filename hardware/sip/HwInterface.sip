@@ -8,8 +8,20 @@
 if(sipIsErr == NULL)
  return PySequence_Check(sipPy);
 
-*sipCppPtr = NULL; // not used in that way.
-return 0;
+*sipCppPtr = new std::vector<HwCap>(PyList_Size(sipPy));
+for(int i = 0;i < PyList_Size(sipPy);++i)
+{
+  PyObject *itemPt = PyList_GetItem(sipPy,i);
+  int state;
+  HwCap *hwCapPt = (HwCap*)sipConvertToType(itemPt,sipType_HwCap, sipTransferObj,SIP_NOT_NONE, &state,sipIsErr);
+  if(!*sipIsErr)
+  {
+    if(hwCapPt)
+      (*sipCppPtr)->operator[](i) = HwCap(*hwCapPt);
+  }
+  sipReleaseType(hwCapPt,sipType_HwCap,state);
+}
+return sipGetState(sipTransferObj);
 %End
 
 %ConvertFromTypeCode
@@ -68,7 +80,6 @@ using namespace lima;
 			break;
 		}
 %End
-
 	virtual void reset(ResetLevel reset_level) = 0;
 	virtual void prepareAcq() = 0;
 	virtual void startAcq() = 0;
