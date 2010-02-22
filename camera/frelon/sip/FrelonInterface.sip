@@ -99,7 +99,7 @@ class SyncCtrlObj : HwSyncCtrlObj
 	virtual void setNbHwFrames(int  nb_frames);
 	virtual void getNbHwFrames(int& nb_frames /Out/);
 
-	virtual void getValidRanges(ValidRangesType& valid_ranges /Out/);
+	virtual void getValidRanges(HwSyncCtrlObj::ValidRangesType& valid_ranges /Out/);
 
 };
 

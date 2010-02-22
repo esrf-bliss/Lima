@@ -68,12 +68,12 @@ class DetInfoCtrlObj(lima.HwDetInfoCtrlObj) :
 
     ##@brief image size won't change so no callback
     #@lima.Debug.DEB_MEMBER_FUNCT
-    def registerMaxImageSizeCallback(cb) :
+    def registerMaxImageSizeCallback(self,cb) :
         pass
 
     ##@brief image size won't change so no callback
     #@lima.Debug.DEB_MEMBER_FUNCT
-    def unregisterMaxImageSizeCallback(cb) :
+    def unregisterMaxImageSizeCallback(self,cb) :
         pass
 
     #@lima.Debug.DEB_MEMBER_FUNCT

@@ -5,8 +5,16 @@ class HwSyncCtrlObj
 using namespace lima;
 %End
 public:
-	struct ValidRangesType 
+	class ValidRangesType 
 	{
+	  public:
+	  ValidRangesType();
+	  ValidRangesType(double minExpTime,
+			  double maxExpTime,
+			  double minLatTime,
+			  double maxLatTime);
+	  ValidRangesType(const HwSyncCtrlObj::ValidRangesType &range);
+
 	  double min_exp_time;
 	  double max_exp_time;
 	  double min_lat_time;
@@ -38,6 +46,6 @@ sipRes = str.str().c_str();
 	virtual void getNbHwFrames(int& nb_frames /Out/) = 0;
 
 
-	virtual void getValidRanges(ValidRangesType& range /Out/) = 0;
+	virtual void getValidRanges(HwSyncCtrlObj::ValidRangesType& range /Out/) = 0;
 };
  

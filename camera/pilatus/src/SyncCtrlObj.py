@@ -85,12 +85,10 @@ class SyncCtrlObj(lima.HwSyncCtrlObj) :
     #@lima.Debug.DEB_MEMBER_FUNCT
     def getValidRanges(self) :
         det_info = self.__det_info()
-        valid_ranges = self.ValidRangesType()
-        valid_ranges.min_exp_time = det_info.get_min_exposition_time()
-        valid_ranges.max_exp_time = det_info.get_max_exposition_time()
-        valid_ranges.min_lat_time = det_info.get_min_latency()
-        valid_ranges.max_lat_time = det_info.get_max_latency()
-        return valid_ranges
+        return lima.HwSyncCtrlObj.ValidRangesType(det_info.get_min_exposition_time(),
+                                                  det_info.get_max_exposition_time(),
+                                                  det_info.get_min_latency(),
+                                                  det_info.get_max_latency())
 
     def prepareAcq(self) :
         com = self.__comm()

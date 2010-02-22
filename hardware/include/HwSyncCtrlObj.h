@@ -13,10 +13,30 @@ class HwSyncCtrlObj
 	DEB_CLASS(DebModHardware, "HwSyncCtrlObj");
 
 public:
-	typedef struct ValidRanges {
+	struct ValidRangesType {
+	  ValidRangesType() :
+	    min_exp_time(-1.),
+	    max_exp_time(-1.),
+	    min_lat_time(-1.),
+	    max_lat_time(-1.) {}
+	  ValidRangesType(double minExpTime,
+			  double maxExpTime,
+			  double minLatTime,
+			  double maxLatTime) :
+	    min_exp_time(minExpTime),
+	    max_exp_time(maxExpTime),
+	    min_lat_time(minLatTime),
+	    max_lat_time(maxLatTime) {}
+
+	  ValidRangesType(const ValidRangesType &range) :
+	    min_exp_time(range.min_exp_time),
+	    max_exp_time(range.max_exp_time),
+	    min_lat_time(range.min_lat_time),
+	    max_lat_time(range.max_lat_time) {}
+
 		double min_exp_time, max_exp_time;
 		double min_lat_time, max_lat_time;
-	} ValidRangesType;
+	};
 
 	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);
 	virtual ~HwSyncCtrlObj();

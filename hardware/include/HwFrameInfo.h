@@ -30,13 +30,7 @@ typedef struct HwFrameInfo {
 		  frame_timestamp(), valid_pixels(0), buffer_owner_ship(Managed) {}
 
 	HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
-		    Timestamp timestamp, int pixels, OwnerShip owner) 
-		: acq_frame_nb(frame_nb), frame_ptr(ptr), frame_dim(),
-		  frame_timestamp(timestamp), valid_pixels(pixels),buffer_owner_ship(owner) 
-        {
-	  if(dim)
-	    frame_dim = *dim;
-	}
+		    Timestamp timestamp, int pixels, OwnerShip owner);
 
 	bool isValid() const;
 } HwFrameInfoType;

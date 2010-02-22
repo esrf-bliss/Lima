@@ -29,3 +29,26 @@ ostream& lima::operator <<(ostream& os, const HwFrameInfoType& info)
 
 	return os;
 }
+
+HwFrameInfo::HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
+			 Timestamp timestamp, int pixels, OwnerShip owner) 
+  : acq_frame_nb(frame_nb), frame_ptr(), frame_dim(),
+    frame_timestamp(timestamp), valid_pixels(pixels),buffer_owner_ship(owner) 
+{
+  if(dim)
+    frame_dim = *dim;
+  if(owner == Transfer)
+    {
+      if(frame_dim.isValid())
+	{
+	  int size = frame_dim.getMemSize();
+	  if(posix_memalign(&frame_ptr,16,size))
+	    throw Exception(Hardware,Error,"Memory allocation",__FILE__,__FUNCTION__,__LINE__);
+	  memcpy(frame_ptr,ptr,size);
+	}
+      else
+	frame_ptr = NULL;
+    }
+  else
+    frame_ptr = ptr;
+}

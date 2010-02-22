@@ -34,7 +34,7 @@ using namespace lima;
 	void registerFrameCallback(CtControl *ct);
         void unregisterFrameCallback();
 
-	void getFrame(Data&,int frameNumber);
+	void getFrame(Data &data /Out/,int frameNumber);
 
 	void reset();
 	void setup(CtControl *ct);

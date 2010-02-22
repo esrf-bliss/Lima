@@ -91,10 +91,8 @@ class _ImageReader(threading.Thread) :
                         else:
                             buffer_ctrl = self.__buffer_ctrl()
                             
-                            hw_frame_info = lima.HwFrameInfoType()
-                            hw_frame_info.frame_data = data
-                            hw_frame_info.buffer_owner_ship = hw_frame_info.Transfer
-                            hw_frame_info.acq_frame_nb = nextFrameId
+                            hw_frame_info = lima.HwFrameInfoType(nextFrameId,data,lima.Timestamp(),
+                                                                 0,lima.HwFrameInfoType.Transfer)
                             if buffer_ctrl._cbk:
                                 buffer_ctrl._cbk.newFrameReady(hw_frame_info)
 
@@ -226,10 +224,8 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
                 except:
                     pass
                 else:
-                    hw_frame_info.frame_data = data
-                    hw_frame_info.buffer_owner_ship = hw_frame_info.Transfer
-                    hw_frame_info.acq_frame_nb = acq_frame_nb
-                    hw_frame_info._data_keept = data
+                    return lima.HwFrameInfoType(acq_frame_nb,data,lima.Timestamp(),
+                                                0,lima.HwFrameInfoType.Transfer)
 
             return hw_frame_info
 
