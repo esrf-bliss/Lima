@@ -56,6 +56,37 @@ return aReturnListPt;
 
 };
 
+%MappedType std::list<double>
+{
+%TypeHeaderCode
+#include <list>
+%End
+
+%ConvertToTypeCode
+if(sipIsErr == NULL)
+{
+bool aReturnFlag = PyList_Check(sipPy);
+for(int i = 0;aReturnFlag && i < PyList_Check(sipPy);++i)
+	aReturnFlag = PyFloat_Check(PyList_GetItem(sipPy,i));
+return aReturnFlag;
+}
+
+*sipCppPtr = new std::list<double>();
+for(int i = 0;i < PyList_Size(sipPy);++i)
+	(*sipCppPtr)->push_back(PyFloat_AS_DOUBLE(PyList_GetItem(sipPy,i)));
+return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+PyObject* aReturnListPt = PyList_New(sipCpp->size());
+std::list<double>::iterator lIter = sipCpp->begin();
+
+for(int i = 0;lIter != sipCpp->end();++lIter,++i)
+   PyList_SetItem(aReturnListPt,i,PyFloat_FromDouble(*lIter));
+return aReturnListPt;
+%End
+};
+
 %ModuleHeaderCode
 extern "C" { void lima_import_array();}
 %End

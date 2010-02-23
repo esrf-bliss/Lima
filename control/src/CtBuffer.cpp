@@ -184,7 +184,7 @@ void CtBuffer::setup(CtControl *ct)
   if (nbuffers > max_nbuffers)
     nbuffers = max_nbuffers;
   m_hw_buffer->setNbBuffers(nbuffers);
-
+  m_pars.nbBuffers = nbuffers;
   registerFrameCallback(ct);
 }
 

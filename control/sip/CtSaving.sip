@@ -182,7 +182,7 @@ using namespace lima;
     void setEndCallback(TaskEventCallback *);
     // --- statistic
 
-    //void getWriteTimeStatistic(std::list<double>& /Out/) const;
+    void getWriteTimeStatistic(std::list<double>& /Out/) const;
     void setStatisticHistorySize(int aSize);
 
     // --- misc

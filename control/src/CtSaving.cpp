@@ -47,6 +47,9 @@ public:
   _SaveTask(CtSaving::_SaveContainer &save_cnt) : SinkTaskBase(),m_container(save_cnt) {}
   virtual void process(Data &aData)
   {
+    DEB_MEMBER_FUNCT();
+    DEB_PARAM() << DEB_VAR1(aData);
+
     m_container.writeFile(aData,m_header);
   }
 
@@ -58,10 +61,14 @@ private:
  */
 class CtSaving::_SaveCBK : public TaskEventCallback
 {
+    DEB_CLASS_NAMESPC(DebModControl,"CtSaving::_SaveCBK","Control");
 public:
   _SaveCBK(CtSaving &aCtSaving) : m_saving(aCtSaving) {}
   virtual void finished(Data &aData)
   {
+    DEB_MEMBER_FUNCT();
+    DEB_PARAM() << DEB_VAR1(aData);
+
     m_saving._save_finished(aData);
   }
 private:
@@ -541,6 +548,7 @@ void CtSaving::_post_save_task(Data &aData,_SaveTask *aSaveTaskPt)
 
   TaskMgr *aSavingMgrPt = new TaskMgr();
   aSavingMgrPt->addSinkTask(0,aSaveTaskPt);
+  aSaveTaskPt->unref();
   aSavingMgrPt->setInputData(aData);
 
   PoolThreadMgr::get().addProcess(aSavingMgrPt);

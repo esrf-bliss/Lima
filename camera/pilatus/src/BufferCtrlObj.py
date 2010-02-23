@@ -93,21 +93,22 @@ class _ImageReader(threading.Thread) :
                             
                             hw_frame_info = lima.HwFrameInfoType(nextFrameId,data,lima.Timestamp(),
                                                                  0,lima.HwFrameInfoType.Transfer)
+                            del data
+                            continueFlag = True
                             if buffer_ctrl._cbk:
-                                buffer_ctrl._cbk.newFrameReady(hw_frame_info)
-
+                                continueFlag = buffer_ctrl._cbk.newFrameReady(hw_frame_info)
+                                
                             #remove old image from buffer (tmp_fs)
                             idImage2remove = nextFrameId - buffer_ctrl.getNbBuffers()
                             if idImage2remove >= 0 :
                                 fullImagePath2remove = os.path.join(self.__basePath,
                                                 '%s%.5d%s' % (self.__fileBase,idImage2remove,
                                                               self.__fileExt))
-                                print 'we will remove',fullImagePath2remove
                                 os.unlink(fullImagePath2remove)
                                 
                             self.__cond.acquire()
-                            print 'lastImageRead is',nextFrameId
                             self.__lastImageRead = nextFrameId
+                            self.__waitFlag = not continueFlag
                     else:               # We didn't managed to access the file
                         lastDirectoryTime = newDirectoryTime
                         #Get all images from directory
@@ -193,7 +194,7 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
             det_info = self.__det_info()
             imageFormat = det_info.getMaxImageSize()
             imageSize = imageFormat.getWidth() * imageFormat.getHeight() * 4 # 4 == image 32bits
-            return com.DEFAULT_TMPFS_SIZE / imageSize
+            return com.DEFAULT_TMPFS_SIZE / imageSize / 2.
 
         #@lima.Debug.DEB_MEMBER_FUNCT
         def getBufferPtr(self,buffer_nb,concat_frame_nb = 0) :
