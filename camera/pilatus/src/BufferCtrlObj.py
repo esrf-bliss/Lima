@@ -31,12 +31,18 @@ class _ImageReader(threading.Thread) :
         self.__waitFlag = True
         self.__numberOfNewFile = 0
         self.__lastImageRead = -1
+        self.__readError = False
+        
+    def is_read_error(self) :
+        with self.__cond:
+            return self.__readError
         
     def reset(self) :
         with self.__cond:
             self.__waitFlag = True
             self.__numberOfNewFile = 0
             self.__lastImageRead = -1
+            self.__readError = False
             
             buffer_ctrl = self.__buffer_ctrl()
             com = buffer_ctrl._com()
@@ -45,7 +51,7 @@ class _ImageReader(threading.Thread) :
                 base,ext = os.path.splitext(filename)
                 if ext.lower() == com.DEFAULT_FILE_EXTENTION :
                     os.unlink(os.path.join(com.DEFAULT_PATH,filename))
-                    
+
     def start_read(self) :
         with self.__cond:
             self.__waitFlag = False
@@ -64,7 +70,7 @@ class _ImageReader(threading.Thread) :
 
     def getLastAcquiredFrame(self) :
         with self.__cond:
-            return self.__lastImageRead + 1
+            return self.__lastImageRead
         
     def run(self) :
         lastDirectoryTime = None
@@ -90,14 +96,15 @@ class _ImageReader(threading.Thread) :
                             break
                         else:
                             buffer_ctrl = self.__buffer_ctrl()
-                            
-                            hw_frame_info = lima.HwFrameInfoType(nextFrameId,data,lima.Timestamp(),
-                                                                 0,lima.HwFrameInfoType.Transfer)
-                            del data
+                              
                             continueFlag = True
                             if buffer_ctrl._cbk:
+                                hw_frame_info = lima.HwFrameInfoType(nextFrameId,data,lima.Timestamp(),
+                                                                     0,lima.HwFrameInfoType.Transfer)
                                 continueFlag = buffer_ctrl._cbk.newFrameReady(hw_frame_info)
                                 
+                            del data
+
                             #remove old image from buffer (tmp_fs)
                             idImage2remove = nextFrameId - buffer_ctrl.getNbBuffers()
                             if idImage2remove >= 0 :
@@ -110,6 +117,7 @@ class _ImageReader(threading.Thread) :
                             self.__lastImageRead = nextFrameId
                             self.__waitFlag = not continueFlag
                     else:               # We didn't managed to access the file
+                        ErrorFlag = False
                         lastDirectoryTime = newDirectoryTime
                         #Get all images from directory
                         files = [x for x in os.listdir(self.__basePath) if os.path.splitext(x)[-1] == '.edf']
@@ -119,8 +127,12 @@ class _ImageReader(threading.Thread) :
                             lastImageId = int(lastImageName.split('_')[-1])
                             #We're probably losing some frames
                             if lastImageId - nextFrameId > 10 :
-                                pass    # trigg an error
+                                ErrorFlag = True
+                        
                         self.__cond.acquire()
+                        if ErrorFlag:
+                            self.__waitFlag = True
+                            self.__readError = True
                         break
                         
 
@@ -150,7 +162,10 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
 
         def stop(self) :
             self.__imageReader.stop_read()
-            
+
+        def is_error(self) :
+            return self.__imageReader.is_read_error()
+        
         #@lima.Debug.DEB_MEMBER_FUNCT
 	def setFrameDim(self,frame_dim) :
             pass
@@ -217,7 +232,6 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
             fullPath = os.path.join(com.DEFAULT_PATH,
                                     '%s%.5d%s' % (fileBase,acq_frame_nb,
                                                   fileExt))
-            print fullPath
             if os.access(fullPath,os.R_OK) :
                 try:
                     f = EdfFile.EdfFile(fullPath)

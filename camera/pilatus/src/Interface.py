@@ -63,7 +63,9 @@ class Interface(lima.HwInterface) :
         camserverStatus = self.__comm.status()
         status = lima.HwInterface.StatusType()
 
-        if camserverStatus == self.__comm.ERROR:
+        if self.__buffer.is_error() :
+            status.det = lima.DetFault
+        elif camserverStatus == self.__comm.ERROR:
             status.det = lima.DetFault
             status.acq = lima.AcqFault
         else:
@@ -72,16 +74,21 @@ class Interface(lima.HwInterface) :
                 status.acq = lima.AcqRunning
             else:
                 status.det = lima.DetIdle
-                status.acq = lima.AcqReady # TODO test if the file save is finnished
+                lastAcquiredFrame = self.__buffer.getLastAcquiredFrame()
+                requestNbFrame = self.__syncObj.getNbFrames()
+                if lastAcquiredFrame < 0 or lastAcquiredFrame == (requestNbFrame - 1):
+                    status.acq = lima.AcqReady
+                else:
+                    status.acq = lima.AcqRunning
             
         status.det_mask = (lima.DetExposure|lima.DetFault)
-        
+
         return status
     
     #@lima.Debug.DEB_MEMBER_FUNCT
     def getNbAcquiredFrames(self) :
-        return self.__buffer.getLastAcquiredFrame()
+        return self.__buffer.getLastAcquiredFrame() + 1
     
     #@lima.Debug.DEB_MEMBER_FUNCT
     def getNbHwAcquiredFrames(self):
-        return self.getLastAcquiredFrame()
+        return self.getNbAcquiredFrames()

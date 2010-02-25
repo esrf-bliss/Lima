@@ -4,7 +4,6 @@ import lima
 
 class SyncCtrlObj(lima.HwSyncCtrlObj) :
     #lima.Debug.DEB_CLASS(lima.DebModCamera, "SyncCtrlObj")
-
     def __init__(self,buffer_obj,comm_object,det_info) :
         lima.HwSyncCtrlObj.__init__(self,buffer_obj)
         self.__comm = weakref.ref(comm_object)
