@@ -149,7 +149,7 @@ class SimuHwInterface : public HwInterface
 	SimuHwInterface(Simulator& simu);
 	virtual ~SimuHwInterface();
 
-	virtual const CapList& getCapList() const;
+	virtual void getCapList(CapList&) const;
 
 	virtual void reset(ResetLevel reset_level);
 	virtual void prepareAcq();

@@ -31,6 +31,8 @@ typedef struct HwFrameInfo {
 
 	HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
 		    Timestamp timestamp, int pixels, OwnerShip owner);
+  
+        HwFrameInfo(const HwFrameInfo &anInfo);
 
 	bool isValid() const;
 } HwFrameInfoType;

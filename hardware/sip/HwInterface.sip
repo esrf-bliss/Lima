@@ -13,13 +13,21 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
 {
   PyObject *itemPt = PyList_GetItem(sipPy,i);
   int state;
+#if (SIP_VERSION > 0x040800)
   HwCap *hwCapPt = (HwCap*)sipConvertToType(itemPt,sipType_HwCap, sipTransferObj,SIP_NOT_NONE, &state,sipIsErr);
+#else
+  HwCap *hwCapPt = (HwCap*)sipConvertToInstance(itemPt,sipClass_HwCap, sipTransferObj,SIP_NOT_NONE, &state,sipIsErr);
+#endif
   if(!*sipIsErr)
   {
     if(hwCapPt)
       (*sipCppPtr)->operator[](i) = HwCap(*hwCapPt);
   }
+#if (SIP_VERSION >= 0x040800)
   sipReleaseType(hwCapPt,sipType_HwCap,state);
+#else
+  sipReleaseInstance(hwCapPt,sipClass_HwCap,state);
+#endif
 }
 return sipGetState(sipTransferObj);
 %End
@@ -67,11 +75,12 @@ using namespace lima;
 	HwInterface();
 	virtual ~HwInterface();
 
-	virtual const std::vector<HwCap>& getCapList() const = 0;
+	virtual void getCapList(std::vector<HwCap> &cap_list /Out/) const = 0;
 
 	SIP_PYOBJECT getHwCtrlObj(HwCap::Type cap_type);
 %MethodCode
-	const HwInterface::CapList& cap_list = sipCpp->getCapList();
+	HwInterface::CapList cap_list;
+	sipCpp->getCapList(cap_list);
 
 	typedef HwInterface::CapList::const_iterator It;
 	for (It i = cap_list.begin(); i != cap_list.end(); ++i)

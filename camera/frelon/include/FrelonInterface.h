@@ -216,7 +216,7 @@ class Interface : public HwInterface
 	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, Camera& cam);
 	virtual ~Interface();
 
-	virtual const CapList& getCapList() const;
+	virtual void getCapList(CapList&) const;
 
 	virtual void reset(ResetLevel reset_level);
 	virtual void prepareAcq();

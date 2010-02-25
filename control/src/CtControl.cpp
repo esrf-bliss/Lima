@@ -204,7 +204,8 @@ void CtControl::prepareAcq()
     m_ct_sps_image->prepare(dim);
   }
 
-  
+  m_images_ready.clear();
+  m_base_images_ready.clear();
 }
 
 void CtControl::startAcq()

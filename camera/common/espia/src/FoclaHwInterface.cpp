@@ -299,9 +299,9 @@ Interface::~Interface()
 }
 
 
-const HwInterface::CapList& Interface::getCapList() const
+void Interface::getCapList(HwInterface::CapList &cap_list) const
 {
-	return m_cap_list;
+	cap_list = m_cap_list;
 }
 
 

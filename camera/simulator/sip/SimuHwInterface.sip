@@ -119,7 +119,7 @@ class SimuHwInterface : HwInterface
 	virtual ~SimuHwInterface();
 
 //	virtual const CapList& getCapList() const;
-	virtual const std::vector<HwCap>& getCapList() const;
+	virtual void getCapList(std::vector<HwCap> &cap_list /Out/) const;
 
 	virtual void reset(ResetLevel reset_level);
 	virtual void prepareAcq();

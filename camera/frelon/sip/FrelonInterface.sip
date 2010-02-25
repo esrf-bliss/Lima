@@ -172,7 +172,7 @@ class Interface : HwInterface
 	virtual ~Interface();
 
 //	virtual const HwInterface::CapList& getCapList() const;
-	virtual const std::vector<HwCap>& getCapList() const;
+	virtual void getCapList(std::vector<HwCap> &cap_list /Out/) const;
 
 	virtual void reset(HwInterface::ResetLevel reset_level);
 	virtual void prepareAcq();

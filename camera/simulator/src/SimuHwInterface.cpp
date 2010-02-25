@@ -291,9 +291,9 @@ SimuHwInterface::~SimuHwInterface()
 {
 }
 
-const HwInterface::CapList& SimuHwInterface::getCapList() const
+void SimuHwInterface::getCapList(HwInterface::CapList &aReturnCapList) const
 {
-	return m_cap_list;
+  aReturnCapList = m_cap_list;
 }
 
 void SimuHwInterface::reset(ResetLevel reset_level)

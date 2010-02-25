@@ -1,6 +1,8 @@
 #include "HwFrameInfo.h"
 #include <iomanip>
 
+#include <iostream>
+
 using namespace lima;
 using namespace std;
 
@@ -51,4 +53,15 @@ HwFrameInfo::HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim,
     }
   else
     frame_ptr = ptr;
+}
+
+HwFrameInfo::HwFrameInfo(const HwFrameInfo &aFrameInfo) :
+  acq_frame_nb(aFrameInfo.acq_frame_nb),
+  frame_ptr(aFrameInfo.frame_ptr),
+  frame_dim(aFrameInfo.frame_dim),
+  frame_timestamp(aFrameInfo.frame_timestamp),
+  valid_pixels(aFrameInfo.valid_pixels),
+  buffer_owner_ship(aFrameInfo.buffer_owner_ship)
+{
+  std::cout << "HwFrameInfo::HwFrameInfo copy" << std::endl;
 }

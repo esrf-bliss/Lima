@@ -28,7 +28,7 @@ class HwInterface
 	HwInterface();
 	virtual ~HwInterface();
 
-	virtual const CapList& getCapList() const = 0;
+	virtual void getCapList(CapList &) const = 0;
 
 	template <class CtrlObj>
 	bool getHwCtrlObj(CtrlObj *& ctrl_obj_ptr) const;
@@ -46,8 +46,8 @@ class HwInterface
 template <class CtrlObj>
 bool HwInterface::getHwCtrlObj(CtrlObj *& ctrl_obj) const
 {
-	const CapList& cap_list = getCapList();
-
+        CapList cap_list;
+	getCapList(cap_list);
 	typedef CapList::const_iterator It;
 	for (It i = cap_list.begin(); i != cap_list.end(); ++i)
 		if (i->getCtrlObj(ctrl_obj))

@@ -479,10 +479,10 @@ Interface::~Interface()
 	DEB_DESTRUCTOR();
 }
 
-const HwInterface::CapList& Interface::getCapList() const
+void Interface::getCapList(HwInterface::CapList &cap_list) const
 {
 	DEB_MEMBER_FUNCT();
-	return m_cap_list;
+	cap_list = m_cap_list;
 }
 
 void Interface::reset(ResetLevel reset_level)
