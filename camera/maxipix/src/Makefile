@@ -1,12 +1,18 @@
 
-maxipix-objs := MaxipixReconstruction.o
+maxipix-objs := MaxipixReconstruction.o PriamSerial.o PriamAcq.o PriamArray.o
 
 SRCS = $(maxipix-objs:.o=.cpp)
 
+include ../../common/espia/include/espia.inc
+
 INCLUDES = -I../include \
+           -I../../../common/include \
+           -I../../../hardware/include \
+           -I../../common/espia/include \
+           -I$(ESPIA_DRV_INCL) \
 	   -I../../../third-party/Processlib/core/include
 
-CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread -g
+CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread
 
 
 all: Maxipix.o
