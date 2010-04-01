@@ -76,13 +76,12 @@ class Interface(lima.HwInterface) :
                 status.det = lima.DetIdle
                 lastAcquiredFrame = self.__buffer.getLastAcquiredFrame()
                 requestNbFrame = self.__syncObj.getNbFrames()
-                if lastAcquiredFrame < 0 or lastAcquiredFrame == (requestNbFrame - 1):
+                if lastAcquiredFrame >= 0 and lastAcquiredFrame == (requestNbFrame - 1):
                     status.acq = lima.AcqReady
                 else:
                     status.acq = lima.AcqRunning
             
         status.det_mask = (lima.DetExposure|lima.DetFault)
-
         return status
     
     #@lima.Debug.DEB_MEMBER_FUNCT
@@ -92,3 +91,7 @@ class Interface(lima.HwInterface) :
     #@lima.Debug.DEB_MEMBER_FUNCT
     def getNbHwAcquiredFrames(self):
         return self.getNbAcquiredFrames()
+
+    #get lower communication
+    def communication(self) :
+        return self.__comm

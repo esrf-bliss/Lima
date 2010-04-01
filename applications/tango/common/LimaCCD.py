@@ -29,10 +29,13 @@
 #=============================================================================
 #
 
+import sys
 import PyTango
 
 import lima
 import processlib
+
+lima.DebParams.setTypeFlags(0)
 
 DevCcdBase			= 0xc180000
 
@@ -115,6 +118,8 @@ class LimaCCDs(PyTango.Device_3Impl):
         try:
             m = __import__('plugins.%s' % (self.LimaCameraType),None,None,'plugins.%s' % (self.LimaCameraType))
         except ImportError:
+            import traceback
+            traceback.print_exc()
             self.set_state(PyTango.DevState.FAULT)
         else:
             self.__interface = m.get_interface()
@@ -162,8 +167,8 @@ class LimaCCDs(PyTango.Device_3Impl):
         if state == PyTango.DevState.OFF:
             return DevCcdReady
         elif state == PyTango.DevState.ON:
-            return DevCcdTaking
-        else
+            return DevCcdAcquiring
+        else:
             return DevCcdFault
 
 #------------------------------------------------------------------
@@ -187,6 +192,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 #    Description: 
 #------------------------------------------------------------------
     def DevCcdStart(self):
+        print 'DevCcdStart'
         self.__control.prepareAcq()
         self.__control.startAcq()
 
@@ -197,6 +203,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 #    Description: 
 #------------------------------------------------------------------
     def DevCcdStop(self):
+        print 'DevCcdStop'
         self.__control.stopAcq()
 
 #------------------------------------------------------------------
@@ -207,7 +214,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 #    argout: DevVarCharArray 
 #------------------------------------------------------------------
     def DevCcdRead(self, argin):
-        data = self.__control.ReadImage(argin)
+        data = self.__control.ReadImage(argin[0])
         return data.buffer.tostring()
 
 #------------------------------------------------------------------
@@ -256,7 +263,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 #    argin:    DevVarLongArray 
 #------------------------------------------------------------------
     def DevCcdSetRoI(self, argin):
-        roi = lima.Roi(Point(roi[0], roi[1]), Point(roi[2], roi[3]))
+        roi = lima.Roi(lima.Point(argin[0], argin[1]), lima.Point(argin[2], argin[3]))
         image = self.__control.image()
         if roi == self.getMaxRoi() :
             roi = lima.Roi()
@@ -320,10 +327,11 @@ class LimaCCDs(PyTango.Device_3Impl):
     def DevCcdGetFilePar(self):
         saving = self.__control.saving()
         pars = saving.getParameters()
-        return [pars.directory,pars.prefix,pars.suffix,
-                str(pars.nextNumber),
-                pars.indexFormat,
-                (pars.overwritePolicy == saving.Overwrite) and 'yes' or 'no')]
+        returnValue  = [pars.directory,pars.prefix,pars.suffix,
+                        str(pars.nextNumber),
+                        pars.indexFormat,
+                        (pars.overwritePolicy == saving.Overwrite) and 'yes' or 'no']
+        return returnValue
 
 #------------------------------------------------------------------
 #    DevCcdDepth command:
@@ -379,11 +387,12 @@ class LimaCCDs(PyTango.Device_3Impl):
 #    argin:    DevLong mode
 #------------------------------------------------------------------
     def DevCcdSetMode(self, argin):
-        live_display = (mode & 0x1)
+        print 'DevCcdSetMode',argin
+        live_display = (argin & 0x1)
         display = self.__control.display()
         display.setActive(live_display)
 
-        auto_save = (mode & 0x8)
+        auto_save = (argin & 0x8)
         savingCtrl = self.__control.saving()
         savingCtrl.setSavingMode(auto_save and lima.CtSaving.AutoFrame or lima.CtSaving.Manual)
 
@@ -410,7 +419,8 @@ class LimaCCDs(PyTango.Device_3Impl):
 #    argin:    DevLong frame to write
 #------------------------------------------------------------------
     def DevCcdWriteFile(self, argin):
-        pass
+        print 'DevCcdWriteFile',argin
+        
 
 #------------------------------------------------------------------
 #    DevCcdGetBin command:
@@ -687,12 +697,6 @@ class LimaCCDsClass(PyTango.DeviceClass):
         'DevCcdGetFrames':
             [[PyTango.DevVoid, ""],
             [PyTango.DevLong, ""]],
-        'DevCcdGetChannel':
-            [[PyTango.DevVoid, ""],
-            [PyTango.DevLong, ""]],
-        'DevCcdSetChannel':
-            [[PyTango.DevLong, ""],
-            [PyTango.DevVoid, ""]],
         'DevCcdSetTrigger':
             [[PyTango.DevLong, ""],
             [PyTango.DevVoid, ""]],
