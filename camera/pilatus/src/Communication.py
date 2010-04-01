@@ -331,7 +331,7 @@ class Communication:
     def start_acquisition(self) :
         with self.__cond:
 	    if self._state == self.RUNNING:
-		raise 'Could not start acquisition, you have to wait the finnished of the previouse one'
+		raise 'Could not start acquisition, you have to wait the finished of the previous one'
 
             while self._exposure_period <= self._exposure or self._exposure_period - (self._exposure + 0.003) > 1e-6:
                 self.__asynSock.send('expperiod %f' % (self._exposure + 0.003))

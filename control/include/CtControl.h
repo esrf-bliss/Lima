@@ -98,7 +98,9 @@ namespace lima
     CtSpsImage* display() { return m_ct_sps_image; }
     CtImage* image() { return m_ct_image; }
     CtBuffer* buffer() { return m_ct_buffer; }
-
+    
+    HwInterface* interface() {return m_hw;}
+    
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;
 

@@ -78,14 +78,14 @@ public:
     void setup(MpxVersion ver, MpxPolarity pol, float freq, std::string fsr0);
     void setChipType(MpxVersion, MpxPolarity);
 
-    void getBoardVersion(short& pcb, short& firmware);
-    void getChipID(short chip, long& id);
+    void getBoardVersion(short& pcb /Out/, short& firmware /Out/);
+    void getChipID(short chip, long& id /Out/);
 
     void setFastFOSpeed(bool fast);
-    void getFastFOSpeed(bool& fast);
+    void getFastFOSpeed(bool& fast /Out/);
     
     void setOscillator(float freq);
-    void getOscillator(float& freq);
+    void getOscillator(float& freq /Out/);
 
     void setChipFsr(short chip, std::string fsr);
     void setChipCfg(short chip, std::string cfg);
@@ -95,67 +95,67 @@ public:
     // --- timing
 
     void setTimeUnit(TimeUnit unit);
-    void getTimeUnit(TimeUnit& unit);
+    void getTimeUnit(TimeUnit& unit /Out/);
 
     void setExposureTime(double askexpo, double& setexpo);
-    void getExposureTime(double& expo);
+    void getExposureTime(double& expo /Out/);
 
     void setMaxExposureTime();
-    void getExposureTimeRange(double& min_expo, double& max_expo);
+    void getExposureTimeRange(double& min_expo /Out/, double& max_expo /Out/);
 
     void setIntervalTime(double asktime, double& settime);
-    void getIntervalTime(double& itime);
+    void getIntervalTime(double& itime /Out/);
 
-    void getMinIntervalTime(double& minit);
+    void getMinIntervalTime(double& minit /Out/);
 
     void setShutterTime(double asktime, double& settime);
-    void getShutterTime(double& stime);
+    void getShutterTime(double& stime /Out/);
 
     // --- external IO signals
 
     void setShutterLevel(SignalLevel level);
-    void getShutterLevel(SignalLevel& level);
+    void getShutterLevel(SignalLevel& level /Out/);
 
     void setShutterMode(ShutterMode mode);
-    void getShutterMode(ShutterMode& mode);
+    void getShutterMode(ShutterMode& mode /Out/);
 
     void setReadyLevel(SignalLevel level);
-    void getReadyLevel(SignalLevel& level);
+    void getReadyLevel(SignalLevel& level /Out/);
 
     void setReadyMode(ReadyMode mode);
-    void getReadyMode(ReadyMode& mode);
+    void getReadyMode(ReadyMode& mode /Out/);
 
     void setGateLevel(SignalLevel level);
-    void getGateLevel(SignalLevel& level);
+    void getGateLevel(SignalLevel& level /Out/);
 
     void setGateMode(GateMode mode);
-    void getGateMode(GateMode& mode);
+    void getGateMode(GateMode& mode /Out/);
 
     void setTriggerLevel(SignalLevel level);
-    void getTriggerLevel(SignalLevel& level);
+    void getTriggerLevel(SignalLevel& level /Out/);
 
     void setTriggerMode(TrigMode mode);
-    void getTriggerMode(TrigMode& mode);
+    void getTriggerMode(TrigMode& mode /Out/);
 
     // --- acquisition
 
     void setNbFrames(int nb);
-    void getNbFrames(int& nb);
+    void getNbFrames(int& nb /Out/);
 
     void setSerialReadout(short chip);
     void setParalellReadout(std::vector<bool> chips);
-    void getReadoutMode(ReadoutMode& mode, std::vector<bool>& chips);
+    void getReadoutMode(ReadoutMode& mode /Out/, std::vector<bool>& chips /Out/);
 
     void setImageMode(ImageMode image);
-    void getImageMode(ImageMode& image);
+    void getImageMode(ImageMode& image /Out/);
 
     void setFFCorrection(short flat);
-    void getFFCorrection(short& flat);
+    void getFFCorrection(short& flat /Out/);
 
     void startAcq();
     void stopAcq();
 
-    void getStatus(DetStatus& status);
+    void getStatus(DetStatus& status /Out/);
 
     // --- reset
 

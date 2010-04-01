@@ -76,6 +76,8 @@ using namespace lima;
     CtImage* image();
     CtBuffer* buffer();
     
+    HwInterface* interface();
+
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy /Out/) const;
 

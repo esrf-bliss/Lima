@@ -79,7 +79,7 @@ private:
  */
 CtSaving::Parameters::Parameters()
   : nextNumber(0), fileFormat(RAW), savingMode(Manual), 
-    overwritePolicy(Abort), framesPerFile(1)
+    overwritePolicy(Abort),indexFormat("%04d"),framesPerFile(1)
 {
 }
 
@@ -660,12 +660,10 @@ void CtSaving::_SaveContainer::_open()
       CtSaving::Parameters pars;
       m_saving.getParameters(pars);
 
-      std::ostringstream idx;
-      idx.width(4);
-      idx.fill('0');
-      idx << pars.nextNumber;
+      char idx[64];
+      snprintf(idx,sizeof(idx),pars.indexFormat.c_str(),pars.nextNumber);
 
-      std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix + idx.str() + pars.suffix;
+      std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix + idx + pars.suffix;
       DEB_TRACE() << DEB_VAR1(aFileName);
 
       if(pars.overwritePolicy == Abort && 

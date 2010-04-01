@@ -114,6 +114,7 @@ using namespace lima;
       CtSaving::FileFormat fileFormat;
       CtSaving::SavingMode savingMode;
       CtSaving::OverwritePolicy overwritePolicy;
+      std::string indexFormat;
       long framesPerFile;
       Parameters();
       const char* __repr__();

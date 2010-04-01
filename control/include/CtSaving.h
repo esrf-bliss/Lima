@@ -53,6 +53,7 @@ namespace lima {
       FileFormat fileFormat;
       SavingMode savingMode;
       OverwritePolicy overwritePolicy;
+      std::string indexFormat;
       long framesPerFile;
       Parameters();
     };

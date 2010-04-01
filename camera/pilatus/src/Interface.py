@@ -69,7 +69,7 @@ class Interface(lima.HwInterface) :
             status.det = lima.DetFault
             status.acq = lima.AcqFault
         else:
-            if camserverStatus == self.__comm.RUNNING:
+            if camserverStatus != self.__comm.OK:
                 status.det = lima.DetExposure
                 status.acq = lima.AcqRunning
             else:
