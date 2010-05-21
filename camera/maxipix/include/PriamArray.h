@@ -2,6 +2,7 @@
 #define _PRIAMARR_H
 
 #include "PriamAcq.h"
+#include "MaxipixDet.h"
 
 namespace lima {
 namespace Maxipix {
@@ -18,14 +19,14 @@ class PriamArray {
 	short high[4];
     };
 
-    PriamArray(PriamAcq::MpxVersion);
+    PriamArray(MaxipixDet::Version);
     ~PriamArray();
 
     void pixelConfig2String(char*, char*, char*, char*, std::string&);
     void serialData2Array(std::string, unsigned short*);
 
   private:
-    PriamAcq::MpxVersion m_version;
+    MaxipixDet::Version m_version;
     PriamArrayBitType m_bit;
 };
 

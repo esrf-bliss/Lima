@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "PriamSerial.h"
+#include "MaxipixDet.h"
 #include "Constants.h"
 
 namespace lima {
@@ -17,19 +18,6 @@ class PriamAcq {
     DEB_CLASS_NAMESPC(DebModCamera, "PriamAcq", "Maxipix");
 
   public:
-
-
-    enum MpxVersion {
-      DUMMY,
-      MPX2,
-      MPX2MXR20,
-      TPX10
-    };
-
-    enum MpxPolarity {
-      NEGATIVE,
-      POSITIVE
-    };
 
     enum TimeUnit {
       UNIT_US,
@@ -80,8 +68,9 @@ class PriamAcq {
 
     // --- configuration
 
-    void setup(MpxVersion ver, MpxPolarity pol, float freq, std::string fsr0);
-    void setChipType(MpxVersion, MpxPolarity);
+    void setup(MaxipixDet::Version ver, MaxipixDet::Polarity pol, \
+		float freq, std::string fsr0);
+    void setChipType(MaxipixDet::Version, MaxipixDet::Polarity);
 
     void getBoardVersion(short& pcb, short& firmware);
     void getChipID(short chip, long& id);
@@ -111,7 +100,7 @@ class PriamAcq {
     void setIntervalTime(double asktime, double& settime);
     void getIntervalTime(double& itime);
 
-    void getMinIntervalTime(double& minit);
+    void getIntervalTimeRange(double& minit, double& maxit);
 
     void setShutterTime(double asktime, double& settime);
     void getShutterTime(double& stime);
@@ -182,7 +171,7 @@ class PriamAcq {
 
     PriamSerial& m_priam_serial;
     short	m_setup;
-    MpxVersion  m_version;
+    MaxipixDet::Version  m_version;
     std::vector<long> m_chip_id;
     std::string m_board_id;
     short	m_pcb; 

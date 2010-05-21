@@ -1,6 +1,4 @@
-
 #include <cmath>
-
 #include "PriamAcq.h"
 
 using namespace std;
@@ -9,7 +7,7 @@ using namespace lima::Maxipix;
 
 PriamAcq::PriamAcq(PriamSerial& priam_serial)
 	:m_priam_serial(priam_serial),
-	 m_setup(0), m_version(DUMMY), 
+	 m_setup(0), m_version(MaxipixDet::DUMMY), 
 	 m_chip_fsr0(""), m_fo_fast(false),
 	 m_expo_time(-1.), m_int_time(-1.),
  	 m_shut_level(HIGH_RISE), m_shut_mode(FRAME),
@@ -24,7 +22,10 @@ PriamAcq::PriamAcq(PriamSerial& priam_serial)
     m_chip_used[0]= true;
 
     setTimeUnit(UNIT_MS);
+    enableSerial(0);
     _readBoardID();
+    double minit;
+    setIntervalTime(0., minit);
 }
 
 PriamAcq::~PriamAcq()
@@ -44,26 +45,29 @@ void PriamAcq::getBoardVersion(short& pcb, short& firmware)
     firmware= m_firmware;
 }
 
-void PriamAcq::setup(MpxVersion version, MpxPolarity polarity, float osc, string fsr0)
+void PriamAcq::setup(MaxipixDet::Version version, \
+	MaxipixDet::Polarity polarity, float osc, string fsr0)
 {
+    enableSerial(0);
     setChipType(version, polarity);
     m_chip_fsr0= fsr0;
     setOscillator(osc);
 }
 
-void PriamAcq::setChipType(MpxVersion version, MpxPolarity polarity)
+void PriamAcq::setChipType(MaxipixDet::Version version, \
+	MaxipixDet::Polarity polarity)
 {
     string sval;
     char val;
 
     switch (version) {
-	case MPX2: val= 0x40; break;
-  	case MPX2MXR20: val= 0x20; break;
-	case TPX10: val= 0x60; break;
+	case MaxipixDet::MPX2: val= 0x40; break;
+  	case MaxipixDet::MPX2MXR20: val= 0x20; break;
+	case MaxipixDet::TPX10: val= 0x60; break;
 	default: val= 0x00;
     }
     m_version= version;
-    if (polarity==POSITIVE) {
+    if (polarity==MaxipixDet::POSITIVE) {
 	val= 0x80 | val;
     }
 
@@ -135,7 +139,7 @@ void PriamAcq::setOscillator(float frequency)
     _timeAdjust();
 
     // -- for TPX, set counting frequency divider
-    if (m_version == TPX10) {
+    if (m_version == MaxipixDet::TPX10) {
 	sval= string(1, (char)0x01);
 	m_priam_serial.writeRegister(PriamSerial::PR_TIP, sval);
     }
@@ -322,9 +326,10 @@ void PriamAcq::getIntervalTime(double& itime)
     _regToTime(it1, it2, itime);
 }
 
-void PriamAcq::getMinIntervalTime(double& minit)
+void PriamAcq::getIntervalTimeRange(double& minit, double& maxit)
 {
     minit= m_min_it / m_time_us;
+    maxit= (double)0x3ff * 1000000. / m_time_us;
 }
 
 void PriamAcq::setShutterTime(double asktime, double& settime)
@@ -462,6 +467,7 @@ void PriamAcq::setNbFrames(int nb)
     in2.assign(1, (char)((nb>>8)&0xff));
     m_priam_serial.writeRegister(PriamSerial::PR_INB1, in1);
     m_priam_serial.writeRegister(PriamSerial::PR_INB2, in2);
+    m_nb_frame= nb;
 }
 
 void PriamAcq::getNbFrames(int& nb)
@@ -470,7 +476,7 @@ void PriamAcq::getNbFrames(int& nb)
 
     m_priam_serial.readRegister(PriamSerial::PR_INB1, in1);
     m_priam_serial.readRegister(PriamSerial::PR_INB2, in2);
-    nb= (int)(in1.at(0)|(in2.at(0)<<8));
+    nb= (int)((in1.at(0)&0xff)|(in2.at(0)<<8));
 }
 
 void PriamAcq::_writeRomReg()
@@ -547,7 +553,7 @@ void PriamAcq::startAcq()
     string reg;
     char mcr2, msr;
     int nbchip;
-    double txtime;
+    double txtime, minit;
 
     if (m_nb_frame == -1)
 	throw LIMA_HW_EXC(Error, "Number of frames has not been set");
@@ -562,7 +568,9 @@ void PriamAcq::startAcq()
     for (int i=0; i<5; i++)
 	if (m_chip_used[i]) nbchip++;
     txtime= m_fo_fast ? 560. : 700.;
-    if ((m_int_time-m_min_it+m_expo_time)<(txtime*nbchip/m_time_us))
+    txtime /= m_time_us;
+    minit = m_min_it / m_time_us;
+    if ((m_int_time-minit+m_expo_time)<(txtime*nbchip))
 	throw LIMA_HW_EXC(Error, "Timing too fast (interval+expo < transfer)");
 
     mcr2= (m_read_mode==SERIAL) ? 0x20 : 0x00;

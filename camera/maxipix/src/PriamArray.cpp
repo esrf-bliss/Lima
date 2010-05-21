@@ -1,5 +1,6 @@
 
 #include "PriamArray.h"
+#include "MaxipixDet.h"
 
 using namespace std;
 using namespace lima;
@@ -24,7 +25,7 @@ const PriamArray::PriamArrayBitType PriamArrayBit[] = {
         2, {9, 6, -1, -1}} 
 };
 
-PriamArray::PriamArray(PriamAcq::MpxVersion version)
+PriamArray::PriamArray(MaxipixDet::Version version)
           :m_version(version)
 {
     m_bit= PriamArrayBit[version];

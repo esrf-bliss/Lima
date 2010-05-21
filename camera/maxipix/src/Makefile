@@ -1,5 +1,5 @@
 
-maxipix-objs := MaxipixReconstruction.o PriamSerial.o PriamAcq.o PriamArray.o
+maxipix-objs := MaxipixReconstruction.o MaxipixDet.o PriamSerial.o PriamAcq.o PriamArray.o MaxipixInterface.o
 
 SRCS = $(maxipix-objs:.o=.cpp)
 

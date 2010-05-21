@@ -8,6 +8,7 @@ namespace Maxipix {
 
 #include "PriamSerial.h"
 #include "PriamAcq.h"
+#include "MaxipixDet.h"
 #include "Constants.h"
 
 using namespace lima;
@@ -16,18 +17,6 @@ using namespace lima;
 class PriamAcq {
 
 public:
-
-  enum MpxVersion {
-    DUMMY,
-    MPX2,
-    MPX2MXR20,
-    TPX10
-  };
-
-  enum MpxPolarity {
-    NEGATIVE,
-    POSITIVE
-  };
 
   enum TimeUnit {
     UNIT_US,
@@ -75,8 +64,8 @@ public:
 
     // --- configuration
 
-    void setup(MpxVersion ver, MpxPolarity pol, float freq, std::string fsr0);
-    void setChipType(MpxVersion, MpxPolarity);
+    void setup(Maxipix::MaxipixDet::Version ver, Maxipix::MaxipixDet::Polarity pol, float freq, std::string fsr0);
+    void setChipType(Maxipix::MaxipixDet::Version v, Maxipix::MaxipixDet::Polarity p);
 
     void getBoardVersion(short& pcb /Out/, short& firmware /Out/);
     void getChipID(short chip, long& id /Out/);
@@ -106,9 +95,9 @@ public:
     void setIntervalTime(double asktime, double& settime);
     void getIntervalTime(double& itime /Out/);
 
-    void getMinIntervalTime(double& minit /Out/);
+    void getIntervalTimeRange(double& minit /Out/, double& maxit /Out/);
 
-    void setShutterTime(double asktime, double& settime);
+    void setShutterTime(double asktime, double& settime /Out/);
     void getShutterTime(double& stime /Out/);
 
     // --- external IO signals
