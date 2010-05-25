@@ -1,0 +1,38 @@
+import os
+
+config_file = file(os.path.join('..','config.inc'))
+include_dirs = []
+camera_module = []
+
+for line in config_file:
+    line = line.strip(' \n')
+    if line.startswith('COMPILE') :
+        flag,value = line.split('=')
+        try:
+            value = int(value)
+        except ValueError:
+            continue
+        else:
+            if value:
+                subpath = '_'.join(flag.split('_')[1:])
+                subpath = subpath.lower()
+                if subpath == 'core':
+                    continue
+                camera_module.append(subpath)
+                if subpath == 'espia':
+                    subpath = os.path.join('common',subpath)
+                include_dirs.append(subpath)
+
+try:
+    Import('env')
+except:
+    env = Environment(CCFLAGS = '-fPIC')
+
+env.Library('libCamera','',
+            LIBS = ['lib%s' % x.title() for x in camera_module],
+            LIBPATH = [os.path.join(x,'src') for x in include_dirs])
+
+SConscript([os.path.join(x,'SConstruct') for x in include_dirs])
+
+
+            

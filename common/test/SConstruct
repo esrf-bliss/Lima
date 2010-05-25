@@ -1,0 +1,8 @@
+import os
+try:
+    Import('env')
+except:
+    env = Environment()
+
+env.Program('testregex',['testregex.cpp'],CPPPATH = os.path.join('..','include'),
+            LIBS=['libCommon'], LIBPATH=[os.path.join('..','src')])

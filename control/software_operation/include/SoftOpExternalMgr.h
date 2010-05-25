@@ -17,12 +17,10 @@ namespace lima
     ~SoftOpExternalMgr();
     
     void getAvailableOp(const SoftOpKey*&) const;
-    void getActiveOp(std::list<stage,std::list<alias> >&) const;
-    void getActiveOp(std::list<stage,std::list<SoftOpInstance> >&);
+    void getActiveOp(std::map<stage,std::list<alias> >&) const;
     void getActiveStageOp(stage,std::list<alias>&) const;
 
-    void addOp(const SoftOpKey&,
-	       const alias&,int stage);
+    void addOp(SoftOpId,const alias&,int stage);
     void delOp(const alias&);
     void getOpClass(const alias&,
 		    SoftOpInstance&) const;
@@ -30,9 +28,19 @@ namespace lima
     void setEndSinkTaskCallback(TaskEventCallback *aCbk);
 
     void addTo(TaskMgr&,int begin_stage,int &last_link_task,int &last_sink_task);
+    
+    void isTaskActive(bool &linkTaskFlag,bool &sinkTaskFlag) const;
+    void prepare();
+
   private:
     typedef std::map<stage,std::list<SoftOpInstance> > Stage2Instance;
     Stage2Instance	m_stage2instance;
+    
+    TaskEventCallback	*m_end_link_callback;
+    TaskEventCallback   *m_end_sink_callback;
+
+    void _checkIfPossible(SoftOpId aSoftOpId,
+			  int stage);
   };
 }
 #endif

@@ -1,0 +1,11 @@
+import os
+
+try:
+    Import('env')
+except:
+    env = Environment(CCFLAGS = '-fPIC')
+
+env.Library('libHardware',Glob('*.cpp'),
+            CPPPATH = [os.path.join('../include'),
+                       os.path.join('../../common/include')])
+            

@@ -1,0 +1,39 @@
+import os
+import platform
+
+try:
+    Import('env')
+except:
+    env = Environment(CCFLAGS = '-fPIC')
+
+CPPPATH = [os.path.join('..','include'),
+           os.path.join('..','..','..','..','hardware','include'),
+           os.path.join('..','..','..','..','common','include')]
+
+#driver
+CS_SCRIPTS   = '/csadmin/common/scripts'
+BLISS_DRV_BASE = '/segfs/bliss/source/driver'
+
+f = os.popen('%s/get_os.share' % CS_SCRIPTS)
+OS = f.read().strip('\n')
+f.close()
+if OS == 'suse82' :
+    ARCH = 'x86'
+    ESPIA_DRV_BASE = '%s/linux/espia/rel' % BLISS_DRV_BASE
+else:
+    f = os.popen('%s/get_esrflinux' % CS_SCRIPTS)
+    ESRF_VER = f.read().strip('\n')
+    f.close()
+    ESRF_MAJ_VER = ESRF_VER[0:4]
+    ESRF_COMP_BASE = '%s/linux-2.6/compile/%s' % (BLISS_DRV_BASE,ESRF_MAJ_VER)
+    ARCH = platform.machine()
+
+    ESPIA_DRV_BASE = '%s/espia/release' % ESRF_COMP_BASE
+
+CPPPATH.append('%s/src' % ESPIA_DRV_BASE)
+
+env.Library('libEspia',Glob('*.cpp'),
+            LIBS = ['libespia'],
+            LIBPATH = [os.path.join(ESPIA_DRV_BASE,'lib',ARCH)],
+            CPPPATH = CPPPATH)
+            

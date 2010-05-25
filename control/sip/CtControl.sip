@@ -75,6 +75,8 @@ using namespace lima;
     CtSpsImage* display();
     CtImage* image();
     CtBuffer* buffer();
+
+    SoftOpExternalMgr* externalOperation();
     
     HwInterface* interface();
 

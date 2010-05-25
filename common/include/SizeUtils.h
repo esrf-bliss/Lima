@@ -377,6 +377,10 @@ class Roi
  public:
 	Roi() {}
 
+	Roi(int x,int y,int width,int height) :
+	  m_top_left(x,y),
+	  m_size(width,height) {}
+
 	Roi(const Point& top_left, const Size& size)
 		: m_top_left(checkCorner(top_left)),
 		  m_size(size) {}

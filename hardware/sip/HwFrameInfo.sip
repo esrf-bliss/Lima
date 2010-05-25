@@ -15,7 +15,7 @@ using namespace lima;
 	void *frame_data;
 %GetCode
 	if(!sipCpp->frame_ptr || !sipCpp->frame_dim.isValid())
-   		return Py_None;
+   		Py_RETURN_NONE;
 
 	Size size = sipCpp->frame_dim.getSize();
 	npy_intp dims[2] = {

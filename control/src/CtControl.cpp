@@ -167,9 +167,8 @@ void CtControl::prepareAcq()
   else
     m_op_int->setEndCallback(NULL);
   // set ext op
-  m_op_ext_link_task_active = false; // @todo
-  m_op_ext_sink_task_active = false; // @todo
-
+  m_op_ext->prepare();
+  m_op_ext->isTaskActive(m_op_ext_link_task_active,m_op_ext_sink_task_active);
   if(m_op_ext_link_task_active)
     {
       _LastImageReadyCallback *aCbkPt = new _LastImageReadyCallback(*this);
@@ -346,7 +345,6 @@ void CtControl::reset()
 
   DEB_TRACE() << "Reseting display";
   m_ct_sps_image->reset();
-
   resetStatus(false);
 }
 

@@ -180,6 +180,7 @@ using namespace lima;
 %End
  public:
 	Roi();
+	Roi(int x,int y,int width,int height);
 	Roi(const Point& top_left, const Size& size);
         Roi(const Point& p1, const Point& p2);
 	Roi(const Roi& r);
@@ -218,6 +219,85 @@ using namespace lima;
 
 bool operator ==(const Roi& r1, const Roi& r2);
 bool operator !=(const Roi& r1, const Roi& r2);
+
+%MappedType std::list<Roi>
+{
+%TypeHeaderCode
+#include <list>
+#include <SizeUtils.h>
+using namespace lima;
+%End
+
+%ConvertToTypeCode
+if(sipIsErr == NULL)
+{
+ bool aReturnFlag = PyList_Check(sipPy);
+ for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
+  aReturnFlag = sipCanConvertToType(PyList_GET_ITEM(sipPy, i),
+                                     sipType_Roi, SIP_NOT_NONE);
+ return aReturnFlag;
+}
+
+std::list<Roi> *roiList = new std::list<Roi>();
+for(int i = 0;i < PyList_Size(sipPy);++i)
+{
+ int state;
+ Roi *aRoi = reinterpret_cast<Roi*>(sipConvertToType(PyList_GET_ITEM(sipPy,i),
+					             sipType_Roi, 0,	
+						     SIP_NOT_NONE,
+						     &state, sipIsErr));
+ // Deal with any errors.
+  if (*sipIsErr)
+  {
+   sipReleaseType(aRoi, sipType_Roi, state);
+
+   // Tidy up.
+   delete roiList;
+
+   // There is no temporary instance.
+   return 0;
+  }
+
+ (*sipCppPtr)->push_back(*aRoi);
+ sipReleaseType(aRoi, sipType_Roi, state);
+}
+*sipCppPtr = roiList;
+return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+ PyObject *l;
+
+ // Create the Python list of the correct length.
+ if (!(l = PyList_New(sipCpp->size())))
+  return NULL;
+
+ // Go through each element in the C++ instance and convert it to a
+ // wrapped Roi
+ int i = 0;
+ for (std::list<Roi>::iterator j = sipCpp->begin();
+      j != sipCpp->end();++j,++i)
+  {
+   Roi &aRoi = *j;
+   PyObject *wobj;
+
+   // Get the Python wrapper for the QWidget instance, creating a new
+   // one if necessary, and handle any ownership transfer.
+   if (!(wobj = sipConvertFromType(&aRoi, sipType_Roi, sipTransferObj)))
+    {
+     // There was an error so garbage collect the Python list.
+     Py_DECREF(l);
+     return NULL;
+    }
+
+   // Add the wrapper to the list.
+   PyList_SET_ITEM(l, i, wobj);
+  }
+
+ // Return the Python list.
+ return l;
+%End
+};
 
 class FrameDim
 {
