@@ -68,71 +68,52 @@ class PilatusDeviceServer(PyTango.Device_4Impl):
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
 
-#------------------------------------------------------------------
-#    Always excuted hook method
-#------------------------------------------------------------------
-    def always_executed_hook(self):
-        print "In ", self.get_name(), "::always_excuted_hook()"
-
 #==================================================================
 #
 #    Pilatus read/write attribute methods
 #
 #==================================================================
-#------------------------------------------------------------------
-#    Read Attribute Hardware
-#------------------------------------------------------------------
-    def read_attr_hardware(self,data):
-        print "In ", self.get_name(), "::read_attr_hardware()"
-
-
 
 #------------------------------------------------------------------
 #    Read Threshold_gain attribute
 #------------------------------------------------------------------
     def read_Threshold_gain(self, attr):
-        print "In ", self.get_name(), "::read_Threshold_gain()"
-        
-        #    Add your own code here
-        
-        attr_Threshold_gain_read = 1
-        attr.set_value(attr_Threshold_gain_read)
+        communication = _PilatusIterface.communication()
+        gain = communication.gain()
+        if gain is None:
+            gain = -1
+        attr.set_value(gain)
 
 
 #------------------------------------------------------------------
 #    Write Threshold_gain attribute
 #------------------------------------------------------------------
     def write_Threshold_gain(self, attr):
-        print "In ", self.get_name(), "::write_Threshold_gain()"
-        data=[]
+        data = []
         attr.get_write_value(data)
-        print "Attribute value = ", data
-
-        #    Add your own code here
-
+        communication = _PilatusIterface.communication()
+        threshold = communication.threshold()
+        communication.set_threshold_gain(threshold,data[0])
 
 #------------------------------------------------------------------
 #    Read Threshold_value attribute
 #------------------------------------------------------------------
     def read_Threshold_value(self, attr):
-        print "In ", self.get_name(), "::read_Threshold_value()"
-        
-        #    Add your own code here
-        
-        attr_Threshold_value_read = 1
-        attr.set_value(attr_Threshold_value_read)
-
+        communication = _PilatusIterface.communication()
+        threshold = communication.threshold()
+        if threshold == None:           # Not set
+            threshold = -1
+        attr.set_value(threshold)
 
 #------------------------------------------------------------------
 #    Write Threshold_value attribute
 #------------------------------------------------------------------
     def write_Threshold_value(self, attr):
-        print "In ", self.get_name(), "::write_Threshold_value()"
-        data=[]
+        data = []
         attr.get_write_value(data)
-        print "Attribute value = ", data
-
-        #    Add your own code here
+        print 'write_Threshold_value',data[0]
+        communication = _PilatusIterface.communication()
+        communication.set_threshold_gain(data[0])
 
 
 
@@ -167,11 +148,11 @@ class PilatusDeviceServerClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'Threshold_gain':
-            [[PyTango.DevULong,
+            [[PyTango.DevLong,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         'Threshold_value':
-            [[PyTango.DevULong,
+            [[PyTango.DevLong,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         }
@@ -189,7 +170,7 @@ class PilatusDeviceServerClass(PyTango.DeviceClass):
 #----------------------------------------------------------------------------
 # Plugins
 #----------------------------------------------------------------------------
-from Pilatus import Interface
+from lima.Pilatus import Interface
 
 _PilatusIterface = None
 
