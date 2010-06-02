@@ -20,8 +20,8 @@ class MaxipixDet
     enum Version {
       DUMMY,
       MPX2,
-      MPX2MXR20,
-      TPX10
+      MXR2,
+      TPX1
     };
 
     enum Polarity {

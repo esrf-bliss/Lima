@@ -41,7 +41,7 @@ PixelConfigArray::PixelConfigArray(MaxipixDet::Version version)
         m_bit.high[3]= -1;
 	break;
 
-    case MaxipixDet::MPX2MXR20:
+    case MaxipixDet::MXR2:
 	m_bit.mask= 0;
         m_bit.test= 9;
         m_bit.nbLow= 3;
@@ -56,7 +56,7 @@ PixelConfigArray::PixelConfigArray(MaxipixDet::Version version)
         m_bit.high[3]= -1;
 	break;
 
-    case MaxipixDet::TPX10:
+    case MaxipixDet::TPX1:
 	m_bit.mask= 7;
         m_bit.test= 13;
         m_bit.nbLow= 3;

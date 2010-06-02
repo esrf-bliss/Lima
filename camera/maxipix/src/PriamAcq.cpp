@@ -62,8 +62,8 @@ void PriamAcq::setChipType(MaxipixDet::Version version, \
 
     switch (version) {
 	case MaxipixDet::MPX2: val= 0x40; break;
-  	case MaxipixDet::MPX2MXR20: val= 0x20; break;
-	case MaxipixDet::TPX10: val= 0x60; break;
+  	case MaxipixDet::MXR2: val= 0x20; break;
+	case MaxipixDet::TPX1: val= 0x60; break;
 	default: val= 0x00;
     }
     m_version= version;
@@ -139,7 +139,7 @@ void PriamAcq::setOscillator(float frequency)
     _timeAdjust();
 
     // -- for TPX, set counting frequency divider
-    if (m_version == MaxipixDet::TPX10) {
+    if (m_version == MaxipixDet::TPX1) {
 	sval= string(1, (char)0x01);
 	m_priam_serial.writeRegister(PriamSerial::PR_TIP, sval);
     }

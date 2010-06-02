@@ -11,7 +11,7 @@ using namespace Maxipix;
 MaxipixDet::MaxipixDet(PriamAcq& priam_acq)
       :m_priam(priam_acq),
        m_init(false),
-       m_version(MPX2MXR20),
+       m_version(MPX2),
        m_polarity(POSITIVE),
        m_frequency(80.0)
 {
@@ -90,8 +90,8 @@ void MaxipixDet::getDetectorModel(std::string& type)
     os << m_xchip << "x" << m_ychip << "-";
     switch (m_version) {
       case MPX2:	os << "MPX2" ; break;
-      case MPX2MXR20:	os << "MPX2MXR20"; break;
-      case TPX10:	os << "TPX10"; break;
+      case MXR2:	os << "MXR2"; break;
+      case TPX1:	os << "TPX1"; break;
       default:		os << "DUMMY";
     };
 
