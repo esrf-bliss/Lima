@@ -1,2 +1,0 @@
-import os
-SConscript([os.path.join('Processlib','SConstruct')])

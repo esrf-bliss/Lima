@@ -57,14 +57,13 @@ class PilatusDeviceServer(PyTango.Device_4Impl):
 #    Device destructor
 #------------------------------------------------------------------
     def delete_device(self):
-        print "[Device delete_device method] for device",self.get_name()
+        pass
 
 
 #------------------------------------------------------------------
 #    Device initialization
 #------------------------------------------------------------------
     def init_device(self):
-        print "In ", self.get_name(), "::init_device()"
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
 
@@ -111,7 +110,6 @@ class PilatusDeviceServer(PyTango.Device_4Impl):
     def write_Threshold_value(self, attr):
         data = []
         attr.get_write_value(data)
-        print 'write_Threshold_value',data[0]
         communication = _PilatusIterface.communication()
         communication.set_threshold_gain(data[0])
 

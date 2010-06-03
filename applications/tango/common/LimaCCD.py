@@ -35,6 +35,9 @@ import PyTango
 import lima
 import processlib
 
+#Commun Devices
+from RoiCounter import RoiCounterDeviceServerClass,RoiCounterDeviceServer
+
 lima.DebParams.setTypeFlags(0)
 
 DevCcdBase			= 0xc180000
@@ -67,6 +70,18 @@ DevErrCcdCmdNotProc		= DevCcdBase + 11
 DevErrCcdCameraModel		= DevCcdBase + 12
 DevErrCcdProcessImage		= DevCcdBase + 13
 DevErrCcdCameraNotActiveYet	= DevCcdBase + 14
+
+#Small Hack
+class _Wrapped:
+    def __init__(self,class_type,ctrl) :
+        self.__class_type = class_type
+        self.__ctrl = weakref.ref(ctrl)
+        
+    def __call__(self,*args) :
+        inst = self.__class_type(*args)
+        if hasattr(inst,'set_control_class') :
+            inst.set_control_class(self.__ctrl)
+        return inst
 
 #==================================================================
 #   LimaCCDs Class Description:
@@ -128,15 +143,15 @@ class LimaCCDs(PyTango.Device_3Impl):
                 specificClass,specificDevice = m.get_tango_specific_class_n_device()
             except AttributeError: pass
             else:
+                util = PyTango.Util.instance()
                 if specificClass and specificDevice:
-                    py.add_TgClass(specificClass,specificDevice,self.LimaCameraType)
-            
+                    util.create_device(specificClass,specificDevice)
 
-#------------------------------------------------------------------
-#    Always excuted hook method
-#------------------------------------------------------------------
-    def always_executed_hook(self):
-        pass
+                #Default Devices
+                #RoiCounter
+                util.create_device(RoiCounterDeviceServerClass,
+                                   _Wrapped(RoiCounterDeviceServer,self.__control),
+                                   'RoiCounters')
 
 #==================================================================
 #
@@ -731,6 +746,7 @@ class LimaCCDsClass(PyTango.DeviceClass):
         self.set_type(name);
         print "In LimaCCDsClass     constructor"
 
+    
 #==================================================================
 #
 #    LimaCCDs class main method
@@ -738,10 +754,8 @@ class LimaCCDsClass(PyTango.DeviceClass):
 #==================================================================
 if __name__ == '__main__':
     try:
-        global py
         py = PyTango.Util(sys.argv)
         py.add_TgClass(LimaCCDsClass,LimaCCDs,'LimaCCDs')
-
         U = PyTango.Util.instance()
         U.server_init()
         U.server_run()
