@@ -19,7 +19,7 @@ class PixelConfigArray {
     PixelConfigArray(Maxipix::MaxipixDet::Version);
     ~PixelConfigArray();
 
-    void convert(std::string&);
+    void convert(std::string& /Out/);
 
     char* maskArray;
 %GetCode

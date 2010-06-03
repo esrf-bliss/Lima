@@ -11,13 +11,13 @@ def getMpxFsrDef(version):
     global _MpxFsrDefInst_
     if _MpxFsrDefInst_ is None:
 	_MpxFsrDefInst_= _MpxFsrDef(version)
-    if _MpxFsrDefInst_.version != version:
+    if _MpxFsrDefInst_.version != mpxVersion(version):
 	_MpxFsrDefInst_= _MpxFsrDef(version)
     return _MpxFsrDefInst_
 
 class _MpxFsrDef:
     def __init__(self, version):
-	self.version= version
+	self.version= mpxVersion(version)
 	self.__fsrKeys= {}
 	self.__dacCode= {}
 	self.__default= {}
@@ -199,7 +199,7 @@ class _MpxFsrDef:
 
 class MpxChipDacs:
     def __init__(self, version):
-	self.version= version
+	self.version= mpxVersion(version)
 	self.reset()
 
     def reset(self):
@@ -265,7 +265,7 @@ class MpxChipDacs:
 
 class MpxDacs:
     def __init__(self, version, nchip):
-	self.version= version
+	self.version= mpxVersion(version)
 	self.nchip= nchip
 	self.reset()
 
@@ -313,12 +313,22 @@ class MpxDacs:
 	for idx in range(self.nchip):
 	    val= value
 	    if idx>0 and self.__thlnoise[0]>0 and self.__thlnoise[idx]>0:
-		val= val + thlnoise[idx] - thlnoise[0]
-	    self.__dacs[idx].setDac("thl", val)
+		val= val + self.__thlnoise[idx] - self.__thlnoise[0]
+	    self.__dacs[idx].setOneDac("thl", val)
 
     def getThl(self):
-	pass
-
+	for idx in range(self.nchip):
+	    val= self.__dacs[idx].getOneDac("thl")
+	    if idx>0 and self.__thlnoise[0]>0 and self.__thlnoise[idx]>0:
+		val= val - self.__thlnoise[idx] + self.__thlnoise[0]
+	    values.append(val)
+	thl= val[0]
+	if self.nchip>1:
+	    for idx in range(1, self.nchip):
+		if values[idx] != thl:
+		    return None
+	return thl
+	
     def setEThl(self, value):
 	if self.__e0thl==0. or self.__estep==0:
 	    raise MpxError("No energy calibration for THL")
@@ -327,7 +337,12 @@ class MpxDacs:
 	self.setThl(ival)
 
     def getEThl(self):
-	pass
+	if self.__e0thl==0. or self.__estep==0:
+	    raise MpxError("No energy calibration for THL")
+	val= self.getThl()
+	if val is not None:
+	    val= (val - self.__e0thl) * self.__estep
+	return val
 
     def setOneDac(self, chipid, name, value):
 	for idx in self.__getChipIdx(chipid):
@@ -344,7 +359,7 @@ class MpxDacs:
 	res= dacs[0]
 	if chipid == 0 and self.nchip > 1:
 	    for idx in range(1, self.nchip):
-		if chip[idx]!=res:
+		if dacs[idx]!=res:
 		    return None
 	return res
 

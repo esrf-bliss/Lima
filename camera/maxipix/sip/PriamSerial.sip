@@ -79,15 +79,15 @@ using namespace lima;
     ~PriamSerial();
 
     void writeRegister(Maxipix::PriamSerial::PriamRegister reg, std::string& buffer);
-    void readRegister(Maxipix::PriamSerial::PriamRegister reg, std::string& buffer, long size=0);
+    void readRegister(Maxipix::PriamSerial::PriamRegister reg, std::string& buffer /Out/, long size=0);
 
     void writeFsr(std::string& fsr, std::string& bid);
 
     void writeMatrix(std::string& input);
-    void readMatrix(std::string& output);
+    void readMatrix(std::string& output /Out/);
 
     void writeLut(Maxipix::PriamSerial::PriamLut lut, std::string& buffer);
-    void readLut(Maxipix::PriamSerial::PriamLut lut, std::string& buffer, long size);
+    void readLut(Maxipix::PriamSerial::PriamLut lut, std::string& buffer /Out/, long size);
 
   };
 };

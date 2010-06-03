@@ -32,16 +32,13 @@ class MpxDetConfig:
 	self.path= spath
 
     def loadConfig(self, name):
-	cfgFile= self.__getConfigFile(name, None, "cfg")
+	cfgFile= self.__getConfigFile(name)
 	self.loadDetectorConfig(cfgFile)
 	self.cfgFile= cfgFile
 	self.name= name
 
-    def __getConfigFile(self, name, chip, ext):
-	fname= name
-	if chip is not None:
-	    fname= "%s_chip_%d"%(fname, chip)
-	fname= "%s.%s"%(fname, ext)
+    def __getConfigFile(self, name chip, ext):
+	fname= "%s.cfg"%name
 	if self.path is not None:
 	    fname= "%s/%s"%(self.path, fname)
 	return fname
