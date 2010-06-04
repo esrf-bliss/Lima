@@ -166,7 +166,7 @@ return aReturnListPt;
 
 %ConvertToTypeCode
 PyObject *key, *value;
-Py_ssize_t pos;
+SIP_SSIZE_T pos;
 
 if(sipIsErr == NULL)
 {
