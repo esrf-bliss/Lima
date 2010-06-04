@@ -68,7 +68,7 @@ public:
     void setChipType(Maxipix::MaxipixDet::Version v, Maxipix::MaxipixDet::Polarity p);
 
     void getBoardVersion(short& pcb /Out/, short& firmware /Out/);
-    void getChipID(short chip, long& id /Out/);
+    void getChipID(short port, long& id /Out/);
 
     void setFastFOSpeed(bool fast);
     void getFastFOSpeed(bool& fast /Out/);
@@ -76,10 +76,10 @@ public:
     void setOscillator(float freq);
     void getOscillator(float& freq /Out/);
 
-    void setChipFsr(short chip, std::string fsr);
-    void setChipCfg(short chip, std::string cfg);
+    void setChipFsr(short port, std::string fsr);
+    void setChipCfg(short port, std::string cfg);
     
-    void enableSerial(short chip);
+    void enableSerial(short port);
 
     // --- timing
 
@@ -131,9 +131,9 @@ public:
     void setNbFrames(int nb);
     void getNbFrames(int& nb /Out/);
 
-    void setSerialReadout(short chip);
-    void setParalellReadout(std::vector<bool> chips);
-    void getReadoutMode(ReadoutMode& mode /Out/, std::vector<bool>& chips /Out/);
+    void setSerialReadout(short port);
+    void setParalellReadout(std::vector<int> ports);
+    void getReadoutMode(ReadoutMode& mode /Out/, std::vector<int>& ports /Out/);
 
     void setImageMode(ImageMode image);
     void getImageMode(ImageMode& image /Out/);
@@ -148,9 +148,10 @@ public:
 
     // --- reset
 
-    void resetFifo(short chip);
-    void resetChip(short chip);
-
+    void resetFifo(short port);
+    void resetAllFifo();
+    void resetChip(short port);
+    void resetAllChip();
   };
 };
 

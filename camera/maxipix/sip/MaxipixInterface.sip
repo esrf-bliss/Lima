@@ -94,7 +94,8 @@ class SyncCtrlObj : HwSyncCtrlObj
 class Interface : HwInterface
 {
  public:
-	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, Maxipix::MaxipixDet& det);
+	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, 
+		  Maxipix::PriamAcq& acq, Maxipix::MaxipixDet& det);
 	virtual ~Interface();
 
 //	virtual void getCapList(CapList&) const;

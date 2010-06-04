@@ -1,6 +1,7 @@
 #ifndef MAXIPIXDET_H
 #define MAXIPIXDET_H
 
+#include "HwMaxImageSizeCallback.h"
 #include "MaxipixReconstruction.h"
 #include "SizeUtils.h"
 #include "Debug.h"
@@ -8,10 +9,7 @@
 namespace lima {
 namespace Maxipix {
 
-class PriamAcq;
-
-class MaxipixDet
-// : public HwMaxImageSizeCallbackGen
+class MaxipixDet : public HwMaxImageSizeCallbackGen
 {
   DEB_CLASS_NAMESPC(DebModCamera, "Camera", "MaxipixDet");
 
@@ -33,22 +31,20 @@ class MaxipixDet
     static const double PixelSize= 55.0;
     static const int MaxChips= 5;
 
-    MaxipixDet(PriamAcq& priam_acq);
+    MaxipixDet();
     ~MaxipixDet();
 
-    // -- acquisition
-    PriamAcq& priamAcq();
-    void resetAllFifo();
-    void resetAllChip();
+    // -- version
+    void setVersion(Version version);
 
     // -- geometry
     void setNbChip(int xchip, int ychip);
     void setPixelGap(int xgap, int ygap);
-    void setPriamPort(int x, int y, int port);
 
     // -- detector info
     void getImageSize(Size& size);
     void getPixelSize(double& size);
+    void getImageType(ImageType& type);
 
     void getDetectorType(std::string& type);
     void getDetectorModel(std::string& model);
@@ -57,30 +53,18 @@ class MaxipixDet
     bool needReconstruction();
     void getReconstruction(MaxipixReconstruction::Model& model);
 
-    // -- config
-    void setVersion(Version version);
-    void getVersion(Version& version);
-    void setPolarity(Polarity polarity);
-    void getPolarity(Polarity& polarity);
-    void setFrequency(float frequency);
-    void getFrequency(float& frequency);
-    void setFsr0(std::string fsr0);
-
-    void setup();
+  protected:
+    virtual void setMaxImageSizeCallbackActive(bool cb_active);
 
   private:
-    PriamAcq& m_priam;
-
-    bool m_init;
-    Version m_version;
-    Polarity m_polarity;
-    float m_frequency;
-    std::string m_fsr0;
+    void _updateSize();
 
     int m_xchip, m_ychip, m_nchip;
     int m_xgap, m_ygap;
-    int m_port[MaxChips];
-    bool m_reconstruct;
+    Size m_size;
+    ImageType m_type;
+    Version m_version;
+    bool m_mis_cb_act;
 };
 
 } // namespace Maxipix

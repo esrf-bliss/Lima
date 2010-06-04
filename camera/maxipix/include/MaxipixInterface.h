@@ -141,7 +141,8 @@ class Interface : public HwInterface
 	DEB_CLASS_NAMESPC(DebModCamera, "Interface", "Maxipix");
 
  public:
-	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, MaxipixDet& det);
+	Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr, 
+		  PriamAcq& priam, MaxipixDet& det);
 	virtual ~Interface();
 
 	virtual void getCapList(CapList&) const;
@@ -156,7 +157,6 @@ class Interface : public HwInterface
  private:
 	Espia::Acq&	m_acq;
 	BufferCtrlMgr&	m_buffer_mgr;
-	MaxipixDet&	m_det;
 	PriamAcq&	m_priam;
 
 	CapList m_cap_list;

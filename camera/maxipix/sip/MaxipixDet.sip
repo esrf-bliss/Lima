@@ -4,6 +4,7 @@ namespace Maxipix {
 
 %TypeHeaderCode
 
+#include "HwMaxImageSizeCallback.h"
 #include "MaxipixReconstruction.h"
 #include "Constants.h"
 
@@ -11,7 +12,6 @@ using namespace lima;
 %End
 
 class MaxipixDet
-// : public HwMaxImageSizeCallbackGen
 {
 
   public:
@@ -32,40 +32,27 @@ class MaxipixDet
     static const double PixelSize;
     static const int MaxChips;
 
-    MaxipixDet(Maxipix::PriamAcq& priam_acq);
+    MaxipixDet();
     ~MaxipixDet();
 
-    // -- acquisition
-    Maxipix::PriamAcq& priamAcq();
-    void resetAllFifo();
-    void resetAllChip();
+    // -- version
+    void setVersion(Version version);
 
     // -- geometry
     void setNbChip(int xchip, int ychip);
     void setPixelGap(int xgap, int ygap);
-    void setPriamPort(int x, int y, int port);
 
     // -- detector info
-    void getImageSize(Size& size);
-    void getPixelSize(double& size);
+    void getImageSize(Size& size /Out/);
+    void getPixelSize(double& size /Out/);
+    void getImageType(ImageType& type /Out/);
 
-    void getDetectorType(std::string& type);
-    void getDetectorModel(std::string& model);
+    void getDetectorType(std::string& type /Out/);
+    void getDetectorModel(std::string& model /Out/);
 
     // -- reconstruction
     bool needReconstruction();
-    void getReconstruction(Maxipix::MaxipixReconstruction::Model& model);
-
-    // -- config
-    void setVersion(Version version);
-    void getVersion(Version& version);
-    void setPolarity(Polarity polarity);
-    void getPolarity(Polarity& polarity);
-    void setFrequency(float frequency);
-    void getFrequency(float& frequency);
-    void setFsr0(std::string fsr0);
-
-    void setup();
+    void getReconstruction(Maxipix::MaxipixReconstruction::Model& model /Out/);
 
 };
 

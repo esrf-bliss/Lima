@@ -17,9 +17,8 @@ PriamAcq::PriamAcq(PriamSerial& priam_serial)
 	 m_read_mode(PARALELL), m_img_mode(NORMAL),
 	 m_flatfield(0), m_nb_frame(-1)
 {
-    m_chip_id.resize(5,0);
-    m_chip_used.resize(5, false);
-    m_chip_used[0]= true;
+    m_chip_id.resize(maxPorts,0);
+    m_port_used.push_back(0);
 
     setTimeUnit(UNIT_MS);
     enableSerial(0);
@@ -190,41 +189,41 @@ void PriamAcq::_timeAdjust()
     m_priam_serial.writeRegister(PriamSerial::PR_TAS, sval);
 }
 
-void PriamAcq::enableSerial(short chip)
+void PriamAcq::enableSerial(short port)
 {
     string sval;
     short val;
 
-    _checkChipNr(chip);
+    _checkPortNr(port);
 
-    val= 0x20 | (1<<chip);
+    val= 0x20 | (1<<port);
     sval= string(1, (char)val);
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, sval);
 }
     
-void PriamAcq::setChipFsr(short chip, string fsr)
+void PriamAcq::setChipFsr(short port, string fsr)
 {
     string sdummy, sid;
 
-    enableSerial(chip);
+    enableSerial(port);
     sdummy.append(32, '\xff');
     m_priam_serial.writeFsr(sdummy, sid);
     m_priam_serial.writeFsr(fsr, sid);
-    m_chip_id[chip]= (long)(sid.c_str());
-    if (chip==0)
+    m_chip_id[port]= (long)(sid.c_str());
+    if (port==0)
 	m_chip_fsr0= fsr;
 }
 
-void PriamAcq::getChipID(short chip, long& id)
+void PriamAcq::getChipID(short port, long& id)
 {
-    _checkChipNr(chip);
-    id= m_chip_id[chip];
+    _checkPortNr(port);
+    id= m_chip_id[port];
 }
 
-void PriamAcq::setChipCfg(short chip, string cfg)
+void PriamAcq::setChipCfg(short port, string cfg)
 {
     string out;
-    enableSerial(chip);
+    enableSerial(port);
     m_priam_serial.writeMatrix(cfg);
     m_priam_serial.readMatrix(out);
 }
@@ -504,35 +503,34 @@ void PriamAcq::getImageMode(ImageMode& img)
     img= m_img_mode;
 }
 
-void PriamAcq::setSerialReadout(short chip)
+void PriamAcq::setSerialReadout(short port)
 {
-    _checkChipNr(chip);
+    _checkPortNr(port);
+    m_port_used.clear();
+    m_port_used.push_back(port);
     m_read_mode= SERIAL;
-    for (int i=0; i<5; i++)
-	m_chip_used[i]= (i==chip);
     _writeRomReg();
 }
 
-void PriamAcq::setParalellReadout(vector<bool> chips)
+void PriamAcq::setParalellReadout(vector<int> ports)
 {
-    if (chips.size()!=5)
-	throw LIMA_HW_EXC(InvalidValue, "Wrong size for chip vector");
-    int sum= 0;
-    for (int i=0; i<(int)chips.size(); i++)
-	sum += chips[i];
-    if (sum==0)
-	throw LIMA_HW_EXC(InvalidValue, "No chip active in chip vector");
-
+    if (!ports.size())
+	throw LIMA_HW_EXC(InvalidValue, "Empty priam ports list");
+    for (int i=0; i<(int)ports.size(); i++)
+	_checkPortNr(ports[i]);
+    
+    m_port_used.clear();
+    for (int i=0; i<(int)ports.size(); i++)
+	m_port_used.push_back(ports[i]);
+    
     m_read_mode= PARALELL;
-    for (int i=0; i<(int)chips.size(); i++)
-	m_chip_used[i]= chips[i]; 
     _writeRomReg();
 }
 
-void PriamAcq::getReadoutMode(ReadoutMode& mode, vector<bool>& chips)
+void PriamAcq::getReadoutMode(ReadoutMode& mode, vector<int>& ports)
 {
     mode= m_read_mode;
-    chips= m_chip_used;
+    ports= m_port_used;
 }
 
 void PriamAcq::setFFCorrection(short flat)
@@ -564,9 +562,7 @@ void PriamAcq::startAcq()
     if (m_int_time<0.)
 	throw LIMA_HW_EXC(Error, "Interval time not set");
 
-    nbchip= 0;
-    for (int i=0; i<5; i++)
-	if (m_chip_used[i]) nbchip++;
+    nbchip= (int)m_port_used.size();
     txtime= m_fo_fast ? 560. : 700.;
     txtime /= m_time_us;
     minit = m_min_it / m_time_us;
@@ -574,9 +570,8 @@ void PriamAcq::startAcq()
 	throw LIMA_HW_EXC(Error, "Timing too fast (interval+expo < transfer)");
 
     mcr2= (m_read_mode==SERIAL) ? 0x20 : 0x00;
-    for (int i=0; i<5; i++)
-        if (m_chip_used[i])
-	    mcr2 |= (1<<i);
+    for (int i=0; i<(int)m_port_used.size(); i++)
+	mcr2 |= (1<<m_port_used[i]);
     reg.assign(1, mcr2);
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, reg);
 
@@ -627,26 +622,37 @@ void PriamAcq::getStatus(DetStatus& status)
     }
 }
 
-void PriamAcq::resetFifo(short chip)
+void PriamAcq::resetFifo(short port)
 {
     string sval;
     char val;
 
-    _checkChipNr(chip);
+    _checkPortNr(port);
 
-    val= 0x80 | 0x20 | (1<<chip);
+    val= 0x80 | 0x20 | (1<<port);
     sval= string(1, val);
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, sval);
 }
+void PriamAcq::resetAllFifo()
+{
+    for (int i=0; i<(int)m_port_used.size(); i++)
+	resetFifo(m_port_used[i]);
+}
 
-void PriamAcq::resetChip(short chip)
+void PriamAcq::resetChip(short port)
 {
     string sval;
     char val;
 
-    _checkChipNr(chip);
+    _checkPortNr(port);
 
-    val= 0xc0 | 0x20 | (1<<chip);
+    val= 0xc0 | 0x20 | (1<<port);
     sval= string(1, val);
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, sval);
 }
+void PriamAcq::resetAllChip()
+{
+    for (int i=0; i<(int)m_port_used.size(); i++)
+	resetChip(m_port_used[i]);
+}
+

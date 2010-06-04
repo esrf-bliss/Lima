@@ -66,13 +66,13 @@ void DetInfoCtrlObj::getDetectorModel(std::string& model)
 void DetInfoCtrlObj::registerMaxImageSizeCallback(HwMaxImageSizeCallback& cb)
 {
     DEB_MEMBER_FUNCT();
-    // TODO in MaxipixDet
+    m_det.registerMaxImageSizeCallback(cb);
 }
 
 void DetInfoCtrlObj::unregisterMaxImageSizeCallback(HwMaxImageSizeCallback& cb)
 {
     DEB_MEMBER_FUNCT();
-    // TODO in MaxipixDet
+    m_det.unregisterMaxImageSizeCallback(cb);
 }
 
 
@@ -284,9 +284,9 @@ void SyncCtrlObj::AcqEndCallback::acqFinished(const HwFrameInfoType& /*finfo*/)
  *******************************************************************/
 
 Interface::Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr,
-                     MaxipixDet& det)
-        : m_acq(acq), m_buffer_mgr(buffer_mgr), m_det(det),
-          m_priam(det.priamAcq()), m_det_info(det), 
+                     PriamAcq& priam, MaxipixDet& det)
+        : m_acq(acq), m_buffer_mgr(buffer_mgr),
+          m_priam(priam), m_det_info(det), 
 	  m_buffer(buffer_mgr), m_sync(acq, m_priam, m_buffer)
 {
         DEB_CONSTRUCTOR();
@@ -323,9 +323,9 @@ void Interface::reset(ResetLevel reset_level)
 
         if (reset_level == HardReset) {
                 DEB_TRACE() << "Performing chip hard reset";
-                m_det.resetAllChip();
+                m_priam.resetAllChip();
         }
-	m_det.resetAllFifo();
+	m_priam.resetAllFifo();
 }
 
 void Interface::prepareAcq()

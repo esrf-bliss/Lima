@@ -8,68 +8,55 @@
 using namespace lima;
 using namespace Maxipix;
 
-MaxipixDet::MaxipixDet(PriamAcq& priam_acq)
-      :m_priam(priam_acq),
-       m_init(false),
-       m_version(MPX2),
-       m_polarity(POSITIVE),
-       m_frequency(80.0)
+MaxipixDet::MaxipixDet()
+	  :m_xchip(0), m_ychip(0), 
+	   m_xgap(0), m_ygap(0),
+	   m_type(Bpp16), m_version(MXR2),
+           m_mis_cb_act(false)
 {
     setNbChip(1, 1);
-    setPixelGap(0, 0);
-    setPriamPort(0, 0, 0);
-    m_fsr0.assign(32, (char)0xff);
 }
 
 MaxipixDet::~MaxipixDet()
 {
 }
 
-PriamAcq& MaxipixDet::priamAcq()
+void MaxipixDet::setVersion(Version version)
 {
-    return m_priam;
-}
-
-void MaxipixDet::resetAllFifo()
-{
-    for (int i=0; i<m_nchip; i++)
-	m_priam.resetFifo(m_port[i]);
-}
-
-void MaxipixDet::resetAllChip()
-{
-    for (int i=0; i<m_nchip; i++)
-	m_priam.resetFifo(m_port[i]);
+    m_version= version;
 }
 
 void MaxipixDet::setNbChip(int xchip, int ychip)
 {
-    m_xchip= xchip;
-    m_ychip= ychip;
-    m_nchip= m_xchip*m_ychip;
-
-    for (int i=0; i<MaxChips; i++)
-	m_port[i]= (i<m_nchip) ? i : 0;
+    if ((xchip != m_xchip)||(ychip != m_ychip)) {
+        m_xchip= xchip;
+        m_ychip= ychip;
+        m_nchip= m_xchip*m_ychip;
+	_updateSize();
+    }
 }
 
 void MaxipixDet::setPixelGap(int xgap, int ygap)
 {
-    m_xgap= xgap;
-    m_ygap= ygap;
+    if ((xgap != m_xgap)||(ygap != m_ygap)) {
+        m_xgap= xgap;
+    	m_ygap= ygap;
+	_updateSize();
+    }
 }
 
-void MaxipixDet::setPriamPort(int x, int y, int port)
-{
-    m_port[x + m_ychip*y]= port;
+void MaxipixDet::_updateSize() {
+    int w= m_xchip*256 + (m_xchip-1)*m_xgap;
+    int h= m_ychip*256 + (m_ychip-1)*m_ygap;
+    m_size= Size(w, h);
+    if (m_mis_cb_act) {
+	maxImageSizeChanged(m_size, m_type);
+    }
 }
-
+	
 void MaxipixDet::getImageSize(Size& size)
 {
-    int w, h;
-
-    w= m_xchip*256 + (m_xchip-1)*m_xgap;
-    h= m_ychip*256 + (m_ychip-1)*m_ygap;
-    size= Size(w, h);
+    size= m_size;
 }
 
 void MaxipixDet::getPixelSize(double& size)
@@ -77,10 +64,16 @@ void MaxipixDet::getPixelSize(double& size)
     size= PixelSize;
 }
 
+void MaxipixDet::getImageType(ImageType& type)
+{
+    type= m_type;
+}
+
 void MaxipixDet::getDetectorType(std::string& type)
 {
     std::ostringstream os;
     os << "MAXIPIX";
+    type= os.str();
 }
 
 void MaxipixDet::getDetectorModel(std::string& type)
@@ -96,21 +89,6 @@ void MaxipixDet::getDetectorModel(std::string& type)
     };
 
     type= os.str();
-}
-
-void MaxipixDet::setup()
-{
-    std::vector<bool> chips;
-    int i;
-
-    m_priam.setup(m_version, m_polarity, m_frequency, m_fsr0);
-
-    for (i=0; i<MaxChips; i++)
- 	chips.push_back(false);
-    for (i=0; i<m_nchip; i++)
-	chips.assign(m_port[i], true);
-    m_priam.setParalellReadout(chips);
-    m_init= true;
 }
 
 bool MaxipixDet::needReconstruction()
@@ -134,41 +112,9 @@ void MaxipixDet::getReconstruction(MaxipixReconstruction::Model& model)
 	throw LIMA_HW_EXC(Error, "Unknown reconstruction model");
     }
 }
-void MaxipixDet::setVersion(Version version)
-{
-    m_version= version;
-}
 
-void MaxipixDet::getVersion(Version& version)
+void MaxipixDet::setMaxImageSizeCallbackActive(bool cb_active)
 {
-    version= m_version;
+        m_mis_cb_act = cb_active;
 }
-
-void MaxipixDet::setPolarity(Polarity polarity)
-{
-    m_polarity= polarity;
-}
-
-void MaxipixDet::getPolarity(Polarity& polarity)
-{
-    polarity= m_polarity;
-}
-
-void MaxipixDet::setFrequency(float frequency)
-{
-    m_frequency= frequency;
-}
-
-void MaxipixDet::getFrequency(float& frequency)
-{
-    if (m_init==true) {
-	m_priam.getOscillator(m_frequency);
-    }
-    frequency= m_frequency;
-}
-
-void MaxipixDet::setFsr0(std::string fsr0)
-{
-    m_fsr0= fsr0;
-}
-
+     

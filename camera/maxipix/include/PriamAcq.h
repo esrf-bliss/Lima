@@ -60,8 +60,7 @@ class PriamAcq {
       RAW
     };
 
-    static const int maxNbFrames= (int)0xffff;
-
+    static const int maxPorts= 5;
 
     PriamAcq(PriamSerial& priam_serial);
     ~PriamAcq();
@@ -73,7 +72,7 @@ class PriamAcq {
     void setChipType(MaxipixDet::Version, MaxipixDet::Polarity);
 
     void getBoardVersion(short& pcb, short& firmware);
-    void getChipID(short chip, long& id);
+    void getChipID(short port, long& id);
 
     void setFastFOSpeed(bool fast);
     void getFastFOSpeed(bool& fast);
@@ -81,10 +80,10 @@ class PriamAcq {
     void setOscillator(float freq);
     void getOscillator(float& freq);
 
-    void setChipFsr(short chip, std::string fsr);
-    void setChipCfg(short chip, std::string cfg);
+    void setChipFsr(short port, std::string fsr);
+    void setChipCfg(short port, std::string cfg);
     
-    void enableSerial(short chip);
+    void enableSerial(short port);
 
     // --- timing
 
@@ -136,9 +135,9 @@ class PriamAcq {
     void setNbFrames(int nb);
     void getNbFrames(int& nb);
 
-    void setSerialReadout(short chip);
-    void setParalellReadout(std::vector<bool> chips);
-    void getReadoutMode(ReadoutMode& mode, std::vector<bool>& chips);
+    void setSerialReadout(short port);
+    void setParalellReadout(std::vector<int> ports);
+    void getReadoutMode(ReadoutMode& mode, std::vector<int>& ports);
 
     void setImageMode(ImageMode image);
     void getImageMode(ImageMode& image);
@@ -153,8 +152,10 @@ class PriamAcq {
 
     // --- reset
 
-    void resetFifo(short chip);
-    void resetChip(short chip);
+    void resetFifo(short port);
+    void resetAllFifo();
+    void resetChip(short port);
+    void resetAllChip();
 
   private:
     void _readBoardID();
@@ -166,7 +167,7 @@ class PriamAcq {
     void _writeRomReg();
     void _writeMsrReg(char);
     
-    inline void _checkChipNr(short chip);
+    inline void _checkPortNr(short port);
 
 
     PriamSerial& m_priam_serial;
@@ -200,14 +201,13 @@ class PriamAcq {
     short	m_flatfield;	
     int		m_nb_frame;
 
-    std::vector<bool> m_chip_used;
-
+    std::vector<int>  m_port_used;
   };
 
-  inline void PriamAcq::_checkChipNr(short chip)
+  inline void PriamAcq::_checkPortNr(short port)
   {
-    if ((chip<0)||(chip>4))
-        throw LIMA_HW_EXC(InvalidValue, "Invalid chip number");
+    if ((port<0)||(port>=maxPorts))
+        throw LIMA_HW_EXC(InvalidValue, "Invalid priam port number");
   };
 
 };

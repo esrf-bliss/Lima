@@ -60,7 +60,7 @@ return aReturnListPt;
 
 };
 
-%MappedType std::vector<bool>
+%MappedType std::vector<int>
 {
 %TypeHeaderCode
 #include <vector>
@@ -71,23 +71,23 @@ if (sipIsErr == NULL)
 {	
 bool aReturnFlag = PyList_Check(sipPy);
 for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-	aReturnFlag = PyBool_Check(PyList_GET_ITEM(sipPy,i));
+	aReturnFlag = PyInt_Check(PyList_GET_ITEM(sipPy,i));
 return aReturnFlag;
 }
  
-*sipCppPtr = new std::vector<bool>(PyList_Size(sipPy));
+*sipCppPtr = new std::vector<int>(PyList_Size(sipPy));
 for(int i = 0;i < PyList_Size(sipPy);++i)
-  (*sipCppPtr)->operator[](i) = PyList_GET_ITEM(sipPy,i) == Py_True;
+  (*sipCppPtr)->operator[](i) = PyInt_AS_LONG(PyList_GET_ITEM(sipPy,i));
 
     return sipGetState(sipTransferObj);
 %End
 
 %ConvertFromTypeCode
 PyObject* aReturnListPt = PyList_New(sipCpp->size());
-std::vector<bool>::iterator vIter = sipCpp->begin();
+std::vector<int>::iterator vIter = sipCpp->begin();
 
 for(int i = 0;vIter != sipCpp->end();++vIter,++i)
-  PyList_SET_ITEM(aReturnListPt,i,PyBool_FromLong(*vIter));
+  PyList_SET_ITEM(aReturnListPt,i,PyInt_FromLong(*vIter));
 
 return aReturnListPt;
 %End

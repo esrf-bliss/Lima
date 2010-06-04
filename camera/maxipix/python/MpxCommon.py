@@ -7,6 +7,14 @@ MpxVersion= [	Maxipix.MaxipixDet.DUMMY,
 		Maxipix.MaxipixDet.TPX1 ]
 MpxTypes= ["DUMMY", "MPX2", "MXR2", "TPX1"]
 
+MpxPolarity= [	Maxipix.MaxipixDet.NEGATIVE,
+		Maxipix.MaxipixDet.POSITIVE ]
+
+def mpxPolarity(polarity):
+    if polarity not in [0,1]:
+	raise MpxError("Invalid Maxipix Polarity")
+    return MpxPolarity[polarity]
+
 def mpxVersion(version):
     if type(version)==types.StringType:
 	if version not in MpxTypes:

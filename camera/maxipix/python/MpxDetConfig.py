@@ -97,7 +97,7 @@ class MpxDetConfig:
 	self.mpxCfg= {}
 	self.mpxCfg["type"]= self.__getParamNeeded(pars, "type", MpxTypes)
 	self.mpxCfg["version"]= mpxVersion(self.mpxCfg["type"])
-	self.mpxCfg["polarity"]= self.__getParamNeeded(pars, "polarity", [0,1])
+	self.mpxCfg["polarity"]= mpxPolarity(self.__getParamNeeded(pars, "polarity", [0,1]))
 	self.mpxCfg["frequency"]= self.__getParamNeeded(pars, "frequency")
 	
 	self.mpxCfg["xchip"]= self.__getParamNeeded(pars, "xchip", range(1,6))
@@ -109,7 +109,6 @@ class MpxDetConfig:
 
     def __parsePriamSection(self, cfg):
 	self.priamCfg= {}
-	self.priamCfg["espia"]= 0
 	if self.mpxCfg["xchip"]==2 and self.mpxCfg["ychip"]==2:
 	    self.priamCfg["chip_1"]= 2
 	    self.priamCfg["chip_2"]= 3
@@ -122,7 +121,6 @@ class MpxDetConfig:
 	if cfg.has_key("priam"):
 	    pars= cfg["priam"]
 	    self.__section= "priam"
-	    self.priamCfg["espia"]= self.__getParamOptional(pars, "espia", range(10), self.priamCfg["espia"])
 	    for name in [ "chip_%d"%idx for idx in range(1, self.mpxCfg["nchip"]+1)]:
 		self.priamCfg[name]= self.__getParamOptional(pars, name, range(1, 6), self.priamCfg[name])
 
