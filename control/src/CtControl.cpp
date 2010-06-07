@@ -158,6 +158,8 @@ void CtControl::prepareAcq()
 
   DEB_TRACE() << "Apply software bin/roi";
   m_op_int_active= m_ct_image->applySoft(m_op_int);
+  if (m_op_int->hasReconstructionTask())
+    m_op_int_active= true;
   if(m_op_int_active)
     {
       _LastBaseImageReadyCallback *aCbkPt = new _LastBaseImageReadyCallback(*this);
@@ -315,6 +317,11 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
   aReturnData.height = img_dim.getSize().getHeight();
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
+}
+
+void CtControl::setReconstructionTask(LinkTask *task)
+{
+  m_op_int->setReconstructionTask(task);
 }
 
 void CtControl::reset()

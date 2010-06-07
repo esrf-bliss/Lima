@@ -19,9 +19,8 @@ class MpxDetConfig:
 	self.cfgFile= None
 
 	self.mpxCfg= None
-	self.priamCfg= None
-	self.thlCfg= None
-	self.dacsCfg= None
+	self.priamPorts= None
+	self.dacs= None
 
     def setPath(self, path):
 	spath= os.path.normpath(path)
@@ -37,7 +36,7 @@ class MpxDetConfig:
 	self.cfgFile= cfgFile
 	self.name= name
 
-    def __getConfigFile(self, name chip, ext):
+    def __getConfigFile(self, name):
 	fname= "%s.cfg"%name
 	if self.path is not None:
 	    fname= "%s/%s"%(self.path, fname)
@@ -86,8 +85,8 @@ class MpxDetConfig:
 	self.__section= None
 	self.__parseMaxipixSection(cfg)
 	self.__parsePriamSection(cfg)
-	self.__parseThresholdSection(cfg)
 	self.__parseDacsSection(cfg)
+	self.__parseThresholdSection(cfg)
 
     def __parseMaxipixSection(self, cfg):
 	if not cfg.has_key("maxipix"):
@@ -108,42 +107,47 @@ class MpxDetConfig:
 	self.mpxCfg["ygap"]= self.__getParamOptional(pars, "ygap", None, 0)
 
     def __parsePriamSection(self, cfg):
-	self.priamCfg= {}
+	self.priamPorts= range(self.mpxCfg["nchip"])
 	if self.mpxCfg["xchip"]==2 and self.mpxCfg["ychip"]==2:
-	    self.priamCfg["chip_1"]= 2
-	    self.priamCfg["chip_2"]= 3
-	    self.priamCfg["chip_3"]= 1
-	    self.priamCfg["chip_4"]= 4
-	else:
-	    for idx in range(1, self.mpxCfg["nchip"]+1):
-		self.priamCfg["chip_%d"%idx]= idx
+	    self.priamPorts[0]= 1
+	    self.priamPorts[1]= 2
+	    self.priamPorts[2]= 0
+	    self.priamPorts[3]= 3
 
 	if cfg.has_key("priam"):
 	    pars= cfg["priam"]
 	    self.__section= "priam"
-	    for name in [ "chip_%d"%idx for idx in range(1, self.mpxCfg["nchip"]+1)]:
-		self.priamCfg[name]= self.__getParamOptional(pars, name, range(1, 6), self.priamCfg[name])
+	    for idx in range(self.mpxCfg["nchip"]):
+		name= "chip_%d"%(idx+1)
+		self.priamPorts[idx]= self.__getParamOptional(pars, name, 
+						range(5), self.priamPorts[idx])
 
     def __parseThresholdSection(self, cfg):
-	self.thlCfg= {}
 	self.__section= "threshold"
 	pars= cfg.get("threshold", {})
-	for name in [ "thlnoise_%d"%idx for idx in range(1, self.mpxCfg["nchip"]+1)]:
-	    self.thlCfg[name]= self.__getParamOptional(pars, name, None, 0)
-	self.thlCfg["estep"]= self.__getParamOptional(pars, "estep", None, 0)
-	self.thlCfg["e0thl"]= self.__getParamOptional(pars, "e0thl", None, 0)
+	thlnoise= []
+	for idx in range(self.mpxCfg["nchip"]):
+	    name= "thlnoise_%d"%(idx+1)
+	    thlnoise.append(self.__getParamOptional(pars, name, None, 0))
+	estep= self.__getParamOptional(pars, "estep", None, 0)
+	e0thl= self.__getParamOptional(pars, "e0thl", None, 0)
+
+	self.dacs.setThlNoise(0, thlnoise)
+	self.dacs.setECalibration(e0thl, estep)
 
     def __parseDacsSection(self, cfg):
-	self.dacsCfg= {}
+	self.dacs= MpxDacs.MpxDacs(self.mpxCfg["version"], self.mpxCfg["nchip"])
 	self.__section= "dacs"
 	if cfg.has_key("dacs"):
 	    pars= cfg["dacs"]
+	    setDacs= {}
 	    fsrKeys= MpxDacs.getMpxFsrDef(self.mpxCfg["version"]).listKeys()
 	    for key in pars.keys():
 		if key not in fsrKeys:
 		    self.__setParamError("Invalid key <%s>"%key)
 		else:
-		    self.dacsCfg[key]= pars[key]
+		    setDacs[key]= pars[key]
+	    self.dacs.setDacs(0, setDacs)
 
     def getPath(self):
 	return self.path
@@ -154,17 +158,14 @@ class MpxDetConfig:
     def getName(self):
 	return self.name
 
-    def getMaxipixCfg(self):
+    def getMpxCfg(self):
 	return self.mpxCfg
 
-    def getPriamCfg(self):
-	return self.priamCfg
+    def getPriamPorts(self):
+	return self.priamPorts
 
-    def getThresholdCfg(self):
-	return self.thlCfg
-
-    def getDacsCfg(self):
-	return self.dacsCfg
+    def getDacs(self):
+	return self.dacs
 
 if __name__=="__main__":
     import sys
@@ -183,11 +184,14 @@ if __name__=="__main__":
 	print "> FileName   =", cfg.getFilename()
 	print 
 	print "[maxipix]"
-	printDict(cfg.getMaxipixCfg())
+	printDict(cfg.getMpxCfg())
 	print "[priam]"
-	printDict(cfg.getPriamCfg())
+	print "ports =", str(cfg.getPriamPorts())
 	print "[threshold]"
-	printDict(cfg.getThresholdCfg())
+	print "thlnoise = ", str(cfg.getDacs().getThlNoise(0))
+	(e0thl, estep)= cfg.getDacs().getECalibration()
+	print "e0thl = ", e0thl
+	print "estep = ", estep
 	print "[dacs]"
-	printDict(cfg.getDacsCfg())
+	printDict(cfg.getDacs().getDacs(0))
 

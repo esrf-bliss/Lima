@@ -63,6 +63,11 @@ void SoftOpInternalMgr::setReconstructionTask(LinkTask *aTask)
   m_reconstruction_task = aTask;
 }
 
+bool SoftOpInternalMgr::hasReconstructionTask()
+{
+  return (m_reconstruction_task!=NULL);
+}
+
 void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
 			      int &aLastStage) const
 {

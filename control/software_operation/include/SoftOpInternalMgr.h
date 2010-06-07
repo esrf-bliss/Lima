@@ -31,6 +31,7 @@ namespace lima
     void getFlip(Flip&) const;
     
     void setReconstructionTask(LinkTask*);
+    bool hasReconstructionTask();
 
     void addTo(TaskMgr&,int&) const;
 

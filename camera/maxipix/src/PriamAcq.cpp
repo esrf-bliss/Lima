@@ -209,7 +209,9 @@ void PriamAcq::setChipFsr(short port, string fsr)
     sdummy.append(32, '\xff');
     m_priam_serial.writeFsr(sdummy, sid);
     m_priam_serial.writeFsr(fsr, sid);
-    m_chip_id[port]= (long)(sid.c_str());
+    m_chip_id[port]= 0;
+    for (int i=0; i<3; i++)
+	m_chip_id[port] |= ((sid.at(i)&0xff)<<i);
     if (port==0)
 	m_chip_fsr0= fsr;
 }

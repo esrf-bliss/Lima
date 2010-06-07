@@ -1,6 +1,7 @@
 class CtControl {
 %TypeHeaderCode
 #include <CtControl.h>
+#include <LinkTask.h>
 using namespace lima;
 %End  
   public:
@@ -94,6 +95,8 @@ using namespace lima;
 
     void registerImageStatusCallback(ImageStatusCallback& cb);
     void unregisterImageStatusCallback(ImageStatusCallback& cb);
+
+    void setReconstructionTask(LinkTask*);
 
   protected:
     bool newFrameReady(Data& data);

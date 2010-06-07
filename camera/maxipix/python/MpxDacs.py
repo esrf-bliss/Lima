@@ -289,11 +289,15 @@ class MpxDacs:
 
     def getFsrString(self, chipid):
 	idx= self.__getChipIdx(chipid)
-	return self.__dacs[idx].getFsrString()
+	return self.__dacs[idx[0]].getFsrString()
 
     def setThlNoise(self, chipid, value):
-	for idx in self.__getChipIdx(chipid):
-	    self.__thlnoise[idx]= value
+	if chipid==0:
+	    for idx in range(self.nchip):
+		self.__thlnoise[idx]= value[idx]
+	else:
+	    for idx in self.__getChipIdx(chipid):
+	        self.__thlnoise[idx]= value
 
     def getThlNoise(self, chipid):
 	if chipid == 0:
@@ -302,11 +306,11 @@ class MpxDacs:
 	    idx= self.__getChipIdx(chipid)
 	    return self.__thlnoise[idx[0]]
 
-    def setECalibrarion(self, e0thl, estep):
+    def setECalibration(self, e0thl, estep):
 	self.__e0thl= e0thl
 	self.__estep= estep
 
-    def getECalibrarion(self, e0thl, step):
+    def getECalibration(self):
 	return (self.__e0thl, self.__estep)
 
     def setThl(self, value):
@@ -350,7 +354,7 @@ class MpxDacs:
 
     def setDacs(self, chipid, dacs):
 	for idx in self.__getChipIdx(chipid):
-	    self.__dacs[idx].setDacs(name, value)
+	    self.__dacs[idx].setDacs(dacs)
 	
     def getOneDac(self, chipid, name):
 	dacs= []
@@ -366,7 +370,7 @@ class MpxDacs:
     def getDacs(self, chipid):
 	dacs= []
 	for idx in self.__getChipIdx(chipid):
-	    dacs.append(self.getDacs())
+	    dacs.append(self.__dacs[idx].getDacs())
 	res= dacs[0]
 	if chipid == 0 and self.nchip > 1:
 	    for (key, val) in dacs[0].items():

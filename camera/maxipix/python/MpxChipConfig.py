@@ -25,7 +25,7 @@ class MpxPixelConfig:
 
     def reset(self):
 	self.__arr= []
-	for idx in range(nchip):
+	for idx in range(self.nchip):
 	    self.__arr.append(MpxPixelArray(self.version))
 	self.name= None
 
@@ -42,7 +42,7 @@ class MpxPixelConfig:
 	for idx in range(self.nchip):
 	    files.append(self.__getConfigFile(name, idx+1))
 	for idx in range(self.nchip):
-	    self.__arr[idx].loadConfig(files[idx])
+	    self.__arr[idx].load(files[idx])
 
     def __getConfigFile(self, name, chip):
 	root= "%s_chip_%d"%(name, chip)

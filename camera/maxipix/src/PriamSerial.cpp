@@ -119,6 +119,7 @@ void PriamSerial::readRegister(PriamRegister reg, string& buffer, long size)
 
 void PriamSerial::_writeCommand(short code, string &inbuf)
 {
+    DEB_MEMBER_FUNCT();
     string wbuf;
 
     wbuf.assign(1, (char)code);
@@ -134,6 +135,7 @@ void PriamSerial::_writeCommand(short code, string &inbuf)
 
 void PriamSerial::_readAnswer(short code, long size, string &rbuf)
 {
+    DEB_MEMBER_FUNCT();
     double tout;
     short  iret;
     string sret("");
@@ -157,11 +159,12 @@ void PriamSerial::_readAnswer(short code, long size, string &rbuf)
     }
 
     if (size>0) {
-	tout= ((int)(size/256) + 1) * 1.0;
+        DEB_TRACE() << "read answer" << DEB_VAR1(size);
+	tout= ((int)(size/1024) + 1) * 1.0;
 	m_espia_serial.read(rbuf, size, tout);
     }
 
-    m_espia_serial.read(sret, 1, 0.1);
+    m_espia_serial.read(sret, 1, 1.0);
     iret= sret.at(0)&0xff;
     if (iret != SERIAL_END) {
 	m_espia_serial.flush();
@@ -171,6 +174,7 @@ void PriamSerial::_readAnswer(short code, long size, string &rbuf)
 
 void PriamSerial::writeFsr(string& fsr, string& bid)
 {
+    DEB_MEMBER_FUNCT();
     PriamCodeType reg;
 
     reg= PriamSerTxCode[PSER_FSR];
@@ -183,6 +187,8 @@ void PriamSerial::writeFsr(string& fsr, string& bid)
 
 void PriamSerial::writeMatrix(string& input)
 {
+    DEB_MEMBER_FUNCT();
+
     PriamCodeType reg;
     string rbuf("");
 
@@ -190,17 +196,23 @@ void PriamSerial::writeMatrix(string& input)
     if (input.size() != (unsigned long)reg.writeSize)
 	throw LIMA_HW_EXC(InvalidValue, "Wrong input size for Priam transfer");
 
+    DEB_TRACE() << "Writing matrix";
     _writeCommand(reg.writeCode, input);
+    DEB_TRACE() << "Handshake Writing matrix";
     _readAnswer(reg.writeCode, 0, rbuf);
 }
 
 void PriamSerial::readMatrix(string& output)
 {
+    DEB_MEMBER_FUNCT();
+
     PriamCodeType reg;
     string wbuf("");
 
     reg= PriamSerTxCode[PSER_MATRIX];
+    DEB_TRACE() << "Asking matrix";
     _writeCommand(reg.readCode, wbuf);
+    DEB_TRACE() << "Reading matrix";
     _readAnswer(reg.readCode, reg.readSize, output);
 }
 

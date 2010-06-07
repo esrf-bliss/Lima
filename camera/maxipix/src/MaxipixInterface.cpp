@@ -300,7 +300,7 @@ Interface::Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr,
         HwSyncCtrlObj *sync = &m_sync;
         m_cap_list.push_back(HwCap(sync));
 
-        //reset(SoftReset);
+        reset(SoftReset);
 }
 
 Interface::~Interface()

@@ -8,6 +8,7 @@
 #include "HwInterface.h"
 
 #include "Data.h"
+#include "LinkTask.h"
 
 
 namespace lima 
@@ -117,6 +118,8 @@ namespace lima
 
     void registerImageStatusCallback(ImageStatusCallback& cb);
     void unregisterImageStatusCallback(ImageStatusCallback& cb);
+
+    void setReconstructionTask(LinkTask*);
 
   protected:
     bool newFrameReady(Data& data);

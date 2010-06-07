@@ -94,7 +94,7 @@ void MaxipixDet::getDetectorModel(std::string& type)
 bool MaxipixDet::needReconstruction()
 {
     if (((m_xchip==2)&&(m_ychip==2)) || \
-	((m_xchip==5)&&(m_ychip==5))) {
+	((m_xchip==5)&&(m_ychip==1))) {
 	    return true;
     }
     return false;
