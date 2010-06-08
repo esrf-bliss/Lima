@@ -20,7 +20,7 @@ namespace lima
     void getActiveOp(std::map<stage,std::list<alias> >&) const;
     void getActiveStageOp(stage,std::list<alias>&) const;
 
-    void addOp(SoftOpId,const alias&,int stage);
+    void addOp(SoftOpId,const alias&,int stage,SoftOpInstance&);
     void delOp(const alias&);
     void getOpClass(const alias&,
 		    SoftOpInstance&) const;

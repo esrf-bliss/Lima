@@ -230,6 +230,9 @@ class Communication:
                 else:
                     gainStr = Communication.GAIN_VALUE2SERVER[gain]
                     self.__asynSock.send('SetThreshold %s %d' % (gainStr,value))
+                # as the the threshold is round, the server don't reply if threshold is nearly the same
+                # so force a reply
+                self.__asynSock.send('SetThreshold')
                 self._state = self.SETTING_THRESHOLD
             else:
                 raise 'Could not set threshold, server is not idle'

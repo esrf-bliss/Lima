@@ -73,7 +73,8 @@ void SoftOpExternalMgr::getActiveStageOp(stage aStage,std::list<alias> &activeOp
 }
 
 void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
-			      const alias &anAlias,int aStage)
+			      const alias &anAlias,int aStage,
+			      SoftOpInstance &anInstance)
 {
   _checkIfPossible(aSoftOpId,aStage);
   SoftOpInstance newInstance(getSoftOpKey(aSoftOpId),anAlias);
@@ -89,6 +90,7 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
   std::pair<Stage2Instance::iterator,bool> aResult = 
     m_stage2instance.insert(std::pair<stage,std::list<SoftOpInstance> >(aStage,std::list<SoftOpInstance>()));
   aResult.first->second.push_back(newInstance);
+  anInstance = newInstance;
 }
 
 void SoftOpExternalMgr::delOp(const alias &anAlias)

@@ -74,7 +74,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
     def is_set_state_allowed(self,*args) :
         return True
 
-    def set_control_class(self,control_class_ref) :
+    def set_control_ref(self,control_class_ref) :
         self.__ctControlRef = control_class_ref
 
 #------------------------------------------------------------------
@@ -102,8 +102,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 	    if not self.__roiCounterMgr:
                 ctControl = self.__ctControlRef()
                 extOpt = ctControl.externalOperation()
-                extOpt.addOp(lima.ROICOUNTERS,self.ROI_COUNTER_TASK_NAME,0)
-                self.__roiCounterMgr = extOpt.getOpClass(self.ROI_COUNTER_TASK_NAME)
+                self.__roiCounterMgr = extOpt.addOp(lima.ROICOUNTERS,self.ROI_COUNTER_TASK_NAME,0)
 	PyTango.Device_4Impl.set_state(self,state)
 
 #------------------------------------------------------------------

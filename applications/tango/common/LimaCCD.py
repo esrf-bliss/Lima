@@ -79,7 +79,7 @@ class _Wrapped:
         
     def __call__(self,*args) :
         inst = self.__class_type(*args)
-        if hasattr(inst,'set_control_class') :
+        if hasattr(inst,'set_control_ref') :
             inst.set_control_class(self.__ctrl)
         return inst
 

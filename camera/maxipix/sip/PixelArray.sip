@@ -21,9 +21,9 @@ class PixelConfigArray {
 
     void convert(std::string& /Out/);
 
-    char* maskArray;
+    void* maskArray;
 %GetCode
-    if (!sipCpp->maskArray) return Py_None;
+    if (!sipCpp->maskArray) Py_RETURN_NONE;
     npy_intp dims[2]= { 256, 256 };
     sipPy = PyArray_SimpleNewFromData(2, dims, NPY_UBYTE, sipCpp->maskArray);
 %End
@@ -42,9 +42,9 @@ class PixelConfigArray {
     Py_DECREF(tmpObject);
 %End
 
-    char* testArray;
+    void* testArray;
 %GetCode
-    if (!sipCpp->testArray) return Py_None;
+    if (!sipCpp->testArray) Py_RETURN_NONE;
     npy_intp dims[2]= { 256, 256 };
     sipPy = PyArray_SimpleNewFromData(2, dims, NPY_UBYTE, sipCpp->testArray);
 %End
@@ -63,9 +63,9 @@ class PixelConfigArray {
     Py_DECREF(tmpObject);
 %End
 
-    char* lowArray;
+    void* lowArray;
 %GetCode
-    if (!sipCpp->lowArray) return Py_None;
+    if (!sipCpp->lowArray) Py_RETURN_NONE;
     npy_intp dims[2]= { 256, 256 };
     sipPy = PyArray_SimpleNewFromData(2, dims, NPY_UBYTE, sipCpp->lowArray);
 %End
@@ -84,9 +84,9 @@ class PixelConfigArray {
     Py_DECREF(tmpObject);
 %End
 
-    char* highArray;
+    void* highArray;
 %GetCode
-    if (!sipCpp->highArray) return Py_None;
+    if (!sipCpp->highArray) Py_RETURN_NONE;
     npy_intp dims[2]= { 256, 256 };
     sipPy = PyArray_SimpleNewFromData(2, dims, NPY_UBYTE, sipCpp->highArray);
 %End

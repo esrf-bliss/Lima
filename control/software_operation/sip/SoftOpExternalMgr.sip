@@ -35,29 +35,18 @@ sipRes = aReturnListPt;
     void getActiveOp(std::map<int,std::list<std::string> > &activeOp /Out/) const;
     void getActiveStageOp(int,std::list<std::string> &activeOp /Out/) const;
 
-    void addOp(SoftOpId,const alias&,int stage);
+    SIP_PYOBJECT addOp(SoftOpId,const alias&,int stage);
+%MethodCode
+    SoftOpInstance anInstance;
+    sipCpp->addOp(a0,*a1,a2,anInstance);
+INSTANCE_2_SoftOp
+%End
     void delOp(const alias&);
     SIP_PYOBJECT getOpClass(const alias&) const;
 %MethodCode
     SoftOpInstance anInstance;
     sipCpp->getOpClass(*a0,anInstance);
-    if(anInstance.m_opt)
-      {
-	switch(anInstance.m_key.m_id)
-	{
-	case(BACKGROUNDSUBSTRACTION):
-	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpBackgroundSubstraction,NULL);break;
-	case(ROICOUNTERS):
-	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpRoiCounter,NULL);break;
-	default:
-	  throw LIMA_CTL_EXC(NotSupported,"Sofware class not yet managed");
-	}
-      }
-    else
-      {
-        Py_INCREF(Py_None);
-	sipRes = Py_None;
-      }
+INSTANCE_2_SoftOp
 %End
 
     void setEndLinkTaskCallback(TaskEventCallback *aCbk);
@@ -68,4 +57,24 @@ sipRes = aReturnListPt;
     
     void isTaskActive(bool &linkTaskFlag /Out/,bool &sinkTaskFlag /Out/) const;
     void prepare();
+%TypeCode
+#define INSTANCE_2_SoftOp \
+    if(anInstance.m_opt) \
+      { \
+	switch(anInstance.m_key.m_id) \
+	{ \
+	case(BACKGROUNDSUBSTRACTION): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpBackgroundSubstraction,NULL);break; \
+	case(ROICOUNTERS): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpRoiCounter,NULL);break; \
+	default: \
+	  throw LIMA_CTL_EXC(NotSupported,"Sofware class not yet managed"); \
+	} \
+      } \
+    else \
+      { \
+        Py_INCREF(Py_None); \
+	sipRes = Py_None; \
+      }
+%End
 };

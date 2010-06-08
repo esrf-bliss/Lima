@@ -258,7 +258,7 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
    return 0;
   }
 
- (*sipCppPtr)->push_back(*aRoi);
+ roiList->push_back(*aRoi);
  sipReleaseType(aRoi, sipType_Roi, state);
 }
 *sipCppPtr = roiList;
