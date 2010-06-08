@@ -52,6 +52,7 @@ class DebParams
 {
 %TypeHeaderCode
 #include <Debug.h>
+#include <AutoObj.h>
 using namespace lima;
 %End
 
@@ -62,20 +63,24 @@ static ConstStr getConstStr(const std::string *s)
 	return (!s || s->empty()) ? NULL : s->c_str();
 }
 
-class DebParamsSip : public DebParams
+class DebParamsData
 {
 public:
-	DebParamsSip(DebModule mod, std::string *cn, std::string *ns)
-		: DebParams(mod, getConstStr(cn), getConstStr(ns)),
-		  class_name(cn), name_space(ns)
+	DebParamsData(std::string *cn, std::string *ns)
+		: class_name(cn), name_space(ns)
 	{}
 
-	~DebParamsSip()
-	{}
+	~DebParamsData()
+	{
+		delete class_name;
+		delete name_space;
+	}
 
 	std::string *class_name;
 	std::string *name_space;
 };
+
+static std::map<DebParams *, DebParamsData *> deb_params_data_map;
 
 %End
 
@@ -89,70 +94,41 @@ public:
 		  const std::string& class_name = "", 
 		  const std::string& name_space = "");
 %MethodCode
-	std::string *class_name = new std::string(*a1);
-	std::string *name_space = new std::string(*a2);
-	sipCpp = new DebParamsSip(a0, class_name, name_space);
+	std::string *cn = new std::string(*a1);
+	std::string *ns = new std::string(*a2);
+	sipCpp = new DebParams(a0, getConstStr(cn), getConstStr(ns));
+	deb_params_data_map[sipCpp] = new DebParamsData(cn, ns);
 %End
 
 	~DebParams();
 %MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	std::string *class_name = deb_params_sip->class_name;
-	std::string *name_space = deb_params_sip->name_space;
-	delete deb_params_sip;
-	delete name_space;
-	delete class_name;
+	AutoPtr<DebParamsData> dpd = deb_params_data_map[sipCpp];
+	deb_params_data_map.erase(sipCpp);
 %End
 
 	void setModule(DebModule mod);
-%MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	deb_params_sip->setModule(a0);
-%End
-
 	DebModule getModule() const;
-%MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	sipRes = deb_params_sip->getModule();
-%End
 
 	void setClassName(const std::string& class_name);
 %MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	*deb_params_sip->class_name = *a0;
-	deb_params_sip->setClassName(getConstStr(deb_params_sip->class_name));
+	std::string *cn = deb_params_data_map[sipCpp]->class_name;
+	*cn = *a0;
+	sipCpp->setClassName(getConstStr(cn));
 %End
 
 	ConstStr getClassName() const;
-%MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	sipRes = deb_params_sip->getClassName();
-%End
 
 	void setNameSpace(const std::string& name_space);
 %MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	*deb_params_sip->name_space = *a0;
-	deb_params_sip->setNameSpace(getConstStr(deb_params_sip->name_space));
+	std::string *ns = deb_params_data_map[sipCpp]->name_space;
+	*ns = *a0;
+	sipCpp->setClassName(getConstStr(ns));
 %End
 
 	ConstStr getNameSpace() const;
-%MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	sipRes = deb_params_sip->getNameSpace();
-%End
 
 	bool checkModule() const;
-%MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	sipRes = deb_params_sip->checkModule();
-%End
-
 	bool checkType(DebType type) const;
-%MethodCode
-	DebParamsSip *deb_params_sip = (DebParamsSip *) sipCpp;
-	sipRes = deb_params_sip->checkType(a0);
-%End
 
 	static void setTypeFlags(Flags type_flags);
 	static Flags getTypeFlags();
@@ -201,6 +177,7 @@ class DebObj
 {
 %TypeHeaderCode
 #include <Debug.h>
+#include <AutoObj.h>
 using namespace lima;
 %End
 
@@ -211,51 +188,31 @@ static ConstStr getConstStr(const std::string *s)
 	return (!s || s->empty()) ? NULL : s->c_str();
 }
 
-class DebObjSip : public DebObj
+class DebObjData
 {
 public:
-	DebObjSip(DebParams *db, std::string *fn, std::string *on,
-		  std::string *fin, int line_nr) 
-		: DebObj(*db, false, getConstStr(fn), getConstStr(on),
-			 getConstStr(fin), line_nr),
-		  deb_params(db), funct_name(fn), obj_name(on), file_name(fin),
-		  next_type(DebTypeAlways)
+	DebObjData(DebParams *db, std::string *fn, std::string *on,
+		   std::string *fin)
+		: deb_params(db), funct_name(fn), obj_name(on), file_name(fin),
+  		  next_type(DebTypeAlways)
 	{}
 
-	~DebObjSip()
-	{}
-
-	DebObj *Fatal()
-	{ return setNextType(DebTypeFatal); }
-
-	DebObj *Error()
-	{ return setNextType(DebTypeError); }
-
-	DebObj *Warning()
-	{ return setNextType(DebTypeWarning); }
-
-	DebObj *Param()
-	{ return setNextType(DebTypeParam); }
-
-	DebObj *Trace()
-	{ return setNextType(DebTypeTrace); }
-
-	DebObj *Return()
-	{ return setNextType(DebTypeReturn); }
-
-	DebObj *Always()
-	{ return setNextType(DebTypeAlways); }
-
-	void write(const std::string& msg)
+	~DebObjData()
 	{
-		if (msg != "\n")
-			DebObj::write(next_type) << msg;
+		delete deb_params;
+		delete funct_name;
+		delete obj_name;
+		delete file_name;
 	}
 
-	DebObj *setNextType(DebType nt)
+	void setNextType(DebType nt)
 	{
 		next_type = nt;
-		return this;
+	}
+
+	DebType getNextType()
+	{
+		return next_type;
 	}
 
 	DebParams *deb_params;
@@ -265,6 +222,22 @@ public:
         DebType next_type;
 };
 
+static std::map<DebObj *, DebObjData *> deb_obj_data_map;
+
+static DebObj* setNextType(DebObj *deb_obj, DebType next_type)
+{
+	deb_obj_data_map[deb_obj]->setNextType(next_type);
+	return deb_obj;
+}
+
+static void write(DebObj *deb_obj, const std::string *msg)
+{
+	if (*msg != "\n") {
+		DebType next_type = deb_obj_data_map[deb_obj]->getNextType();
+		deb_obj->write(next_type) << *msg;
+	}
+}
+
 %End
 
  public:
@@ -273,128 +246,106 @@ public:
 	       const std::string& obj_name = "",
 	       const std::string& file_name = "", int line_nr = 0);
 %MethodCode
-	DebParams *deb_params   = new DebParams(*a0);
-	std::string *funct_name = new std::string(*a1);
-	std::string *obj_name   = new std::string(*a2);
-	std::string *file_name   = new std::string(*a3);
-	sipCpp = new DebObjSip(deb_params, funct_name, obj_name, 
-			       file_name, a4);
+	DebParams *dp    = new DebParams(*a0);
+	std::string *fn  = new std::string(*a1);
+	std::string *on  = new std::string(*a2);
+	std::string *fin = new std::string(*a3);
+	sipCpp = new DebObj(*dp, false, getConstStr(fn), getConstStr(on), 
+			    getConstStr(fin), a4);
+	deb_obj_data_map[sipCpp] = new DebObjData(dp, fn, on, fin);
 %End
 
 	~DebObj();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	DebParams *deb_params   = deb_obj_sip->deb_params;
-	std::string *funct_name = deb_obj_sip->funct_name;
-	std::string *obj_name   = deb_obj_sip->obj_name;
-	std::string *file_name  = deb_obj_sip->file_name;
-	delete deb_obj_sip;
-	delete file_name;
-	delete obj_name;
-	delete funct_name;
-	delete deb_params;
+	AutoPtr<DebObjData> dod = deb_obj_data_map[sipCpp];
+	deb_obj_data_map.erase(sipCpp);
 %End
 
 	DebObj& Fatal();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	sipRes = deb_obj_sip->Fatal();
+	sipRes = setNextType(sipCpp, DebTypeFatal);
 %End
 
 	DebObj& Error();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	sipRes = deb_obj_sip->Fatal();
+	sipRes = setNextType(sipCpp, DebTypeError);
 %End
 
 	DebObj& Warning();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	sipRes = deb_obj_sip->Warning();
+	sipRes = setNextType(sipCpp, DebTypeWarning);
 %End
 
 	DebObj& Param();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	sipRes = deb_obj_sip->Param();
+	sipRes = setNextType(sipCpp, DebTypeParam);
 %End
 
 	DebObj& Trace();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	sipRes = deb_obj_sip->Trace();
+	sipRes = setNextType(sipCpp, DebTypeTrace);
 %End
 
 	DebObj& Return();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	sipRes = deb_obj_sip->Return();
+	sipRes = setNextType(sipCpp, DebTypeReturn);
 %End
 
 	DebObj& Always();
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	sipRes = deb_obj_sip->Always();
+	sipRes = setNextType(sipCpp, DebTypeAlways);
 %End
 
 	void write(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->write(*a0);	
+	write(sipCpp, a0);
 %End
 
 	void __lshift__(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) a0;
-	deb_obj_sip->write(*a1);	
+	write(a0, a1);
 %End
 
 	void Fatal(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->Fatal();
-	deb_obj_sip->write(*a0);	
+	setNextType(sipCpp, DebTypeFatal);
+	write(sipCpp, a0);
 %End
 
 	void Error(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->Error();
-	deb_obj_sip->write(*a0);	
+	setNextType(sipCpp, DebTypeError);
+	write(sipCpp, a0);
 %End
 
 	void Warning(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->Warning();
-	deb_obj_sip->write(*a0);	
+	setNextType(sipCpp, DebTypeWarning);
+	write(sipCpp, a0);
 %End
 
 	void Param(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->Param();
-	deb_obj_sip->write(*a0);	
+	setNextType(sipCpp, DebTypeParam);
+	write(sipCpp, a0);
 %End
 
 	void Trace(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->Trace();
-	deb_obj_sip->write(*a0);	
+	setNextType(sipCpp, DebTypeTrace);
+	write(sipCpp, a0);
 %End
 
 	void Return(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->Return();
-	deb_obj_sip->write(*a0);	
+	setNextType(sipCpp, DebTypeReturn);
+	write(sipCpp, a0);
 %End
 
 	void Always(const std::string& msg);
 %MethodCode
-	DebObjSip *deb_obj_sip = (DebObjSip *) sipCpp;
-	deb_obj_sip->Always();
-	deb_obj_sip->write(*a0);	
+	setNextType(sipCpp, DebTypeAlways);
+	write(sipCpp, a0);
 %End
+
 };
