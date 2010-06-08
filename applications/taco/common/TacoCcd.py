@@ -108,6 +108,10 @@ DevErrCcdCameraModel		= DevCcdBase + 12
 DevErrCcdProcessImage		= DevCcdBase + 13
 DevErrCcdCameraNotActiveYet	= DevCcdBase + 14
 
+# Debug Commands
+DevGetDebugFlags		= 1501
+DevSetDebugFlags		= 1502
+
 class TacoCcdError:
     pass
 
@@ -193,6 +197,10 @@ class TacoCcdAcq(TacoServer):
                                  'readBeamParams', 'DevReadValues'],
         DevReadSigValues:	[D_VOID_TYPE, D_VAR_FLOATARR,
                                  'readCcdParams', 'DevReadSigValues'],
+	DevSetDebugFlags:	[D_ULONG_TYPE, D_VOID_TYPE,
+				 'setDebugFlags', 'DevSetDebugFlags'],
+	DevGetDebugFlags:	[D_VOID_TYPE, D_ULONG_TYPE,
+				 'getDebugFlags', 'DevGetDebugFlags'],
     }
 
     LiveDisplay  = 1
@@ -459,6 +467,29 @@ class TacoCcdAcq(TacoServer):
         beam_params = [0] * 21
         deb.Return('Getting beam params: %s' % beam_params)
         return beam_params
+
+    @DEB_MEMBER_FUNCT
+    def setDebugFlags(self, deb_flags):
+	deb_flags &= 0xffffffff
+	deb.Param('Setting debug flags: 0x%08x' % deb_flags)
+	DebParams.setTypeFlags((deb_flags   >> 16)  & 0xff)
+	DebParams.setModuleFlags((deb_flags >>  0)  & 0xffff)
+
+	deb.Trace('FormatFlags: %s' % DebParams.getFormatFlagsNameList())
+	deb.Trace('TypeFlags:   %s' % DebParams.getTypeFlagsNameList())
+	deb.Trace('ModuleFlags: %s' % DebParams.getModuleFlagsNameList())
+    
+    @DEB_MEMBER_FUNCT
+    def getDebugFlags(self):
+	deb.Trace('FormatFlags: %s' % DebParams.getFormatFlagsNameList())
+	deb.Trace('TypeFlags:   %s' % DebParams.getTypeFlagsNameList())
+	deb.Trace('ModuleFlags: %s' % DebParams.getModuleFlagsNameList())
+
+	deb_flags = (((DebParams.getTypeFlags()    & 0xff)   << 16) |
+		     ((DebParams.getModuleFlags()  & 0xffff) <<  0))
+	deb_flags &= 0xffffffff
+	deb.Return('Getting debug flags: 0x%08x' % deb_flags)
+	return deb_flags
 
     
 class CcdServer:
