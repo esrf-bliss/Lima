@@ -172,11 +172,11 @@ from lima.Pilatus import Interface
 
 _PilatusIterface = None
 
-def get_interface() :
+def get_control() :
     global _PilatusIterface
     if _PilatusIterface is None:
         _PilatusIterface = Interface.Interface()
-    return _PilatusIterface
+    return lima.CtControl(_PilatusIterface)
 
 def close_interface() :
     global _PilatusIterface

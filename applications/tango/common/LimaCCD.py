@@ -137,8 +137,7 @@ class LimaCCDs(PyTango.Device_3Impl):
             traceback.print_exc()
             self.set_state(PyTango.DevState.FAULT)
         else:
-            self.__interface = m.get_interface()
-            self.__control = lima.CtControl(self.__interface)
+            self.__control = m.get_control()
             try:
                 specificClass,specificDevice = m.get_tango_specific_class_n_device()
             except AttributeError: pass
