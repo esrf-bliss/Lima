@@ -2,13 +2,13 @@
 #       "$Header:  $";
 #=============================================================================
 #
-# file :        LimaCCDs.py
+# file :        LimaTacoCCDs.py
 #
-# description : Python source for the LimaCCDs and its commands. 
+# description : Python source for the LimaTacoCCDs and its commands. 
 #                The class is derived from Device. It represents the
 #                CORBA servant object which will be accessed from the
 #                network. All commands which can be executed on the
-#         LimaCCDs are implemented in this file.
+#         LimaTacoCCDs are implemented in this file.
 #
 # project :    TANGO Device Server
 #
@@ -84,9 +84,9 @@ class _Wrapped:
         return inst
 
 #==================================================================
-#   LimaCCDs Class Description:
+#   LimaTacoCCDs Class Description:
 #
-#      This is a device server for the LimaCCDs cameras
+#      This is a device server for the LimaTacoCCDs cameras
 #      and implementing the Taco ccd interface
 #      for integrating it on the beamline.
 #
@@ -98,7 +98,7 @@ class _Wrapped:
 #   DevState.FAULT :  ccd is in FAULT, cannot take pictures
 #==================================================================
 
-class LimaCCDs(PyTango.Device_3Impl):
+class LimaTacoCCDs(PyTango.Device_3Impl):
 
 #--------- Add you global variables here --------------------------
     RUNNING,IDLE,WRITE_ERROR = range(3)
@@ -108,7 +108,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 #------------------------------------------------------------------
     def __init__(self,cl, name):
         PyTango.Device_3Impl.__init__(self,cl,name)
-        LimaCCDs.init_device(self)
+        LimaTacoCCDs.init_device(self)
         self.__lima_control = None
         self.__bpm_mgr  = processlib.Tasks.BpmManager()
         self.__bpm_task = processlib.Tasks.BpmTask(self.__bpm_mgr)
@@ -118,7 +118,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 #------------------------------------------------------------------
     def delete_device(self):
         try:
-            m = __import__('plugins.%s' % (self.LimaCameraType),None,None,'plugins.%s' % (self.LimaCameraType))
+            m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
         except ImportError:
             pass
         else:
@@ -131,7 +131,7 @@ class LimaCCDs(PyTango.Device_3Impl):
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
         try:
-            m = __import__('plugins.%s' % (self.LimaCameraType),None,None,'plugins.%s' % (self.LimaCameraType))
+            m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
         except ImportError:
             import traceback
             traceback.print_exc()
@@ -154,7 +154,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 
 #==================================================================
 #
-#    LimaCCDs read/write attribute methods
+#    LimaTacoCCDs read/write attribute methods
 #
 #==================================================================
 #------------------------------------------------------------------
@@ -166,7 +166,7 @@ class LimaCCDs(PyTango.Device_3Impl):
 
 #==================================================================
 #
-#    LimaCCDs command methods
+#    LimaTacoCCDs command methods
 #
 #==================================================================
 
@@ -617,10 +617,10 @@ class LimaCCDs(PyTango.Device_3Impl):
         return frame_dim
 #==================================================================
 #
-#    LimaCCDsClass class definition
+#    LimaTacoCCDsClass class definition
 #
 #==================================================================
-class LimaCCDsClass(PyTango.DeviceClass):
+class LimaTacoCCDsClass(PyTango.DeviceClass):
 
     #    Class Properties
     class_property_list = {
@@ -738,23 +738,23 @@ class LimaCCDsClass(PyTango.DeviceClass):
 
 
 #------------------------------------------------------------------
-#    LimaCCDsClass Constructor
+#    LimaTacoCCDsClass Constructor
 #------------------------------------------------------------------
     def __init__(self, name):
         PyTango.DeviceClass.__init__(self, name)
         self.set_type(name);
-        print "In LimaCCDsClass     constructor"
+        print "In LimaTacoCCDsClass     constructor"
 
     
 #==================================================================
 #
-#    LimaCCDs class main method
+#    LimaTacoCCDs class main method
 #
 #==================================================================
 if __name__ == '__main__':
     try:
         py = PyTango.Util(sys.argv)
-        py.add_TgClass(LimaCCDsClass,LimaCCDs,'LimaCCDs')
+        py.add_TgClass(LimaTacoCCDsClass,LimaTacoCCDs,'LimaTacoCCDs')
         U = PyTango.Util.instance()
         U.server_init()
         U.server_run()
