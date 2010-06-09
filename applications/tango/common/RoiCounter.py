@@ -217,17 +217,17 @@ class RoiCounterDeviceServerClass(PyTango.DeviceClass):
         [[PyTango.DevVoid,""],
          [PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"]],
         'get':
-        [[PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"]]
-        [PyTango.DevVoid,""],
+        [[PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"],
+        [PyTango.DevVoid,""]],
         'clearAllRoi':
         [[PyTango.DevVoid,""],
          [PyTango.DevVoid,""]],
         'setMaskFile':
         [[PyTango.DevVoid,""],
-         [PyTango.DevVarStringArray],"Full path of mask file"]],
+         [PyTango.DevVarStringArray,"Full path of mask file"]],
         'readCounters':
         [[PyTango.DevVarDoubleArray,"frame number 0,sum 0,average 0,std 0,frame number 0,sum 0,average 0,std 0..."],
-         [PyTango.DevLong],"from which frame"]]
+         [PyTango.DevLong,"from which frame"]]
 	}
 
 
