@@ -1,4 +1,4 @@
-%Module lima 0
+%Module limacore 0
 
 %ModuleHeaderCode
   #include <SoftOpId.h>
