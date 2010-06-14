@@ -20,10 +20,15 @@ ifneq ($(COMPILE_MAXIPIX), 0)
 sip-modules += maxipix
 endif
 
+all:	src
+
 src:
 	for d in $(sip-modules); do \
 		$(MAKE) -C $$d || break; \
 	done
+
+config:
+	python configure.py
 
 clean:
 	for d in $(sip-modules); do \
