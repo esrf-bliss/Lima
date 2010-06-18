@@ -41,7 +41,7 @@ Sps/Src/sps.o:	Sps/Src/sps.c Sps/Include/sps.h
 	make -C Sps/Src CPPFLAGS=-I../Include CFLAGS=-fPIC sps.o
 
 cbflib.src:
-	$(MAKE) -C CBFLib/ -f Makefile_LINUX all
+	$(MAKE) CFLAGS=-fPIC -C CBFLib/ -f Makefile_LINUX all
 
 cbflib.clean:
 	$(MAKE) -C CBFLib/ -f Makefile_LINUX clean
