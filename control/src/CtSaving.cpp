@@ -6,6 +6,11 @@
 #endif
 
 #include "CtSaving.h"
+#include "CtSaving_Edf.h"
+
+#ifdef WITH_CBF_SAVING
+#include "CtSaving_Cbf.h"
+#endif
 
 #include "TaskMgr.h"
 #include "SinkTask.h"
@@ -14,37 +19,13 @@ using namespace lima;
 
 static const char DIR_SEPARATOR = '/';
 
-class CtSaving::_SaveContainer
-{
-    DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
-public:
-  _SaveContainer(CtSaving&);
-  ~_SaveContainer();
-
-  void writeFile(Data&,CtSaving::HeaderMap &);
-  void setStatisticSize(int aSize);
-  void getStatistic(std::list<double>&) const;
-  void clear();
-
-private:
-  CtSaving		&m_saving;
-  int			m_written_frames;
-  std::ofstream		m_fout;
-  std::list<double>	m_statistic_list;
-  int			m_statistic_size;
-  mutable Cond		m_cond;
-
-  void		_open();
-  void		_close();
-  void		_writeEdfHeader(Data&,CtSaving::HeaderMap&);
-};
 /** @brief save task class
  */
 class CtSaving::_SaveTask : public SinkTaskBase
 {
     DEB_CLASS_NAMESPC(DebModControl,"Saving Task","Control");
 public:
-  _SaveTask(CtSaving::_SaveContainer &save_cnt) : SinkTaskBase(),m_container(save_cnt) {}
+  _SaveTask(CtSaving::SaveContainer &save_cnt) : SinkTaskBase(),m_container(save_cnt) {}
   virtual void process(Data &aData)
   {
     DEB_MEMBER_FUNCT();
@@ -55,7 +36,7 @@ public:
 
   CtSaving::HeaderMap	 m_header;
 private:
-  _SaveContainer &m_container;
+  SaveContainer &m_container;
 };
 /** @brief save callback
  */
@@ -91,7 +72,7 @@ CtSaving::CtSaving(CtControl &aCtrl) :
 {
   DEB_CONSTRUCTOR();
 
-  m_save_cnt = new _SaveContainer(*this);
+  m_save_cnt = new SaveContainerEdf(*this);
   m_saving_cbk = new _SaveCBK(*this);
   resetLastFrameNb();
 }
@@ -112,6 +93,8 @@ void CtSaving::setParameters(const CtSaving::Parameters &pars)
   DEB_PARAM() << DEB_VAR1(pars);
 
   AutoMutex aLock(m_cond.mutex());
+  _check_if_multi_frame_per_file_allowed(pars.fileFormat,pars.framesPerFile);
+  _create_save_cnt(pars.fileFormat);
   m_pars = pars;
 }
 
@@ -198,15 +181,53 @@ void CtSaving::getNextNumber(long& number) const
   DEB_RETURN() << DEB_VAR1(number);
 }
 
-void CtSaving::setFormat(const FileFormat &format)
+void CtSaving::setFormat(FileFormat format)
 {
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
+  _create_save_cnt(format);
   m_pars.fileFormat = format;
 
   DEB_RETURN() << DEB_VAR1(format);
 }
+void CtSaving::_create_save_cnt(FileFormat format)
+{
+  if(format != m_pars.fileFormat)
+    {
+      // wait until the container is no more used
+      while(!m_ready_flag) m_cond.wait();
+
+      switch(format)
+	{
+	case CBFFormat :
+#ifndef WITH_CBF_SAVING
+	throw LIMA_CTL_EXC(NotSupported,"Lima is not compiled with the cbf saving option, not managed");  
+#endif
+	case RAW:
+	case EDF:
+	  delete m_save_cnt;break;
+	default:
+	  throw LIMA_CTL_EXC(NotSupported,"File format not yet managed");
+	}
+
+      switch(format)
+	{
+	case RAW:
+	case EDF:
+	  m_save_cnt = new SaveContainerEdf(*this);break;
+#ifdef WITH_CBF_SAVING
+	case CBFFormat:
+	  m_save_cnt = new SaveContainerCbf(*this);
+	  m_pars.framesPerFile = 1;
+	  break;
+#endif
+	default:
+	  break;
+	}
+    }
+}
+
 void CtSaving::getFormat(FileFormat& format) const
 {
   DEB_MEMBER_FUNCT();
@@ -260,9 +281,24 @@ void CtSaving::setFramesPerFile(unsigned long frames_per_file)
   DEB_PARAM() << DEB_VAR1(frames_per_file);
 
   AutoMutex aLock(m_cond.mutex());
+  _check_if_multi_frame_per_file_allowed(m_pars.fileFormat,frames_per_file);
   m_pars.framesPerFile = frames_per_file;
 }
 
+void CtSaving::_check_if_multi_frame_per_file_allowed(FileFormat format,int frame_per_file) const
+{
+  switch(format)
+    {
+#ifdef WITH_CBF_SAVING
+    case CBFFormat :
+      if(frame_per_file > 1)
+	throw LIMA_CTL_EXC(InvalidValue,"CBF file format does not support multi frame per file");
+      break;
+#endif
+    default:
+      break;
+    }
+}
 void CtSaving::getFramePerFile(unsigned long& frames_per_file) const
 {
   DEB_MEMBER_FUNCT();
@@ -636,102 +672,19 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
   m_cond.signal();
 
 }
-/** @brief saving container
- *
- *  This class manage file saving
- */
-CtSaving::_SaveContainer::_SaveContainer(CtSaving &aCtSaving) :
-  m_saving(aCtSaving),m_written_frames(0),m_statistic_size(16)
+
+CtSaving::SaveContainer::SaveContainer(CtSaving &aCtSaving) :
+  m_written_frames(0),m_saving(aCtSaving),m_statistic_size(16)
 {
   DEB_CONSTRUCTOR();
 }
 
-CtSaving::_SaveContainer::~_SaveContainer()
+CtSaving::SaveContainer::~SaveContainer()
 {
   DEB_DESTRUCTOR();
 }
 
-void CtSaving::_SaveContainer::_open()
-{
-  DEB_MEMBER_FUNCT();
-
-  if(!m_fout.is_open())
-    {
-      CtSaving::Parameters pars;
-      m_saving.getParameters(pars);
-
-      char idx[64];
-      snprintf(idx,sizeof(idx),pars.indexFormat.c_str(),pars.nextNumber);
-
-      std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix + idx + pars.suffix;
-      DEB_TRACE() << DEB_VAR1(aFileName);
-
-      if(pars.overwritePolicy == Abort && 
-	 !access(aFileName.c_str(),R_OK))
-	{
-	  m_saving._setSavingError(CtControl::SaveOverwriteError);
-	  std::string output;
-	  output = "Try to over write file: " + aFileName;
-	  DEB_ERROR() << output;
-	  throw LIMA_CTL_EXC(Error, output.c_str());
-	}
-      std::_Ios_Openmode openFlags = std::ios_base::out | std::ios_base::binary;
-      if(pars.overwritePolicy == Append)
-	openFlags |= std::ios_base::app;
-      else if(pars.overwritePolicy == Overwrite)
-	openFlags |= std::ios_base::trunc;
-
-      for(int nbTry = 0;nbTry < 5;++nbTry)
-	{
-	  try {
-	    m_fout.clear();
-	    m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-	    m_fout.open(aFileName.c_str(),openFlags);
-	  } catch (std::ios_base::failure &error) {
-	    DEB_ERROR() << "Failure opening " << aFileName << ":" 
-			<< error.what();
-	  }
-
-	  if(m_fout.fail())
-	    {
-	      std::string output;
-
-	      if(access(pars.directory.c_str(),W_OK))
-		{
-		  m_saving._setSavingError(CtControl::SaveAccessError);
-		  output = "Can not write in directory: " + pars.directory;
-		  DEB_ERROR() << output;
-		  throw LIMA_CTL_EXC(Error,output.c_str());
-		}
-	    }
-	  else
-	    {
-	      DEB_TRACE() << "Open file: " << aFileName;
-	      break;
-	    }
-	}
-    }
-}
-
-void CtSaving::_SaveContainer::_close()
-{
-  DEB_MEMBER_FUNCT();
-  
-  if (!m_fout.is_open()) {
-    DEB_TRACE() << "Nothing to do";
-    return;
-  }
-
-  DEB_TRACE() << "Close current file";
-
-  m_fout.close();
-  m_written_frames = 0;
-  long idx;
-  m_saving.getNextNumber(idx);
-  m_saving.setNextNumber(idx + 1);
-}
-
-void CtSaving::_SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
+void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(aData,aHeader);
@@ -742,14 +695,10 @@ void CtSaving::_SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
   CtSaving::Parameters pars;
   m_saving.getParameters(pars);
 
-  _open();
+  open(pars);
   try
     {
-
-      if(pars.fileFormat == CtSaving::EDF)
-	_writeEdfHeader(aData,aHeader);
-  
-      m_fout.write((char*)aData.data(),aData.size());
+      _writeFile(aData,aHeader,pars.fileFormat);
     }
   catch(std::ios_base::failure &error)
     {
@@ -776,7 +725,7 @@ void CtSaving::_SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
 	    {
 	      m_saving._setSavingError(CtControl::SaveDiskFull);
 	      DEB_ERROR() << "Disk full!!!";
-	      m_fout.close();
+	      close();
 	      return;
 	    }
 	};
@@ -784,12 +733,12 @@ void CtSaving::_SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
   
 #endif
       m_saving._setSavingError(CtControl::SaveUnknownError);
-      m_fout.close();
+      close();
       return;
     }
 
   if(++m_written_frames == pars.framesPerFile)
-    _close();
+    close();
 
   struct timeval end_write;
   gettimeofday(&end_write, NULL);
@@ -805,7 +754,8 @@ void CtSaving::_SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
     m_statistic_list.pop_front();
   m_statistic_list.push_back(diff);
 }
-void CtSaving::_SaveContainer::setStatisticSize(int aSize)
+
+void CtSaving::SaveContainer::setStatisticSize(int aSize)
 {
   AutoMutex aLock = AutoMutex(m_cond.mutex());
   if(long(m_statistic_list.size()) > aSize)
@@ -818,7 +768,7 @@ void CtSaving::_SaveContainer::setStatisticSize(int aSize)
   m_statistic_size = aSize;
 }
 
-void CtSaving::_SaveContainer::getStatistic(std::list<double> &aReturnList) const
+void CtSaving::SaveContainer::getStatistic(std::list<double> &aReturnList) const
 {
   AutoMutex aLock = AutoMutex(m_cond.mutex());
   for(std::list<double>::const_iterator i = m_statistic_list.begin();
@@ -826,84 +776,79 @@ void CtSaving::_SaveContainer::getStatistic(std::list<double> &aReturnList) cons
     aReturnList.push_back(*i);
 }
 
-void CtSaving::_SaveContainer::clear()
+void CtSaving::SaveContainer::clear()
 {
   AutoMutex aLock(m_cond.mutex());
   m_statistic_list.clear();
-  _close();
+  this->close();
 }
 
-void CtSaving::_SaveContainer::_writeEdfHeader(Data &aData,HeaderMap &aHeader)
+void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 {
   DEB_MEMBER_FUNCT();
 
-  time_t ctime_now;
-  time(&ctime_now);
-
-  struct timeval tod_now;
-  gettimeofday(&tod_now, NULL);
-
-  char time_str[64];
-  ctime_r(&ctime_now, time_str);
-  time_str[strlen(time_str) - 1] = '\0';
-	
-  int image_nb = m_written_frames + 1;
-
-  char aBuffer[512];
-  long aStartPosition = m_fout.tellp();
-  m_fout << "{\n";
-
-  snprintf(aBuffer,sizeof(aBuffer),"HeaderID = EH:%06u:000000:000000 ;\n", image_nb);
-  m_fout << aBuffer;
-
-  m_fout << "ByteOrder = LowByteFirst ;\n";
-  const char *aStringType = NULL;
-  switch(aData.type)
+  if(!m_file_opened)
     {
-    case Data::UINT8:	aStringType = "UnsignedByte";break;
-    case Data::INT8:	aStringType = "SignedByte";break;
-    case Data::UINT16:	aStringType = "UnsignedShort";break;
-    case Data::INT16:	aStringType = "SignedShort";break;
-    case Data::UINT32:	aStringType = "UnsignedInteger";break;
-    case Data::INT32:	aStringType = "SignedInteger";break;
-    case Data::UINT64:	aStringType = "Unsigned64";break;
-    case Data::INT64:	aStringType = "Signed64";break;
-    case Data::FLOAT:	aStringType = "FloatValue";break;
-    case Data::DOUBLE:	aStringType = "DoubleValue";break;
-    default:
-      break;		// @todo ERROR has to be manage
+      char idx[64];
+      snprintf(idx,sizeof(idx),pars.indexFormat.c_str(),pars.nextNumber);
+
+      std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix + idx + pars.suffix;
+      DEB_TRACE() << DEB_VAR1(aFileName);
+
+      if(pars.overwritePolicy == Abort && 
+	 !access(aFileName.c_str(),R_OK))
+	{
+	  m_saving._setSavingError(CtControl::SaveOverwriteError);
+	  std::string output;
+	  output = "Try to over write file: " + aFileName;
+	  DEB_ERROR() << output;
+	  throw LIMA_CTL_EXC(Error, output.c_str());
+	}
+      std::_Ios_Openmode openFlags = std::ios_base::out | std::ios_base::binary;
+      if(pars.overwritePolicy == Append)
+	openFlags |= std::ios_base::app;
+      else if(pars.overwritePolicy == Overwrite)
+	openFlags |= std::ios_base::trunc;
+
+      for(int nbTry = 0;nbTry < 5;++nbTry)
+	{
+	  bool succeed = false;
+	  try {
+	    succeed = _open(aFileName,openFlags);
+	  } catch (std::ios_base::failure &error) {
+	    DEB_ERROR() << "Failure opening " << aFileName << ":" 
+			<< error.what();
+	  }
+
+	  if(!succeed)
+	    {
+	      std::string output;
+
+	      if(access(pars.directory.c_str(),W_OK))
+		{
+		  m_saving._setSavingError(CtControl::SaveAccessError);
+		  output = "Can not write in directory: " + pars.directory;
+		  DEB_ERROR() << output;
+		  throw LIMA_CTL_EXC(Error,output.c_str());
+		}
+	    }
+	  else
+	    {
+	      DEB_TRACE() << "Open file: " << aFileName;
+	      m_file_opened = true;
+	      break;
+	    }
+	}
     }
-  m_fout << "DataType = " << aStringType << " ;\n";
+}
 
-  m_fout << "Size = " << aData.size() << " ;\n";
-  m_fout << "Dim_1 = " << aData.width << " ;\n";
-  m_fout << "Dim_2 = " << aData.height << " ;\n";
-
-  m_fout << "acq_frame_nb = " << aData.frameNumber << " ;\n";
-  m_fout << "time = " << time_str << " ;\n";
-
-  snprintf(aBuffer,sizeof(aBuffer),"time_of_day = %ld.%06ld ;\n",tod_now.tv_sec, tod_now.tv_usec);
-  m_fout << aBuffer;
-
-  snprintf(aBuffer,sizeof(aBuffer),"time_of_frame = %.6f ;\n",aData.timestamp);
-  m_fout << aBuffer;
-
-  //@todo m_fout << "valid_pixels = " << aData.validPixels << " ;\n";
-  
-  
-  aData.header.lock();
-  Data::HeaderContainer::Header &aDataHeader = aData.header.header();
-  for(Data::HeaderContainer::Header::iterator i = aDataHeader.begin();i != aDataHeader.end();++i)
-    m_fout << i->first << " = " << i->second << " ;\n";
-  aData.header.unlock();
-
-  for(HeaderMap::iterator i = aHeader.begin(); i != aHeader.end();++i)
-    m_fout << i->first << " = " << i->second << " ;\n";
-  
-  long aEndPosition = m_fout.tellp();
-  
-  long lenght = aEndPosition - aStartPosition;
-  long finalHeaderLenght = (lenght + 511) & ~511; // 512 alignment
-  snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght - 2),"");
-  m_fout << aBuffer;
+void CtSaving::SaveContainer::close()
+{
+  DEB_MEMBER_FUNCT();
+  _close();
+  m_file_opened = false;
+  m_written_frames = 0;
+  long idx;
+  m_saving.getNextNumber(idx);
+  m_saving.setNextNumber(idx + 1);
 }

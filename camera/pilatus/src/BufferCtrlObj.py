@@ -22,7 +22,10 @@ class _ImageReader(threading.Thread) :
         self.__continue = True
         self.__buffer_ctrl = weakref.ref(buffer_ctrl)
         com = buffer_ctrl._com()
-        self.__dirFd = os.open(com.DEFAULT_PATH,os.O_DIRECTORY)
+	try:
+            self.__dirFd = os.open(com.DEFAULT_PATH,os.O_DIRECTORY)
+	except OSError:
+	    self.__dirFd = None
 
         self.__basePath = com.DEFAULT_PATH
         self.__fileBase = com.DEFAULT_FILE_BASE
@@ -74,6 +77,9 @@ class _ImageReader(threading.Thread) :
         
     def run(self) :
         lastDirectoryTime = None
+
+	if not self.__dirFd: return #@todo should throw an execption
+
         with self.__cond:
             while(self.__continue) :
                 newDirectoryTime = os.fstat(self.__dirFd).st_mtime

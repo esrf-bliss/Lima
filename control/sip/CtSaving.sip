@@ -92,6 +92,7 @@ using namespace lima;
     enum FileFormat {
       RAW,
       EDF,
+      CBFFormat,
     };
 
     enum SavingMode {
@@ -143,7 +144,7 @@ using namespace lima;
     void setNextNumber(long number);
     void getNextNumber(long& number) const;
 
-    void setFormat(const FileFormat &format);
+    void setFormat(FileFormat format);
     void getFormat(FileFormat &format /Out/) const;
 
     // --- saving modes

@@ -5,16 +5,16 @@ import shutil
 import numpy
 
 modules = [('core',		['common', 'hardware', 'control']),
-	   ('simulator',	['camera/simulator']),
-	   ('espia',		['camera/common/espia']),
-	   ('frelon',		['camera/frelon']),
-	   ('maxipix',		['camera/maxipix'])]
+	   ('simulator',	[os.path.join('camera','simulator')]),
+	   ('espia',		[os.path.join('camera','common','espia')]),
+	   ('frelon',		[os.path.join('camera','frelon')]),
+	   ('maxipix',		[os.path.join('camera','maxipix')])]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
 
 rootDir = '..'
 def rootName(fn):
-    return '%s/%s' % (rootDir, fn)
+    return os.path.join(rootDir, fn)
     
 def findIncludes(baseDir):
     inclDirs = []
@@ -61,7 +61,7 @@ def main():
         os.chdir('%s' % modName)
 
         global rootDir
-        rootDir = '../' + rootDir
+        rootDir = os.path.join('..',rootDir)
     
         sipFileNameSrc = "lima%s.sip" % modName
         if modName != 'core':
@@ -74,11 +74,11 @@ def main():
         shutil.copyfile(sipFileNameSrc, sipFileName)
 
         initNumpy = 'lima_init_numpy.cpp'
-        shutil.copyfile('../' + initNumpy, initNumpy)
+        shutil.copyfile(os.path.join('..',initNumpy), initNumpy)
 
 
-        dirProcesslib = rootName('third-party/Processlib')
-        sipProcesslib = dirProcesslib + '/sip'
+        dirProcesslib = rootName(os.path.join('third-party','Processlib'))
+        sipProcesslib = os.path.join(dirProcesslib,'/sip')
         extraIncludes = ['.', '../core', sipProcesslib, numpy.get_include()]
 
         extraIncludes += findIncludes(dirProcesslib)
@@ -88,7 +88,7 @@ def main():
     
         if (modName in espiaModules) and ('espia' not in excludeMods):
             espia_base = '/segfs/bliss/source/driver/linux-2.6/espia'
-            espia_incl = espia_base + '/src'
+            espia_incl = os.path.join(espia_base,'src')
             extraIncludes += [espia_incl]
    
         extraIncludes += findModuleIncludes(modName)

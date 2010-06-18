@@ -1,3 +1,5 @@
+include ../../config.inc
+
 lima-objs = ../../common/src/Common.o ../../hardware/src/Hw.o ../src/Ct.o
 simu-objs = ../../camera/simulator/src/Simu.o
 
@@ -14,6 +16,14 @@ INC = -I../include -I../../common/include -I../control/include \
 CXXFLAGS += $(INC) -g -Wall -pthread
 LDFLAGS = -pthread
 LDLIBS = -L../../third-party/Processlib/build -lprocesslib
+
+ifndef COMPILE_CBF_SAVING
+COMPILE_CBF_SAVING = 0
+endif
+
+ifneq ($(COMPILE_CBF_SAVING),0)
+LDLIBS += -L../../third-party/CBFLib/lib -lcbf
+endif
 
 all: 	simutest
 

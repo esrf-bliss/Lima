@@ -20,7 +20,6 @@ namespace lima {
 
     friend class CtControl;
   public:
-
     CtSaving(CtControl&);
     ~CtSaving();
   
@@ -28,6 +27,7 @@ namespace lima {
       {
 	RAW,
 	EDF,
+	CBFFormat,
       };
 
     enum SavingMode 
@@ -79,7 +79,7 @@ namespace lima {
     void setNextNumber(long number);
     void getNextNumber(long& number) const;
 
-    void setFormat(const FileFormat &format);
+    void setFormat(FileFormat format);
     void getFormat(FileFormat& format) const;
 
     // --- saving modes
@@ -128,15 +128,46 @@ namespace lima {
 
     void clear();
 
+    class SaveContainer
+    {
+      DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
+    public:
+      SaveContainer(CtSaving&);
+      virtual ~SaveContainer();
+
+      void open(const CtSaving::Parameters&);
+      void close();
+      void writeFile(Data&,CtSaving::HeaderMap &);
+      void setStatisticSize(int aSize);
+      void getStatistic(std::list<double>&) const;
+      void clear();
+
+    protected:
+      virtual bool _open(const std::string &filename,
+			 std::_Ios_Openmode flags) = 0;
+      virtual void _close() = 0;
+      virtual void _writeFile(Data &data,
+			      CtSaving::HeaderMap &aHeader,
+			      FileFormat) = 0;
+
+      int			m_written_frames;
+    private:
+      CtSaving			&m_saving;
+      std::list<double>		m_statistic_list;
+      int			m_statistic_size;
+      mutable Cond		m_cond;
+      bool			m_file_opened;
+
+    };
+    friend class SaveContainer;
+
   private:
     class _SaveTask;
-    class _SaveContainer;
     class _SaveCBK;
     friend class _SaveCBK;
-    friend class _SaveContainer;
 
     CtControl			&m_ctrl;
-    _SaveContainer		*m_save_cnt;
+    SaveContainer		*m_save_cnt;
     _SaveCBK			*m_saving_cbk;
     Parameters			m_pars;
     HeaderMap			m_common_header;
@@ -154,6 +185,8 @@ namespace lima {
     void _post_save_task(Data&,_SaveTask*);
     void _save_finished(Data&);
     void _setSavingError(CtControl::ErrorCode);
+    inline void _create_save_cnt(FileFormat);
+    inline void _check_if_multi_frame_per_file_allowed(FileFormat,int) const;
   };
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
   {

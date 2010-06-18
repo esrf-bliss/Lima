@@ -63,7 +63,10 @@ class DetInfoCtrlObj(lima.HwDetInfoCtrlObj) :
 
     #@lima.Debug.DEB_MEMBER_FUNCT
     def getDetectorModel(self):
-        return self.__name.split(',')[0].split()[-1]
+	if self.__name :
+           return self.__name.split(',')[0].split()[-1]
+	else:
+	   return "Pilatus unknown"
 
 
     ##@brief image size won't change so no callback
@@ -105,7 +108,10 @@ class DetInfoCtrlObj(lima.HwDetInfoCtrlObj) :
     
     #@lima.Debug.DEB_MEMBER_FUNCT
     def _readConfig(self) :
-        f = file(CAMERA_INFO_FILE)
+        try:
+            f = file(CAMERA_INFO_FILE)
+	except IOError:
+	    return
         for line in f:
             if line.startswith(CAMERA_NAME_TOKEN) :
                 self.__name = line.split('=')[-1].strip(' \t\"')

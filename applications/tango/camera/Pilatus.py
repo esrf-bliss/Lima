@@ -168,6 +168,7 @@ class PilatusDeviceServerClass(PyTango.DeviceClass):
 #----------------------------------------------------------------------------
 # Plugins
 #----------------------------------------------------------------------------
+import lima
 from lima.Pilatus import Interface
 
 _PilatusIterface = None
