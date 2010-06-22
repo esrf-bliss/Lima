@@ -28,7 +28,7 @@ class MpxAcq:
 
 	self.cfgPath= None
 	self.mpxCfg= None
-	self.dacs= None
+	self.mpxDacs= None
 	self.priamPorts= None
 
     def __del__(self):

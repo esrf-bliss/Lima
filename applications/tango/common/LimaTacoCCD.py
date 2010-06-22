@@ -1,5 +1,3 @@
-#       "$Name:  $";
-#       "$Header:  $";
 #=============================================================================
 #
 # file :        LimaTacoCCDs.py
@@ -11,12 +9,6 @@
 #         LimaTacoCCDs are implemented in this file.
 #
 # project :    TANGO Device Server
-#
-# $Author:  $
-#
-# $Revision:  $
-#
-# $Log:     $
 #
 # copyleft :    European Synchrotron Radiation Facility
 #        BP 220, Grenoble 38043
@@ -34,11 +26,6 @@ import PyTango
 
 import lima
 import processlib
-
-#Commun Devices
-from RoiCounter import RoiCounterDeviceServerClass,RoiCounterDeviceServer
-
-lima.DebParams.setTypeFlags(0)
 
 DevCcdBase			= 0xc180000
 
@@ -71,18 +58,6 @@ DevErrCcdCameraModel		= DevCcdBase + 12
 DevErrCcdProcessImage		= DevCcdBase + 13
 DevErrCcdCameraNotActiveYet	= DevCcdBase + 14
 
-#Small Hack
-class _Wrapped:
-    def __init__(self,class_type,ctrl) :
-        self.__class_type = class_type
-        self.__ctrl = weakref.ref(ctrl)
-        
-    def __call__(self,*args) :
-        inst = self.__class_type(*args)
-        if hasattr(inst,'set_control_ref') :
-            inst.set_control_class(self.__ctrl)
-        return inst
-
 #==================================================================
 #   LimaTacoCCDs Class Description:
 #
@@ -98,18 +73,17 @@ class _Wrapped:
 #   DevState.FAULT :  ccd is in FAULT, cannot take pictures
 #==================================================================
 
-class LimaTacoCCDs(PyTango.Device_3Impl):
+class LimaTacoCCDs(PyTango.Device_4Impl):
 
 #--------- Add you global variables here --------------------------
-    RUNNING,IDLE,WRITE_ERROR = range(3)
     
 #------------------------------------------------------------------
 #    Device constructor
 #------------------------------------------------------------------
     def __init__(self,cl, name):
-        PyTango.Device_3Impl.__init__(self,cl,name)
-        LimaTacoCCDs.init_device(self)
-        self.__lima_control = None
+        PyTango.Device_4Impl.__init__(self,cl,name)
+        self.init_device()
+        
         self.__bpm_mgr  = processlib.Tasks.BpmManager()
         self.__bpm_task = processlib.Tasks.BpmTask(self.__bpm_mgr)
         
@@ -117,12 +91,7 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    Device destructor
 #------------------------------------------------------------------
     def delete_device(self):
-        try:
-            m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
-        except ImportError:
-            pass
-        else:
-            m.close_interface()
+        pass
 
 #------------------------------------------------------------------
 #    Device initialization
@@ -130,27 +99,7 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
     def init_device(self):
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
-        try:
-            m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
-        except ImportError:
-            import traceback
-            traceback.print_exc()
-            self.set_state(PyTango.DevState.FAULT)
-        else:
-            self.__control = m.get_control()
-            try:
-                specificClass,specificDevice = m.get_tango_specific_class_n_device()
-            except AttributeError: pass
-            else:
-                util = PyTango.Util.instance()
-                if specificClass and specificDevice:
-                    util.create_device(specificClass,specificDevice)
-
-                #Default Devices
-                #RoiCounter
-                util.create_device(RoiCounterDeviceServerClass,
-                                   _Wrapped(RoiCounterDeviceServer,self.__control),
-                                   'RoiCounters')
+        
 
 #==================================================================
 #
@@ -192,7 +141,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevLong taco state
 #------------------------------------------------------------------
     def State(self):
-        state = self.__control.getStatus()
+        control = _control_ref()
+        state = control.getStatus()
         if state.AcquisitionStatus == lima.AcqReady:
             return PyTango.DevState.OFF
         elif state.AcquisitionStatus == lima.AcqRunning:
@@ -207,8 +157,9 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #------------------------------------------------------------------
     def DevCcdStart(self):
         print 'DevCcdStart'
-        self.__control.prepareAcq()
-        self.__control.startAcq()
+        control = _control_ref()
+        control.prepareAcq()
+        control.startAcq()
 
 
 #------------------------------------------------------------------
@@ -218,7 +169,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #------------------------------------------------------------------
     def DevCcdStop(self):
         print 'DevCcdStop'
-        self.__control.stopAcq()
+        control = _control_ref()
+        control.stopAcq()
 
 #------------------------------------------------------------------
 #    DevCcdRead command:
@@ -228,7 +180,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevVarCharArray 
 #------------------------------------------------------------------
     def DevCcdRead(self, argin):
-        data = self.__control.ReadImage(argin[0])
+        control = _control_ref()
+        data = control.ReadImage(argin[0])
         return data.buffer.tostring()
 
 #------------------------------------------------------------------
@@ -256,7 +209,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argin:    DevFloat    
 #------------------------------------------------------------------
     def DevCcdSetExposure(self, argin):
-        acq = self.__control.acquisition()
+        control = _control_ref()
+        acq = control.acquisition()
         acq.setAcqExpoTime(argin)
 
 #------------------------------------------------------------------
@@ -267,7 +221,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevFloat    
 #------------------------------------------------------------------
     def DevCcdGetExposure(self):
-        acq = self.__control.acquisition()
+        control = _control_ref()
+        acq = control.acquisition()
         return acq.getAcqExpoTime()
 
 #------------------------------------------------------------------
@@ -278,7 +233,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #------------------------------------------------------------------
     def DevCcdSetRoI(self, argin):
         roi = lima.Roi(lima.Point(argin[0], argin[1]), lima.Point(argin[2], argin[3]))
-        image = self.__control.image()
+        control = _control_ref()
+        image = control.image()
         if roi == self.getMaxRoi() :
             roi = lima.Roi()
         image.setRoi(roi)
@@ -290,7 +246,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevVarLongArray region of interest
 #------------------------------------------------------------------
     def DevCcdGetRoI(self):
-        image = self.__control.image()
+        control = _control_ref()
+        image = control.image()
         roi = image.getRoi()
         if roi.isEmpty():
             roi = self.getMaxRoi()
@@ -300,7 +257,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
         return [tl.x, tl.y, br.x, br.y]
     
     def getMaxRoi(self):
-        ct_image = self.__control.image()
+        control = _control_ref()
+        ct_image = control.image()
         max_roi_size = ct_image.getMaxImageSize()
         max_roi_size /= lima.Point(ct_image.getBin())
         max_roi = lima.Roi(lima.Point(0,0),max_roi_size)
@@ -313,7 +271,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argin:    DevVarStringArray    
 #------------------------------------------------------------------
     def DevCcdSetFilePar(self, argin):
-        saving  = self.__control.saving()
+        control = _control_ref()
+        saving  = control.saving()
         pars = saving.getParameters()
         pars.directory = argin[0]
         pars.prefix = argin[1]
@@ -339,7 +298,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevVarStringArray    
 #------------------------------------------------------------------
     def DevCcdGetFilePar(self):
-        saving = self.__control.saving()
+        control = _control_ref()
+        saving = control.saving()
         pars = saving.getParameters()
         returnValue  = [pars.directory,pars.prefix,pars.suffix,
                         str(pars.nextNumber),
@@ -355,7 +315,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevLong 
 #------------------------------------------------------------------
     def DevCcdDepth(self):
-        interface = self.__control.interface()
+        control = _control_ref()
+        interface = control.interface()
         det_info = interface.getHwCtrlObj(lima.HwCap.DetInfo)
         image_type = det_info.getCurrImageType()
         return lima.FrameDim.getImageTypeDepth(image_type)
@@ -392,7 +353,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #         
 #------------------------------------------------------------------
     def DevCcdReset(self):
-        self.__control.reset()
+        control = _control_ref()
+        control.reset()
         
 #------------------------------------------------------------------
 #    DevCcdSetMode command:
@@ -403,11 +365,12 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
     def DevCcdSetMode(self, argin):
         print 'DevCcdSetMode',argin
         live_display = (argin & 0x1)
-        display = self.__control.display()
+        control = _control_ref()
+        display = control.display()
         display.setActive(live_display)
 
         auto_save = (argin & 0x8)
-        savingCtrl = self.__control.saving()
+        savingCtrl = control.saving()
         savingCtrl.setSavingMode(auto_save and lima.CtSaving.AutoFrame or lima.CtSaving.Manual)
 
 
@@ -418,10 +381,11 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevLong 
 #------------------------------------------------------------------
     def DevCcdGetMode(self):
-        display = self.__control.display()
+        control = _control_ref()
+        display = control.display()
         mode = display.isActive()
 
-        saving = self.__control.saving()
+        saving = control.saving()
         mode |= (saving.getSavingMode() == lima.CtSaving.AutoFrame) << 3
         return mode
 
@@ -443,7 +407,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevVarLongArray 
 #------------------------------------------------------------------
     def DevCcdGetBin(self):
-        image = self.__control.image()
+        control = _control_ref()
+        image = control.image()
         bin = image.getBin()
         return [bin.getX(),bin.getY()]
 
@@ -455,7 +420,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #------------------------------------------------------------------
     def DevCcdSetBin(self, argin):
         bin = lima.Bin(argin[1],argin[0])
-        image = self.__control.image()
+        control = _control_ref()
+        image = control.image()
         image.setBin(bin)
 
 #------------------------------------------------------------------
@@ -465,7 +431,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argin:    DevLong 
 #------------------------------------------------------------------
     def DevCcdSetFrames(self, argin):
-        acquisition = self.__control.acquisition()
+        control = _control_ref()
+        acquisition = control.acquisition()
         acquisition.setAcqNbFrames(argin)
         
 #------------------------------------------------------------------
@@ -475,7 +442,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevLong 
 #------------------------------------------------------------------
     def DevCcdGetFrames(self):
-        acquisition = self.__control.acquisition()
+        control = _control_ref()
+        acquisition = control.acquisition()
         return acquisition.getAcqNbFrames()
 
 #------------------------------------------------------------------
@@ -485,7 +453,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argin:    DevLong 
 #------------------------------------------------------------------
     def DevCcdSetTrigger(self, argin):
-        acquisition = self.__control.acquisition()
+        control = _control_ref()
+        acquisition = control.acquisition()
 
         triggerMode = None
         if argin == 0:
@@ -507,7 +476,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argin:    DevLong 
 #------------------------------------------------------------------
     def DevCcdGetTrigger(self,argin) :
-        acquisition = self.__control.acquisition()
+        control = _control_ref()
+        acquisition = control.acquisition()
         triggerMode = acquisition.getTriggerMode()
         if triggerMode == lima.IntTrig:
             returnValue = 0
@@ -531,7 +501,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
             value = value.strip(' \t;')
             if not key: continue
             header_map[key] = value
-        saving = self.__control.saving()
+        control = _control_ref()
+        saving = control.saving()
         saving.setCommonHeader(header_map)
 
 #------------------------------------------------------------------
@@ -541,7 +512,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
 #    argout: DevVarDoubleArray    
 #------------------------------------------------------------------
     def DevReadValues(self):
-        img_data = self.__control.ReadImage(-1)
+        control = _control_ref()
+        img_data = control.ReadImage(-1)
         self.__bpm_task.process(img_data)
         bpm_pars = self.__bpm_mgr.getResult(1)
         if bpm_pars.errorCode != self.__bpm_mgr.OK:
@@ -586,7 +558,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
         exp_time = self.DevCcdGetExposure()
         threshold = 0
         calib_intensity = -1
-        image = self.__control.image()
+        control = _control_ref()
+        image = control.image()
         max_dim = image.getMaxImageSize()
         roi = self.DevCcdGetRoI()
         is_live = -1
@@ -611,7 +584,8 @@ class LimaTacoCCDs(PyTango.Device_3Impl):
         return ''                       # not managed yet!
 
     def __getFrameDim(self) :
-        interface = self.__control.interface()
+        control = _control_ref()
+        interface = control.interface()
         bufferCtrl = interface.getHwCtrlObj(lima.HwCap.Buffer)
         frame_dim = bufferCtrl.getFrameDim()
         return frame_dim
@@ -629,17 +603,6 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
 
     #    Device Properties
     device_property_list = {
-        'Ccd_device':
-            [PyTango.DevString,
-            "name of tango ccd device",
-            [] ],
-        'Bpm_device':
-            [PyTango.DevString,
-            "Name of the bpm device to read the beam parameters from.",
-            [] ],
-        'LimaCameraType' :
-        [PyTango.DevString,
-         "Camera Plugin name",[]],
         }
 
 
@@ -745,21 +708,12 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
         self.set_type(name);
         print "In LimaTacoCCDsClass     constructor"
 
-    
-#==================================================================
-#
-#    LimaTacoCCDs class main method
-#
-#==================================================================
-if __name__ == '__main__':
-    try:
-        py = PyTango.Util(sys.argv)
-        py.add_TgClass(LimaTacoCCDsClass,LimaTacoCCDs,'LimaTacoCCDs')
-        U = PyTango.Util.instance()
-        U.server_init()
-        U.server_run()
+global _control_ref
+_control_ref = None
 
-    except PyTango.DevFailed,e:
-        print '-------> Received a DevFailed exception:',e
-    except Exception,e:
-        print '-------> An unforeseen exception occured....',e
+def set_control_ref(ctrl) :
+    global _control_ref
+    _control_ref = ctrl
+
+def get_tango_specific_class_n_device() :
+    return LimaTacoCCDsClass,LimaTacoCCDs

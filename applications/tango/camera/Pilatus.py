@@ -1,5 +1,3 @@
-#    "$Name:  $";
-#    "$Header:  $";
 #=============================================================================
 #
 # file :        Pilatus.py
@@ -11,12 +9,6 @@
 #                Pilatus are implemented in this file.
 #
 # project :     TANGO Device Server
-#
-# $Author:  $
-#
-# $Revision:  $
-#
-# $Log:  $
 #
 # copyleft :    European Synchrotron Radiation Facility
 #               BP 220, Grenoble 38043
@@ -42,7 +34,7 @@ import sys
 #==================================================================
 
 
-class PilatusDeviceServer(PyTango.Device_4Impl):
+class Pilatus(PyTango.Device_4Impl):
 
 #--------- Add you global variables here --------------------------
 
@@ -51,7 +43,7 @@ class PilatusDeviceServer(PyTango.Device_4Impl):
 #------------------------------------------------------------------
     def __init__(self,cl, name):
         PyTango.Device_4Impl.__init__(self,cl,name)
-        PilatusDeviceServer.init_device(self)
+        self.init_device()
 
 #------------------------------------------------------------------
 #    Device destructor
@@ -126,7 +118,7 @@ class PilatusDeviceServer(PyTango.Device_4Impl):
 #    PilatusClass class definition
 #
 #==================================================================
-class PilatusDeviceServerClass(PyTango.DeviceClass):
+class PilatusClass(PyTango.DeviceClass):
 
     #    Class Properties
     class_property_list = {
@@ -157,12 +149,11 @@ class PilatusDeviceServerClass(PyTango.DeviceClass):
 
 
 #------------------------------------------------------------------
-#    PilatusDeviceServerClass Constructor
+#    PilatusClass Constructor
 #------------------------------------------------------------------
     def __init__(self, name):
         PyTango.DeviceClass.__init__(self, name)
-        self.set_type(name);
-        print "In PilatusDeviceServerClass  constructor"
+        self.set_type(name)
 
 
 #----------------------------------------------------------------------------
@@ -187,4 +178,4 @@ def close_interface() :
 
 
 def get_tango_specific_class_n_device() :
-    return PilatusDeviceServerClass,PilatusDeviceServer
+    return PilatusClass,Pilatus
