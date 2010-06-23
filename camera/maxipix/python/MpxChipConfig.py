@@ -2,7 +2,7 @@ import os, os.path
 import string
 import numpy
 import EdfFile
-from lima import Maxipix
+
 from MpxCommon import *
 
 

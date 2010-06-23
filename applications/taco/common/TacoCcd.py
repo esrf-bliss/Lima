@@ -1,8 +1,7 @@
 import os, sys, string, time, re
 import numpy as N
 from TacoServer import *
-from lima import *
-from Debug import *
+from Lima.Core import *
 
 DevCcdBase			= 0xc180000
 

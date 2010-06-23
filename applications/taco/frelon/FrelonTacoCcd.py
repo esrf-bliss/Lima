@@ -1,5 +1,5 @@
 from TacoCcd import *
-from FrelonAcq import FrelonAcq
+from Lima.Frelon import FrelonAcq
 from processlib import Tasks
 import gc
 

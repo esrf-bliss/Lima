@@ -1,4 +1,4 @@
-from lima import Maxipix
+from limamaxipix import Maxipix
 import types
 
 MpxVersion= [	Maxipix.MaxipixDet.DUMMY,

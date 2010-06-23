@@ -1,4 +1,4 @@
-from lima import DebParams, DebObj
+from limacore import DebParams, DebObj
 import os, sys, new
 
 

@@ -15,3 +15,6 @@ config.inc:
 config:
 	cd third-party/Processlib/sip; python configure.py
 	$(MAKE) -C sip config
+
+include install.inc
+

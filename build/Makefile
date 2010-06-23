@@ -5,8 +5,8 @@ include ../config.inc
 # LIMA - CORE
 ############################
 
-CORE_LDFLAGS = -fPIC -L../third-party/Processlib/build
-CORE_LDLIBS = -lprocesslib
+CORE_LDFLAGS	:= -L../third-party/Processlib/build
+CORE_LDLIBS	:= -lprocesslib
 
 ifneq ($(COMPILE_CBF_SAVING),0)
 ct-objs += CtSaving_Cbf.o
@@ -16,19 +16,33 @@ endif
 
 ifneq ($(COMPILE_CORE),0)
 
-core-objs := ../common/src/Common.o \
-	     ../hardware/src/Hw.o \
-	     ../control/src/Ct.o 
+name		:= core
+core-objs	:= ../common/src/Common.o \
+		   ../hardware/src/Hw.o \
+		   ../control/src/Ct.o 
+version-file	:= ../common/VERSION
+core-flags	:= $(CORE_LDFLAGS)
+core-deps	:= $(CORE_LDLIBS)
 
-liblimacore.so:		$(core-objs)
-	$(CXX) -shared -o $@ $(CORE_LDFLAGS) $+ $(CORE_LDLIBS)
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
 
-build_targets += liblimacore.so
+core-base	:= liblima$(name).so
+core-full	:= $(core-base).$(full-version)
+core-maj	:= $(core-base).$(maj-version)
+core-flags	+= -fPIC -Wl,-soname,$(core-maj)
+
+$(core-full):		$(core-objs)
+	$(CXX) -shared -o $@ $(core-flags) $+ $(core-deps)
+	rm -f $(core-maj);  ln -s $(core-full) $(core-maj)
+	rm -f $(core-base); ln -s $(core-maj)  $(core-base)
+
+build_targets := $(core-full)
 
 endif
 
-LDFLAGS = $(CORE_LDFLAGS) -L.
-LDLIBS = $(CORE_LDLIBS) -llimacore
+LDFLAGS		:= $(CORE_LDFLAGS) -L.
+LDLIBS		:= $(CORE_LDLIBS) -llimacore
 
 
 ############################
@@ -37,32 +51,60 @@ LDLIBS = $(CORE_LDLIBS) -llimacore
 
 ifneq ($(COMPILE_SIMULATOR),0)
 
-simu-objs = ../camera/simulator/src/Simu.o
+name		:= simulator
+simu-objs	:= ../camera/simulator/src/Simu.o
+version-file	:= ../camera/simulator/VERSION
+simu-flags	:= $(LDFLAGS)
+simu-deps	:= $(LDLIBS)
 
-liblimasimulator.so:	$(simu-objs)
-	$(CXX) -shared -o $@ $(LDFLAGS) $+ $(LDLIBS)
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
 
-build_targets += liblimasimulator.so
+simu-base	:= liblima$(name).so
+simu-full	:= $(simu-base).$(full-version)
+simu-maj	:= $(simu-base).$(maj-version)
+simu-flags	+= -fPIC -Wl,-soname,$(simu-maj)
+
+$(simu-full):		$(simu-objs)
+	$(CXX) -shared -o $@ $(simu-flags) $+ $(simu-deps)
+	rm -f $(simu-maj);  ln -s $(simu-full) $(simu-maj)
+	rm -f $(simu-base); ln -s $(simu-maj)  $(simu-base)
+
+build_targets += $(simu-full)
 
 endif
-	    
+
 
 ############################
 # LIMA - ESPIA
 ############################
 
 include ../camera/common/espia/include/espia.inc
-ESPIA_LDFLAGS = $(LDFLAGS) -L$(ESPIA_DRV_LIB)
-ESPIA_LDLIBS = $(LDLIBS) -lespia
+ESPIA_LDFLAGS	:= $(LDFLAGS) -L$(ESPIA_DRV_LIB)
+ESPIA_LDLIBS	:= $(LDLIBS) -lespia
 
 ifneq ($(COMPILE_ESPIA),0)
 
-espia-objs = ../camera/common/espia/src/Espia.o
+name		:= espia
+espia-objs	:= ../camera/common/espia/src/Espia.o
+version-file	:= ../camera/common/espia/VERSION
+espia-flags	:= $(ESPIA_LDFLAGS)
+espia-deps	:= $(ESPIA_LDLIBS)
 
-liblimaespia.so:	$(espia-objs)
-	$(CXX) -shared -o $@ $(ESPIA_LDFLAGS) $+ $(ESPIA_LDLIBS)
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
 
-build_targets += liblimaespia.so
+espia-base	:= liblima$(name).so
+espia-full	:= $(espia-base).$(full-version)
+espia-maj	:= $(espia-base).$(maj-version)
+espia-flags	+= -fPIC -Wl,-soname,$(espia-maj)
+
+$(espia-full):		$(espia-objs)
+	$(CXX) -shared -o $@ $(espia-flags) $+ $(espia-deps)
+	rm -f $(espia-maj);  ln -s $(espia-full) $(espia-maj)
+	rm -f $(espia-base); ln -s $(espia-maj)  $(espia-base)
+
+build_targets += $(espia-full)
 
 endif
 
@@ -73,15 +115,29 @@ endif
 
 ifneq ($(COMPILE_FRELON),0)
 
-frelon-objs = ../camera/frelon/src/Frelon.o
+FRELON_LDFLAGS	:= $(ESPIA_LDFLAGS) -L.
+FRELON_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia
 
-FRELON_LDFLAGS = $(ESPIA_LDFLAGS) -L.
-FRELON_LDLIBS = $(ESPIA_LDLIBS) -llimaespia
+name		:= frelon
+frelon-objs	:= ../camera/frelon/src/Frelon.o
+version-file	:= ../camera/frelon/VERSION
+frelon-flags	:= $(FRELON_LDFLAGS)
+frelon-deps	:= $(FRELON_LDLIBS)
 
-liblimafrelon.so:	$(frelon-objs)
-	$(CXX) -shared -o $@ $(FRELON_LDFLAGS) $+ $(FRELON_LDLIBS)
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
 
-build_targets += liblimafrelon.so
+frelon-base	:= liblima$(name).so
+frelon-full	:= $(frelon-base).$(full-version)
+frelon-maj	:= $(frelon-base).$(maj-version)
+frelon-flags	+= -fPIC -Wl,-soname,$(frelon-maj)
+
+$(frelon-full):		$(frelon-objs)
+	$(CXX) -shared -o $@ $(frelon-flags) $+ $(frelon-deps)
+	rm -f $(frelon-maj);  ln -s $(frelon-full) $(frelon-maj)
+	rm -f $(frelon-base); ln -s $(frelon-maj)  $(frelon-base)
+
+build_targets += $(frelon-full)
 
 endif
 
@@ -92,15 +148,29 @@ endif
 
 ifneq ($(COMPILE_MAXIPIX),0)
 
-maxipix-objs += ../camera/maxipix/src/Maxipix.o
+MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L.
+MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia
 
-MAXIPIX_LDFLAGS = $(ESPIA_LDFLAGS) -L.
-MAXIPIX_LDLIBS = $(ESPIA_LDLIBS) -llimaespia
+name		:= maxipix
+maxipix-objs	:= ../camera/maxipix/src/Maxipix.o
+version-file	:= ../camera/maxipix/VERSION
+maxipix-flags	:= $(MAXIPIX_LDFLAGS)
+maxipix-deps	:= $(MAXIPIX_LDLIBS)
 
-liblimamaxipix.so:	$(maxipix-objs)
-	$(CXX) -shared -o $@ $(MAXIPIX_LDFLAGS) $+ $(MAXIPIX_LDLIBS)
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
 
-build_targets += liblimamaxipix.so
+maxipix-base	:= liblima$(name).so
+maxipix-full	:= $(maxipix-base).$(full-version)
+maxipix-maj	:= $(maxipix-base).$(maj-version)
+maxipix-flags	+= -fPIC -Wl,-soname,$(maxipix-maj)
+
+$(maxipix-full):		$(maxipix-objs)
+	$(CXX) -shared -o $@ $(maxipix-flags) $+ $(maxipix-deps)
+	rm -f $(maxipix-maj);  ln -s $(maxipix-full) $(maxipix-maj)
+	rm -f $(maxipix-base); ln -s $(maxipix-maj)  $(maxipix-base)
+
+build_targets += $(maxipix-full)
 
 endif
 
@@ -110,4 +180,4 @@ test:
 	@true
 
 clean:
-	rm -f *.o liblima*.so
+	rm -f *.o liblima*.so*

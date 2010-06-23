@@ -1,5 +1,6 @@
-from lima import *
-from Debug import *
+from Lima.Core import *
+from Lima import Espia
+from limafrelon import *
 
 class FrelonAcq:
 

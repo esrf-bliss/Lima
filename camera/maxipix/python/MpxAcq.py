@@ -1,7 +1,11 @@
 import os.path
 import gc
-from lima import *
+
+from Lima.Core import *
+from Lima import Espia
+
 from MpxCommon import *
+
 import MpxDacs
 import MpxDetConfig
 import MpxChipConfig

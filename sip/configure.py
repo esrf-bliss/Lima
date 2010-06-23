@@ -78,7 +78,7 @@ def main():
 
 
         dirProcesslib = rootName(os.path.join('third-party','Processlib'))
-        sipProcesslib = os.path.join(dirProcesslib,'/sip')
+        sipProcesslib = os.path.join(dirProcesslib,'sip')
         extraIncludes = ['.', '../core', sipProcesslib, numpy.get_include()]
 
         extraIncludes += findIncludes(dirProcesslib)
@@ -99,9 +99,9 @@ def main():
         sipFile.write('%%Import %s/processlib_tmp.sip\n' % sipProcesslib)
     
         if modName != 'core':
-            sipFile.write('%Import ../core/limacore_tmp.sip\n');
+            sipFile.write('%Import ../core/limacore_tmp.sip\n')
         if (modName in espiaModules) and (modName != 'espia'):
-            sipFile.write('%Import ../espia/limaespia_tmp.sip\n');
+            sipFile.write('%Import ../espia/limaespia_tmp.sip\n')
             extraIncludes += findModuleIncludes('espia')
 
         for sdir in modDirs:
@@ -166,11 +166,12 @@ def main():
         makefile.extra_lib_dirs = [rootName('build')]
         makefile.extra_cxxflags = ['-pthread', '-g']
         makefile.extra_cxxflags.extend(['-I' + x for x in extraIncludes])
+        
         # Add the library we are wrapping.  The name doesn't include any 
         # platform specific prefixes or extensions (e.g. the "lib" prefix on 
         # UNIX, or the ".dll" extension on Windows).
         # None (for me)
-
+        
         # Generate the Makefile itself.
         makefile.generate()
 
