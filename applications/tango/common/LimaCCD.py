@@ -24,26 +24,13 @@
 import sys
 import PyTango
 
-import lima
+from Lima import Core
 
 import plugins
 import camera
 
 
-lima.DebParams.setTypeFlags(0)
-
-#Small Hack
-class _Wrapped:
-    def __init__(self,class_type,ctrl) :
-        self.__class_type = class_type
-        self.__ctrl = weakref.ref(ctrl)
-        
-    def __call__(self,*args) :
-        inst = self.__class_type(*args)
-        if hasattr(inst,'set_control_ref') :
-            inst.set_control_ref(self.__ctrl)
-        return inst
-
+Core.DebParams.setTypeFlags(0)
 
 class LimaCCDs(PyTango.Device_4Impl) :
     def __init__(self,*args) :

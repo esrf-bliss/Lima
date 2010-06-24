@@ -175,8 +175,7 @@ class MaxipixClass(PyTango.DeviceClass):
 #----------------------------------------------------------------------------
 #                              Plugins
 #----------------------------------------------------------------------------
-import lima
-from lima.Maxipix.MpxAcq import MpxAcq
+from Lima.Maxipix.MpxAcq import MpxAcq
 
 _MaxipixAcq = None
 

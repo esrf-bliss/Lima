@@ -24,7 +24,7 @@
 import sys
 import PyTango
 
-import lima
+from lima import Core
 import processlib
 
 DevCcdBase			= 0xc180000
@@ -143,9 +143,9 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
     def State(self):
         control = _control_ref()
         state = control.getStatus()
-        if state.AcquisitionStatus == lima.AcqReady:
+        if state.AcquisitionStatus == Core.AcqReady:
             return PyTango.DevState.OFF
-        elif state.AcquisitionStatus == lima.AcqRunning:
+        elif state.AcquisitionStatus == Core.AcqRunning:
             return PyTango.DevState.ON
         else:
             return PyTango.DevState.FAULT
@@ -232,11 +232,11 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    argin:    DevVarLongArray 
 #------------------------------------------------------------------
     def DevCcdSetRoI(self, argin):
-        roi = lima.Roi(lima.Point(argin[0], argin[1]), lima.Point(argin[2], argin[3]))
+        roi = Core.Roi(Core.Point(argin[0], argin[1]), Core.Point(argin[2], argin[3]))
         control = _control_ref()
         image = control.image()
         if roi == self.getMaxRoi() :
-            roi = lima.Roi()
+            roi = Core.Roi()
         image.setRoi(roi)
 #------------------------------------------------------------------
 #    DevCcdGetRoI command:
@@ -260,8 +260,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         control = _control_ref()
         ct_image = control.image()
         max_roi_size = ct_image.getMaxImageSize()
-        max_roi_size /= lima.Point(ct_image.getBin())
-        max_roi = lima.Roi(lima.Point(0,0),max_roi_size)
+        max_roi_size /= Core.Point(ct_image.getBin())
+        max_roi = Core.Roi(Core.Point(0,0),max_roi_size)
         return max_roi
 
 #------------------------------------------------------------------
@@ -317,9 +317,9 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
     def DevCcdDepth(self):
         control = _control_ref()
         interface = control.interface()
-        det_info = interface.getHwCtrlObj(lima.HwCap.DetInfo)
+        det_info = interface.getHwCtrlObj(Core.HwCap.DetInfo)
         image_type = det_info.getCurrImageType()
-        return lima.FrameDim.getImageTypeDepth(image_type)
+        return Core.FrameDim.getImageTypeDepth(image_type)
 
 #------------------------------------------------------------------
 #    DevCcdYSize command:
@@ -371,7 +371,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 
         auto_save = (argin & 0x8)
         savingCtrl = control.saving()
-        savingCtrl.setSavingMode(auto_save and lima.CtSaving.AutoFrame or lima.CtSaving.Manual)
+        savingCtrl.setSavingMode(auto_save and Core.CtSaving.AutoFrame or Core.CtSaving.Manual)
 
 
 #------------------------------------------------------------------
@@ -386,7 +386,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         mode = display.isActive()
 
         saving = control.saving()
-        mode |= (saving.getSavingMode() == lima.CtSaving.AutoFrame) << 3
+        mode |= (saving.getSavingMode() == Core.CtSaving.AutoFrame) << 3
         return mode
 
 
@@ -419,7 +419,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    argin:    DevVarLongArray 
 #------------------------------------------------------------------
     def DevCcdSetBin(self, argin):
-        bin = lima.Bin(argin[1],argin[0])
+        bin = Core.Bin(argin[1],argin[0])
         control = _control_ref()
         image = control.image()
         image.setBin(bin)
@@ -458,14 +458,14 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 
         triggerMode = None
         if argin == 0:
-            triggerMode = lima.IntTrig
+            triggerMode = Core.IntTrig
         elif argin == 1:
             exp_time = acquisition.getAcqExpoTime()
-            triggerMode = (exp_time == 0) and lima.ExtGate or lima.ExtTrigSingle
+            triggerMode = (exp_time == 0) and Core.ExtGate or Core.ExtTrigSingle
         elif argin == 2:
-            triggerMode = lima.ExtTrigMult
+            triggerMode = Core.ExtTrigMult
         else:
-            raise lima.Exception,'Invalid ext. trig: %s' % argin
+            raise Core.Exception,'Invalid ext. trig: %s' % argin
 
         acquisition.setTriggerMode(triggerMode)
         
@@ -479,14 +479,14 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         control = _control_ref()
         acquisition = control.acquisition()
         triggerMode = acquisition.getTriggerMode()
-        if triggerMode == lima.IntTrig:
+        if triggerMode == Core.IntTrig:
             returnValue = 0
-        elif triggerMode == lima.ExtTrigSingle or triggerMode == lima.ExtGate:
+        elif triggerMode == Core.ExtTrigSingle or triggerMode == Core.ExtGate:
             returnValue = 1
-        elif triggerMode == lima.ExtTrigMult:
+        elif triggerMode == Core.ExtTrigMult:
             returnValue = 2
         else:
-            raise lima.Exception, 'Invalid trigger mode: %s' % triggerMode
+            raise Core.Exception, 'Invalid trigger mode: %s' % triggerMode
         return returnValue
 #------------------------------------------------------------------
 #    DevCcdHeader command:
@@ -517,7 +517,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         self.__bpm_task.process(img_data)
         bpm_pars = self.__bpm_mgr.getResult(1)
         if bpm_pars.errorCode != self.__bpm_mgr.OK:
-            raise lima.Exception,'Error calculating beam params: %d' % bpm_pars.errorCode
+            raise Core.Exception,'Error calculating beam params: %d' % bpm_pars.errorCode
 
         nr_spots = 1
         auto_cal = -1
@@ -586,7 +586,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
     def __getFrameDim(self) :
         control = _control_ref()
         interface = control.interface()
-        bufferCtrl = interface.getHwCtrlObj(lima.HwCap.Buffer)
+        bufferCtrl = interface.getHwCtrlObj(Core.HwCap.Buffer)
         frame_dim = bufferCtrl.getFrameDim()
         return frame_dim
 #==================================================================
@@ -708,9 +708,8 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
         self.set_type(name);
         print "In LimaTacoCCDsClass     constructor"
 
-global _control_ref
-_control_ref = None
 
+_control_ref = None
 def set_control_ref(ctrl) :
     global _control_ref
     _control_ref = ctrl

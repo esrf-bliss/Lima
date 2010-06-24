@@ -159,8 +159,8 @@ class PilatusClass(PyTango.DeviceClass):
 #----------------------------------------------------------------------------
 # Plugins
 #----------------------------------------------------------------------------
-import lima
-from lima.Pilatus import Interface
+from Lima import Core
+from Lima.Pilatus import Interface
 
 _PilatusIterface = None
 
@@ -168,7 +168,7 @@ def get_control() :
     global _PilatusIterface
     if _PilatusIterface is None:
         _PilatusIterface = Interface.Interface()
-    return lima.CtControl(_PilatusIterface)
+    return Lima.CtControl(_PilatusIterface)
 
 def close_interface() :
     global _PilatusIterface

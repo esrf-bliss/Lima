@@ -34,7 +34,7 @@ import weakref
 import PyTango
 import sys
 import processlib
-import lima
+from Lima import Core
 
 try:
     import EdfFile
@@ -59,7 +59,6 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 	PyTango.Device_4Impl.__init__(self,cl,name)
 	RoiCounterDeviceServer.init_device(self)
 	self.__roiCounterMgr = None
-        self.__ctControl = None
         
     def __getattr__(self,name) :
         if not name.startwith('__') :
@@ -73,9 +72,6 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 
     def is_set_state_allowed(self,*args) :
         return True
-
-    def set_control_ref(self,control_class_ref) :
-        self.__ctControlRef = control_class_ref
 
 #------------------------------------------------------------------
 #    Device destructor
@@ -95,14 +91,14 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 	if(state == PyTango.DevState.OFF) :
 	    if(self.__roiCounterMgr) :
 		self.__roiCounterMgr = None
-		ctControl = self.__ctControlRef()
+		ctControl = _control_ref()
 		extOpt = ctControl.externalOperation()
 		extOpt.delOp(self.ROI_COUNTER_TASK_NAME)
 	elif(state == PyTango.DevState.ON) :
 	    if not self.__roiCounterMgr:
-                ctControl = self.__ctControlRef()
+                ctControl = _control_ref()
                 extOpt = ctControl.externalOperation()
-                self.__roiCounterMgr = extOpt.addOp(lima.ROICOUNTERS,self.ROI_COUNTER_TASK_NAME,0)
+                self.__roiCounterMgr = extOpt.addOp(Core.ROICOUNTERS,self.ROI_COUNTER_TASK_NAME,0)
 	PyTango.Device_4Impl.set_state(self,state)
 
 #------------------------------------------------------------------
@@ -188,7 +184,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
                                       itertools.islice(argin,1,len(argin),4),
                                       itertools.islice(argin,2,len(argin),4),
                                       itertools.islice(argin,3,len(argin),4)) :
-            roi = lima.Roi(x,y,w,h)
+            roi = Core.Roi(x,y,w,h)
             rois.append(roi)
         return rois
 #==================================================================
@@ -250,4 +246,8 @@ class RoiCounterDeviceServerClass(PyTango.DeviceClass):
 
 
 
-    
+_control_ref = None
+def set_control_ref(self,control_class_ref) :
+    global _control_ref
+    _control_ref= control_class_ref
+
