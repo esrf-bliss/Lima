@@ -24,7 +24,7 @@
 import sys
 import PyTango
 
-from lima import Core
+from Lima import Core
 import processlib
 
 DevCcdBase			= 0xc180000

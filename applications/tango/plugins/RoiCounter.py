@@ -251,3 +251,5 @@ def set_control_ref(self,control_class_ref) :
     global _control_ref
     _control_ref= control_class_ref
 
+def get_tango_specific_class_n_device() :
+   return RoiCounterDeviceServerClass,RoiCounterDeviceServer

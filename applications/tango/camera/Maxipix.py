@@ -146,17 +146,17 @@ class MaxipixClass(PyTango.DeviceClass):
 
     attr_list = {
         'threshold_noise':
-        [[PyTango.DevVarLongArray,
-          PyTango.SCALAR,
-          PyTango.READ_WRITE]],
+        [[PyTango.DevLong,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,2]],
         'threshold':
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
         'energy_calibration':
-        [[PyTango.DevVarDoubleArray,
-          PyTango.SCALAR,
-          PyTango.READ_WRITE]],
+        [[PyTango.DevDouble,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,2]],
         'energy_threshold':
         [[PyTango.DevDouble,
           PyTango.SCALAR,

@@ -23,6 +23,7 @@
 
 import sys
 import PyTango
+import weakref
 
 from Lima import Core
 
@@ -63,9 +64,10 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 specificClass,specificDevice = m.get_tango_specific_class_n_device()
             except AttributeError: pass
             else:
+		Core.DebParams.setTypeFlags(0)
                 util = PyTango.Util.instance()
-                if specificClass and specificDevice:
-                    util.create_device(specificClass,specificDevice)
+#                if specificClass and specificDevice:
+#                    util.create_device(specificClass,specificDevice)
 
 
 class LimaCCDsClass(PyTango.DeviceClass) :
@@ -97,7 +99,8 @@ def declare_camera_n_commun_to_tango_world(util) :
             continue
         else:
             try:
-                specificClass,specificDevice = m.get_tango_specific_class_n_device()
+		func = getattr(m,'get_tango_specific_class_n_device')
+                specificClass,specificDevice = func()
             except AttributeError:
                 continue
             else:
@@ -107,21 +110,25 @@ def declare_camera_n_commun_to_tango_world(util) :
         try:
             m = __import__('plugins.%s' % (module_name),None,None,'plugins.%s' % (module_name))
         except ImportError:
+	    import traceback
+	    traceback.print_exc()
             continue
         else:
             try:
-                specificClass,specificDevice = m.get_tango_specific_class_n_device()
+		func = getattr(m,'get_tango_specific_class_n_device')
             except AttributeError:
+	        import traceback
+	        traceback.print_exc()
                 continue
             else:
-                util.add_TgClass(specificClass,specificDevice,specificDevice.__name__)
+                specificClass,specificDevice = func()
+		util.add_TgClass(specificClass,specificDevice,specificDevice.__name__)
 
 def _set_control_ref(ctrl_ref) :
     for module_name in plugins.__all__:
         try:
-            m = __import__('plugins.%s' % (module_name),None,None,'plugins.%s' % (module_name))
-            if hasattr(m,'set_control_ref') :
-                m.set_control_ref(ctrl_ref)
+            ctr_ref_func = __import__('plugins.%s.set_control_ref' % (module_name),None,None)
+            ctr_ref_func(ctrl_ref)
         except ImportError:
             continue
                
@@ -136,7 +143,12 @@ if __name__ == '__main__':
     try:
         py = PyTango.Util(sys.argv)
         py.add_TgClass(LimaCCDsClass,LimaCCDs,'LimaCCDs')
-        declare_camera_n_commun_to_tango_world(py)
+	try:
+        	declare_camera_n_commun_to_tango_world(py)
+	except:
+		print 'SEB_EXP'
+		import traceback
+		traceback.print_exc()
         
         U = PyTango.Util.instance()
         U.server_init()
