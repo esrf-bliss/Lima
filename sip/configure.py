@@ -38,6 +38,7 @@ def main():
 
     confFile = open(rootName('config.inc'))
     for line in confFile:
+	if line.startswith('export') : break
         line = line.strip('\n ')
         if line.startswith('COMPILE_'):
             var, value = line.split('=')
