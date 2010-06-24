@@ -21,7 +21,7 @@
 import PyTango
 import sys
 
-class MaxipixDeviceServer(PyTango.Device_4Impl):
+class Maxipix(PyTango.Device_4Impl):
     def __init__(self,*args) :
         PyTango.Device_4Impl.__init__(self,*args)
         self.init_device()
@@ -129,7 +129,7 @@ class MaxipixDeviceServer(PyTango.Device_4Impl):
         self.config_name = data[0]
 
 
-class MaxipixDeviceServerClass(PyTango.DeviceClass):
+class MaxipixClass(PyTango.DeviceClass):
 
     class_property_list = {}
 
@@ -191,5 +191,5 @@ def close_interface() :
     _MaxipixAcq = None
     
 def get_tango_specific_class_n_device():
-    return MaxipixDeviceServerClass,MaxipixDeviceServer
+    return MaxipixClass,Maxipix
 
