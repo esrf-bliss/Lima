@@ -127,13 +127,16 @@ def declare_camera_n_commun_to_tango_world(util) :
 def _set_control_ref(ctrl_ref) :
     for module_name in plugins.__all__:
         try:
-            ctr_ref_func = __import__('plugins.%s.set_control_ref' % (module_name),None,None)
-            ctr_ref_func(ctrl_ref)
+            m = __import__('plugins.%s' % (module_name),None,None,'plugins.%s' % (module_name))
         except ImportError:
             continue
-               
-
-
+	else:
+	    try:
+	        func = getattr(m,"set_control_ref")
+		func(ctrl_ref)
+	    except AttributeError:
+		continue
+	
 #==================================================================
 #
 #    LimaCCDs class main method

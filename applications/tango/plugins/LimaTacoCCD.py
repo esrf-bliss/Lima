@@ -706,7 +706,6 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
     def __init__(self, name):
         PyTango.DeviceClass.__init__(self, name)
         self.set_type(name);
-        print "In LimaTacoCCDsClass     constructor"
 
 
 _control_ref = None

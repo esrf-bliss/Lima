@@ -33,6 +33,7 @@ import itertools
 import weakref
 import PyTango
 import sys
+import numpy
 import processlib
 from Lima import Core
 
@@ -56,13 +57,13 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 #    Device constructor
 #------------------------------------------------------------------
     def __init__(self,cl, name):
+	self.__roiCounterMgr = None
 	PyTango.Device_4Impl.__init__(self,cl,name)
 	RoiCounterDeviceServer.init_device(self)
-	self.__roiCounterMgr = None
         
     def __getattr__(self,name) :
-        if not name.startwith('__') :
-            if name.startwith('is_') and name.endswith('_allowed') :
+        if not name.startswith('__') :
+            if name.startswith('is_') and name.endswith('_allowed') :
                 self.__dict__[name] = self.__global_allowed
                 return self.__global_allowed
         raise AttributeError('RoiCounterDeviceServer has no attribute %s' % name)
@@ -101,6 +102,15 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
                 self.__roiCounterMgr = extOpt.addOp(Core.ROICOUNTERS,self.ROI_COUNTER_TASK_NAME,0)
 	PyTango.Device_4Impl.set_state(self,state)
 
+    def Start(self) :
+	try:
+	    self.set_state(PyTango.DevState.ON)
+	except:
+	    import traceback
+	    traceback.print_exc()
+    
+    def Stop(self):
+	self.set_state(PyTango.DevState.OFF)
 #------------------------------------------------------------------
 #    Read Threshold_value attribute
 #------------------------------------------------------------------
@@ -125,19 +135,19 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 #
 #==================================================================
     def add(self,argin):
-        if len(argin) % 4:
+        if not len(argin) % 4:
             self.__roiCounterMgr.add(self.__get_roi_list_from_argin(argin))
         else:
             raise AttributeError('should be a roi vector as follow [x0,y0,width0,height0,x1,y1,width1,heigh1,...')
     
     def set(self,argin):
-        if len(argin) % 4:
+        if not len(argin) % 4:
             self.__roiCounterMgr.set(self.__get_roi_list_from_argin(argin))
         else:
             raise AttributeError('should be a roi vector as follow [x0,y0,width0,height0,x1,y1,width1,heigh1,...')
 
     
-    def get(self,argin):
+    def get(self):
         returnList = []
         for roi in self.__roiCounterMgr.get():
             p = roi.getTopLeft()
@@ -145,7 +155,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
             returnList.extend((p.x,p.y,s.getWidth(),s.getHeight()))
         return returnList
 
-    def clearAllRoi(self,argin):
+    def clearAllRoi(self):
         self.__roiCounterMgr.clearAllRoi()
 
     def setMaskFile(self,argin) :
@@ -207,30 +217,36 @@ class RoiCounterDeviceServerClass(PyTango.DeviceClass):
     #	 Command definitions
     cmd_list = {
         'add':
-        [[PyTango.DevVoid,""],
-         [PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"]],
-        'set':
-        [[PyTango.DevVoid,""],
-         [PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"]],
-        'get':
         [[PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"],
-        [PyTango.DevVoid,""]],
+         [PyTango.DevVoid,""]],
+        'set':
+        [[PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"],
+	[PyTango.DevVoid,""]],
+        'get':
+        [[PyTango.DevVoid,""],
+        [PyTango.DevVarLongArray,"roi vector [x0,y0,width0,height0,x1,y1,width1,heigh1,...]"]],
         'clearAllRoi':
         [[PyTango.DevVoid,""],
          [PyTango.DevVoid,""]],
         'setMaskFile':
-        [[PyTango.DevVoid,""],
-         [PyTango.DevVarStringArray,"Full path of mask file"]],
+        [[PyTango.DevVarStringArray,"Full path of mask file"],
+         [PyTango.DevVoid,""]],
         'readCounters':
-        [[PyTango.DevVarDoubleArray,"frame number 0,sum 0,average 0,std 0,frame number 0,sum 0,average 0,std 0..."],
-         [PyTango.DevLong,"from which frame"]]
+        [[PyTango.DevLong,"from which frame"],
+         [PyTango.DevVarDoubleArray,"number of result for each roi,frame number 0,sum 0,average 0,std 0,frame number 0,sum 0,average 0,std 0..."]],
+	'Start':
+	[[PyTango.DevVoid,""],
+	 [PyTango.DevVoid,""]],
+	'Stop':
+	[[PyTango.DevVoid,""],
+	 [PyTango.DevVoid,""]],
 	}
 
 
     #	 Attribute definitions
     attr_list = {
 	'BufferSize':
-	    [[PyTango.DevULong,
+	    [[PyTango.DevLong,
 	    PyTango.SCALAR,
 	    PyTango.READ_WRITE]],
 	}
@@ -242,12 +258,11 @@ class RoiCounterDeviceServerClass(PyTango.DeviceClass):
     def __init__(self, name):
 	PyTango.DeviceClass.__init__(self, name)
 	self.set_type(name);
-	print "In RoiCounterDeviceServerClass  constructor"
 
 
 
 _control_ref = None
-def set_control_ref(self,control_class_ref) :
+def set_control_ref(control_class_ref) :
     global _control_ref
     _control_ref= control_class_ref
 
