@@ -235,6 +235,7 @@ void SyncCtrlObj::getLatTime(double& lat_time)
 void SyncCtrlObj::setNbHwFrames(int  nb_frames)
 {
     DEB_MEMBER_FUNCT();
+    m_acq.setNbFrames(nb_frames);
     m_priam.setNbFrames(nb_frames);
 }
 void SyncCtrlObj::getNbHwFrames(int& nb_frames)
