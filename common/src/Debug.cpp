@@ -297,7 +297,9 @@ ConstStr DebParams::getModuleName(DebModule mod)
 
 void DebParams::doInit()
 {
-	s_type_flags = s_fmt_flags = s_mod_flags = 0;
+	s_fmt_flags = s_mod_flags = AllFlags;
+	s_type_flags  = DebTypeFatal | DebTypeError | DebTypeWarning;
+	s_type_flags |= DebTypeAlways;
 
 	s_deb_stream = new DebStream();
 
