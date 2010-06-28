@@ -321,12 +321,6 @@ inline DebParams::DebParams(DebModule mod, ConstStr class_name,
 	m_name_space = name_space;
 }
 
-inline void DebParams::checkInit()
-{
-	EXEC_ONCE(doInit());
-}
-
-
 inline void DebParams::setModule(DebModule mod)
 {
 	m_mod = mod; 

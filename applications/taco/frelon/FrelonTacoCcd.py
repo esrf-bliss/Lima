@@ -4,8 +4,8 @@ from processlib import Tasks
 import gc
 
 DebParams.setTypeFlags(DebParams.AllFlags)
-DebParams.setModFlags(DebParams.AllFlags)
-DebParams.setFmtFlags(DebParams.AllFlags)
+DebParams.setModuleFlags(DebParams.AllFlags)
+DebParams.setFormatFlags(DebParams.AllFlags)
 
 class FrelonTacoAcq(TacoCcdAcq):
 

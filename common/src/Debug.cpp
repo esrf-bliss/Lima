@@ -103,6 +103,12 @@ map<DebModule, string> *DebParams::s_mod_name_map  = NULL;
 
 Mutex *DebParams::s_mutex = NULL;
 
+void DebParams::checkInit()
+{
+	EXEC_ONCE(doInit());
+}
+
+
 void DebParams::setTypeFlags(Flags type_flags)
 { 
 	checkInit();
