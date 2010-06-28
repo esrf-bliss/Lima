@@ -3,6 +3,10 @@ from Lima.Frelon import FrelonAcq
 from processlib import Tasks
 import gc
 
+DebParams.setTypeFlags(DebParams.AllFlags)
+DebParams.setModFlags(DebParams.AllFlags)
+DebParams.setFmtFlags(DebParams.AllFlags)
+
 class FrelonTacoAcq(TacoCcdAcq):
 
     DEB_CLASS(DebModApplication, "FrelonTacoAcq")
