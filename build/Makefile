@@ -9,7 +9,6 @@ CORE_LDFLAGS	:= -L../third-party/Processlib/build
 CORE_LDLIBS	:= -lprocesslib
 
 ifneq ($(COMPILE_CBF_SAVING),0)
-ct-objs += CtSaving_Cbf.o
 CORE_LDFLAGS += -L../third-party/CBFLib/lib
 CORE_LDLIBS += -lcbf
 endif
@@ -19,7 +18,7 @@ ifneq ($(COMPILE_CORE),0)
 name		:= core
 core-objs	:= ../common/src/Common.o \
 		   ../hardware/src/Hw.o \
-		   ../control/src/Ct.o 
+		   ../control/src/Ct.o
 version-file	:= ../common/VERSION
 core-flags	:= $(CORE_LDFLAGS)
 core-deps	:= $(CORE_LDLIBS)

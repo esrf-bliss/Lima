@@ -8,8 +8,10 @@ SRCS = testfrelon.cpp testfreloninterface.cpp testfrelonspectroscopy.cpp \
 
 include ../../common/espia/include/espia.inc
 
-LDFLAGS = -pthread -L$(ESPIA_DRV_LIB) -L../../../third-party/Processlib/build
-LDLIBS = -lespia -lprocesslib
+LDFLAGS = -pthread -L$(ESPIA_DRV_LIB) \
+          -L../../../third-party/Processlib/build \
+          -L../../../third-party/CBFLib/lib
+LDLIBS = -lespia -lprocesslib -lcbf
 
 CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../hardware/include -I../../../common/include \

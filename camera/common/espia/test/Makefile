@@ -9,7 +9,11 @@ include ../../../common/espia/include/espia.inc
 
 LDFLAGS = -pthread -L$(ESPIA_DRV_LIB)
 LDLIBS = -lespia
-HWINTER_LDFLAGS = -L../../../../third-party/Processlib/build -lprocesslib
+
+HWINTER_LDFLAGS = $(LDFLAGS) \
+		  -L../../../../third-party/Processlib/build \
+		  -L../../../../third-party/CBFLib/lib
+HWINTER_LDLIBS = $(LDLIBS) -lprocesslib -lcbf
 
 CXXFLAGS = -I../include \
 	   -I../../../../hardware/include -I../../../../common/include \
@@ -24,7 +28,7 @@ testfocla:	testfocla.o $(focla-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 testfoclahwinterface:	testfoclahwinterface.o $(focla-objs) $(ct-objs)
-	$(CXX) $(LDFLAGS) $(HWINTER_LDFLAGS) -o $@ $+ $(LDLIBS) 
+	$(CXX) $(HWINTER_LDFLAGS) -o $@ $+ $(HWINTER_LDLIBS)
 
 clean:
 	rm -f *.o testfocla testfoclahwinterface
