@@ -1,3 +1,5 @@
+include ../../../config.inc
+
 frelon-objs = ../src/Frelon.o ../../common/espia/src/Espia.o \
 	      ../../../hardware/src/Hw.o ../../../common/src/Common.o 
 
@@ -8,10 +10,13 @@ SRCS = testfrelon.cpp testfreloninterface.cpp testfrelonspectroscopy.cpp \
 
 include ../../common/espia/include/espia.inc
 
-LDFLAGS = -pthread -L$(ESPIA_DRV_LIB) \
-          -L../../../third-party/Processlib/build \
-          -L../../../third-party/CBFLib/lib
-LDLIBS = -lespia -lprocesslib -lcbf
+LDFLAGS = -pthread -L$(ESPIA_DRV_LIB) -L../../../third-party/Processlib/build 
+LDLIBS = -lespia -lprocesslib
+
+ifneq ($(COMPILE_CBF_SAVING), 0)
+LDFLAGS += -L../../../third-party/CBFLib/lib
+LDLIBS += -lcbf
+endif
 
 CXXFLAGS = -I../include -I../../common/espia/include \
 	   -I../../../hardware/include -I../../../common/include \

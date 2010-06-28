@@ -1,3 +1,4 @@
+include ../../../../config.inc
 
 focla-objs = ../src/Espia.o \
 	     ../../../../hardware/src/Hw.o ../../../../common/src/Common.o
@@ -10,10 +11,13 @@ include ../../../common/espia/include/espia.inc
 LDFLAGS = -pthread -L$(ESPIA_DRV_LIB)
 LDLIBS = -lespia
 
-HWINTER_LDFLAGS = $(LDFLAGS) \
-		  -L../../../../third-party/Processlib/build \
-		  -L../../../../third-party/CBFLib/lib
-HWINTER_LDLIBS = $(LDLIBS) -lprocesslib -lcbf
+HWINTER_LDFLAGS = $(LDFLAGS) -L../../../../third-party/Processlib/build
+HWINTER_LDLIBS = $(LDLIBS) -lprocesslib
+
+ifneq ($(COMPILE_CBF_SAVING), 0)
+HWINTER_LDFLAGS += -L../../../../third-party/CBFLib/lib
+HWINTER_LDLIBS += $(LDLIBS) -lprocesslib
+endif
 
 CXXFLAGS = -I../include \
 	   -I../../../../hardware/include -I../../../../common/include \
