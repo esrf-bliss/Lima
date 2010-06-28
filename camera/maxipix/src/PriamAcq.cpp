@@ -23,8 +23,6 @@ PriamAcq::PriamAcq(PriamSerial& priam_serial)
     setTimeUnit(UNIT_MS);
     enableSerial(0);
     _readBoardID();
-    double minit;
-    setIntervalTime(0., minit);
 }
 
 PriamAcq::~PriamAcq()
