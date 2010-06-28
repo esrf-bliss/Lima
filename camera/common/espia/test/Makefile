@@ -16,7 +16,7 @@ HWINTER_LDLIBS = $(LDLIBS) -lprocesslib
 
 ifneq ($(COMPILE_CBF_SAVING), 0)
 HWINTER_LDFLAGS += -L../../../../third-party/CBFLib/lib
-HWINTER_LDLIBS += $(LDLIBS) -lprocesslib
+HWINTER_LDLIBS += -lcbf
 endif
 
 CXXFLAGS = -I../include \
