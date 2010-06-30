@@ -113,22 +113,8 @@ class SyncCtrlObj : public HwSyncCtrlObj
     virtual void getValidRanges(ValidRangesType& valid_ranges);
 
   private:
-    class AcqEndCallback : public Espia::AcqEndCallback
-    {
-	DEB_CLASS_NAMESPC(DebModCamera, "SyncCtrlObj::AcqEndCallback", "Maxipix");
-
-      public:
-	AcqEndCallback(PriamAcq& priam);
-	virtual ~AcqEndCallback();
-
-      protected:
-	virtual void acqFinished(const HwFrameInfoType& /*finfo*/);
-      private:
-	PriamAcq& m_priam;
-      };
     Espia::Acq& m_acq;
     PriamAcq& m_priam;
-    AcqEndCallback m_acq_end_cb;
 };
 
 
@@ -155,9 +141,25 @@ class Interface : public HwInterface
 	virtual int getNbHwAcquiredFrames();
 
  private:
+	class AcqEndCallback : public Espia::AcqEndCallback
+	{
+		DEB_CLASS_NAMESPC(DebModCamera, "Interface::AcqEndCallback", 
+				  "Maxipix");
+
+	public:
+		AcqEndCallback(PriamAcq& priam);
+		virtual ~AcqEndCallback();
+
+	protected:
+		virtual void acqFinished(const HwFrameInfoType& /*finfo*/);
+	private:
+		PriamAcq& m_priam;
+	};
+
 	Espia::Acq&	m_acq;
 	BufferCtrlMgr&	m_buffer_mgr;
 	PriamAcq&	m_priam;
+	AcqEndCallback  m_acq_end_cb;
 
 	CapList m_cap_list;
 	DetInfoCtrlObj m_det_info;

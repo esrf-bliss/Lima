@@ -181,8 +181,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #------------------------------------------------------------------
     def DevCcdRead(self, argin):
         control = _control_ref()
-        data = control.ReadImage(argin[0])
-        return data.buffer.tostring()
+        data = control.ReadImage(int(argin[0]))
+        return data.buffer
 
 #------------------------------------------------------------------
 #    DevCcdReadJpeg command:
@@ -329,9 +329,12 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    argout: DevLong 
 #------------------------------------------------------------------
     def DevCcdYSize(self):
-        frame_dim = self.__getFrameDim()
-        size = frame_dim.getSize()
-        return size.getHeight()
+        #frame_dim = self.__getFrameDim()
+        #size = frame_dim.getSize()
+	control = _control_ref()
+        image = control.image()
+	dim = image.getImageDim()
+        return dim.getSize().getHeight()
         
 
 #------------------------------------------------------------------
@@ -342,9 +345,12 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    argout: DevLong 
 #------------------------------------------------------------------
     def DevCcdXSize(self):
-        frame_dim = self.__getFrameDim()
-        size = frame_dim.getSize()
-        return size.getWidth()
+        #frame_dim = self.__getFrameDim()
+        #size = frame_dim.getSize()
+	control = _control_ref()
+        image = control.image()
+	dim = image.getImageDim()
+        return dim.getSize().getWidth()
 
 #------------------------------------------------------------------
 #    DevCcdReset command:
@@ -619,7 +625,7 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
             [PyTango.DevVoid, ""]],
         'DevCcdRead':
             [[PyTango.DevVarLongArray, ""],
-            [PyTango.DevVarCharArray, ""]],
+            [PyTango.DevVarShortArray, ""]],
         'DevCcdReadJpeg':
             [[PyTango.DevShort, "jpeg compression"],
             [PyTango.DevVarCharArray, "jpeg compressed image"]],

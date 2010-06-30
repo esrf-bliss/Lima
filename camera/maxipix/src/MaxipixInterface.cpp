@@ -185,8 +185,7 @@ void BufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
 SyncCtrlObj::SyncCtrlObj(Espia::Acq& acq, PriamAcq& priam, BufferCtrlObj& buffer_ctrl)
 	:HwSyncCtrlObj(buffer_ctrl), 
 	 m_acq(acq), 
-	 m_priam(priam),
-	 m_acq_end_cb(priam)
+	 m_priam(priam)
 {
     DEB_CONSTRUCTOR();
     m_priam.setTimeUnit(PriamAcq::UNIT_S);
@@ -262,23 +261,6 @@ void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
     DEB_RETURN() << DEB_VAR2(valid_ranges.min_lat_time, valid_ranges.max_lat_time);
 }
 
-SyncCtrlObj::AcqEndCallback::AcqEndCallback(PriamAcq& priam)
-        : m_priam(priam)
-{
-        DEB_CONSTRUCTOR();
-}
-
-SyncCtrlObj::AcqEndCallback::~AcqEndCallback()
-{
-        DEB_DESTRUCTOR();
-}
-
-void SyncCtrlObj::AcqEndCallback::acqFinished(const HwFrameInfoType& /*finfo*/)
-{
-        DEB_MEMBER_FUNCT();
-        m_priam.stopAcq();
-}
-
 
 /*******************************************************************
  * \brief Hw Interface constructor
@@ -287,10 +269,12 @@ void SyncCtrlObj::AcqEndCallback::acqFinished(const HwFrameInfoType& /*finfo*/)
 Interface::Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr,
                      PriamAcq& priam, MaxipixDet& det)
         : m_acq(acq), m_buffer_mgr(buffer_mgr),
-          m_priam(priam), m_det_info(det), 
+          m_priam(priam), m_acq_end_cb(priam), m_det_info(det), 
 	  m_buffer(buffer_mgr), m_sync(acq, m_priam, m_buffer)
 {
         DEB_CONSTRUCTOR();
+
+	m_acq.registerAcqEndCallback(m_acq_end_cb);
 
        	HwDetInfoCtrlObj *det_info = &m_det_info;
         m_cap_list.push_back(HwCap(det_info));
@@ -338,8 +322,8 @@ void Interface::startAcq()
 {
         DEB_MEMBER_FUNCT();
         m_buffer_mgr.setStartTimestamp(Timestamp::now());
-        m_priam.startAcq();
         m_acq.start();
+        m_priam.startAcq();
 }
 
 void Interface::stopAcq()
@@ -373,5 +357,22 @@ void Interface::getStatus(StatusType& status)
 	m_priam.getStatus(status.det);
 
         DEB_RETURN() << DEB_VAR1(status);
+}
+
+Interface::AcqEndCallback::AcqEndCallback(PriamAcq& priam)
+        : m_priam(priam)
+{
+        DEB_CONSTRUCTOR();
+}
+
+Interface::AcqEndCallback::~AcqEndCallback()
+{
+        DEB_DESTRUCTOR();
+}
+
+void Interface::AcqEndCallback::acqFinished(const HwFrameInfoType& /*finfo*/)
+{
+        DEB_MEMBER_FUNCT();
+        m_priam.stopAcq();
 }
 

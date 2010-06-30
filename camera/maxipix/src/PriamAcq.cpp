@@ -604,6 +604,7 @@ void PriamAcq::_writeMsrReg(char val)
 void PriamAcq::stopAcq()
 {
     _writeMsrReg((char)0x00);
+    enableSerial(0);
 }
 
 void PriamAcq::getStatus(DetStatus& status)
