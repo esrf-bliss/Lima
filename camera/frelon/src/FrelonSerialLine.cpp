@@ -156,11 +156,18 @@ void SerialLine::readResp(string& buffer, int max_len, double timeout)
 		throw LIMA_HW_EXC(Error, "readLine without previous write");
 	}
 
+	ReadRespCleanup read_resp_clenup(*this);
+
 	if ((m_curr_op == MultiRead) && (timeout == TimeoutDefault))
 		readMultiLine(buffer, max_len);
 	else
 		readSingleLine(buffer, max_len, timeout);
 
+}
+
+void SerialLine::readRespCleanup()
+{
+	DEB_MEMBER_FUNCT();
 	m_curr_op = None;
 	m_cond.signal();
 }

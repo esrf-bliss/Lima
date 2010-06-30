@@ -92,6 +92,22 @@ class SerialLine : public HwSerialLine
 			      int max_len = MaxReadLen, 
 			      double timeout = TimeoutDefault);
 
+	class ReadRespCleanup {
+	public:
+		ReadRespCleanup(SerialLine& ser_line)
+			: m_ser_line(ser_line)
+		{}
+
+		~ReadRespCleanup()
+		{ m_ser_line.readRespCleanup(); }
+
+	private:
+		SerialLine& m_ser_line;
+	};
+	friend class RespCleanup;
+
+	void readRespCleanup();
+
 	bool isRegCacheable(Reg reg);
 	bool getRegCacheVal(Reg reg, int& val);
 
