@@ -25,7 +25,10 @@ import sys
 import PyTango
 
 from Lima import Core
+from Lima.Core import *
 import processlib
+
+import numpy
 
 DevCcdBase			= 0xc180000
 
@@ -56,7 +59,11 @@ DevErrCcdFileExist		= DevCcdBase + 10
 DevErrCcdCmdNotProc		= DevCcdBase + 11
 DevErrCcdCameraModel		= DevCcdBase + 12
 DevErrCcdProcessImage		= DevCcdBase + 13
-DevErrCcdCameraNotActiveYet	= DevCcdBase + 14
+
+
+DebParams.setTypeFlags(DebParams.AllFlags)
+DebParams.setModuleFlags(DebParams.AllFlags)
+DebParams.setFormatFlags(DebParams.AllFlags)
 
 #==================================================================
 #   LimaTacoCCDs Class Description:
@@ -75,7 +82,12 @@ DevErrCcdCameraNotActiveYet	= DevCcdBase + 14
 
 class LimaTacoCCDs(PyTango.Device_4Impl):
 
+    DEB_CLASS(DebModApplication, 'LimaTacoCCDs')
+
 #--------- Add you global variables here --------------------------
+    LiveDisplay  = 1
+    StripeConcat = 4
+    AutoSave     = 8
     
 #------------------------------------------------------------------
 #    Device constructor
@@ -125,6 +137,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevLong taco state
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def TacoState(self):
         state = self.State()
         if state == PyTango.DevState.OFF:
@@ -140,6 +153,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevLong taco state
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def State(self):
         control = _control_ref()
         state = control.getStatus()
@@ -155,8 +169,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #
 #    Description: 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdStart(self):
-        print 'DevCcdStart'
         control = _control_ref()
         control.prepareAcq()
         control.startAcq()
@@ -167,8 +181,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #
 #    Description: 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdStop(self):
-        print 'DevCcdStop'
         control = _control_ref()
         control.stopAcq()
 
@@ -179,10 +193,14 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    argin:    DevVarLongArray 
 #    argout: DevVarCharArray 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdRead(self, argin):
         control = _control_ref()
         data = control.ReadImage(int(argin[0]))
-        return data.buffer
+	dataflat = data.buffer.ravel()
+	dataflat.dtype=numpy.uint8
+	return dataflat
+
 
 #------------------------------------------------------------------
 #    DevCcdReadJpeg command:
@@ -191,6 +209,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    argin:    DevShort    jpeg compression
 #    argout: DevVarCharArray jpeg compressed image
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdReadJpeg(self, argin):
         pass
 
@@ -199,6 +218,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #
 #    Description: 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdWrite(self):
         pass
 
@@ -208,6 +228,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevFloat    
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdSetExposure(self, argin):
         control = _control_ref()
         acq = control.acquisition()
@@ -220,6 +241,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #         
 #    argout: DevFloat    
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetExposure(self):
         control = _control_ref()
         acq = control.acquisition()
@@ -231,6 +253,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevVarLongArray 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdSetRoI(self, argin):
         roi = Core.Roi(Core.Point(argin[0], argin[1]), Core.Point(argin[2], argin[3]))
         control = _control_ref()
@@ -245,6 +268,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #         
 #    argout: DevVarLongArray region of interest
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetRoI(self):
         control = _control_ref()
         image = control.image()
@@ -256,6 +280,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         br = roi.getBottomRight()
         return [tl.x, tl.y, br.x, br.y]
     
+    @DEB_MEMBER_FUNCT
     def getMaxRoi(self):
         control = _control_ref()
         ct_image = control.image()
@@ -270,25 +295,25 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevVarStringArray    
 #------------------------------------------------------------------
-    def DevCcdSetFilePar(self, argin):
+    @DEB_MEMBER_FUNCT
+    def DevCcdSetFilePar(self, par_arr):
+        deb.Param('Setting file pars: %s' % par_arr)
         control = _control_ref()
-        saving  = control.saving()
+        saving = control.saving()
         pars = saving.getParameters()
-        pars.directory = argin[0]
-        pars.prefix = argin[1]
-        pars.suffix = argin[2]
-        pars.nextNumber = int(argin[3])
-        pars.indexFormat = argin[4]
-        if argin[5] in ['y', 'yes'] :
-            pars.overwritePolicy = saving.Overwrite
+        pars.directory  = par_arr[0]
+        pars.prefix     = par_arr[1]
+        pars.suffix     = par_arr[2]
+        pars.nextNumber = int(par_arr[3])
+        index_format    = par_arr[4]
+        if par_arr[5] in ['y', 'yes']:
+            pars.overwritePolicy = Core.CtSaving.Overwrite
         else:
-            pars.overwritePolicy = saving.Abort
-
+            pars.overwritePolicy = Core.CtSaving.Abort
         if pars.suffix.lower()[-4:] == '.edf':
-            pars.fileFormat = saving.EDF
+            pars.fileFormat = Core.CtSaving.EDF
         else:
-            pars.fileFormat = saving.RAW
-
+            pars.fileFormat = Core.CtSaving.RAW
         saving.setParameters(pars)
 
 #------------------------------------------------------------------
@@ -297,15 +322,42 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevVarStringArray    
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetFilePar(self):
         control = _control_ref()
         saving = control.saving()
         pars = saving.getParameters()
-        returnValue  = [pars.directory,pars.prefix,pars.suffix,
-                        str(pars.nextNumber),
-                        pars.indexFormat,
-                        (pars.overwritePolicy == saving.Overwrite) and 'yes' or 'no']
-        return returnValue
+        overwrite = (pars.overwritePolicy == Core.CtSaving.Overwrite)
+        over_str = (overwrite and 'yes') or 'no'
+        index_format = '%04d'
+        arr = [pars.directory, pars.prefix, pars.suffix, pars.nextNumber,
+               index_format, over_str]
+        par_arr = map(str, arr)
+        deb.Return('File pars: %s' % par_arr)
+        return par_arr
+
+#------------------------------------------------------------------
+#    DevCcdHeader command:
+#
+#    Description: 
+#    argout: DevVarStringArray    
+#------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
+    def DevCcdHeader(self, header_str):
+        deb.Param('Setting file header: %s' % header_str)
+        control = _control_ref()
+        saving = control.saving()
+        header_map = {}
+        for line in header_str.split('\n'):
+            token = line.split('=')
+            key = token[0].strip()
+            if not key:
+                continue
+            val = string.join(token[1:], '=').strip()
+            if val[-1] == ';':
+                val = val[:-1].strip()
+            header_map[key] = val
+        saving.setCommonHeader(header_map)
 
 #------------------------------------------------------------------
 #    DevCcdDepth command:
@@ -314,6 +366,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #         
 #    argout: DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdDepth(self):
         control = _control_ref()
         interface = control.interface()
@@ -328,6 +381,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #         
 #    argout: DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdYSize(self):
         #frame_dim = self.__getFrameDim()
         #size = frame_dim.getSize()
@@ -344,6 +398,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #         
 #    argout: DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdXSize(self):
         #frame_dim = self.__getFrameDim()
         #size = frame_dim.getSize()
@@ -358,6 +413,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: reset ccd
 #         
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdReset(self):
         control = _control_ref()
         control.reset()
@@ -368,17 +424,13 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevLong mode
 #------------------------------------------------------------------
-    def DevCcdSetMode(self, argin):
-        print 'DevCcdSetMode',argin
-        live_display = (argin & 0x1)
-        control = _control_ref()
-        display = control.display()
-        display.setActive(live_display)
-
-        auto_save = (argin & 0x8)
-        savingCtrl = control.saving()
-        savingCtrl.setSavingMode(auto_save and Core.CtSaving.AutoFrame or Core.CtSaving.Manual)
-
+    @DEB_MEMBER_FUNCT
+    def DevCcdSetMode(self, mode):
+        deb.Param('Setting mode: %s (0x%x)' % (mode, mode))
+        live_display = (mode & self.LiveDisplay) != 0
+        self.setLiveDisplay(live_display)
+        auto_save = (mode & self.AutoSave) != 0
+        self.setAutosave(auto_save)
 
 #------------------------------------------------------------------
 #    DevCcdGetMode command:
@@ -386,14 +438,50 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetMode(self):
-        control = _control_ref()
-        display = control.display()
-        mode = display.isActive()
-
-        saving = control.saving()
-        mode |= (saving.getSavingMode() == Core.CtSaving.AutoFrame) << 3
+        mode = 0
+        if self.getLiveDisplay():
+            mode |= self.LiveDisplay
+        if self.getAutosave():
+            mode |= self.AutoSave
+        deb.Return('Getting mode: %s (0x%x)' % (mode, mode))
         return mode
+
+    @DEB_MEMBER_FUNCT
+    def setAutosave(self, autosave_act):
+	control = _control_ref()
+        saving = control.saving()
+        deb.Param('Setting autosave active: %s' % autosave_act)
+        if autosave_act:
+            saving_mode = Core.CtSaving.AutoFrame
+        else:
+            saving_mode = Core.CtSaving.Manual
+        saving.setSavingMode(saving_mode)
+
+    @DEB_MEMBER_FUNCT
+    def getAutosave(self):
+	control = _control_ref()
+        saving = control.saving()
+        autosave_act = (saving.getSavingMode() == Core.CtSaving.AutoFrame)
+        deb.Return('Getting autosave active: %s' % autosave_act)
+        return autosave_act
+
+    @DEB_MEMBER_FUNCT
+    def setLiveDisplay(self, livedisplay_act):
+        deb.Param('Setting live display active: %s' % livedisplay_act)
+	control = _control_ref()
+        display = control.display()
+        display.setNames('_ccd_ds_', 'limaccd_live')
+        display.setActive(livedisplay_act)
+
+    @DEB_MEMBER_FUNCT
+    def getLiveDisplay(self):
+	control = _control_ref()
+        display = control.display()
+        livedisplay_act = display.isActive()
+        deb.Return('Getting live display active: %s' % livedisplay_act)
+        return livedisplay_act
 
 
 #------------------------------------------------------------------
@@ -402,9 +490,9 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevLong frame to write
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdWriteFile(self, argin):
-        print 'DevCcdWriteFile',argin
-        
+       pass 
 
 #------------------------------------------------------------------
 #    DevCcdGetBin command:
@@ -412,6 +500,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevVarLongArray 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetBin(self):
         control = _control_ref()
         image = control.image()
@@ -424,6 +513,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevVarLongArray 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdSetBin(self, argin):
         bin = Core.Bin(argin[1],argin[0])
         control = _control_ref()
@@ -436,6 +526,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdSetFrames(self, argin):
         control = _control_ref()
         acquisition = control.acquisition()
@@ -447,6 +538,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetFrames(self):
         control = _control_ref()
         acquisition = control.acquisition()
@@ -458,6 +550,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdSetTrigger(self, argin):
         control = _control_ref()
         acquisition = control.acquisition()
@@ -481,6 +574,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetTrigger(self,argin) :
         control = _control_ref()
         acquisition = control.acquisition()
@@ -500,6 +594,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argin:    DevLong 
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdHeader(self, argin):
         header_map = {}
         for key,value in [x.split('=') for x in argin.split('\n')] :
@@ -517,6 +612,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevVarDoubleArray    
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevReadValues(self):
         control = _control_ref()
         img_data = control.ReadImage(-1)
@@ -560,6 +656,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #    Description: 
 #    argout: DevVarDoubleArray    
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevReadSigValues(self):
         exp_time = self.DevCcdGetExposure()
         threshold = 0
@@ -586,9 +683,75 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #         
 #    argout: DevString    
 #------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def DevCcdGetLstErrMsg(self):
         return ''                       # not managed yet!
 
+
+#------------------------------------------------------------------
+#    DevCcdGetCurrent command:
+#
+#    Description: Get the current acquired frame number
+#    argout: DevVarDoubleArray    
+#------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
+    def DevCcdGetCurrent(self):
+        control = _control_ref() 
+        ct_status = control.getStatus()
+        saving = control.saving()
+        img_counters = ct_status.ImageCounters
+        if saving.getSavingMode() == Core.CtSaving.AutoFrame:
+            last_frame_nb = img_counters.LastImageSaved
+        else:
+            last_frame_nb = img_counters.LastImageAcquired
+        nb_frames = last_frame_nb + 1
+        deb.Return('Nb of frames: %s' % nb_frames)
+        return nb_frames
+
+
+#------------------------------------------------------------------
+#    DevSetDebugFlags command:
+#
+#    Description: Get the current acquired frame number
+#    argout: DevVarDoubleArray    
+#------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
+    def DevSetDebugFlags(self, deb_flags):
+        deb_flags &= 0xffffffff
+        deb.Param('Setting debug flags: 0x%08x' % deb_flags)
+        DebParams.setTypeFlags((deb_flags   >> 16)  & 0xff)
+        DebParams.setModuleFlags((deb_flags >>  0)  & 0xffff)
+
+        deb.Trace('FormatFlags: %s' % DebParams.getFormatFlagsNameList())
+        deb.Trace('TypeFlags:   %s' % DebParams.getTypeFlagsNameList())
+        deb.Trace('ModuleFlags: %s' % DebParams.getModuleFlagsNameList())
+
+#------------------------------------------------------------------
+#    DevGetDebugFlags command:
+#
+#    Description: Get the current acquired frame number
+#    argout: DevVarDoubleArray    
+#------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
+    def DevGetDebugFlags(self):
+        deb.Trace('FormatFlags: %s' % DebParams.getFormatFlagsNameList())
+        deb.Trace('TypeFlags:   %s' % DebParams.getTypeFlagsNameList())
+        deb.Trace('ModuleFlags: %s' % DebParams.getModuleFlagsNameList())
+
+        deb_flags = (((DebParams.getTypeFlags()    & 0xff)   << 16) |
+                     ((DebParams.getModuleFlags()  & 0xffff) <<  0))
+        deb_flags &= 0xffffffff
+        deb.Return('Getting debug flags: 0x%08x' % deb_flags)
+        return deb_flags
+
+
+#------------------------------------------------------------------
+#    DevGetCurrent command:
+#
+#    Description: Get the current acquired frame number
+#    argout: DevVarDoubleArray    
+#------------------------------------------------------------------
+    @DEB_MEMBER_FUNCT
     def __getFrameDim(self) :
         control = _control_ref()
         interface = control.interface()
@@ -625,7 +788,7 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
             [PyTango.DevVoid, ""]],
         'DevCcdRead':
             [[PyTango.DevVarLongArray, ""],
-            [PyTango.DevVarShortArray, ""]],
+            [PyTango.DevVarCharArray, ""]],
         'DevCcdReadJpeg':
             [[PyTango.DevShort, "jpeg compression"],
             [PyTango.DevVarCharArray, "jpeg compressed image"]],
@@ -643,6 +806,9 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
             [PyTango.DevVoid, ""]],
         'DevCcdSetFilePar':
             [[PyTango.DevVarStringArray, ""],
+            [PyTango.DevVoid, ""]],
+        'DevCcdHeader':
+            [[PyTango.DevString, ""],
             [PyTango.DevVoid, ""]],
         'DevCcdGetFilePar':
             [[PyTango.DevVoid, ""],
@@ -698,6 +864,15 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
         'DevCcdGetLstErrMsg':
             [[PyTango.DevVoid, ""],
             [PyTango.DevString, ""]],
+        'DevCcdGetCurrent':
+            [[PyTango.DevVoid, ""],
+            [PyTango.DevLong, ""]],
+        'DevGetDebugFlags':
+            [[PyTango.DevVoid, ""],
+            [PyTango.DevULong, ""]],
+        'DevSetDebugFlags':
+            [[PyTango.DevULong, ""],
+            [PyTango.DevVoid, ""]],
         }
 
 
