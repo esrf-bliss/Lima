@@ -4,7 +4,7 @@ import weakref
 import threading
 import os
 
-import lima
+from Lima import Core
 import EdfFile
 
 def _invert_sort_file(a,b) :
@@ -105,8 +105,8 @@ class _ImageReader(threading.Thread) :
                               
                             continueFlag = True
                             if buffer_ctrl._cbk:
-                                hw_frame_info = lima.HwFrameInfoType(nextFrameId,data,lima.Timestamp(),
-                                                                     0,lima.HwFrameInfoType.Transfer)
+                                hw_frame_info = Core.HwFrameInfoType(nextFrameId,data,Core.Timestamp(),
+                                                                     0,Core.HwFrameInfoType.Transfer)
                                 continueFlag = buffer_ctrl._cbk.newFrameReady(hw_frame_info)
                                 
                             del data
@@ -145,11 +145,11 @@ class _ImageReader(threading.Thread) :
                 
                 
             
-class BufferCtrlObj(lima.HwBufferCtrlObj):
-	#lima.Debug.DEB_CLASS(lima.DebModCamera,"BufferCtrlObj")
+class BufferCtrlObj(Core.HwBufferCtrlObj):
+	#Core.Debug.DEB_CLASS(Core.DebModCamera,"BufferCtrlObj")
 
         def __init__(self,comm_object,det_info) :
-            lima.HwBufferCtrlObj.__init__(self)
+            Core.HwBufferCtrlObj.__init__(self)
             self._com = weakref.ref(comm_object)
             self.__det_info = weakref.ref(det_info)
             self._cbk = None
@@ -172,44 +172,44 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
         def is_error(self) :
             return self.__imageReader.is_read_error()
         
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
 	def setFrameDim(self,frame_dim) :
             pass
             
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getFrameDim(self) :
             det_info = self.__det_info()
-            return lima.FrameDim(det_info.getDetectorImageSize(),
+            return Core.FrameDim(det_info.getDetectorImageSize(),
                                  det_info.getDefImageType())
         
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def setNbBuffers(self,nb_buffers) :
            self.__nb_buffer = nb_buffers
             
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
 	def getNbBuffers(self) :
             return self.__nb_buffer
 
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def setNbConcatFrames(self,nb_concat_frames) :
             if nb_concat_frames != 1:
-                raise lima.Exceptions(lima.Hardware,lima.NotSupported)
+                raise Core.Exceptions(Core.Hardware,Core.NotSupported)
 
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getNbConcatFrames(self) :
             return 1
 
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def setNbAccFrames(self,nb_acc_frames) :
             com = self._com()
             com.set_nb_exposure_per_frame(nb_acc_frames)
             
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
 	def getNbAccFrames(self) :
             com = self._com()
             return com.nb_exposure_per_frame()
         
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getMaxNbBuffers(self) :
             com = self._com()
             det_info = self.__det_info()
@@ -217,21 +217,21 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
             imageSize = imageFormat.getWidth() * imageFormat.getHeight() * 4 # 4 == image 32bits
             return com.DEFAULT_TMPFS_SIZE / imageSize / 2.
 
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getBufferPtr(self,buffer_nb,concat_frame_nb = 0) :
             pass
         
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getFramePtr(self,acq_frame_nb) :
             pass
 
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getStartTimestamp(self,start_ts) :
             pass
         
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getFrameInfo(self,acq_frame_nb) :
-            hw_frame_info = lima.HwFrameInfoType()
+            hw_frame_info = Core.HwFrameInfoType()
             com = self._com()            
             fileBase = com.DEFAULT_FILE_BASE
             fileExt = com.DEFAULT_FILE_EXTENTION
@@ -245,21 +245,21 @@ class BufferCtrlObj(lima.HwBufferCtrlObj):
                 except:
                     pass
                 else:
-                    return lima.HwFrameInfoType(acq_frame_nb,data,lima.Timestamp(),
-                                                0,lima.HwFrameInfoType.Transfer)
+                    return Core.HwFrameInfoType(acq_frame_nb,data,Core.Timestamp(),
+                                                0,Core.HwFrameInfoType.Transfer)
 
             return hw_frame_info
 
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def registerFrameCallback(self,frame_cb) :
             self._cbk = frame_cb
             
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
 	def unregisterFrameCallback(self,frame_cb) :
             self._cbk = None
 
 
-        #@lima.Debug.DEB_MEMBER_FUNCT
+        #@Core.Debug.DEB_MEMBER_FUNCT
         def getLastAcquiredFrame(self) :
             return self.__imageReader.getLastAcquiredFrame()
 

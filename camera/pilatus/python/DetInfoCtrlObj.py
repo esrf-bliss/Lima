@@ -1,6 +1,6 @@
 import os
 
-import lima
+from Lima import Core
 
 
 CAMERA_NAME_TOKEN = 'camera_name'
@@ -14,11 +14,11 @@ CAMERA_INFO_FILE = os.path.expanduser(os.path.join('~det','p2_det/config/cam_dat
 #file named CAMERA_INFO_FILE in HOME directory of the users
 #@todo check if we can do best
 
-class DetInfoCtrlObj(lima.HwDetInfoCtrlObj) :
+class DetInfoCtrlObj(Core.HwDetInfoCtrlObj) :
 
-    #lima.Debug.DEB_CLASS(lima.DebModCamera, "DetInfoCtrlObj")
+    #Core.Debug.DEB_CLASS(Core.DebModCamera, "DetInfoCtrlObj")
     def __init__(self) :
-        lima.HwDetInfoCtrlObj.__init__(self)
+        Core.HwDetInfoCtrlObj.__init__(self)
 
         #Variables
         self.__name = None
@@ -29,39 +29,39 @@ class DetInfoCtrlObj(lima.HwDetInfoCtrlObj) :
     def init(self) :
         self._readConfig()
         
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def getMaxImageSize(self) :
-        return lima.Size(self.__width,self.__height)
+        return Core.Size(self.__width,self.__height)
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def getDetectorImageSize(self) :
         return self.getMaxImageSize()
     
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def getDefImageType(self) :
         if self.__bpp == 32:
-            return lima.Bpp32
+            return Core.Bpp32
         else:                           # TODO
-            raise lima.Exception(lima.Hardware,lima.NotSupported)
+            raise Core.Exception(Core.Hardware,Core.NotSupported)
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def getCurrImageType(self) :
         return self.getDefImageType()
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def setCurrImageType(self) :
-        raise lima.Exceptions(lima.Hardware,lima.NotSupported)
+        raise Core.Exceptions(Core.Hardware,Core.NotSupported)
 
     
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def getPixelSize(self) :
         return 172e-6
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def getDetectorType(self) :
         return 'Pilatus'
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def getDetectorModel(self):
 	if self.__name :
            return self.__name.split(',')[0].split()[-1]
@@ -70,25 +70,25 @@ class DetInfoCtrlObj(lima.HwDetInfoCtrlObj) :
 
 
     ##@brief image size won't change so no callback
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def registerMaxImageSizeCallback(self,cb) :
         pass
 
     ##@brief image size won't change so no callback
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def unregisterMaxImageSizeCallback(self,cb) :
         pass
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def get_min_exposition_time(self):
         return 1e-6
     ##@todo don't know realy what is the maximum exposure time
     #for now set to a high value 1 hour
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def get_max_exposition_time(self) :
         return 3600
 
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def get_min_latency(self) :
         period = None
         model = self.getDetectorModel()
@@ -102,11 +102,11 @@ class DetInfoCtrlObj(lima.HwDetInfoCtrlObj) :
 
     ##@todo don't know
     #@see get_max_exposition_time
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def get_max_latency(self):
         return self.get_min_latency()
     
-    #@lima.Debug.DEB_MEMBER_FUNCT
+    #@Core.Debug.DEB_MEMBER_FUNCT
     def _readConfig(self) :
         try:
             f = file(CAMERA_INFO_FILE)
