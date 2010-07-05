@@ -51,6 +51,13 @@ MAXIPIX_MAJ_VERSION = $(shell echo $(MAXIPIX_FULL_VERSION) | cut -d. -f1)
 INSTALL_MAXIPIX_VDIR = $(INSTALL_MAXIPIX_DIR)/v$(MAXIPIX_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_PILATUS), 0)
+INSTALL_PILATUS_DIR = $(INSTALL_PLAT_DIR)/Pilatus
+PILATUS_FULL_VERSION = $(shell cat camera/pilatus/VERSION)
+PILATUS_MAJ_VERSION = $(shell echo $(PILATUS_FULL_VERSION) | cut -d. -f1)
+INSTALL_PILATUS_VDIR = $(INSTALL_PILATUS_DIR)/v$(PILATUS_FULL_VERSION)
+endif
+
 .PHONY: install
 
 install:
@@ -101,4 +108,9 @@ ifneq ($(COMPILE_MAXIPIX), 0)
 	cp -d build/liblimamaxipix.so.$(MAXIPIX_MAJ_VERSION) $(INSTALL_LIB_DIR)
 	cp sip/maxipix/limamaxipix.so $(INSTALL_MAXIPIX_VDIR)
 	cp camera/maxipix/python/Mpx*.py $(INSTALL_MAXIPIX_VDIR)
+endif
+ifneq ($(COMPILE_PILATUS), 0)
+	mkdir -p $(INSTALL_PILATUS_VDIR)
+	cp camera/pilatus/python/__init__.py $(INSTALL_PILATUS_DIR)
+	cp camera/pilatus/python/*.py $(INSTALL_PILATUS_VDIR)
 endif
