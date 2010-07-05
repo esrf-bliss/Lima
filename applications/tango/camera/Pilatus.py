@@ -168,7 +168,7 @@ def get_control() :
     global _PilatusIterface
     if _PilatusIterface is None:
         _PilatusIterface = Interface.Interface()
-    return Lima.CtControl(_PilatusIterface)
+    return Core.CtControl(_PilatusIterface)
 
 def close_interface() :
     global _PilatusIterface
