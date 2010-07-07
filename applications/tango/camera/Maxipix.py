@@ -44,7 +44,7 @@ class Maxipix(PyTango.Device_4Impl):
     ## @brief Read threshold noise of a maxipix chips
     #
     def read_threshold_noise(self,attr) :
-        dac = _MaxipixAcq.mpxDacs()
+        dac = _MaxipixAcq.mpxDacs
         thlNoises = dac.getThlNoise(0)
 
         attr.set_value(thlNoises,len(thlNoises))
@@ -55,14 +55,15 @@ class Maxipix(PyTango.Device_4Impl):
         data = []
         attr.get_write_value(data)
 
-        dac = _MaxipixAcq.mpxDacs()
+        dac = _MaxipixAcq.mpxDacs
         dac.setThlNoise(0,*data)
 
     ## @brief Read the global threshold
     #
     def read_threshold(self,attr) :
-        dac = _MaxipixAcq.mpxDacs()
+        dac = _MaxipixAcq.mpxDacs
         thl = dac.getThl()
+	if thl is None: thl = -1
 
         attr.set_value(thl)
 
@@ -72,7 +73,7 @@ class Maxipix(PyTango.Device_4Impl):
         data = []
         attr.get_write_value(data)
         
-        dac = _MaxipixAcq.mpxDacs()
+        dac = _MaxipixAcq.mpxDacs
         dac.setThl(data[0])
 
     ## @brief Read the energy step
@@ -81,8 +82,8 @@ class Maxipix(PyTango.Device_4Impl):
     # threshold
     # 
     def read_energy_calibration(self,attr) :
-        dac = _MaxipixAcq.mpxDacs()
-        values = dat.getECalibration()
+        dac = _MaxipixAcq.mpxDacs
+        values = dac.getECalibration()
         
         attr.set_value(values,len(values))
         
@@ -92,15 +93,17 @@ class Maxipix(PyTango.Device_4Impl):
         data = []
         attr.get_write_value(data)
 
-        dac = _MaxipixAcq.mpxDacs()
+        dac = _MaxipixAcq.mpxDacs
         dat.setECalibration(*data)
 
     ## @brief Read the energy threshold
     #
     # energy_threshold = energy_step * threshold (global)
     def read_energy_threshold(self,attr) :
-        dac = _MaxipixAcq.mpxDacs()
+        dac = _MaxipixAcq.mpxDacs
         value = dac.getEThl()
+	if value is None: value = -1
+	
         attr.set_value(value)
 
     ## @brief Write the energy threshold
@@ -109,7 +112,7 @@ class Maxipix(PyTango.Device_4Impl):
         data = []
         attr.get_write_value(data)
         
-        dac = _MaxipixAcq.mpxDacs()
+        dac = _MaxipixAcq.mpxDacs
         dac.setEThl(data[0])
         
     ## @brief read the config name
@@ -148,7 +151,7 @@ class MaxipixClass(PyTango.DeviceClass):
         'threshold_noise':
         [[PyTango.DevLong,
           PyTango.SPECTRUM,
-          PyTango.READ_WRITE,2]],
+          PyTango.READ_WRITE,5]],
         'threshold':
         [[PyTango.DevLong,
           PyTango.SCALAR,
@@ -156,7 +159,7 @@ class MaxipixClass(PyTango.DeviceClass):
         'energy_calibration':
         [[PyTango.DevDouble,
           PyTango.SPECTRUM,
-          PyTango.READ_WRITE,2]],
+          PyTango.READ_WRITE,5]],
         'energy_threshold':
         [[PyTango.DevDouble,
           PyTango.SCALAR,

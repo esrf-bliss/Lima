@@ -321,12 +321,13 @@ class MpxDacs:
 	    self.__dacs[idx].setOneDac("thl", val)
 
     def getThl(self):
+	values = []
 	for idx in range(self.nchip):
 	    val= self.__dacs[idx].getOneDac("thl")
 	    if idx>0 and self.__thlnoise[0]>0 and self.__thlnoise[idx]>0:
 		val= val - self.__thlnoise[idx] + self.__thlnoise[0]
 	    values.append(val)
-	thl= val[0]
+	thl= values[0]
 	if self.nchip>1:
 	    for idx in range(1, self.nchip):
 		if values[idx] != thl:
