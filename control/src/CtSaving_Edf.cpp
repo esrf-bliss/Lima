@@ -122,7 +122,7 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
   long aEndPosition = m_fout.tellp();
   
   long lenght = aEndPosition - aStartPosition;
-  long finalHeaderLenght = (lenght + 511) & ~511; // 512 alignment
+  long finalHeaderLenght = (lenght + 1023) & ~1023; // 1024 alignment
   snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght - 2),"");
   m_fout << aBuffer;
 }

@@ -5,7 +5,11 @@ import threading
 import select
 import os
 
+from Lima import Core
+
 class _AsyncSocket(threading.Thread) :
+    Core.DEB_CLASS(Core.DebModCameraCom, '_AsyncSocket')
+    
     def __init__(self,cnt,cond) :
         threading.Thread.__init__(self)
         
@@ -56,10 +60,14 @@ class _AsyncSocket(threading.Thread) :
             os.write(self.__wakeUp,"|")
         self.join()
 
+    @Core.DEB_MEMBER_FUNCT
     def send(self,msg) :
+        deb.Param('message=%s' % msg)
+
         msg += '\x18'
         self.__socket.send(msg)
-            
+
+    @Core.DEB_MEMBER_FUNCT
     def run(self) :
         with self.__cond:
             while not self.__stop :
@@ -77,6 +85,7 @@ class _AsyncSocket(threading.Thread) :
                         self.__cnt._state = Communication.DISCONNECTED
                     else:
                         for msg in messages.split('\x18') :
+                            deb.Trace("message rx : %s" % msg)
                             if msg[:2] == '15': # generique response
                                 if msg[3:5] == 'OK': # will check what the message is about
                                     real_message = msg[6:]
@@ -145,6 +154,8 @@ class _AsyncSocket(threading.Thread) :
             
         
 class Communication:
+    Core.DEB_CLASS(Core.DebModCameraCom, 'Communication')
+    
     ERROR,DISCONNECTED,OK,SETTING_THRESHOLD,SETTING_EXPOSURE,SETTING_NB_IMAGE_IN_SEQUENCE,SETTING_EXPOSURE_PERIOD,SETTING_HARDWARE_TRIGGER_DELAY,SETTING_EXPOSURE_PER_FRAME,KILL_ACQUISITION,RUNNING = range(11)
     LOW,MID,HIGH,ULTRA_HIGH = range(4)  # GAIN enum
     GAIN_SERVER_RESPONSE = {'low' : LOW,'mid' : MID,'high' : HIGH,'ultra high' : ULTRA_HIGH}
@@ -243,7 +254,11 @@ class Communication:
 
     def set_exposure(self,val) :
         with self.__cond:
-            if self._state != self.OK :
+	    # yet an other border-effect with the SPEC CCD interface
+	    # to reach the GATE mode SPEC programs extgate + expotime = 0
+            if self._trigger_mode == self.EXTERNAL_GATE:
+	    	return
+	    if self._state != self.OK :
                 self.__cond.wait(self.__timeout)
 
             if self._state == self.OK:
@@ -330,15 +345,17 @@ class Communication:
                 self._trigger_mode = trigger_mode
             else:
                 raise 'Trigger can be only:Internal,External start,External multi start or External gate!'
-    
+    @Core.DEB_MEMBER_FUNCT
     def start_acquisition(self) :
         with self.__cond:
+            deb.Trace("State : %s, trigger mode : %s" % (self._state,self._trigger_mode))
 	    if self._state == self.RUNNING:
 		raise 'Could not start acquisition, you have to wait the finished of the previous one'
 
-            while self._exposure_period <= self._exposure or self._exposure_period - (self._exposure + 0.003) > 1e-6:
-                self.__asynSock.send('expperiod %f' % (self._exposure + 0.003))
-                self.__cond.wait(self.__timeout)
+            if self._trigger_mode != self.EXTERNAL_GATE:
+                while self._exposure_period <= self._exposure or self._exposure_period - (self._exposure + 0.003) > 1e-6:
+                    self.__asynSock.send('expperiod %f' % (self._exposure + 0.003))
+                    self.__cond.wait(self.__timeout)
             #Start Acquisition
             self._state = self.RUNNING
             if self._trigger_mode == self.EXTERNAL_START:
@@ -346,11 +363,14 @@ class Communication:
             elif self._trigger_mode == self.EXTERNAL_MULTI_START:
                 self.__asynSock.send('extmtrigger %s' % self.DEFAULT_FILE_NAME)
             elif self._trigger_mode == self.EXTERNAL_GATE:
+                self.__asynSock.send('exptime 0.003')  # TRICK TO RETURN QUICKLY
+                self.__cond.wait(self.__timeout)
                 self.__asynSock.send('extenable %s' % self.DEFAULT_FILE_NAME)
             else:
                 self.__asynSock.send('exposure %s' % self.DEFAULT_FILE_NAME)
                 
-            
+            if self._trigger_mode != self.INTERNAL:
+                self.__cond.wait(self.__timeout)
             
 
     def stop_acquisition(self) :

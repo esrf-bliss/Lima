@@ -53,7 +53,12 @@ class _ImageReader(threading.Thread) :
             for filename in os.listdir(com.DEFAULT_PATH) :
                 base,ext = os.path.splitext(filename)
                 if ext.lower() == com.DEFAULT_FILE_EXTENTION :
-                    os.unlink(os.path.join(com.DEFAULT_PATH,filename))
+                    try:
+                        os.unlink(os.path.join(com.DEFAULT_PATH,filename))
+                    except OSError:
+                        import traceback
+                        traceback.print_exc()
+                        break
 
     def start_read(self) :
         with self.__cond:

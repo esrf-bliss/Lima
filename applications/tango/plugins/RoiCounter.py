@@ -62,16 +62,15 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 	RoiCounterDeviceServer.init_device(self)
         
     def __getattr__(self,name) :
-        if not name.startswith('__') :
-            if name.startswith('is_') and name.endswith('_allowed') :
-                self.__dict__[name] = self.__global_allowed
-                return self.__global_allowed
+        if name.startswith('is_') and name.endswith('_allowed') :
+            self.__dict__[name] = self.__global_allowed
+            return self.__global_allowed
         raise AttributeError('RoiCounterDeviceServer has no attribute %s' % name)
 
-    def __global_allowed(self,*args) :
+    def __global_allowed(self) :
         return self.get_state() == PyTango.DevState.ON
 
-    def is_set_state_allowed(self,*args) :
+    def is_set_state_allowed(self) :
         return True
 
 #------------------------------------------------------------------
