@@ -68,7 +68,7 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
 	
   int image_nb = m_written_frames + 1;
 
-  char aBuffer[512];
+  char aBuffer[2048];
   long aStartPosition = m_fout.tellp();
   m_fout << "{\n";
 
