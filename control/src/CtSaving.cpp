@@ -610,7 +610,11 @@ void CtSaving::_save_finished(Data &aData)
 	if(nextDataIter != m_frame_datas.end())
 	  {
 	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
-	    _get_common_header(aSaveTaskPt->m_header);
+	    std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(nextDataIter->first);
+	    if(aHeaderIter != m_frame_headers.end())
+	        _takeHeader(aHeaderIter,aSaveTaskPt->m_header);
+            else
+	        _get_common_header(aSaveTaskPt->m_header);
 	    m_last_frameid_saved = nextDataIter->first;
 	    Data aData = nextDataIter->second;
 	    m_frame_datas.erase(nextDataIter);
@@ -674,7 +678,7 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
 }
 
 CtSaving::SaveContainer::SaveContainer(CtSaving &aCtSaving) :
-  m_written_frames(0),m_saving(aCtSaving),m_statistic_size(16)
+  m_written_frames(0),m_saving(aCtSaving),m_statistic_size(16),m_file_opened(false)
 {
   DEB_CONSTRUCTOR();
 }

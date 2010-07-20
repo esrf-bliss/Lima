@@ -120,6 +120,8 @@ class _AsyncSocket(threading.Thread) :
                                         columnPos = real_message.find(':')
                                         self.__cnt._nimages = int(real_message[columnPos+1:])
                                         self.__cnt._state = Communication.OK
+                                    elif self.__cnt._state == Communication.SETTING_THRESHOLD:
+				        self.__cnt._state = Communication.OK
                                 else:   # ERROR MESSAGE
                                     if self.__cnt._state == Communication.SETTING_THRESHOLD:
                                         self.__cnt._state = Communication.OK
@@ -241,9 +243,6 @@ class Communication:
                 else:
                     gainStr = Communication.GAIN_VALUE2SERVER[gain]
                     self.__asynSock.send('SetThreshold %s %d' % (gainStr,value))
-                # as the the threshold is round, the server don't reply if threshold is nearly the same
-                # so force a reply
-                self.__asynSock.send('SetThreshold')
                 self._state = self.SETTING_THRESHOLD
             else:
                 raise 'Could not set threshold, server is not idle'
@@ -357,7 +356,6 @@ class Communication:
                     self.__asynSock.send('expperiod %f' % (self._exposure + 0.003))
                     self.__cond.wait(self.__timeout)
             #Start Acquisition
-            self._state = self.RUNNING
             if self._trigger_mode == self.EXTERNAL_START:
                 self.__asynSock.send('exttrigger %s' % self.DEFAULT_FILE_NAME)
             elif self._trigger_mode == self.EXTERNAL_MULTI_START:
@@ -371,7 +369,8 @@ class Communication:
                 
             if self._trigger_mode != self.INTERNAL:
                 self.__cond.wait(self.__timeout)
-            
+             
+            self._state = self.RUNNING
 
     def stop_acquisition(self) :
         with self.__cond:

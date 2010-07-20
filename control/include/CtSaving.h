@@ -190,12 +190,22 @@ namespace lima {
   };
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
   {
+    const char *aFileFormatHumanPt;
+    switch(params.fileFormat)
+      {
+      case CtSaving::EDF:
+	aFileFormatHumanPt = "EDF";break;
+      case CtSaving::CBFFormat:
+	aFileFormatHumanPt = "CBF";break;
+      default:
+	aFileFormatHumanPt = "RAW";break;
+      }
     os << "<"
        << "directory=" << params.directory << ", "
        << "prefix=" << params.prefix << ", "
        << "suffix=" << params.suffix << ", "
        << "nextNumber=" << params.nextNumber << ", "
-       << "fileFormat=" << params.fileFormat << ", "
+       << "fileFormat=" << params.fileFormat << "," << aFileFormatHumanPt << ", "
        << "savingMode=" << params.savingMode << ", "
        << "overwritePolicy=" << params.overwritePolicy << ", "
        << "framesPerFile=" << params.framesPerFile

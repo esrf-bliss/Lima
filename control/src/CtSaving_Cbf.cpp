@@ -84,7 +84,7 @@ bool SaveContainerCbf::_open(const std::string &filename,
   char openFlags[8];
   if(stdOpenflags & std::ios_base::app)
     openFlags[0] = 'a';
-  else if(stdOpenflags & std::ios_base::trunc)
+  else
     openFlags[0] = 'w';
   
   if(stdOpenflags & std::ios_base::binary)
@@ -93,9 +93,11 @@ bool SaveContainerCbf::_open(const std::string &filename,
     openFlags[1] = '+',openFlags[2] = '\0';
 
 
+  DEB_TRACE() << "Open file name: " << filename << " with open flags: " << openFlags;
   m_fout = fopen(filename.c_str(),openFlags);
   if(m_fout)
     cbf_make_handle(&m_cbf);
+
   return !!m_fout;
 }
 
@@ -156,6 +158,8 @@ int SaveContainerCbf::_writeCbfHeader(Data &aData,
 	  key = currentCategory;
 	  currentCategory = DEFAULT_CATEGORY;
 	}
+      else
+	key = key.substr(1);
 
       if(previousCategory != currentCategory)
 	{
@@ -190,10 +194,11 @@ int SaveContainerCbf::_writeCbfData(Data &aData)
 					 aData.is_signed(),
 					 aData.size()/aData.depth(),
 					 "little_endian",
-					 aData.height,
 					 aData.width,
+					 aData.height,
 					 0,
 					 0));
+
   cbf_failnez(cbf_write_file(m_cbf,m_fout,0,CBF,MSG_DIGEST|MIME_HEADERS,0));
   return 0;
 }

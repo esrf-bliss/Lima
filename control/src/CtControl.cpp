@@ -258,6 +258,7 @@ void CtControl::getStatus(Status& status) const
 	{
 	  HwInterface::Status aHwStatus;
 	  m_hw->getStatus(aHwStatus);
+	  DEB_TRACE() << DEB_VAR1(aHwStatus);
 	  // set the status to hw acquisition status
 	  m_status.AcquisitionStatus = aHwStatus.acq; 
 
