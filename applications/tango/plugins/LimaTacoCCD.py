@@ -60,11 +60,6 @@ DevErrCcdCmdNotProc		= DevCcdBase + 11
 DevErrCcdCameraModel		= DevCcdBase + 12
 DevErrCcdProcessImage		= DevCcdBase + 13
 
-
-#Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
-#Core.DebParams.setModuleFlags(Core.DebParams.AllFlags)
-#Core.DebParams.setFormatFlags(Core.DebParams.AllFlags)
-
 #==================================================================
 #   LimaTacoCCDs Class Description:
 #
