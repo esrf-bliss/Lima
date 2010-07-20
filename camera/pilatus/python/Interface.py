@@ -19,6 +19,7 @@ class Interface(Core.HwInterface) :
         self.__detInfo.init()
         self.__buffer = BufferCtrlObj(self.__comm,self.__detInfo)
         self.__syncObj = SyncCtrlObj(self.__buffer,self.__comm,self.__detInfo)
+	self.__acquisition_start_flag = False
 
     def __del__(self) :
         self.__comm.quit()
@@ -50,6 +51,7 @@ class Interface(Core.HwInterface) :
         
     #@Core.Debug.DEB_MEMBER_FUNCT
     def startAcq(self) :
+        self.__acquisition_start_flag = True
         self.__comm.start_acquisition()
         self.__buffer.start()
         
@@ -76,7 +78,7 @@ class Interface(Core.HwInterface) :
                 status.det = Core.DetIdle
                 lastAcquiredFrame = self.__buffer.getLastAcquiredFrame()
                 requestNbFrame = self.__syncObj.getNbFrames()
-                if lastAcquiredFrame >= 0 and lastAcquiredFrame == (requestNbFrame - 1):
+                if not self.__acquisition_start_flag or (lastAcquiredFrame >= 0 and lastAcquiredFrame == (requestNbFrame - 1)):
                     status.acq = Core.AcqReady
                 else:
                     status.acq = Core.AcqRunning

@@ -25,6 +25,7 @@ import sys
 import PyTango
 
 from Lima import Core
+
 import processlib
 
 import numpy
@@ -60,8 +61,8 @@ DevErrCcdCameraModel		= DevCcdBase + 12
 DevErrCcdProcessImage		= DevCcdBase + 13
 
 
-Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
-Core.DebParams.setModuleFlags(Core.DebModCameraCom)
+#Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
+#Core.DebParams.setModuleFlags(Core.DebParams.AllFlags)
 #Core.DebParams.setFormatFlags(Core.DebParams.AllFlags)
 
 #==================================================================
@@ -98,6 +99,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         self.__bpm_mgr  = processlib.Tasks.BpmManager()
         self.__bpm_task = processlib.Tasks.BpmTask(self.__bpm_mgr)
         
+	self.__key_header_delimiter = '='
+	self.__entry_header_delimiter = '\n'
 #------------------------------------------------------------------
 #    Device destructor
 #------------------------------------------------------------------
@@ -170,9 +173,6 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #------------------------------------------------------------------
     @Core.DEB_MEMBER_FUNCT
     def DevCcdStart(self):
-        Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
-        Core.DebParams.setModuleFlags(Core.DebModCameraCom)
-
         control = _control_ref()
         control.prepareAcq()
         control.startAcq()
@@ -236,7 +236,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 
         control = _control_ref()
         acq = control.acquisition()
-
+        
         trig_mode = acq.getTriggerMode()
         if exp_time == 0 and trig_mode == Core.ExtTrigSingle:
             acq.setTriggerMode(Core.ExtGate)
@@ -244,7 +244,6 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
             acq.setTriggerMode(Core.ExtTrigSingle)
         acq.setAcqExpoTime(exp_time)
 
-        
 
 #------------------------------------------------------------------
 #    DevCcdGetExposure command:
@@ -362,17 +361,25 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         control = _control_ref()
         saving = control.saving()
         header_map = {}
-        for line in header_str.split('\n'):
-            token = line.split('=')
+        for line in header_str.split(self.__entry_header_delimiter) :
+            token = line.split(self.__key_header_delimiter)
             key = token[0].strip()
             if not key:
                 continue
-            val = string.join(token[1:], '=').strip()
-            if val[-1] == ';':
-                val = val[:-1].strip()
+            try:
+	        val = '='.join(token[1:]).strip()
+	    except ValueError:
+		continue
+            if val.endswith(';'):
+                val = val[:-1]
             header_map[key] = val
         saving.setCommonHeader(header_map)
 
+    @Core.DEB_MEMBER_FUNCT
+    def DevCcdHeaderDelimiter(self,delimiter) :
+	deb.Param('Setting file header delimiter: %s' % delimiter)
+	self.__key_header_delimiter = delimiter[0]
+	self.__entry_header_delimiter = delimiter[1]
 #------------------------------------------------------------------
 #    DevCcdDepth command:
 #
@@ -603,24 +610,6 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
             raise Core.Exception, 'Invalid trigger mode: %s' % triggerMode
         return returnValue
 #------------------------------------------------------------------
-#    DevCcdHeader command:
-#
-#    Description: 
-#    argin:    DevLong 
-#------------------------------------------------------------------
-    @Core.DEB_MEMBER_FUNCT
-    def DevCcdHeader(self, argin):
-        header_map = {}
-        for key,value in [x.split('=') for x in argin.split('\n')] :
-            key = key.strip()
-            value = value.strip(' \t;')
-            if not key: continue
-            header_map[key] = value
-        control = _control_ref()
-        saving = control.saving()
-        saving.setCommonHeader(header_map)
-
-#------------------------------------------------------------------
 #    DevReadValues command:
 #
 #    Description: 
@@ -748,12 +737,12 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
 #------------------------------------------------------------------
     @Core.DEB_MEMBER_FUNCT
     def DevGetDebugFlags(self):
-        deb.Trace('FormatFlags: %s' % Core.DebParams.getFormatFlagsNameList())
-        deb.Trace('TypeFlags:   %s' % Core.DebParams.getTypeFlagsNameList())
-        deb.Trace('ModuleFlags: %s' % Core.DebParams.getModuleFlagsNameList())
+        deb.Trace('FormatFlags: %s' % DebParams.getFormatFlagsNameList())
+        deb.Trace('TypeFlags:   %s' % DebParams.getTypeFlagsNameList())
+        deb.Trace('ModuleFlags: %s' % DebParams.getModuleFlagsNameList())
 
-        deb_flags = (((Core.DebParams.getTypeFlags()    & 0xff)   << 16) |
-                     ((Core.DebParams.getModuleFlags()  & 0xffff) <<  0))
+        deb_flags = (((DebParams.getTypeFlags()    & 0xff)   << 16) |
+                     ((DebParams.getModuleFlags()  & 0xffff) <<  0))
         deb_flags &= 0xffffffff
         deb.Return('Getting debug flags: 0x%08x' % deb_flags)
         return deb_flags
@@ -824,6 +813,9 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
         'DevCcdHeader':
             [[PyTango.DevString, ""],
             [PyTango.DevVoid, ""]],
+        'DevCcdHeaderDelimiter':
+            [[PyTango.DevVarStringArray, ""],
+	    [PyTango.DevVoid,""]],
         'DevCcdGetFilePar':
             [[PyTango.DevVoid, ""],
             [PyTango.DevVarStringArray, ""]],
@@ -866,9 +858,6 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
         'DevCcdGetTrigger':
             [[PyTango.DevVoid, ""],
             [PyTango.DevLong, ""]],
-        'DevCcdHeader':
-            [[PyTango.DevString, ""],
-            [PyTango.DevVoid, ""]],
         'DevCcdGetRoI':
             [[PyTango.DevVoid, ""],
             [PyTango.DevVarLongArray, "region of interest"]],

@@ -31,8 +31,6 @@ import plugins
 import camera
 
 
-Core.DebParams.setTypeFlags(0)
-
 class LimaCCDs(PyTango.Device_4Impl) :
     def __init__(self,*args) :
         PyTango.Device_4Impl.__init__(self,*args)
