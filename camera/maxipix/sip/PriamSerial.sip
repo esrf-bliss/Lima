@@ -78,16 +78,16 @@ using namespace lima;
     PriamSerial(Espia::SerialLine &espia_serial_line);
     ~PriamSerial();
 
-    void writeRegister(Maxipix::PriamSerial::PriamRegister reg, std::string& buffer);
-    void readRegister(Maxipix::PriamSerial::PriamRegister reg, std::string& buffer /Out/, long size=0);
+    void writeRegister(Maxipix::PriamSerial::PriamRegister reg,const std::string& buffer);
+    void readRegister(Maxipix::PriamSerial::PriamRegister reg, std::string& buffer /Out/, long size=0) const;
 
-    void writeFsr(std::string& fsr, std::string& bid);
+    void writeFsr(const std::string& fsr, std::string& bid /Out/);
 
     void writeMatrix(std::string& input);
-    void readMatrix(std::string& output /Out/);
+    void readMatrix(std::string& output /Out/) const;
 
-    void writeLut(Maxipix::PriamSerial::PriamLut lut, std::string& buffer);
-    void readLut(Maxipix::PriamSerial::PriamLut lut, std::string& buffer /Out/, long size);
+    void writeLut(Maxipix::PriamSerial::PriamLut lut,const std::string& buffer);
+    void readLut(Maxipix::PriamSerial::PriamLut lut, std::string& buffer /Out/, long size) const;
 
   };
 };

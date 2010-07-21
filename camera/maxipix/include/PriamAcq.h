@@ -18,7 +18,7 @@ class PriamAcq {
     DEB_CLASS_NAMESPC(DebModCamera, "PriamAcq", "Maxipix");
 
   public:
-
+    typedef std::pair<int,std::string> PortNFsr;
     enum TimeUnit {
       UNIT_US,
       UNIT_10US,
@@ -68,87 +68,90 @@ class PriamAcq {
     // --- configuration
 
     void setup(MaxipixDet::Version ver, MaxipixDet::Polarity pol, \
-		float freq, std::string fsr0);
+		float freq, const std::string &fsr0);
     void setChipType(MaxipixDet::Version, MaxipixDet::Polarity);
 
-    void getBoardVersion(short& pcb, short& firmware);
-    void getChipID(short port, long& id);
+    void getBoardVersion(short& pcb, short& firmware) const;
+    void getChipID(short port, long& id) const;
 
     void setFastFOSpeed(bool fast);
-    void getFastFOSpeed(bool& fast);
+    void getFastFOSpeed(bool& fast) const;
     
     void setOscillator(float freq);
-    void getOscillator(float& freq);
+    void getOscillator(float& freq) const;
 
-    void setChipFsr(short port, std::string fsr);
-    void setChipCfg(short port, std::string cfg);
+    void setChipFsr(short port,const std::string &fsr);
+    void setChipCfg(short port,const std::string &cfg);
     
+    void applyFsrChips();
+    void prepareFsrChips(const std::vector<PortNFsr> &);
+
     void enableSerial(short port);
 
     // --- timing
 
     void setTimeUnit(TimeUnit unit);
-    void getTimeUnit(TimeUnit& unit);
+    void getTimeUnit(TimeUnit& unit) const;
 
     void setExposureTime(double askexpo, double& setexpo);
-    void getExposureTime(double& expo);
+    void getExposureTime(double& expo) const;
 
     void setMaxExposureTime();
-    void getExposureTimeRange(double& min_expo, double& max_expo);
+    void getExposureTimeRange(double& min_expo, double& max_expo) const;
 
     void setIntervalTime(double asktime, double& settime);
-    void getIntervalTime(double& itime);
+    void getIntervalTime(double& itime) const;
 
-    void getIntervalTimeRange(double& minit, double& maxit);
+    void getIntervalTimeRange(double& minit, double& maxit) const;
 
     void setShutterTime(double asktime, double& settime);
-    void getShutterTime(double& stime);
+    void getShutterTime(double& stime) const;
 
     // --- external IO signals
 
     void setShutterLevel(SignalLevel level);
-    void getShutterLevel(SignalLevel& level);
+    void getShutterLevel(SignalLevel& level) const;
 
     void setShutterMode(ShutterMode mode);
-    void getShutterMode(ShutterMode& mode);
+    void getShutterMode(ShutterMode& mode) const;
 
     void setReadyLevel(SignalLevel level);
-    void getReadyLevel(SignalLevel& level);
+    void getReadyLevel(SignalLevel& level) const;
 
     void setReadyMode(ReadyMode mode);
-    void getReadyMode(ReadyMode& mode);
+    void getReadyMode(ReadyMode& mode) const;
 
     void setGateLevel(SignalLevel level);
-    void getGateLevel(SignalLevel& level);
+    void getGateLevel(SignalLevel& level) const;
 
     void setGateMode(GateMode mode);
-    void getGateMode(GateMode& mode);
+    void getGateMode(GateMode& mode) const;
 
     void setTriggerLevel(SignalLevel level);
-    void getTriggerLevel(SignalLevel& level);
+    void getTriggerLevel(SignalLevel& level) const;
 
     void setTriggerMode(TrigMode mode);
-    void getTriggerMode(TrigMode& mode);
+    void getTriggerMode(TrigMode& mode) const;
 
     // --- acquisition
 
     void setNbFrames(int nb);
-    void getNbFrames(int& nb);
+    void getNbFrames(int& nb) const;
 
     void setSerialReadout(short port);
     void setParalellReadout(std::vector<int> ports);
-    void getReadoutMode(ReadoutMode& mode, std::vector<int>& ports);
+    void getReadoutMode(ReadoutMode& mode, std::vector<int>& ports) const;
 
     void setImageMode(ImageMode image);
-    void getImageMode(ImageMode& image);
+    void getImageMode(ImageMode& image) const;
 
     void setFFCorrection(short flat);
-    void getFFCorrection(short& flat);
+    void getFFCorrection(short& flat) const;
 
     void startAcq();
     void stopAcq();
 
-    void getStatus(DetStatus& status);
+    void getStatus(DetStatus& status) const;
 
     // --- reset
 
@@ -160,51 +163,52 @@ class PriamAcq {
   private:
     void _readBoardID();
     void _timeAdjust();
-    void _timeToReg(double, double&, std::string&, std::string&);
-    void _regToTime(std::string, std::string, double&);
+    void _timeToReg(double,double&,std::string&,std::string&);
+    void _regToTime(const std::string,const std::string, double&) const;
     void _updateSignalReg(std::string&);
     void _writeSignalReg();
     void _writeRomReg();
     void _writeMsrReg(char);
     
-    inline void _checkPortNr(short port);
+    inline void _checkPortNr(short port) const;
 
 
-    PriamSerial& m_priam_serial;
-    short	m_setup;
-    MaxipixDet::Version  m_version;
-    std::vector<long> m_chip_id;
-    std::string m_board_id;
-    short	m_pcb; 
-    short	m_firmware;
-    float	m_osc_frequency;
-    std::string	m_chip_fsr0;
-    bool	m_fo_fast;
+    PriamSerial& 		m_priam_serial;
+    short			m_setup;
+    MaxipixDet::Version  	m_version;
+    std::vector<long> 		m_chip_id;
+    std::string 		m_board_id;
+    short			m_pcb; 
+    short			m_firmware;
+    float			m_osc_frequency;
+    std::string			m_chip_fsr0;
+    bool			m_fo_fast;
 
-    TimeUnit	m_time_unit;
-    double	m_time_us;
-    double	m_min_it;
-    double	m_expo_time;
-    double	m_int_time;
+    TimeUnit			m_time_unit;
+    double			m_time_us;
+    double			m_min_it;
+    double			m_expo_time;
+    double			m_int_time;
 
-    SignalLevel	m_shut_level;
-    ShutterMode	m_shut_mode;
-    SignalLevel	m_ready_level;
-    ReadyMode	m_ready_mode;
-    SignalLevel	m_gate_level;
-    GateMode	m_gate_mode;
-    SignalLevel	m_trig_level;
-    TrigMode	m_trig_mode;
+    SignalLevel			m_shut_level;
+    ShutterMode			m_shut_mode;
+    SignalLevel			m_ready_level;
+    ReadyMode			m_ready_mode;
+    SignalLevel			m_gate_level;
+    GateMode			m_gate_mode;
+    SignalLevel			m_trig_level;
+    TrigMode			m_trig_mode;
 
-    ReadoutMode m_read_mode;
-    ImageMode   m_img_mode;
-    short	m_flatfield;	
-    int		m_nb_frame;
+    ReadoutMode 		m_read_mode;
+    ImageMode   		m_img_mode;
+    short			m_flatfield;	
+    int				m_nb_frame;
 
-    std::vector<int>  m_port_used;
+    std::vector<int>  		m_port_used;
+    std::map<int,std::string> 	m_next_fsr_chips;
   };
 
-  inline void PriamAcq::_checkPortNr(short port)
+  inline void PriamAcq::_checkPortNr(short port) const
   {
     if ((port<0)||(port>=maxPorts))
         throw LIMA_HW_EXC(InvalidValue, "Invalid priam port number");

@@ -68,7 +68,7 @@ PriamSerial::~PriamSerial()
     DEB_DESTRUCTOR();
 }
 
-void PriamSerial::writeRegister(PriamRegister reg, string& buffer)
+void PriamSerial::writeRegister(PriamRegister reg,const string& buffer)
 {
     DEB_MEMBER_FUNCT();
 
@@ -89,7 +89,7 @@ void PriamSerial::writeRegister(PriamRegister reg, string& buffer)
     _readAnswer(wreg.writeCode, 0, rbuf);
 }
 
-void PriamSerial::readRegister(PriamRegister reg, string& buffer, long size)
+void PriamSerial::readRegister(PriamRegister reg,string& buffer, long size) const
 {
     DEB_MEMBER_FUNCT();
 
@@ -117,7 +117,7 @@ void PriamSerial::readRegister(PriamRegister reg, string& buffer, long size)
 	throw LIMA_HW_EXC(Error, "Priam return size not correct");
 }
 
-void PriamSerial::_writeCommand(short code, string &inbuf)
+void PriamSerial::_writeCommand(short code,const string &inbuf) const
 {
     DEB_MEMBER_FUNCT();
     string wbuf;
@@ -133,7 +133,7 @@ void PriamSerial::_writeCommand(short code, string &inbuf)
     }
 }
 
-void PriamSerial::_readAnswer(short code, long size, string &rbuf)
+void PriamSerial::_readAnswer(short code, long size, string &rbuf) const
 {
     DEB_MEMBER_FUNCT();
     double tout;
@@ -172,7 +172,7 @@ void PriamSerial::_readAnswer(short code, long size, string &rbuf)
     }
 }
 
-void PriamSerial::writeFsr(string& fsr, string& bid)
+void PriamSerial::writeFsr(const string& fsr,string& bid)
 {
     DEB_MEMBER_FUNCT();
     PriamCodeType reg;
@@ -185,7 +185,7 @@ void PriamSerial::writeFsr(string& fsr, string& bid)
     _readAnswer(reg.writeCode, reg.readSize, bid);
 }
 
-void PriamSerial::writeMatrix(string& input)
+void PriamSerial::writeMatrix(const string& input)
 {
     DEB_MEMBER_FUNCT();
 
@@ -202,7 +202,7 @@ void PriamSerial::writeMatrix(string& input)
     _readAnswer(reg.writeCode, 0, rbuf);
 }
 
-void PriamSerial::readMatrix(string& output)
+void PriamSerial::readMatrix(string& output) const
 {
     DEB_MEMBER_FUNCT();
 
@@ -216,7 +216,7 @@ void PriamSerial::readMatrix(string& output)
     _readAnswer(reg.readCode, reg.readSize, output);
 }
 
-void PriamSerial::writeLut(PriamLut lut, string& buffer)
+void PriamSerial::writeLut(PriamLut lut,const string& buffer)
 {
     PriamCodeType reg;
     string wbuf("");
@@ -235,7 +235,7 @@ void PriamSerial::writeLut(PriamLut lut, string& buffer)
     _readAnswer(reg.writeCode, 0, wbuf);
 }
 
-void PriamSerial::readLut(PriamLut lut, string& buffer, long size)
+void PriamSerial::readLut(PriamLut lut, string& buffer, long size) const
 {
     PriamCodeType reg;
     string wbuf("");

@@ -36,14 +36,15 @@ void PriamAcq::_readBoardID()
     m_firmware= (short)(m_board_id.at(0) & 0x0f);
 }
 
-void PriamAcq::getBoardVersion(short& pcb, short& firmware)
+void PriamAcq::getBoardVersion(short& pcb, short& firmware) const
 {
     pcb= m_pcb;
     firmware= m_firmware;
 }
 
-void PriamAcq::setup(MaxipixDet::Version version, \
-	MaxipixDet::Polarity polarity, float osc, string fsr0)
+void PriamAcq::setup(MaxipixDet::Version version,
+		     MaxipixDet::Polarity polarity, 
+		     float osc,const string &fsr0)
 {
     enableSerial(0);
     setChipType(version, polarity);
@@ -51,8 +52,8 @@ void PriamAcq::setup(MaxipixDet::Version version, \
     setOscillator(osc);
 }
 
-void PriamAcq::setChipType(MaxipixDet::Version version, \
-	MaxipixDet::Polarity polarity)
+void PriamAcq::setChipType(MaxipixDet::Version version,
+			   MaxipixDet::Polarity polarity)
 {
     string sval;
     char val;
@@ -86,7 +87,7 @@ void PriamAcq::setFastFOSpeed(bool fast)
     m_fo_fast= fast;
 }
 
-void PriamAcq::getFastFOSpeed(bool& fast)
+void PriamAcq::getFastFOSpeed(bool& fast) const
 {
     string sval;
     m_priam_serial.readRegister(PriamSerial::PR_MCR1, sval);
@@ -150,7 +151,7 @@ void PriamAcq::setOscillator(float frequency)
 
     m_setup |= 0x02;
 }
-void PriamAcq::getOscillator(float& frequency)
+void PriamAcq::getOscillator(float& frequency) const
 {
     frequency= m_osc_frequency;
 }
@@ -199,9 +200,17 @@ void PriamAcq::enableSerial(short port)
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, sval);
 }
     
-void PriamAcq::setChipFsr(short port, string fsr)
+void PriamAcq::setChipFsr(short port,const string &fsr)
 {
-    string sdummy, sid;
+   DEB_MEMBER_FUNCT();
+
+  std::ostringstream fsrString;
+  fsrString << std::hex;
+  fsrString << fsr;
+
+   DEB_PARAM() << DEB_VAR2(port,fsrString);
+
+   string sdummy, sid;
 
     enableSerial(port);
     sdummy.append(32, '\xff');
@@ -213,14 +222,50 @@ void PriamAcq::setChipFsr(short port, string fsr)
     if (port==0)
 	m_chip_fsr0= fsr;
 }
+/** @brief apply next fsr into chips.
+    This is normally called into Interface::prepareAcq
+*/
+void PriamAcq::applyFsrChips()
+{
+  for(std::map<int,std::string>::iterator i = m_next_fsr_chips.begin();
+      i != m_next_fsr_chips.end();++i)
+    setChipFsr(i->first,i->second);
+  m_next_fsr_chips.clear();
+}
 
-void PriamAcq::getChipID(short port, long& id)
+/** @brief set fsf for chips. The register is actually send when
+    applyNextFsrChips is called.
+*/
+void PriamAcq::prepareFsrChips(const std::vector<PortNFsr> &aFsrS)
+{
+  DEB_MEMBER_FUNCT();
+
+  for(std::vector<PortNFsr>::const_iterator i = aFsrS.begin();
+      i != aFsrS.end();++i)
+    {
+      int port = i->first;
+      const std::string &fsr = i->second;
+
+      std::ostringstream fsrString;
+      fsrString << std::hex;
+      fsrString << fsr;
+
+      DEB_TRACE() << DEB_VAR2(port,fsrString);
+
+      std::pair<std::map<int,std::string>::iterator, bool> insertTest = 
+	m_next_fsr_chips.insert(std::pair<int,std::string>(port,fsr));
+      if(!insertTest.second)
+	insertTest.first->second = i->second;
+    }
+}
+
+void PriamAcq::getChipID(short port, long& id) const
 {
     _checkPortNr(port);
     id= m_chip_id[port];
 }
 
-void PriamAcq::setChipCfg(short port, string cfg)
+void PriamAcq::setChipCfg(short port,const string &cfg)
 {
     string out;
     enableSerial(port);
@@ -234,7 +279,7 @@ void PriamAcq::setTimeUnit(TimeUnit unit)
     m_time_us= pow(10., (int)m_time_unit);
 }
 
-void PriamAcq::getTimeUnit(TimeUnit& unit)
+void PriamAcq::getTimeUnit(TimeUnit& unit) const
 {
     unit= m_time_unit;
 }
@@ -258,7 +303,7 @@ void PriamAcq::_timeToReg(double in, double& out, string& reg1, string& reg2)
     out= ((double)it * pow(10.,iu)) / m_time_us;
 }
 
-void PriamAcq::_regToTime(string reg1, string reg2, double& out)
+void PriamAcq::_regToTime(string reg1, string reg2, double& out) const
 {
     int iu, it;
 
@@ -286,7 +331,7 @@ void PriamAcq::setExposureTime(double askexpo, double& setexpo)
     m_expo_time= setexpo;
 }
 
-void PriamAcq::getExposureTime(double& expo)
+void PriamAcq::getExposureTime(double& expo) const
 {
     string et1, et2;
     m_priam_serial.readRegister(PriamSerial::PR_ET1, et1);
@@ -294,7 +339,7 @@ void PriamAcq::getExposureTime(double& expo)
     _regToTime(et1, et2, expo);
 }
 
-void PriamAcq::getExposureTimeRange(double& min_expo, double& max_expo)
+void PriamAcq::getExposureTimeRange(double& min_expo, double& max_expo) const
 {
     min_expo= 300 / m_time_us;
     max_expo= (double)0x3ff * 1000000. / m_time_us;
@@ -316,7 +361,7 @@ void PriamAcq::setIntervalTime(double asktime, double& settime)
     m_int_time= settime;
 }
 
-void PriamAcq::getIntervalTime(double& itime)
+void PriamAcq::getIntervalTime(double& itime) const
 {
     string it1, it2;
 
@@ -325,7 +370,7 @@ void PriamAcq::getIntervalTime(double& itime)
     _regToTime(it1, it2, itime);
 }
 
-void PriamAcq::getIntervalTimeRange(double& minit, double& maxit)
+void PriamAcq::getIntervalTimeRange(double& minit, double& maxit) const
 {
     minit= m_min_it / m_time_us;
     maxit= (double)0x3ff * 1000000. / m_time_us;
@@ -341,7 +386,7 @@ void PriamAcq::setShutterTime(double asktime, double& settime)
     m_priam_serial.writeRegister(PriamSerial::PR_ST2, st2);
 }
 
-void PriamAcq::getShutterTime(double& stime)
+void PriamAcq::getShutterTime(double& stime) const
 {
     string st1, st2;
 
@@ -375,7 +420,7 @@ void PriamAcq::setShutterLevel(SignalLevel level)
     _writeSignalReg();
 }
 
-void PriamAcq::getShutterLevel(SignalLevel& level)
+void PriamAcq::getShutterLevel(SignalLevel& level) const
 {
     level= m_shut_level;
 }
@@ -386,7 +431,7 @@ void PriamAcq::setShutterMode(ShutterMode mode)
     _writeSignalReg();
 }
 
-void PriamAcq::getShutterMode(ShutterMode& mode)
+void PriamAcq::getShutterMode(ShutterMode& mode) const
 {
     mode= m_shut_mode;
 }
@@ -397,7 +442,7 @@ void PriamAcq::setReadyLevel(SignalLevel level)
     _writeSignalReg();
 }
 
-void PriamAcq::getReadyLevel(SignalLevel& level)
+void PriamAcq::getReadyLevel(SignalLevel& level) const
 {
     level= m_ready_level;
 }
@@ -407,7 +452,7 @@ void PriamAcq::setReadyMode(ReadyMode mode)
     m_ready_mode= mode;
 }
 
-void PriamAcq::getReadyMode(ReadyMode& mode)
+void PriamAcq::getReadyMode(ReadyMode& mode) const
 {
     mode= m_ready_mode;
 }
@@ -417,7 +462,7 @@ void PriamAcq::setGateLevel(SignalLevel level)
     m_gate_level= level;
 }
 
-void PriamAcq::getGateLevel(SignalLevel& level)
+void PriamAcq::getGateLevel(SignalLevel& level) const
 {
     level= m_gate_level;
 }
@@ -427,7 +472,7 @@ void PriamAcq::setGateMode(GateMode mode)
     m_gate_mode= mode;
 }
 
-void PriamAcq::getGateMode(GateMode& mode)
+void PriamAcq::getGateMode(GateMode& mode) const
 {
     mode= m_gate_mode;
 }
@@ -437,7 +482,7 @@ void PriamAcq::setTriggerLevel(SignalLevel level)
     m_trig_level= level;
 }
 
-void PriamAcq::getTriggerLevel(SignalLevel& level)
+void PriamAcq::getTriggerLevel(SignalLevel& level) const
 {
     level= m_trig_level;
 }
@@ -447,7 +492,7 @@ void PriamAcq::setTriggerMode(TrigMode mode)
     m_trig_mode= mode;
 }
 
-void PriamAcq::getTriggerMode(TrigMode& mode)
+void PriamAcq::getTriggerMode(TrigMode& mode) const
 {
     mode= m_trig_mode;
 }
@@ -469,7 +514,7 @@ void PriamAcq::setNbFrames(int nb)
     m_nb_frame= nb;
 }
 
-void PriamAcq::getNbFrames(int& nb)
+void PriamAcq::getNbFrames(int& nb) const
 {
     string in1, in2;
 
@@ -498,7 +543,7 @@ void PriamAcq::setImageMode(ImageMode img)
     _writeRomReg();
 }
 
-void PriamAcq::getImageMode(ImageMode& img)
+void PriamAcq::getImageMode(ImageMode& img) const
 {
     img= m_img_mode;
 }
@@ -527,7 +572,7 @@ void PriamAcq::setParalellReadout(vector<int> ports)
     _writeRomReg();
 }
 
-void PriamAcq::getReadoutMode(ReadoutMode& mode, vector<int>& ports)
+void PriamAcq::getReadoutMode(ReadoutMode& mode, vector<int>& ports) const
 {
     mode= m_read_mode;
     ports= m_port_used;
@@ -541,7 +586,7 @@ void PriamAcq::setFFCorrection(short flat)
     _writeRomReg();
 }
 
-void PriamAcq::getFFCorrection(short& flat)
+void PriamAcq::getFFCorrection(short& flat) const
 {
     flat= m_flatfield;
 }
@@ -607,7 +652,7 @@ void PriamAcq::stopAcq()
     enableSerial(0);
 }
 
-void PriamAcq::getStatus(DetStatus& status)
+void PriamAcq::getStatus(DetStatus& status) const
 {
     string msr;
     int	busy;

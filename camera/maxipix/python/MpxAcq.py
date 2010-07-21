@@ -102,6 +102,7 @@ class MpxAcq:
 	print "Setting PRIAM configuration ..."
 	self.__pacq.setup(self.mpxCfg["version"], self.mpxCfg["polarity"],
 			  self.mpxCfg["frequency"], self.mpxDacs.getFsrString(1))
+        
 	self.__pacq.setParalellReadout(self.priamPorts)
 	self.__pacq.setImageMode(Maxipix.PriamAcq.NORMAL)
 	self.__pacq.setGateMode(Maxipix.PriamAcq.INACTIVE)

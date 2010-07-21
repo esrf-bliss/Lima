@@ -87,23 +87,22 @@ namespace Maxipix {
     PriamSerial(Espia::SerialLine &espia_serial_line);
     ~PriamSerial();
 
-    void writeRegister(PriamRegister reg, std::string& buffer);
-    void readRegister(PriamRegister reg, std::string& buffer, long size=0);
+    void writeRegister(PriamRegister reg,const std::string& buffer);
+    void readRegister(PriamRegister reg,std::string& buffer, long size=0) const;
 
-    void writeFsr(std::string& fsr, std::string& bid);
+    void writeFsr(const std::string& fsr,std::string& bid);
 
-    void writeMatrix(std::string& input);
-    void readMatrix(std::string& output);
+    void writeMatrix(const std::string& input);
+    void readMatrix(std::string& output) const;
 
-    void writeLut(PriamLut lut, std::string& buffer);
-    void readLut(PriamLut lut, std::string& buffer, long size);
+    void writeLut(PriamLut lut,const std::string& buffer);
+    void readLut(PriamLut lut,std::string& buffer,long size) const;
 
   private:
-    void _readAnswer(short code, long size, std::string& buf);
-    void _writeCommand(short code, std::string& buf);
+    void _readAnswer(short code,long size,std::string& buf) const;
+    void _writeCommand(short code,const std::string& buf) const;
 
-    Espia::SerialLine& m_espia_serial;
-    
+    mutable Espia::SerialLine& m_espia_serial;
   };
 
 }
