@@ -1,5 +1,4 @@
 #include "FrelonCamera.h"
-#include "RegEx.h"
 #include "MiscUtils.h"
 #include <sstream>
 
@@ -35,10 +34,32 @@ void Camera::sync()
 
 	DEB_TRACE() << "Synchronizing with the camera";
 
+	m_model.reset();
+
+	try {
+		string ver;
+		getVersion(ver);
+		m_model.setVersion(ver);
+	} catch (Exception e) {
+		string err_msg = e.getErrMsg();
+		DEB_ERROR() << "Error getting version: " << DEB_VAR1(err_msg);
+		string timeout_msg = Espia::StrError(SCDXIPCI_ERR_TIMEOUT);
+		bool timeout = (err_msg.find(timeout_msg) != string::npos);
+		if (!timeout)
+			throw;
+
+		THROW_HW_ERROR(Error) << "Serial connection timeout: "
+					 "is camera ON and connected?";
+	}
+
+	int complex_ser_nb;
+	getComplexSerialNb(complex_ser_nb);
+	m_model.setComplexSerialNb(complex_ser_nb);
+
 	string ver;
-	getVersion(ver);
-	int ser_nb;
-	getSerialNb(ser_nb);
+	m_model.getVersion(ver);
+	DEB_ALWAYS() << "Found Frelon " << m_model.getName() 
+		     << " #" << m_model.getSerialNb() << ", FW:" << ver;
 
 	double exp_time;
 	getExpTime(exp_time);
@@ -66,10 +87,9 @@ void Camera::sendCmd(Cmd cmd)
 	DEB_MEMBER_FUNCT();
 	const string& cmd_str = CmdStrMap[cmd];
 	DEB_PARAM() << DEB_VAR2(cmd, cmd_str);
-	if (cmd_str.empty()) {
-		DEB_ERROR() << "Invalid command cmd=" << cmd;
-		throw LIMA_HW_EXC(InvalidValue, "Invalid command");
-	}
+	if (cmd_str.empty())
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(cmd);
 
 	string resp;
 	m_ser_line.sendFmtCmd(cmd_str, resp);
@@ -112,47 +132,9 @@ void Camera::getComplexSerialNb(int& complex_ser_nb)
 	DEB_RETURN() << DEB_VAR1(DEB_HEX(complex_ser_nb));
 }
 
-void Camera::getSerialNbParam(SerNbParam param, int& val)
+Model& Camera::getModel()
 {
-	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(DEB_HEX(param));
-	int complex_ser_nb;
-	getComplexSerialNb(complex_ser_nb);
-	val = complex_ser_nb & int(param);
-}
-
-void Camera::getSerialNb(int& ser_nb)
-{
-	DEB_MEMBER_FUNCT();
-	getSerialNbParam(SerNb, ser_nb);
-	DEB_RETURN() << DEB_VAR1(ser_nb);
-}
-
-void Camera::isFrelon2k16(bool& is_frelon_2k16)
-{
-	DEB_MEMBER_FUNCT();
-	int frelon_2k16;
-	getSerialNbParam(F2k16, frelon_2k16);
-	is_frelon_2k16 = bool(frelon_2k16);
-	DEB_RETURN() << DEB_VAR1(is_frelon_2k16);
-}
-
-void Camera::isFrelon4M(bool& is_frelon_4m)
-{
-	DEB_MEMBER_FUNCT();
-	int f4m;
-	getSerialNbParam(F4M, f4m);
-	is_frelon_4m = bool(f4m);
-	DEB_RETURN() << DEB_VAR1(is_frelon_4m);
-}
-
-void Camera::hasTaper(bool& has_taper)
-{
-	DEB_MEMBER_FUNCT();
-	int taper;
-	getSerialNbParam(Taper, taper);
-	has_taper = bool(taper);
-	DEB_RETURN() << DEB_VAR1(has_taper);
+	return m_model;
 }
 
 void Camera::setChanMode(int chan_mode)
@@ -187,7 +169,8 @@ void Camera::getInputChanMode(FrameTransferMode ftm, InputChan input_chan,
 	InputChanList::const_iterator it;
 	it = find(chan_list.begin(), chan_list.end(), input_chan);
 	if (it == chan_list.end())
-		throw LIMA_HW_EXC(InvalidValue, "Invalid input channel");
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(input_chan);
 	chan_mode += it - chan_list.begin();
 
 	DEB_RETURN() << DEB_VAR1(chan_mode);
@@ -263,7 +246,7 @@ void Camera::getFrameTransferMode(FrameTransferMode& ftm)
 		}
 	}
 
-	throw LIMA_HW_EXC(Error, "Invalid chan mode");
+	THROW_HW_ERROR(Error) << "Invalid " << DEB_VAR1(chan_mode);
 }
 
 void Camera::getFrameDim(FrameDim& frame_dim)
@@ -338,10 +321,9 @@ void Camera::setBin(const Bin& bin)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(bin);
 	
-	if ((bin.getX() > 8) || (bin.getY() > 1024)) {
-		DEB_ERROR() << "Invalid bin: " << bin << ". Must be <= 8x1024";
-		throw LIMA_HW_EXC(InvalidValue, "Bin must be <= 8x1024");
-	}
+	if ((bin.getX() > 8) || (bin.getY() > 1024))
+		THROW_HW_ERROR(InvalidValue) << "Invalid " << DEB_VAR1(bin)
+					     << ". Must be <= 8x1024";
 
 	Bin curr_bin;
 	getBin(curr_bin);
@@ -734,13 +716,12 @@ void Camera::setRoiBinOffset(const Point& roi_bin_offset)
 	Size bin_size = Point(bin);
 	Roi valid_offset_range(Point(0), bin_size);
 	if (!valid_offset_range.containsPoint(roi_bin_offset)) {
-		string err_msg = "Invalid unaligned ";
-		DEB_ERROR() << err_msg << DEB_VAR1(roi_bin_offset);
-		throw LIMA_HW_EXC(InvalidValue, err_msg + "roi_bin_offset");
+		THROW_HW_ERROR(InvalidValue) << "Invalid unaligned " 
+					     << DEB_VAR1(roi_bin_offset);
 	} else if (roi_bin_offset.x != 0) {
-		string err_msg = "Roi must be horizontally aligned to bin";
-		DEB_ERROR() << err_msg;
-		throw LIMA_HW_EXC(InvalidValue, err_msg);
+		THROW_HW_ERROR(InvalidValue) 
+			<< "Invalid " << DEB_VAR1(roi_bin_offset) << ". "
+			<< "Must be horizontally aligned to " << DEB_VAR1(bin);
 	}
 
 	Roi chan_roi;
@@ -772,11 +753,9 @@ void Camera::setRoiBinOffset(const Point& roi_bin_offset)
 		image_roi.setTopLeft(image_tl);
 		ok = max_chan_roi.containsRoi(image_roi);
 	}
-	if (!ok) {
-		string err_msg = "Cannot apply requested ";
-		DEB_ERROR() << err_msg << DEB_VAR1(roi_bin_offset);
-		throw LIMA_HW_EXC(InvalidValue, err_msg + "roi_bin_offset");
-	}
+	if (!ok)
+		THROW_HW_ERROR(InvalidValue) << "Cannot apply requested "
+					     << DEB_VAR1(roi_bin_offset);
 
 	Point chan_tl, chan_br;
 	xformChanCoords(image_roi.getTopLeft(),     chan_tl, c_tl);
@@ -848,10 +827,9 @@ void Camera::setExpTime(double exp_time)
 		if (ok)
 			break;
 	}
-	if (!ok) {
-		DEB_ERROR() << "Exp. time too high: " << DEB_VAR1(exp_time);
-		throw LIMA_HW_EXC(InvalidValue, "Exposure time too high");
-	}
+	if (!ok)
+		THROW_HW_ERROR(InvalidValue) << "Exp. time too high: " 
+					     << DEB_VAR1(exp_time);
 
 	TimeUnitFactor time_unit_factor = (exp_val == 0) ? Milliseconds : *it;
 	setTimeUnitFactor(time_unit_factor);

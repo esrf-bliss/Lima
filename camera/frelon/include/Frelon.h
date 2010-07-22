@@ -80,10 +80,12 @@ extern FTMInputChanListMapType FTMInputChanListMap;
 
 
 enum SerNbParam {
-	SerNb = 0x00ff,
-	F4M   = 0x2000,
-	F2k16 = 0x4000,
-	Taper = 0x8000,
+	SerNb      = 0x00ff,
+	SPB1Kodak  = 0x2000,
+	SPB1Adc16  = 0x4000,
+	SPB2Sign   = 0x0100,
+	SPB2Type   = 0x7000,
+	Taper      = 0x8000,
 };
 
 enum RoiMode {

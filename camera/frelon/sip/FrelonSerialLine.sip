@@ -7,9 +7,6 @@ class SerialLine : HwSerialLine
 
 %TypeHeaderCode
 #include "FrelonSerialLine.h"
-#include "RegEx.h"
-#include "MiscUtils.h"
-#include <sstream>
 %End
 
  public:

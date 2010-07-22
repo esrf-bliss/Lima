@@ -22,9 +22,8 @@ void HwFrameCallbackGen::registerFrameCallback(HwFrameCallback& frame_cb)
 	DEB_PARAM() << DEB_VAR2(&frame_cb, m_frame_cb);
 
 	if (m_frame_cb) {
-		DEB_ERROR() << "A FrameCallback is already registered";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "A FrameCallback is already registered");
+		THROW_HW_ERROR(InvalidValue) << 
+			"A FrameCallback is already registered";
 	}
 
 	frame_cb.setFrameCallbackGen(this);
@@ -38,9 +37,8 @@ void HwFrameCallbackGen::unregisterFrameCallback(HwFrameCallback& frame_cb)
 	DEB_PARAM() << DEB_VAR2(&frame_cb, m_frame_cb);
 
 	if (m_frame_cb != &frame_cb) { 
-		DEB_ERROR() << "Specified FrameCallback is not registered";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "Specified FrameCallback is not registered");
+		THROW_HW_ERROR(InvalidValue) << 
+			"Specified FrameCallback is not registered";
 	}
 
 	setFrameCallbackActive(false);
@@ -82,13 +80,11 @@ void HwFrameCallback::setFrameCallbackGen(HwFrameCallbackGen *frame_cb_gen)
 	DEB_PARAM() << DEB_VAR2(frame_cb_gen, m_frame_cb_gen);
 
 	if (frame_cb_gen && m_frame_cb_gen) {
-		DEB_ERROR() << "HwFrameCallbackGen is already set";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "HwFrameCallbackGen is already set");
+		THROW_HW_ERROR(InvalidValue) <<  
+			"HwFrameCallbackGen is already set";
 	} else if (!frame_cb_gen && !m_frame_cb_gen) {
-		DEB_ERROR() << "HwFrameCallbackGen is not set";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "HwFrameCallbackGen is not set");
+		THROW_HW_ERROR(InvalidValue) << 
+			"HwFrameCallbackGen is not set";
 	}
 
 	m_frame_cb_gen = frame_cb_gen;

@@ -216,7 +216,8 @@ int Espia::Focla::Dev::pIdxFromName( const string pname )
 
 	map<string, int>::iterator pnm = ParamName2IdxMap.find(pname);
 	if( pnm == ParamName2IdxMap.end() )
-		throw LIMA_HW_EXC(InvalidValue, "No such Focla parameter name");
+		THROW_HW_ERROR(InvalidValue) << "No such Focla param. name: "
+					     << DEB_VAR1(pname);
 	return pnm->second;
 }
 
@@ -225,10 +226,9 @@ void Espia::Focla::Dev::checkMeta() throw(Exception)
 {
 	DEB_MEMBER_FUNCT();
 
-	if( m_edev.isMeta() ) {
-		throw LIMA_HW_EXC(NotSupported, "Operation not permitted on "
-		                                "meta-devices!");
-	}
+	if( m_edev.isMeta() )
+		THROW_HW_ERROR(NotSupported) 
+			<< "Operation not permitted on meta-devices!";
 }
 
 
@@ -480,7 +480,7 @@ void Espia::Focla::Dev::ccLevelGet( int cam_nb, int cc_nb,
 			return;
 		}
 	}
-	throw LIMA_HW_EXC(InvalidValue, "Interanl error"); // ???
+	THROW_HW_ERROR(Error) << "Internal error"; // ???
 }
 
 
@@ -504,7 +504,7 @@ void Espia::Focla::Dev::ccLevelSet( int cam_nb, int cc_nb,
 		pval = Espia::Focla::CCLevel[cc_level];
 		setParam( pname, pval );
 	} else {
-		throw LIMA_HW_EXC(InvalidValue, "Interanl error"); // ???
+		THROW_HW_ERROR(Error) << "Internal error"; // ???
 	}
 }
 
@@ -525,7 +525,8 @@ int Espia::Focla::Dev::sigNbFromName( const string sname )
 
 	map<string, int>::iterator snm = SigName2IdxMap.find(sname);
 	if( snm == SigName2IdxMap.end() )
-		throw LIMA_HW_EXC(InvalidValue, "No such Focla signal name");
+		THROW_HW_ERROR(InvalidValue) << "No such Focla signal name: "
+					     << DEB_VAR1(sname);
 	return snm->second;
 }
 

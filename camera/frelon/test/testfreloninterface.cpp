@@ -73,7 +73,8 @@ void SoftRoiCallback::data2FrameInfo(Data& data, HwFrameInfoType& finfo,
 	case Data::UINT32:
 		image_type = Bpp32; break;
 	default:
-		throw LIMA_HW_EXC(InvalidValue, "Unknown data type");
+		THROW_HW_ERROR(InvalidValue) << "Unknown " 
+					     << DEB_VAR1(data.type);
 	}
 
 	HwBufferCtrlObj *buffer_ctrl;
@@ -172,8 +173,8 @@ void TestFrameCallback::frameInfo2Data(const HwFrameInfoType& frame_info,
 	case Bpp32:
 		data.type = Data::UINT32; break;
 	default:
-		DEB_ERROR() << "Invalid frame image type";
-		throw LIMA_HW_EXC(InvalidValue, "Invalid frame image type");
+		THROW_HW_ERROR(InvalidValue) << "Invalid "
+					     << DEB_VAR1(image_type);
 	}
 	
 	Buffer *buffer = new Buffer();
@@ -470,8 +471,7 @@ void test_frelon_hw_inter(bool do_reset)
 	if (raised_exception) {
 		DEB_TRACE() << "Exception was raised OK!";
 	} else {
-		DEB_ERROR() << "Did not raise bad bin exception";
-		throw LIMA_HW_EXC(Error, "Did not raise bad bin exception");
+		THROW_HW_ERROR(Error) << "Did not raise bad bin exception";
 	}
 
 	bin = Bin(2, 2);

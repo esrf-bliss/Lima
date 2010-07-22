@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <ostream>
+#include <sstream>
 
 namespace lima
 {
@@ -22,7 +23,16 @@ class Exception
 	Exception(Layer layer, ErrorType err_type, std::string err_desc,
 		  std::string file_name, std::string funct_name, int line_nr);
 
-	std::string getErrMsg() const;
+	Layer       getLayer()     const;
+	ErrorType   getErrType()   const;
+	std::string getErrDesc()   const;
+	std::string getFileName()  const;
+	std::string getFunctName() const;
+
+	std::string getErrMsg()    const;
+
+	template <class T>
+	Exception& operator <<(const T& o);
 
  private:
 	Layer m_layer;
@@ -33,10 +43,19 @@ class Exception
 	int m_line_nr;
 };
 
+template <class T>
+Exception& Exception::operator <<(const T& o)
+{
+	std::ostringstream os;
+	os << o;
+	m_err_desc += os.str();
+	return *this;
+}
+
+
 std::ostream& operator <<(std::ostream& os, Layer layer);
 std::ostream& operator <<(std::ostream& os, ErrorType err_type);
 std::ostream& operator <<(std::ostream& os, const Exception& e);
-
 
 #define LIMA_EXC(layer, err_type, err_desc) \
 	Exception(layer, err_type, err_desc, __FILE__, __FUNCTION__, __LINE__)

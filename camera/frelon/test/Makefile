@@ -1,17 +1,13 @@
 include ../../../config.inc
 
-frelon-objs = ../src/Frelon.o ../../common/espia/src/Espia.o \
-	      ../../../hardware/src/Hw.o ../../../common/src/Common.o 
-
-ct-objs = ../../../control/src/Ct.o
-
 SRCS = testfrelon.cpp testfreloninterface.cpp testfrelonspectroscopy.cpp \
        testfreloncontrol.cpp
 
 include ../../common/espia/include/espia.inc
 
-LDFLAGS = -pthread -L$(ESPIA_DRV_LIB) -L../../../third-party/Processlib/build 
-LDLIBS = -lespia -lprocesslib
+LDFLAGS = -pthread -L../../../build -L$(ESPIA_DRV_LIB) \
+	  -L../../../third-party/Processlib/build 
+LDLIBS = -llimafrelon -llimaespia -llimacore -lespia -lprocesslib 
 
 ifneq ($(COMPILE_CBF_SAVING), 0)
 LDFLAGS += -L../../../third-party/CBFLib/lib
@@ -32,16 +28,16 @@ test-progs = testfrelon testfreloninterface testfrelonspectroscopy \
 
 all: 	$(test-progs)
 
-testfrelon:		testfrelon.o $(frelon-objs)
+testfrelon:		testfrelon.o
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
-testfreloninterface:	testfreloninterface.o $(frelon-objs) $(ct-objs)
+testfreloninterface:	testfreloninterface.o
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
-testfrelonspectroscopy:	testfrelonspectroscopy.o $(frelon-objs)
+testfrelonspectroscopy:	testfrelonspectroscopy.o
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
-testfreloncontrol:	testfreloncontrol.o $(frelon-objs) $(ct-objs)
+testfreloncontrol:	testfreloncontrol.o
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 clean:

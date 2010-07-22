@@ -162,10 +162,9 @@ void Dev::getDrvOption(const string& opt_name, int& val)
 	DEB_PARAM() << DEB_VAR1(opt_name);
 
 	map<string, int>::iterator pop = EspiaDrvOptMap.find(opt_name);
-	if (pop == EspiaDrvOptMap.end()) {
-		DEB_ERROR() << "Invalid driver option: " << opt_name;
-		throw LIMA_HW_EXC(InvalidValue, "No such Espia driver option");
-	}
+	if (pop == EspiaDrvOptMap.end())
+		THROW_HW_ERROR(InvalidValue) << "Invalid driver option: " 
+					     << DEB_VAR1(opt_name);
 
 	int action = SCDXIPCI_OPT_RD;
 	DEB_TRACE() << "Reading driver option #" << pop->second;
@@ -181,10 +180,9 @@ void Dev::setDrvOption(const string& opt_name, int val)
 	DEB_PARAM() << DEB_VAR2(opt_name, val);
 
 	map<string, int>::iterator pop = EspiaDrvOptMap.find(opt_name);
-	if (pop == EspiaDrvOptMap.end()) {
-		DEB_ERROR() << "Invalid driver option: " << opt_name;
-		throw LIMA_HW_EXC(InvalidValue, "No such Espia driver option");
-	}
+	if (pop == EspiaDrvOptMap.end())
+		THROW_HW_ERROR(InvalidValue) << "Invalid driver option: " 
+					     << DEB_VAR1(opt_name);
 
 	int action = SCDXIPCI_OPT_RD_WR;
 	DEB_TRACE() << "Writing driver option #" << pop->second << "=" << val;

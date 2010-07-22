@@ -24,11 +24,9 @@ SerialLine::SerialLine(Dev& edev, const string& line_term,
 	DEB_CONSTRUCTOR();
 	DEB_PARAM() << DEB_VAR1(edev.getDevNb());
 
-	if (edev.isMeta()) {
-		DEB_ERROR() << "Specified Dev is a meta-device";
-		throw LIMA_HW_EXC(NotSupported, "Can't create a "
-		                          "SerialLine for a meta-device");
-	}
+	if (edev.isMeta())
+		THROW_HW_ERROR(NotSupported) 
+			<< "Can't create a SerialLine on a meta-device";
 
 	ostringstream os;
 	os << "Serial#" << edev.getDevNb();

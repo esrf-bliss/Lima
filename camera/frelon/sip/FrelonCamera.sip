@@ -8,9 +8,6 @@ class Camera
 
 %TypeHeaderCode
 #include "FrelonCamera.h"
-#include "RegEx.h"
-#include "MiscUtils.h"
-#include <sstream>
 %End
 
  public:
@@ -24,12 +21,8 @@ class Camera
 
 	void hardReset();
 	void getVersion(std::string& ver /Out/);
-
 	void getComplexSerialNb(int& complex_ser_nb /Out/);
-	void getSerialNb(int& ser_nb /Out/);
-	void isFrelon2k16(bool& is_frelon_2k16 /Out/);
-	void isFrelon4M(bool& is_frelon_4m /Out/);
-	void hasTaper(bool& has_taper /Out/);
+	Frelon::Model& getModel();
 
 	void setInputChan(Frelon::InputChan  input_chan);
 	void getInputChan(Frelon::InputChan& input_chan /Out/);

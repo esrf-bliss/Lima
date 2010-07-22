@@ -54,19 +54,16 @@ void DetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
 	DEB_MEMBER_FUNCT();
 	ImageType unique_image_type;
 	getCurrImageType(unique_image_type);
-	if (curr_image_type != unique_image_type) {
-		DEB_ERROR() << "Only " << unique_image_type << "allowed";
-		throw LIMA_HW_EXC(InvalidValue, "Only one image type allowed");
-	}
+	if (curr_image_type != unique_image_type)
+		THROW_HW_ERROR(InvalidValue) 
+			<< "Only " << DEB_VAR1(unique_image_type) << "allowed";
 }
 
 void DetInfoCtrlObj::getPixelSize(double& pixel_size)
 {
 	DEB_MEMBER_FUNCT();
-	bool is_frelon_4m;
-	m_cam.isFrelon4M(is_frelon_4m);
-	ChipType chip_type = is_frelon_4m ? Kodak : Atmel;
-	pixel_size = ChipPixelSizeMap[chip_type];
+	Model& model = m_cam.getModel();
+	pixel_size = model.getPixelSize();
 	DEB_RETURN() << DEB_VAR1(pixel_size);
 }
 
@@ -80,21 +77,8 @@ void DetInfoCtrlObj::getDetectorType(std::string& det_type)
 void DetInfoCtrlObj::getDetectorModel(std::string& det_model)
 {
 	DEB_MEMBER_FUNCT();
-	bool is_frelon_4m;
-	m_cam.isFrelon4M(is_frelon_4m);
-
-	det_model = is_frelon_4m ? "4M" : "2k";
-	if (!is_frelon_4m) {
-		bool is_frelon_2k16;
-		m_cam.isFrelon2k16(is_frelon_2k16);
-		det_model += is_frelon_2k16 ? "16" : "14";
-	}
-
-	bool has_taper;
-	m_cam.hasTaper(has_taper);
-	if (has_taper)
-		det_model += "T";
-
+	Model& model = m_cam.getModel();
+	det_model = model.getName();
 	DEB_RETURN() << DEB_VAR1(det_model);
 }
 

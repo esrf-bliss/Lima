@@ -62,7 +62,8 @@ def main():
         os.chdir('%s' % modName)
 
         global rootDir
-        rootDir = os.path.join('..',rootDir)
+        orig_rootDir = rootDir
+        rootDir = os.path.join('..', rootDir)
     
         sipFileNameSrc = "lima%s.sip" % modName
         if modName != 'core':
@@ -190,8 +191,18 @@ def main():
         sipconfig.create_config_module("lima%sconfig.py" % modName,
                                        "../limaconfig.py.in", content)
 
+        # Fix SIP Exception handling
+        for cpp_file in glob.glob('siplima*.cpp'):
+            cmd = 'python ../checksipexc.py %s 2> /dev/null' % cpp_file
+            cpp_file_out = '%s.out' % cpp_file
+            if os.system(cmd) == 0:
+                cmd = 'rm %s' % cpp_file_out
+            else:
+                cmd = 'rm %s; mv %s %s' % (cpp_file, cpp_file_out, cpp_file)
+            os.system(cmd)
+            
         os.chdir('..')
-        rootDir = rootDir[3:]
+        rootDir = orig_rootDir
 
 
 if __name__ == '__main__':

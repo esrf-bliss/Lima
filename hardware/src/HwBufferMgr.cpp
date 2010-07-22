@@ -61,16 +61,14 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 	DEB_PARAM() << DEB_VAR2(nb_buffers, frame_dim);
 
 	int frame_size = frame_dim.getMemSize();
-	if (frame_size <= 0) {
-		DEB_ERROR() << "Invalid FrameDim: " << frame_dim;
-		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
-	}
+	if (frame_size <= 0) 
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(frame_dim);
        
 	int max_buffers = getMaxNbBuffers(frame_dim);
-	if ((nb_buffers < 1) || (nb_buffers > max_buffers)) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(nb_buffers);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid number of buffers");
-	}
+	if ((nb_buffers < 1) || (nb_buffers > max_buffers)) 
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(nb_buffers);
 
 	int curr_nb_buffers;
 	getNbBuffers(curr_nb_buffers);
@@ -167,10 +165,9 @@ void BufferCbMgr::setStartTimestamp(Timestamp start_ts)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(start_ts);
 
-	if (!start_ts.isSet()) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(start_ts);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid start timestamp");
-	}
+	if (!start_ts.isSet())
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(start_ts);
 
 	m_start_ts = start_ts;
 }
@@ -189,10 +186,9 @@ void BufferCbMgr::getBufferFrameDim(const FrameDim& single_frame_dim,
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(single_frame_dim, nb_concat_frames);
 
-	if (nb_concat_frames < 1) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(nb_concat_frames);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid nb concat frames");
-	}
+	if (nb_concat_frames < 1) 
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(nb_concat_frames);
 
 	buffer_frame_dim = single_frame_dim;
 	Size buffer_size = buffer_frame_dim.getSize();
@@ -273,11 +269,11 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames,
 
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(frame_dim);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(frame_dim);
 	} else if (nb_concat_frames < 1) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(nb_concat_frames);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid nb concat frames");
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(nb_concat_frames);
 	}
 
 	int curr_nb_buffers;
@@ -345,16 +341,16 @@ bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 	if (!frame_info.frame_ptr) {
 		frame_info.frame_ptr = ptr;
 	} else if (frame_info.frame_ptr != ptr) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(frame_info.frame_ptr);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid frame ptr");
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(frame_info.frame_ptr);
 	}
 
 	const FrameDim& frame_dim = getFrameDim();
 	if (!frame_info.frame_dim.isValid()) {
 		frame_info.frame_dim = frame_dim;
 	} else if (frame_info.frame_dim != frame_dim) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(frame_info.frame_dim);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid frame dim");
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(frame_info.frame_dim);
 	}
 	if (frame_info.valid_pixels == 0)
 		frame_info.valid_pixels = Point(frame_dim.getSize()).getArea();
@@ -394,7 +390,9 @@ void StdBufferCbMgr::getNbConcatFrames(int& nb_concat_frames)
 void *StdBufferCbMgr::getBufferPtr(int buffer_nb, int concat_frame_nb)
 {
 	if (concat_frame_nb >= m_nb_concat_frames)
-		throw LIMA_HW_EXC(InvalidValue, "Invalid concat frame nb");
+		throw LIMA_HW_EXC(InvalidValue, "Invalid ") 
+			<< DEB_VAR2(concat_frame_nb, m_nb_concat_frames);
+
 	char *ptr = (char *) m_alloc_mgr->getBufferPtr(buffer_nb);
 	return ptr + concat_frame_nb * m_frame_dim.getMemSize();
 }
@@ -419,10 +417,9 @@ void StdBufferCbMgr::getFrameInfo(int acq_frame_nb, HwFrameInfo& info)
 	getNbBuffers(nb_buffers);
 	int nb_frames = nb_buffers * m_nb_concat_frames;
 	int frame_nb = acq_frame_nb % nb_frames;
-	if (m_info_list[frame_nb].acq_frame_nb != acq_frame_nb) {
-		DEB_ERROR() << "Frame " << acq_frame_nb << " not available";
-		throw LIMA_HW_EXC(Error, "Frame not available");
-	}
+	if (m_info_list[frame_nb].acq_frame_nb != acq_frame_nb)
+		THROW_HW_ERROR(Error) << "Frame " << acq_frame_nb 
+				      << " not available";
 
 	info = m_info_list[frame_nb];
 	DEB_RETURN() << DEB_VAR1(info);
@@ -483,16 +480,12 @@ void BufferCtrlMgr::setNbConcatFrames(int nb_concat_frames)
 	DEB_PARAM() << DEB_VAR1(nb_concat_frames);
 
 	bool ask_concat = (nb_concat_frames > 1);
-	if ((getAcqMode() == Acc) && ask_concat) {
-		DEB_ERROR() << "Frame acc. is active";
-		throw LIMA_HW_EXC(InvalidValue, "Frame acc. is active");
-	}
+	if ((getAcqMode() == Acc) && ask_concat)
+		THROW_HW_ERROR(InvalidValue) << "Frame acc. is active";
 
 	bool can_concat = (m_acq_buffer_mgr->getCap() & BufferCbMgr::Concat);
-	if (ask_concat && !can_concat) {
-		DEB_ERROR() << "Stripe concat. not supported";
-		throw LIMA_HW_EXC(NotSupported, "Strip concat. not supported");
-	}
+	if (ask_concat && !can_concat)
+		THROW_HW_ERROR(NotSupported) << "Stripe concat. not supported";
 
 	if (nb_concat_frames != m_nb_concat_frames)
 		releaseBuffers();
@@ -513,10 +506,8 @@ void BufferCtrlMgr::setNbAccFrames(int nb_acc_frames)
 	DEB_PARAM() << DEB_VAR1(nb_acc_frames);
 
 	bool ask_acc = (nb_acc_frames > 1);
-	if ((getAcqMode() == Concat) && ask_acc) {
-		DEB_ERROR() << "Stripe concat. is active";
-		throw LIMA_HW_EXC(InvalidValue, "Stripe concat. is active");
-	}
+	if ((getAcqMode() == Concat) && ask_acc)
+		THROW_HW_ERROR(InvalidValue) << "Stripe concat. is active";
 
 	if (ask_acc && (m_effect_buffer_mgr != &m_aux_buffer_mgr))
 		m_effect_buffer_mgr = &m_aux_buffer_mgr;
@@ -554,8 +545,8 @@ void BufferCtrlMgr::setNbBuffers(int nb_buffers)
 	int max_nb_buffers;
 	getMaxNbBuffers(max_nb_buffers);
 	if ((nb_buffers > 0) && (nb_buffers > max_nb_buffers)) {
-		DEB_ERROR() << "Too many " << DEB_VAR1(nb_buffers);
-		throw LIMA_HW_EXC(InvalidValue, "Too many buffers");
+		THROW_HW_ERROR(InvalidValue) << "Too many buffers:" 
+					     << DEB_VAR1(nb_buffers);
 	} else if (nb_buffers == 0)
 		nb_buffers = max_nb_buffers;
 
@@ -735,8 +726,8 @@ void accumulateFrame(void *src_ptr, const FrameDim& src_frame_dim,
 	int dheight = dst_frame_dim.getSize().getHeight();
 
 	if( (dwidth < swidth) || (dheight < sheight) ) { // Do we need this?
-		throw LIMA_HW_EXC(InvalidValue, "Accumulation buffer is too "
-		                                "small");
+		throw LIMA_HW_EXC(InvalidValue, "Acc. buffer is too small: ")
+			<< DEB_VAR2(src_frame_dim, dst_frame_dim);
 	}
 
 	SrcType *sp  = (SrcType *) src_ptr;
@@ -766,8 +757,8 @@ void BufferCtrlMgr::accFrame(void *src_ptr, const FrameDim& src_frame_dim,
 	ImageType d_type = dst_frame_dim.getImageType();
 
 	if( s_type > d_type ) {
-		throw LIMA_HW_EXC(InvalidValue, "Accumulation buffer is too "
-		                                "small");
+		throw LIMA_HW_EXC(InvalidValue, "Acc. buffer type too small: ")
+			<< DEB_VAR2(s_type, d_type);
 	}
 
 	int type = s_type + d_type;
@@ -809,7 +800,8 @@ void BufferCtrlMgr::accFrame(void *src_ptr, const FrameDim& src_frame_dim,
 			break;
 		default:
 			throw LIMA_HW_EXC(InvalidValue,
-					  "Unsupported image type");
+					  "Unsupported image type: ") 
+				<< DEB_VAR1(type);
 	}
 }
 

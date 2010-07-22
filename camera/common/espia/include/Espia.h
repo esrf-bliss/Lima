@@ -2,6 +2,7 @@
 #define ESPIA_H
 
 #include "espia_lib.h"
+#include <errno.h>
 #include "Exceptions.h"
 #include "Debug.h"
 
@@ -34,18 +35,17 @@ inline double USec2Sec(unsigned long usec)
 	return usec;
 }
 
-void ThrowError(int ret, std::string file, std::string func, int line);
+void ThrowError(int ret, std::string file, std::string func, int line,
+		DebObj *deb_ptr = NULL);
 
+std::string StrError(int ret);
 
 #define ESPIA_CHECK_CALL(espia_ret)					\
 	do {								\
 		int aux_ret = (espia_ret);				\
-		if (aux_ret < 0) {					\
-			DEB_ERROR() << "Espia error: " 			\
-				    << espia_strerror(aux_ret);		\
+		if (aux_ret < 0)					\
 			Espia::ThrowError(aux_ret, __FILE__,		\
-					  __FUNCTION__, __LINE__);	\
-		}							\
+					  __FUNCTION__, __LINE__, &deb);\
 	} while (0)
 
 

@@ -1,4 +1,4 @@
-import os, sys, imp, glob
+import os, sys, imp, glob, DLFCN
 
 root_name = __path__[0]
 mod_name = os.path.basename(root_name)
@@ -33,8 +33,13 @@ if not (os.path.isdir(mod_path) or os.path.islink(mod_path)):
 
 __path__.append(mod_path)
 
+ld_open_flags = sys.getdlopenflags()
+sys.setdlopenflags(ld_open_flags | DLFCN.RTLD_GLOBAL)
+
 from Lima.Maxipix.limamaxipix import *
+
+sys.setdlopenflags(ld_open_flags)
 
 del root_name, mod_name, mod_path, x, env_var_name
 del version, req_version, version_dirs, version_code, version_cmp
-del os, sys, imp, glob
+del os, sys, imp, glob, DLFCN

@@ -1,4 +1,4 @@
-import os, sys, imp, glob
+import os, sys, imp, glob, DLFCN
 
 root_name = __path__[0]
 mod_name = os.path.basename(root_name)
@@ -33,13 +33,19 @@ if not (os.path.isdir(mod_path) or os.path.islink(mod_path)):
 
 sys.path.insert(0, mod_path)
 
+ld_open_flags = sys.getdlopenflags()
+sys.setdlopenflags(ld_open_flags | DLFCN.RTLD_GLOBAL)
+
 from limafrelon import *
+
+sys.setdlopenflags(ld_open_flags)
+
 globals().update(Frelon.__dict__)
 
 from FrelonAcq import FrelonAcq
 
 sys.path.remove(mod_path)
 
-del root_name, mod_name, mod_path, x, env_var_name
+del root_name, mod_name, mod_path, x, env_var_name, ld_open_flags
 del version, req_version, version_dirs, version_code, version_cmp
-del os, sys, imp, glob
+del os, sys, imp, glob, DLFCN

@@ -6,6 +6,7 @@
 
 #include "StreamUtils.h"
 #include "ThreadUtils.h"
+#include "Exceptions.h"
 
 #include <string>
 #include <map>
@@ -216,7 +217,7 @@ class DebProxy
 	DebProxy();
 	DebProxy(DebObj *deb_obj, DebType type, ConstStr file_name, 
 		 int line_nr);
-	DebProxy(const DebProxy& p); // should not be called
+	DebProxy(const DebProxy& p);  // should never be called
 	~DebProxy();
 
 	template <class T> 
@@ -297,6 +298,25 @@ inline std::ostream& operator <<(std::ostream& os, const DebHex& deb_hex)
 	return os << std::hex << std::showbase << deb_hex.getVal()
 		  << std::dec << std::noshowbase;
 }
+
+
+/*------------------------------------------------------------------
+ *  class DebExcProxy
+ *------------------------------------------------------------------*/
+
+class DebExcProxy
+{
+ public:
+	DebExcProxy(DebProxy *deb_proxy, const Exception& exc);
+	~DebExcProxy();
+
+	template <class T>
+	DebExcProxy& operator <<(const T& o);
+
+ private:
+	DebProxy *m_deb_proxy;
+	Exception m_exc;
+};
 
 
 /*------------------------------------------------------------------
@@ -459,6 +479,31 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 
 /*------------------------------------------------------------------
+ *  class DebExcProxy inline functions
+ *------------------------------------------------------------------*/
+
+inline DebExcProxy::DebExcProxy(DebProxy *deb_proxy, const Exception& exc)
+	: m_deb_proxy(deb_proxy), m_exc(exc)
+{
+	*m_deb_proxy << m_exc.getErrType() << ": ";
+}
+
+inline DebExcProxy::~DebExcProxy()
+{
+	delete m_deb_proxy;
+	throw m_exc;
+}
+
+template <class T>
+DebExcProxy& DebExcProxy::operator <<(const T& o)
+{
+	*m_deb_proxy << o;
+	m_exc << o;
+	return *this;
+}
+
+
+/*------------------------------------------------------------------
  *  debug macros
  *------------------------------------------------------------------*/
 
@@ -517,6 +562,9 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 	DebObj deb(getDebParams(), false, __FUNCTION__,			\
 		   getDebObjName(), __FILE__, __LINE__)
 
+#define DEB_FROM_PTR(deb_ptr)						\
+	DebObj& deb = *(deb_ptr)
+
 #define DEB_STATIC_FUNCT()						\
 	DEB_GLOBAL_FUNCT()
 
@@ -553,6 +601,28 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 #define DEB_OBJ_NAME(o) \
 	((o)->getDebObjName())
+
+#define THROW_MSG(type, exc)				\
+	DebExcProxy(new DebProxy(DEB_MSG(type)), exc)
+
+#define THROW_FATAL(exc)				\
+	THROW_MSG(DebTypeFatal, exc)
+#define THROW_ERROR(exc)				\
+	THROW_MSG(DebTypeError, exc)
+
+#define THROW_COM_FATAL(err_type)	\
+	THROW_FATAL(LIMA_COM_EXC(err_type, ""))
+#define THROW_CTL_FATAL(err_type)		\
+	THROW_FATAL(LIMA_CTL_EXC(err_type, ""))
+#define THROW_HW_FATAL(err_type)		\
+	THROW_FATAL(LIMA_HW_EXC(err_type, ""))
+
+#define THROW_COM_ERROR(err_type)		\
+	THROW_ERROR(LIMA_COM_EXC(err_type, ""))
+#define THROW_CTL_ERROR(err_type)		\
+	THROW_ERROR(LIMA_CTL_EXC(err_type, ""))
+#define THROW_HW_ERROR(err_type)		\
+	THROW_ERROR(LIMA_HW_EXC(err_type, ""))
 
 } // namespace lima
 

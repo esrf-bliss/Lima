@@ -31,8 +31,9 @@ class limaModuleMakefile(sipconfig.ModuleMakefile):
     def finalise(self):
         """Finalise the macros.
         """
-        # Make sure our C++ library is linked.
-        self.extra_libs.append("lima")
+        # In case a C++ library is needed for link.
+	# Not necessary here, it's done in the configure.py script
+        # self.extra_libs.append("lima")
 
         # Let the super-class do what it needs to.
         sipconfig.ModuleMakefile.finalise(self)

@@ -2,6 +2,7 @@
 #define FRELONCAMERA_H
 
 #include "FrelonSerialLine.h"
+#include "FrelonModel.h"
 #include "HwMaxImageSizeCallback.h"
 
 namespace lima
@@ -25,12 +26,8 @@ class Camera : public HwMaxImageSizeCallbackGen
 
 	void hardReset();
 	void getVersion(std::string& ver);
-
 	void getComplexSerialNb(int& complex_ser_nb);
-	void getSerialNb(int& ser_nb);
-	void isFrelon2k16(bool& is_frelon_2k16);
-	void isFrelon4M(bool& is_frelon_4m);
-	void hasTaper(bool& has_taper);
+	Model& getModel();
 
 	void setInputChan(InputChan  input_chan);
 	void getInputChan(InputChan& input_chan);
@@ -94,8 +91,6 @@ class Camera : public HwMaxImageSizeCallbackGen
 
 	void sendCmd(Cmd cmd);
 
-	void getSerialNbParam(SerNbParam param, int& val);
-
 	void setChanMode(int  chan_mode);
 	void getChanMode(int& chan_mode);
 	
@@ -134,6 +129,7 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void getTimeUnitFactor(TimeUnitFactor& time_unit_factor);
 
 	SerialLine m_ser_line;
+	Model m_model;
 	Point m_roi_offset;
 	TrigMode m_trig_mode;
 	int m_nb_frames;

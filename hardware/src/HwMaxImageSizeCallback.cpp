@@ -45,11 +45,9 @@ HwMaxImageSizeCallbackGen::registerMaxImageSizeCallback(
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(&cb, m_mis_cb);
 
-	if (m_mis_cb) {
-		DEB_ERROR() << "An ImageSizeCallback already registered";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "An ImageSizeCallback already registered");
-	}
+	if (m_mis_cb)
+		THROW_HW_ERROR(InvalidValue) 
+			<< "An ImageSizeCallback already registered";
 
 	cb.setMaxImageSizeCallbackGen(this);
 	m_mis_cb = &cb;
@@ -63,11 +61,9 @@ HwMaxImageSizeCallbackGen::unregisterMaxImageSizeCallback(
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(&cb, m_mis_cb);
 
-	if (m_mis_cb != &cb) {
-		DEB_ERROR() << "Requested ImageSizeCallback not registered";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "Req. ImageSizeCallback not registered");
-	}
+	if (m_mis_cb != &cb)
+		THROW_HW_ERROR(InvalidValue) 
+			<< "Requested ImageSizeCallback not registered";
 
 	setMaxImageSizeCallbackActive(false);
 	m_mis_cb = NULL;

@@ -1,7 +1,8 @@
 
 include ../../common/espia/include/espia.inc
 
-frelon-objs = FrelonBase.o FrelonSerialLine.o FrelonCamera.o FrelonInterface.o
+frelon-objs = FrelonBase.o FrelonSerialLine.o FrelonModel.o FrelonCamera.o \
+	      FrelonInterface.o 
 
 SRCS = $(frelon-objs:.o=.cpp) 
 

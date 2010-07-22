@@ -38,11 +38,9 @@ void AcqEndCallback::setAcq(Acq *acq)
 	DEB_PARAM() << DEB_VAR1(acq);
 
 	if (acq && m_acq) {
-		DEB_ERROR() << "Acquisition already set";
-		throw LIMA_HW_EXC(InvalidValue, "Acq already set");
+		THROW_HW_ERROR(InvalidValue) << "Acquisition already set";
 	} else if (!acq && !m_acq) {
-		DEB_ERROR() << "Acquisition already reset";
-		throw LIMA_HW_EXC(InvalidValue, "Acq already reset");
+		THROW_HW_ERROR(InvalidValue) << "Acquisition already reset";
 	}
 
 	m_acq = acq;
@@ -217,11 +215,10 @@ void Acq::bufferAlloc(int& nb_buffers, int nb_buffer_frames,
 	DEB_PARAM() << DEB_VAR3(nb_buffers, nb_buffer_frames, frame_dim);
 
 	if (!frame_dim.isValid() || (nb_buffers <= 0) || 
-	    (nb_buffer_frames <= 0)) {
-		DEB_ERROR() << "Invalid parameters";
-		throw LIMA_HW_EXC(InvalidValue, "Invalid frame_dim, "
-				  "nb_buffers and/or nb_buffer_frames");
-	}
+	    (nb_buffer_frames <= 0))
+		THROW_HW_ERROR(InvalidValue) << "Invalid parameters: "
+					     << DEB_VAR3(frame_dim, nb_buffers,
+							 nb_buffer_frames);
 
 	if ((frame_dim == m_frame_dim) && (nb_buffers == m_nb_buffers) &&
 	    (nb_buffer_frames == m_nb_buffer_frames)) {
@@ -396,10 +393,9 @@ void Acq::setNbFrames(int nb_frames)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(nb_frames);
 
-	if (nb_frames < 0) {
-		DEB_ERROR() << "Invalid " << DEB_VAR1(nb_frames);
-		throw LIMA_HW_EXC(InvalidValue, "Invalid nb of frames");
-	}
+	if (nb_frames < 0)
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(nb_frames);
 
 	m_nb_frames = nb_frames;
 }
@@ -417,10 +413,8 @@ void Acq::start()
 
 	AutoMutex l = acqLock();
 
-	if (m_started) {
-		DEB_ERROR() << "Acquisition already running";
-		throw LIMA_HW_EXC(Error, "Acquisition already running");
-	}
+	if (m_started) 
+		THROW_HW_ERROR(Error) << "Acquisition already running";
 
 	resetFrameInfo(m_last_frame_info);
 
@@ -470,11 +464,9 @@ void Acq::registerAcqEndCallback(AcqEndCallback& acq_end_cb)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(&acq_end_cb, m_acq_end_cb);
 
-	if (m_acq_end_cb) {
-		DEB_ERROR() << "AcqEndCallback already registered";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "AcqEndCallback already registered");
-	}
+	if (m_acq_end_cb)
+		THROW_HW_ERROR(InvalidValue) 
+			<< "AcqEndCallback already registered";
 
 	acq_end_cb.setAcq(this);
 	m_acq_end_cb = &acq_end_cb;
@@ -485,11 +477,9 @@ void Acq::unregisterAcqEndCallback(AcqEndCallback& acq_end_cb)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(&acq_end_cb, m_acq_end_cb);
 
-	if (m_acq_end_cb != &acq_end_cb) {
-		DEB_ERROR() << "Specified AcqEndCallback not registered";
-		throw LIMA_HW_EXC(InvalidValue, 
-				  "Specified AcqEndCallback not registered");
-	}
+	if (m_acq_end_cb != &acq_end_cb)
+		THROW_HW_ERROR(InvalidValue) 
+			<< "Specified AcqEndCallback not registered";
 
 	stop();
 

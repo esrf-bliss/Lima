@@ -192,10 +192,9 @@ void test_frelon_spectroscopy()
 	hw_inter.startAcq();
 	acq_state.waitNot(AcqState::Acquiring);
 	t1 = Timestamp::now();
-	if (acq_state.get() == AcqState::Aborted) {
-		DEB_ERROR() << "Acquisition aborted!";
-		throw LIMA_HW_EXC(Error, "Acquisition aborted");
-	}
+	if (acq_state.get() == AcqState::Aborted)
+		THROW_HW_ERROR(Error) << "Acquisition aborted!";
+
 	DEB_ALWAYS() << "Acquisition finished after " << (t1 - t0) << " sec";
 
 	DEB_ALWAYS() << "Saving buffer";

@@ -12,6 +12,31 @@ Exception::Exception(Layer layer, ErrorType err_type, string err_desc,
 {
 }
 
+Layer Exception::getLayer() const
+{
+	return m_layer;
+}
+
+ErrorType Exception::getErrType() const
+{
+	return m_err_type;
+}
+
+string Exception::getErrDesc() const
+{
+	return m_err_desc;
+}
+
+string Exception::getFileName() const
+{
+	return m_file_name;
+}
+
+string Exception::getFunctName() const
+{
+	return m_funct_name;
+}
+
 string Exception::getErrMsg() const
 {
 	ostringstream os;

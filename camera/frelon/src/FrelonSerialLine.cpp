@@ -151,10 +151,8 @@ void SerialLine::readResp(string& buffer, int max_len, double timeout)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR3(max_len, timeout, m_curr_op);
 
-	if (m_curr_op == None) {
-		DEB_FATAL() << "readLine without previous write!";
-		throw LIMA_HW_EXC(Error, "readLine without previous write");
-	}
+	if (m_curr_op == None)
+		THROW_HW_FATAL(Error) << "readLine without previous write!";
 
 	ReadRespCleanup read_resp_clenup(*this);
 
@@ -230,10 +228,8 @@ void SerialLine::readMultiLine(string& buffer, int max_len)
 		}
 	}
 
-	if (buffer.empty()) {
-		DEB_ERROR() << "Timeout reading multi-line";
-		throw LIMA_HW_EXC(Error, "Timeout reading Frelon multi line");
-	}
+	if (buffer.empty())
+		THROW_HW_ERROR(Error) << "Timeout reading Frelon multi-line";
 }
 
 bool SerialLine::isRegCacheable(Reg reg)
@@ -304,7 +300,8 @@ void SerialLine::splitMsg(const string& msg,
 
 	RegEx::FullNameMatchType match;
 	if (!re.matchName(msg, match))
-		throw LIMA_HW_EXC(InvalidValue, "Invalid Frelon message");
+		THROW_HW_ERROR(InvalidValue) << "Invalid Frelon message: "
+					     << DEB_VAR1(msg);
 
 	typedef pair<MsgPart, string> KeyPair;
 	static const KeyPair key_list[] = {
@@ -335,17 +332,14 @@ void SerialLine::decodeFmtResp(const string& ans, string& fmt_resp)
 			        "E\a?:(?P<err>[^\r]+))\r\n");
 
 	RegEx::FullNameMatchType match;
-	if (!re.matchName(ans, match)) {
-		DEB_ERROR() << "Unexpected Frelon answer";
-		throw LIMA_HW_EXC(Error, "Unexpected Frelon answer");
-	}
+	if (!re.matchName(ans, match))
+		THROW_HW_ERROR(Error) << "Unexpected Frelon answer: "
+				      << DEB_VAR1(ans);
 
 	RegEx::SingleMatchType& err = match["err"];
 	if (err) {
 		string err_str(err.start, err.end);
-		string err_desc = string("Frelon Error: ") + err_str;
-		DEB_ERROR() << err_desc;
-		throw LIMA_HW_EXC(Error, err_desc);
+		THROW_HW_ERROR(Error) << "Frelon Error: " << err_str;
 	}
 
 	RegEx::SingleMatchType& warn = match["warn"];
@@ -429,11 +423,9 @@ void SerialLine::writeRegister(Reg reg, int  val)
 	if (ok && (cache_val == val)) {
 		DEB_TRACE() << "Value already in cache";
 	} else {
-		if (reg_str.empty()) {
-			DEB_ERROR() << "Invalid register reg=" << reg;
-			throw LIMA_HW_EXC(InvalidValue, "Invalid register");
-		}
-
+		if (reg_str.empty())
+			THROW_HW_ERROR(InvalidValue) << "Invalid "
+						     << DEB_VAR1(reg);
 		ostringstream cmd;
 		cmd << reg_str << val;
 		string resp;
@@ -454,11 +446,9 @@ void SerialLine::readRegister(Reg reg, int& val)
 	if (ok) {
 		DEB_TRACE() << "Using cache value";
 	} else {
-		if (reg_str.empty()) {
-			DEB_ERROR() << "Invalid register reg=" << reg;
-			throw LIMA_HW_EXC(InvalidValue, "Invalid register");
-		}
-		
+		if (reg_str.empty())
+			THROW_HW_ERROR(InvalidValue) << "Invalid "
+						     << DEB_VAR1(reg);
 		string resp;
 		sendFmtCmd(reg_str + "?", resp);
 		istringstream is(resp);
