@@ -206,15 +206,16 @@ class PriamAcq {
 
     std::vector<int>  		m_port_used;
     std::map<int,std::string> 	m_next_fsr_chips;
-  };
+};
 
-  inline void PriamAcq::_checkPortNr(short port) const
-  {
+inline void PriamAcq::_checkPortNr(short port) const
+{
+    DEB_MEMBER_FUNCT();
     if ((port<0)||(port>=maxPorts))
-        throw LIMA_HW_EXC(InvalidValue, "Invalid priam port number");
-  };
+	THROW_HW_ERROR(InvalidValue) << "Invalid priam " << DEB_VAR1(port);
+};
 
-};
-};
+}; // namespace Maxipix
+}; // namespace lima
 
 #endif // _PRIAMACQ_H

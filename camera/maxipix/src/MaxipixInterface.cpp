@@ -42,7 +42,11 @@ void DetInfoCtrlObj::getCurrImageType(ImageType& image_type)
 void DetInfoCtrlObj::setCurrImageType(ImageType image_type)
 {
     DEB_MEMBER_FUNCT();
-    throw LIMA_HW_EXC(Error, "Cannot change image type");
+    ImageType valid_image_type;
+    getDefImageType(valid_image_type);
+    if (image_type != valid_image_type)
+	THROW_HW_ERROR(Error) << "Cannot change to " 
+			      << DEB_VAR2(image_type, valid_image_type);
 }
 
 void DetInfoCtrlObj::getPixelSize(double& size)

@@ -78,10 +78,11 @@ void PriamSerial::writeRegister(PriamRegister reg,const string& buffer)
     wreg= PriamRegCode[reg];
 
     if (wreg.writeCode==0xff)
-	throw LIMA_HW_EXC(InvalidValue, "Priam register is not writable");
+	THROW_HW_ERROR(InvalidValue) <<  "Priam register " << reg << " (" 
+				     << wreg.name << ") is not writable";
 
     if ((wreg.writeSize>0)&&(buffer.size()!=(unsigned long)wreg.writeSize))
-	    throw LIMA_HW_EXC(InvalidValue, "Wrong buffer size for Priam register");
+	THROW_HW_ERROR(InvalidValue) << "Wrong buffer size for Priam register";
 
     DEB_TRACE() << "write" << DEB_VAR2(wreg.name, buffer);
 
@@ -99,7 +100,8 @@ void PriamSerial::readRegister(PriamRegister reg,string& buffer, long size) cons
     rreg= PriamRegCode[reg];
 
     if (rreg.readCode==0xff)
-        throw LIMA_HW_EXC(InvalidValue, "Priam regiter is not readable");
+        THROW_HW_ERROR(InvalidValue) <<  "Priam register " << reg << " (" 
+				     << rreg.name << ") is not readable";
 
     DEB_TRACE() << "read" << DEB_VAR2(rreg.name, size);
 
@@ -114,7 +116,9 @@ void PriamSerial::readRegister(PriamRegister reg,string& buffer, long size) cons
     _readAnswer(rreg.readCode, rsize, buffer);
 
     if (buffer.size() != (unsigned long)rsize)
-	throw LIMA_HW_EXC(Error, "Priam return size not correct");
+	THROW_HW_ERROR(Error) << "Priam return " << DEB_VAR1(buffer.size())
+			      << "is not correct; should be " 
+			      << DEB_VAR1(rsize);
 }
 
 void PriamSerial::_writeCommand(short code,const string &inbuf) const
@@ -142,20 +146,20 @@ void PriamSerial::_readAnswer(short code, long size, string &rbuf) const
 
     m_espia_serial.read(sret, 1, 0.2);
     if (sret.size()==0) {
-        throw LIMA_HW_EXC(Error, "No answer from priam");
+        THROW_HW_ERROR(Error) << "No answer from priam";
     }
     iret= sret.at(0)&0xff;
     if (iret==SERIAL_ERR) {
 	m_espia_serial.flush();
-	throw LIMA_HW_EXC(Error, "Priam serial error");
+	THROW_HW_ERROR(Error) << "Priam serial error";
     }
     if (iret==SERIAL_BAD) {
 	m_espia_serial.flush();
-	throw LIMA_HW_EXC(Error, "Priam command not authorized");
+	THROW_HW_ERROR(Error) << "Priam command not authorized";
     }
     if (iret!=code) {
 	m_espia_serial.flush();
-	throw LIMA_HW_EXC(Error, "Priam code not replyed");
+	THROW_HW_ERROR(Error) << "Priam code not replyed";
     }
 
     if (size>0) {
@@ -168,7 +172,7 @@ void PriamSerial::_readAnswer(short code, long size, string &rbuf) const
     iret= sret.at(0)&0xff;
     if (iret != SERIAL_END) {
 	m_espia_serial.flush();
-	throw LIMA_HW_EXC(Error, "Priam end of transfer not received");
+	THROW_HW_ERROR(Error) << "Priam end of transfer not received";
     }
 }
 
@@ -179,7 +183,9 @@ void PriamSerial::writeFsr(const string& fsr,string& bid)
 
     reg= PriamSerTxCode[PSER_FSR];
     if (fsr.size() != (unsigned long)reg.writeSize)
-	throw LIMA_HW_EXC(InvalidValue, "Wrong input size for Priam transfer");
+	THROW_HW_ERROR(InvalidValue) << "Wrong " << DEB_VAR1(fsr.size())
+				     << " for Priam transfer; should be "
+				     << DEB_VAR1(long(reg.writeSize));
 
     _writeCommand(reg.writeCode, fsr);
     _readAnswer(reg.writeCode, reg.readSize, bid);
@@ -194,7 +200,9 @@ void PriamSerial::writeMatrix(const string& input)
 
     reg= PriamSerTxCode[PSER_MATRIX];
     if (input.size() != (unsigned long)reg.writeSize)
-	throw LIMA_HW_EXC(InvalidValue, "Wrong input size for Priam transfer");
+	THROW_HW_ERROR(InvalidValue) << "Wrong " << DEB_VAR1(input.size())
+				     << " for Priam transfer; should be "
+				     << DEB_VAR1(long(reg.writeSize));
 
     DEB_TRACE() << "Writing matrix";
     _writeCommand(reg.writeCode, input);
@@ -218,6 +226,8 @@ void PriamSerial::readMatrix(string& output) const
 
 void PriamSerial::writeLut(PriamLut lut,const string& buffer)
 {
+    DEB_MEMBER_FUNCT();
+
     PriamCodeType reg;
     string wbuf("");
     unsigned int size;
@@ -225,7 +235,8 @@ void PriamSerial::writeLut(PriamLut lut,const string& buffer)
     reg= PriamLutCode[lut];
     size= buffer.size();
     if (size > 256)
-	throw LIMA_HW_EXC(InvalidValue, "Lookup string size should be <= 256 char");
+	THROW_HW_ERROR(InvalidValue) << "Wrong lookup string " 
+				     << DEB_VAR1(size) << ", should be <= 256";
 
     wbuf.append(1, (char)reg.writeCode);
     wbuf.append(1, (char)size);
@@ -237,11 +248,14 @@ void PriamSerial::writeLut(PriamLut lut,const string& buffer)
 
 void PriamSerial::readLut(PriamLut lut, string& buffer, long size) const
 {
+    DEB_MEMBER_FUNCT();
+
     PriamCodeType reg;
     string wbuf("");
 
     if (size > 256)
-	throw LIMA_HW_EXC(InvalidValue, "Lookup string size should be <= 256 char");
+	THROW_HW_ERROR(InvalidValue) << "Wrong lookup string " 
+				     << DEB_VAR1(size) << ";should be <= 256";
     wbuf.append(1, (char)reg.readCode);
     wbuf.append(1, (char)(size&0xff));
     m_espia_serial.write(wbuf, false);
