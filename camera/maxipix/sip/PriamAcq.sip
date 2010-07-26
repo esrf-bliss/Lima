@@ -80,39 +80,6 @@ public:
     void setChipFsr(short port, const std::string &fsr);
     void setChipCfg(short port, const std::string &cfg);
 
-    void applyFsrChips();
-    void prepareFsrChips(SIP_PYOBJECT);
-%MethodCode
-    if(!PySequence_Check(a0))
-	throw Exception(Hardware,InvalidValue,"Should give sequence",
-	__FILE__,__FUNCTION__, __LINE__);
-    std::vector<Maxipix::PriamAcq::PortNFsr> aTmpVector;
-    for(Py_ssize_t i = 0;i < PySequence_Size(a0);++i)
-	{
-	   PyObject *aTuplePt = PySequence_Fast_GET_ITEM(a0,i);
-	   if(!PySequence_Check(aTuplePt) ||
-	      PySequence_Size(aTuplePt) != 2)
-	     throw Exception(Hardware,InvalidValue,"In the sequence you should give (portid,fsrstring)",
-			     __FILE__,__FUNCTION__, __LINE__);
-	   PyObject *intObject = PySequence_Fast_GET_ITEM(aTuplePt,0);
-	   if(!PyInt_Check(intObject))
-	     throw Exception(Hardware,InvalidValue,"first object in the sequence is the portid",
-			     __FILE__,__FUNCTION__, __LINE__);
-	   PyObject *stringObject = PySequence_Fast_GET_ITEM(aTuplePt,1);
-	   if(!PyString_Check(stringObject))
-	     throw Exception(Hardware,InvalidValue,"second object in the sequence is the fsrstring",
-			     __FILE__,__FUNCTION__, __LINE__);
-	   
-	   aTmpVector.push_back(Maxipix::PriamAcq::PortNFsr(PyInt_AsLong(intObject),
-							    std::string(PyString_AS_STRING(stringObject),
-									PyString_GET_SIZE(stringObject))));
-	}
-    
-   Py_BEGIN_ALLOW_THREADS;
-   sipCpp->prepareFsrChips(aTmpVector);
-   Py_END_ALLOW_THREADS;
-%End    
-
     void enableSerial(short port);
 
     // --- timing

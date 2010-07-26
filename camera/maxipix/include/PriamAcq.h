@@ -83,9 +83,6 @@ class PriamAcq {
     void setChipFsr(short port,const std::string &fsr);
     void setChipCfg(short port,const std::string &cfg);
     
-    void applyFsrChips();
-    void prepareFsrChips(const std::vector<PortNFsr> &);
-
     void enableSerial(short port);
 
     // --- timing
@@ -205,7 +202,6 @@ class PriamAcq {
     int				m_nb_frame;
 
     std::vector<int>  		m_port_used;
-    std::map<int,std::string> 	m_next_fsr_chips;
 };
 
 inline void PriamAcq::_checkPortNr(short port) const

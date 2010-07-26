@@ -252,44 +252,6 @@ void PriamAcq::setChipFsr(short port,const string &fsr)
     if (port==0)
 	m_chip_fsr0= fsr;
 }
-/** @brief apply next fsr into chips.
-    This is normally called into Interface::prepareAcq
-*/
-void PriamAcq::applyFsrChips()
-{
-    DEB_MEMBER_FUNCT();
-
-    std::map<int,std::string>::iterator i;
-    for(i = m_next_fsr_chips.begin(); i != m_next_fsr_chips.end(); ++i)
-	setChipFsr(i->first,i->second);
-    m_next_fsr_chips.clear();
-}
-
-/** @brief set fsf for chips. The register is actually send when
-    applyNextFsrChips is called.
-*/
-void PriamAcq::prepareFsrChips(const std::vector<PortNFsr> &aFsrS)
-{
-    DEB_MEMBER_FUNCT();
-
-    std::vector<PortNFsr>::const_iterator i;
-    for(i = aFsrS.begin(); i != aFsrS.end(); ++i) {
-	int port = i->first;
-	const std::string &fsr = i->second;
-
-	std::ostringstream fsrString;
-	fsrString << std::hex;
-	fsrString << fsr;
-
-	DEB_TRACE() << DEB_VAR2(port,fsrString);
-
-	std::pair<int,std::string> port_fsr_pair(port, fsr);
-	std::pair<std::map<int,std::string>::iterator, bool> insertTest;
-	insertTest = m_next_fsr_chips.insert(port_fsr_pair);
-	if(!insertTest.second)
-	    insertTest.first->second = i->second;
-    }
-}
 
 void PriamAcq::getChipID(short port, long& id) const
 {
