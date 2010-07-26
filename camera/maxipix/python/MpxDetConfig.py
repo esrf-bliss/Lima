@@ -132,8 +132,10 @@ class MpxDetConfig:
 	estep= self.__getParamOptional(pars, "estep", None, 0)
 	e0thl= self.__getParamOptional(pars, "e0thl", None, 0)
 
+	thl= self.dacs.getOneDac(1, "thl")
 	self.dacs.setThlNoise(0, thlnoise)
 	self.dacs.setECalibration(e0thl, estep)
+	self.dacs.setThl(0, thl)
 
     def __parseDacsSection(self, cfg):
 	self.dacs= MpxDacs.MpxDacs(self.mpxCfg["version"], self.mpxCfg["nchip"])

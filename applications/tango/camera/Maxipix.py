@@ -75,6 +75,7 @@ class Maxipix(PyTango.Device_4Impl):
         
         dac = _MaxipixAcq.mpxDacs
         dac.setThl(data[0])
+	_MaxipixAcq.applyChipFsr(0)
 
     ## @brief Read the energy step
     #
@@ -114,6 +115,7 @@ class Maxipix(PyTango.Device_4Impl):
         
         dac = _MaxipixAcq.mpxDacs
         dac.setEThl(data[0])
+	_MaxipixAcq.applyChipFsr(0)
         
     ## @brief read the config name
     #

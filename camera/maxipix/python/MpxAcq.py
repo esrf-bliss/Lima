@@ -110,6 +110,8 @@ class MpxAcq:
 	self.__pacq.setIntervalTime(0.)
 	self.__pacq.setShutterTime(0.)
 
+	self.applyChipFsr(0)
+
 	if self.__mdet.needReconstruction():
 	    print "Setting image reconstruction ..."
 	    model= self.__mdet.getReconstruction()
@@ -128,8 +130,34 @@ class MpxAcq:
 	self.chipCfg.setPath(self.cfgPath)
 	self.chipCfg.loadConfig(name)
 
-	for idx in range(self.mpxCfg["nchip"]):
-	    scfg= self.chipCfg.getMpxString(idx+1)
-	    print "Loading Chip Config <%s> #%d ..."%(name, idx)
-	    self.__pacq.setChipCfg(self.priamPorts[idx], scfg)
+	self.applyPixelConfig(0)
 
+    def applyPixelConfig(self, chipid):
+	if chipid==0:
+	    for idx in range(self.mpxCfg["nchip"]):
+	        scfg= self.chipCfg.getMpxString(idx+1)
+	        print "Loading Chip Config #%d ..."%(idx+1)
+	        self.__pacq.setChipCfg(self.priamPorts[idx], scfg)
+	else:
+	    port= self.__getPriamPort(chipid)
+	    scfg= self.chipCfg.getMpxString(chipid)
+	    print "Loading Chip Config #%d ..."%(chipid)
+	    self.__pacq.setChipCfg(port, scfg)
+	     
+    def applyChipFsr(self, chipid):
+	if chipid==0:
+	    for idx in range(self.mpxCfg["nchip"]):
+		sfsr= self.mpxDacs.getFsrString(idx+1)
+	        print "Loading Chip FSR #%d ..."%(idx+1)
+		self.__pacq.setChipFsr(self.priamPorts[idx], sfsr)
+	else:
+	    port= self.__getPriamPort(chipid)
+	    sfsr= self.mpxDacs.getFsrString(chipid)
+	    print "Loading Chip FSR #%d ..."%(chipid)
+	    self.__pacq.setChipFsr(port, sfsr)
+
+    def __getPriamPort(self, chipid):
+	if chipid <= 0 or chipid > self.mpxCfg["nchip"]:
+            raise MpxError("<%d> is not a valid chipID"%chipid)
+	return self.priamPorts[chipid-1]
+	
