@@ -360,7 +360,7 @@ class MpxDacs:
     def getOneDac(self, chipid, name):
 	dacs= []
 	for idx in self.__getChipIdx(chipid):
-	    dacs.append(self.getOneDac(idx, name))
+	    dacs.append(self.__dacs[idx].getOneDac(name))
 	res= dacs[0]
 	if chipid == 0 and self.nchip > 1:
 	    for idx in range(1, self.nchip):

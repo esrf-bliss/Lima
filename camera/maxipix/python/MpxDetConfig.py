@@ -135,7 +135,7 @@ class MpxDetConfig:
 	thl= self.dacs.getOneDac(1, "thl")
 	self.dacs.setThlNoise(0, thlnoise)
 	self.dacs.setECalibration(e0thl, estep)
-	self.dacs.setThl(0, thl)
+	self.dacs.setThl(thl)
 
     def __parseDacsSection(self, cfg):
 	self.dacs= MpxDacs.MpxDacs(self.mpxCfg["version"], self.mpxCfg["nchip"])
