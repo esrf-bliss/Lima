@@ -19,7 +19,7 @@ enum ImageType {
 std::ostream& operator <<(std::ostream& os, ImageType image_type);
 
 enum AcqMode {
-	Single, Accumulation, Concatenation,
+	Single, Concatenation, Accumulation,
 };
 
 std::ostream& operator <<(std::ostream& os, AcqMode acq_mode);

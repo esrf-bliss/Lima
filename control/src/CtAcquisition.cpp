@@ -106,21 +106,18 @@ void CtAcquisition::_hwRead()
 
   switch (m_hwpars.acqMode) {
   case Single:
-    m_hwpars.acqNbFrames= read_nframes;
     m_hwpars.concatNbFrames= 0;
     m_acc_exptime= m_hwpars.accMaxExpoTime;
     m_acc_nframes= 0;
     break;
   case Concatenation:
     // concatNbFrames unchanged (or read in buffer ??)
-    m_hwpars.acqNbFrames= read_nframes;
     m_acc_exptime= m_hwpars.accMaxExpoTime;
     m_acc_nframes= 0;
     break;
   case Accumulation:
     m_hwpars.concatNbFrames= 0;
     _updateAccPars();
-    m_hwpars.acqNbFrames= int(read_nframes / m_acc_nframes);
     break;
   }
   
@@ -133,23 +130,19 @@ void CtAcquisition::_apply()
 
   if (m_changes.triggerMode) m_hw_sync->setTrigMode(m_inpars.triggerMode);
   if (m_changes.latencyTime) m_hw_sync->setLatTime(m_inpars.latencyTime);
+  if (m_changes.acqNbFrames) m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
 
   switch (m_inpars.acqMode) {
   case Single:
     if (m_changes.acqExpoTime) m_hw_sync->setExpTime(m_inpars.acqExpoTime);
-    if (m_changes.acqNbFrames) m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
     break;
   case Concatenation:
     if (m_changes.acqExpoTime) m_hw_sync->setExpTime(m_inpars.acqExpoTime);
-    if (m_changes.acqNbFrames) m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
     break;
   case Accumulation:
     if (m_changes.acqExpoTime || m_changes.accMaxExpoTime) {
       _updateAccPars();
       m_hw_sync->setExpTime(m_acc_exptime);
-      m_hw_sync->setNbFrames(m_inpars.acqNbFrames * m_acc_nframes);
-    } else if (m_changes.acqNbFrames) {
-      m_hw_sync->setNbFrames(m_inpars.acqNbFrames * m_acc_nframes);
     }
     break;
   }
@@ -192,6 +185,7 @@ void CtAcquisition::setAcqMode(AcqMode mode)
     if (m_inpars.accMaxExpoTime<=0) {
       m_inpars.accMaxExpoTime= m_inpars.acqExpoTime;
     }
+    break;
   case Concatenation:
     if (m_inpars.concatNbFrames<1)
       m_inpars.concatNbFrames= 1;
