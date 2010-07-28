@@ -710,6 +710,8 @@ bool BufferCtrlMgr::acqFrameReady(const HwFrameInfoType& acq_frame_info)
 	HwFrameInfoType aux_frame_info(aux_frame_nb, aux_frame_ptr,
 				       &aux_frame_dim, frame_ts, valid_pixels,
 				       HwFrameInfoType::Managed);
+	aux_mgr.newFrameReady(aux_frame_info);
+
 	return newFrameReady(aux_frame_info);
 }
 

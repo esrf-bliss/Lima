@@ -145,13 +145,14 @@ void CtControl::prepareAcq()
 
   resetStatus(false);
 
-  DEB_TRACE() << "Apply Acquisition Parameters";
-  m_ct_acq->apply(m_policy);
   DEB_TRACE() << "Apply hardware bin/roi";
   m_ct_image->applyHard();
 
   DEB_TRACE() << "Setup Acquisition Buffers";
   m_ct_buffer->setup(this);
+
+  DEB_TRACE() << "Apply Acquisition Parameters";
+  m_ct_acq->apply(m_policy);
 
   DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();

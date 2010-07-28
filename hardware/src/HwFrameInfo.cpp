@@ -23,8 +23,9 @@ ostream& lima::operator <<(ostream& os, const HwFrameInfoType& info)
 	if(info.frame_dim.isValid())	
 	   os << "frame_dim=" << info.frame_dim << ", ";
 
+	int orig_prec = os.precision();
 	os << "time_stamp=" << fixed << setprecision(6) 
-	   << info.frame_timestamp << setprecision(0) << ", "
+	   << info.frame_timestamp << setprecision(orig_prec) << ", "
 	   << "valid_pixels=" << info.valid_pixels << ", "
 	   << "buffer_owner_ship=" << aBufferOwnerShipPt
 	   << ">";
