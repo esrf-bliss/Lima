@@ -30,13 +30,22 @@ from Lima import Core
 import plugins
 import camera
 
-
 class LimaCCDs(PyTango.Device_4Impl) :
+
+    Core.DEB_CLASS(Core.DebModApplication, 'LimaCCDs')
+    
+#------------------------------------------------------------------
+#    Device constructor
+#------------------------------------------------------------------
     def __init__(self,*args) :
         PyTango.Device_4Impl.__init__(self,*args)
         self.init_device()
         self.__lima_control = None
 
+#------------------------------------------------------------------
+#    Device destructor
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
     def delete_device(self) :
         try:
             m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
@@ -45,6 +54,10 @@ class LimaCCDs(PyTango.Device_4Impl) :
         else:
             m.close_interface()
 
+#------------------------------------------------------------------
+#    Device initialization
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
     def init_device(self) :
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
@@ -68,6 +81,144 @@ class LimaCCDs(PyTango.Device_4Impl) :
 #                    util.create_device(specificClass,specificDevice)
 
 
+#==================================================================
+#
+#    LimaCCDs read/write attribute methods
+#
+#==================================================================
+
+    ## @brief Read maximum accumulation exposure time
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_max_expotime(self,attr) :        
+	acq = self.__control.acquisition()
+
+        value = acq.getAccMaxExpoTime()
+	if value is None: value = -1
+	
+        attr.set_value(value)
+
+    ## @brief Write the accumulation max exposure time
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_acc_max_expotime(self,attr) :
+        data = []
+        attr.get_write_value(data)
+	acq = self.__control.acquisition()
+        acq.setAccMaxExpoTime(*data)
+
+    ## @brief Read calculated accumulation exposure time
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_expotime(self,attr) :        
+	acq = self.__control.acquisition()
+
+        value = acq.getAccExpoTime()
+	if value is None: value = -1
+	
+        attr.set_value(value)
+	
+    ## @brief Read calculated accumulation number of frames
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_nb_frames(self,attr) :        
+	acq = self.__control.acquisition()
+        value = acq.getAccNbFrames()
+	if value is None: value = -1
+	
+        attr.set_value(value)
+	
+    ## @brief Read acquisition mode
+    # 0-Normal, 1-Accumulation, 2-Concatenation
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acq_mode(self,attr) :        
+	acq = self.__control.acquisition()
+
+        value = acq.getAcqMode()
+	if value is None: value = -1
+	
+        attr.set_value(value)
+    ## @brief Write Acquisition mode
+    #0-Normal, 1-Accumulation, 2-Concatenation
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_acq_mode(self,attr) :
+        data = []
+        attr.get_write_value(data)
+	acq = self.__control.acquisition()
+
+        acq.setAcqMode(*data)
+
+    ## @brief Read latency time 
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_latency_time(self,attr) :
+        acq = self.__control.acquisition()
+
+        value = acq.getLatencyTime()
+        if value is None: value = -1
+
+        attr.set_value(value)
+    ## @brief Write Latency time 
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_latency_time(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        acq = self.__control.acquisition()
+
+        acq.setLatencyTime(*data)
+
+#==================================================================
+#
+#    LimaCCDs command methods
+#
+#==================================================================
+#------------------------------------------------------------------
+#    setDebugFlags command:
+#
+#    Description: Get the current acquired frame number
+#    argout: DevVarDoubleArray    
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
+    def setDebugFlags(self, deb_flags):
+        deb_flags &= 0xffffffff
+        deb.Param('Setting debug flags: 0x%08x' % deb_flags)
+        Core.DebParams.setTypeFlags((deb_flags   >> 16)  & 0xff)
+        Core.DebParams.setModuleFlags((deb_flags >>  0)  & 0xffff)
+
+        deb.Trace('FormatFlags: %s' % Core.DebParams.getFormatFlagsNameList())
+        deb.Trace('TypeFlags:   %s' % Core.DebParams.getTypeFlagsNameList())
+        deb.Trace('ModuleFlags: %s' % Core.DebParams.getModuleFlagsNameList())
+
+#------------------------------------------------------------------
+#    getDebugFlags command:
+#
+#    Description: Get the current acquired frame number
+#    argout: DevVarDoubleArray    
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
+    def getDebugFlags(self):
+        deb.Trace('FormatFlags: %s' % Core.DebParams.getFormatFlagsNameList())
+        deb.Trace('TypeFlags:   %s' % Core.DebParams.getTypeFlagsNameList())
+        deb.Trace('ModuleFlags: %s' % Core.DebParams.getModuleFlagsNameList())
+
+        deb_flags = (((Core.DebParams.getTypeFlags()    & 0xff)   << 16) |
+                     ((Core.DebParams.getModuleFlags()  & 0xffff) <<  0))
+        deb_flags &= 0xffffffff
+        deb.Return('Getting debug flags: 0x%08x' % deb_flags)
+        return deb_flags
+
+
+
+
+
+#==================================================================
+#
+#    LimaTacoCCDsClass class definition
+#
+#==================================================================
 class LimaCCDsClass(PyTango.DeviceClass) :
     #    Class Properties
     class_property_list = {
@@ -83,10 +234,36 @@ class LimaCCDsClass(PyTango.DeviceClass) :
 
     #    Command definitions
     cmd_list = {
+        'getDebugFlags':
+            [[PyTango.DevVoid, ""],
+            [PyTango.DevULong, "Debug flag in HEX format"]],
+        'setDebugFlags':
+            [[PyTango.DevULong, "Debug flag in HEX format"],
+            [PyTango.DevVoid, ""]],
         }
     
     #    Attribute definitions
     attr_list = {
+       'acc_max_expotime':
+        [[PyTango.DevDouble,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+       'acc_expotime':
+        [[PyTango.DevDouble,
+          PyTango.SCALAR,
+          PyTango.READ]],	      	
+       'latency_time':
+        [[PyTango.DevDouble,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],	      	
+       'acc_nb_frames':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ]],	      	
+       'acq_mode':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],	      	
         }
 
 def declare_camera_n_commun_to_tango_world(util) :

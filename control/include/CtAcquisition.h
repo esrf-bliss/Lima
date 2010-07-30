@@ -57,6 +57,7 @@ namespace lima
     void getAcqExpoTime(double& acq_time) const;
 
     void setAccMaxExpoTime(double max_time);
+    void getAccMaxExpoTime(double& max_time) const;
 
     void getAccNbFrames(int& nframes) const;
     void getAccExpoTime(double& acc_time) const;

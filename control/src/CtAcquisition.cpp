@@ -13,6 +13,8 @@ CtAcquisition::CtAcquisition(HwInterface *hw)
     throw LIMA_CTL_EXC(Error, "Cannot get hardware sync object");
 
   m_hw_sync->getValidRanges(m_valid_ranges);
+  DEB_TRACE() << DEB_VAR1(m_valid_ranges);
+
   m_applied_once= false;
 }
 
@@ -269,6 +271,15 @@ void CtAcquisition::setAccMaxExpoTime(double acc_time)
   DEB_PARAM() << DEB_VAR1(acc_time);
 
   m_inpars.accMaxExpoTime= acc_time;
+}
+
+void CtAcquisition::getAccMaxExpoTime(double& acc_time) const
+{
+  DEB_MEMBER_FUNCT();
+
+  acc_time= m_inpars.accMaxExpoTime;
+
+  DEB_RETURN() << DEB_VAR1(acc_time);
 }
 
 void CtAcquisition::getAccExpoTime(double& acc_time) const
