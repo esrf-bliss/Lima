@@ -275,16 +275,18 @@ return sipGetState(sipTransferObj);
  // Go through each element in the C++ instance and convert it to a
  // wrapped Roi
  int i = 0;
+ sipTransferObj = NULL;
  for (std::list<Roi>::iterator j = sipCpp->begin();
       j != sipCpp->end();++j,++i)
   {
-   Roi &aRoi = *j;
+   Roi *aRoi = new Roi(*j);
    PyObject *wobj;
 
    // Get the Python wrapper for the QWidget instance, creating a new
    // one if necessary, and handle any ownership transfer.
-   if (!(wobj = sipConvertFromType(&aRoi, sipType_Roi, sipTransferObj)))
+   if (!(wobj = sipConvertFromNewType(aRoi, sipType_Roi, sipTransferObj)))
     {
+     delete aRoi;
      // There was an error so garbage collect the Python list.
      Py_DECREF(l);
      return NULL;
