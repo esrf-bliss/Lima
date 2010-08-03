@@ -5,11 +5,62 @@
 using namespace lima;
 using namespace std;
 
-Exception::Exception(Layer layer, ErrorType err_type, string err_desc,
-		     string file_name, string funct_name, int line_nr)
-	: m_layer(layer), m_err_type(err_type), m_err_desc(err_desc),
-	  m_file_name(file_name), m_funct_name(funct_name), m_line_nr(line_nr)
+
+ExcDebProxy::ExcDebProxy(DebProxy *deb_proxy)
 {
+	m_d = new Data(deb_proxy);
+}
+
+ExcDebProxy::ExcDebProxy(const ExcDebProxy& o)
+{
+	m_d = o.getData();
+}
+
+ExcDebProxy::~ExcDebProxy()
+{
+	if (m_d->deb_proxy) {
+		*m_d->deb_proxy << " [thrown]";
+		delete m_d->deb_proxy;
+		m_d->deb_proxy = NULL;
+	}
+
+	if (putData())
+		delete m_d;
+}
+
+struct ExcDebProxy::Data *ExcDebProxy::getData() const
+{
+	m_d->count.get();
+	return m_d;
+}
+
+bool ExcDebProxy::putData() const
+{
+	return m_d->count.put();
+}
+
+ExcDebProxy::Data::Data(DebProxy *d)
+	: deb_proxy(d)
+{
+}
+
+ExcDebProxy::operator DebProxy *() const
+{
+	return m_d->deb_proxy;
+}
+
+
+Exception::Exception(Layer layer, ErrorType err_type, const string& err_desc,
+		     const string& file_name, const string& funct_name, 
+		     int line_nr, ExcDebProxy exc_deb_proxy)
+	: m_layer(layer), m_err_type(err_type), m_err_desc(err_desc),
+	  m_file_name(file_name), m_funct_name(funct_name), m_line_nr(line_nr),
+	  m_exc_deb_proxy(exc_deb_proxy)
+{
+	DebProxy *deb_proxy = m_exc_deb_proxy;
+	if (deb_proxy)
+		*deb_proxy << "Exception(" << getErrType() << "): " 
+			   << getErrDesc();
 }
 
 Layer Exception::getLayer() const

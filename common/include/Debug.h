@@ -6,7 +6,6 @@
 
 #include "StreamUtils.h"
 #include "ThreadUtils.h"
-#include "Exceptions.h"
 
 #include <string>
 #include <map>
@@ -301,25 +300,6 @@ inline std::ostream& operator <<(std::ostream& os, const DebHex& deb_hex)
 
 
 /*------------------------------------------------------------------
- *  class DebExcProxy
- *------------------------------------------------------------------*/
-
-class DebExcProxy
-{
- public:
-	DebExcProxy(DebProxy *deb_proxy, const Exception& exc);
-	~DebExcProxy();
-
-	template <class T>
-	DebExcProxy& operator <<(const T& o);
-
- private:
-	DebProxy *m_deb_proxy;
-	Exception m_exc;
-};
-
-
-/*------------------------------------------------------------------
  *  global inline functions
  *------------------------------------------------------------------*/
 
@@ -479,31 +459,6 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 
 /*------------------------------------------------------------------
- *  class DebExcProxy inline functions
- *------------------------------------------------------------------*/
-
-inline DebExcProxy::DebExcProxy(DebProxy *deb_proxy, const Exception& exc)
-	: m_deb_proxy(deb_proxy), m_exc(exc)
-{
-	*m_deb_proxy << m_exc.getErrType() << ": ";
-}
-
-inline DebExcProxy::~DebExcProxy()
-{
-	delete m_deb_proxy;
-	throw m_exc;
-}
-
-template <class T>
-DebExcProxy& DebExcProxy::operator <<(const T& o)
-{
-	*m_deb_proxy << o;
-	m_exc << o;
-	return *this;
-}
-
-
-/*------------------------------------------------------------------
  *  debug macros
  *------------------------------------------------------------------*/
 
@@ -601,28 +556,6 @@ DebExcProxy& DebExcProxy::operator <<(const T& o)
 
 #define DEB_OBJ_NAME(o) \
 	((o)->getDebObjName())
-
-#define THROW_MSG(type, exc)				\
-	DebExcProxy(new DebProxy(DEB_MSG(type)), exc)
-
-#define THROW_FATAL(exc)				\
-	THROW_MSG(DebTypeFatal, exc)
-#define THROW_ERROR(exc)				\
-	THROW_MSG(DebTypeError, exc)
-
-#define THROW_COM_FATAL(err_type)	\
-	THROW_FATAL(LIMA_COM_EXC(err_type, ""))
-#define THROW_CTL_FATAL(err_type)		\
-	THROW_FATAL(LIMA_CTL_EXC(err_type, ""))
-#define THROW_HW_FATAL(err_type)		\
-	THROW_FATAL(LIMA_HW_EXC(err_type, ""))
-
-#define THROW_COM_ERROR(err_type)		\
-	THROW_ERROR(LIMA_COM_EXC(err_type, ""))
-#define THROW_CTL_ERROR(err_type)		\
-	THROW_ERROR(LIMA_CTL_EXC(err_type, ""))
-#define THROW_HW_ERROR(err_type)		\
-	THROW_ERROR(LIMA_HW_EXC(err_type, ""))
 
 } // namespace lima
 

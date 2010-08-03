@@ -6,6 +6,9 @@
 using namespace lima;
 using namespace std;
 
+DEB_GLOBAL(DebModTest);
+
+
 void print_str(const string& desc, const string& str)
 {
 	cout << desc << " \"" << str << "\"" << endl;
@@ -28,6 +31,8 @@ void split_msg(const Frelon::SerialLine& frelon_ser_line, const string& msg)
 
 void frelon_cmd(Frelon::SerialLine& frelon_ser_line, const string& cmd)
 {
+	DEB_GLOBAL_FUNCT();
+
 	split_msg(frelon_ser_line, cmd);
 	frelon_ser_line.write(cmd);
 
@@ -37,12 +42,14 @@ void frelon_cmd(Frelon::SerialLine& frelon_ser_line, const string& cmd)
 	t0 = Timestamp::now();
 	frelon_ser_line.readLine(ans);
 	t1 = Timestamp::now();
-	cout << "Elapsed " << (t1 - t0) << " sec" << endl;
+	DEB_TRACE() << "Elapsed " << (t1 - t0) << " sec";
 	print_str("Ans", ans);
 }
 
 void frelon_read_reg(Frelon::Camera& frelon_cam, Frelon::Reg reg)
 {
+	DEB_GLOBAL_FUNCT();
+
 	Timestamp t0, t1;
 	int val;
 
@@ -50,8 +57,8 @@ void frelon_read_reg(Frelon::Camera& frelon_cam, Frelon::Reg reg)
 	t0 = Timestamp::now();
 	frelon_cam.readRegister(reg, val);
 	t1 = Timestamp::now();
-	cout << "Elapsed " << (t1 - t0) << " sec" << endl;
-	cout << "Val" << " " << val << endl;
+	DEB_TRACE() << "Elapsed " << (t1 - t0) << " sec";
+	DEB_TRACE() << "Val" << " " << val;
 }
 
 void frelon_set_roi(Frelon::Camera& frelon_cam, const Roi& set_roi)
@@ -84,6 +91,8 @@ void test_sleep()
 
 class FrelonFrameCb : public HwFrameCallback
 {
+	DEB_CLASS(DebModTest, "FrelonFrameCb");
+
 public:
 	FrelonFrameCb(int nb_frames, Cond& acq_finished) 
 		: m_nb_frames(nb_frames), m_acq_finished(acq_finished) {}
@@ -91,7 +100,8 @@ public:
 protected:
 	virtual bool newFrameReady(const HwFrameInfoType& frame_info)
 	{
-		cout << frame_info << "          \r" << flush;
+		DEB_MEMBER_FUNCT();
+		DEB_PARAM() << DEB_VAR1(frame_info);
 		if (frame_info.acq_frame_nb == m_nb_frames - 1) {
 			cout << endl;
 			m_acq_finished.signal();
@@ -104,9 +114,11 @@ private:
 	Cond& m_acq_finished;
 };
 
-void test_frelon(bool do_reset)
+void test_frelon(int espia_nb, bool do_reset)
 {
-	Espia::Dev espia_dev(0);
+	DEB_GLOBAL_FUNCT();
+
+	Espia::Dev espia_dev(espia_nb);
 	Espia::Acq espia_acq(espia_dev);
 	Espia::BufferMgr espia_buffer_mgr(espia_acq);
 	Espia::SerialLine espia_ser_line(espia_dev);
@@ -117,9 +129,9 @@ void test_frelon(bool do_reset)
 	string msg;
 
 	if (do_reset) {
-		cout << "Resetting camera ... " << endl;
+		DEB_TRACE() << "Resetting camera ... ";
 		frelon_cam.hardReset();
-		cout << "  Done!" << endl;
+		DEB_TRACE() << "  Done!";
 	}
 
 	string ver;
@@ -143,46 +155,46 @@ void test_frelon(bool do_reset)
 
 	Frelon::InputChan input_chan;
 	frelon_cam.getInputChan(input_chan);
-	cout << "Chan " << int(input_chan) << ": ";
+	DEB_TRACE() << "Chan " << int(input_chan) << ": ";
 
 	string sep = "";
 	for (int i = 0; i < 4; i++) {
 		Frelon::InputChan chan = Frelon::InputChan(1 << i);
 		if (frelon_cam.isChanActive(input_chan, chan)) {
-			cout << sep << (i + 1);
+			DEB_TRACE() << sep << (i + 1);
 			sep = "&";
 		}
 	}
-	cout << endl;
+	DEB_TRACE();
 
 	test_sleep();
 
-	cout << "TopLeft:     " << TopLeft     << endl;
-	cout << "TopRight:    " << TopRight    << endl;
-	cout << "BottomLeft:  " << BottomLeft  << endl;
-	cout << "BottomRight: " << BottomRight << endl;
+	DEB_TRACE() << "TopLeft:     " << TopLeft    ;
+	DEB_TRACE() << "TopRight:    " << TopRight   ;
+	DEB_TRACE() << "BottomLeft:  " << BottomLeft ;
+	DEB_TRACE() << "BottomRight: " << BottomRight;
 
 	Bin bin;
 	Roi roi;
 
 	frelon_cam.getBin(bin);
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 	bin = 1;
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 	frelon_cam.setBin(bin);
 	frelon_cam.getBin(bin);
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 	
 	roi = Roi(Point(515, 517), Size(1021, 521));
 	frelon_set_roi(frelon_cam, roi);
 
 	frelon_cam.getBin(bin);
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 	bin = 2;
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 	frelon_cam.setBin(bin);
 	frelon_cam.getBin(bin);
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 	
 	roi = Roi(Point(257, 259), Size(509, 265));
 	frelon_set_roi(frelon_cam, roi);
@@ -191,10 +203,10 @@ void test_frelon(bool do_reset)
 	frelon_set_roi(frelon_cam, roi);
 
 	bin = 1;
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 	frelon_cam.setBin(bin);
 	frelon_cam.getBin(bin);
-	cout << "Bin " << bin << endl;
+	DEB_TRACE() << "Bin " << bin;
 
 	roi.reset();
 	frelon_set_roi(frelon_cam, roi);
@@ -206,7 +218,7 @@ void test_frelon(bool do_reset)
 	buffer_mgr.setFrameDim(frame_dim);
 	int max_nb_buffers;
 	buffer_mgr.getMaxNbBuffers(max_nb_buffers);
-	cout << "MaxNbBuffers " << max_nb_buffers << endl;
+	DEB_TRACE() << "MaxNbBuffers " << max_nb_buffers;
 	int nb_concat_frames = 1;
 	buffer_mgr.setNbConcatFrames(nb_concat_frames);
 	int nb_buffers = max_nb_buffers;
@@ -215,30 +227,30 @@ void test_frelon(bool do_reset)
 	buffer_mgr.getFrameDim(frame_dim);
 	buffer_mgr.getNbBuffers(nb_buffers);
 	buffer_mgr.getNbConcatFrames(nb_concat_frames);
-	cout << "FrameDim " << frame_dim << ", "
+	DEB_TRACE() << "FrameDim " << frame_dim << ", "
 	     << "NbBuffers " << nb_buffers << ", "
-	     << "NbConcatFrames " << nb_concat_frames << endl;
+	     << "NbConcatFrames " << nb_concat_frames;
 
 	TrigMode trig_mode;
 	frelon_cam.getTrigMode(trig_mode);
-	cout << "TrigMode " << trig_mode << endl;
+	DEB_TRACE() << "TrigMode " << trig_mode;
 	trig_mode = IntTrig;
 	frelon_cam.setTrigMode(trig_mode);
 	frelon_cam.getTrigMode(trig_mode);
-	cout << "TrigMode " << trig_mode << endl;
+	DEB_TRACE() << "TrigMode " << trig_mode;
 	
 	int nb_frames;
 	frelon_cam.getNbFrames(nb_frames);
-	cout << "NbFrames " << nb_frames << endl;
+	DEB_TRACE() << "NbFrames " << nb_frames;
 	nb_frames = nb_buffers;
 	frelon_cam.setNbFrames(nb_frames);
 	frelon_cam.getNbFrames(nb_frames);
-	cout << "NbFrames " << nb_frames << endl;
+	DEB_TRACE() << "NbFrames " << nb_frames;
 
 	Espia::Acq::StatusType acq_status;
 	espia_acq.getStatus(acq_status);
-	cout << "running " << acq_status.running << ", "
-	     << "last_frame_nb " << acq_status.last_frame_nb << endl;
+	DEB_TRACE() << "running " << acq_status.running << ", "
+	     << "last_frame_nb " << acq_status.last_frame_nb;
 
 	espia_acq.setNbFrames(nb_frames);
 
@@ -250,18 +262,40 @@ void test_frelon(bool do_reset)
 	espia_acq.start();
 	frelon_cam.start();
 	acq_finished.wait();
-	cout << "Acq. finished!" << endl;
+	DEB_TRACE() << "Acq. finished!";
 }
 
 
 int main(int argc, char *argv[])
 {
-	
+	DEB_GLOBAL_FUNCT();
+
 	try {
-		bool do_reset = (argc > 1) && (string(argv[1]) == "reset");
-		test_frelon(do_reset);
+		char *endp;
+
+		int espia_nb = 0;
+		if ((argc > 1) && argv[1]) {
+			espia_nb = strtol(argv[1], &endp, 0);
+			if (*endp)
+				THROW_HW_ERROR(InvalidValue) 
+					<< "Invalid " << DEB_VAR1(argv[1]);
+		}
+
+		bool do_reset = (argc > 2) && (string(argv[2]) == "reset");
+
+		if ((argc > 3) && argv[3]) {
+			int deb_flags = strtol(argv[3], &endp, 0);
+			if (*endp)
+				THROW_HW_ERROR(InvalidValue) 
+					<< "Invalid " << DEB_VAR1(argv[3]);
+			DebParams::setTypeFlags(deb_flags);
+		}
+
+		test_frelon(espia_nb, do_reset);
 	} catch (Exception e) {
-		cerr << "LIMA Exception: " << e << endl;
+		DEB_ERROR() << "LIMA Exception: " << e;
+	} catch (...) {
+		DEB_ERROR() << "Unkown exception!";
 	}
 
 	return 0;

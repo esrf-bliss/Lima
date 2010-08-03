@@ -56,8 +56,7 @@ class SimpleRegEx
 
 	static int findNbGroups(const std::string& regex_str);
 
-	void throwError(int ret, std::string file, std::string func, 
-			int line) const;
+	std::string strError(int ret) const;
 
 	std::string m_str;
 	regex_t m_regex;

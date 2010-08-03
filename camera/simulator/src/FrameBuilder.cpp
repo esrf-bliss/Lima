@@ -113,8 +113,7 @@ void FrameBuilder::checkPeaks( std::vector<struct GaussPeak> const &peaks )
 	vector<GaussPeak>::const_iterator p;
 	for( p = peaks.begin( ); p != peaks.end( ); ++p ) {
 		if( ! roi.containsPoint(Point(p->x0, p->y0)) )
-			throw Exception( Hardware, InvalidValue, "Peak too far",
-			                 __FILE__, __FUNCTION__, __LINE__ );
+			throw LIMA_HW_EXC(InvalidValue, "Peak too far");
 	}
 	
 }
@@ -372,8 +371,7 @@ void FrameBuilder::getNextFrame( unsigned char *ptr ) throw (Exception)
 			fillData<unsigned long>(ptr);
 			break;
 		default:
-			throw Exception( Hardware, NotSupported, "Depth",
-			                 __FILE__, __FUNCTION__, __LINE__ );
+			throw LIMA_HW_EXC(NotSupported, "Invalid depth");
 	}
 	++m_frame_nr;
 }

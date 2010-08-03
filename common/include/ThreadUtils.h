@@ -1,7 +1,6 @@
 #ifndef THREADUTILS_H
 #define THREADUTILS_H
 
-#include "Exceptions.h"
 #include "AutoObj.h"
 #include <pthread.h>
 

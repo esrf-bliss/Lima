@@ -94,12 +94,9 @@ void MemBuffer::alloc(int size)
 	release();
 
 	int ret = posix_memalign(&m_ptr, Alignment, size);
-	if (ret != 0) {
-		ostringstream os;
-		os << "Error in posix_memalign: " << strerror(ret);
-		const string& err_desc = os.str();
-		throw LIMA_COM_EXC(Error, err_desc);
-	}
+	if (ret != 0)
+		throw LIMA_COM_EXC(Error, "Error in posix_memalign: ")
+			<< strerror(ret);
 
 	m_size = size;
 }

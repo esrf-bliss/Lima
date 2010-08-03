@@ -14,8 +14,6 @@ enum {
 
 unsigned long Sec2USec(double sec);
 double USec2Sec(unsigned long usec);
-void ThrowError(int ret, std::string file, std::string func, int line, 
-		DebObj *deb_ptr = NULL);
 std::string StrError(int ret);
 
 }; // namespace Espia

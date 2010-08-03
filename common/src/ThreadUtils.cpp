@@ -1,4 +1,5 @@
 #include "ThreadUtils.h"
+#include "Exceptions.h"
 #include <errno.h>
 #include <sys/time.h>
 

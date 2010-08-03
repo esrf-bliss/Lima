@@ -106,16 +106,15 @@ void CtSpsImage::_check_data_size(Data &data)
 	case 2: image_type = Bpp16; break;
 	case 4: image_type = Bpp32; break;
 	default:
-		DEB_ERROR() << "Invalid " << DEB_VAR1(data.depth());
-		throw LIMA_CTL_EXC(InvalidValue, "Invalid data depth");
+		THROW_CTL_ERROR(InvalidValue) << "Invalid " 
+					      << DEB_VAR1(data.depth());
 	}
 	
 	FrameDim frame_dim(Size(data.width, data.height), image_type);
-	if (frame_dim != m_sps_cnt->m_frame_dim) {
-		DEB_ERROR() << "Data " << DEB_VAR1(frame_dim) 
-			    << " does not match " << DEB_VAR1(m_sps_cnt->m_frame_dim);
-		throw LIMA_CTL_EXC(InvalidValue, "Image size mismatch");
-	}
+	if (frame_dim != m_sps_cnt->m_frame_dim)
+		THROW_CTL_ERROR(InvalidValue) 
+			<< "Data " << DEB_VAR1(frame_dim) << " does not match "
+			<< DEB_VAR1(m_sps_cnt->m_frame_dim);
 }
 void CtSpsImage::_post_sps_task(Data &aData)
 {
@@ -196,11 +195,9 @@ void _SpsImage::setNames(const std::string& spec_name,
 		return;
 	}
 
-	if (m_frame_dim.isValid()) {
-		std::string error_desc = "Cannot change the names of active array";
-		DEB_ERROR() << error_desc;
-		throw LIMA_CTL_EXC(InvalidValue, error_desc);
-	}
+	if (m_frame_dim.isValid())
+		THROW_CTL_ERROR(InvalidValue) 
+			<< "Cannot change the names of active array";
 
 	m_spec_name = spec_name;
 	m_array_name = array_name;
@@ -227,11 +224,9 @@ void _SpsImage::createSPS(const FrameDim& frame_dim)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(frame_dim, m_frame_dim);
 
-	if (m_spec_name.empty() || m_array_name.empty()) {
-		std::string error_desc = "Must set the session/array names first";
-		DEB_ERROR() << error_desc;
-		throw LIMA_CTL_EXC(InvalidValue, error_desc);
-	}
+	if (m_spec_name.empty() || m_array_name.empty())
+		THROW_CTL_ERROR(InvalidValue) 
+			<< "Must set the session/array names first";
 
 	char *c_spec_name  = (char *) m_spec_name.c_str();
 	char *c_array_name = (char *) m_array_name.c_str();
@@ -254,24 +249,22 @@ void _SpsImage::createSPS(const FrameDim& frame_dim)
 		sps_type = SPS_UINT;
 		break;
 	default:
-		DEB_ERROR() << "Unknown " << DEB_VAR1(image_type);
-		throw LIMA_CTL_EXC(InvalidValue, "Unknown image type");
+		THROW_CTL_ERROR(InvalidValue) << "Unknown " 
+					      << DEB_VAR1(image_type);
 	}
 
 	int ret = SPS_CreateArray(c_spec_name, c_array_name, 
 				  size.getHeight(), size.getWidth(),
 				  sps_type, SPS_IS_IMAGE);
-	if (ret != 0) {
-		DEB_ERROR() << "Error creating SPS array: " << DEB_VAR1(ret);
-		throw LIMA_CTL_EXC(Error, "Error creating SPS array");
-	}
+	if (ret != 0)
+		THROW_CTL_ERROR(Error) << "Error creating SPS array: " 
+				       << DEB_VAR1(ret);
 
 	m_shared_mem = SPS_GetDataPointer(c_spec_name, c_array_name, 1);
-	if (m_shared_mem == NULL) {
-		DEB_ERROR() << "Error getting SPS array pointer: "
+	if (m_shared_mem == NULL)
+		THROW_CTL_ERROR(Error) << "Error getting SPS array pointer: "
 			    << "is " << DEB_VAR1(frame_dim) << " too big?";
-		throw LIMA_CTL_EXC(Error, "Error getting SPS array pointer");
-	}
+
 	DEB_TRACE() << DEB_VAR1(m_shared_mem);
 
 	m_frame_dim = frame_dim;

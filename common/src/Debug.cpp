@@ -1,5 +1,6 @@
 #include "Debug.h"
 #include "MiscUtils.h"
+#include "Exceptions.h"
 
 #include <ctime>
 #include <iomanip>
@@ -193,10 +194,9 @@ void DebParams::setFlagsNameList(Flags& flags,
 	for (lit = name_list.begin(); lit != lend; ++lit) {
 		const string& name = *lit;
 		mit = FindMapValue(name_map, name);
-		if (mit == mend) {
-			string err_desc = string("Invalid name: ") + name;
-			throw LIMA_COM_EXC(InvalidValue, err_desc);
-		}
+		if (mit == mend)
+			throw LIMA_COM_EXC(InvalidValue, "Invalid name: ")
+				<< name;
 		flags |= mit->first;
 	}
 }

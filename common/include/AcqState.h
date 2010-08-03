@@ -3,6 +3,8 @@
 
 #include "ThreadUtils.h"
 
+#include <ostream>
+
 namespace lima
 {
 

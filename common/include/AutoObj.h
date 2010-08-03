@@ -1,6 +1,8 @@
 #ifndef AUTOOBJ_H
 #define AUTOOBJ_H
 
+#include <stdio.h>	// For NULL
+
 namespace lima
 {
 

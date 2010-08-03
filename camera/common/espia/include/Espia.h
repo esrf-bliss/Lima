@@ -35,17 +35,14 @@ inline double USec2Sec(unsigned long usec)
 	return usec;
 }
 
-void ThrowError(int ret, std::string file, std::string func, int line,
-		DebObj *deb_ptr = NULL);
-
 std::string StrError(int ret);
 
 #define ESPIA_CHECK_CALL(espia_ret)					\
 	do {								\
 		int aux_ret = (espia_ret);				\
 		if (aux_ret < 0)					\
-			Espia::ThrowError(aux_ret, __FILE__,		\
-					  __FUNCTION__, __LINE__, &deb);\
+			THROW_HW_ERROR(Error) << "Espia error: "	\
+					      << StrError(aux_ret);	\
 	} while (0)
 
 

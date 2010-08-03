@@ -7,9 +7,10 @@ using namespace std;
 	{								\
 		int aux_ret = (ret);					\
 		if (aux_ret != 0)					\
-			throwError(aux_ret, __FILE__, __FUNCTION__,	\
-				   __LINE__);				\
+			throw LIMA_COM_EXC(Error, "regex: ") 		\
+				<< strError(aux_ret);			\
 	}
+
 
 SimpleRegEx::SingleMatch::SingleMatch()
 {
@@ -197,14 +198,13 @@ bool SimpleRegEx::match(const string& str, FullMatchType& match,
 	return (match[0].start == str.begin());
 }
 
-void SimpleRegEx::throwError(int ret, string file, string func, int line) const
+string SimpleRegEx::strError(int ret) const
 {
 	size_t len = regerror(ret, &m_regex, NULL, 0);
 	string regerr(len, '\0');
 	char *data = (char *) regerr.data();
 	regerror(ret, &m_regex, data, regerr.size());
-	string err_desc = string("regex: ") + regerr;
-	throw Exception(Common, Error, err_desc, file, func, line);
+	return regerr;
 }
 
 SimpleRegEx lima::operator +(const SimpleRegEx& re1, const SimpleRegEx& re2)
