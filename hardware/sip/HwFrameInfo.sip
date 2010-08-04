@@ -25,9 +25,12 @@ using namespace lima;
 	int arr_type;
 	ImageType image_type = sipCpp->frame_dim.getImageType();
 	switch (image_type) {
-	case Bpp8:  arr_type = NPY_UBYTE;  break;
-	case Bpp16: arr_type = NPY_USHORT; break;
-	case Bpp32: arr_type = NPY_UINT32; break;
+	case Bpp8:  	arr_type = NPY_UBYTE;  	break;
+	case Bpp8S:  	arr_type = NPY_BYTE;  	break;
+	case Bpp16: 	arr_type = NPY_USHORT; 	break;
+	case Bpp16S: 	arr_type = NPY_SHORT; 	break;
+	case Bpp32: 	arr_type = NPY_UINT32; 	break;
+	case Bpp32S: 	arr_type = NPY_INT32; 	break;
 	default:
 		return NULL;
 	}
@@ -49,12 +52,12 @@ if(!sipErr)
     ImageType image_type;
     switch(tmpObject->descr->type_num)
     {
-    case NPY_BYTE:
-    case NPY_UBYTE:  image_type = Bpp8;  break;
-    case NPY_SHORT:
-    case NPY_USHORT: image_type = Bpp16; break;
-    case NPY_INT32:
-    case NPY_UINT32: image_type = Bpp32; break;
+    case NPY_BYTE: 	image_type = Bpp8S; 	break;
+    case NPY_UBYTE:  	image_type = Bpp8;  	break;
+    case NPY_SHORT:	image_type = Bpp16S; 	break;
+    case NPY_USHORT: 	image_type = Bpp16; 	break;
+    case NPY_INT32:	image_type = Bpp32S; 	break;
+    case NPY_UINT32: 	image_type = Bpp32; 	break;
     default:
     sipErr = 1;
     }
@@ -91,12 +94,12 @@ Py_DECREF(tmpObject);
  	    ImageType image_type;
     	    switch(tmpObject->descr->type_num)
     	    {
-	      case NPY_BYTE:
-    	      case NPY_UBYTE:  image_type = Bpp8;  break;
-    	      case NPY_SHORT:
-    	      case NPY_USHORT: image_type = Bpp16; break;
-    	      case NPY_INT32:
-              case NPY_UINT32: image_type = Bpp32; break;
+	      case NPY_BYTE:	image_type = Bpp8S;  	break;
+    	      case NPY_UBYTE:  	image_type = Bpp8;  	break;
+    	      case NPY_SHORT:	image_type = Bpp16S; 	break;
+    	      case NPY_USHORT: 	image_type = Bpp16; 	break;
+    	      case NPY_INT32:	image_type = Bpp32S; 	break;
+              case NPY_UINT32: 	image_type = Bpp32; 	break;
     	      default:
 		goto clean;
             }

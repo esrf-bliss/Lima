@@ -201,13 +201,21 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
   switch (ftype) {
   case Bpp8:
     fdata.type= Data::UINT8; break;
+  case Bpp8S:
+    fdata.type = Data::INT8; break;
   case Bpp10:
   case Bpp12:
   case Bpp14:
   case Bpp16:
     fdata.type= Data::UINT16; break;
+  case Bpp16S:
+    fdata.type = Data::INT16; break;
   case Bpp32:
     fdata.type= Data::UINT32; break;
+  case Bpp32S:
+    fdata.type = Data::INT32; break;
+  default:
+    THROW_CTL_ERROR(InvalidValue) << "Data type not yet managed" << DEB_VAR1(ftype);
   }
 
   fsize= frame_info.frame_dim.getSize();

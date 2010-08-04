@@ -125,11 +125,17 @@ ostream& lima::operator <<(ostream& os, const Roi& roi)
 int FrameDim::getImageTypeBpp(ImageType type)
 {
 	switch (type) {
+	case Bpp8S:
 	case Bpp8:  return 8;
+	case Bpp10S:
 	case Bpp10: return 10;
+	case Bpp12S:
 	case Bpp12: return 12;
+	case Bpp14S:
 	case Bpp14: return 14;
+	case Bpp16S:
 	case Bpp16: return 16;
+	case Bpp32S:
 	case Bpp32: return 32;
 	default:
 		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");
@@ -139,14 +145,20 @@ int FrameDim::getImageTypeBpp(ImageType type)
 int FrameDim::getImageTypeDepth(ImageType type)
 {
 	switch (type) {
+	case Bpp8S:
 	case Bpp8: 
 		return 1;
 	case Bpp10: 
+	case Bpp10S: 
 	case Bpp12: 
+	case Bpp12S: 
 	case Bpp14: 
+	case Bpp14S: 
 	case Bpp16: 
+	case Bpp16S: 
 		return 2;
 	case Bpp32: 
+	case Bpp32S: 
 		return 4;
 	default:    
 		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");

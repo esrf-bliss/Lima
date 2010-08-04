@@ -11,9 +11,12 @@ enum AlignDir {
 };
 
 std::ostream& operator <<(std::ostream& os, AlignDir align_dir);
-
+/**@brief ImageType is the depth of detectors images
+ * - Bpp8 means 8 bits unsigned
+ * - Bpp8S means 8 bits signed....
+ */
 enum ImageType {
-	Bpp8, Bpp10, Bpp12, Bpp14, Bpp16, Bpp32
+  Bpp8, Bpp8S, Bpp10, Bpp10S, Bpp12, Bpp12S, Bpp14, Bpp14S, Bpp16, Bpp16S, Bpp32, Bpp32S
 };
 
 std::ostream& operator <<(std::ostream& os, ImageType image_type);

@@ -101,13 +101,17 @@ void CtSpsImage::_check_data_size(Data &data)
 	DEB_MEMBER_FUNCT();
 
 	ImageType image_type;
-	switch (data.depth()) {
-	case 1:	image_type = Bpp8;  break;
-	case 2: image_type = Bpp16; break;
-	case 4: image_type = Bpp32; break;
+	switch (data.type) {
+
+	case Data::UINT8:	image_type = Bpp8;  break;
+	case Data::INT8:	image_type = Bpp8S;  break;
+	case Data::UINT16: image_type = Bpp16; break;
+	case Data::INT16: image_type = Bpp16S; break;
+	case Data::UINT32: image_type = Bpp32; break;
+	case Data::INT32: image_type = Bpp32S; break;
 	default:
 		THROW_CTL_ERROR(InvalidValue) << "Invalid " 
-					      << DEB_VAR1(data.depth());
+					      << DEB_VAR1(data.type);
 	}
 	
 	FrameDim frame_dim(Size(data.width, data.height), image_type);
@@ -239,14 +243,23 @@ void _SpsImage::createSPS(const FrameDim& frame_dim)
 	case Bpp8:
 		sps_type = SPS_UCHAR;
 		break;
+	case Bpp8S:
+		sps_type = SPS_CHAR;
+		break;
 	case Bpp10:
 	case Bpp12:
 	case Bpp14:
 	case Bpp16:
 		sps_type = SPS_USHORT;
 		break;
+	case Bpp16S:
+		sps_type = SPS_SHORT;
+		break;
 	case Bpp32:
 		sps_type = SPS_UINT;
+		break;
+	case Bpp32S:
+		sps_type = SPS_INT;
 		break;
 	default:
 		THROW_CTL_ERROR(InvalidValue) << "Unknown " 

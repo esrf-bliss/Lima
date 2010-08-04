@@ -765,9 +765,10 @@ void BufferCtrlMgr::accFrame(void *src_ptr, const FrameDim& src_frame_dim,
 
 	int type = s_type + d_type;
 
-	typedef unsigned char  UI8;
-	typedef unsigned short UI16;
-	typedef unsigned int   UI32;
+ 	typedef	 unsigned char  UI8;
+	typedef	 unsigned short UI16;
+	typedef	 unsigned int   UI32;
+	typedef  int   		I32;
 
 	switch( type ) {  // In our specific case the sum is unambiguous!
 		case (Bpp8 + Bpp8):
@@ -799,6 +800,11 @@ void BufferCtrlMgr::accFrame(void *src_ptr, const FrameDim& src_frame_dim,
 			accumulateFrame<UI32,UI32>(src_ptr, src_frame_dim, 
 						   dst_ptr, dst_frame_dim,
 						   valid_pixels);
+			break;
+		case (Bpp32S + Bpp32S):
+			accumulateFrame<I32,I32>(src_ptr, src_frame_dim, 
+						 dst_ptr, dst_frame_dim,
+						 valid_pixels);
 			break;
 		default:
 			throw LIMA_HW_EXC(InvalidValue,
