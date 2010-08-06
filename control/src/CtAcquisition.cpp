@@ -100,7 +100,6 @@ void CtAcquisition::_hwRead()
 {
   DEB_MEMBER_FUNCT();
 
-  int read_nframes;
   m_hw_sync->getTrigMode(m_hwpars.triggerMode);
   m_hw_sync->getExpTime(m_hwpars.acqExpoTime);
   m_hw_sync->getLatTime(m_hwpars.latencyTime);

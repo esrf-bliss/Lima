@@ -8,7 +8,7 @@ def DEB_GLOBAL_FUNCT(fn):
 def DEB_MEMBER_FUNCT(fn):
     return DEB_FUNCT(fn, False, 2)
 
-def DEB_FUNCT(fn, in_global=True, frame=1):
+def DEB_FUNCT(fn, in_global=True, frame=1, deb_container=None):
     frame = sys._getframe(frame)
     if in_global:
         n_dict = frame.f_globals
@@ -21,8 +21,10 @@ def DEB_FUNCT(fn, in_global=True, frame=1):
     def real_fn(*arg, **kw):
         sys.exc_clear()
         fn_globals = dict(fn.func_globals)
-        fn_globals['deb'] = DebObj(deb_params, fn.func_name, '',
-                                   filename, lineno)
+        deb_obj = DebObj(deb_params, fn.func_name, '', filename, lineno)
+        fn_globals['deb'] = deb_obj
+        if deb_container is not None:
+            deb_container.add(deb_obj)
         new_fn = new.function(fn.func_code, fn_globals, fn.func_name,
                               fn.func_defaults)
         return new_fn(*arg, **kw)

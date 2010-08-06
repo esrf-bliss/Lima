@@ -81,7 +81,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_base_images_ready(CtControl::ltData()),
   m_images_ready(CtControl::ltData()),
   m_policy(All), m_ready(false),
-  m_autosave(false),
+  m_autosave(false), m_started(false),
   m_img_status_cb(NULL)
 {
   DEB_CONSTRUCTOR();
@@ -219,6 +219,7 @@ void CtControl::startAcq()
 
   m_ready = false;
   m_hw->startAcq();
+  m_started = true;
 
   DEB_TRACE() << "Hardware Acquisition started";
 }
@@ -228,6 +229,7 @@ void CtControl::stopAcq()
   DEB_MEMBER_FUNCT();
 
   m_hw->stopAcq();
+  m_started = false;
 
   DEB_TRACE() << "Hardware Acquisition Stopped";
 }
@@ -238,8 +240,9 @@ void CtControl::getStatus(Status& status) const
 
   AutoMutex aLock(m_cond.mutex());
 
-  DEB_TRACE() << DEB_VAR1(m_status.AcquisitionStatus);
-  if(m_status.AcquisitionStatus != AcqFault)
+  DEB_TRACE() << DEB_VAR2(m_status.AcquisitionStatus, m_started);
+  bool fault = (m_status.AcquisitionStatus == AcqFault);
+  if(!fault && m_started)
     {
       const ImageStatus &anImageCnt = m_status.ImageCounters;
 
@@ -272,7 +275,8 @@ void CtControl::getStatus(Status& status) const
       else
 	m_status.AcquisitionStatus = AcqRunning;
     }
-  
+  else if (!fault)
+    m_status.AcquisitionStatus = AcqReady;
   
   status= m_status;
   

@@ -1,4 +1,4 @@
-import os, sys, string, time, re
+import os, sys, string, time, re, ctypes
 import numpy as N
 from TacoServer import *
 from Lima.Core import *
@@ -111,10 +111,40 @@ DevErrCcdCameraNotActiveYet	= DevCcdBase + 14
 DevGetDebugFlags		= 1501
 DevSetDebugFlags		= 1502
 
-class TacoCcdError:
-    pass
+import Server
+TacoLib = ctypes.cdll.LoadLibrary(Server.__file__)
+DevErrorPushPtr = TacoLib.dev_error_push
+DevErrorPushProto = ctypes.CFUNCTYPE(ctypes.c_long, ctypes.c_char_p)
+DevErrorPush = DevErrorPushProto(DevErrorPushPtr)
 
-        
+def TACO_SERVER_FUNCT(fn):
+    deb_container = set()
+    deb_fn = DEB_FUNCT(fn, False, 2, deb_container)
+    def taco_fn(*arg, **kw):
+        try:
+            ret = deb_fn(*arg, **kw)
+            deb_container.pop()
+        except Server.error:
+            exc_class, exc_obj, stack_trace = sys.exc_info()
+            sys.exc_clear()
+            del stack_trace
+            deb_container.pop()
+            raise exc_class, exc_obj
+        except:
+            exc_class, exc_obj, stack_trace = sys.exc_info()
+            msg = '%s: %s' % (exc_class, exc_obj)
+            sys.exc_clear()
+            del exc_class, exc_obj, stack_trace
+            DevErrorPush(msg)
+            deb = deb_container.pop()
+            deb.Error(msg)
+            del deb
+            Server.error.taco_error = DevErr_CommandFailed
+            raise Server.error
+        return ret
+    return taco_fn
+
+
 class TacoCcdAcq(TacoServer):
 
     cmd_list = {
@@ -178,6 +208,10 @@ class TacoCcdAcq(TacoServer):
                                  'setKinetics', 'DevCcdSetKinetics'],
         DevCcdGetKinetics:	[D_VOID_TYPE, D_LONG_TYPE,
                                  'getKinetics', 'DevCcdGetKinetics'],
+        DevCcdSetKinWinSize:	[D_LONG_TYPE, D_VOID_TYPE,
+                                 'setKinWinSize', 'DevCcdSetKinWinSize'],
+        DevCcdGetKinWinSize:	[D_VOID_TYPE, D_LONG_TYPE,
+                                 'getKinWinSize', 'DevCcdGetKinWinSize'],
         DevCcdStart:		[D_VOID_TYPE, D_VOID_TYPE,
                                  'startAcq', 'DevCcdStart'],
         DevCcdStop:		[D_VOID_TYPE, D_VOID_TYPE,
@@ -217,11 +251,11 @@ class TacoCcdAcq(TacoServer):
         TacoServer.__init__(self, dev_name, dev_class, cmd_list)
         self.dev_name = dev_name
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def reset(self):
         deb.Trace('Reseting the device!')
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getResources(self, default_resources):
         deb.Param('default_resources=%s' % default_resources)
         pars = {}
@@ -233,13 +267,13 @@ class TacoCcdAcq(TacoServer):
         deb.Return('pars=%s' % pars)
         return pars
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getState(self):
         self.state = DevCcdReady
         deb.Return('Device state: 0x%08x (%d)' % (state, state))
         return self.state
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getStatus(self):
         state_desc = { DevCcdReady:     'CCD is Ready',
                        DevCcdAcquiring: 'CCD is Acquiring' }
@@ -248,93 +282,93 @@ class TacoCcdAcq(TacoServer):
         deb.Return('Device status: %s (0x%08x)' % (status, state))
         return status
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getFrameDim(self, max_dim=False):
         fdim = FrameDim(Size(1024, 1024), Bpp16)
         deb.Return('Frame dim: %s' % fdim)
         return fdim
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getXSize(self):
         frame_dim = self.getFrameDim(max_dim=True)
         width = frame_dim.getSize().getWidth()
         deb.Return('width=%s' % width)
         return width
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getYSize(self):
         frame_dim = self.getFrameDim(max_dim=True)
         height = frame_dim.getSize().getHeight()
         deb.Return('height=%s' % height)
         return height
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getDepth(self):
         frame_dim = self.getFrameDim(max_dim=True)
         depth = frame_dim.getDepth()
         deb.Return('depth=%s' % depth)
         return depth
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getType(self):
         type_nb = 0
         deb.Return('Getting type: %s (#%s)' % (ccd_type, type_nb))
         return type_nb
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getLstErrMsg(self):
         err_msg = ''
         deb.Return('Getting last err. msg: %s' % err_msg)
         return err_msg
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setTrigger(self, ext_trig):
         deb.Param('Setting trigger: %s' % ext_trig)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getTrigger(self):
         ext_trig = 0
         deb.Return('Getting trigger: %s' % ext_trig)
         return ext_trig
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setNbFrames(self, nb_frames):
         deb.Param('Setting nb. frames: %s' % nb_frames)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getNbFrames(self):
         nb_frames = 1
         deb.Return('Getting nb. frames: %s' % nb_frames)
         return nb_frames
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setExpTime(self, exp_time):
         deb.Param('Setting exp. time: %s' % exp_time)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getExpTime(self):
         exp_time = 1
         deb.Return('Getting exp. time: %s' % exp_time)
         return exp_time
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setBin(self, bin):
         # SPEC format Y,X -> incompat. with getBin ...
         bin = Bin(bin[1], bin[0])
         deb.Param('Setting binning: %s' % bin)
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getBin(self):
         bin = Bin(1, 1)
         deb.Return('Getting binning: %s' % bin)
         return [bin.getX(), bin.getY()]
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setRoi(self, roi):
         roi = Roi(Point(roi[0], roi[1]), Point(roi[2], roi[3]))
         deb.Param('Setting roi: %s' % roi)
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getRoi(self):
         roi = Roi()
         deb.Return('Getting roi: %s' % roi)
@@ -342,11 +376,11 @@ class TacoCcdAcq(TacoServer):
         br = roi.getBottomRight()
         return [tl.getX(), tl.getY(), br.getX(), br.getY()]
             
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setFilePar(self, pars):
         deb.Param('Setting file pars: %s' % pars)
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getFilePar(self):
         pars = CtSaving.Parameters()
         overwrite = pars.overwritePolicy == CtSaving.Overwrite
@@ -356,68 +390,78 @@ class TacoCcdAcq(TacoServer):
         deb.Return('File pars: %s' % par_arr)
         return par_arr
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setFileHeader(self, header_str):
         deb.Param('Setting file header: %s' % header_str)
       
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def writeFile(self, frame_nb):
         deb.Param('Writing frame %s to file' % frame_nb)
       
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setChannel(self, input_chan):
         deb.Param('Setting input channel: %s' % input_chan)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getChannel(self):
         input_chan = 0
         deb.Return('Getting input channel: %s' % input_chan)
         return input_chan
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setMode(self, mode):
         deb.Param('Setting mode: %s (0x%x)' % (mode, mode))
         live_display = (mode & self.LiveDisplay) != 0
         auto_save = (mode & self.AutoSave) != 0
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getMode(self):
         auto_save = False
         mode = (auto_save and self.AutoSave) or 0
         deb.Return('Getting mode: %s (0x%x)' % (mode, mode))
         return mode
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setHwPar(self, hw_par_str):
         hw_par = map(int, string.split(hw_par_str))
         deb.Param('Setting hw par: %s' % hw_par)
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getHwPar(self):
         hw_par = []
         deb.Return('Getting hw par: %s' % hw_par)
         hw_par_str = string.join(map(str, hw_par))
         return hw_par_str
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setKinetics(self, kinetics):
         deb.Param('Setting the profile: %s' % kinetics)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getKinetics(self):
         kinetics = 0
         deb.Return('Getting the profile: %s' % kinetics)
         return kinetics
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
+    def setKinWinSize(self, kin_win_size):
+        deb.Param('Setting the kinetics window size: %s' % kin_win_size)
+    
+    @TACO_SERVER_FUNCT
+    def getKinWinSize(self):
+        kin_win_size = 0
+        deb.Return('Getting the kinetics window size: %s' % kin_win_size)
+        return kin_win_size
+    
+    @TACO_SERVER_FUNCT
     def startAcq(self):
         deb.Trace('Starting the device')
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def stopAcq(self):
         deb.Trace('Stopping the device')
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def readFrame(self, frame_data):
         frame_nb, frame_size = frame_data
         frame_dim = self.getFrameDim()
@@ -432,42 +476,42 @@ class TacoCcdAcq(TacoServer):
                                (frame_size, len(s)))
         return s
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def startLive(self):
         deb.Trace('Starting live mode')
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getCurrent(self):
         last_frame_nb = 0
         return last_frame_nb
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def execCommand(self, cmd):
         deb.Param('Sending cmd: %s' % cmd)
         resp = ''
         deb.Return('Received response: %s' % resp)
         return resp
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getChanges(self):
         changes = 0
         deb.Return('Getting changes: %s' % changes)
         return changes
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def readCcdParams(self):
         beam_params = self.readBeamParams()
         ccd_params = [0] * 10 + beam_params
         deb.Return('Getting CCD params: %s' % ccd_params)
         return ccd_params
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def readBeamParams(self):
         beam_params = [0] * 21
         deb.Return('Getting beam params: %s' % beam_params)
         return beam_params
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setDebugFlags(self, deb_flags):
 	deb_flags &= 0xffffffff
 	deb.Param('Setting debug flags: 0x%08x' % deb_flags)
@@ -478,7 +522,7 @@ class TacoCcdAcq(TacoServer):
 	deb.Trace('TypeFlags:   %s' % DebParams.getTypeFlagsNameList())
 	deb.Trace('ModuleFlags: %s' % DebParams.getModuleFlagsNameList())
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getDebugFlags(self):
 	deb.Trace('FormatFlags: %s' % DebParams.getFormatFlagsNameList())
 	deb.Trace('TypeFlags:   %s' % DebParams.getTypeFlagsNameList())

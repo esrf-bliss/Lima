@@ -7,7 +7,7 @@ using namespace lima::Frelon;
 using namespace std;
 
 const double Camera::BinChangeTime  = 2.0;
-const double Camera::MaxReadoutTime = 0.7;
+const double Camera::MaxIdleWaitTime = 1.5;
 
 
 Camera::Camera(Espia::SerialLine& espia_ser_line)
@@ -38,11 +38,11 @@ void Camera::sync()
 
 	try {
 		string ver;
-		getVersion(ver);
-		m_model.setVersion(ver);
+		getVersionStr(ver);
+		m_model.setVersionStr(ver);
 	} catch (Exception e) {
 		string err_msg = e.getErrMsg();
-		DEB_ERROR() << "Error getting version: " << DEB_VAR1(err_msg);
+		DEB_TRACE() << "Error getting version: " << DEB_VAR1(err_msg);
 		string timeout_msg = Espia::StrError(SCDXIPCI_ERR_TIMEOUT);
 		bool timeout = (err_msg.find(timeout_msg) != string::npos);
 		if (!timeout)
@@ -57,7 +57,7 @@ void Camera::sync()
 	m_model.setComplexSerialNb(complex_ser_nb);
 
 	string ver;
-	m_model.getVersion(ver);
+	m_model.getFirmware().getVersionStr(ver);
 	DEB_ALWAYS() << "Found Frelon " << m_model.getName() 
 		     << " #" << m_model.getSerialNb() << ", FW:" << ver;
 
@@ -117,7 +117,7 @@ void Camera::hardReset()
 	sync();
 }
 
-void Camera::getVersion(string& ver)
+void Camera::getVersionStr(string& ver)
 {
 	DEB_MEMBER_FUNCT();
 	string cmd = RegStrMap[Version] + "?";
@@ -137,10 +137,60 @@ Model& Camera::getModel()
 	return m_model;
 }
 
+int Camera::getModesAvail()
+{
+	DEB_MEMBER_FUNCT();
+
+	int modes_avail;
+	if (m_model.hasModesAvail())
+		readRegister(CcdModesAvail, modes_avail);
+	else if (m_model.getChipType() == Kodak)
+		modes_avail = KodakModesAvail;
+	else
+		modes_avail = AtmelModesAvail;
+		
+	DEB_RETURN() << DEB_VAR1(modes_avail);
+	return modes_avail;
+}
+
+string Camera::getInputChanModeName(FrameTransferMode ftm, 
+				    InputChan input_chan)
+{
+	DEB_MEMBER_FUNCT();
+
+	ostringstream os;
+	os << ((ftm == FTM) ? "FTM" : "FFM") << "-";
+	string sep;
+	for (int chan = 1; chan <= 4; chan++) {
+		int chan_bit = 1 << (chan - 1);
+		if ((input_chan & chan_bit) != 0) {
+			os << sep << chan;
+			sep = "+";
+		}
+	}
+	string mode_name = os.str();
+	DEB_RETURN() << DEB_VAR1(mode_name);
+	return mode_name;
+}
+
 void Camera::setChanMode(int chan_mode)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(chan_mode);
+
+	int mode_bit = 1 << (chan_mode - 1);
+	bool valid_mode = ((getModesAvail() & mode_bit) != 0);
+	if (!valid_mode) {
+		FrameTransferMode ftm;
+		InputChan input_chan;
+		calcFTMInputChan(chan_mode, ftm, input_chan);
+		string mode_name = getInputChanModeName(ftm, input_chan);
+
+		THROW_HW_ERROR(InvalidValue) 
+			<< "Channel mode " << mode_name 
+			<< " [" << DEB_VAR1(chan_mode) << "] "
+			<< "not supported in " << m_model.getName();
+	}
 	writeRegister(ChanMode, chan_mode);
 }
 
@@ -151,20 +201,20 @@ void Camera::getChanMode(int& chan_mode)
 	DEB_RETURN() << DEB_VAR1(chan_mode);
 }
 
-void Camera::getBaseChanMode(FrameTransferMode ftm, int& base_chan_mode)
+void Camera::calcBaseChanMode(FrameTransferMode ftm, int& base_chan_mode)
 {
 	DEB_MEMBER_FUNCT();
 	base_chan_mode = FTMChanRangeMap[ftm].first;
 	DEB_RETURN() << DEB_VAR1(base_chan_mode);
 }
 
-void Camera::getInputChanMode(FrameTransferMode ftm, InputChan input_chan,
-			      int& chan_mode)
+void Camera::calcChanMode(FrameTransferMode ftm, InputChan input_chan,
+			  int& chan_mode)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(ftm, DEB_HEX(input_chan));
 
-	getBaseChanMode(ftm, chan_mode);
+	calcBaseChanMode(ftm, chan_mode);
 	const InputChanList& chan_list = FTMInputChanListMap[ftm];
 	InputChanList::const_iterator it;
 	it = find(chan_list.begin(), chan_list.end(), input_chan);
@@ -176,6 +226,31 @@ void Camera::getInputChanMode(FrameTransferMode ftm, InputChan input_chan,
 	DEB_RETURN() << DEB_VAR1(chan_mode);
 }
 
+void Camera::calcFTMInputChan(int chan_mode, FrameTransferMode& ftm, 
+			      InputChan& input_chan)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(chan_mode);
+
+	bool ftm_found = false;
+	FTMChanRangeMapType::const_iterator it, end = FTMChanRangeMap.end();
+	for (it = FTMChanRangeMap.begin(); it != end; ++it) {
+		ftm = it->first;
+		const ChanRange& range = it->second;
+		if ((chan_mode >= range.first) && (chan_mode < range.second)) {
+			ftm_found = true;
+			break;
+		}
+	}
+	if (!ftm_found)
+		THROW_HW_ERROR(Error) << "Invalid " << DEB_VAR1(chan_mode);
+
+	int base_chan_mode;
+	calcBaseChanMode(ftm, base_chan_mode);
+	input_chan = FTMInputChanListMap[ftm][chan_mode - base_chan_mode];
+	DEB_RETURN() << DEB_VAR2(ftm, DEB_HEX(input_chan));
+}
+
 void Camera::setInputChan(InputChan input_chan)
 {
 	DEB_MEMBER_FUNCT();
@@ -184,7 +259,7 @@ void Camera::setInputChan(InputChan input_chan)
 	FrameTransferMode ftm;
 	getFrameTransferMode(ftm);
 	int chan_mode;
-	getInputChanMode(ftm, input_chan, chan_mode);
+	calcChanMode(ftm, input_chan, chan_mode);
 	setChanMode(chan_mode);
 }
 
@@ -193,11 +268,9 @@ void Camera::getInputChan(InputChan& input_chan)
 	DEB_MEMBER_FUNCT();
 
 	FrameTransferMode ftm;
-	getFrameTransferMode(ftm);
-	int chan_mode, base_chan_mode;
+	int chan_mode;
 	getChanMode(chan_mode);
-	getBaseChanMode(ftm, base_chan_mode);
-	input_chan = FTMInputChanListMap[ftm][chan_mode - base_chan_mode];
+	calcFTMInputChan(chan_mode, ftm, input_chan);
 
 	DEB_RETURN() << DEB_VAR1(DEB_HEX(input_chan));
 }
@@ -217,7 +290,7 @@ void Camera::setFrameTransferMode(FrameTransferMode ftm)
 	InputChan input_chan;
 	getInputChan(input_chan);
 	int chan_mode;
-	getInputChanMode(ftm, input_chan, chan_mode);
+	calcChanMode(ftm, input_chan, chan_mode);
 	setChanMode(chan_mode);
 
 	if (!m_mis_cb_act) 
@@ -910,7 +983,7 @@ void Camera::getStatus(Status& status)
 	DEB_RETURN() << DEB_VAR1(DEB_HEX(status));
 }
 
-bool Camera::waitStatus(Status& status, double timeout)
+bool Camera::waitStatus(Status& status, Status mask, double timeout)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(status, timeout);
@@ -921,9 +994,15 @@ bool Camera::waitStatus(Status& status, double timeout)
 
 	bool good_status = false;
 	Status curr_status;
-	while (!good_status && !end.isSet() || (Timestamp::now() < end)) {
+	while (!good_status) {
+		if (end.isSet() && (Timestamp::now() >= end)) {
+			DEB_WARNING() << "Timeout waiting for " 
+				      << DEB_VAR1(status);
+			break;
+		}
+
 		getStatus(curr_status);
-		good_status = ((curr_status & status) == status);
+		good_status = ((curr_status & mask) == status);
 	}
 
 	status = curr_status;
@@ -956,15 +1035,7 @@ void Camera::stop()
 
 	DEB_TRACE() << "Waiting for camera to become idle";
 	Status status = Wait;
-	waitStatus(status);
-
-	FrameTransferMode ftm;
-	getFrameTransferMode(ftm);
-	if (ftm == FTM) {
-		DEB_TRACE() << "Waiting for possible FTM frame readout: "
-			    << "sleeping " << DEB_VAR1(MaxReadoutTime);
-		Sleep(MaxReadoutTime);
-	}
+	waitStatus(status, StatusMask, MaxIdleWaitTime);
 }
 
 void Camera::setMaxImageSizeCallbackActive(bool cb_active)

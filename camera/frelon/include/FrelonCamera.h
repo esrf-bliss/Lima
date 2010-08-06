@@ -25,7 +25,7 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void readRegister (Reg reg, int& val);
 
 	void hardReset();
-	void getVersion(std::string& ver);
+	void getVersionStr(std::string& ver);
 	void getComplexSerialNb(int& complex_ser_nb);
 	Model& getModel();
 
@@ -34,6 +34,9 @@ class Camera : public HwMaxImageSizeCallbackGen
 
 	void setFrameTransferMode(FrameTransferMode  ftm);
 	void getFrameTransferMode(FrameTransferMode& ftm);
+
+	std::string getInputChanModeName(FrameTransferMode ftm, 
+					 InputChan input_chan);
 
 	void getFrameDim(FrameDim& frame_dim);
 
@@ -73,7 +76,7 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void getNbFrames(int& nb_frames);
 
 	void getStatus(Status& status);
-	bool waitStatus(Status& status, double timeout = 0);
+	bool waitStatus(Status& status, Status mask, double timeout);
 
 	void start();
 	void stop();
@@ -83,7 +86,7 @@ class Camera : public HwMaxImageSizeCallbackGen
 
  private:
 	static const double BinChangeTime;
-	static const double MaxReadoutTime;
+	static const double MaxIdleWaitTime;
 
 	Espia::Dev& getEspiaDev();
 
@@ -91,12 +94,16 @@ class Camera : public HwMaxImageSizeCallbackGen
 
 	void sendCmd(Cmd cmd);
 
+	int getModesAvail();
+
 	void setChanMode(int  chan_mode);
 	void getChanMode(int& chan_mode);
 	
-	void getBaseChanMode(FrameTransferMode ftm, int& base_chan_mode);
-	void getInputChanMode(FrameTransferMode ftm, InputChan input_chan,
-			      int& chan_mode);
+	void calcBaseChanMode(FrameTransferMode ftm, int& base_chan_mode);
+	void calcChanMode(FrameTransferMode ftm, InputChan input_chan,
+			  int& chan_mode);
+	void calcFTMInputChan(int chan_mode, FrameTransferMode& ftm, 
+			      InputChan& input_chan);
 
 	void setFlipMode(int  flip_mode);
 	void getFlipMode(int& flip_mode);

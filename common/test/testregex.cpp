@@ -25,13 +25,12 @@ void print_match_list(const string& re, int nb_groups, const string& s,
 		for (int j = 0; itj != fmatch.end(); ++j, ++itj) {
 			const SingleMatchType& smatch = *itj;
 			cout << i << "-" << j << ": ";
-			if (!smatch) {
+			if (!smatch.found()) {
 				cout << "No match" << endl;
 				continue;
 			}
 			cout << smatch.start - b << "-" << smatch.end - b
-			     << ": " << string(smatch.start, smatch.end) 
-			     << endl;
+			     << ": " << string(smatch) << endl;
 		}
 	}
 	cout << endl;
@@ -54,13 +53,12 @@ void print_name_match_list(const string& re, int nb_name_groups,
 			const SingleMatchType& smatch = itj->second;
 			
 			cout << i << "-\"" << name << "\": ";
-			if (!smatch) {
+			if (!smatch.found()) {
 				cout << "No match" << endl;
 				continue;
 			}
 			cout << smatch.start - b << "-" << smatch.end - b
-			     << ": " << string(smatch.start, smatch.end) 
-			     << endl;
+			     << ": " << string(smatch) << endl;
 		}
 	}
 	cout << endl;

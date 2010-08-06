@@ -313,7 +313,7 @@ void SerialLine::splitMsg(const string& msg,
 	for (it = key_list; it != end; ++it) {
 		const MsgPart& key = it->first;
 		const string&  grp = it->second;
-		msg_parts[key] = string(match[grp].start, match[grp].end);
+		msg_parts[key] = match[grp];
 	}
 
 	DEB_RETURN() << DEB_VAR2(msg_parts[MsgSync], msg_parts[MsgCmd]);
@@ -337,22 +337,19 @@ void SerialLine::decodeFmtResp(const string& ans, string& fmt_resp)
 				      << DEB_VAR1(ans);
 
 	RegEx::SingleMatchType& err = match["err"];
-	if (err) {
-		string err_str(err.start, err.end);
-		THROW_HW_ERROR(Error) << "Frelon Error: " << err_str;
-	}
+	if (err.found()) 
+		THROW_HW_ERROR(Error) << "Frelon Error: " << string(err);
 
 	RegEx::SingleMatchType& warn = match["warn"];
-	if (warn) {
-		string warn_str(warn.start, warn.end);
+	if (warn.found()) {
+		string warn_str = warn;
 		DEB_WARNING() << "Camera warning: " << warn_str;
 		istringstream is(warn_str);
 		is >> m_last_warn;
 		return;
 	}
 
-	RegEx::SingleMatchType& resp = match["resp"];
-	fmt_resp = string(resp.start, resp.end);
+	fmt_resp = match["resp"];
 	if (!fmt_resp.empty())
 		DEB_RETURN() << DEB_VAR1(fmt_resp);
 }

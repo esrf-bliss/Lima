@@ -135,7 +135,7 @@ void test_frelon(int espia_nb, bool do_reset)
 	}
 
 	string ver;
-	frelon_cam.getVersion(ver);
+	frelon_cam.getVersionStr(ver);
 	print_str("Ver", ver);
 
 	msg = ">C\r\n";

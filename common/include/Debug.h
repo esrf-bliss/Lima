@@ -1,4 +1,4 @@
-// This code was taken from the Debug.h file (Generig debug in C++)
+// This code was taken from the Debug.h file (Generic debug in C++)
 // in: /segfs/dserver/classes++/extdevice/
 
 #ifndef DEBUG_H

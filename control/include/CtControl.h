@@ -169,6 +169,7 @@ namespace lima
     bool		m_ready;
     bool		m_autosave;
     bool		m_display_active_flag;
+    bool		m_started;
 
     ImageStatusCallback *m_img_status_cb;
 

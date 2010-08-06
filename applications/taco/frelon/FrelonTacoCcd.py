@@ -1,5 +1,5 @@
 from TacoCcd import *
-from Lima.Frelon import FrelonAcq
+from Lima import Frelon
 from processlib import Tasks
 import gc
 
@@ -11,12 +11,18 @@ class FrelonTacoAcq(TacoCcdAcq):
 
     DEB_CLASS(DebModApplication, "FrelonTacoAcq")
 
+    StateDesc = {
+        DEVFAULT:        'Fault: Camera off or disconnected',
+        DevCcdReady:     'Ready: Camera is Idle',
+        DevCcdAcquiring: 'Acquiring: Camera is Running',
+    }
+    
     @DEB_MEMBER_FUNCT
     def __init__(self, dev_name, dev_class=None, cmd_list=None):
         TacoCcdAcq.__init__(self, dev_name, dev_class, cmd_list)
         
         espia_dev_nb = 0
-        self.m_acq = FrelonAcq(espia_dev_nb)
+        self.m_acq = Frelon.FrelonAcq(espia_dev_nb)
         self.m_bpm_mgr  = Tasks.BpmManager()
         self.m_bpm_task = Tasks.BpmTask(self.m_bpm_mgr)
         
@@ -24,13 +30,13 @@ class FrelonTacoAcq(TacoCcdAcq):
     def __del__(self):
         pass
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def reset(self):
         deb.Trace("Reseting the device!")
         ct = self.m_acq.getGlobalControl()
         ct.reset()
-        
-    @DEB_MEMBER_FUNCT
+
+    @TACO_SERVER_FUNCT
     def getState(self):
         deb.Trace('Query device state ...')
         ct = self.m_acq.getGlobalControl()
@@ -45,20 +51,22 @@ class FrelonTacoAcq(TacoCcdAcq):
             end = index(msg, ', ImageCounters')
             msg = msg[:end] + '>'
             ct.resetStatus(True)
+            ct.stopAcq()
             raise Exception, msg
         deb.Return('Device state: 0x%08x (%d)' % (self.state, self.state))
         return self.state
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getStatus(self):
-        state_desc = { DevCcdReady:     'CCD is Ready',
-                       DevCcdAcquiring: 'CCD is Acquiring' }
         state = self.getState()
-        status = state_desc[state]
-        deb.Return('Device status: %s (0x%08x)' % (status, state))
+        dev_status = self.StateDesc[state]
+        cam = self.m_acq.getFrelonCamera()
+        ccd_status = cam.getStatus()
+        status = '%s (CCD Status: 0x%02X)' % (dev_status, ccd_status)
+        deb.Return('Dev status: %s' % status)
         return status
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getFrameDim(self, max_dim=False):
         ct_image = self.m_acq.getImageControl()
         if max_dim:
@@ -69,20 +77,21 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Frame dim: %s' % fdim)
         return fdim
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getType(self):
         cam = self.m_acq.getFrelonCamera()
-        type_nb = (cam.isFrelon2k16() and 2016) or 2014
+        model = cam.getModel()
+        type_nb = ((model.getAdcBits() == 16) and 2016) or 2014
         deb.Return('Getting type: %s' % type_nb)
         return type_nb
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getLstErrMsg(self):
         err_msg = ''
         deb.Return('Getting last err. msg: %s' % err_msg)
         return err_msg
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setTrigger(self, ext_trig):
         deb.Param('Setting trigger: %s' % ext_trig)
         ct_acq = self.m_acq.getAcqControl()
@@ -101,7 +110,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         if exp_time != prev_exp_time:
             ct_acq.setAcqExpoTime(exp_time)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getTrigger(self):
         ct_acq = self.m_acq.getAcqControl()
         trig_mode = ct_acq.getTriggerMode()
@@ -116,20 +125,20 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Getting trigger: %s' % ext_trig)
         return ext_trig
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setNbFrames(self, nb_frames):
         deb.Param('Setting nb. frames: %s' % nb_frames)
         ct_acq = self.m_acq.getAcqControl()
         ct_acq.setAcqNbFrames(nb_frames)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getNbFrames(self):
         ct_acq = self.m_acq.getAcqControl()
         nb_frames = ct_acq.getAcqNbFrames()
         deb.Return('Getting nb. frames: %s' % nb_frames)
         return nb_frames
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setExpTime(self, exp_time):
         deb.Param('Setting exp. time: %s' % exp_time)
         ct_acq = self.m_acq.getAcqControl()
@@ -140,14 +149,14 @@ class FrelonTacoAcq(TacoCcdAcq):
             ct_acq.setTriggerMode(ExtTrigSingle)
         ct_acq.setAcqExpoTime(exp_time)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getExpTime(self):
         ct_acq = self.m_acq.getAcqControl()
         exp_time = ct_acq.getAcqExpoTime()
         deb.Return('Getting exp. time: %s' % exp_time)
         return exp_time
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setBin(self, bin):
         # SPEC format Y,X -> incompat. with getBin ...
         bin = Bin(bin[1], bin[0])
@@ -155,14 +164,14 @@ class FrelonTacoAcq(TacoCcdAcq):
         ct_image = self.m_acq.getImageControl()
         ct_image.setBin(bin)
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getBin(self):
         ct_image = self.m_acq.getImageControl()
         bin = ct_image.getBin()
         deb.Return('Getting binning: %s' % bin)
         return [bin.getX(), bin.getY()]
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getMaxRoi(self):
         ct_image = self.m_acq.getImageControl()
         max_roi_size = ct_image.getMaxImageSize()
@@ -171,7 +180,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Max roi: %s' % max_roi)
         return max_roi
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setRoi(self, roi):
         roi = Roi(Point(roi[0], roi[1]), Point(roi[2], roi[3]))
         deb.Param('Setting roi: %s' % roi)
@@ -180,7 +189,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         ct_image = self.m_acq.getImageControl()
         ct_image.setRoi(roi)
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getRoi(self):
         ct_image = self.m_acq.getImageControl()
         roi = ct_image.getRoi()
@@ -191,7 +200,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         br = roi.getBottomRight()
         return [tl.x, tl.y, br.x, br.y]
             
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setFilePar(self, par_arr):
         deb.Param('Setting file pars: %s' % par_arr)
         ct_saving = self.m_acq.getSavingControl()
@@ -211,7 +220,7 @@ class FrelonTacoAcq(TacoCcdAcq):
             pars.fileFormat = CtSaving.RAW
         ct_saving.setParameters(pars)
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getFilePar(self):
         ct_saving = self.m_acq.getSavingControl()
         pars = ct_saving.getParameters()
@@ -224,7 +233,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('File pars: %s' % par_arr)
         return par_arr
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setFileHeader(self, header_str):
         deb.Param('Setting file header: %s' % header_str)
         header_map = {}
@@ -240,24 +249,29 @@ class FrelonTacoAcq(TacoCcdAcq):
         ct_saving = self.m_acq.getSavingControl()
         ct_saving.setCommonHeader(header_map)
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def writeFile(self, frame_nb):
         deb.Param('Writing frame %s to file' % frame_nb)
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setChannel(self, input_chan):
-        deb.Param('Setting input channel: %s' % input_chan)
+        input_chan = Frelon.InputChan(input_chan)
         cam = self.m_acq.getFrelonCamera()
-        cam.setInputChan(int(input_chan))
+        ftm = cam.getFrameTransferMode()
+        mode_name = cam.getInputChanModeName(ftm, input_chan)
+        deb.Param('Setting input channel: %s [%s]' % (input_chan, mode_name))
+        cam.setInputChan(input_chan)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getChannel(self):
         cam = self.m_acq.getFrelonCamera()
         input_chan = cam.getInputChan()
-        deb.Return('Getting input channel: %s' % input_chan)
+        ftm = cam.getFrameTransferMode()
+        mode_name = cam.getInputChanModeName(ftm, input_chan)
+        deb.Return('Getting input channel: %s [%s]' % (input_chan, mode_name))
         return input_chan
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setMode(self, mode):
         deb.Param('Setting mode: %s (0x%x)' % (mode, mode))
         live_display = (mode & self.LiveDisplay) != 0
@@ -265,7 +279,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         auto_save = (mode & self.AutoSave) != 0
         self.setAutosave(auto_save)
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getMode(self):
         mode = 0
         if self.getLiveDisplay():
@@ -275,10 +289,11 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Getting mode: %s (0x%x)' % (mode, mode))
         return mode
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setHwPar(self, hw_par_str):
         hw_par = map(int, string.split(hw_par_str))
         deb.Param('Setting hw par: %s' % hw_par)
+        kin_win_size, kin_line_beg, kin_stripes = self.getKinPars()
         flip_mode, kin_line_beg, kin_stripes, d0, roi_mode = hw_par
         cam = self.m_acq.getFrelonCamera()
         flip = Flip(flip_mode >> 1, flip_mode & 1)
@@ -288,41 +303,58 @@ class FrelonTacoAcq(TacoCcdAcq):
         roi_mode = roi_modes[roi_modes_int.index(roi_mode)]
         cam.setRoiMode(roi_mode)
         if roi_mode == Frelon.Kinetic:
-            self.setKinPars(kin_line_beg, kin_stripes)
+            self.setKinPars(kin_win_size, kin_line_beg, kin_stripes)
         else:
             deb.Warning("Ingoring Kinetic parameters")
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getHwPar(self):
         cam = self.m_acq.getFrelonCamera()
         flip = cam.getFlip()
         flip_mode = flip.x << 1 | flip.y
         roi_mode = cam.getRoiMode()
-        kin_line_beg, kin_stripes = self.getKinPars()
+        kin_win_size, kin_line_beg, kin_stripes = self.getKinPars()
         hw_par = [flip_mode, kin_line_beg, kin_stripes, 0, roi_mode]
         deb.Return('Getting hw par: %s' % hw_par)
         hw_par_str = string.join(map(str, hw_par))
         return hw_par_str
 
-    @DEB_MEMBER_FUNCT
-    def setKinPars(self, kin_line_beg, kin_stripes):
-        deb.Param('Setting kin pars: kin_line_beg=%s, kin_stripes=%s' % \
-                  (kin_line_beg, kin_stripes))
+    @TACO_SERVER_FUNCT
+    def setKinPars(self, kin_win_size, kin_line_beg, kin_stripes):
+        deb.Param('Setting kin pars: ' +
+                  'kin_win_size=%s, kin_line_beg=%s, kin_stripes=%s' % \
+                  (kin_win_size, kin_line_beg, kin_stripes))
         if kin_stripes > 1:
             deb.Warning('Ignoring kin_stripes=%d' % kin_stripes)
             
         ct_image = self.m_acq.getImageControl()
         bin = ct_image.getBin()
+        if kin_win_size % bin.getY() != 0:
+            msg = "Invalid kinetics window size (%d): " % kin_win_size + \
+                  "must be multiple of vert. bin (%d)" % bin.getY()
+            raise Exception, msg
+
         roi = ct_image.getRoi()
         if roi.isEmpty():
             roi = self.getMaxRoi()
         roi = roi.getUnbinned(bin)
-        roi_bin_offset  = Point(roi.getTopLeft().x, kin_line_beg)
-        roi_bin_offset -= roi.getTopLeft()
+
+        tl = Point(roi.getTopLeft().x, kin_line_beg)
+        tl_aligned = Point(tl)
+        tl_aligned.alignTo(Point(bin), Floor)
+        size = Size(roi.getSize().getWidth(), kin_win_size)
+
+        roi = Roi(tl_aligned, size)
+        roi = roi.getBinned(bin)
+        ct_image.setRoi(roi)
+        
+        roi_bin_offset  = tl
+        roi_bin_offset -= tl_aligned
+
         cam = self.m_acq.getFrelonCamera()
         cam.setRoiBinOffset(roi_bin_offset)
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getKinPars(self):
         ct_image = self.m_acq.getImageControl()
         bin = ct_image.getBin()
@@ -330,17 +362,19 @@ class FrelonTacoAcq(TacoCcdAcq):
         if roi.isEmpty():
             roi = self.getMaxRoi()
         roi = roi.getUnbinned(bin)
+        kin_win_size = roi.getSize().getHeight()
         cam = self.m_acq.getFrelonCamera()
         tl  = roi.getTopLeft()
         tl += cam.getRoiBinOffset()
         kin_line_beg = tl.y
         kin_stripes = 1
-        deb.Return('Getting kin pars: kin_line_beg=%s, kin_stripes=%s' % \
-                   (kin_line_beg, kin_stripes))
-        return kin_line_beg, kin_stripes
+        deb.Return('Getting kin pars: ' +
+                   'kin_win_size=%s, kin_line_beg=%s, kin_stripes=%s' % \
+                   (kin_win_size, kin_line_beg, kin_stripes))
+        return kin_win_size, kin_line_beg, kin_stripes
 
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setKinetics(self, kinetics):
         deb.Param('Setting the profile: %s' % kinetics)
         if kinetics == 0:
@@ -352,7 +386,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         cam = self.m_acq.getFrelonCamera()
         cam.setFrameTransferMode(ftm)
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getKinetics(self):
         cam = self.m_acq.getFrelonCamera()
         ftm = cam.getFrameTransferMode()
@@ -363,20 +397,30 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Getting the profile: %s' % kinetics)
         return kinetics
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
+    def setKinWinSize(self, kin_win_size):
+        deb.Param('Setting the kinetics window size: %s' % kin_win_size)
+    
+    @TACO_SERVER_FUNCT
+    def getKinWinSize(self):
+        kin_win_size = 0
+        deb.Return('Getting the kinetics window size: %s' % kin_win_size)
+        return kin_win_size
+    
+    @TACO_SERVER_FUNCT
     def startAcq(self):
         deb.Trace('Starting the device')
         ct = self.m_acq.getGlobalControl()
         ct.prepareAcq()
         ct.startAcq()
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def stopAcq(self):
         deb.Trace('Stopping the device')
         ct = self.m_acq.getGlobalControl()
         ct.stopAcq()
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def readFrame(self, frame_data):
         frame_nb, frame_size = frame_data
         deb.Param('frame_nb=%s, frame_size=%s' % (frame_nb, frame_size))
@@ -393,13 +437,13 @@ class FrelonTacoAcq(TacoCcdAcq):
                                (frame_size, len(s)))
         return s
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def startLive(self):
         deb.Trace('Starting live mode')
         self.setNbFrames(0)
         self.startAcq()
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setAutosave(self, autosave_act):
         deb.Param('Setting autosave active: %s' % autosave_act)
         if autosave_act:
@@ -409,28 +453,28 @@ class FrelonTacoAcq(TacoCcdAcq):
         ct_saving = self.m_acq.getSavingControl()
         ct_saving.setSavingMode(saving_mode)
     
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getAutosave(self):
         ct_saving = self.m_acq.getSavingControl()
         autosave_act = (ct_saving.getSavingMode() == CtSaving.AutoFrame)
         deb.Return('Getting autosave active: %s' % autosave_act)
         return autosave_act
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def setLiveDisplay(self, livedisplay_act):
         deb.Param('Setting live display active: %s' % livedisplay_act)
         ct_display = self.m_acq.getDisplayControl()
         ct_display.setNames('_ccd_ds_', 'frelon_live')
         ct_display.setActive(livedisplay_act)
         
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getLiveDisplay(self):
         ct_display = self.m_acq.getDisplayControl()
         livedisplay_act = ct_display.isActive()
         deb.Return('Getting live display active: %s' % livedisplay_act)
         return livedisplay_act
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getCurrent(self):
         ct = self.m_acq.getGlobalControl()
         ct_status = ct.getStatus()
@@ -443,7 +487,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Nb of frames: %s' % nb_frames)
         return nb_frames
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def execCommand(self, cmd):
         deb.Param('Sending cmd: %s' % cmd)
         cam = self.m_acq.getFrelonCamera()
@@ -455,13 +499,13 @@ class FrelonTacoAcq(TacoCcdAcq):
             deb.Return(line)
         return resp
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def getChanges(self):
         changes = 0
         deb.Trace('Getting changes: %s' % changes)
         return changes
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def readCcdParams(self):
         exp_time = self.getExpTime()
         threshold = 0
@@ -483,7 +527,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Getting CCD params: %s' % ccd_params)
         return ccd_params
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def readBeamParams(self):
         frame_nb = -1
         ct = self.m_acq.getGlobalControl()
@@ -492,15 +536,14 @@ class FrelonTacoAcq(TacoCcdAcq):
         deb.Return('Beam params: %s' % beam_params)
         return beam_params
 
-    @DEB_MEMBER_FUNCT
+    @TACO_SERVER_FUNCT
     def calcBeamParams(self, img_data):
         self.m_bpm_task.process(img_data)
         timeout = 1
         bpm_pars = self.m_bpm_mgr.getResult(timeout)
         if bpm_pars.errorCode != self.m_bpm_mgr.OK:
-            msg = 'Error calculating beam params: %d' % bpm_pars.errorCode
-            deb.Error(msg)
-            raise Exception, msg
+            raise Exception, ('Error calculating beam params: %d' %
+                              bpm_pars.errorCode)
         
         nr_spots = 1
         auto_cal = -1

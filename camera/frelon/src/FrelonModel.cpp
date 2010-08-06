@@ -1,8 +1,119 @@
 #include "FrelonModel.h"
+#include "RegEx.h"
 
 using namespace lima;
 using namespace lima::Frelon;
 using namespace std;
+
+Firmware::Firmware()
+{
+	DEB_CONSTRUCTOR();
+
+	reset();
+}
+
+
+Firmware::Firmware(const string& ver)
+{
+	DEB_CONSTRUCTOR();
+	DEB_PARAM() << DEB_VAR1(ver);
+
+	reset();
+	setVersionStr(ver);
+}
+
+
+Firmware::~Firmware()
+{
+	DEB_DESTRUCTOR();
+
+	reset();
+}
+
+
+void Firmware::reset()
+{
+	DEB_MEMBER_FUNCT();
+
+	m_major = m_minor = 0;
+	m_rel.clear();
+}
+
+void Firmware::setVersionStr(const string& ver)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(ver);
+
+	RegEx re("(?P<major>[0-9]+)\\.(?P<minor>[0-9]+)(?P<rel>[a-z]+)?");
+	RegEx::FullNameMatchType match;
+
+	if (!re.matchName(ver, match))
+		THROW_HW_ERROR(InvalidValue) << "Invalid firmware "
+					     << DEB_VAR1(ver);
+
+	m_major = atoi(string(match["major"]).c_str());
+	m_minor = atoi(string(match["minor"]).c_str());
+	m_rel = match["rel"];
+
+	if (!isValid()) {
+		reset();
+		THROW_HW_ERROR(InvalidValue) << "Invalid firmware "
+					     << DEB_VAR1(ver);
+	}
+}
+
+void Firmware::getVersionStr(string& ver) const
+{
+	DEB_MEMBER_FUNCT();
+
+	ostringstream os;
+	if (isValid())
+		os << m_major << "." << m_minor << m_rel;
+	else
+		os << "Unknown";
+
+	ver = os.str();
+	DEB_RETURN() << DEB_VAR1(ver);
+}
+
+bool Firmware::isValid() const
+{
+	DEB_MEMBER_FUNCT();
+
+	bool valid = (m_major > 0) || (m_minor > 0);
+	DEB_RETURN() << DEB_VAR1(valid);
+	return valid;
+}
+
+int Firmware::getMajor() const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_RETURN() << DEB_VAR1(m_major);
+	return m_major;
+}
+
+int Firmware::getMinor() const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_RETURN() << DEB_VAR1(m_minor);
+	return m_minor;
+}
+
+string Firmware::getRelease() const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_RETURN() << DEB_VAR1(m_rel);
+	return m_rel;
+}
+
+void Firmware::checkValid()
+{
+	DEB_MEMBER_FUNCT();
+
+	if (!isValid())
+		THROW_HW_ERROR(InvalidValue) 
+			<< "Frelon Firmware not fully initialised yet";
+}
 
 Model::Model()
 {
@@ -16,18 +127,16 @@ Model::~Model()
 	DEB_DESTRUCTOR();
 }
 
-void Model::setVersion(const std::string& ver)
+void Model::setVersionStr(const std::string& ver)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(ver);
-	m_ver = ver;
+	m_firmware.setVersionStr(ver);
 }
 
-void Model::getVersion(std::string& ver)
+Firmware& Model::getFirmware()
 {
-	DEB_MEMBER_FUNCT();
-	ver = m_ver;
-	DEB_RETURN() << DEB_VAR1(ver);
+	return m_firmware;
 }
 
 void Model::setComplexSerialNb(int complex_ser_nb)
@@ -48,7 +157,7 @@ void Model::reset()
 {
 	DEB_MEMBER_FUNCT();
 
-	m_ver.clear();
+	m_firmware.reset();
 	m_complex_ser_nb = 0;
 }
 
@@ -56,7 +165,7 @@ bool Model::isValid()
 {
 	DEB_MEMBER_FUNCT();
 
-	bool valid = (m_complex_ser_nb > 0) && !m_ver.empty();
+	bool valid = (m_complex_ser_nb > 0) && m_firmware.isValid();
 	DEB_RETURN() << DEB_VAR1(valid);
 	return valid;
 }
@@ -143,6 +252,26 @@ bool Model::hasTaper()
 	bool taper = bool(getSerialNbParam(Taper));
 	DEB_RETURN() << DEB_VAR1(taper);
 	return taper;
+}
+
+bool Model::hasModesAvail()
+{
+	DEB_MEMBER_FUNCT();
+	checkValid();
+
+	bool avail_modes = (isSPB2() && (m_firmware >= Firmware("2.1b")));
+	DEB_RETURN() << DEB_VAR1(avail_modes);
+	return avail_modes;
+}
+
+bool Model::hasTimeCalc()
+{
+	DEB_MEMBER_FUNCT();
+	checkValid();
+
+	bool time_calc = (isSPB2() && (m_firmware >= Firmware("2.1b")));
+	DEB_RETURN() << DEB_VAR1(time_calc);
+	return time_calc;
 }
 
 double Model::getPixelSize()

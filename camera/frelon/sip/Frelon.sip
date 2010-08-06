@@ -113,14 +113,15 @@ enum {
 };
 
 enum Status {
-        Wait     = 0x80,
-        Transfer = 0x40,
-        Exposure = 0x20,
-        Shutter  = 0x10,
-        Readout  = 0x08,
-        Latency  = 0x04,
-        ExtStart = 0x02,
-        ExtStop  = 0x01,
+        Wait       = 0x80,
+        Transfer   = 0x40,
+        Exposure   = 0x20,
+        Shutter    = 0x10,
+        Readout    = 0x08,
+        Latency    = 0x04,
+        ExtStart   = 0x02,
+        ExtStop    = 0x01,
+	StatusMask = 0xff,
 };
 
 

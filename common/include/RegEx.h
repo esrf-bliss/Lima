@@ -23,7 +23,9 @@ class SimpleRegEx
 
 		SingleMatch();
 		SingleMatch(StrIt it, const regmatch_t& rm);
-		operator bool() const;
+
+		bool found() const;
+		operator std::string() const;
 	} SingleMatchType;
 
 	typedef std::vector<SingleMatchType> FullMatchType;

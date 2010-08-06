@@ -20,7 +20,7 @@ class Camera
 	void readRegister (Frelon::Reg reg, int& val /Out/);
 
 	void hardReset();
-	void getVersion(std::string& ver /Out/);
+	void getVersionStr(std::string& ver /Out/);
 	void getComplexSerialNb(int& complex_ser_nb /Out/);
 	Frelon::Model& getModel();
 
@@ -29,6 +29,9 @@ class Camera
 
 	void setFrameTransferMode(Frelon::FrameTransferMode  ftm);
 	void getFrameTransferMode(Frelon::FrameTransferMode& ftm /Out/);
+
+	std::string getInputChanModeName(Frelon::FrameTransferMode ftm, 
+					 Frelon::InputChan input_chan);
 
 	void getFrameDim(FrameDim& frame_dim /Out/);
 
@@ -68,7 +71,8 @@ class Camera
 	void getNbFrames(int& nb_frames /Out/);
 
 	void getStatus(Frelon::Status& status /Out/);
-	bool waitStatus(Frelon::Status& status /InOut/, double timeout = 0);
+	bool waitStatus(Frelon::Status& status /InOut/, Frelon::Status mask, 
+			double timeout);
 
 	void start();
 	void stop();

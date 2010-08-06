@@ -26,9 +26,15 @@ SimpleRegEx::SingleMatch::SingleMatch(StrIt it, const regmatch_t& rm)
 		start = end = it;
 }
 
-SimpleRegEx::SingleMatch::operator bool() const
+bool SimpleRegEx::SingleMatch::found() const
 { 
 	return start != end; 
+}
+
+
+SimpleRegEx::SingleMatch::operator string() const
+{ 
+	return string(start, end); 
 }
 
 
@@ -300,12 +306,12 @@ void RegEx::set(const string& regex_str)
 		simple_regex_str += string(sit, grp_open.end);
 		sit = grp_open.end;
 
-		bool is_grp = (!pre_grp_chr || (*pre_grp_chr.start != '\\'));
+		bool is_grp = (!pre_grp_chr.found() || 
+			       (*pre_grp_chr.start != '\\'));
 		if (is_grp)
 			grp_nb++;
-		if (is_grp && grp_ext) {
-			string name(grp_name.start, grp_name.end);
-			m_name_map[name] = grp_nb;
+		if (is_grp && grp_ext.found()) {
+			m_name_map[grp_name] = grp_nb;
 			sit = grp_ext.end;
 		}
 		simple_regex_str += string(sit, grp_start.end);

@@ -27,7 +27,7 @@ src:
 		$(MAKE) -C $$d || break; \
 	done
 
-config:
+config:	clean mrproper
 	python configure.py
 
 clean:
