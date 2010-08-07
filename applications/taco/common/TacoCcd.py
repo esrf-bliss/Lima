@@ -132,7 +132,7 @@ def TACO_SERVER_FUNCT(fn):
             raise exc_class, exc_obj
         except:
             exc_class, exc_obj, stack_trace = sys.exc_info()
-            msg = '%s: %s' % (exc_class, exc_obj)
+            msg = '%s: %s' % (exc_class.__name__, exc_obj)
             sys.exc_clear()
             del exc_class, exc_obj, stack_trace
             DevErrorPush(msg)

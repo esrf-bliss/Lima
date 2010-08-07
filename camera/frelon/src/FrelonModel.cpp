@@ -247,7 +247,6 @@ ChipType Model::getChipType()
 bool Model::hasTaper()
 {
 	DEB_MEMBER_FUNCT();
-	checkValid();
 
 	bool taper = bool(getSerialNbParam(Taper));
 	DEB_RETURN() << DEB_VAR1(taper);
@@ -257,7 +256,6 @@ bool Model::hasTaper()
 bool Model::hasModesAvail()
 {
 	DEB_MEMBER_FUNCT();
-	checkValid();
 
 	bool avail_modes = (isSPB2() && (m_firmware >= Firmware("2.1b")));
 	DEB_RETURN() << DEB_VAR1(avail_modes);
@@ -267,7 +265,6 @@ bool Model::hasModesAvail()
 bool Model::hasTimeCalc()
 {
 	DEB_MEMBER_FUNCT();
-	checkValid();
 
 	bool time_calc = (isSPB2() && (m_firmware >= Firmware("2.1b")));
 	DEB_RETURN() << DEB_VAR1(time_calc);

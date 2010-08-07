@@ -75,6 +75,7 @@ static Reg CacheableRegCList[] = {
 	ChanMode,	TimeUnit,	RoiEnable,	RoiFast,
 	RoiKinetic,	BinVert,	BinHorz,	ConfigHD,
 	ShutEnable,	HardTrigDisable, FlipMode,	CompSerNb,
+	CcdModesAvail,
 };
 RegListType 
 lima::Frelon::CacheableRegList(C_LIST_ITERS(CacheableRegCList));

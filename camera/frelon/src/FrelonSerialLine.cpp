@@ -93,18 +93,18 @@ void SerialLine::writeCmd(const string& buffer, bool no_wait)
 	if (reg_found && isRegCacheable(m_curr_reg)) {
 		bool is_req = !msg_parts[MsgReq].empty();
 		m_curr_op = is_req ? ReadReg : WriteReg;
+		if (!is_req)
+			m_curr_resp = msg_parts[MsgVal];
 		int cache_val;
 		m_curr_cache = getRegCacheVal(m_curr_reg, cache_val);
 		if (m_curr_cache) {
 			ostringstream os;
 			os << cache_val;
 			const string& cache_str = os.str();
-			if (is_req) {
+			if (is_req)
 				m_curr_resp = cache_str;
-			} else {
-				m_curr_resp = msg_parts[MsgVal];
+			else
 				m_curr_cache = (m_curr_resp == cache_str);
-			}
 		}
 		if (m_curr_cache) {
 			DEB_TRACE() << "Skipping " << m_curr_op 
