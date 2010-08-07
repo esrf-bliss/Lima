@@ -11,6 +11,8 @@ class FrelonTacoAcq(TacoCcdAcq):
 
     DEB_CLASS(DebModApplication, "FrelonTacoAcq")
 
+    GetAcqFrames = 0x2
+    
     StateDesc = {
         DEVFAULT:        'Fault: Camera off or disconnected',
         DevCcdReady:     'Ready: Camera is Idle',
@@ -25,6 +27,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         self.m_acq = Frelon.FrelonAcq(espia_dev_nb)
         self.m_bpm_mgr  = Tasks.BpmManager()
         self.m_bpm_task = Tasks.BpmTask(self.m_bpm_mgr)
+        self.m_get_acq_frames = False
         
     @DEB_MEMBER_FUNCT
     def __del__(self):
@@ -278,6 +281,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         self.setLiveDisplay(live_display)
         auto_save = (mode & self.AutoSave) != 0
         self.setAutosave(auto_save)
+        self.m_get_acq_frames = (mode & self.GetAcqFrames) != 0
         
     @TACO_SERVER_FUNCT
     def getMode(self):
@@ -286,6 +290,8 @@ class FrelonTacoAcq(TacoCcdAcq):
             mode |= self.LiveDisplay
         if self.getAutosave():
             mode |= self.AutoSave
+        if self.m_get_acq_frames:
+            mode |= self.GetAcqFrames
         deb.Return('Getting mode: %s (0x%x)' % (mode, mode))
         return mode
 
@@ -479,7 +485,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         ct = self.m_acq.getGlobalControl()
         ct_status = ct.getStatus()
         img_counters = ct_status.ImageCounters
-        if self.getAutosave():
+        if self.getAutosave() and not self.m_get_acq_frames:
             last_frame_nb = img_counters.LastImageSaved
         else:
             last_frame_nb = img_counters.LastImageAcquired

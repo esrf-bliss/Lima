@@ -1,3 +1,4 @@
+import gc
 from Lima.Core import *
 from Lima import Espia
 from limafrelon import *
@@ -8,6 +9,8 @@ class FrelonAcq:
 
     @DEB_MEMBER_FUNCT
     def __init__(self, espia_dev_nb):
+        self.m_cam_inited    = False
+        
         self.m_edev          = Espia.Dev(espia_dev_nb)
         self.m_acq           = Espia.Acq(self.m_edev)
         self.m_buffer_cb_mgr = Espia.BufferMgr(self.m_acq)
@@ -24,15 +27,19 @@ class FrelonAcq:
         self.m_ct_buffer     = self.m_ct.buffer()
         self.m_ct_display    = self.m_ct.display()
         
-
+        self.m_cam_inited    = True
+        
     @DEB_MEMBER_FUNCT
     def __del__(self):
-        del self.m_ct_buffer, self.m_ct_image, self.m_ct_saving, self.m_ct_acq
-        del self.m_ct;			gc.collect()
+        if self.m_cam_inited:
+            del self.m_ct_display, self.m_ct_buffer, self.m_ct_image, \
+                self.m_ct_saving, self.m_ct_acq
+            del self.m_ct;			gc.collect()
 
-        del self.m_hw_inter;		gc.collect()
-        del self.m_buffer_mgr;		gc.collect()
-        del self.m_cam;			gc.collect()
+            del self.m_hw_inter;		gc.collect()
+            del self.m_buffer_mgr;		gc.collect()
+            del self.m_cam;			gc.collect()
+            
         del self.m_eserline;		gc.collect()
         del self.m_buffer_cb_mgr;	gc.collect()
         del self.m_acq;			gc.collect()

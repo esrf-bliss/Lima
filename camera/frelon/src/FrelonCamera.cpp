@@ -986,18 +986,19 @@ void Camera::getStatus(Status& status)
 bool Camera::waitStatus(Status& status, Status mask, double timeout)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR2(status, timeout);
+	DEB_PARAM() << DEB_VAR3(DEB_HEX(status), DEB_HEX(mask), timeout);
 
 	Timestamp end;
 	if (timeout > 0)
 		end = Timestamp::now() + Timestamp(timeout);
 
 	bool good_status = false;
-	Status curr_status;
+	Status curr_status = Status(0xffff);
 	while (!good_status) {
 		if (end.isSet() && (Timestamp::now() >= end)) {
 			DEB_WARNING() << "Timeout waiting for " 
-				      << DEB_VAR1(status);
+				      << DEB_VAR2(DEB_HEX(status), 
+						  DEB_HEX(curr_status));
 			break;
 		}
 
@@ -1006,7 +1007,7 @@ bool Camera::waitStatus(Status& status, Status mask, double timeout)
 	}
 
 	status = curr_status;
-	DEB_RETURN() << DEB_VAR2(status, good_status);
+	DEB_RETURN() << DEB_VAR2(DEB_HEX(status), good_status);
 	return good_status;
 }
 
