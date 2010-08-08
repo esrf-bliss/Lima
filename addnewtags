@@ -10,8 +10,10 @@ def usage():
     print ""
     sys.exit(1)
 
-CHG_MAJOR, CHG_MINOR, CHG_RELEASE = "major", "minor", "release"
-JUST_PRINT = "print"
+CHG_MAJOR, CHG_MINOR, CHG_RELEASE = 'major', 'minor', 'release'
+JUST_PRINT = 'print'
+
+ALL = 'all'
 
 class Version:
 
@@ -64,16 +66,23 @@ try:
 except:
     usage()
 
-mod_version_objsion_files = {
-    'core':    'common/VERSION',
-    'espia':   'camera/common/espia/VERSION',
-    'frelon':  'camera/frelon/VERSION',
-    'maxipix': 'camera/maxipix/VERSION',
-    'pilatus': 'camera/pilatus/VERSION',
+mod_version_data = {
+    'core':    
+	['common/VERSION', ALL],
+    'espia':   
+	['camera/common/espia/VERSION', ALL],
+    'frelon':  
+	['camera/frelon/VERSION', ALL],
+    'maxipix': 
+	['camera/maxipix/VERSION', ALL],
+    'pilatus': 
+	['camera/pilatus/VERSION', ALL],
+    'taco/camera/frelon': 
+	['applications/taco/VERSION', 'applications/taco'],
 }
 
-if modules == ['all']:
-    modules = mod_version_objsion_files.keys()
+if modules == [ALL]:
+    modules = mod_version_data.keys()
 
 max_name_len = 0
 for mod in modules:
@@ -81,7 +90,7 @@ for mod in modules:
 
 mod_version_objs = {}
 for mod in modules:
-    version_file_name = os.path.join('trunk', mod_version_objsion_files[mod])
+    version_file_name = os.path.join('trunk', mod_version_data[mod][0])
     version_file = open(version_file_name, "rt")
     version_str = version_file.readlines()[0].strip()
     version_file.close()
@@ -112,7 +121,7 @@ for mod in modules:
     elif change_type == CHG_RELEASE:
         version.rel   += 1
     print "New %-*s version: %s" % (max_name_len, mod, version)
-    version_file_name = os.path.join('trunk', mod_version_objsion_files[mod])
+    version_file_name = os.path.join('trunk', mod_version_data[mod][0])
     version_file = open(version_file_name, 'wt')
     version_str = version_file.write('%s\n' % version)
     version_file.close()
@@ -121,5 +130,8 @@ for mod in modules:
     version = mod_version_objs[mod]
     svn_tag = os.path.join(mod, 'v%s' % version)
     print "Creating svn tag: %s" % svn_tag
-    cmd = 'svn copy trunk tags/%s' % svn_tag
+    trunk_sub_dir = mod_version_data[mod][1]
+    if trunk_sub_dir == ALL:
+        trunk_sub_dir = '.'
+    cmd = 'svn copy trunk/%s tags/%s' % (trunk_sub_dir, svn_tag)
     os.system(cmd)
