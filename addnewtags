@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+
+import os, sys
+
+def usage():
+    prgname = os.path.basename(sys.argv[0])
+    print "Usage: %s <change_type | print> <all | module ...>" % prgname
+    print ""
+    print "   change_type: major | minor | release"
+    print ""
+    sys.exit(1)
+
+CHG_MAJOR, CHG_MINOR, CHG_RELEASE = "major", "minor", "release"
+JUST_PRINT = "print"
+
+class Version:
+
+    RePat = '[0-9]+(\\.[0-9]+(\\.[0-9]+)?)?'
+
+    def __init__(self, major=1, minor=None, rel=None, fromstr=None):
+        if fromstr:
+            x = map(int, fromstr.split('.'))
+            major = x[0]
+            minor = rel = None
+            try:
+                minor = x[1]
+                rel   = x[2]
+            except:
+                pass
+
+        self.major = major
+        self.minor = minor
+        self.rel = rel
+
+    def __str__(self):
+        s = '%d' % self.major
+        if self.minor is not None:
+            s += '.%d' % (self.minor)
+        if self.rel is not None:
+            s += '.%d' % (self.rel)
+        return s
+    
+    def __repr__(self):
+        return str(self)
+    
+    def __cmp__(self, other):
+        if not isinstance(other, Version):
+            other = Version(fromstr=repr(other))
+        return cmp(hash(self), hash(other))
+
+    def __hash__(self):
+        return (self.major << 16) + ((self.minor or 0) << 8) + (self.rel or 0)
+    
+
+
+try:
+    change_type = sys.argv[1]
+    if change_type not in [CHG_MAJOR, CHG_MINOR, CHG_RELEASE, JUST_PRINT]:
+        raise InvalidValue
+
+    modules = sys.argv[2:]
+    if not modules:
+        raise InvalidValue
+except:
+    usage()
+
+mod_version_objsion_files = {
+    'core':    'common/VERSION',
+    'espia':   'camera/common/espia/VERSION',
+    'frelon':  'camera/frelon/VERSION',
+    'maxipix': 'camera/maxipix/VERSION',
+    'pilatus': 'camera/pilatus/VERSION',
+}
+
+if modules == ['all']:
+    modules = mod_version_objsion_files.keys()
+
+max_name_len = 0
+for mod in modules:
+    max_name_len = max(max_name_len, len(mod))
+
+mod_version_objs = {}
+for mod in modules:
+    version_file_name = os.path.join('trunk', mod_version_objsion_files[mod])
+    version_file = open(version_file_name, "rt")
+    version_str = version_file.readlines()[0].strip()
+    version_file.close()
+    version = Version(fromstr=version_str)
+    mod_version_objs[mod] = version
+    print "Found %-*s version: %s" % (max_name_len, mod, version)
+
+if change_type == JUST_PRINT:
+    sys.exit(0)
+
+for mod in modules:
+    print "Checking %-*s tags:" % (max_name_len, mod)
+    mod_tag_svn_dir = os.path.join('tags', mod, '.svn')
+    if not os.path.isdir(mod_tag_svn_dir):
+        msg = 'Error: %s tags not in svn! Please do "svn update"' % mod
+	raise RuntimeError, msg
+    print "  + OK"
+
+for mod in modules:
+    version = mod_version_objs[mod]
+    if change_type == CHG_MAJOR:
+        version.major += 1
+        version.minor  = 0
+        version.rel    = 0
+    elif change_type == CHG_MINOR:
+        version.minor += 1
+        version.rel    = 0
+    elif change_type == CHG_RELEASE:
+        version.rel   += 1
+    print "New %-*s version: %s" % (max_name_len, mod, version)
+    version_file_name = os.path.join('trunk', mod_version_objsion_files[mod])
+    version_file = open(version_file_name, 'wt')
+    version_str = version_file.write('%s\n' % version)
+    version_file.close()
+
+for mod in modules:
+    version = mod_version_objs[mod]
+    svn_tag = os.path.join(mod, 'v%s' % version)
+    print "Creating svn tag: %s" % svn_tag
+    cmd = 'svn copy trunk tags/%s' % svn_tag
+    os.system(cmd)

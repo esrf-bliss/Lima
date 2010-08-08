@@ -18,11 +18,17 @@ ostream& lima::operator <<(ostream& os, ImageType image_type)
 	const char *name = "Unknown";
 	switch (image_type) {
 	case Bpp8:		name = "Bpp8";		break;
+	case Bpp8S:		name = "Bpp8S";		break;
 	case Bpp10:		name = "Bpp10";		break;
+	case Bpp10S:		name = "Bpp10S";	break;
 	case Bpp12:		name = "Bpp12";		break;
+	case Bpp12S:		name = "Bpp12S";	break;
 	case Bpp14:		name = "Bpp14";		break;
+	case Bpp14S:		name = "Bpp14S";	break;
 	case Bpp16:		name = "Bpp16";		break;
+	case Bpp16S:		name = "Bpp16S";	break;
 	case Bpp32:		name = "Bpp32";		break;
+	case Bpp32S:		name = "Bpp32S";	break;
 	}
 	return os << name;
 }
