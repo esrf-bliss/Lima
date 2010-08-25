@@ -40,7 +40,7 @@ class DetInfoCtrlObj(Core.HwDetInfoCtrlObj) :
     #@Core.Debug.DEB_MEMBER_FUNCT
     def getDefImageType(self) :
         if self.__bpp == 32:
-            return Core.Bpp32
+            return Core.Bpp32S
         else:                           # TODO
             raise Core.Exception(Core.Hardware,Core.NotSupported)
 
