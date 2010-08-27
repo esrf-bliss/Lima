@@ -1,21 +1,23 @@
 include ../../config.inc
 
-lima-objs = ../../common/src/Common.o ../../hardware/src/Hw.o ../src/Ct.o
 simu-objs = ../../camera/simulator/src/Simu.o
 
 simutest-objs = simutest.o
-simutest-ext-objs = $(lima-objs) $(simu-objs)
+simutest-ext-objs = $(simu-objs)
 
 SRCS = $(simutest-objs:.o=.cpp) 
 
 INC = -I../include -I../../common/include -I../control/include \
 	-I../../hardware/include -I../../camera/simulator/include \
 	-I../software_operation/include \
-	-I../../third-party/Processlib/core/include
+	-I../../third-party/Processlib/core/include \
+	-I../../third-party/Processlib/tasks/include
 
-CXXFLAGS += $(INC) -g -Wall -pthread
+CPPFLAGS += $(INC) 
+CXXFLAGS += -g -Wall -pthread
 LDFLAGS = -pthread
-LDLIBS = -L../../third-party/Processlib/build -lprocesslib
+LDLIBS = -L../../build -llimacore \
+         -L../../third-party/Processlib/build -lprocesslib
 
 ifndef COMPILE_CBF_SAVING
 COMPILE_CBF_SAVING = 0
@@ -25,14 +27,17 @@ ifneq ($(COMPILE_CBF_SAVING),0)
 LDLIBS += -L../../third-party/CBFLib/lib -lcbf
 endif
 
-all: 	simutest
+all: 	simutest roicountertest
 
 simutest: $(simutest-objs) $(simutest-ext-objs) 
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
-	cp ../../third-party/Processlib/build/libprocesslib.so .
+
+roicountertest:		roicountertest.o
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 clean: 
-	rm -f $(simutest-objs) simutest
+	rm -f $(simutest-objs) simutest \
+	      roicountertest roicountertest.o
 
 %.o : %.cpp
 	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<

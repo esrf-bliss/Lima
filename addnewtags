@@ -79,6 +79,12 @@ mod_version_data = {
 	['camera/pilatus/VERSION', ALL],
     'taco/camera/frelon': 
 	['applications/taco/VERSION', 'applications/taco'],
+    'tango-new/common': 
+	['applications/tango-new/common/VERSION', 'applications/tango-new/common'],
+    'tango-new/camera/maxipix': 
+	['applications/tango-new/camera/maxipix/VERSION', 'applications/tango-new/camera/maxipix'],
+    'tango-new/camera/pilatus': 
+	['applications/tango-new/camera/pilatus/VERSION', 'applications/tango-new/camera/pilatus'],
 }
 
 if modules == [ALL]:
