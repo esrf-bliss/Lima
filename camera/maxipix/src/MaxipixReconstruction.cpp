@@ -25,13 +25,13 @@ static const int MAXIPIX_NB_COLUMN = 256;
       int aNbChipCopyWithGap = 4; \
       do			  \
     	{ \
-	  memcpy(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY); \
+	  memmove(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY); \
 	  GAP_COPY_FUNCTION \
 	  aDstPt -= MAXIPIX_LINE_SIZE + xSpace * 2; \
 	  aSrcPt -= MAXIPIX_LINE_SIZE; \
 	} \
       while(--aNbChipCopyWithGap);		    \
-      memcpy(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY); \
+      memmove(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY); \
       aDstPt -= MAXIPIX_LINE_SIZE; \
       aSrcPt -= MAXIPIX_LINE_SIZE; \
     } \
