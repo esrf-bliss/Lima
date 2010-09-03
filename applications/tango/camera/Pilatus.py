@@ -105,7 +105,37 @@ class Pilatus(PyTango.Device_4Impl):
         communication = _PilatusIterface.communication()
         communication.set_threshold_gain(data[0])
 
+#------------------------------------------------------------------
+#    Read Working_energy attribute
+#------------------------------------------------------------------
+    def read_Working_energy(self, attr):
+        communication = _PilatusIterface.communication()
+        threshold = communication.threshold()
+        if threshold == None:           # Not set
+            energy = -1
+        else:
+            energy = threshold / 600.    # threshold is 60% of working energy
+        attr.set_value(energy)
 
+#------------------------------------------------------------------
+#    Write Working_energy attribute
+#------------------------------------------------------------------
+    def write_Working_energy(self, attr):
+        data = []
+        attr.get_write_value(data)
+        energy = data[0]
+        threshold_value = energy * 600  # 60% of working energy
+        if energy > 12 :
+            gain = 0                    # Low gain
+        elif energy > 8 and energy <= 12 :
+            gain = 1                    # Mid gain
+        elif energy >= 6 and energy <= 8:
+            gain = 2                    # high gain
+        else:
+            gain = 3                    # Ultra high gain
+        
+        communication = _PilatusIterface.communication()
+        communication.set_threshold_gain(threshold_value,gain)
 
 #==================================================================
 #
@@ -143,6 +173,10 @@ class PilatusClass(PyTango.DeviceClass):
             PyTango.READ_WRITE]],
         'Threshold_value':
             [[PyTango.DevLong,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
+        'Working_energy':
+            [[PyTango.DevFloat,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         }
