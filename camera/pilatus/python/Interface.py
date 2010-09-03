@@ -38,8 +38,9 @@ class Interface(Core.HwInterface) :
         if reset_level == self.HardReset:
             self.__comm.hard_reset()
 
+        self.__buffer.reset()
         self.__comm.soft_reset()
-    
+        
     #@Core.Debug.DEB_MEMBER_FUNCT
     def prepareAcq(self):
         camserverStatus = self.__comm.status()
