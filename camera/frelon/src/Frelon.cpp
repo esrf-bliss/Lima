@@ -80,6 +80,13 @@ static Reg CacheableRegCList[] = {
 RegListType 
 lima::Frelon::CacheableRegList(C_LIST_ITERS(CacheableRegCList));
 
+typedef pair<Reg, double> RegSleepPair;
+static const RegSleepPair RegSleepCList[] = {
+	RegSleepPair(ConfigHD, 2.0),
+	RegSleepPair(BinHorz,  2.0),
+};
+RegDoubleMapType lima::Frelon::RegSleepMap(C_LIST_ITERS(RegSleepCList));
+
 const int lima::Frelon::MaxRegVal = (1 << 16) - 1;
 
 typedef pair<Cmd, string> CmdPair;

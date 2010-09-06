@@ -193,7 +193,16 @@ void SerialLine::readSingleLine(string& buffer, int max_len, double timeout)
 	m_espia_ser_line.readLine(buffer, max_len, timeout);
 
 	decodeFmtResp(buffer, m_curr_fmt_resp);
-	
+
+	if (m_curr_op == WriteReg) {
+		double sleep_time = getRegSleepTime(m_curr_reg);
+		if (sleep_time > 0) {
+			DEB_TRACE() << "Sleeping " << sleep_time << " s after "
+				    << "changing " << RegStrMap[m_curr_reg];
+			Sleep(sleep_time);
+		}
+	}
+
 	bool reg_op = ((m_curr_op == WriteReg) || (m_curr_op == ReadReg));
 	if (!reg_op || !isRegCacheable(m_curr_reg))
 		return;
@@ -255,6 +264,16 @@ bool SerialLine::getRegCacheVal(Reg reg, int& val)
 	val = in_cache ? it->second : 0;
 	DEB_RETURN() << DEB_VAR2(in_cache, val);
 	return in_cache;
+}
+
+double SerialLine::getRegSleepTime(Reg reg)
+{
+	DEB_MEMBER_FUNCT();
+	RegDoubleMapType::const_iterator it = RegSleepMap.find(reg);
+	bool in_map = (it != RegSleepMap.end());
+	double sleep_time = in_map ? it->second : 0;
+	DEB_RETURN() << DEB_VAR1(sleep_time);
+	return sleep_time;
 }
 
 void SerialLine::flush()

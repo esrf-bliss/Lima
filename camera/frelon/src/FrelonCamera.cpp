@@ -6,7 +6,6 @@ using namespace lima;
 using namespace lima::Frelon;
 using namespace std;
 
-const double Camera::BinChangeTime  = 2.0;
 const double Camera::MaxIdleWaitTime = 1.5;
 
 
@@ -165,7 +164,7 @@ string Camera::getInputChanModeName(FrameTransferMode ftm,
 		int chan_bit = 1 << (chan - 1);
 		if ((input_chan & chan_bit) != 0) {
 			os << sep << chan;
-			sep = "+";
+			sep = "&";
 		}
 	}
 	string mode_name = os.str();
@@ -287,8 +286,7 @@ void Camera::setFrameTransferMode(FrameTransferMode ftm)
 		return;
 	}
 
-	InputChan input_chan;
-	getInputChan(input_chan);
+	InputChan input_chan = Chan1234;
 	int chan_mode;
 	calcChanMode(ftm, input_chan, chan_mode);
 	setChanMode(chan_mode);
@@ -410,9 +408,6 @@ void Camera::setBin(const Bin& bin)
 
 	writeRegister(BinHorz, bin.getX());
 	writeRegister(BinVert, bin.getY());
-
-	DEB_TRACE() << "Sleeping " << DEB_VAR1(BinChangeTime);
-	Sleep(BinChangeTime);
 }
 
 void Camera::getBin(Bin& bin)

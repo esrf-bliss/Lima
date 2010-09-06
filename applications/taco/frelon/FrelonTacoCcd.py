@@ -300,13 +300,11 @@ class FrelonTacoAcq(TacoCcdAcq):
         hw_par = map(int, string.split(hw_par_str))
         deb.Param('Setting hw par: %s' % hw_par)
         kin_win_size, kin_line_beg, kin_stripes = self.getKinPars()
-        flip_mode, kin_line_beg, kin_stripes, d0, roi_mode = hw_par
+        flip_mode, kin_line_beg, kin_stripes, d0, roi_mode_int = hw_par
         cam = self.m_acq.getFrelonCamera()
         flip = Flip(flip_mode >> 1, flip_mode & 1)
         cam.setFlip(flip)
-        roi_modes = [Frelon.None, Frelon.Slow, Frelon.Fast, Frelon.Kinetic]
-        roi_modes_int = map(int, roi_modes)
-        roi_mode = roi_modes[roi_modes_int.index(roi_mode)]
+        roi_mode = Frelon.RoiMode(roi_mode_int)
         cam.setRoiMode(roi_mode)
         if roi_mode == Frelon.Kinetic:
             self.setKinPars(kin_win_size, kin_line_beg, kin_stripes)
@@ -406,10 +404,12 @@ class FrelonTacoAcq(TacoCcdAcq):
     @TACO_SERVER_FUNCT
     def setKinWinSize(self, kin_win_size):
         deb.Param('Setting the kinetics window size: %s' % kin_win_size)
+        prev_win_size, kin_line_beg, kin_stripes = self.getKinPars()
+        self.setKinPars(kin_win_size, kin_line_beg, kin_stripes)
     
     @TACO_SERVER_FUNCT
     def getKinWinSize(self):
-        kin_win_size = 0
+        kin_win_size, kin_line_beg, kin_stripes = self.getKinPars()
         deb.Return('Getting the kinetics window size: %s' % kin_win_size)
         return kin_win_size
     

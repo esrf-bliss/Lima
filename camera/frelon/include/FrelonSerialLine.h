@@ -111,6 +111,8 @@ class SerialLine : public HwSerialLine
 	bool isRegCacheable(Reg reg);
 	bool getRegCacheVal(Reg reg, int& val);
 
+	double getRegSleepTime(Reg reg);
+ 
 	Espia::SerialLine& m_espia_ser_line;
 	Cond m_cond;
 	int m_last_warn;

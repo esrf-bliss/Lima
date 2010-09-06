@@ -117,6 +117,10 @@ DevErrorPushPtr = TacoLib.dev_error_push
 DevErrorPushProto = ctypes.CFUNCTYPE(ctypes.c_long, ctypes.c_char_p)
 DevErrorPush = DevErrorPushProto(DevErrorPushPtr)
 
+class TacoError(RuntimeError):
+    pass
+
+
 def TACO_SERVER_FUNCT(fn):
     deb_container = set()
     deb_fn = DEB_FUNCT(fn, False, 2, deb_container)
@@ -124,12 +128,9 @@ def TACO_SERVER_FUNCT(fn):
         try:
             ret = deb_fn(*arg, **kw)
             deb_container.pop()
-        except Server.error:
-            exc_class, exc_obj, stack_trace = sys.exc_info()
-            sys.exc_clear()
-            del stack_trace
+        except TacoError:
             deb_container.pop()
-            raise exc_class, exc_obj
+            raise
         except:
             exc_class, exc_obj, stack_trace = sys.exc_info()
             msg = '%s: %s' % (exc_class.__name__, exc_obj)
@@ -139,8 +140,7 @@ def TACO_SERVER_FUNCT(fn):
             deb = deb_container.pop()
             deb.Error(msg)
             del deb
-            Server.error.taco_error = DevErr_CommandFailed
-            raise Server.error
+            raise TacoError, msg
         return ret
     return taco_fn
 

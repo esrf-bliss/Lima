@@ -35,6 +35,9 @@ extern RegStrMapType RegStrMap;
 typedef std::vector<Reg> RegListType;
 extern RegListType CacheableRegList;
 
+typedef std::map<Reg, double> RegDoubleMapType;
+extern RegDoubleMapType RegSleepMap;
+
 extern const int MaxRegVal;
 
 enum Cmd {
