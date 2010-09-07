@@ -28,7 +28,7 @@ class FrelonTacoAcq(TacoCcdAcq):
         self.m_bpm_mgr  = Tasks.BpmManager()
         self.m_bpm_task = Tasks.BpmTask(self.m_bpm_mgr)
         self.m_get_acq_frames = False
-        
+
     @DEB_MEMBER_FUNCT
     def __del__(self):
         pass
@@ -593,10 +593,22 @@ class FrelonServer(CcdServer):
         CcdServer.__init__(self, bin_name, pers_name)
 
         dev_name_list = self.getDevNameList()
+        dev_model_list = []
 
         for dev_name in dev_name_list:
             dev = FrelonTacoAcq(dev_name)
             self.addDev(dev)
 
+            cam = dev.m_acq.getFrelonCamera()
+            model = cam.getModel()
+            model_str = "Frelon %s #%d, FW:%s" % \
+                        (model.getName(), model.getSerialNb(),
+                         model.getFirmware().getVersionStr())
+            dev_model_list.append(model_str)
+            
+        deb.Always("Using following cameras:")
+        for dev_name, model_str in zip(dev_name_list, dev_model_list):
+            deb.Always("  %s - %s" % (dev_name, model_str))
+            
         self.startup()
         

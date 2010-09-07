@@ -3,6 +3,8 @@
 
 using namespace lima;
 
+static const Bin Bin_1x1(1, 1);
+
 // ----------------------------------------------------------------------------
 // CLASS CtSwBinRoi
 // ----------------------------------------------------------------------------
@@ -81,8 +83,7 @@ void CtSwBinRoi::resetBin()
 {
 	DEB_MEMBER_FUNCT();
 
-	m_roi= m_roi.getUnbinned(m_bin);
-	m_bin.reset();
+	setBin(Bin_1x1);
 }
 
 void CtSwBinRoi::resetRoi()
@@ -96,8 +97,8 @@ void CtSwBinRoi::reset()
 {
 	DEB_MEMBER_FUNCT();
 
-	m_bin.reset();
-	m_roi.reset();
+	resetBin();
+	resetRoi();
 }
 
 bool CtSwBinRoi::apply(SoftOpInternalMgr *op)
@@ -246,15 +247,13 @@ void CtHwBinRoi::resetBin()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (m_has_roi && !m_set_roi.isEmpty()) {
-		Roi new_roi= m_set_roi.getUnbinned(m_bin);
+	if (m_has_bin) {
+		Bin bin = Bin_1x1;
+		setBin(bin, false);
+	} else {
 		m_bin.reset();
-		setRoi(new_roi, true);
+		_updateSize();
 	}
-	else {
-		m_bin.reset();
-	}
-	_updateSize();
 }
 
 void CtHwBinRoi::resetRoi()
@@ -269,9 +268,8 @@ void CtHwBinRoi::reset()
 {
 	DEB_MEMBER_FUNCT();
 
-	m_bin.reset();
-	m_set_roi.reset();
-	_updateSize();
+	resetBin();
+	resetRoi();
 }
 
 void CtHwBinRoi::apply()

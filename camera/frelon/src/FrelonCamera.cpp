@@ -6,6 +6,7 @@ using namespace lima;
 using namespace lima::Frelon;
 using namespace std;
 
+const double Camera::UpdateCcdStatusTime = 0.1;
 const double Camera::MaxIdleWaitTime = 1.5;
 
 
@@ -34,14 +35,13 @@ void Camera::sync()
 	DEB_TRACE() << "Synchronizing with the camera";
 
 	m_model.reset();
+	m_roi_offset = 0;
 
 	try {
-		string ver;
-		getVersionStr(ver);
-		m_model.setVersionStr(ver);
+		syncRegs();
 	} catch (Exception e) {
 		string err_msg = e.getErrMsg();
-		DEB_TRACE() << "Error getting version: " << DEB_VAR1(err_msg);
+		DEB_TRACE() << "Error in sync: " << DEB_VAR1(err_msg);
 		string timeout_msg = Espia::StrError(SCDXIPCI_ERR_TIMEOUT);
 		bool timeout = (err_msg.find(timeout_msg) != string::npos);
 		if (!timeout)
@@ -51,22 +51,36 @@ void Camera::sync()
 					 "is camera ON and connected?";
 	}
 
-	int complex_ser_nb;
-	getComplexSerialNb(complex_ser_nb);
-	m_model.setComplexSerialNb(complex_ser_nb);
-
 	string ver;
 	m_model.getFirmware().getVersionStr(ver);
 	DEB_ALWAYS() << "Found Frelon " << m_model.getName() 
 		     << " #" << m_model.getSerialNb() << ", FW:" << ver;
+}
+
+void Camera::syncRegs()
+{
+	DEB_MEMBER_FUNCT();
+
+	m_ser_line.clearCache();
+
+	string ver;
+	getVersionStr(ver);
+	m_model.setVersionStr(ver);
+
+	int complex_ser_nb;
+	getComplexSerialNb(complex_ser_nb);
+	m_model.setComplexSerialNb(complex_ser_nb);
 
 	double exp_time;
 	getExpTime(exp_time);
 	m_trig_mode = (exp_time == 0) ? ExtGate : IntTrig;
 
-	readRegister(NbFrames, m_nb_frames);
-
-	m_roi_offset = 0;
+	// A sequencer cmd will send the CCD status byte to the Espia
+	m_nb_frames = 1;
+	writeRegister(NbFrames, m_nb_frames);
+	DEB_TRACE() << "Sleeping " << UpdateCcdStatusTime << " s to allow "
+		    << "CCD status byte get updated";
+	Sleep(UpdateCcdStatusTime);
 }
 
 SerialLine& Camera::getSerialLine()
@@ -1022,15 +1036,20 @@ void Camera::stop()
 {
 	DEB_MEMBER_FUNCT();
 
+	Status status;
+	getStatus(status);
+	if (status == Wait)
+		return;
+
 	TrigMode trig_mode;
 	getTrigMode(trig_mode);
 	if (trig_mode != ExtGate) {
-		DEB_TRACE() << "Aborting possible acquisition";
+		DEB_TRACE() << "Aborting current acquisition";
 		sendCmd(Stop);
 	}
 
 	DEB_TRACE() << "Waiting for camera to become idle";
-	Status status = Wait;
+	status = Wait;
 	waitStatus(status, StatusMask, MaxIdleWaitTime);
 }
 

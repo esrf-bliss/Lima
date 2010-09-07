@@ -85,12 +85,13 @@ class Camera : public HwMaxImageSizeCallbackGen
 	virtual void setMaxImageSizeCallbackActive(bool cb_active);
 
  private:
-	static const double BinChangeTime;
+	static const double UpdateCcdStatusTime;
 	static const double MaxIdleWaitTime;
 
 	Espia::Dev& getEspiaDev();
 
 	void sync();
+	void syncRegs();
 
 	void sendCmd(Cmd cmd);
 
