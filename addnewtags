@@ -2,6 +2,10 @@
 
 import os, sys
 
+trunk_dir = os.path.dirname(sys.argv[0])
+lima_dir = os.path.join(trunk_dir, '..')
+os.chdir(lima_dir)
+
 def usage():
     prgname = os.path.basename(sys.argv[0])
     print "Usage: %s <change_type | print> <all | module ...>" % prgname
@@ -139,5 +143,13 @@ for mod in modules:
     trunk_sub_dir = mod_version_data[mod][1]
     if trunk_sub_dir == ALL:
         trunk_sub_dir = '.'
-    cmd = 'svn copy trunk/%s tags/%s' % (trunk_sub_dir, svn_tag)
+    trunk_dir = os.path.join('trunk', trunk_sub_dir)
+    tag_dir = os.path.join('tags', svn_tag)
+    cmd = 'svn copy %s %s' % (trunk_dir, tag_dir)
     os.system(cmd)
+    if trunk_sub_dir == '.':
+        print "Cleaning directory %s" % tag_dir
+        cmd = 'make -C %s clean > /dev/null 2>&1' % tag_dir
+        os.system(cmd)
+        cmd = 'make -C %s/sip mrproper > /dev/null 2>&1' % tag_dir
+        os.system(cmd)
