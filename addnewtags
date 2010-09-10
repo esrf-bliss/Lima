@@ -3,8 +3,12 @@
 import os, sys
 
 trunk_dir = os.path.dirname(sys.argv[0])
+if trunk_dir == '.':
+    trunk_dir = os.getcwd()
 lima_dir = os.path.join(trunk_dir, '..')
 os.chdir(lima_dir)
+
+base_http_ripository = "https://scm.blissgarden.org/svn/lima"
 
 def usage():
     prgname = os.path.basename(sys.argv[0])
@@ -100,7 +104,7 @@ for mod in modules:
 
 mod_version_objs = {}
 for mod in modules:
-    version_file_name = os.path.join('trunk', mod_version_data[mod][0])
+    version_file_name = os.path.join(trunk_dir, mod_version_data[mod][0])
     version_file = open(version_file_name, "rt")
     version_str = version_file.readlines()[0].strip()
     version_file.close()
@@ -111,10 +115,16 @@ for mod in modules:
 if change_type == JUST_PRINT:
     sys.exit(0)
 
+if not os.access('tags',os.W_OK) :
+    f = os.popen('svn ls  https://scm.blissgarden.org/svn/lima/tags')
+    tags_ls_dirs = set([line.strip('\n/') for line in f.readlines() if line.endswith('/\n')])
+else:
+    tags_ls_dirs = set()
+
 for mod in modules:
     print "Checking %-*s tags:" % (max_name_len, mod)
     mod_tag_svn_dir = os.path.join('tags', mod, '.svn')
-    if not os.path.isdir(mod_tag_svn_dir):
+    if not os.path.isdir(mod_tag_svn_dir) and mod not in tags_ls_dirs:
         msg = 'Error: %s tags not in svn! Please do "svn update"' % mod
 	raise RuntimeError, msg
     print "  + OK"
@@ -131,7 +141,7 @@ for mod in modules:
     elif change_type == CHG_RELEASE:
         version.rel   += 1
     print "New %-*s version: %s" % (max_name_len, mod, version)
-    version_file_name = os.path.join('trunk', mod_version_data[mod][0])
+    version_file_name = os.path.join(trunk_dir, mod_version_data[mod][0])
     version_file = open(version_file_name, 'wt')
     version_str = version_file.write('%s\n' % version)
     version_file.close()
@@ -143,8 +153,10 @@ for mod in modules:
     trunk_sub_dir = mod_version_data[mod][1]
     if trunk_sub_dir == ALL:
         trunk_sub_dir = '.'
-    trunk_dir = os.path.join('trunk', trunk_sub_dir)
+    trunk_directory = os.path.join(trunk_dir, trunk_sub_dir)
     tag_dir = os.path.join('tags', svn_tag)
+    if not os.access(tag_dir,os.W_OK) :
+	tag_dir = os.path.join(base_http_ripository,'tags', svn_tag)
     cmd = 'svn copy %s %s' % (trunk_dir, tag_dir)
     os.system(cmd)
     if trunk_sub_dir == '.':
