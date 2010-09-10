@@ -137,6 +137,24 @@ class Pilatus(PyTango.Device_4Impl):
         communication = _PilatusIterface.communication()
         communication.set_threshold_gain(threshold_value,gain)
 
+#------------------------------------------------------------------
+#    Read gapfill attribute
+#------------------------------------------------------------------
+    def read_Gapfill(self, attr):
+        communication = _PilatusIterface.communication()
+        gapfill = communication.gapfill()
+        attr.set_value(gapfill)
+
+#------------------------------------------------------------------
+#    Write gapfill attribute
+#------------------------------------------------------------------
+    def write_Gapfill(self, attr):
+        data = []
+        attr.get_write_value(data)
+        gapfill = data[0]
+        communication = _PilatusIterface.communication()
+        communication.set_gapfill(gapfill)
+
 #==================================================================
 #
 #    Pilatus command methods
@@ -177,6 +195,10 @@ class PilatusClass(PyTango.DeviceClass):
             PyTango.READ_WRITE]],
         'Working_energy':
             [[PyTango.DevFloat,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
+        'Gapfill':
+            [[PyTango.DevBoolean,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         }

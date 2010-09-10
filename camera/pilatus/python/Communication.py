@@ -180,6 +180,8 @@ class Communication:
         self._error_message = None
 	
         self._trigger_mode = Communication.INTERNAL
+        self._gap_fill = False
+        
         try:
             self.connect(host,port)
         except socket.error:
@@ -246,7 +248,10 @@ class Communication:
                 self._state = self.SETTING_THRESHOLD
             else:
                 raise 'Could not set threshold, server is not idle'
-        
+
+            if self._gap_fill:
+                self.__asynSock.send('gapfill -1')
+            
     def exposure(self) :
         with self.__cond:
             return self._exposure
@@ -379,3 +384,12 @@ class Communication:
                 self.__asynSock.send('k')
         
     
+    def set_gapfill(self,val) :
+        with self.__cond:
+            self._gap_fill = val
+            self.__asynSock.send('gapfill %d' % (self._gap_fill and -1 or 0))
+        
+
+    def gapfill(self) :
+        with self.__cond:
+            return self._gap_fill and True or False

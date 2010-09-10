@@ -167,7 +167,14 @@ int SaveContainerCbf::_writeCbfHeader(Data &aData,
 	  cbf_failnez(cbf_new_category(m_cbf,currentCategory.c_str()));
 	}
       cbf_failnez(cbf_new_column(m_cbf,key.c_str()));
-      cbf_failnez(cbf_set_value(m_cbf,i->second.c_str()));
+      if(!i->second.find_first_of('#')) // Goreterie MOSFLM
+	{
+	  std::string tmpString = "\n";
+	  tmpString += i->second;
+	  cbf_failnez(cbf_set_value(m_cbf,tmpString.c_str()));
+	}
+      else
+	cbf_failnez(cbf_set_value(m_cbf,i->second.c_str()));
     }
   return 0;
 }
@@ -176,14 +183,7 @@ int SaveContainerCbf::_writeCbfData(Data &aData)
 {
   DEB_MEMBER_FUNCT();
 
-  char imageBuffer[64];
-  snprintf(imageBuffer,sizeof(imageBuffer),"image_%d",m_written_frames);
-
   cbf_failnez(cbf_new_category		(m_cbf, "array_data"));
-  cbf_failnez(cbf_new_column		(m_cbf, "array_id"));
-  cbf_failnez(cbf_set_value		(m_cbf, imageBuffer));
-  cbf_failnez(cbf_new_column		(m_cbf, "binary_id"));
-  cbf_failnez(cbf_set_integervalue	(m_cbf, m_written_frames));
   cbf_failnez(cbf_new_column		(m_cbf, "data"));
 
   cbf_failnez(cbf_set_integerarray_wdims(m_cbf,
@@ -197,7 +197,7 @@ int SaveContainerCbf::_writeCbfData(Data &aData)
 					 aData.width,
 					 aData.height,
 					 0,
-					 0));
+					 128));
 
   cbf_failnez(cbf_write_file(m_cbf,m_fout,0,CBF,MSG_DIGEST|MIME_HEADERS,0));
   return 0;
