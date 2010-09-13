@@ -87,12 +87,12 @@ mod_version_data = {
 	['camera/pilatus/VERSION', ALL],
     'taco/camera/frelon': 
 	['applications/taco/VERSION', 'applications/taco'],
-    'tango-new/common': 
-	['applications/tango-new/common/VERSION', 'applications/tango-new/common'],
-    'tango-new/camera/maxipix': 
-	['applications/tango-new/camera/maxipix/VERSION', 'applications/tango-new/camera/maxipix'],
-    'tango-new/camera/pilatus': 
-	['applications/tango-new/camera/pilatus/VERSION', 'applications/tango-new/camera/pilatus'],
+    'tango/common': 
+	['applications/tango/VERSION', 'applications/tango'],
+    'tango/camera/maxipix': 
+	['applications/tango/camera/Maxipix_VERSION', 'applications/tango/camera'],
+    'tango/camera/pilatus': 
+	['applications/tango/camera/Pilatus_VERSION', 'applications/tango/camera'],
 }
 
 if modules == [ALL]:
@@ -118,6 +118,12 @@ if change_type == JUST_PRINT:
 if not os.access('tags',os.W_OK) :
     f = os.popen('svn ls  https://scm.blissgarden.org/svn/lima/tags')
     tags_ls_dirs = set([line.strip('\n/') for line in f.readlines() if line.endswith('/\n')])
+    f.close()
+
+    f = os.popen('svn ls -R  https://scm.blissgarden.org/svn/lima/tags/tango')
+    tags_ls_dirs.update(set([os.path.join('tango',line.strip('\n/')) for line in f.readlines() if line.endswith('/\n')]))
+    f.close()
+    print tags_ls_dirs
 else:
     tags_ls_dirs = set()
 
@@ -157,7 +163,7 @@ for mod in modules:
     tag_dir = os.path.join('tags', svn_tag)
     if not os.access(tag_dir,os.W_OK) :
 	tag_dir = os.path.join(base_http_ripository,'tags', svn_tag)
-    cmd = 'svn copy %s %s' % (trunk_dir, tag_dir)
+    cmd = 'svn copy %s %s' % (trunk_directory, tag_dir)
     os.system(cmd)
     if trunk_sub_dir == '.':
         print "Cleaning directory %s" % tag_dir
