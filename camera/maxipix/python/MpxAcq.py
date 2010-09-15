@@ -117,7 +117,7 @@ class MpxAcq:
 	    model= self.__mdet.getReconstruction()
 	    self.__reconstruct= Maxipix.MaxipixReconstruction()
 	    self.__reconstruct.setModel(model)
-	    self.__reconstruct.setType(Maxipix.MaxipixReconstruction.ZERO)
+	    self.__reconstruct.setType(self.mpxCfg["fillmode"])
 	    self.__reconstruct.setXnYGapSpace(self.mpxCfg["xgap"], 
 						self.mpxCfg["ygap"])
 	    self.__ct.setReconstructionTask(self.__reconstruct)

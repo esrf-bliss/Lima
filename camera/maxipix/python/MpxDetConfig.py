@@ -96,7 +96,7 @@ class MpxDetConfig:
 	self.mpxCfg= {}
 	self.mpxCfg["type"]= self.__getParamNeeded(pars, "type", MpxTypes)
 	self.mpxCfg["version"]= mpxVersion(self.mpxCfg["type"])
-	self.mpxCfg["polarity"]= mpxPolarity(self.__getParamNeeded(pars, "polarity", [0,1]))
+	self.mpxCfg["polarity"]= mpxPolarity(self.__getParamNeeded(pars, "polarity", MpxPolarityTypes))
 	self.mpxCfg["frequency"]= self.__getParamNeeded(pars, "frequency")
 	
 	self.mpxCfg["xchip"]= self.__getParamNeeded(pars, "xchip", range(1,6))
@@ -105,7 +105,8 @@ class MpxDetConfig:
 
 	self.mpxCfg["xgap"]= self.__getParamOptional(pars, "xgap", None, 0)
 	self.mpxCfg["ygap"]= self.__getParamOptional(pars, "ygap", None, 0)
-
+	self.mpxCfg["fillmode"]= mpxFillMode(self.__getParamOptional(pars, "fillmode", None, 1))
+        
     def __parsePriamSection(self, cfg):
 	self.priamPorts= range(self.mpxCfg["nchip"])
 	if self.mpxCfg["xchip"]==2 and self.mpxCfg["ychip"]==2:
