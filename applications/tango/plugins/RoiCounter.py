@@ -67,7 +67,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
             return self.__global_allowed
         raise AttributeError('RoiCounterDeviceServer has no attribute %s' % name)
 
-    def __global_allowed(self,*args) :
+    def __global_allowed(self) :
         return self.get_state() == PyTango.DevState.ON
 
     def is_set_state_allowed(self) :
@@ -174,7 +174,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 
             
             if minListSize :
-                returnArray = numpy.zeros(minListSize * (len(roiResultCounterList) + 1),dtype = numpy.double)
+                returnArray = numpy.zeros(minListSize * len(roiResultCounterList) * 4 + 1,dtype = numpy.double)
                 returnArray[0] = float(minListSize)
                 indexArray = 1
                 for roiId,resultList in roiResultCounterList:
