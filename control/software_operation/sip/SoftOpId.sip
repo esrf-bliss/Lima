@@ -73,6 +73,7 @@ return sipGetState(sipTransferObj);
  if (!(l = PyList_New(sipCpp->size())))
   return NULL;
 
+ sipTransferObj = NULL;
  int i = 0;
  for (std::list<SoftOpRoiCounter::RoiIdAndResults>::iterator j = sipCpp->begin();
       j != sipCpp->end();++j,++i)
@@ -87,8 +88,10 @@ return sipGetState(sipTransferObj);
 
      // Get the Python wrapper for the QWidget instance, creating a new
      // one if necessary, and handle any ownership transfer.
-     if (!(wobj = sipConvertFromType(&(*k), sipType_Tasks_RoiCounterResult, sipTransferObj)))
+     Tasks::RoiCounterResult *aResultPt = new Tasks::RoiCounterResult(*k);
+     if (!(wobj = sipConvertFromNewType(aResultPt, sipType_Tasks_RoiCounterResult, sipTransferObj)))
      {
+      delete aResultPt;
       // There was an error so garbage collect the Python lists.
       Py_DECREF(PyRoiResultList);
       Py_DECREF(l);

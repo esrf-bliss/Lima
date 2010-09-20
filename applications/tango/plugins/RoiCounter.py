@@ -67,7 +67,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
             return self.__global_allowed
         raise AttributeError('RoiCounterDeviceServer has no attribute %s' % name)
 
-    def __global_allowed(self) :
+    def __global_allowed(self,*args) :
         return self.get_state() == PyTango.DevState.ON
 
     def is_set_state_allowed(self) :

@@ -154,7 +154,7 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
 			      int &last_link_task,int &last_sink_task)
 {
   last_link_task = last_sink_task = begin_stage;
-  int nextStage = begin_stage + 1;
+  int nextStage = begin_stage;
   for(Stage2Instance::iterator i = m_stage2instance.begin();
       i != m_stage2instance.end();++i,++nextStage)
     {
