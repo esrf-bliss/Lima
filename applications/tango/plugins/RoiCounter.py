@@ -67,7 +67,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
             return self.__global_allowed
         raise AttributeError('RoiCounterDeviceServer has no attribute %s' % name)
 
-    def __global_allowed(self) :
+    def __global_allowed(self,*args) :
         return self.get_state() == PyTango.DevState.ON
 
     def is_set_state_allowed(self) :
@@ -185,7 +185,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
                                                                 result.std)
                         indexArray += 4
                 return returnArray
-        return numpy.array([],dtype = numpy.double)
+        return numpy.array([0],dtype = numpy.double)
 
     def __get_roi_list_from_argin(self,argin) :
         rois = []

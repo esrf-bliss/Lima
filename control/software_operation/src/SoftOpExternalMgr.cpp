@@ -176,7 +176,12 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
   if(aLastLink.first > begin_stage)
     aLastLink.second->setEventCallback(m_end_link_callback);
   if(aLastSink.first > begin_stage)
-    aLastSink.second->setEventCallback(m_end_sink_callback);
+    {
+      SinkTaskBase *aDummyPt = new SinkTaskBase();
+      aDummyPt->setEventCallback(m_end_sink_callback);
+      aTaskMgr.addSinkTask(aLastSink.first + 1,aDummyPt);
+      aDummyPt->unref();
+    }
 }
 
 void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
