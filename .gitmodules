@@ -1,0 +1,9 @@
+[submodule "third-party/CBFLib"]
+	path = third-party/CBFLib
+	url = git://git.epn-campus.eu/repositories/CBFlib.git
+[submodule "third-party/Sps"]
+	path = third-party/Sps
+	url = git://git.epn-campus.eu/repositories/Sps.git
+[submodule "third-party/Processlib"]
+	path = third-party/Processlib
+	url = git://git.epn-campus.eu/repositories/Processlib.git
