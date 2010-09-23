@@ -357,7 +357,7 @@ class Communication:
 		raise 'Could not start acquisition, you have to wait the finished of the previous one'
 
             if self._trigger_mode != self.EXTERNAL_GATE:
-                while self._exposure_period <= self._exposure or self._exposure_period - (self._exposure + 0.003) > 1e-6:
+                while self._exposure_period <= self._exposure or self._exposure_period - self._exposure < 0.003:
                     self.__asynSock.send('expperiod %f' % (self._exposure + 0.003))
                     self.__cond.wait(self.__timeout)
             #Start Acquisition

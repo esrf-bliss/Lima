@@ -104,7 +104,7 @@ class DetInfoCtrlObj(Core.HwDetInfoCtrlObj) :
     #@see get_max_exposition_time
     #@Core.Debug.DEB_MEMBER_FUNCT
     def get_max_latency(self):
-        return self.get_min_latency()
+        return 2**31
     
     #@Core.Debug.DEB_MEMBER_FUNCT
     def _readConfig(self) :
