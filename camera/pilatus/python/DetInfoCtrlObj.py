@@ -90,15 +90,7 @@ class DetInfoCtrlObj(Core.HwDetInfoCtrlObj) :
 
     #@Core.Debug.DEB_MEMBER_FUNCT
     def get_min_latency(self) :
-        period = None
-        model = self.getDetectorModel()
-        if model == '300K' or model == '300KWF' :
-            period = 1/200.             # 200Hz
-        else:                           # PILATUS UNKNOWN
-            period = 1/12.              # frequence of the Pilatus 6M (slowest)
-
-        latency = period - self.get_min_exposition_time()
-        return latency
+	return 0.003
 
     ##@todo don't know
     #@see get_max_exposition_time
