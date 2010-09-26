@@ -31,7 +31,8 @@ void SoftOpBackgroundSubstraction::addTo(TaskMgr &aMgr,int stage)
 
 SoftOpRoiCounter::SoftOpRoiCounter() : 
   SoftOpBaseClass(),
-  m_history_size(DEFAULT_HISTORY_SIZE)
+  m_history_size(DEFAULT_HISTORY_SIZE),
+  m_counter_status(-1)
 {
 }
 
@@ -114,6 +115,21 @@ void SoftOpRoiCounter::clearAllRoi()
     }
 }
 
+void SoftOpRoiCounter::clearCounterStatus()
+{
+  m_counter_status = -2;
+}
+/** @brief get the counter status
+ *  counter status indicate the status of roi counters
+ *  if counterStatus == -2 acquisition didn't started
+ *  if counterStatus == -1 acquisition has started
+ *  counterStatus > -1 == nb image pending :
+ *  i.e: if counterStatus == 10, it's mean image id 10 is in progress or finnished
+ */
+int SoftOpRoiCounter::getCounterStatus() const
+{
+  return m_counter_status;
+}
 void SoftOpRoiCounter::setMask(Data &aMask)
 {
   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
@@ -152,6 +168,7 @@ void SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
     aMgr.addSinkTask(stage,i->second);
+  ++m_counter_status;
 }
 
 void SoftOpRoiCounter::prepare()
@@ -159,4 +176,5 @@ void SoftOpRoiCounter::prepare()
    for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
      i->first->resetHistory();
+   m_counter_status = -1;
 }

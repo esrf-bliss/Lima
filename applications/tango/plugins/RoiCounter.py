@@ -99,6 +99,8 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
                 ctControl = _control_ref()
                 extOpt = ctControl.externalOperation()
                 self.__roiCounterMgr = extOpt.addOp(Core.ROICOUNTERS,self.ROI_COUNTER_TASK_NAME,0)
+            self.__roiCounterMgr.clearCounterStatus()
+            
 	PyTango.Device_4Impl.set_state(self,state)
 
     def Start(self) :
@@ -111,7 +113,7 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
     def Stop(self):
 	self.set_state(PyTango.DevState.OFF)
 #------------------------------------------------------------------
-#    Read Threshold_value attribute
+#    Read BufferSize attribute
 #------------------------------------------------------------------
     def read_BufferSize(self, attr):
 	value_read = self.__roiCounterMgr.getBufferSize()
@@ -119,13 +121,20 @@ class RoiCounterDeviceServer(PyTango.Device_4Impl):
 
 
 #------------------------------------------------------------------
-#    Write Threshold_value attribute
+#    Write BufferSize attribute
 #------------------------------------------------------------------
     def write_BufferSize(self, attr):
 	data=[]
 	attr.get_write_value(data)
         self.__roiCounterMgr.setBufferSize(data[0])
 
+
+#------------------------------------------------------------------
+#    Read CounterStatus attribute
+#------------------------------------------------------------------
+    def read_CounterStatus(self, attr):
+	value_read = self.__roiCounterMgr.getCounterStatus()
+	attr.set_value(value_read)
 
 
 #==================================================================
@@ -248,6 +257,10 @@ class RoiCounterDeviceServerClass(PyTango.DeviceClass):
 	    [[PyTango.DevLong,
 	    PyTango.SCALAR,
 	    PyTango.READ_WRITE]],
+	'CounterStatus':
+	    [[PyTango.DevLong,
+	    PyTango.SCALAR,
+	    PyTango.READ]],
 	}
 
 
