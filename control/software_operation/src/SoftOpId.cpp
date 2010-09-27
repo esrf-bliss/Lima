@@ -48,6 +48,7 @@ SoftOpRoiCounter::~SoftOpRoiCounter()
 
 void SoftOpRoiCounter::add(const std::list<Roi> &rois)
 {
+  AutoMutex aLock(m_cond.mutex());
   for(std::list<Roi>::const_iterator i = rois.begin();
       i != rois.end();++i)
     {
@@ -71,6 +72,7 @@ void SoftOpRoiCounter::set(const std::list<Roi> &rois)
  */
 void SoftOpRoiCounter::get(std::list<Roi> &aReturnList) const
 {
+  AutoMutex aLock(m_cond.mutex());
   for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
     {
@@ -87,6 +89,7 @@ void SoftOpRoiCounter::del(const std::list<int> &roiIds)
   std::list<int> aTmpList = roiIds;
   aTmpList.sort();
   
+  AutoMutex aLock(m_cond.mutex());
   std::list<int>::iterator i = aTmpList.begin();
   std::list<ManagerNCounter>::iterator k = m_manager_tasks.begin();
   for(int index = 1;i != aTmpList.end() && k != m_manager_tasks.end();++i)
@@ -107,6 +110,7 @@ void SoftOpRoiCounter::del(const std::list<int> &roiIds)
  */
 void SoftOpRoiCounter::clearAllRoi()
 {
+  AutoMutex aLock(m_cond.mutex());
   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
     {
@@ -117,6 +121,7 @@ void SoftOpRoiCounter::clearAllRoi()
 
 void SoftOpRoiCounter::clearCounterStatus()
 {
+  AutoMutex aLock(m_cond.mutex());
   m_counter_status = -2;
 }
 /** @brief get the counter status
@@ -128,10 +133,12 @@ void SoftOpRoiCounter::clearCounterStatus()
  */
 int SoftOpRoiCounter::getCounterStatus() const
 {
+  AutoMutex aLock(m_cond.mutex());
   return m_counter_status;
 }
 void SoftOpRoiCounter::setMask(Data &aMask)
 {
+  AutoMutex aLock(m_cond.mutex());
   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
       i->second->setMask(aMask);
@@ -140,6 +147,7 @@ void SoftOpRoiCounter::setMask(Data &aMask)
 
 void SoftOpRoiCounter::setBufferSize(int size)
 {
+  AutoMutex aLock(m_cond.mutex());
   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
     i->first->resizeHistory(size);
@@ -148,11 +156,13 @@ void SoftOpRoiCounter::setBufferSize(int size)
 
 void SoftOpRoiCounter::getBufferSize(int &size) const
 {
+  AutoMutex aLock(m_cond.mutex());
   size = m_history_size;
 }
 
 void SoftOpRoiCounter::readCounters(int from,std::list<RoiIdAndResults> &result) const
 {
+  AutoMutex aLock(m_cond.mutex());
   int roiIndex = 1;
   for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i,++roiIndex)
@@ -165,6 +175,7 @@ void SoftOpRoiCounter::readCounters(int from,std::list<RoiIdAndResults> &result)
 
 void SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
 {
+  AutoMutex aLock(m_cond.mutex());
   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
     aMgr.addSinkTask(stage,i->second);
@@ -173,6 +184,7 @@ void SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
 
 void SoftOpRoiCounter::prepare()
 {
+  AutoMutex aLock(m_cond.mutex());
    for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
      i->first->resetHistory();

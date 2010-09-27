@@ -109,6 +109,7 @@ namespace lima
     int				m_history_size;
     int				m_counter_status;
     Data			m_mask;
+    mutable Cond		m_cond;
   };
 
 }
