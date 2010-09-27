@@ -515,7 +515,11 @@ void CtSaving::frameReady(Data &aData)
 	if(m_ready_flag && m_last_frameid_saved == aData.frameNumber - 1)
 	  {
 	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
-	    _get_common_header(aSaveTaskPt->m_header);
+	    std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(aData.frameNumber);
+	    if(aHeaderIter != m_frame_headers.end())
+	      _takeHeader(aHeaderIter,aSaveTaskPt->m_header);
+	    else
+	      _get_common_header(aSaveTaskPt->m_header);
 	    m_ready_flag = false,m_last_frameid_saved = aData.frameNumber;
 	    aLock.unlock();
 	    _post_save_task(aData,aSaveTaskPt);
@@ -612,9 +616,9 @@ void CtSaving::_save_finished(Data &aData)
 	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
 	    std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(nextDataIter->first);
 	    if(aHeaderIter != m_frame_headers.end())
-	        _takeHeader(aHeaderIter,aSaveTaskPt->m_header);
+	      _takeHeader(aHeaderIter,aSaveTaskPt->m_header);
             else
-	        _get_common_header(aSaveTaskPt->m_header);
+	      _get_common_header(aSaveTaskPt->m_header);
 	    m_last_frameid_saved = nextDataIter->first;
 	    Data aData = nextDataIter->second;
 	    m_frame_datas.erase(nextDataIter);
