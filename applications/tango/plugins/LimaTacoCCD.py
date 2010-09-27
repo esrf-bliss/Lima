@@ -372,7 +372,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         saving.setCommonHeader(header_map)
 
 #------------------------------------------------------------------
-#    DevCcdHeader command:
+#    DevCcdImageHeader command:
 #
 #    Description: 
 #    argout: DevVarStringArray    
