@@ -11,6 +11,7 @@
 
 class Data;
 class TaskEventCallback;
+class SinkTaskBase;
 
 namespace lima {
 
@@ -114,7 +115,7 @@ namespace lima {
     void removeFrameHeader(long frame_nr);
     void removeAllFrameHeaders();
 
-    void frameReady(Data &);
+    void frameReady(Data &,bool=false);
     void resetLastFrameNb();
 
     void setEndCallback(TaskEventCallback *);
@@ -141,6 +142,18 @@ namespace lima {
       void setStatisticSize(int aSize);
       void getStatistic(std::list<double>&) const;
       void clear();
+      
+      /** @brief should return true if container has compression or
+       *  havy task to do before saving
+       *  if return is true, getCompressionTask should return a Task
+       * @see getCompressionTask
+       */
+      virtual bool needParralelCompression() const {return false;}
+      /** @brief get a new compression task at each call.
+       * this methode is not call if needParralelCompression return false
+       *  @see needParralelCompression
+       */
+      virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&) {return NULL;}
 
     protected:
       virtual bool _open(const std::string &filename,
@@ -165,10 +178,12 @@ namespace lima {
     class _SaveTask;
     class _SaveCBK;
     friend class _SaveCBK;
+    class _CompressionCBK;
 
-    CtControl			&m_ctrl;
-    SaveContainer		*m_save_cnt;
-    _SaveCBK			*m_saving_cbk;
+    CtControl& 			m_ctrl;
+    SaveContainer* 		m_save_cnt;
+    _SaveCBK* 			m_saving_cbk;
+    _CompressionCBK* 		m_compression_cbk;
     Parameters			m_pars;
     HeaderMap			m_common_header;
     std::map<long, HeaderMap>	m_frame_headers;

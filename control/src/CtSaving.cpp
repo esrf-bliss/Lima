@@ -55,7 +55,23 @@ public:
 private:
   CtSaving &m_saving;
 };
+/** @brief compression callback
+ */
+class CtSaving::_CompressionCBK : public TaskEventCallback
+{
+    DEB_CLASS_NAMESPC(DebModControl,"CtSaving::_SaveCBK","Control");
+public:
+  _CompressionCBK(CtSaving &aCtSaving) : m_saving(aCtSaving) {}
+  virtual void finished(Data &aData)
+  {
+    DEB_MEMBER_FUNCT();
+    DEB_PARAM() << DEB_VAR1(aData);
 
+    m_saving.frameReady(aData,true);
+  }
+private:
+  CtSaving &m_saving;
+};
 /** @brief Parameters default constructor
  */
 CtSaving::Parameters::Parameters()
@@ -74,6 +90,7 @@ CtSaving::CtSaving(CtControl &aCtrl) :
 
   m_save_cnt = new SaveContainerEdf(*this);
   m_saving_cbk = new _SaveCBK(*this);
+  m_compression_cbk = new _CompressionCBK(*this);
   resetLastFrameNb();
 }
 
@@ -85,6 +102,7 @@ CtSaving::~CtSaving()
   delete m_save_cnt;
   m_saving_cbk->unref();
   setEndCallback(NULL);
+  m_compression_cbk->unref();
 }
 
 void CtSaving::setParameters(const CtSaving::Parameters &pars)
@@ -496,7 +514,7 @@ void CtSaving::setEndCallback(TaskEventCallback *aCbkPt)
     m_end_cbk->ref();
 }
 
-void CtSaving::frameReady(Data &aData)
+void CtSaving::frameReady(Data &aData,bool afterCompressionFlag)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
@@ -508,6 +526,26 @@ void CtSaving::frameReady(Data &aData)
       return;
     }
   AutoMutex aLock(m_cond.mutex());
+  //Some container need a parralel compression before real file saving
+  if(!afterCompressionFlag && m_save_cnt->needParralelCompression())
+    {
+      CtSaving::HeaderMap header;
+      std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(aData.frameNumber);
+      if(aHeaderIter != m_frame_headers.end())
+	_takeHeader(aHeaderIter,header);
+      else
+	_get_common_header(header);
+      SinkTaskBase *aCompressionTaskPt = m_save_cnt->getCompressionTask(header);
+      aCompressionTaskPt->setEventCallback(m_compression_cbk);
+      TaskMgr *aCompressionMgrPt = new TaskMgr();
+      aCompressionMgrPt->addSinkTask(0,aCompressionTaskPt);
+      aCompressionTaskPt->unref();
+      aCompressionMgrPt->setInputData(aData);
+     
+      PoolThreadMgr::get().addProcess(aCompressionMgrPt);
+      return;
+    }
+
   switch(m_pars.savingMode)
     {
     case CtSaving::AutoFrame:
