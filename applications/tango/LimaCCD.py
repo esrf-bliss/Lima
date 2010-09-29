@@ -79,7 +79,12 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 util = PyTango.Util.instance()
 #                if specificClass and specificDevice:
 #                    util.create_device(specificClass,specificDevice)
-
+        try:
+            nb_thread = int(self.NbProcessingThread)
+        except ValueError:
+            pass
+        else:
+            Core.Processlib.PoolThreadMgr.get().setNumberOfThread(nb_thread)
 
 #==================================================================
 #
@@ -241,6 +246,9 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'LimaCameraType' :
         [PyTango.DevString,
          "Camera Plugin name",[]],
+        'NbProcessingThread' :
+        [PyTango.DevString,
+         "Number of thread for processing",[]],
         }
 
     #    Command definitions
