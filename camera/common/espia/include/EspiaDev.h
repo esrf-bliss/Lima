@@ -20,6 +20,11 @@ extern const std::string OPT_DEBUG_LEVEL,
 extern std::map<std::string, int> EspiaDrvOptMap;
 
 
+extern const std::string PARAM_CHAN_UP_LED;
+
+extern std::map<std::string, int> EspiaParamMap;
+
+
 class Dev
 {
 	DEB_CLASS_NAMESPC(DebModEspia, "Dev", "Espia");
@@ -44,13 +49,19 @@ class Dev
 	void getDrvOption(const std::string& opt_name, int& val);
 	void setDrvOption(const std::string& opt_name, int  val);
 
+	void getParam(const std::string& param_name, int& val);
+	void setParam(const std::string& param_name, int  val);
+
+	void getChanUpLed(int& chan_up_led);
+
  private:
 	static const double ResetLinkTime;
 
 	void open(int dev_nb);
 	void close();
 
-	void initEspiaDrvOptMap();
+	void initDrvOptMap();
+	void initParamMap();
 
 	int m_dev_nb;
 	espia_t m_dev;

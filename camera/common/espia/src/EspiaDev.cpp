@@ -13,6 +13,10 @@ const string lima::Espia::OPT_NO_FIFO_RESET = "NO_FIFO_RESET";
 
 map<string, int> lima::Espia::EspiaDrvOptMap;
 
+const string lima::Espia::PARAM_CHAN_UP_LED = "CHAN_UP_LED";
+
+map<string, int> lima::Espia::EspiaParamMap;
+
 
 Dev::Dev(int dev_nb)
 {
@@ -31,7 +35,8 @@ Dev::Dev(int dev_nb)
 
 	open(dev_nb);
 
-	initEspiaDrvOptMap();
+	initDrvOptMap();
+	initParamMap();
 }
 
 Dev::~Dev()
@@ -126,13 +131,12 @@ void Dev::getCcdStatus(int& ccd_status)
 }
 
 
-void Dev::initEspiaDrvOptMap()
+void Dev::initDrvOptMap()
 {
 	DEB_MEMBER_FUNCT();
 
-	static bool is_init_EspiaDrvOptMap = false;
-
-	if (is_init_EspiaDrvOptMap)
+	static bool inited = false;
+	if (inited)
 		return;
 
 	DEB_TRACE() << "Initing EspiaDrvOptMap";
@@ -152,7 +156,7 @@ void Dev::initEspiaDrvOptMap()
 		EspiaDrvOptMap[option_name] = eoption->option;
 	}
 
-	is_init_EspiaDrvOptMap = true;
+	inited = true;
 }
 
 
@@ -188,3 +192,76 @@ void Dev::setDrvOption(const string& opt_name, int val)
 	DEB_TRACE() << "Writing driver option #" << pop->second << "=" << val;
 	CHECK_CALL(espia_option(m_dev, pop->second, action, &val));
 }
+
+
+void Dev::initParamMap()
+{
+	DEB_MEMBER_FUNCT();
+
+	static bool inited = false;
+	if (inited)
+		return;
+
+	DEB_TRACE() << "Initing EspiaParamMap";
+
+	int nr_param = -1;
+	DEB_TRACE() << "Getting number of params";
+	CHECK_CALL(espia_get_param_data(m_dev, &nr_param, NULL));
+	DEB_TRACE() << DEB_VAR1(nr_param);
+	
+	for (int i = 0; i < nr_param; i++) {
+		struct espia_param *eparam;
+		DEB_TRACE() << "Getting param #" << i;
+		CHECK_CALL(espia_get_param_data(m_dev, &i, &eparam));
+		
+		string param_name = eparam->name;
+		DEB_TRACE() << DEB_VAR1(param_name);
+		EspiaParamMap[param_name] = i;
+	}
+
+	inited = true;
+}
+
+
+void Dev::getParam(const string& param_name, int& val)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(param_name);
+
+	map<string, int>::iterator pop = EspiaParamMap.find(param_name);
+	if (pop == EspiaParamMap.end())
+		THROW_HW_ERROR(InvalidValue) << "Invalid driver param: " 
+					     << DEB_VAR1(param_name);
+
+	DEB_TRACE() << "Reading espia param #" << pop->second;
+	unsigned int aux_val = val;
+	CHECK_CALL(espia_get_param(m_dev, &pop->second, &aux_val, 1));
+	val = aux_val;
+	DEB_RETURN() << DEB_VAR1(val);
+}
+
+
+void Dev::setParam(const string& param_name, int val)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(param_name, val);
+
+	map<string, int>::iterator pop = EspiaParamMap.find(param_name);
+	if (pop == EspiaParamMap.end())
+		THROW_HW_ERROR(InvalidValue) << "Invalid driver param: " 
+					     << DEB_VAR1(param_name);
+
+	DEB_TRACE() << "Writing espia param #" << pop->second << "=" << val;
+	unsigned int aux_val = val;
+	CHECK_CALL(espia_set_param(m_dev, &pop->second, &aux_val, 1));
+}
+
+
+void Dev::getChanUpLed(int& chan_up_led)
+{
+	DEB_MEMBER_FUNCT();
+	getParam(PARAM_CHAN_UP_LED, chan_up_led);
+	DEB_RETURN() << DEB_VAR1(chan_up_led);
+}
+
+
