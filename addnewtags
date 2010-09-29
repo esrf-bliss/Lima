@@ -126,7 +126,7 @@ if os.system('git commit') :
 
 for mod in modules:
     version = mod_version_objs[mod]
-    git_tag = os.path.join(mod, 'v%s' % version)
+    git_tag = os.path.join(mod, '%s' % version)
     git_tag = git_tag.replace(os.sep,'-')
     print "Creating git tag: %s" % git_tag
     
