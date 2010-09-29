@@ -170,6 +170,17 @@ class LimaCCDs(PyTango.Device_4Impl) :
 
         acq.setLatencyTime(*data)
 
+    ## @brief read write statistic
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_write_statistic(self,attr) :
+        saving = self.__control.saving()
+        stat = saving.getWriteTimeStatistic()
+        if not len(stat) :
+            attr.set_value([-1],len(1))
+        else:
+            attr.set_value(stat,len(stat))
+
 #==================================================================
 #
 #    LimaCCDs command methods
@@ -263,7 +274,11 @@ class LimaCCDsClass(PyTango.DeviceClass) :
        'acq_mode':
         [[PyTango.DevLong,
           PyTango.SCALAR,
-          PyTango.READ_WRITE]],	      	
+          PyTango.READ_WRITE]],
+        'write_statistic':
+        [[PyTango.DevDouble,
+          PyTango.SPECTRUM,
+          PyTango.READ,256]],
         }
 
 def declare_camera_n_commun_to_tango_world(util) :
