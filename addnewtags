@@ -2,13 +2,9 @@
 
 import os, sys
 
-trunk_dir = os.path.dirname(sys.argv[0])
-if trunk_dir == '.':
-    trunk_dir = os.getcwd()
-lima_dir = os.path.join(trunk_dir, '..')
-os.chdir(lima_dir)
-
-base_http_ripository = "https://scm.blissgarden.org/svn/lima"
+base_path = os.path.dirname(sys.argv[0])
+if base_path == '.':
+    base_path = os.getcwd()
 
 def usage():
     prgname = os.path.basename(sys.argv[0])
@@ -75,24 +71,15 @@ except:
     usage()
 
 mod_version_data = {
-    'core':    
-	['common/VERSION', ALL],
-    'espia':   
-	['camera/common/espia/VERSION', ALL],
-    'frelon':  
-	['camera/frelon/VERSION', ALL],
-    'maxipix': 
-	['camera/maxipix/VERSION', ALL],
-    'pilatus': 
-	['camera/pilatus/VERSION', ALL],
-    'taco/camera/frelon': 
-	['applications/taco/VERSION', 'applications/taco'],
-    'tango/common': 
-	['applications/tango/VERSION', 'applications/tango'],
-    'tango/camera/maxipix': 
-	['applications/tango/camera/Maxipix_VERSION', 'applications/tango/camera'],
-    'tango/camera/pilatus': 
-	['applications/tango/camera/Pilatus_VERSION', 'applications/tango/camera'],
+    'core': 'common/VERSION',
+    'espia': 'camera/common/espia/VERSION',
+    'frelon': 'camera/frelon/VERSION',
+    'maxipix': 'camera/maxipix/VERSION',
+    'pilatus': 'camera/pilatus/VERSION',
+    'taco/camera/frelon': 'applications/taco/VERSION',
+    'tango/common': 'applications/tango/VERSION',
+    'tango/camera/maxipix': 'applications/tango/camera/Maxipix_VERSION',
+    'tango/camera/pilatus': 'applications/tango/camera/Pilatus_VERSION',
 }
 
 if modules == [ALL]:
@@ -104,7 +91,7 @@ for mod in modules:
 
 mod_version_objs = {}
 for mod in modules:
-    version_file_name = os.path.join(trunk_dir, mod_version_data[mod][0])
+    version_file_name = os.path.join(base_path, mod_version_data[mod])
     version_file = open(version_file_name, "rt")
     version_str = version_file.readlines()[0].strip()
     version_file.close()
@@ -114,26 +101,6 @@ for mod in modules:
 
 if change_type == JUST_PRINT:
     sys.exit(0)
-
-if not os.access('tags',os.W_OK) :
-    f = os.popen('svn ls  https://scm.blissgarden.org/svn/lima/tags')
-    tags_ls_dirs = set([line.strip('\n/') for line in f.readlines() if line.endswith('/\n')])
-    f.close()
-
-    f = os.popen('svn ls -R  https://scm.blissgarden.org/svn/lima/tags/tango')
-    tags_ls_dirs.update(set([os.path.join('tango',line.strip('\n/')) for line in f.readlines() if line.endswith('/\n')]))
-    f.close()
-    print tags_ls_dirs
-else:
-    tags_ls_dirs = set()
-
-for mod in modules:
-    print "Checking %-*s tags:" % (max_name_len, mod)
-    mod_tag_svn_dir = os.path.join('tags', mod, '.svn')
-    if not os.path.isdir(mod_tag_svn_dir) and mod not in tags_ls_dirs:
-        msg = 'Error: %s tags not in svn! Please do "svn update"' % mod
-	raise RuntimeError, msg
-    print "  + OK"
 
 for mod in modules:
     version = mod_version_objs[mod]
@@ -147,27 +114,21 @@ for mod in modules:
     elif change_type == CHG_RELEASE:
         version.rel   += 1
     print "New %-*s version: %s" % (max_name_len, mod, version)
-    version_file_name = os.path.join(trunk_dir, mod_version_data[mod][0])
+    version_file_name = os.path.join(base_path, mod_version_data[mod])
     version_file = open(version_file_name, 'wt')
     version_str = version_file.write('%s\n' % version)
     version_file.close()
 
+    os.system('git add %s' % version_file_name)
+
+if os.system('git commit') :
+    sys.exit(0)
+
 for mod in modules:
     version = mod_version_objs[mod]
-    svn_tag = os.path.join(mod, 'v%s' % version)
-    print "Creating svn tag: %s" % svn_tag
-    trunk_sub_dir = mod_version_data[mod][1]
-    if trunk_sub_dir == ALL:
-        trunk_sub_dir = '.'
-    trunk_directory = os.path.join(trunk_dir, trunk_sub_dir)
-    tag_dir = os.path.join('tags', svn_tag)
-    if not os.access(tag_dir,os.W_OK) :
-	tag_dir = os.path.join(base_http_ripository,'tags', svn_tag)
-    cmd = 'svn copy %s %s' % (trunk_directory, tag_dir)
+    git_tag = os.path.join(mod, 'v%s' % version)
+    git_tag = git_tag.replace(os.sep,'-')
+    print "Creating git tag: %s" % git_tag
+    
+    cmd = 'git tag %s' % (git_tag)
     os.system(cmd)
-    if trunk_sub_dir == '.':
-        print "Cleaning directory %s" % tag_dir
-        cmd = 'make -C %s clean > /dev/null 2>&1' % tag_dir
-        os.system(cmd)
-        cmd = 'make -C %s/sip mrproper > /dev/null 2>&1' % tag_dir
-        os.system(cmd)
