@@ -248,7 +248,7 @@ class LimaCCDsClass(PyTango.DeviceClass) :
          "Camera Plugin name",[]],
         'NbProcessingThread' :
         [PyTango.DevString,
-         "Number of thread for processing",[]],
+         "Number of thread for processing",[2]],
         }
 
     #    Command definitions
