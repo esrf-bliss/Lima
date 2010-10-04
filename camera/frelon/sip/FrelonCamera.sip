@@ -24,6 +24,8 @@ class Camera
 	void getComplexSerialNb(int& complex_ser_nb /Out/);
 	Frelon::Model& getModel();
 
+	Frelon::TimingCtrl& getTimingCtrl();
+
 	void setInputChan(Frelon::InputChan  input_chan);
 	void getInputChan(Frelon::InputChan& input_chan /Out/);
 
