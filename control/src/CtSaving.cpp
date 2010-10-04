@@ -526,30 +526,31 @@ void CtSaving::frameReady(Data &aData,bool afterCompressionFlag)
       return;
     }
   AutoMutex aLock(m_cond.mutex());
-  //Some container need a parralel compression before real file saving
-  if(!afterCompressionFlag && m_save_cnt->needParralelCompression())
-    {
-      CtSaving::HeaderMap header;
-      std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(aData.frameNumber);
-      if(aHeaderIter != m_frame_headers.end())
-	_takeHeader(aHeaderIter,header);
-      else
-	_get_common_header(header);
-      SinkTaskBase *aCompressionTaskPt = m_save_cnt->getCompressionTask(header);
-      aCompressionTaskPt->setEventCallback(m_compression_cbk);
-      TaskMgr *aCompressionMgrPt = new TaskMgr();
-      aCompressionMgrPt->addSinkTask(0,aCompressionTaskPt);
-      aCompressionTaskPt->unref();
-      aCompressionMgrPt->setInputData(aData);
-     
-      PoolThreadMgr::get().addProcess(aCompressionMgrPt);
-      return;
-    }
 
   switch(m_pars.savingMode)
     {
     case CtSaving::AutoFrame:
       {
+	//Some container need a parralel compression before real file saving
+	if(!afterCompressionFlag && m_save_cnt->needParralelCompression())
+	  {
+	    CtSaving::HeaderMap header;
+	    std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(aData.frameNumber);
+	    if(aHeaderIter != m_frame_headers.end())
+	      _takeHeader(aHeaderIter,header);
+	    else
+	      _get_common_header(header);
+	    SinkTaskBase *aCompressionTaskPt = m_save_cnt->getCompressionTask(header);
+	    aCompressionTaskPt->setEventCallback(m_compression_cbk);
+	    TaskMgr *aCompressionMgrPt = new TaskMgr();
+	    aCompressionMgrPt->addSinkTask(0,aCompressionTaskPt);
+	    aCompressionTaskPt->unref();
+	    aCompressionMgrPt->setInputData(aData);
+     
+	    PoolThreadMgr::get().addProcess(aCompressionMgrPt);
+	    return;
+	  }
+
 	if(m_ready_flag && m_last_frameid_saved == aData.frameNumber - 1)
 	  {
 	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
@@ -569,11 +570,32 @@ void CtSaving::frameReady(Data &aData,bool afterCompressionFlag)
     case CtSaving::AutoHeader:
       {
 	std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(aData.frameNumber);
-	if(aHeaderIter != m_frame_headers.end() &&
+
+	//Some container need a parralel compression before real file saving
+	if(aHeaderIter != m_frame_headers.end() && 
+	   !afterCompressionFlag && m_save_cnt->needParralelCompression())
+	  {
+	    CtSaving::HeaderMap header;
+	    std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(aData.frameNumber);
+	    _takeHeader(aHeaderIter,header);
+	    SinkTaskBase *aCompressionTaskPt = m_save_cnt->getCompressionTask(header);
+	    aCompressionTaskPt->setEventCallback(m_compression_cbk);
+	    TaskMgr *aCompressionMgrPt = new TaskMgr();
+	    aCompressionMgrPt->addSinkTask(0,aCompressionTaskPt);
+	    aCompressionTaskPt->unref();
+	    aCompressionMgrPt->setInputData(aData);
+     
+	    PoolThreadMgr::get().addProcess(aCompressionMgrPt);
+	    return;
+	  }
+
+	if((afterCompressionFlag || aHeaderIter != m_frame_headers.end()) &&
 	   m_ready_flag && m_last_frameid_saved == aData.frameNumber - 1)
 	  {
 	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
-	    _takeHeader(aHeaderIter,aSaveTaskPt->m_header);
+	    if(!afterCompressionFlag)
+	      _takeHeader(aHeaderIter,aSaveTaskPt->m_header);
+
 	    m_ready_flag = false,m_last_frameid_saved = aData.frameNumber;
 	    aLock.unlock();
 	    _post_save_task(aData,aSaveTaskPt);
