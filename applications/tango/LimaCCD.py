@@ -114,6 +114,13 @@ class LimaCCDs(PyTango.Device_4Impl) :
 #
 #==================================================================
 
+    ## @brief Read the Camera Type
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_camera_type(self,attr) :        
+	value  = self.LimaCameraType	
+        attr.set_value(value)
+
     ## @brief Read maximum accumulation exposure time
     #
     @Core.DEB_MEMBER_FUNCT
@@ -196,6 +203,30 @@ class LimaCCDs(PyTango.Device_4Impl) :
         acq = self.__control.acquisition()
 
         acq.setLatencyTime(*data)
+
+    ## @brief Read last image acquired
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_last_image_ready(self,attr) :
+        status = self.__control.getStatus()
+	img_counters= status.ImageCounters
+
+        value = img_counters.LastImageReady
+        if value is None: value = -1
+
+        attr.set_value(value)
+
+    ## @brief Read last image saved
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_last_image_saved(self,attr) :
+        status = self.__control.getStatus()
+	img_counters= status.ImageCounters
+
+        value = img_counters.LastImageSaved
+        if value is None: value = -1
+
+        attr.set_value(value)
 
     ## @brief read write statistic
     #
@@ -285,6 +316,10 @@ class LimaCCDsClass(PyTango.DeviceClass) :
     
     #    Attribute definitions
     attr_list = {
+       'camera_type':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ]],
        'acc_max_expotime':
         [[PyTango.DevDouble,
           PyTango.SCALAR,
@@ -305,6 +340,14 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
+       'last_image_ready':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ]],
+       'last_image_saved':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ]],
         'write_statistic':
         [[PyTango.DevDouble,
           PyTango.SPECTRUM,
