@@ -11,7 +11,8 @@ const double Camera::MaxIdleWaitTime = 1.5;
 
 
 Camera::Camera(Espia::SerialLine& espia_ser_line)
-	: m_ser_line(espia_ser_line), m_mis_cb_act(false)
+	: m_ser_line(espia_ser_line), m_timing_ctrl(m_model, m_ser_line),
+	  m_mis_cb_act(false)
 {
 	DEB_CONSTRUCTOR();
 
@@ -148,6 +149,11 @@ void Camera::getComplexSerialNb(int& complex_ser_nb)
 Model& Camera::getModel()
 {
 	return m_model;
+}
+
+TimingCtrl& Camera::getTimingCtrl()
+{
+	return m_timing_ctrl;
 }
 
 int Camera::getModesAvail()
@@ -970,7 +976,8 @@ void Camera::setNbFrames(int nb_frames)
 
 	TrigMode trig_mode;
 	getTrigMode(trig_mode);
-	int cam_nb_frames = (trig_mode == ExtTrigMult) ? 1 : nb_frames;
+	bool one_frame = (trig_mode == ExtTrigMult) || (trig_mode == ExtGate);
+	int cam_nb_frames = one_frame ? 1 : nb_frames;
 	writeRegister(NbFrames, cam_nb_frames);
 	m_nb_frames = nb_frames;
 }
@@ -1044,8 +1051,12 @@ void Camera::stop()
 	TrigMode trig_mode;
 	getTrigMode(trig_mode);
 	if (trig_mode != ExtGate) {
-		DEB_TRACE() << "Aborting current acquisition";
-		sendCmd(Stop);
+		int cam_nb_frames;
+		readRegister(NbFrames, cam_nb_frames);
+		if (cam_nb_frames > 1) {
+			DEB_TRACE() << "Aborting current acquisition";
+			sendCmd(Stop);
+		}
 	}
 
 	DEB_TRACE() << "Waiting for camera to become idle";

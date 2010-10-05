@@ -3,6 +3,7 @@
 
 #include "FrelonSerialLine.h"
 #include "FrelonModel.h"
+#include "FrelonTimingCtrl.h"
 #include "HwMaxImageSizeCallback.h"
 
 namespace lima
@@ -28,6 +29,8 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void getVersionStr(std::string& ver);
 	void getComplexSerialNb(int& complex_ser_nb);
 	Model& getModel();
+
+	TimingCtrl& getTimingCtrl();
 
 	void setInputChan(InputChan  input_chan);
 	void getInputChan(InputChan& input_chan);
@@ -138,6 +141,7 @@ class Camera : public HwMaxImageSizeCallbackGen
 
 	SerialLine m_ser_line;
 	Model m_model;
+	TimingCtrl m_timing_ctrl;
 	Point m_roi_offset;
 	TrigMode m_trig_mode;
 	int m_nb_frames;
