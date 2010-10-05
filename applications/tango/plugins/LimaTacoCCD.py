@@ -96,6 +96,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         
 	self.__key_header_delimiter = '='
 	self.__entry_header_delimiter = '\n'
+        self.__image_number_header_delimiter = ';'
 #------------------------------------------------------------------
 #    Device destructor
 #------------------------------------------------------------------
@@ -370,11 +371,44 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
             header_map[key] = val
         saving.setCommonHeader(header_map)
 
+#------------------------------------------------------------------
+#    DevCcdImageHeader command:
+#
+#    Description: 
+#    argout: DevVarStringArray    
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
+    def DevCcdImageHeader(self, headers_str):
+        control = _control_ref()
+        saving = control.saving()
+        for image_header in headers_str:
+            imageIdSepPos = image_header.find(self.__image_number_header_delimiter)
+            imageId = int(image_header[:imageIdSepPos])
+            headers_str = image_header[imageIdSepPos+1:]
+            deb.Param('Setting to image %d file header: %s' % (imageId,header_str))
+            header_map = {}
+            for line in header_str.split(self.__entry_header_delimiter) :
+                token = line.split(self.__key_header_delimiter)
+                key = token[0].strip()
+                if not key:
+                    continue
+                try:
+                    val = '='.join(token[1:]).strip()
+                except ValueError:
+                    continue
+                if val.endswith(';'):
+                    val = val[:-1]
+                header_map[key] = val
+            saving.updateFrameHeader(imageId,header_map)
+
     @Core.DEB_MEMBER_FUNCT
     def DevCcdHeaderDelimiter(self,delimiter) :
 	deb.Param('Setting file header delimiter: %s' % delimiter)
 	self.__key_header_delimiter = delimiter[0]
 	self.__entry_header_delimiter = delimiter[1]
+        if len(delimiter) > 2:
+            self.__image_number_header_delimiter = delimiter[2]
+
 #------------------------------------------------------------------
 #    DevCcdDepth command:
 #
@@ -807,6 +841,9 @@ class LimaTacoCCDsClass(PyTango.DeviceClass):
             [PyTango.DevVoid, ""]],
         'DevCcdHeader':
             [[PyTango.DevString, ""],
+            [PyTango.DevVoid, ""]],
+        'DevCcdImageHeader':
+            [[PyTango.DevVarStringArray, ""],
             [PyTango.DevVoid, ""]],
         'DevCcdHeaderDelimiter':
             [[PyTango.DevVarStringArray, ""],

@@ -7,3 +7,9 @@
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
 	url = git://git.epn-campus.eu/repositories/Processlib.git
+[submodule "camera/basler"]
+	path = camera/basler
+	url = git://git.epn-campus.eu/repositories/LimaCameraBasler
+[submodule "applications/spec"]
+	path = applications/spec
+	url = git://git.epn-campus.eu/repositories/LimaSpec

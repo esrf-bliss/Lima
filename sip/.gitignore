@@ -1,0 +1,11 @@
+*.pyc
+core/Makefile
+core/lima_init_numpy.cpp
+core/limacore.sbf
+core/limacore_tmp.sip
+core/limacoreconfig.py
+core/sipAPIlimacore.h
+espia/
+frelon/
+maxipix/
+simulator/

@@ -79,7 +79,12 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 util = PyTango.Util.instance()
 #                if specificClass and specificDevice:
 #                    util.create_device(specificClass,specificDevice)
-
+        try:
+            nb_thread = int(self.NbProcessingThread)
+        except ValueError:
+            pass
+        else:
+            Core.Processlib.PoolThreadMgr.get().setNumberOfThread(nb_thread)
 
 #==================================================================
 #
@@ -201,7 +206,17 @@ class LimaCCDs(PyTango.Device_4Impl) :
 
         attr.set_value(value)
 
-#==================================================================
+    ## @brief read write statistic
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_write_statistic(self,attr) :
+        saving = self.__control.saving()
+        stat = saving.getWriteTimeStatistic()
+        if not len(stat) :
+            attr.set_value([-1],len(1))
+        else:
+            attr.set_value(stat,len(stat))
+
 #==================================================================
 #
 #    LimaCCDs command methods
@@ -262,6 +277,9 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'LimaCameraType' :
         [PyTango.DevString,
          "Camera Plugin name",[]],
+        'NbProcessingThread' :
+        [PyTango.DevString,
+         "Number of thread for processing",[2]],
         }
 
     #    Command definitions
@@ -308,6 +326,10 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ]],
+        'write_statistic':
+        [[PyTango.DevDouble,
+          PyTango.SPECTRUM,
+          PyTango.READ,256]],
         }
 
 def declare_camera_n_commun_to_tango_world(util) :

@@ -4,5 +4,8 @@ sip*.cpp
 *.so
 *.so.*
 *~
+*.swp
+\#*\#
+.\#*
 config.inc
 install

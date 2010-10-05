@@ -169,6 +169,9 @@ using namespace lima;
   void get(std::list<Roi> &rois /Out/) const;
   void del(const std::list<int> &roiIds);
   void clearAllRoi();
+
+  void clearCounterStatus();
+  int  getCounterStatus() const;
     
   void setMask(Data &aMask);
 

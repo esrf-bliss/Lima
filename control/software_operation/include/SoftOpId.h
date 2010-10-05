@@ -89,7 +89,10 @@ namespace lima
     void get(std::list<Roi>&) const;
     void del(const std::list<int> &roiIds);
     void clearAllRoi();		/* clear all roi */
-    
+
+    void clearCounterStatus();
+    int  getCounterStatus() const;
+
     void setMask(Data &aMask);
 
     void setBufferSize(int size);
@@ -104,7 +107,9 @@ namespace lima
 
     std::list<ManagerNCounter>  m_manager_tasks;
     int				m_history_size;
+    int				m_counter_status;
     Data			m_mask;
+    mutable Cond		m_cond;
   };
 
 }
