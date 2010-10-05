@@ -21,7 +21,7 @@
 #=============================================================================
 #
 
-import sys
+import sys,os
 import PyTango
 import weakref
 
@@ -39,9 +39,9 @@ class LimaCCDs(PyTango.Device_4Impl) :
 #------------------------------------------------------------------
     def __init__(self,*args) :
         PyTango.Device_4Impl.__init__(self,*args)
+        self.__className2deviceName = {}
         self.init_device()
         self.__lima_control = None
-        self.__className2deviceName = {}
         
 #------------------------------------------------------------------
 #    Device destructor
@@ -63,13 +63,16 @@ class LimaCCDs(PyTango.Device_4Impl) :
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
         #get sub devices
-        personalName = '/'.join(sys.argv[0:2])
+        fullpathExecName = sys.argv[0]
+        execName = os.path.split(fullpathExecName)[-1]
+        execName = os.path.splitext(execName)[0]
+        personalName = '/'.join([execName,sys.argv[1]])
         dataBase = PyTango.Database()
         result = dataBase.get_device_class_list(personalName)
         for i in range(len(result.value_string) / 2) :
             class_name = result.value_string[i * 2]
             deviceName = result.value_string[i * 2 + 1]
-            self.__className2deviceName[class_name] = deviceName
+            self.__className2deviceName[deviceName] = class_name
             
         try:
             m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
@@ -98,7 +101,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
                             value = value[0]
                         properties[key] = value
             
-            self.__control = m.get_control(properties)
+            self.__control = m.get_control(**properties)
             _set_control_ref(weakref.ref(self.__control))
 
         try:
