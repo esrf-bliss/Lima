@@ -41,7 +41,8 @@ class LimaCCDs(PyTango.Device_4Impl) :
         PyTango.Device_4Impl.__init__(self,*args)
         self.init_device()
         self.__lima_control = None
-
+        self.__className2deviceName = {}
+        
 #------------------------------------------------------------------
 #    Device destructor
 #------------------------------------------------------------------
@@ -61,6 +62,15 @@ class LimaCCDs(PyTango.Device_4Impl) :
     def init_device(self) :
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
+        #get sub devices
+        personalName = '/'.join(sys.argv[0:2])
+        dataBase = PyTango.Database()
+        result = dataBase.get_device_class_list(personalName)
+        for i in range(len(result.value_string) / 2) :
+            class_name = result.value_string[i * 2]
+            deviceName = result.value_string[i * 2 + 1]
+            self.__className2deviceName[class_name] = deviceName
+            
         try:
             m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
         except ImportError:
@@ -68,9 +78,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
             traceback.print_exc()
             self.set_state(PyTango.DevState.FAULT)
         else:
-            self.__control = m.get_control()
-            _set_control_ref(weakref.ref(self.__control))
-            
+            properties = {}
             try:
                 specificClass,specificDevice = m.get_tango_specific_class_n_device()
             except AttributeError: pass
@@ -79,6 +87,20 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 util = PyTango.Util.instance()
 #                if specificClass and specificDevice:
 #                    util.create_device(specificClass,specificDevice)
+                #get properties for this device
+
+                deviceName = self.__className2deviceName.get(specificDevice.__name__,None)
+                if deviceName:
+                    propertiesNames = dataBase.get_device_property_list(deviceName,"*")
+                    for pName in propertiesNames.value_string:
+                        key,value = dataBase.get_device_property(deviceName,pName).popitem()
+                        if len(value) == 1:
+                            value = value[0]
+                        properties[key] = value
+            
+            self.__control = m.get_control(properties)
+            _set_control_ref(weakref.ref(self.__control))
+
         try:
             nb_thread = int(self.NbProcessingThread)
         except ValueError:
