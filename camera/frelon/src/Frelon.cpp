@@ -136,6 +136,10 @@ static const InputChanPair FTMInputChanListCList[] = {
 FTMInputChanListMapType 
 lima::Frelon::FTMInputChanListMap(C_LIST_ITERS(FTMInputChanListCList));
 
+static const InputChan DefInputChanCList[] = {
+	Chan1234, Chan12, Chan34, Chan13, Chan24, Chan1, Chan2, Chan3, Chan4, 
+};
+InputChanList lima::Frelon::DefInputChanList(C_LIST_ITERS(DefInputChanCList));
 
 typedef pair<TimeUnitFactor, double> FactorPair;
 static const FactorPair TimeUnitFactorCList[] = {

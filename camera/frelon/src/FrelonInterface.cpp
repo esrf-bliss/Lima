@@ -482,7 +482,9 @@ void Interface::reset(ResetLevel reset_level)
 	}
 
 	m_cam.setFrameTransferMode(FFM);
-	m_cam.setInputChan(Chan1234);
+	InputChan input_chan;
+	m_cam.getDefInputChan(FFM, input_chan);
+	m_cam.setInputChan(input_chan);
 
 	m_flip.setFlip(Flip(false));
 

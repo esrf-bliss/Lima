@@ -220,7 +220,7 @@ from Lima.Pilatus import Interface
 
 _PilatusIterface = None
 
-def get_control() :
+def get_control(**keys) :
     global _PilatusIterface
     if _PilatusIterface is None:
         _PilatusIterface = Interface.Interface()

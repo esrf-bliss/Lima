@@ -270,6 +270,37 @@ void Camera::calcFTMInputChan(int chan_mode, FrameTransferMode& ftm,
 	DEB_RETURN() << DEB_VAR2(ftm, DEB_HEX(input_chan));
 }
 
+void Camera::getDefInputChan(FrameTransferMode ftm, InputChan& input_chan)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(ftm);
+
+	int modes_avail = getModesAvail();
+
+	bool valid_mode = false;
+	InputChanList::const_iterator it, end = DefInputChanList.end();
+	for (it = DefInputChanList.begin(); it != end; ++it) {
+		input_chan = *it;
+		int chan_mode;
+		try {
+			calcChanMode(ftm, input_chan, chan_mode);
+		} catch (...) {
+			continue;
+		}
+		int mode_bit = 1 << (chan_mode - 1);
+		valid_mode = ((modes_avail & mode_bit) != 0);
+		if (valid_mode)
+			break;
+	}
+
+	if (!valid_mode) 
+		THROW_HW_ERROR(Error) << "Could not find valid " << ftm 
+				      << "mode: " << DEB_VAR1(modes_avail);
+
+	DEB_RETURN() << DEB_VAR1(DEB_HEX(input_chan)) 
+		     << " [" << getInputChanModeName(ftm, input_chan) << "]";
+}
+
 void Camera::setInputChan(InputChan input_chan)
 {
 	DEB_MEMBER_FUNCT();
@@ -306,10 +337,20 @@ void Camera::setFrameTransferMode(FrameTransferMode ftm)
 		return;
 	}
 
-	InputChan input_chan = Chan1234;
+	InputChan input_chan;
+	getInputChan(input_chan);
 	int chan_mode;
-	calcChanMode(ftm, input_chan, chan_mode);
-	setChanMode(chan_mode);
+	try {
+		calcChanMode(ftm, input_chan, chan_mode);
+		setChanMode(chan_mode);
+	} catch (...) {
+		DEB_TRACE() << DEB_VAR1(DEB_HEX(input_chan)) 
+			    << " not available in " << DEB_VAR1(ftm);
+		DEB_TRACE() << "  Trying default input channel";
+		getDefInputChan(ftm, input_chan);
+		calcChanMode(ftm, input_chan, chan_mode);
+		setChanMode(chan_mode);
+	}
 
 	if (!m_mis_cb_act) 
 		return;
@@ -799,6 +840,14 @@ void Camera::setRoiBinOffset(const Point& roi_bin_offset)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(roi_bin_offset);
 
+	RoiMode roi_mode;
+	getRoiMode(roi_mode);
+	if (roi_mode == None) {
+		if (!roi_bin_offset.isNull())
+			THROW_HW_ERROR(InvalidValue) << "HW Roi not active";
+		return;
+	}
+
 	Bin bin;
 	getBin(bin);
 	Size bin_size = Point(bin);
@@ -856,6 +905,13 @@ void Camera::setRoiBinOffset(const Point& roi_bin_offset)
 void Camera::getRoiBinOffset(Point& roi_bin_offset)
 {
 	DEB_MEMBER_FUNCT();
+
+	RoiMode roi_mode;
+	getRoiMode(roi_mode);
+	if (roi_mode == None) {
+		roi_bin_offset = 0;
+		return;
+	}
 
 	Roi chan_roi, image_roi;
 	readChanRoi(chan_roi);
