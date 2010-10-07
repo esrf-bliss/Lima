@@ -184,7 +184,7 @@ from Lima.Maxipix.MpxAcq import MpxAcq
 
 _MaxipixAcq = None
 
-def get_control() :
+def get_control(**keys) :
     global _MaxipixAcq
     if _MaxipixAcq is None:
         _MaxipixAcq = MpxAcq(0)
