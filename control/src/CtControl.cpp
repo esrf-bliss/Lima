@@ -7,6 +7,7 @@
 #include "CtAcquisition.h"
 #include "CtImage.h"
 #include "CtBuffer.h"
+#include "CtAccumulation.h"
 
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
@@ -87,8 +88,9 @@ CtControl::CtControl(HwInterface *hw) :
   DEB_CONSTRUCTOR();
 
   m_ct_acq= new CtAcquisition(hw);
-  m_ct_image= new CtImage(hw);
+  m_ct_image= new CtImage(hw,*this);
   m_ct_buffer= new CtBuffer(hw);
+  m_ct_accumulation = new CtAccumulation(*this);
 
   //Saving
   m_ct_saving= new CtSaving(*this);
@@ -118,6 +120,7 @@ CtControl::~CtControl()
   delete m_ct_acq;
   delete m_ct_image;
   delete m_ct_buffer;
+  delete m_ct_accumulation;
   delete m_op_int;
   delete m_op_ext;
 }
@@ -153,6 +156,9 @@ void CtControl::prepareAcq()
 
   DEB_TRACE() << "Apply Acquisition Parameters";
   m_ct_acq->apply(m_policy);
+
+  DEB_TRACE() << "Prepare Accumulation if needed";
+  m_ct_accumulation->prepare();
 
   DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();

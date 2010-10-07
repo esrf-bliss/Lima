@@ -126,16 +126,6 @@ void SimuBufferCtrlObj::getNbConcatFrames(int& nb_concat_frames)
 	m_buffer_mgr.getNbConcatFrames(nb_concat_frames);
 }
 
-void SimuBufferCtrlObj::setNbAccFrames(int nb_acc_frames)
-{
-	m_buffer_mgr.setNbAccFrames(nb_acc_frames);
-}
-
-void SimuBufferCtrlObj::getNbAccFrames(int& nb_acc_frames)
-{
-	m_buffer_mgr.getNbAccFrames(nb_acc_frames);
-}
-
 void SimuBufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers)
 {
 	m_buffer_mgr.getMaxNbBuffers(max_nb_buffers);

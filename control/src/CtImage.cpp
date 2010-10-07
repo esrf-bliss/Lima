@@ -1,5 +1,6 @@
 
 #include "CtImage.h"
+#include "CtAcquisition.h"
 
 using namespace lima;
 
@@ -295,8 +296,8 @@ void CtMaxImageSizeCB::maxImageSizeChanged(const Size& size, ImageType
 // ----------------------------------------------------------------------------
 // CLASS CtImage
 // ----------------------------------------------------------------------------
-CtImage::CtImage(HwInterface *hw)
-	: m_mode(HardAndSoft)
+CtImage::CtImage(HwInterface *hw,CtControl &ct)
+  : m_ct(ct),m_mode(HardAndSoft)
 {
 	DEB_CONSTRUCTOR();
 
@@ -354,8 +355,11 @@ void CtImage::getImageType(ImageType& type) const
 void CtImage::getImageDim(FrameDim& dim) const
 {
 	DEB_MEMBER_FUNCT();
-
-	dim= FrameDim(m_sw->getSize(), m_img_type);
+	CtAcquisition *acq = m_ct.acquisition();
+	AcqMode mode;
+	acq->getAcqMode(mode);
+	ImageType imageType = mode == Accumulation ? Bpp32S : m_img_type;
+	dim= FrameDim(m_sw->getSize(), imageType);
 
 	DEB_RETURN() << DEB_VAR1(dim);
 }

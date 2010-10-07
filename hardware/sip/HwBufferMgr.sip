@@ -132,9 +132,6 @@ using namespace lima;
 	void setNbConcatFrames(int  nb_concat_frames);
 	void getNbConcatFrames(int& nb_concat_frames /out/);
 
-	void setNbAccFrames(int  nb_acc_frames);
-	void getNbAccFrames(int& nb_acc_frames /Out/);
-
 	void setNbBuffers(int  nb_buffers);
 	void getNbBuffers(int& nb_buffers /Out/);
 

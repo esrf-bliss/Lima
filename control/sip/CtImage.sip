@@ -71,7 +71,7 @@ using namespace lima;
 		
 	// Size, Type, Bin, XY from common
 
-	CtImage(HwInterface *hw);
+	CtImage(HwInterface *hw,CtControl&);
 	~CtImage();
 
 	void getMaxImageSize(Size& size /Out/) const;

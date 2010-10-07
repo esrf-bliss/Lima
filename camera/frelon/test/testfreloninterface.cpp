@@ -525,25 +525,6 @@ void test_frelon_hw_inter(bool do_reset)
 	hw_inter.stopAcq();
 	print_status(hw_inter);
 
-	hw_buffer->setFrameDim(effect_frame_dim);
-	hw_buffer->setNbAccFrames(5);
-	hw_buffer->setNbBuffers(10);
-	check_sps_image_frame_dim(hw_inter, bin, set_roi, sps_image);
-
-	hw_sync->setNbFrames(3);
-
-	DebParams::disableModuleFlags(DebModEspia);
-	print_deb_flags();
-
-	print_status(hw_inter);
-	acq_state.set(AcqState::Acquiring);
-	hw_inter.startAcq();
-	acq_state.waitNot(AcqState::Acquiring);
-	PoolThreadMgr::get().wait();
-	print_status(hw_inter);
-	hw_inter.stopAcq();
-	print_status(hw_inter);
-
 	DebParams::enableTypeFlags  (DebParams::AllFlags);
 	DebParams::enableFormatFlags(DebParams::AllFlags);
 	DebParams::enableModuleFlags(DebParams::AllFlags);

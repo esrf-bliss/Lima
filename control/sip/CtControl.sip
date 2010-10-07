@@ -76,6 +76,7 @@ using namespace lima;
     CtSpsImage* display();
     CtImage* image();
     CtBuffer* buffer();
+    CtAccumulation* accumulation();
 
     SoftOpExternalMgr* externalOperation();
     

@@ -1,6 +1,7 @@
 #ifndef CTIMAGE_H
 #define CTIMAGE_H
 
+#include "CtControl.h"
 #include "Constants.h"
 #include "HwInterface.h"
 #include "HwDetInfoCtrlObj.h"
@@ -98,7 +99,7 @@ class CtImage {
 		HardAndSoft,
 	};
 
-	CtImage(HwInterface *hw);
+	CtImage(HwInterface *hw,CtControl&);
 	~CtImage();
 
 	void getMaxImageSize(Size& size) const;
@@ -135,14 +136,15 @@ class CtImage {
 	void _setHSRoi(const Roi &roi);
 	void _setHSBin(const Bin &bin);
 
-	HwDetInfoCtrlObj *m_hw_det;
-	CtMaxImageSizeCB	*m_cb_size;
-	CtSwBinRoi	*m_sw;
-	CtHwBinRoi	*m_hw;
+	HwDetInfoCtrlObj* 	m_hw_det;
+	CtMaxImageSizeCB* 	m_cb_size;
+	CtSwBinRoi* 		m_sw;
+	CtHwBinRoi* 		m_hw;
+	CtControl&		m_ct;
 
-	Size		m_max_size;
-	ImageType	m_img_type;
-	ImageOpMode	m_mode;
+	Size			m_max_size;
+	ImageType		m_img_type;
+	ImageOpMode		m_mode;
 };
  
 inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoi &binroi)

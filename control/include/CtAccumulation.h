@@ -1,15 +1,26 @@
-#ifndef CTACCCONCAT_H
-#define CTACCCONCAT_H
+#ifndef CTACCUMULATION_H
+#define CTACCUMULATION_H
+
+#include <list>
+#include <deque>
+
+#include "CtControl.h"
 
 namespace lima
 {
-  class CtAccConcat
+  class CtAccumulation
   {
-    DEB_CLASS_NAMESPC(DebModControl,"AccConcat","Control");
+    DEB_CLASS_NAMESPC(DebModControl,"Accumulation","Control");
   public:
+    friend class CtControl;
+    friend class CtBuffer;
+    friend class CtBufferFrameCB;
+
+    typedef std::list<std::list<long long> > saturatedCounterResult;
+
     struct Parameters
     {
-      DEB_CLASS_NAMESPC(DebModControl,"AccConcat::Parameters","Control");
+      DEB_CLASS_NAMESPC(DebModControl,"Accumulation::Parameters","Control");
     public:
       Parameters();
       void reset();
@@ -17,8 +28,8 @@ namespace lima
       bool		active;	///< if true do the calculation
       long long		pixelThresholdValue; ///< value which determine the threshold of the calculation
 
-      int		saturatedImageCounterBufferSize; ///< default 64
-      
+      unsigned int	buffers_size; ///< total nb buffer for acquisition
+
       bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
       std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
     };
@@ -28,15 +39,16 @@ namespace lima
       DEB_CLASS_NAMESPC(DebModControl,"AccConcat::ThresholdCallback", 
 			"Control");
     public:
-      ThresholdCallback();
-      virtual ~ThresholdCallback();
+      ThresholdCallback() {};
+      virtual ~ThresholdCallback() {};
+
+      long long m_max;
+
     protected:
       virtual void aboveMax(Data&,long long value) = 0;
-      
-      long long m_max;
     };
-    CtAccConcat();
-    ~CtAccConcat();
+    CtAccumulation(CtControl&);
+    ~CtAccumulation();
 
     // --- accumulation adn concatenation parameters
 
@@ -46,13 +58,13 @@ namespace lima
     void setActive(bool activeFlag);
     void getActive(bool &activeFlag);
 
-    void setPixelThresholdValue(const int &pixelThresholdValue);
+    void setPixelThresholdValue(int pixelThresholdValue);
     void getPixelThresholdValue(int &pixelThresholdValue) const;
 
-    void setSaturatedImageCounterBufferSize(const int &saturatedImageCounterBufferSize);
-    void getSaturatedImageCounterBufferSize(int &saturatedImageCounterBufferSize) const;
+    void setBufferSize(int aBufferSize);
+    void getBufferSize(int &aBufferSize) const;
 
-    void setSavingFlag(const bool &savingFlag);
+    void setSavingFlag(bool savingFlag);
     void getSavingFlag(bool &savingFlag) const;
 
     void setSavePrefix(const std::string &savePrefix);
@@ -60,18 +72,31 @@ namespace lima
 
     // --- variable and data result of Concatenation or Accumulation
 
-    void readSaturatedImageCounter(Data&,long frameNumber = -1) const;
-    void readSaturatedSumCounter(int from,std::list<long long> &result) const;
+    void readSaturatedImageCounter(Data&,long frameNumber = -1);
+    void readSaturatedSumCounter(int from,saturatedCounterResult &result);
 
     // --- Mask image to calculate sum counter
     void setMask(Data&);
+
 
     // --- Callback to monitor detector saturation
 
     void registerThresholdCallback(ThresholdCallback &cb);
     void unregisterThresholdCallback(ThresholdCallback &cb);
   private:
-    Parameters m_pars;
+    Parameters 		m_pars;
+    std::deque<Data> 	m_datas;
+    std::deque<Data> 	m_saturated_images;
+    CtControl& 		m_ct;
+    mutable Mutex 	m_lock;
+
+    // --- Methodes for acquisition
+    void prepare();
+    bool newFrameReady(Data&);
+    void getFrame(Data &,int frameNumber);
+
+    void _accFrame(Data &src,Data &dst);
+    void _calcSaturatedImage(Data &src);
   };
 }
 #endif
