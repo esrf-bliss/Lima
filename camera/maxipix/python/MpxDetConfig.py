@@ -105,7 +105,6 @@ class MpxDetConfig:
 
 	self.mpxCfg["xgap"]= self.__getParamOptional(pars, "xgap", None, 0)
 	self.mpxCfg["ygap"]= self.__getParamOptional(pars, "ygap", None, 0)
-	self.mpxCfg["fillmode"]= mpxFillMode(self.__getParamOptional(pars, "fillmode", None, 1))
         
     def __parsePriamSection(self, cfg):
 	self.priamPorts= range(self.mpxCfg["nchip"])

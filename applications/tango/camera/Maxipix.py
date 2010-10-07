@@ -27,12 +27,19 @@ class Maxipix(PyTango.Device_4Impl):
         PyTango.Device_4Impl.__init__(self,*args)
         self.init_device()
 
-    def delete_device(self) :
+   def delete_device(self) :
         pass
 
     def init_device(self):
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
+        _PriamAcq = _MaxipixAcq.getPriamAcq()
+        self.__SignalLevel = {'LOW_FALL': _PriamAcq.SignalLevel.LOW_FALL,\
+                              'HIGH_RISE': _PriamAcq.SignalLevel.HIGH_RISE}
+        self.__ReadyMode = {'EXPOSURE': _PriamAcq.ReadyMode.EXPOSURE,\
+                            'EXPOSURE_READOUT': _PriamAcq.ReadyMode.EXPOSURE_READOUT}
+        self.__GateMode = {'INACTIVE': _PriamAcq.GateMode.INACTIVE,\
+                            'ACTIVE': _PriamAcq.GateMode.ACTIVE}
 
         #init MpxAcq with espia device board number
 	#if not self.espia_dev_nb:
@@ -50,7 +57,7 @@ class Maxipix(PyTango.Device_4Impl):
 	    
 	#set the reconstruction fill mode
 	if self.fill_mode:
-	    self.setFillmode(self.fill_mode)
+	    _MaxipixAcq.setFillMode(self.fill_mode)
 	else:
 	    self.fill_mode = _MaxipixAcq.getFillMode()
 
@@ -59,46 +66,65 @@ class Maxipix(PyTango.Device_4Impl):
 
 
 	#set the ready_mode 
-	if self.ready_mode:
-	    _PriamAcq.setReadyMode(self.ready_mode)
-	else:
-	    self.ready_mode = _PriamAcq.getReadyMode()
+        for att_name in ['ready_mode','ready_level','gate_mode','gate_level','shutter_level','trigger_level'] :
+            self.__applyPriamAcqAttr(att_name,None)
 
-	#set the ready_level 
-	if self.ready_level:
-	    _PriamAcq.setReadyLevel(self.ready_level)
-	else:
-	    self.ready_mode = _PriamAcq.getReadyLevel()
 
-	#set the gate_mode 
-	if self.gate_mode:
-	    _PriamAcq.setGateMode(self.gate_mode)
-	else:
-	    self.gate_mode = _PriamAcq.getGateMode()
 
-	#set the gate_level 
-	if self.gate_level:
-	    _PriamAcq.setGateLevel(self.gate_mode)
-	else:
-	    self.gate_level = _PriamAcq.getGateLevel()
-        
-	#set the shutter_mode 
-	if self.shutter_mode:
-	    _PriamAcq.setShutterMode(self.shutter_mode)
-	else:
-	    self.ready_mode = _PriamAcq.getShutterMode()
+    def __getDictKey(self,dict, value):
+        try:
+            ind = dict.values().index(value)                            
+        except ValueError:
+            return None
+        return dict.keys(ind)
 
-	#set the shutter_level 
-	if self.shutter_level:
-	    _PriamAcq.setShutterLevel(self.shutter_level)
-	else:
-	    self.shutter_level = _PriamAcq.getShutterLevel()
+    def __getDictValue(self,dict, key):
+        try:
+            value = dict[key.upper()]
+        except KeyError:
+            return None
+        return value
 
-	#set the trigger_level 
-	if self.trigger_level:
-	    _PriamAcq.setTriggerLevel(self.trigger_level)
-	else:
-	    self.trigger_level = _PriamAcq.getTriggerLevel()
+    def __getPriamAcqAttr(self,attr_name):
+
+        _PriamAcq = _MaxipixAcq.getPriamAcq()
+	name = ''.join([name.capitalize() for name in attr_name.split('_')])
+        attr = getattr(self,attr_name)
+        if attr_name.count('level'):
+           dictInstance = self.__SignalLevel
+        else:
+           dictInstance = getattr(self,'__%s' % name)
+        getMethod = getattr(_PriamAcq,'get%s' % name)
+        return self.getDictKey(dictInstance,getMethod())
+
+
+    def __setPriamAcqAttr(self,attr_name, value=None):
+
+        _PriamAcq = _MaxipixAcq.getPriamAcq()
+	name = ''.join([name.capitalize() for name in attr_name.split('_')])
+        attr = getattr(self,attr_name)
+        if attr_name.count('level'):
+           dictInstance = self.__SignalLevel
+        else:
+           dictInstance = getattr(self,'__%s' % name)
+        getMethod = getattr(_PriamAcq,'get%s' % name)
+        setMethod = getattr(_PriamAcq,'set%s' % name)
+       
+        if value:
+        # just set a new value for this attribute
+            attr_value = self.__getDictValue(dictInstance,value)
+            attr = attr_value
+            setMethod(attr_value)
+        else:
+        # here set attribute from the property value
+        # if the property is missing then initialize the attribute by reading the hardware
+            if  attr is not None:
+                attr_value = self.__getDictValue(dictInstance,attr)
+                if attr_value is None:
+                    raise PyTango.DevFailed('Wrong value %s: %s'%s(attr_name,attr_value)  
+	        setMethod(attr_value)
+	    else:
+	        attr = self.__getDictKey(getMethod())
 
 	            
     ## @brief Read threshold noise of a maxipix chips
@@ -238,9 +264,7 @@ class Maxipix(PyTango.Device_4Impl):
     ## @brief read the ready_mode
     # EXPSURE-0, EXPOSURE_READOUT-1
     def read_ready_mode(self,attr) :
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-
-        ready_mode  = _PriamAcq.getReadyMode()
+        ready_mode  = self.__getPriamAcqAttr('ready_mode')
         attr.set_value(ready_mode)
 
     ## @brief Write the ready_mode
@@ -248,15 +272,12 @@ class Maxipix(PyTango.Device_4Impl):
     def write_ready_mode(self,attr) :
         data = []
         attr.get_write_value(data)
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-        _PriamAcq.setReadyMode(data[0])
+        self.__setPriamAcqAttr('ready_mode',data[0])
 
     ## @brief read the ready_level
     # LOW_FALL-0, HIGH_RISE-1
     def read_ready_level(self,attr) :
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-
-        ready_level  = _PriamAcq.getReadyLevel()
+        ready_level  = self.__getPriamAcqAttr('ready_level')
         attr.set_value(ready_level)
 
     ## @brief Write the ready_level
@@ -264,31 +285,12 @@ class Maxipix(PyTango.Device_4Impl):
     def write_ready_level(self,attr) :
         data = []
         attr.get_write_value(data)
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-        _PriamAcq.setReadyLevel(data[0])
+        self.__setPriamAcqAttr('ready_level',data[0])
 
-    ## @brief read the shutter_mode
-    # FRAME-0, SEQUENCE-1
-    def read_shutter_mode(self,attr) :
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-
-        shutter_mode  = _PriamAcq.getShutterMode()
-        attr.set_value(shutter_mode)
-
-    ## @brief Write the shutter_mode
-    # FRAME-0, SEQUENCE-1
-    def write_shutter_mode(self,attr) :
-        data = []
-        attr.get_write_value(data)
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-        _PriamAcq.setShutterMode(data[0])
-	
     ## @brief read the shutter_level
     # LOW_FALL-0, HIGH_RISE-1
     def read_shutter_level(self,attr) :
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-
-        shutter_level  = _PriamAcq.getShutterLevel()
+        shutter_level  = self.__getPriamAcqAttr('shutter_level')
         attr.set_value(shutter_level)
 
     ## @brief Write the shutter_level
@@ -296,15 +298,12 @@ class Maxipix(PyTango.Device_4Impl):
     def write_shutter_level(self,attr) :
         data = []
         attr.get_write_value(data)
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-        _PriamAcq.setShutterLevel(data[0])
+        self.__setPriamAcqAttr('shutter_level',data[0])
 
     ## @brief read the gate_mode
     # FRAME-0, SEQUENCE-1
     def read_gate_mode(self,attr) :
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-
-        gate_mode  = _PriamAcq.getGateMode()
+        gate_mode  = self.__getPriamAcqAttr('gate_mode')
         attr.set_value(gate_mode)
 
     ## @brief Write the gate_mode
@@ -312,15 +311,12 @@ class Maxipix(PyTango.Device_4Impl):
     def write_gate_mode(self,attr) :
         data = []
         attr.get_write_value(data)
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-        _PriamAcq.setGateMode(data[0])
+        self.__setPriamAcqAttr('gate_mode',data[0])
 	
     ## @brief read the gate_level
     # LOW_FALL-0, HIGH_RISE-1
     def read_gate_level(self,attr) :
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-
-        gate_level  = _PriamAcq.getGateLevel()
+        gate_level  = self.__getPriamAcqAttr('gate_level')
         attr.set_value(gate_level)
 
     ## @brief Write the gate_level
@@ -328,15 +324,12 @@ class Maxipix(PyTango.Device_4Impl):
     def write_gate_level(self,attr) :
         data = []
         attr.get_write_value(data)
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-        _PriamAcq.setGetLevel(data[0])
+        self.__setPriamAcqAttr('gate_level',data[0])
 	
     ## @brief read the trigger_level
     # LOW_FALL-0, HIGH_RISE-1
     def read_trigger_level(self,attr) :
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-
-        trigger_level  = _PriamAcq.getTriggerLevel()
+        trigger_level  = self.__getPriamAcqAttr('gate_level')
         attr.set_value(trigger_level)
 
     ## @brief Write the trigger_level
@@ -344,8 +337,7 @@ class Maxipix(PyTango.Device_4Impl):
     def write_trigger_level(self,attr) :
         data = []
         attr.get_write_value(data)
-	_PriamAcq = _MaxipixAcq.getPriamAcq()
-        _PriamAcq.setTriggerLevel(data[0])
+        self.__setPriamAcqAttr('trigger_level',data[0])
 	
 
 class MaxipixClass(PyTango.DeviceClass):
@@ -425,31 +417,27 @@ class MaxipixClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ]],	  
         'ready_mode':	  
-        [[PyTango.DevShort,
+        [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],	  
         'ready_level':	  
-        [[PyTango.DevShort,
-          PyTango.SCALAR,
-          PyTango.READ_WRITE]],	  
-        'shutter_mode':	  
-        [[PyTango.DevShort,
+        [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],	  
         'shutter_level':	  
-        [[PyTango.DevShort,
+        [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],	  
         'gate_mode':	  
-        [[PyTango.DevShort,
+        [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],	  
         'gate_level':	  
-        [[PyTango.DevShort,
+        [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],	  
         'trigger_level':	  
-        [[PyTango.DevShort,
+        [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],	  
         }
@@ -467,12 +455,11 @@ from Lima.Maxipix.MpxAcq import MpxAcq
 
 _MaxipixAcq = None
 
-def get_control(espia_dev_nb = 0,**keys) :
-    print "espia_dev_nb",espia_dev_nb
-    print keys
+def get_control(espia_dev_nb = '0',**keys) :
+    #properties are passed here as string
     global _MaxipixAcq
     if _MaxipixAcq is None:
-        _MaxipixAcq = MpxAcq(espia_dev_nb)
+        _MaxipixAcq = MpxAcq(int(espia_dev_nb))
     return _MaxipixAcq.getControl()
 
 def close_interface() :

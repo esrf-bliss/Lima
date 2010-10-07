@@ -11,27 +11,6 @@ MpxPolarity= [	Maxipix.MaxipixDet.NEGATIVE,
 		Maxipix.MaxipixDet.POSITIVE ]
 MpxPolarityTypes= ["NEGATIVE","POSITIVE"]
 
-MpxFillMode= [ Maxipix.MaxipixReconstruction.RAW,
-               Maxipix.MaxipixReconstruction.ZERO,
-               Maxipix.MaxipixReconstruction.DISPATCH,
-               Maxipix.MaxipixReconstruction.MEAN ] 
-
-MpxFillModeTypes= ["RAW","ZERO","DISPATCH","MEAN"]
-
-
-def mpxFillMode(mode):
-    if type(mode)==types.StringType:
-	if mode.upper() not in MpxFillModeTypes:
-	    raise MpxError("Invalid Maxipix FillMode String <%s>"%mode)
-	return MpxFillMode[MpxFillModeTypes.index(mode.upper())]
-    elif type(mode)==types.IntType:
-	if mode not in range(len(MpxFillMode)):
-	    raise MpxError("Invalid Maxipix FillMode value <%d>"%mode)
-	return MpxFillMode[mode]
-    else:	
-	if mode not in MpxFillMode:
-	    raise MpxError("Invalid Maxipix FillMode <%s>"%str(mode))
-	return mode
 
 def mpxPolarity(polarity):
     if type(polarity)==types.StringType:

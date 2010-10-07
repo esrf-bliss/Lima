@@ -1,5 +1,6 @@
 import os.path
 import gc
+import types
 
 from Lima.Core import *
 from Lima import Espia
@@ -12,8 +13,19 @@ import MpxChipConfig
 
 
 class MpxAcq:
-    def __init__(self, espia_dev_nr):
-	self.__edev= Espia.Dev(0)
+    DEB_CLASS(DebModApplication, "MpxAcq")
+    
+    @DEB_MEMBER_FUNCT
+    def __init__(self, espia_dev_nb=None):
+    
+        self.__cam_inited = False
+	
+	if espia_dev_nb is not None:	
+	    self.init(espia_dev_nb)
+
+    @DEB_MEMBER_FUNCT
+    def init(self, espia_dev_nb):	
+	self.__edev= Espia.Dev(espia_dev_nb)
 	self.__edev.resetLink()
 	self.__eser= Espia.SerialLine(self.__edev)
 	self.__eacq= Espia.Acq(self.__edev)
@@ -29,47 +41,111 @@ class MpxAcq:
 					self.__pacq, self.__mdet)
 	self.__ct= CtControl(self.__hwInt)
 	self.__reconstruct= None
-
+	self.__reconstructType = "RAW"	
+	
 	self.cfgPath= None
 	self.mpxCfg= None
 	self.mpxDacs= None
 	self.priamPorts= None
 
+        self.mpxFillModes = {"RAW":Maxipix.MaxipixReconstruction.RAW,
+	                        "ZERO":Maxipix.MaxipixReconstruction.ZERO,
+				"DISPATCH":Maxipix.MaxipixReconstruction.DISPATCH,
+				"MEAN":Maxipix.MaxipixReconstruction.MEAN,
+				}
+        self.__cam_inited = True
+	
+    @DEB_MEMBER_FUNCT
     def __del__(self):
-	del self.__ct; gc.collect()
-	if self.__reconstruct is not None:
-	    del self.__reconstruct
-	del self.__hwInt; gc.collect()
-	del self.__mdet; gc.collect()
-	del self.__pacq; gc.collect()
-	del self.__pser; gc.collect()
-	del self.__mbuf; gc.collect()
-	del self.__ebuf; gc.collect()
-	del self.__eacq; gc.collect()
-	del self.__eser; gc.collect()
-	del self.__edev; gc.collect()
+        if self.__cam_inited:
+            del self.__ct; gc.collect()
+            if self.__reconstruct is not None:
+                del self.__reconstruct
+            del self.__hwInt; gc.collect()
+            del self.__mdet; gc.collect()
+            del self.__pacq; gc.collect()
+            del self.__pser; gc.collect()
+            del self.__mbuf; gc.collect()
+            del self.__ebuf; gc.collect()
+            del self.__eacq; gc.collect()
+            del self.__eser; gc.collect()
+            del self.__edev; gc.collect()
+
 
     def getControl(self):
-	return self.__ct
+        if self.__cam_inited:
+	    return self.__ct
+	else:
+	    raise MpxError("init() method must be called first")
 
     def getInterface(self):
-	return self.__hwInt
+        if self.__cam_inited:
+            return self.__hwInt
+	else:
+	    raise MpxError("init() method must be called first")
 
     def getPriamAcq(self):
-	return self.__pacq
+        if self.__cam_inited:
+	    return self.__pacq
+	else:
+	    raise MpxError("init() method must be called first")
 
     def getPriamSerial(self):
-	return self.__pser
+        if self.__cam_inited:
+           return self.__pser
+        else:
+	    raise MpxError("init() method must be called first")
+
 
     def getEspiaAcq(self):
-	return self.__eacq
+        if self.__cam_inited:
+            return self.__eacq
+	else:
+	    raise MpxError("init() method must be called first")
 
     def getEspiaSerial(self):
-	return self.__eser
+        if self.__cam_inited:
+            return self.__eser
+	else:
+	    raise MpxError("init() method must be called first")
 
     def getEspiaDev(self):
-	return self.__edev
+        if self.__cam_inited:
+            return self.__edev
+	else:
+	    raise MpxError("init() method must be called first")
 
+    @DEB_MEMBER_FUNCT
+    def setFillMode(self, fillMode):
+        if self.__cam_inited:
+            if type(fillMode) == types.StringType:
+	        if fillMode.upper() not in self.mpxFillModes.keys():
+	            raise MpxError("invalid reconstruction fill mode %s"%fillMode)
+	        self.__reconstructType = fillMode.upper()
+	        self.__reconstruct.setType(self.mpxFillModes[self.__reconstructType])		    
+	    
+            if type(fillMode) == types.IntType:
+	        if fillMode not in self.mpxFillModes.values():
+	            raise MpxError("invalid reconstruction fill mode %d"%fillMode)
+                self.__reconstructType = \
+	        self.mpxFillModes.keys()[self.mpxFillModes.values().index(fillMode)]	    
+	        self.__reconstruct.setType(fillMode)		 
+	else:
+	    raise MpxError("init() method must be called first")
+    
+    def getFillMode(self):
+        if self.__cam_inited:
+            return self.__reconstructType
+	else:
+	    raise MpxError("init() method must be called first")
+
+
+    @DEB_MEMBER_FUNCT
+    def setReadyMode(self, readyMode):
+    
+    def getReady
+
+    @DEB_MEMBER_FUNCT
     def setPath(self, path):
 	spath= os.path.normpath(path)
         if not os.path.isdir(spath):
@@ -78,10 +154,12 @@ class MpxAcq:
             raise MpxError("no read permission on <%s>"%path)
         self.cfgPath= spath
 
+    @DEB_MEMBER_FUNCT
     def loadConfig(self, name):
 	self.loadDetConfig(name)
 	self.loadChipConfig(name)
 
+    @DEB_MEMBER_FUNCT
     def loadDetConfig(self, name):
 	detConfig= MpxDetConfig.MpxDetConfig()
 	detConfig.setPath(self.cfgPath)
@@ -115,15 +193,19 @@ class MpxAcq:
 	if self.__mdet.needReconstruction():
 	    print "Setting image reconstruction ..."
 	    model= self.__mdet.getReconstruction()
+	    if self.__reconstruct is not None:
+	    	self.__ct.setReconstructionTask(None)
+		del self.__reconstruct
 	    self.__reconstruct= Maxipix.MaxipixReconstruction()
 	    self.__reconstruct.setModel(model)
-	    self.__reconstruct.setType(self.mpxCfg["fillmode"])
+	    self.setFillMode(Maxipix.MaxipixReconstruction.RAW)	    
 	    self.__reconstruct.setXnYGapSpace(self.mpxCfg["xgap"], 
 						self.mpxCfg["ygap"])
 	    self.__ct.setReconstructionTask(self.__reconstruct)
 	else:
 	    self.__ct.setReconstructionTask(None)
 
+    @DEB_MEMBER_FUNCT
     def loadChipConfig(self, name):
 	self.chipCfg= MpxChipConfig.MpxPixelConfig(self.mpxCfg["version"], 
 						self.mpxCfg["nchip"])
@@ -132,6 +214,7 @@ class MpxAcq:
 
 	self.applyPixelConfig(0)
 
+    @DEB_MEMBER_FUNCT
     def applyPixelConfig(self, chipid):
 	if chipid==0:
 	    for idx in range(self.mpxCfg["nchip"]):
@@ -144,6 +227,7 @@ class MpxAcq:
 	    print "Loading Chip Config #%d ..."%(chipid)
 	    self.__pacq.setChipCfg(port, scfg)
 	     
+    @DEB_MEMBER_FUNCT
     def applyChipFsr(self, chipid):
 	if chipid==0:
 	    for idx in range(self.mpxCfg["nchip"]):
