@@ -25,6 +25,7 @@ namespace lima {
     virtual void _writeFile(Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
+    virtual void _clear();
   private:
     inline int _writeCbfHeader(Data&,CtSaving::HeaderMap&);
     inline int _writeCbfData(Data&);

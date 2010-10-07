@@ -162,6 +162,7 @@ namespace lima {
       virtual void _writeFile(Data &data,
 			      CtSaving::HeaderMap &aHeader,
 			      FileFormat) = 0;
+      virtual void _clear() {};
 
       int			m_written_frames;
     private:

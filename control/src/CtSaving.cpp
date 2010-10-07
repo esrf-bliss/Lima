@@ -849,6 +849,7 @@ void CtSaving::SaveContainer::clear()
   AutoMutex aLock(m_cond.mutex());
   m_statistic_list.clear();
   this->close();
+  _clear();			// call inheritance if needed
 }
 
 void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)

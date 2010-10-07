@@ -168,7 +168,8 @@ static inline void outerror(int err)
 
 SaveContainerCbf::SaveContainerCbf(CtSaving &aCtSaving) :
   CtSaving::SaveContainer(aCtSaving),
-  m_fout(NULL)
+  m_fout(NULL),
+  m_lock(MutexAttr::Normal)
 {
   DEB_CONSTRUCTOR();
 }
@@ -231,6 +232,13 @@ void SaveContainerCbf::_writeFile(Data &aData,
     throw LIMA_CTL_EXC(Error,"Something went wrong during CBF data writing");
 }
 
+void SaveContainerCbf::_clear()
+{
+  AutoMutex aLock(m_lock);
+  for(dataId2cbfHandle::iterator i = m_cbfs.begin();
+      i != m_cbfs.end();i = m_cbfs.erase(i))
+      cbf_free_handle(i->second);
+}
 
 int SaveContainerCbf::_writeCbfData(Data &aData)
 {
