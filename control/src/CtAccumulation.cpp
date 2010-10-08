@@ -146,7 +146,7 @@ bool CtAccumulation::newFrameReady(Data &aData)
   int nb_acc_frame;
   acq->getAccNbFrames(nb_acc_frame);
   AutoMutex aLock(m_lock);
-  if(aData.frameNumber % nb_acc_frame) // new Data has to be created
+  if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
     {
       int nextFrameNumber;
       if(m_datas.empty())	// Init (first Frame)
@@ -175,7 +175,7 @@ bool CtAccumulation::newFrameReady(Data &aData)
   if(active)
     _calcSaturatedImage(aData);
 
-  if((aData.frameNumber + 1) % nb_acc_frame)
+  if(!((aData.frameNumber + 1) % nb_acc_frame))
     return m_ct.newFrameReady(accFrame);
   else
     return true;			// Always continue @see if it may have an overun
