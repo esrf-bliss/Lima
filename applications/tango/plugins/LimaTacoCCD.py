@@ -384,7 +384,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         for image_header in headers_str:
             imageIdSepPos = image_header.find(self.__image_number_header_delimiter)
             imageId = int(image_header[:imageIdSepPos])
-            headers_str = image_header[imageIdSepPos+1:]
+            header_str = image_header[imageIdSepPos+1:]
             deb.Param('Setting to image %d file header: %s' % (imageId,header_str))
             header_map = {}
             for line in header_str.split(self.__entry_header_delimiter) :

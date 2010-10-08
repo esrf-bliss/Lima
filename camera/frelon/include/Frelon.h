@@ -78,8 +78,11 @@ typedef std::map<FrameTransferMode, ChanRange> FTMChanRangeMapType;
 extern FTMChanRangeMapType FTMChanRangeMap;
 
 typedef std::vector<InputChan> InputChanList;
+
 typedef std::map<FrameTransferMode, InputChanList> FTMInputChanListMapType;
 extern FTMInputChanListMapType FTMInputChanListMap;
+
+extern InputChanList DefInputChanList;
 
 
 enum SerNbParam {
