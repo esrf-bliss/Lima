@@ -131,8 +131,16 @@ void CtAcquisition::_apply()
 
   if (m_changes.triggerMode) m_hw_sync->setTrigMode(m_inpars.triggerMode);
   if (m_changes.latencyTime) m_hw_sync->setLatTime(m_inpars.latencyTime);
-  if (m_changes.acqNbFrames) m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
-
+  
+  if(m_changes.acqMode)
+    {
+      if(m_inpars.acqMode == Accumulation)
+	m_hw_sync->setNbFrames(m_acc_nframes);
+      else
+	m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
+    }
+  else if (m_changes.acqNbFrames) m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
+  
   switch (m_inpars.acqMode) {
   case Single:
     if (m_changes.acqExpoTime) m_hw_sync->setExpTime(m_inpars.acqExpoTime);
@@ -394,6 +402,7 @@ void CtAcquisition::ChangedPars::set(bool val)
   latencyTime= val;
   triggerMode= val;
   accMaxExpoTime= val;
+  acqMode = val;
   DEB_TRACE() << DEB_VAR5(acqExpoTime,acqNbFrames,
 			  latencyTime,triggerMode,
 			  accMaxExpoTime);
@@ -410,7 +419,8 @@ void CtAcquisition::ChangedPars::check(Parameters p1,
   latencyTime= (p1.latencyTime != p2.latencyTime);
   triggerMode= (p1.triggerMode != p2.triggerMode);
   accMaxExpoTime= (p1.accMaxExpoTime != p2.accMaxExpoTime);
+  acqMode = (p1.acqMode != p2.acqMode);
 
-  DEB_TRACE() << DEB_VAR5(acqExpoTime,acqNbFrames,latencyTime,
-			  triggerMode,accMaxExpoTime);
+  DEB_TRACE() << DEB_VAR6(acqExpoTime,acqNbFrames,latencyTime,
+			  triggerMode,accMaxExpoTime,acqMode);
 }
