@@ -19,27 +19,31 @@
 #=============================================================================
 #
 import PyTango
-import sys
+import sys, types
 
 
 class Maxipix(PyTango.Device_4Impl):
     def __init__(self,*args) :
         PyTango.Device_4Impl.__init__(self,*args)
+
+
         self.init_device()
 
-   def delete_device(self) :
+
+    def delete_device(self):
         pass
 
     def init_device(self):
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
-        _PriamAcq = _MaxipixAcq.getPriamAcq()
-        self.__SignalLevel = {'LOW_FALL': _PriamAcq.SignalLevel.LOW_FALL,\
-                              'HIGH_RISE': _PriamAcq.SignalLevel.HIGH_RISE}
-        self.__ReadyMode = {'EXPOSURE': _PriamAcq.ReadyMode.EXPOSURE,\
-                            'EXPOSURE_READOUT': _PriamAcq.ReadyMode.EXPOSURE_READOUT}
-        self.__GateMode = {'INACTIVE': _PriamAcq.GateMode.INACTIVE,\
-                            'ACTIVE': _PriamAcq.GateMode.ACTIVE}
+        
+	_PriamAcq = _MaxipixAcq.getPriamAcq()
+        self.__SignalLevel = {'LOW_FALL': _PriamAcq.LOW_FALL,\
+                              'HIGH_RISE': _PriamAcq.HIGH_RISE}
+        self.__ReadyMode = {'EXPOSURE': _PriamAcq.EXPOSURE,\
+                            'EXPOSURE_READOUT': _PriamAcq.EXPOSURE_READOUT}
+        self.__GateMode = {'INACTIVE': _PriamAcq.INACTIVE,\
+                            'ACTIVE': _PriamAcq.ACTIVE}
 
         #init MpxAcq with espia device board number
 	#if not self.espia_dev_nb:
@@ -62,12 +66,9 @@ class Maxipix(PyTango.Device_4Impl):
 	    self.fill_mode = _MaxipixAcq.getFillMode()
 
 
-        _PriamAcq = _MaxipixAcq.getPriamAcq()
-
-
-	#set the ready_mode 
+	#set the priamAcq attributes with properties if any 
         for att_name in ['ready_mode','ready_level','gate_mode','gate_level','shutter_level','trigger_level'] :
-            self.__applyPriamAcqAttr(att_name,None)
+            self.__setPriamAcqAttr(att_name,None)
 
 
 
@@ -76,7 +77,7 @@ class Maxipix(PyTango.Device_4Impl):
             ind = dict.values().index(value)                            
         except ValueError:
             return None
-        return dict.keys(ind)
+        return dict.keys()[ind].lower()
 
     def __getDictValue(self,dict, key):
         try:
@@ -93,9 +94,9 @@ class Maxipix(PyTango.Device_4Impl):
         if attr_name.count('level'):
            dictInstance = self.__SignalLevel
         else:
-           dictInstance = getattr(self,'__%s' % name)
+           dictInstance = getattr(self,'_Maxipix__%s' % name)
         getMethod = getattr(_PriamAcq,'get%s' % name)
-        return self.getDictKey(dictInstance,getMethod())
+        return self.__getDictKey(dictInstance,getMethod())
 
 
     def __setPriamAcqAttr(self,attr_name, value=None):
@@ -106,7 +107,7 @@ class Maxipix(PyTango.Device_4Impl):
         if attr_name.count('level'):
            dictInstance = self.__SignalLevel
         else:
-           dictInstance = getattr(self,'__%s' % name)
+           dictInstance = getattr(self,'_Maxipix__%s' % name)
         getMethod = getattr(_PriamAcq,'get%s' % name)
         setMethod = getattr(_PriamAcq,'set%s' % name)
        
@@ -118,13 +119,16 @@ class Maxipix(PyTango.Device_4Impl):
         else:
         # here set attribute from the property value
         # if the property is missing then initialize the attribute by reading the hardware
-            if  attr is not None:
+            if type(attr) is not types.StringType:
+	        raise PyTango.DevFailed('Wrong value %s: %s'%(attr_name,attr)) 
+            if  attr:
+	        print attr
                 attr_value = self.__getDictValue(dictInstance,attr)
                 if attr_value is None:
-                    raise PyTango.DevFailed('Wrong value %s: %s'%s(attr_name,attr_value)  
-	        setMethod(attr_value)
+                    raise PyTango.DevFailed('Wrong value %s: %s'%(attr_name,attr))  
+                setMethod(attr_value)
 	    else:
-	        attr = self.__getDictKey(getMethod())
+	        attr = self.__getDictKey(dictInstance,getMethod())
 
 	            
     ## @brief Read threshold noise of a maxipix chips
@@ -358,25 +362,25 @@ class MaxipixClass(PyTango.DeviceClass):
         [PyTango.DevString,
          "The default configuration loaded",[]],	 
        'ready_level':
-        [PyTango.DevShort,
+        [PyTango.DevString,
          "The ready output signal level",[]],	  
        'gate_level':
-        [PyTango.DevShort,
+        [PyTango.DevString,
          "The gate output signal level",[]],	  
        'shutter_level':
-        [PyTango.DevShort,
+        [PyTango.DevString,
          "The shutter output signal level",[]],	  
        'trigger_level':
-        [PyTango.DevShort,
+        [PyTango.DevString,
          "The trigger output signal level",[]],	  
        'ready_mode':
-        [PyTango.DevShort,
+        [PyTango.DevString,
          "The ready output signal level",[]],	  
        'gate_mode':
-        [PyTango.DevShort,
+        [PyTango.DevString,
          "The gate output signal level",[]],	  
        'shutter_mode':
-        [PyTango.DevShort,
+        [PyTango.DevString,
          "The shutter output signal level",[]],	  
 
         }
