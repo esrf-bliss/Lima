@@ -161,7 +161,7 @@ bool CtAccumulation::newFrameReady(Data &aData)
       newData.frameNumber = nextFrameNumber;
       newData.timestamp = aData.timestamp;
       newData.buffer = new Buffer(newData.size());
-      memset(newData.buffer,0,newData.size());
+      memset(newData.data(),0,newData.size());
       m_datas.push_back(newData);
       
       if(m_datas.size() > m_pars.buffers_size)
