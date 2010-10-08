@@ -401,27 +401,44 @@ void CtSaving::validateFrameHeader(long frame_nr)
     case CtSaving::AutoHeader:
       {
 	FrameMap::iterator frame_iter = m_frame_datas.find(frame_nr);
-	if(frame_iter != m_frame_datas.end() &&
-	   m_ready_flag && m_last_frameid_saved == frame_nr - 1)
+	//Some container need a parralel compression before real file saving
+	if(frame_iter != m_frame_datas.end())
 	  {
-	    
-	    _SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
-	    _get_common_header(aSaveTaskPt->m_header);
-	    std::map<long,HeaderMap>::iterator headerIter =
-	      m_frame_headers.find(frame_nr);
-
-	    if(headerIter != m_frame_headers.end())
+	    if(m_save_cnt->needParralelCompression())
 	      {
-		aSaveTaskPt->m_header.insert(headerIter->second.begin(),
-					     headerIter->second.end());
-		m_frame_headers.erase(headerIter);
+		CtSaving::HeaderMap header;
+		std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(frame_nr);
+		if(aHeaderIter != m_frame_headers.end())
+		  _takeHeader(aHeaderIter,header);
+		else
+		  _get_common_header(header);
+		SinkTaskBase *aCompressionTaskPt = m_save_cnt->getCompressionTask(header);
+		aCompressionTaskPt->setEventCallback(m_compression_cbk);
+		TaskMgr *aCompressionMgrPt = new TaskMgr();
+		aCompressionMgrPt->addSinkTask(0,aCompressionTaskPt);
+		aCompressionTaskPt->unref();
+		aCompressionMgrPt->setInputData(frame_iter->second);
+     
+		PoolThreadMgr::get().addProcess(aCompressionMgrPt);
+		return;
 	      }
-	    Data aData = frame_iter->second;
-	    m_frame_datas.erase(frame_iter);
-	    m_ready_flag = false,m_last_frameid_saved = frame_nr;
-	    aLock.unlock();
-	    _post_save_task(aData,aSaveTaskPt);
-	    break;
+
+	    if(m_ready_flag && m_last_frameid_saved == frame_nr - 1)
+	      {
+	    
+		_SaveTask *aSaveTaskPt = new _SaveTask(*m_save_cnt);
+		std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(frame_nr);
+		if(aHeaderIter != m_frame_headers.end())
+		  _takeHeader(aHeaderIter,aSaveTaskPt->m_header);
+		else
+		  _get_common_header(aSaveTaskPt->m_header);
+		Data aData = frame_iter->second;
+		m_frame_datas.erase(frame_iter);
+		m_ready_flag = false,m_last_frameid_saved = frame_nr;
+		aLock.unlock();
+		_post_save_task(aData,aSaveTaskPt);
+		break;
+	      }
 	  }
       }
     default:
