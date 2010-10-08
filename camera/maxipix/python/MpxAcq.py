@@ -141,11 +141,6 @@ class MpxAcq:
 
 
     @DEB_MEMBER_FUNCT
-    def setReadyMode(self, readyMode):
-    
-    def getReady
-
-    @DEB_MEMBER_FUNCT
     def setPath(self, path):
 	spath= os.path.normpath(path)
         if not os.path.isdir(spath):
