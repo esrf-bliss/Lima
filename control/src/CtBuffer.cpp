@@ -185,7 +185,6 @@ void CtBuffer::setup(CtControl *ct)
     acq->getConcatNbFrames(concat_nframes);
     break;
   }
-  m_frame_cb->m_ct_accumulation = m_ct_accumulation;
   m_hw_buffer->setFrameDim(fdim);
   m_hw_buffer->setNbConcatFrames(concat_nframes);
 
@@ -196,6 +195,7 @@ void CtBuffer::setup(CtControl *ct)
   m_hw_buffer->setNbBuffers(nbuffers);
   m_pars.nbBuffers = nbuffers;
   registerFrameCallback(ct);
+  m_frame_cb->m_ct_accumulation = m_ct_accumulation;
 }
 
 void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
