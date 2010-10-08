@@ -235,9 +235,13 @@ void SaveContainerCbf::_writeFile(Data &aData,
 void SaveContainerCbf::_clear()
 {
   AutoMutex aLock(m_lock);
-  for(dataId2cbfHandle::iterator i = m_cbfs.begin();
-      i != m_cbfs.end();i = m_cbfs.erase(i))
+  dataId2cbfHandle::iterator i = m_cbfs.begin();
+  while(i != m_cbfs.end())
+    {
       cbf_free_handle(i->second);
+      dataId2cbfHandle::iterator previous = i++;
+      m_cbfs.erase(previous);
+    }
 }
 
 int SaveContainerCbf::_writeCbfData(Data &aData)
