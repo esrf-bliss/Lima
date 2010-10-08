@@ -132,14 +132,13 @@ void CtAcquisition::_apply()
   if (m_changes.triggerMode) m_hw_sync->setTrigMode(m_inpars.triggerMode);
   if (m_changes.latencyTime) m_hw_sync->setLatTime(m_inpars.latencyTime);
   
-  if(m_changes.acqMode)
+  if(m_changes.acqMode || m_changes.acqNbFrames)
     {
       if(m_inpars.acqMode == Accumulation)
 	m_hw_sync->setNbFrames(m_acc_nframes);
       else
 	m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
     }
-  else if (m_changes.acqNbFrames) m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
   
   switch (m_inpars.acqMode) {
   case Single:
