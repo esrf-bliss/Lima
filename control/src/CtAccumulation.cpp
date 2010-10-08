@@ -134,6 +134,8 @@ void CtAccumulation::_calcSaturatedImage(Data &src)
  */
 void CtAccumulation::prepare()
 {
+  DEB_MEMBER_FUNCT();
+
   AutoMutex aLock(m_lock);
   m_datas.clear();
   m_saturated_images.clear();
@@ -142,6 +144,9 @@ void CtAccumulation::prepare()
  */
 bool CtAccumulation::newFrameReady(Data &aData)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData);
+
   CtAcquisition *acq = m_ct.acquisition();
   int nb_acc_frame;
   acq->getAccNbFrames(nb_acc_frame);
