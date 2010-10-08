@@ -346,8 +346,10 @@ void CtImage::setMaxImage(const Size &size, ImageType type)
 void CtImage::getImageType(ImageType& type) const
 {
 	DEB_MEMBER_FUNCT();
-
-	type= m_img_type;
+	CtAcquisition *acq = m_ct.acquisition();
+	AcqMode mode;
+	acq->getAcqMode(mode);
+	type= mode == Accumulation ? Bpp32S : m_img_type;
 
 	DEB_RETURN() << DEB_VAR1(type);
 }
