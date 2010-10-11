@@ -270,13 +270,18 @@ void CtControl::getStatus(Status& status) const
 	  m_hw->getStatus(aHwStatus);
 	  DEB_TRACE() << DEB_VAR1(aHwStatus);
 	  // set the status to hw acquisition status
-	  m_status.AcquisitionStatus = aHwStatus.acq; 
+	  m_status.AcquisitionStatus = aHwStatus.acq;
+	  AcqMode anAcqMode;
+	  m_ct_acq->getAcqMode(anAcqMode);
 
-	  int last_hw_frame = m_hw->getNbAcquiredFrames() - 1;
-	  bool aFalseIdle = ((aHwStatus.acq == AcqReady) && 
-			     (anImageCnt.LastImageAcquired != last_hw_frame));
-	  if (aFalseIdle)
-	    m_status.AcquisitionStatus = AcqRunning;
+	  if(anAcqMode != Accumulation)
+	    {
+	      int last_hw_frame = m_hw->getNbAcquiredFrames() - 1;
+	      bool aFalseIdle = ((aHwStatus.acq == AcqReady) && 
+				 (anImageCnt.LastImageAcquired != last_hw_frame));
+	      if (aFalseIdle)
+		m_status.AcquisitionStatus = AcqRunning;
+	    }
 	}
       else
 	m_status.AcquisitionStatus = AcqRunning;
