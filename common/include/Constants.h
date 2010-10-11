@@ -16,7 +16,8 @@ std::ostream& operator <<(std::ostream& os, AlignDir align_dir);
  * - Bpp8S means 8 bits signed....
  */
 enum ImageType {
-  Bpp8, Bpp8S, Bpp10, Bpp10S, Bpp12, Bpp12S, Bpp14, Bpp14S, Bpp16, Bpp16S, Bpp32, Bpp32S
+	Bpp8, Bpp8S, Bpp10, Bpp10S, Bpp12, Bpp12S, Bpp14, Bpp14S, 
+	Bpp16, Bpp16S, Bpp32, Bpp32S
 };
 
 std::ostream& operator <<(std::ostream& os, ImageType image_type);

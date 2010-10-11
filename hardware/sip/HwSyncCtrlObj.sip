@@ -30,6 +30,7 @@ sipRes = str.str().c_str();
 	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);
 	virtual ~HwSyncCtrlObj();
 
+	virtual bool checkTrigMode(TrigMode trig_mode) = 0;
 	virtual void setTrigMode(TrigMode  trig_mode) = 0;
 	virtual void getTrigMode(TrigMode& trig_mode /Out/) = 0;
 

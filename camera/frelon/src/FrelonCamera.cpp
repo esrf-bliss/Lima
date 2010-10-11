@@ -991,6 +991,23 @@ void Camera::getExpTime(double& exp_time)
 	DEB_RETURN() << DEB_VAR1(exp_time);
 }
 
+void Camera::setShutMode(ShutMode shut_mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(shut_mode);
+	int cam_shut_mode = (shut_mode == Frelon::AutoFrame) ? 1 : 0;
+	writeRegister(ShutEnable, cam_shut_mode);
+}
+
+void Camera::getShutMode(ShutMode& shut_mode)
+{
+	DEB_MEMBER_FUNCT();
+	int cam_shut_mode;
+	readRegister(ShutEnable, cam_shut_mode);
+	shut_mode = (cam_shut_mode == 1) ? Frelon::AutoFrame : Frelon::Off;
+	DEB_RETURN() << DEB_VAR1(shut_mode);
+}
+
 void Camera::setShutCloseTime(double shut_time)
 {
 	DEB_MEMBER_FUNCT();

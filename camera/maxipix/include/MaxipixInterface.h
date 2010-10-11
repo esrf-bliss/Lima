@@ -98,6 +98,7 @@ class SyncCtrlObj : public HwSyncCtrlObj
     SyncCtrlObj(Espia::Acq& acq, PriamAcq& priam, BufferCtrlObj& buffer_mgr);
     virtual ~SyncCtrlObj();
 
+    virtual bool checkTrigMode(TrigMode trig_mode);
     virtual void setTrigMode(TrigMode  trig_mode);
     virtual void getTrigMode(TrigMode& trig_mode);
 

@@ -74,6 +74,7 @@ class SyncCtrlObj : HwSyncCtrlObj
 		Maxipix::BufferCtrlObj& buffer_mgr);
     virtual ~SyncCtrlObj();
 
+    virtual bool checkTrigMode(TrigMode trig_mode);
     virtual void setTrigMode(TrigMode  trig_mode);
     virtual void getTrigMode(TrigMode& trig_mode /Out/);
 

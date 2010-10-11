@@ -32,7 +32,7 @@ class Simulator
 
 	void setBin(const Bin& bin);
 	void getBin(Bin& bin /Out/);
-	void checkBin(Bin& bin /InOut/);
+	void checkBin(Bin& bin /In,Out/);
 
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(FrameDim& frame_dim /Out/);

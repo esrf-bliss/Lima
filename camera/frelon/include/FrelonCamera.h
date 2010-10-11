@@ -70,6 +70,9 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void setExpTime(double  exp_time);
 	void getExpTime(double& exp_time);
 
+	void setShutMode(ShutMode  shut_mode);
+	void getShutMode(ShutMode& shut_mode);
+
 	void setShutCloseTime(double  shut_time);
 	void getShutCloseTime(double& shut_time);
 

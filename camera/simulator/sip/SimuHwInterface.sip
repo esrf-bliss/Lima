@@ -73,6 +73,7 @@ class SimuSyncCtrlObj : HwSyncCtrlObj
 	SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl);
 	virtual ~SimuSyncCtrlObj();
 
+	virtual bool checkTrigMode(TrigMode trig_mode);
 	virtual void setTrigMode(TrigMode  trig_mode);
 	virtual void getTrigMode(TrigMode& trig_mode /Out/);
 
@@ -103,7 +104,7 @@ class SimuBinCtrlObj : HwBinCtrlObj
 
 	virtual void setBin(const Bin& bin);
 	virtual void getBin(Bin& bin /Out/);
-	virtual void checkBin(Bin& bin /InOut/);
+	virtual void checkBin(Bin& bin /In,Out/);
 
 };
 

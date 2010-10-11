@@ -101,6 +101,7 @@ class SyncCtrlObj : public HwSyncCtrlObj
 	SyncCtrlObj(Espia::Acq& acq, Camera& cam, BufferCtrlObj& buffer_ctrl);
 	virtual ~SyncCtrlObj();
 
+	virtual bool checkTrigMode(TrigMode trig_mode);
 	virtual void setTrigMode(TrigMode  trig_mode);
 	virtual void getTrigMode(TrigMode& trig_mode);
 
@@ -204,6 +205,35 @@ class FlipCtrlObj : public HwFlipCtrlObj
 
 
 /*******************************************************************
+ * \class ShutterCtrlObj
+ * \brief Control object providing Frelon shutter interface
+ *******************************************************************/
+
+class ShutterCtrlObj : public HwShutterCtrlObj
+{
+	DEB_CLASS(DebModCamera, "ShutterCtrlObj");
+
+public:
+	ShutterCtrlObj(Camera& cam);
+	virtual ~ShutterCtrlObj();
+
+	virtual bool checkMode(Mode mode);
+	virtual void setMode(Mode  mode);
+	virtual void getMode(Mode& mode);
+
+	virtual void setState(bool  open);
+	virtual void getState(bool& open);
+
+	virtual void setOpenTime (double  shut_open_time);
+	virtual void getOpenTime (double& shut_open_time);
+	virtual void setCloseTime(double  shut_close_time);
+	virtual void getCloseTime(double& shut_close_time);
+
+ private:
+	Camera& m_cam;
+};
+
+/*******************************************************************
  * \class Interface
  * \brief Frelon hardware interface
  *******************************************************************/
@@ -237,6 +267,7 @@ class Interface : public HwInterface
 	BinCtrlObj     m_bin;
 	RoiCtrlObj     m_roi;
 	FlipCtrlObj    m_flip;
+	ShutterCtrlObj m_shutter;
 };
 
 

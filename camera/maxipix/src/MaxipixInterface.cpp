@@ -200,11 +200,33 @@ SyncCtrlObj::~SyncCtrlObj()
     DEB_DESTRUCTOR();
 }
 
+bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
+{
+    DEB_MEMBER_FUNCT();
+
+    bool valid_mode;
+    switch (trig_mode) {
+    case IntTrig:
+    case ExtTrigSingle:
+    case ExtTrigMult:
+    case ExtGate:
+    case ExtStartStop:
+	valid_mode = true;
+	break;
+    default:
+	valid_mode = false;
+    }
+    return valid_mode;
+}
+
 void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
     DEB_MEMBER_FUNCT();
+    if (!checkTrigMode(trig_mode))
+	THROW_HW_ERROR(InvalidValue) << "Invalid " << DEB_VAR1(trig_mode);
     m_priam.setTriggerMode(trig_mode);
 }
+
 void SyncCtrlObj::getTrigMode(TrigMode& trig_mode)
 {
     DEB_MEMBER_FUNCT();

@@ -19,6 +19,7 @@ public:
 	HwShutterCtrlObj();
 	virtual ~HwShutterCtrlObj();
 
+	virtual bool checkMode(Mode mode) = 0;
 	virtual void setMode(Mode  mode) = 0;
 	virtual void getMode(Mode& mode) = 0;
 

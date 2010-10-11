@@ -139,6 +139,10 @@ enum Status {
 	StatusMask = 0xff,
 };
 
+enum ShutMode {
+	Off, AutoFrame,
+};
+
 
 } // namespace Frelon
 

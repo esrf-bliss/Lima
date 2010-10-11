@@ -219,9 +219,35 @@ SyncCtrlObj::~SyncCtrlObj()
 	DEB_DESTRUCTOR();
 }
 
+bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(trig_mode);
+
+	bool valid_mode;
+	switch (trig_mode) {
+	case IntTrig:
+	case ExtTrigSingle:
+	case ExtTrigMult:
+	case ExtGate:
+		valid_mode = true;
+		break;
+
+	default:
+		valid_mode = false;
+	}
+
+	DEB_RETURN() << DEB_VAR1(valid_mode);
+	return valid_mode;
+}
+
 void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
 	DEB_MEMBER_FUNCT();
+
+	if (!checkTrigMode(trig_mode))
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(trig_mode);
 	m_cam.setTrigMode(trig_mode);
 }
 
@@ -426,6 +452,120 @@ void FlipCtrlObj::checkFlip(Flip& flip)
 
 
 /*******************************************************************
+ * \brief ShutterCtrlObj constructor
+ *******************************************************************/
+
+ShutterCtrlObj::ShutterCtrlObj(Camera& cam)
+	: m_cam(cam)
+{
+	DEB_CONSTRUCTOR();
+}
+
+ShutterCtrlObj::~ShutterCtrlObj()
+{
+	DEB_DESTRUCTOR();
+}
+
+bool ShutterCtrlObj::checkMode(Mode mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(mode);
+
+	bool valid_mode;
+	switch (mode) {
+	case Manual:
+	case AutoFrame:
+		valid_mode = true;
+		break;
+	default:
+		valid_mode = false;
+	}
+
+	DEB_RETURN() << DEB_VAR1(valid_mode);
+	return valid_mode;
+}
+
+void ShutterCtrlObj::setMode(Mode mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(mode);
+
+	if (!checkMode(mode))
+		THROW_HW_ERROR(InvalidValue) << "Invalid " << DEB_VAR1(mode);
+
+	ShutMode cam_mode;
+	cam_mode = (mode == AutoFrame) ? Frelon::AutoFrame : Frelon::Off;
+	m_cam.setShutMode(cam_mode);
+}
+
+void ShutterCtrlObj::getMode(Mode& mode)
+{
+	DEB_MEMBER_FUNCT();
+
+	ShutMode cam_mode;
+	m_cam.getShutMode(cam_mode);
+	mode = (cam_mode == Frelon::AutoFrame) ? AutoFrame : Manual;
+	DEB_RETURN() << DEB_VAR1(mode);
+}
+
+void ShutterCtrlObj::setState(bool open)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(open);
+
+	Mode mode;
+	getMode(mode);
+	if (mode != Manual)
+		THROW_HW_ERROR(NotSupported) << "Not in manual mode";
+	else if (open)
+		THROW_HW_ERROR(NotSupported) << "Manual shutter open "
+					        "not supported";
+}
+
+void ShutterCtrlObj::getState(bool& open)
+{
+	DEB_MEMBER_FUNCT();
+
+	Mode mode;
+	getMode(mode);
+	if (mode != Manual)
+		THROW_HW_ERROR(NotSupported) << "Not in manual mode";
+
+	open = false;
+	DEB_RETURN() << DEB_VAR1(open);
+}
+
+void ShutterCtrlObj::setOpenTime(double shut_open_time)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(shut_open_time);
+
+	if (shut_open_time != 0)
+		THROW_HW_ERROR(NotSupported) << "Invalid " 
+					     << DEB_VAR1(shut_open_time);
+}
+
+void ShutterCtrlObj::getOpenTime(double& shut_open_time)
+{
+	DEB_MEMBER_FUNCT();
+	shut_open_time = 0;
+	DEB_RETURN() << DEB_VAR1(shut_open_time);
+}
+
+void ShutterCtrlObj::setCloseTime(double shut_close_time)
+{
+	DEB_MEMBER_FUNCT();
+	m_cam.setShutCloseTime(shut_close_time);
+}
+
+void ShutterCtrlObj::getCloseTime(double& shut_close_time)
+{
+	DEB_MEMBER_FUNCT();
+	m_cam.getShutCloseTime(shut_close_time);
+}
+
+
+/*******************************************************************
  * \brief Hw Interface constructor
  *******************************************************************/
 
@@ -433,7 +573,7 @@ Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 		     Camera& cam)
 	: m_acq(acq), m_buffer_mgr(buffer_mgr), m_cam(cam),
 	  m_det_info(cam), m_buffer(buffer_mgr), m_sync(acq, cam, m_buffer), 
-	  m_bin(cam), m_roi(cam), m_flip(cam)
+	  m_bin(cam), m_roi(cam), m_flip(cam), m_shutter(cam)
 {
 	DEB_CONSTRUCTOR();
 
@@ -454,6 +594,9 @@ Interface::Interface(Acq& acq, BufferCtrlMgr& buffer_mgr,
 
 	HwFlipCtrlObj *flip = &m_flip;
 	m_cap_list.push_back(HwCap(flip));
+
+	HwShutterCtrlObj *shutter = &m_shutter;
+	m_cap_list.push_back(HwCap(shutter));
 
 	reset(SoftReset);
 }

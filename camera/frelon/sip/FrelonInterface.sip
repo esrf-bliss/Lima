@@ -87,6 +87,7 @@ class SyncCtrlObj : HwSyncCtrlObj
 	            Frelon::BufferCtrlObj& buffer_ctrl);
 	virtual ~SyncCtrlObj();
 
+	virtual bool checkTrigMode(TrigMode trig_mode);
 	virtual void setTrigMode(TrigMode  trig_mode);
 	virtual void getTrigMode(TrigMode& trig_mode /Out/);
 
@@ -118,7 +119,7 @@ class BinCtrlObj : HwBinCtrlObj
 
 	virtual void setBin(const Bin& bin);
 	virtual void getBin(Bin& bin /Out/);
-	virtual void checkBin(Bin& bin /InOut/);
+	virtual void checkBin(Bin& bin /In,Out/);
 };
 
 
@@ -153,8 +154,34 @@ class FlipCtrlObj : HwFlipCtrlObj
 	virtual ~FlipCtrlObj();
 
 	virtual void setFlip(const Flip& flip);
-	virtual void getFlip(Flip& flip);
-	virtual void checkFlip(Flip& flip);
+	virtual void getFlip(Flip& flip /Out/);
+	virtual void checkFlip(Flip& flip /In,Out/);
+};
+
+
+class ShutterCtrlObj : HwShutterCtrlObj
+{
+
+%TypeHeaderCode
+#include "FrelonInterface.h"
+#include <algorithm>
+%End
+
+public:
+	ShutterCtrlObj(Frelon::Camera& cam);
+	virtual ~ShutterCtrlObj();
+
+	virtual bool checkMode(Mode mode);
+	virtual void setMode(Mode  mode);
+	virtual void getMode(Mode& mode /Out/);
+
+	virtual void setState(bool  open);
+	virtual void getState(bool& open /Out/);
+
+	virtual void setOpenTime (double  shut_open_time);
+	virtual void getOpenTime (double& shut_open_time /Out/);
+	virtual void setCloseTime(double  shut_close_time);
+	virtual void getCloseTime(double& shut_close_time /Out/);
 };
 
 

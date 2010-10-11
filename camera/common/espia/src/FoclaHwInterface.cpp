@@ -221,13 +221,22 @@ SyncCtrlObj::~SyncCtrlObj()
 }
 
 
+bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
+{
+	return (trig_mode == IntTrig);
+}
+
+
 void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
+	if (!checkTrigMode(trig_mode))
+		throw LIMA_HW_EXC(InvalidValue, "Invalid (external) trigger");
 }
 
 
 void SyncCtrlObj::getTrigMode(TrigMode &trig_mode)
 {
+	trig_mode = IntTrig;
 }
 
 

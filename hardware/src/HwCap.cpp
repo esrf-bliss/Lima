@@ -40,5 +40,11 @@ HwCap::Type HwCap::getTypeFromCtrlObj<>(HwFlipCtrlObj *p)
 	return Flip;
 }
 
+template <>
+HwCap::Type HwCap::getTypeFromCtrlObj<>(HwShutterCtrlObj *p)
+{
+	return Shutter;
+}
+
 
 } // namespace lima

@@ -185,15 +185,20 @@ SimuSyncCtrlObj::~SimuSyncCtrlObj()
 {
 }
 
+bool SimuSyncCtrlObj::checkTrigMode(TrigMode trig_mode)
+{
+	return (trig_mode == IntTrig);
+}
+
 void SimuSyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
-	trig_mode = IntTrig;
+	if (!checkTrigMode(trig_mode))
+		throw LIMA_HW_EXC(InvalidValue, "Invalid (external) trigger");
 }
 
 void SimuSyncCtrlObj::getTrigMode(TrigMode& trig_mode)
 {
-	if (trig_mode != IntTrig)
-		throw LIMA_HW_EXC(InvalidValue, "Invalid (external) trigger");
+	trig_mode = IntTrig;
 }
 
 void SimuSyncCtrlObj::setExpTime(double exp_time)

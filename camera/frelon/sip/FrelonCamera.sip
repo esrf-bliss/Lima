@@ -41,11 +41,11 @@ class Camera
 
 	bool isChanActive(Frelon::InputChan curr, Frelon::InputChan chan);
 
-	void checkFlip(Flip& flip /InOut/);
+	void checkFlip(Flip& flip /In,Out/);
 	void setFlip(const Flip& flip);
 	void getFlip(Flip& flip /Out/);
 
-	void checkBin(Bin& bin /InOut/);
+	void checkBin(Bin& bin /In,Out/);
 	void setBin(const Bin& bin);
 	void getBin(Bin& bin /Out/);
 
@@ -65,6 +65,9 @@ class Camera
 	void setExpTime(double  exp_time);
 	void getExpTime(double& exp_time /Out/);
 
+	void setShutMode(Frelon::ShutMode  shut_mode);
+	void getShutMode(Frelon::ShutMode& shut_mode /Out/);
+
 	void setShutCloseTime(double  shut_time);
 	void getShutCloseTime(double& shut_time /Out/);
 
@@ -75,7 +78,7 @@ class Camera
 	void getNbFrames(int& nb_frames /Out/);
 
 	void getStatus(Frelon::Status& status /Out/);
-	bool waitStatus(Frelon::Status& status /InOut/, Frelon::Status mask, 
+	bool waitStatus(Frelon::Status& status /In,Out/, Frelon::Status mask, 
 			double timeout);
 
 	void start();

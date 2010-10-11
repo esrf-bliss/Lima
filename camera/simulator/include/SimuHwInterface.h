@@ -99,6 +99,7 @@ class SimuSyncCtrlObj : public HwSyncCtrlObj
 	SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl);
 	virtual ~SimuSyncCtrlObj();
 
+	virtual bool checkTrigMode(TrigMode trig_mode);
 	virtual void setTrigMode(TrigMode  trig_mode);
 	virtual void getTrigMode(TrigMode& trig_mode);
 
