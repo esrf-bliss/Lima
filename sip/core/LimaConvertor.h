@@ -45,6 +45,13 @@ case HwCap::Flip:\
     sipRes = sipConvertFromInstance(aCtrlObjPt,sipClass_HwFlipCtrlObj,NULL); \
   break;\
 }\
+case HwCap::Shutter:\
+{\
+  HwShutterCtrlObj *aCtrlObjPt = NULL;\
+  if(cppObject->getCtrlObj(aCtrlObjPt))\
+    sipRes = sipConvertFromInstance(aCtrlObjPt,sipClass_HwShutterCtrlObj,NULL); \
+  break;\
+}\
 default:\
 std::cerr << "HwCap getCtrlObj : sip wrapping Type -> " << cppObject->getType() << " not yet managed" << std::endl;break;\
 }\

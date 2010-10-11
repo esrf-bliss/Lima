@@ -466,13 +466,13 @@ ShutterCtrlObj::~ShutterCtrlObj()
 	DEB_DESTRUCTOR();
 }
 
-bool ShutterCtrlObj::checkMode(Mode mode)
+bool ShutterCtrlObj::checkMode(Mode shut_mode)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(mode);
+	DEB_PARAM() << DEB_VAR1(shut_mode);
 
 	bool valid_mode;
-	switch (mode) {
+	switch (shut_mode) {
 	case Manual:
 	case AutoFrame:
 		valid_mode = true;
@@ -485,27 +485,28 @@ bool ShutterCtrlObj::checkMode(Mode mode)
 	return valid_mode;
 }
 
-void ShutterCtrlObj::setMode(Mode mode)
+void ShutterCtrlObj::setMode(Mode shut_mode)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(mode);
+	DEB_PARAM() << DEB_VAR1(shut_mode);
 
-	if (!checkMode(mode))
-		THROW_HW_ERROR(InvalidValue) << "Invalid " << DEB_VAR1(mode);
+	if (!checkMode(shut_mode))
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(shut_mode);
 
 	ShutMode cam_mode;
-	cam_mode = (mode == AutoFrame) ? Frelon::AutoFrame : Frelon::Off;
+	cam_mode = (shut_mode == AutoFrame) ? Frelon::AutoFrame : Frelon::Off;
 	m_cam.setShutMode(cam_mode);
 }
 
-void ShutterCtrlObj::getMode(Mode& mode)
+void ShutterCtrlObj::getMode(Mode& shut_mode)
 {
 	DEB_MEMBER_FUNCT();
 
 	ShutMode cam_mode;
 	m_cam.getShutMode(cam_mode);
-	mode = (cam_mode == Frelon::AutoFrame) ? AutoFrame : Manual;
-	DEB_RETURN() << DEB_VAR1(mode);
+	shut_mode = (cam_mode == Frelon::AutoFrame) ? AutoFrame : Manual;
+	DEB_RETURN() << DEB_VAR1(shut_mode);
 }
 
 void ShutterCtrlObj::setState(bool open)
@@ -516,7 +517,7 @@ void ShutterCtrlObj::setState(bool open)
 	Mode mode;
 	getMode(mode);
 	if (mode != Manual)
-		THROW_HW_ERROR(NotSupported) << "Not in manual mode";
+		THROW_HW_ERROR(NotSupported) << "Not in manual shutter mode";
 	else if (open)
 		THROW_HW_ERROR(NotSupported) << "Manual shutter open "
 					        "not supported";
@@ -529,7 +530,7 @@ void ShutterCtrlObj::getState(bool& open)
 	Mode mode;
 	getMode(mode);
 	if (mode != Manual)
-		THROW_HW_ERROR(NotSupported) << "Not in manual mode";
+		THROW_HW_ERROR(NotSupported) << "Not in manual shutter mode";
 
 	open = false;
 	DEB_RETURN() << DEB_VAR1(open);

@@ -13,12 +13,12 @@ public:
 	HwShutterCtrlObj();
 	virtual ~HwShutterCtrlObj();
 
-	virtual bool checkMode(Mode mode) = 0;
-	virtual void setMode(Mode  mode) = 0;
-	virtual void getMode(Mode& mode /Out/) = 0;
+	virtual bool checkMode(Mode shut_mode) = 0;
+	virtual void setMode(Mode  shut_mode) = 0;
+	virtual void getMode(Mode& shut_mode /Out/) = 0;
 
-	virtual void setState(bool  open) = 0;
-	virtual void getState(bool& open /Out/) = 0;
+	virtual void setState(bool  shut_open) = 0;
+	virtual void getState(bool& shut_open /Out/) = 0;
 
 	virtual void setOpenTime (double  shut_open_time)  = 0;
 	virtual void getOpenTime (double& shut_open_time /Out/)  = 0;
