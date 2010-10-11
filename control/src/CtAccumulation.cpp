@@ -1,11 +1,11 @@
 #include "CtAccumulation.h"
 #include "CtAcquisition.h"
+#include "CtBuffer.h"
 
 using namespace lima;
 //	     ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() : 
   pixelThresholdValue(2^16),
-  buffers_size(64),
   savingFlag(false),
   savePrefix("saturated_")
 {
@@ -59,16 +59,10 @@ void CtAccumulation::getPixelThresholdValue(int &pixelThresholdValue) const
   pixelThresholdValue = m_pars.pixelThresholdValue;
 }
 
-void CtAccumulation::setBufferSize(int aBufferSize)
-{
-  AutoMutex aLock(m_lock);
-  m_pars.buffers_size = aBufferSize;
-}
-
 void CtAccumulation::getBufferSize(int &aBufferSize) const
 {
   AutoMutex aLock(m_lock);
-  aBufferSize = m_pars.buffers_size;
+  aBufferSize = m_buffers_size;
 }
 
 void CtAccumulation::setSavingFlag(bool savingFlag)
@@ -139,6 +133,8 @@ void CtAccumulation::prepare()
   AutoMutex aLock(m_lock);
   m_datas.clear();
   m_saturated_images.clear();
+  CtBuffer *buffer = m_ct.buffer();
+  buffer->getNumber(m_buffers_size);
 }
 /** @brief this is an intergnal call from CtBuffer in case of accumulation
  */
@@ -169,11 +165,11 @@ bool CtAccumulation::newFrameReady(Data &aData)
       memset(newData.data(),0,newData.size());
       m_datas.push_back(newData);
       
-      if(m_datas.size() > m_pars.buffers_size)
+      if(long(m_datas.size()) > m_buffers_size)
 	m_datas.pop_front();
     }
   bool active = m_pars.active;
-  Data &accFrame = m_datas.back();
+  Data accFrame = m_datas.back();
   aLock.unlock();
 
   _accFrame(aData,accFrame);

@@ -16,8 +16,6 @@ public:
     bool		active;	///< if true do the calculation
     long long		pixelThresholdValue; ///< value which determine the threshold of the calculation
 
-    unsigned int	buffers_size; ///< total nb buffer for acquisition
-
     bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
     std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
   };
@@ -48,7 +46,6 @@ public:
   void setPixelThresholdValue(int pixelThresholdValue);
   void getPixelThresholdValue(int &pixelThresholdValue) const;
 
-  void setBufferSize(int aBufferSize);
   void getBufferSize(int &aBufferSize) const;
 
   void setSavingFlag(bool savingFlag);

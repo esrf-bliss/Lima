@@ -3,8 +3,6 @@
 
 using namespace lima;
 
-const static int DEFAULT_NB_BUFFER_4_ACC = 16;
-
 bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 {
   DEB_MEMBER_FUNCT();
@@ -167,7 +165,7 @@ void CtBuffer::setup(CtControl *ct)
   img= ct->image();
   img->getHwImageDim(fdim);
 
-  int nbuffers = acq_nframes;
+  int hwNbBuffer = acq_nframes,nbuffers = acq_nframes;
   m_ct_accumulation = NULL;
   switch (mode) {
   case Single:
@@ -175,11 +173,10 @@ void CtBuffer::setup(CtControl *ct)
     break;
   case Accumulation:
     m_hw_buffer->getNbConcatFrames(concat_nframes);
-    if (concat_nframes > 1)
-      m_hw_buffer->setNbConcatFrames(1);
     concat_nframes= 1;
     m_ct_accumulation = ct->accumulation();
-    nbuffers = DEFAULT_NB_BUFFER_4_ACC;
+    hwNbBuffer = 16;
+    nbuffers -= hwNbBuffer;
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
@@ -190,8 +187,8 @@ void CtBuffer::setup(CtControl *ct)
 
   int max_nbuffers;
   m_hw_buffer->getMaxNbBuffers(max_nbuffers);
-  if (nbuffers > max_nbuffers)
-    nbuffers = max_nbuffers;
+  if (hwNbBuffer > max_nbuffers)
+    hwNbBuffer = max_nbuffers;
   m_hw_buffer->setNbBuffers(nbuffers);
   m_pars.nbBuffers = nbuffers;
   registerFrameCallback(ct);

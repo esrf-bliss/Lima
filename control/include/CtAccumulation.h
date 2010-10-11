@@ -28,8 +28,6 @@ namespace lima
       bool		active;	///< if true do the calculation
       long long		pixelThresholdValue; ///< value which determine the threshold of the calculation
 
-      unsigned int	buffers_size; ///< total nb buffer for acquisition
-
       bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
       std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
     };
@@ -61,7 +59,6 @@ namespace lima
     void setPixelThresholdValue(int pixelThresholdValue);
     void getPixelThresholdValue(int &pixelThresholdValue) const;
 
-    void setBufferSize(int aBufferSize);
     void getBufferSize(int &aBufferSize) const;
 
     void setSavingFlag(bool savingFlag);
@@ -85,6 +82,7 @@ namespace lima
     void unregisterThresholdCallback(ThresholdCallback &cb);
   private:
     Parameters 		m_pars;
+    long		m_buffers_size;
     std::deque<Data> 	m_datas;
     std::deque<Data> 	m_saturated_images;
     CtControl& 		m_ct;
