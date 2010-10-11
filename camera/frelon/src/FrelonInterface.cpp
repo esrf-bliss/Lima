@@ -491,7 +491,7 @@ void ShutterCtrlObj::setMode(Mode shut_mode)
 	DEB_PARAM() << DEB_VAR1(shut_mode);
 
 	if (!checkMode(shut_mode))
-		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+		THROW_HW_ERROR(NotSupported) << "Invalid (not supported) " 
 					     << DEB_VAR1(shut_mode);
 
 	ShutMode cam_mode;
@@ -542,8 +542,8 @@ void ShutterCtrlObj::setOpenTime(double shut_open_time)
 	DEB_PARAM() << DEB_VAR1(shut_open_time);
 
 	if (shut_open_time != 0)
-		THROW_HW_ERROR(NotSupported) << "Invalid " 
-					     << DEB_VAR1(shut_open_time);
+		THROW_HW_ERROR(NotSupported) << "Shutter open time not "
+						"supported";
 }
 
 void ShutterCtrlObj::getOpenTime(double& shut_open_time)
