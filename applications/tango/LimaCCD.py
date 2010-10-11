@@ -242,6 +242,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
         else:
             attr.set_value(stat,len(stat))
 
+
 #==================================================================
 #
 #    LimaCCDs command methods
