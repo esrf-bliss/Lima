@@ -1013,6 +1013,9 @@ void Camera::setShutCloseTime(double shut_time)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(shut_time);
 	int shut_val = int(shut_time / TimeUnitFactorMap[Milliseconds] + 0.1);
+	if (shut_val > MaxRegVal)
+		THROW_HW_ERROR(InvalidValue) << "Shutter close time too high: "
+					     << DEB_VAR1(shut_time);
 	writeRegister(ShutCloseTime, shut_val);
 }
 
