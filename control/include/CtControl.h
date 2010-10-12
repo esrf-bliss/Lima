@@ -20,11 +20,8 @@ namespace lima
   class CtBufferFrameCB;
   class CtSaving;
   class CtSpsImage;
-<<<<<<< HEAD
   class CtShutter;
-=======
   class CtAccumulation;
->>>>>>> Accumulation
 
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;

@@ -91,11 +91,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_acq= new CtAcquisition(hw);
   m_ct_image= new CtImage(hw,*this);
   m_ct_buffer= new CtBuffer(hw);
-<<<<<<< HEAD
   m_ct_shutter = new CtShutter(hw);
-=======
   m_ct_accumulation = new CtAccumulation(*this);
->>>>>>> Accumulation
 
   //Saving
   m_ct_saving= new CtSaving(*this);
