@@ -31,7 +31,7 @@ static const int MAXIPIX_NB_COLUMN = 256;
 	{								\
 	  memmove(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY);		\
 	  GAP_COPY_FUNCTION						\
-	    aDstPt -= maxipix_line_size + xSpace * depth;		\
+	  aDstPt -= maxipix_line_size + xSpace * depth;		        \
 	  aSrcPt -= maxipix_line_size;					\
 	}								\
       while(--aNbChipCopyWithGap);					\
@@ -77,7 +77,7 @@ static inline void _zero_5x1(Data &src,Data &dst,
 #undef GAP_COPY_FUNCTION
 #endif
 #define GAP_COPY_FUNCTION				\
-      MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 4;	\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 4;	\
       int*aPixel = ((int*)aDstPt);			\
       for(int i = xSpace + 2;i;--i,--aPixel)		\
 	*aPixel = 0;
@@ -89,7 +89,7 @@ static inline void _zero_5x1(Data &src,Data &dst,
 #undef GAP_COPY_FUNCTION
 #endif
 #define GAP_COPY_FUNCTION					\
-      MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 2;		\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 2;		\
       unsigned short *aPixel = ((unsigned short*)aDstPt);	\
       for(int i = xSpace + 2;i;--i,--aPixel)			\
 	*aPixel = 0;
@@ -106,7 +106,7 @@ static inline void _dispatch_5x1(Data &src,Data &dst,
 #undef GAP_COPY_FUNCTION
 #endif
 #define GAP_COPY_FUNCTION						\
-      MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 4;			\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 4;			\
       int *aPixel = ((int*)aDstPt);					\
       int aPixelValue = *aPixel / nbPixelDispatch;			\
       for(int i = nbPixelDispatch;i;--i,--aPixel)			\
@@ -124,7 +124,7 @@ static inline void _dispatch_5x1(Data &src,Data &dst,
 #undef GAP_COPY_FUNCTION
 #endif
 #define GAP_COPY_FUNCTION						\
-      MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 2;			\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 2;			\
       unsigned short *aPixel = ((unsigned short*)aDstPt);		\
       unsigned short aPixelValue = *aPixel / nbPixelDispatch;		\
       for(int i = nbPixelDispatch;i;--i,--aPixel)			\
@@ -148,7 +148,7 @@ static inline void _mean_5x1(Data &src,Data &dst,
 #undef GAP_COPY_FUNCTION
 #endif
 #define GAP_COPY_FUNCTION						\
-      MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 4;			\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 4;			\
       int*aPixel = ((int*)aDstPt);					\
       int aFirstPixelValue = *aPixel / nbPixelMean;			\
       *aPixel = aFirstPixelValue;--aPixel;				\
@@ -167,7 +167,7 @@ static inline void _mean_5x1(Data &src,Data &dst,
 #undef GAP_COPY_FUNCTION
 #endif
 #define GAP_COPY_FUNCTION						\
-      MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 2;			\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 2;			\
       unsigned short *aPixel = ((unsigned short*)aDstPt);		\
       unsigned short aFirstPixelValue = *aPixel / nbPixelMean;		\
       *aPixel = aFirstPixelValue;--aPixel;				\
@@ -526,13 +526,29 @@ Data MaxipixReconstruction::process(Data &aData)
       switch(mType)
 	{
 	case RAW:
-	  _raw_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);break;
-	case ZERO: 
-	  _zero_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);break;
+	  if(aReturnData.depth() == 4)
+	    _raw_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _raw_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
+	case ZERO:
+	  if(aReturnData.depth() == 4)
+	    _zero_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _zero_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
 	case DISPATCH:
-	  _dispatch_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);break;
+	  if(aReturnData.depth() == 4)
+	    _dispatch_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _dispatch_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
 	case MEAN:
-	  _mean_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);break;
+	  if(aReturnData.depth() == 4)
+	    _mean_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _mean_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
 	default:		// ERROR
 	  break;
 	}
