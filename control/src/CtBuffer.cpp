@@ -1,4 +1,5 @@
 #include "CtBuffer.h"
+#include "CtAccumulation.h"
 
 using namespace lima;
 
@@ -9,11 +10,14 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 
   Data fdata;
   CtBuffer::getDataFromHwFrameInfo(fdata,frame_info);
-  return m_ct->newFrameReady(fdata);
+  if(m_ct_accumulation)
+    return m_ct_accumulation->newFrameReady(fdata);
+  else
+    return m_ct->newFrameReady(fdata);
 }
 
 CtBuffer::CtBuffer(HwInterface *hw)
-  : m_frame_cb(NULL)
+  : m_frame_cb(NULL),m_ct_accumulation(NULL)
 
 {
   DEB_CONSTRUCTOR();
@@ -126,10 +130,14 @@ void CtBuffer::getFrame(Data &aReturnData,int frameNumber)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
 
-  HwFrameInfo info;
-  m_hw_buffer->getFrameInfo(frameNumber,info);
-  getDataFromHwFrameInfo(aReturnData,info);
-
+  if(m_ct_accumulation)
+    m_ct_accumulation->getFrame(aReturnData,frameNumber);
+  else
+    {
+      HwFrameInfo info;
+      m_hw_buffer->getFrameInfo(frameNumber,info);
+      getDataFromHwFrameInfo(aReturnData,info);
+    }
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }
 
@@ -148,7 +156,7 @@ void CtBuffer::setup(CtControl *ct)
   CtImage *img;
   AcqMode mode;
   FrameDim fdim;
-  int acq_nframes, acc_nframes, concat_nframes;
+  int acq_nframes, concat_nframes;
 
   acq= ct->acquisition();
   acq->getAcqMode(mode);
@@ -157,35 +165,35 @@ void CtBuffer::setup(CtControl *ct)
   img= ct->image();
   img->getHwImageDim(fdim);
 
+  int hwNbBuffer = acq_nframes,nbuffers = acq_nframes;
+  m_ct_accumulation = NULL;
   switch (mode) {
   case Single:
-    acc_nframes= 1;
     concat_nframes= 1;
     break;
   case Accumulation:
-    acq->getAccNbFrames(acc_nframes);
-    m_hw_buffer->getNbConcatFrames(concat_nframes);
-    if (concat_nframes > 1)
-      m_hw_buffer->setNbConcatFrames(1);
     concat_nframes= 1;
+    m_ct_accumulation = ct->accumulation();
+    hwNbBuffer = 16;
     break;
   case Concatenation:
-    acc_nframes= 1;
     acq->getConcatNbFrames(concat_nframes);
     break;
   }
   m_hw_buffer->setFrameDim(fdim);
-  m_hw_buffer->setNbAccFrames(acc_nframes);
   m_hw_buffer->setNbConcatFrames(concat_nframes);
 
-  int nbuffers = acq_nframes;
   int max_nbuffers;
   m_hw_buffer->getMaxNbBuffers(max_nbuffers);
-  if (nbuffers > max_nbuffers)
+  if (hwNbBuffer > max_nbuffers)
+    hwNbBuffer = max_nbuffers;
+  m_hw_buffer->setNbBuffers(hwNbBuffer);
+
+  if(nbuffers > max_nbuffers)
     nbuffers = max_nbuffers;
-  m_hw_buffer->setNbBuffers(nbuffers);
   m_pars.nbBuffers = nbuffers;
   registerFrameCallback(ct);
+  m_frame_cb->m_ct_accumulation = m_ct_accumulation;
 }
 
 void CtBuffer::getDataFromHwFrameInfo(Data &fdata,

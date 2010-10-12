@@ -148,18 +148,6 @@ void BufferCtrlObj::getNbConcatFrames(int& nb_concat_frames)
 	m_buffer_mgr.getNbConcatFrames(nb_concat_frames);
 }
 
-void BufferCtrlObj::setNbAccFrames(int nb_acc_frames)
-{
-	DEB_MEMBER_FUNCT();
-	m_buffer_mgr.setNbAccFrames(nb_acc_frames);
-}
-
-void BufferCtrlObj::getNbAccFrames(int& nb_acc_frames)
-{
-	DEB_MEMBER_FUNCT();
-	m_buffer_mgr.getNbAccFrames(nb_acc_frames);
-}
-
 void BufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers)
 {
 	DEB_MEMBER_FUNCT();
@@ -657,7 +645,6 @@ void Interface::reset(ResetLevel reset_level)
 	m_buffer.setFrameDim(frame_dim);
 
 	m_buffer.setNbConcatFrames(1);
-	m_buffer.setNbAccFrames(1);
 	m_buffer.setNbBuffers(1);
 }
 

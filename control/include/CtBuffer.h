@@ -15,12 +15,14 @@ namespace lima {
   class CtBufferFrameCB : public HwFrameCallback
   {
     DEB_CLASS_NAMESPC(DebModControl,"BufferFrameCB","Control");
+    friend class CtBuffer;
   public:
-    CtBufferFrameCB(CtControl *ct): m_ct(ct) {}
+    CtBufferFrameCB(CtControl *ct): m_ct(ct),m_ct_accumulation(NULL) {}
   protected:
     bool newFrameReady(const HwFrameInfoType& frame_info);
   private:
-    CtControl *m_ct;
+    CtControl* 		m_ct;
+    CtAccumulation* 	m_ct_accumulation;
   };
 
   class CtBuffer 
@@ -65,10 +67,10 @@ namespace lima {
     static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);
   private:
 
-    HwBufferCtrlObj	*m_hw_buffer;
-    CtBufferFrameCB *m_frame_cb;
-    Parameters	m_pars;
-
+    HwBufferCtrlObj* 	m_hw_buffer;
+    CtBufferFrameCB* 	m_frame_cb;
+    Parameters		m_pars;
+    CtAccumulation* 	m_ct_accumulation;
   };
 
   inline std::ostream& operator<<(std::ostream &os,

@@ -20,7 +20,11 @@ namespace lima
   class CtBufferFrameCB;
   class CtSaving;
   class CtSpsImage;
+<<<<<<< HEAD
   class CtShutter;
+=======
+  class CtAccumulation;
+>>>>>>> Accumulation
 
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
@@ -29,6 +33,7 @@ namespace lima
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
 
     friend class CtBufferFrameCB;
+    friend class CtAccumulation;
     friend class CtSaving;	// just to set saving error in stat
   public:
 
@@ -95,16 +100,18 @@ namespace lima
     void startAcq();
     void stopAcq();
 
-    CtAcquisition* acquisition() { return m_ct_acq; }
-    CtSaving* saving() { return m_ct_saving; }
-    CtSpsImage* display() { return m_ct_sps_image; }
-    CtImage* image() { return m_ct_image; }
-    CtBuffer* buffer() { return m_ct_buffer; }
-    CtShutter* shutter() { return m_ct_shutter; }
 
-    SoftOpExternalMgr* externalOperation() {return m_op_ext;}
+    CtAcquisition* 	acquisition() 		{ return m_ct_acq; }
+    CtSaving* 		saving() 		{ return m_ct_saving; }
+    CtSpsImage* 	display() 		{ return m_ct_sps_image; }
+    CtImage* 		image() 		{ return m_ct_image; }
+    CtBuffer* 		buffer() 		{ return m_ct_buffer; }
+    CtAccumulation* 	accumulation() 		{ return m_ct_accumulation; }
+    CtShutter* 		shutter() 		{ return m_ct_shutter; }
 
-    HwInterface* interface() {return m_hw;}
+    SoftOpExternalMgr* 	externalOperation() 	{return m_op_ext;}
+
+    HwInterface* 	interface() 		{return m_hw;}
     
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;
@@ -158,6 +165,8 @@ namespace lima
     CtImage		*m_ct_image;
     CtBuffer		*m_ct_buffer;
     CtShutter		*m_ct_shutter;
+    CtAccumulation	*m_ct_accumulation;
+
     SoftOpInternalMgr   *m_op_int;
     SoftOpExternalMgr	*m_op_ext;
 

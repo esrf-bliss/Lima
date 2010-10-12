@@ -51,9 +51,6 @@ class BufferCtrlObj : HwBufferCtrlObj
     virtual void setNbConcatFrames(int  nb_concat_frames);
     virtual void getNbConcatFrames(int& nb_concat_frames /Out/);
 
-    virtual void setNbAccFrames(int  nb_acc_frames);
-    virtual void getNbAccFrames(int& nb_acc_frames /Out/);
-
     virtual void getMaxNbBuffers(int& max_nb_buffers /Out/);
 
     virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0);

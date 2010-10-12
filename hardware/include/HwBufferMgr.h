@@ -203,9 +203,6 @@ class BufferCtrlMgr : public HwFrameCallbackGen
 	void setNbConcatFrames(int  nb_concat_frames);
 	void getNbConcatFrames(int& nb_concat_frames);
 
-	void setNbAccFrames(int  nb_acc_frames);
-	void getNbAccFrames(int& nb_acc_frames);
-
 	void setNbBuffers(int  nb_buffers);
 	void getNbBuffers(int& nb_buffers);
 
@@ -244,16 +241,9 @@ class BufferCtrlMgr : public HwFrameCallbackGen
 
 	void releaseBuffers();
 	bool acqFrameReady(const HwFrameInfoType& acq_frame_info);
-	void accFrame(void *src_ptr, const FrameDim& src_frame_dim,
-		      void *dst_ptr, const FrameDim& dst_frame_dim,
-		      int& valid_pixels);
 
 	int m_nb_concat_frames;
-	int m_nb_acc_frames;
 	BufferCbMgr *m_acq_buffer_mgr;
-	SoftBufferAllocMgr m_aux_alloc_mgr;
-	StdBufferCbMgr m_aux_buffer_mgr;
-	BufferCbMgr *m_effect_buffer_mgr;
 	FrameDim m_frame_dim;
 	AcqFrameCallback m_frame_cb;
 	bool m_frame_cb_act;

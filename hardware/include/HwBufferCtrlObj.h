@@ -23,9 +23,6 @@ public:
 	virtual void setNbConcatFrames(int  nb_concat_frames) = 0;
 	virtual void getNbConcatFrames(int& nb_concat_frames) = 0;
 
-	virtual void setNbAccFrames(int  nb_acc_frames) = 0;
-	virtual void getNbAccFrames(int& nb_acc_frames) = 0;
-
 	virtual void getMaxNbBuffers(int& max_nb_buffers) = 0;
 
 	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0) = 0;

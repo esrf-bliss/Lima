@@ -17,11 +17,7 @@ int HwInterface::getNbAcquiredFrames()
 {
 	DEB_MEMBER_FUNCT();
 
-	HwBufferCtrlObj *buffer_ctrl;
-	getHwCtrlObj(buffer_ctrl);
-	int nb_acc_frames;
-	buffer_ctrl->getNbAccFrames(nb_acc_frames);
-	int nb_acq_frames =  getNbHwAcquiredFrames() / nb_acc_frames;
+	int nb_acq_frames =  getNbHwAcquiredFrames();
 
 	DEB_RETURN() << DEB_VAR1(nb_acq_frames);
 	return nb_acq_frames;

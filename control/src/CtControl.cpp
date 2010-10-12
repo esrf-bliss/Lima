@@ -8,6 +8,7 @@
 #include "CtImage.h"
 #include "CtBuffer.h"
 #include "CtShutter.h"
+#include "CtAccumulation.h"
 
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
@@ -88,9 +89,13 @@ CtControl::CtControl(HwInterface *hw) :
   DEB_CONSTRUCTOR();
 
   m_ct_acq= new CtAcquisition(hw);
-  m_ct_image= new CtImage(hw);
+  m_ct_image= new CtImage(hw,*this);
   m_ct_buffer= new CtBuffer(hw);
+<<<<<<< HEAD
   m_ct_shutter = new CtShutter(hw);
+=======
+  m_ct_accumulation = new CtAccumulation(*this);
+>>>>>>> Accumulation
 
   //Saving
   m_ct_saving= new CtSaving(*this);
@@ -120,6 +125,7 @@ CtControl::~CtControl()
   delete m_ct_acq;
   delete m_ct_image;
   delete m_ct_buffer;
+  delete m_ct_accumulation;
   delete m_op_int;
   delete m_op_ext;
 }
@@ -155,6 +161,9 @@ void CtControl::prepareAcq()
 
   DEB_TRACE() << "Apply Acquisition Parameters";
   m_ct_acq->apply(m_policy);
+
+  DEB_TRACE() << "Prepare Accumulation if needed";
+  m_ct_accumulation->prepare();
 
   DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();
@@ -266,13 +275,18 @@ void CtControl::getStatus(Status& status) const
 	  m_hw->getStatus(aHwStatus);
 	  DEB_TRACE() << DEB_VAR1(aHwStatus);
 	  // set the status to hw acquisition status
-	  m_status.AcquisitionStatus = aHwStatus.acq; 
+	  m_status.AcquisitionStatus = aHwStatus.acq;
+	  AcqMode anAcqMode;
+	  m_ct_acq->getAcqMode(anAcqMode);
 
-	  int last_hw_frame = m_hw->getNbAcquiredFrames() - 1;
-	  bool aFalseIdle = ((aHwStatus.acq == AcqReady) && 
-			     (anImageCnt.LastImageAcquired != last_hw_frame));
-	  if (aFalseIdle)
-	    m_status.AcquisitionStatus = AcqRunning;
+	  if(anAcqMode != Accumulation)
+	    {
+	      int last_hw_frame = m_hw->getNbAcquiredFrames() - 1;
+	      bool aFalseIdle = ((aHwStatus.acq == AcqReady) && 
+				 (anImageCnt.LastImageAcquired != last_hw_frame));
+	      if (aFalseIdle)
+		m_status.AcquisitionStatus = AcqRunning;
+	    }
 	}
       else
 	m_status.AcquisitionStatus = AcqRunning;

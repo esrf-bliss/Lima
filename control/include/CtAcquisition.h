@@ -87,6 +87,7 @@ namespace lima
       bool	latencyTime;
       bool	triggerMode;
       bool	accMaxExpoTime;
+      bool	acqMode;
     };
 
     void _updateAccPars() const;

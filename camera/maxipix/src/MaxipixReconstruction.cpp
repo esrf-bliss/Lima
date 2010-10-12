@@ -9,140 +9,188 @@ static const int MAXIPIX_NB_COLUMN = 256;
 //----------------------------------------------------------------------------
 //			  5x1 copy function
 //----------------------------------------------------------------------------
-#define COPY_5x1 \
-  /* set aSrcPt to the last line of the 5th chip */	 \
-  unsigned char *aSrcPt = ((unsigned char*)src.data()) + \
-    (MAXIPIX_LINE_SIZE * 5 * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE; \
+#define COPY_5x1				\
+  int maxipix_line_size = MAXIPIX_LINE_SIZE;	\
+  int depth = src.depth();			\
+  if(depth == 4)				\
+    maxipix_line_size <<= 1;				\
+  /* set aSrcPt to the last line of the 5th chip */	\
+  unsigned char *aSrcPt = ((unsigned char*)src.data()) +		\
+			  (maxipix_line_size * 5 * MAXIPIX_NB_LINE) - maxipix_line_size; \
   /*set aDstPt to the last line of the 5th chip including the gap */	\
-  unsigned char *aDstPt = ((unsigned char*)dst.data()) + \
-    ((MAXIPIX_LINE_SIZE * 5 + xSpace * 2 * 4) * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE; \
- \
-  int aNbLine = MAXIPIX_NB_LINE; \
-  do \
-    { \
-      int MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE; \
-      						      \
-      int aNbChipCopyWithGap = 4; \
-      do			  \
-    	{ \
-	  memmove(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY); \
-	  GAP_COPY_FUNCTION \
-	  aDstPt -= MAXIPIX_LINE_SIZE + xSpace * 2; \
-	  aSrcPt -= MAXIPIX_LINE_SIZE; \
-	} \
-      while(--aNbChipCopyWithGap);		    \
-      memmove(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY); \
-      aDstPt -= MAXIPIX_LINE_SIZE; \
-      aSrcPt -= MAXIPIX_LINE_SIZE; \
-    } \
-  while(--aNbLine);
+  unsigned char *aDstPt = ((unsigned char*)dst.data()) +		\
+			  ((maxipix_line_size * 5 + xSpace * depth * 4) * MAXIPIX_NB_LINE) - maxipix_line_size;	\
+									\
+  int aNbLine = MAXIPIX_NB_LINE;					\
+  do									\
+    {									\
+      int MAXIPIX_LINE_SIZE_COPY = maxipix_line_size;			\
+									\
+      int aNbChipCopyWithGap = 4;					\
+      do								\
+	{								\
+	  memmove(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY);		\
+	  GAP_COPY_FUNCTION						\
+	  aDstPt -= maxipix_line_size + xSpace * depth;		        \
+	  aSrcPt -= maxipix_line_size;					\
+	}								\
+      while(--aNbChipCopyWithGap);					\
+      memmove(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY);			\
+      aDstPt -= maxipix_line_size;					\
+      aSrcPt -= maxipix_line_size;					\
+    }									\
+while(--aNbLine);
 
 static void _raw_5x1(Data &src,Data &dst,
-			    int xSpace)
+		     int xSpace)
 {
-//   /* set aSrcPt to the last line of the 5th chip */	
-//   unsigned char *aSrcPt = ((unsigned char*)src.data()) +
-//     (MAXIPIX_LINE_SIZE * 5 * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE;
-//   /*set aDstPt to the last line of the 5th chip including the gap */	
-//   unsigned char *aDstPt = ((unsigned char*)dst.data()) +
-//     ((MAXIPIX_LINE_SIZE * 5 + xSpace * 2 * 4) * MAXIPIX_NB_LINE) - MAXIPIX_LINE_SIZE;
-
-//   int aNbLine = MAXIPIX_NB_LINE;
-//   do
-//     {
-//       int MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE;
-      						
-//       int aNbChipCopyWithGap = 4;
-//       do			
-//     	{
-// 	  memcpy(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY);
-// 	  unsigned short *aPixel = ((unsigned short*)aDstPt) - 1;
-// 	  for(int i = xSpace;i;--i,--aPixel)
-// 	    *aPixel = 0;
-
-// 	  aDstPt -= MAXIPIX_LINE_SIZE + xSpace * 2;
-// 	  aSrcPt -= MAXIPIX_LINE_SIZE;
-// 	}
-//       while(--aNbChipCopyWithGap);
-//       memcpy(aDstPt,aSrcPt,MAXIPIX_LINE_SIZE_COPY);
-//       aDstPt -= MAXIPIX_LINE_SIZE;
-//       aSrcPt -= MAXIPIX_LINE_SIZE;
-//     }
-//   while(--aNbLine);
+  if(src.depth() == 4)		// Accumulation
+    {
 #ifdef GAP_COPY_FUNCTION
 #undef GAP_COPY_FUNCTION
 #endif
-#define GAP_COPY_FUNCTION \
-  unsigned short *aPixel = ((unsigned short*)aDstPt) - 1;	\
-  for(int i = xSpace;i;--i,--aPixel)				\
-    *aPixel = 0;
-COPY_5x1
+#define GAP_COPY_FUNCTION			\
+      int *aPixel = ((int*)aDstPt) - 1;		\
+      for(int i = xSpace;i;--i,--aPixel)	\
+	*aPixel = 0;
+      COPY_5x1;
+    }
+  else
+    {
+#ifdef GAP_COPY_FUNCTION
+#undef GAP_COPY_FUNCTION
+#endif
+#define GAP_COPY_FUNCTION					\
+      unsigned short *aPixel = ((unsigned short*)aDstPt) - 1;	\
+      for(int i = xSpace;i;--i,--aPixel)			\
+	*aPixel = 0;
+      COPY_5x1;
+    }
 }
 
 static inline void _zero_5x1(Data &src,Data &dst,
 			     int xSpace)
 {
+  if(src.depth() == 4)
+    {
 #ifdef GAP_COPY_FUNCTION
 #undef GAP_COPY_FUNCTION
 #endif
-#define GAP_COPY_FUNCTION \
-  MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 2; \
-  unsigned short *aPixel = ((unsigned short*)aDstPt); \
-  for(int i = xSpace + 2;i;--i,--aPixel) \
-    *aPixel = 0;
-COPY_5x1
+#define GAP_COPY_FUNCTION				\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 4;	\
+      int*aPixel = ((int*)aDstPt);			\
+      for(int i = xSpace + 2;i;--i,--aPixel)		\
+	*aPixel = 0;
+      COPY_5x1;
+    }
+  else
+    {
+#ifdef GAP_COPY_FUNCTION
+#undef GAP_COPY_FUNCTION
+#endif
+#define GAP_COPY_FUNCTION					\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 2;		\
+      unsigned short *aPixel = ((unsigned short*)aDstPt);	\
+      for(int i = xSpace + 2;i;--i,--aPixel)			\
+	*aPixel = 0;
+      COPY_5x1;
+    }
 }
 static inline void _dispatch_5x1(Data &src,Data &dst,
 				 int xSpace)
 {
   int nbPixelDispatch = (xSpace >> 1) + 1; // (xSpace / 2) + 1
+  if(src.depth() == 4)
+    {
 #ifdef GAP_COPY_FUNCTION
 #undef GAP_COPY_FUNCTION
 #endif
-#define GAP_COPY_FUNCTION \
-  MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 2; \
-  unsigned short *aPixel = ((unsigned short*)aDstPt); \
-  unsigned short aPixelValue = *aPixel / nbPixelDispatch; \
-  for(int i = nbPixelDispatch;i;--i,--aPixel) \
-    *aPixel = aPixelValue; \
-   \
-  unsigned short *aSrcPixel = ((unsigned short*)aSrcPt) - 1; \
-  aPixelValue = *aSrcPixel / nbPixelDispatch; \
-  for(int i = nbPixelDispatch;i;--i,--aPixel) \
-    *aPixel = aPixelValue; 
-COPY_5x1
+#define GAP_COPY_FUNCTION						\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 4;			\
+      int *aPixel = ((int*)aDstPt);					\
+      int aPixelValue = *aPixel / nbPixelDispatch;			\
+      for(int i = nbPixelDispatch;i;--i,--aPixel)			\
+	*aPixel = aPixelValue;						\
+									\
+      int *aSrcPixel = ((int*)aSrcPt) - 1;	\
+      aPixelValue = *aSrcPixel / nbPixelDispatch;			\
+      for(int i = nbPixelDispatch;i;--i,--aPixel)			\
+	*aPixel = aPixelValue; 
+      COPY_5x1;
+    }
+  else
+    {
+#ifdef GAP_COPY_FUNCTION
+#undef GAP_COPY_FUNCTION
+#endif
+#define GAP_COPY_FUNCTION						\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 2;			\
+      unsigned short *aPixel = ((unsigned short*)aDstPt);		\
+      unsigned short aPixelValue = *aPixel / nbPixelDispatch;		\
+      for(int i = nbPixelDispatch;i;--i,--aPixel)			\
+	*aPixel = aPixelValue;						\
+									\
+      unsigned short *aSrcPixel = ((unsigned short*)aSrcPt) - 1;	\
+      aPixelValue = *aSrcPixel / nbPixelDispatch;			\
+      for(int i = nbPixelDispatch;i;--i,--aPixel)			\
+	*aPixel = aPixelValue; 
+      COPY_5x1;
+    }
 }
 
 static inline void _mean_5x1(Data &src,Data &dst,
-				 int xSpace)
+			     int xSpace)
 {
   int nbPixelMean = (xSpace >> 1) + 1; // (xSpace / 2) + 1
+  if(src.depth() == 4)
+    {
 #ifdef GAP_COPY_FUNCTION
 #undef GAP_COPY_FUNCTION
 #endif
-#define GAP_COPY_FUNCTION \
-  MAXIPIX_LINE_SIZE_COPY = MAXIPIX_LINE_SIZE - 2; \
-  unsigned short *aPixel = ((unsigned short*)aDstPt); \
-  unsigned short aFirstPixelValue = *aPixel / nbPixelMean; \
-  *aPixel = aFirstPixelValue;--aPixel; \
-   \
-  unsigned short *aSrcPixel = ((unsigned short*)aSrcPt) - 1; \
-  unsigned short aSecondPixelValue = *aSrcPixel / nbPixelMean; \
-  float aStepValue = (aSecondPixelValue - aFirstPixelValue) / (xSpace + 1); \
-  float aPixelValue = aFirstPixelValue + aStepValue; \
-  for(int i = xSpace + 1;i;--i,aPixelValue += aStepValue,--aPixel) \
-    *aPixel = (unsigned short)aPixelValue;
-COPY_5x1
+#define GAP_COPY_FUNCTION						\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 4;			\
+      int*aPixel = ((int*)aDstPt);					\
+      int aFirstPixelValue = *aPixel / nbPixelMean;			\
+      *aPixel = aFirstPixelValue;--aPixel;				\
+									\
+      int *aSrcPixel = ((int*)aSrcPt) - 1;				\
+      int aSecondPixelValue = *aSrcPixel / nbPixelMean;			\
+      float aStepValue = (aSecondPixelValue - aFirstPixelValue) / (xSpace + 1); \
+      float aPixelValue = aFirstPixelValue + aStepValue;		\
+      for(int i = xSpace + 1;i;--i,aPixelValue += aStepValue,--aPixel)	\
+	*aPixel = (int)aPixelValue;
+      COPY_5x1;
+    }
+  else
+    {
+#ifdef GAP_COPY_FUNCTION
+#undef GAP_COPY_FUNCTION
+#endif
+#define GAP_COPY_FUNCTION						\
+      MAXIPIX_LINE_SIZE_COPY = maxipix_line_size - 2;			\
+      unsigned short *aPixel = ((unsigned short*)aDstPt);		\
+      unsigned short aFirstPixelValue = *aPixel / nbPixelMean;		\
+      *aPixel = aFirstPixelValue;--aPixel;				\
+									\
+      unsigned short *aSrcPixel = ((unsigned short*)aSrcPt) - 1;	\
+      unsigned short aSecondPixelValue = *aSrcPixel / nbPixelMean;	\
+      float aStepValue = (aSecondPixelValue - aFirstPixelValue) / (xSpace + 1); \
+      float aPixelValue = aFirstPixelValue + aStepValue;		\
+      for(int i = xSpace + 1;i;--i,aPixelValue += aStepValue,--aPixel)	\
+	*aPixel = (unsigned short)aPixelValue;
+      COPY_5x1;
+    }
 }
 //----------------------------------------------------------------------------
 //			     2x2 function
 //----------------------------------------------------------------------------
+template<class type>
 static inline void copy_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 {
   int aTotalWidth = (MAXIPIX_NB_COLUMN * 2) + xSpace;
   int aTotalHeight = (MAXIPIX_NB_LINE * 2) + ySpace;
-  unsigned short *aSrcPt = (unsigned short*)src.data();
-  unsigned short *aDstPt = ((unsigned short*)dst->data) + (aTotalWidth * aTotalHeight) - aTotalWidth;
+  type *aSrcPt = (type*)src.data();
+  type *aDstPt = ((type*)dst->data) + (aTotalWidth * aTotalHeight) - aTotalWidth;
 
   int aJump2LeftChip = aTotalWidth - 1;
   
@@ -176,12 +224,13 @@ static inline void copy_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 
 }
 
+template<class type>
 static inline void _raw_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 {
-  copy_2x2(src,dst,xSpace,ySpace);
+  copy_2x2<type>(src,dst,xSpace,ySpace);
 
   int aTotalWidth = (MAXIPIX_NB_COLUMN * 2) + xSpace;
-  unsigned short *aDstPt = ((unsigned short*)dst->data) + MAXIPIX_NB_COLUMN;
+  type *aDstPt = ((type*)dst->data) + MAXIPIX_NB_COLUMN;
   for(int i = MAXIPIX_NB_LINE;i;--i,aDstPt += aTotalWidth)
     for(int k = 0;k < xSpace;++k)
       aDstPt[k] = 0;
@@ -197,12 +246,13 @@ static inline void _raw_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
       aDstPt[k] = 0;
 }
 
+template<class type>
 static inline void _zero_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 {
   int aTotalWidth = (MAXIPIX_NB_COLUMN * 2) + xSpace;
-  copy_2x2(src,dst,xSpace,ySpace);
+  copy_2x2<type>(src,dst,xSpace,ySpace);
   
-  unsigned short *aDstPt = ((unsigned short*)dst->data) + MAXIPIX_NB_COLUMN - 1;
+  type *aDstPt = ((type*)dst->data) + MAXIPIX_NB_COLUMN - 1;
   for(int i = MAXIPIX_NB_LINE - 1;i;--i,aDstPt += aTotalWidth)
     for(int k = 0;k < xSpace + 2;++k)
       aDstPt[k] = 0;
@@ -218,17 +268,18 @@ static inline void _zero_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
       aDstPt[k] = 0;
 }
 
+template<class type>
 static inline void _dispatch_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 {
   int aTotalWidth = (MAXIPIX_NB_COLUMN * 2) + xSpace;
-  copy_2x2(src,dst,xSpace,ySpace);
+  copy_2x2<type>(src,dst,xSpace,ySpace);
   
-  unsigned short *aDstPt = ((unsigned short*)dst->data) + MAXIPIX_NB_COLUMN - 1;
+  type *aDstPt = ((type*)dst->data) + MAXIPIX_NB_COLUMN - 1;
   int aNbPixel2Dispatch = (xSpace >> 1) + 1;
 
   for(int lineId = MAXIPIX_NB_LINE - 1;lineId;--lineId)
     {
-      unsigned short aPixelValue = *aDstPt / aNbPixel2Dispatch;
+      type aPixelValue = *aDstPt / aNbPixel2Dispatch;
       for(int i = aNbPixel2Dispatch;i;--i,++aDstPt)
 	*aDstPt = aPixelValue;
 
@@ -249,16 +300,17 @@ static inline void _dispatch_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
   */
   do
     {
+      type aPixelValue;
       //Last line or first line of left chip (depend on aPart)
       for(int columnIter = MAXIPIX_NB_COLUMN - 1;columnIter;--columnIter,++aDstPt)
 	{
-	  unsigned short aPixelValue = *aDstPt / aNbPixel2DispatchInY;
+	  aPixelValue = *aDstPt / aNbPixel2DispatchInY;
 	  for(int y = 0;y < aNbPixel2DispatchInY;++y)
 	    aDstPt[aTotalWidth * y] = aPixelValue;
 	}
   
       //Bottom or top right corner of left chip
-      unsigned short aPixelValue = *aDstPt / (aNbPixel2DispatchInY * aNbPixel2Dispatch);
+      aPixelValue = *aDstPt / (aNbPixel2DispatchInY * aNbPixel2Dispatch);
       for(int columnIter = aNbPixel2Dispatch;columnIter;--columnIter,++aDstPt)
 	{
 	  for(int y = 0;y < aNbPixel2DispatchInY;++y)
@@ -285,12 +337,12 @@ static inline void _dispatch_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
     }
   while(--aPart);
 
-  aDstPt = ((unsigned short*)dst->data) + aTotalWidth * (MAXIPIX_NB_LINE + ySpace + 1) +
+  aDstPt = ((type*)dst->data) + aTotalWidth * (MAXIPIX_NB_LINE + ySpace + 1) +
     MAXIPIX_NB_COLUMN - 1;
   
   for(int lineId = MAXIPIX_NB_LINE - 1;lineId;--lineId)
     {
-      unsigned short aPixelValue = *aDstPt / aNbPixel2Dispatch;
+      type aPixelValue = *aDstPt / aNbPixel2Dispatch;
       for(int i = aNbPixel2Dispatch;i;--i,++aDstPt)
 	*aDstPt = aPixelValue;
 
@@ -302,11 +354,12 @@ static inline void _dispatch_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
     }
 }
 
+template<class type>
 static inline void _mean_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 {
   int aTotalWidth = (MAXIPIX_NB_COLUMN * 2) + xSpace;
-  copy_2x2(src,dst,xSpace,ySpace);
-  unsigned short *aDstPt = ((unsigned short*)dst->data) + MAXIPIX_NB_COLUMN - 1;
+  copy_2x2<type>(src,dst,xSpace,ySpace);
+  type *aDstPt = ((type*)dst->data) + MAXIPIX_NB_COLUMN - 1;
   int aNbXPixel2Dispatch = (xSpace >> 1) + 1;
   int aNbYPixel2Dispatch = (ySpace >> 1) + 1;
 
@@ -315,12 +368,12 @@ static inline void _mean_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
       float aFirstValue = *aDstPt / float(aNbXPixel2Dispatch);
       float aLastValue = aDstPt[xSpace + 1] / float(aNbXPixel2Dispatch);
       float anInc = (aLastValue - aFirstValue) / (xSpace + 1);
-      *aDstPt = (unsigned short)aFirstValue;
-      aDstPt[xSpace + 1] = (unsigned short)aLastValue;
+      *aDstPt = (type)aFirstValue;
+      aDstPt[xSpace + 1] = (type)aLastValue;
       aFirstValue += anInc;
 
       for(int i = 0;i < xSpace;++i,aFirstValue += anInc)
-	aDstPt[1 + i] = (unsigned short)aFirstValue;
+	aDstPt[1 + i] = (type)aFirstValue;
     }
 
   //corner
@@ -353,12 +406,12 @@ static inline void _mean_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
     {
       for(int colId = 0;colId < xSpace + 2;++colId)
 	{
-	  aDstPt[colId] = (unsigned short)aFirstLinePt[colId];
+	  aDstPt[colId] = (type)aFirstLinePt[colId];
 	  aFirstLinePt[colId] += anIncBuffer[colId];
 	}
     }
   for(int colId = 0;colId < xSpace + 2;++colId)
-    aDstPt[colId] = (unsigned short)aLastLinePt[colId];
+    aDstPt[colId] = (type)aLastLinePt[colId];
 
   delete [] aFirstLinePt;
   delete [] aLastLinePt;
@@ -367,8 +420,8 @@ static inline void _mean_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
   //center lines
   aDstPt -= (aTotalWidth * (ySpace + 1)) + MAXIPIX_NB_COLUMN - 1;
   
-  unsigned short *aFirstValuePt = aDstPt;
-  unsigned short *aSecondValuePt = aDstPt + (aTotalWidth * (ySpace + 1));
+  type *aFirstValuePt = aDstPt;
+  type *aSecondValuePt = aDstPt + (aTotalWidth * (ySpace + 1));
   
   int aNbChip = 2;
   do
@@ -378,13 +431,13 @@ static inline void _mean_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
 	  float aFirstValue = *aFirstValuePt / float(aNbYPixel2Dispatch);
 	  float aLastValue = *aSecondValuePt / float(aNbYPixel2Dispatch);
 	  anInc = (aLastValue - aFirstValue) / (ySpace + 1);
-	  *aFirstValuePt = (unsigned short)aFirstValue;
-	  *aSecondValuePt = (unsigned short)aLastValue;
+	  *aFirstValuePt = (type)aFirstValue;
+	  *aSecondValuePt = (type)aLastValue;
 
 	  aFirstValue += anInc;
 
 	  for(int lineIter = 0;lineIter < ySpace;++lineIter,aFirstValue += anInc)
-	    aFirstValuePt[(1 + lineIter) * aTotalWidth] = (unsigned short)aFirstValue;
+	    aFirstValuePt[(1 + lineIter) * aTotalWidth] = (type)aFirstValue;
 	}
       aFirstValuePt += xSpace + 2;
       aSecondValuePt += xSpace + 2;
@@ -397,12 +450,12 @@ static inline void _mean_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
       float aFirstValue = *aDstPt / float(aNbXPixel2Dispatch);
       float aLastValue = aDstPt[xSpace + 1] / float(aNbXPixel2Dispatch);
       float anInc = (aLastValue - aFirstValue) / (xSpace + 1);
-      *aDstPt = (unsigned short)aFirstValue;
-      aDstPt[xSpace + 1] = (unsigned short)aLastValue;
+      *aDstPt = (type)aFirstValue;
+      aDstPt[xSpace + 1] = (type)aLastValue;
       aFirstValue += anInc;
 
       for(int i = 0;i < xSpace;++i,aFirstValue += anInc)
-	aDstPt[1 + i] = (unsigned short)aFirstValue;
+	aDstPt[1 + i] = (type)aFirstValue;
     }
   
 }
@@ -447,8 +500,7 @@ Data MaxipixReconstruction::process(Data &aData)
       aReturnData.width = MAXIPIX_NB_COLUMN * 5 + 4 * mXSpace;
       if(!_processingInPlaceFlag)
 	{
-	  Buffer *aNewBuffer = new Buffer((MAXIPIX_LINE_SIZE * 5 + (mXSpace << 1) * 4) * 
-					  MAXIPIX_NB_LINE);
+	  Buffer *aNewBuffer = new Buffer(aReturnData.size());
 	  aReturnData.setBuffer(aNewBuffer);
 	}
       switch(mType)
@@ -470,18 +522,33 @@ Data MaxipixReconstruction::process(Data &aData)
       aReturnData.width = MAXIPIX_NB_COLUMN * 2 + mXSpace;
       aReturnData.height = MAXIPIX_NB_LINE * 2 + mYSpace;
 
-      int aBufferSize = (aReturnData.width * aReturnData.height) << 1;
-      Buffer *aNewBuffer = new Buffer(aBufferSize);
+      Buffer *aNewBuffer = new Buffer(aReturnData.size());
       switch(mType)
 	{
 	case RAW:
-	  _raw_2x2(aData,aNewBuffer,mXSpace,mYSpace);break;
-	case ZERO: 
-	  _zero_2x2(aData,aNewBuffer,mXSpace,mYSpace);break;
+	  if(aReturnData.depth() == 4)
+	    _raw_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _raw_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
+	case ZERO:
+	  if(aReturnData.depth() == 4)
+	    _zero_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _zero_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
 	case DISPATCH:
-	  _dispatch_2x2(aData,aNewBuffer,mXSpace,mYSpace);break;
+	  if(aReturnData.depth() == 4)
+	    _dispatch_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _dispatch_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
 	case MEAN:
-	  _mean_2x2(aData,aNewBuffer,mXSpace,mYSpace);break;
+	  if(aReturnData.depth() == 4)
+	    _mean_2x2<int>(aData,aNewBuffer,mXSpace,mYSpace);
+	  else
+	    _mean_2x2<unsigned short>(aData,aNewBuffer,mXSpace,mYSpace);
+	  break;
 	default:		// ERROR
 	  break;
 	}
@@ -490,7 +557,7 @@ Data MaxipixReconstruction::process(Data &aData)
 	{
 	  unsigned char *aSrcPt = (unsigned char*)aNewBuffer->data;
 	  unsigned char *aDstPt = (unsigned char*)aData.data();
-	  memcpy(aDstPt,aSrcPt,aBufferSize);
+	  memcpy(aDstPt,aSrcPt,aReturnData.size());
 	}
       else
 	aReturnData.setBuffer(aNewBuffer);
