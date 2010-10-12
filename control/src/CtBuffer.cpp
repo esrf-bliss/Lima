@@ -166,6 +166,8 @@ void CtBuffer::setup(CtControl *ct)
   img->getHwImageDim(fdim);
 
   int hwNbBuffer = acq_nframes,nbuffers = acq_nframes;
+  int max_nbuffers;
+  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
   m_ct_accumulation = NULL;
   switch (mode) {
   case Single:
@@ -176,7 +178,7 @@ void CtBuffer::setup(CtControl *ct)
     concat_nframes= 1;
     m_ct_accumulation = ct->accumulation();
     hwNbBuffer = 16;
-    nbuffers -= hwNbBuffer;
+    nbuffers = max_nbuffers - hwNbBuffer;
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
@@ -185,11 +187,9 @@ void CtBuffer::setup(CtControl *ct)
   m_hw_buffer->setFrameDim(fdim);
   m_hw_buffer->setNbConcatFrames(concat_nframes);
 
-  int max_nbuffers;
-  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
   if (hwNbBuffer > max_nbuffers)
     hwNbBuffer = max_nbuffers;
-  m_hw_buffer->setNbBuffers(nbuffers);
+  m_hw_buffer->setNbBuffers(hwNbBuffer);
   m_pars.nbBuffers = nbuffers;
   registerFrameCallback(ct);
   m_frame_cb->m_ct_accumulation = m_ct_accumulation;
