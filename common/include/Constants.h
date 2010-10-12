@@ -2,6 +2,7 @@
 #define CONSTANTS_H
 
 #include <ostream>
+#include <vector>
 
 namespace lima
 {
@@ -41,6 +42,14 @@ enum BufferMode {
 };
 
 std::ostream& operator <<(std::ostream& os, BufferMode buffer_mode);
+
+enum ShutterMode {
+  ShutterManual, ShutterAutoFrame, ShutterAutoSequence
+};
+
+typedef std::vector<ShutterMode> ShutterModeList;
+
+std::ostream& operator <<(std::ostream& os, ShutterMode shutter_mode);
 
 enum AcqStatus {
 	AcqReady, AcqRunning, AcqFault,

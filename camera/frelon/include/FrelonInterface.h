@@ -217,17 +217,18 @@ public:
 	ShutterCtrlObj(Camera& cam);
 	virtual ~ShutterCtrlObj();
 
-	virtual bool checkMode(Mode shut_mode);
-	virtual void setMode(Mode  shut_mode);
-	virtual void getMode(Mode& shut_mode);
+	virtual bool checkMode(ShutterMode shut_mode) const;
+	virtual void getModeList(ShutterModeList&  mode_list) const;
+	virtual void setMode(ShutterMode  shut_mode);
+	virtual void getMode(ShutterMode& shut_mode) const;
 
 	virtual void setState(bool  shut_open);
-	virtual void getState(bool& shut_open);
+	virtual void getState(bool& shut_open) const;
 
 	virtual void setOpenTime (double  shut_open_time);
-	virtual void getOpenTime (double& shut_open_time);
+	virtual void getOpenTime (double& shut_open_time) const;
 	virtual void setCloseTime(double  shut_close_time);
-	virtual void getCloseTime(double& shut_close_time);
+	virtual void getCloseTime(double& shut_close_time) const;
 
  private:
 	Camera& m_cam;

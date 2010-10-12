@@ -466,15 +466,15 @@ ShutterCtrlObj::~ShutterCtrlObj()
 	DEB_DESTRUCTOR();
 }
 
-bool ShutterCtrlObj::checkMode(Mode shut_mode)
+bool ShutterCtrlObj::checkMode(ShutterMode shut_mode) const
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(shut_mode);
 
 	bool valid_mode;
 	switch (shut_mode) {
-	case Manual:
-	case AutoFrame:
+	case ShutterManual:
+	case ShutterAutoFrame:
 		valid_mode = true;
 		break;
 	default:
@@ -485,7 +485,14 @@ bool ShutterCtrlObj::checkMode(Mode shut_mode)
 	return valid_mode;
 }
 
-void ShutterCtrlObj::setMode(Mode shut_mode)
+void ShutterCtrlObj::getModeList(ShutterModeList& mode_list) const
+{
+	DEB_MEMBER_FUNCT();
+	mode_list.push_back(lima::ShutterManual);
+	mode_list.push_back(lima::ShutterAutoFrame);	
+}
+
+void ShutterCtrlObj::setMode(ShutterMode shut_mode)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(shut_mode);
@@ -495,17 +502,17 @@ void ShutterCtrlObj::setMode(Mode shut_mode)
 					     << DEB_VAR1(shut_mode);
 
 	ShutMode cam_mode;
-	cam_mode = (shut_mode == AutoFrame) ? Frelon::AutoFrame : Frelon::Off;
+	cam_mode = (shut_mode == ShutterAutoFrame) ? Frelon::AutoFrame : Frelon::Off;
 	m_cam.setShutMode(cam_mode);
 }
 
-void ShutterCtrlObj::getMode(Mode& shut_mode)
+void ShutterCtrlObj::getMode(ShutterMode& shut_mode) const
 {
 	DEB_MEMBER_FUNCT();
 
 	ShutMode cam_mode;
 	m_cam.getShutMode(cam_mode);
-	shut_mode = (cam_mode == Frelon::AutoFrame) ? AutoFrame : Manual;
+	shut_mode = (cam_mode == Frelon::AutoFrame) ? ShutterAutoFrame : ShutterManual;
 	DEB_RETURN() << DEB_VAR1(shut_mode);
 }
 
@@ -514,22 +521,22 @@ void ShutterCtrlObj::setState(bool open)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(open);
 
-	Mode mode;
+	ShutterMode mode;
 	getMode(mode);
-	if (mode != Manual)
+	if (mode != ShutterManual)
 		THROW_HW_ERROR(NotSupported) << "Not in manual shutter mode";
 	else if (open)
 		THROW_HW_ERROR(NotSupported) << "Manual shutter open "
 					        "not supported";
 }
 
-void ShutterCtrlObj::getState(bool& open)
+void ShutterCtrlObj::getState(bool& open) const
 {
 	DEB_MEMBER_FUNCT();
 
-	Mode mode;
+	ShutterMode mode;
 	getMode(mode);
-	if (mode != Manual)
+	if (mode != ShutterManual)
 		THROW_HW_ERROR(NotSupported) << "Not in manual shutter mode";
 
 	open = false;
@@ -546,7 +553,7 @@ void ShutterCtrlObj::setOpenTime(double shut_open_time)
 					     << DEB_VAR1(shut_open_time);
 }
 
-void ShutterCtrlObj::getOpenTime(double& shut_open_time)
+void ShutterCtrlObj::getOpenTime(double& shut_open_time) const
 {
 	DEB_MEMBER_FUNCT();
 	shut_open_time = 0;
@@ -559,7 +566,7 @@ void ShutterCtrlObj::setCloseTime(double shut_close_time)
 	m_cam.setShutCloseTime(shut_close_time);
 }
 
-void ShutterCtrlObj::getCloseTime(double& shut_close_time)
+void ShutterCtrlObj::getCloseTime(double& shut_close_time) const
 {
 	DEB_MEMBER_FUNCT();
 	m_cam.getShutCloseTime(shut_close_time);

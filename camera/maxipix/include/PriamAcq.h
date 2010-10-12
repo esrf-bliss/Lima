@@ -51,7 +51,7 @@ class PriamAcq {
     };
 
     enum ReadoutMode {
-      PARALELL,
+      PARALLEL,
       SERIAL
     };
 

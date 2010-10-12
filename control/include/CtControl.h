@@ -20,6 +20,7 @@ namespace lima
   class CtBufferFrameCB;
   class CtSaving;
   class CtSpsImage;
+  class CtShutter;
 
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
@@ -99,6 +100,7 @@ namespace lima
     CtSpsImage* display() { return m_ct_sps_image; }
     CtImage* image() { return m_ct_image; }
     CtBuffer* buffer() { return m_ct_buffer; }
+    CtShutter* shutter() { return m_ct_shutter; }
 
     SoftOpExternalMgr* externalOperation() {return m_op_ext;}
 
@@ -155,6 +157,7 @@ namespace lima
     CtAcquisition	*m_ct_acq;
     CtImage		*m_ct_image;
     CtBuffer		*m_ct_buffer;
+    CtShutter		*m_ct_shutter;
     SoftOpInternalMgr   *m_op_int;
     SoftOpExternalMgr	*m_op_ext;
 

@@ -4,6 +4,7 @@ using namespace std;
 using namespace lima;
 using namespace lima::Maxipix;
 
+
 DetInfoCtrlObj::DetInfoCtrlObj(MaxipixDet& det)
 	       :m_det(det)
 {
@@ -287,6 +288,121 @@ void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
     DEB_RETURN() << DEB_VAR2(valid_ranges.min_lat_time, valid_ranges.max_lat_time);
 }
 
+/*******************************************************************
+ * \brief ShutterCtrlObj constructor
+ *******************************************************************/
+
+ShutterCtrlObj::ShutterCtrlObj(PriamAcq& priam)
+	: m_priam(priam)
+{
+	DEB_CONSTRUCTOR();
+}
+
+ShutterCtrlObj::~ShutterCtrlObj()
+{
+	DEB_DESTRUCTOR();
+}
+
+bool ShutterCtrlObj::checkMode(ShutterMode shut_mode) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(shut_mode);
+
+	bool valid_mode;
+	switch (shut_mode) {	
+	case ShutterAutoFrame:
+	case ShutterAutoSequence:
+		valid_mode = true;
+		break;
+	default:
+	// No Manual mode for Maxipix !
+		valid_mode = false;
+	}
+
+	DEB_RETURN() << DEB_VAR1(valid_mode);
+	return valid_mode;
+}
+
+void ShutterCtrlObj::getModeList(ShutterModeList& mode_list) const
+{
+	DEB_MEMBER_FUNCT();
+	mode_list.push_back(ShutterAutoFrame);
+	mode_list.push_back(ShutterAutoSequence);
+}
+
+void ShutterCtrlObj::setMode(ShutterMode shut_mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(shut_mode);
+
+	if (!checkMode(shut_mode))
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR1(shut_mode);
+
+	PriamAcq::ShutterMode cam_mode;
+	cam_mode = (shut_mode == ShutterAutoFrame) ? PriamAcq::FRAME : PriamAcq::SEQUENCE;
+	m_priam.setShutterMode(cam_mode);
+}
+
+void ShutterCtrlObj::getMode(ShutterMode& shut_mode) const
+{
+	DEB_MEMBER_FUNCT();
+
+	PriamAcq::ShutterMode cam_mode;
+	m_priam.getShutterMode(cam_mode);
+	shut_mode = (cam_mode == PriamAcq::FRAME) ? ShutterAutoFrame : ShutterAutoSequence;
+	DEB_RETURN() << DEB_VAR1(shut_mode);
+}
+
+void ShutterCtrlObj::setState(bool open)
+{
+	DEB_MEMBER_FUNCT();
+
+	THROW_HW_ERROR(NotSupported) << "No manual mode for Maxipix";
+}
+
+void ShutterCtrlObj::getState(bool& open) const
+{
+	DEB_MEMBER_FUNCT();
+
+	THROW_HW_ERROR(NotSupported) << "No manual mode for Maxipix";
+
+}
+
+void ShutterCtrlObj::setOpenTime(double shut_open_time)
+{
+	DEB_MEMBER_FUNCT();
+	double settime;
+			
+	m_priam.setShutterTime(shut_open_time, settime);
+}
+
+void ShutterCtrlObj::getOpenTime(double& shut_open_time) const
+{
+	DEB_MEMBER_FUNCT();
+	m_priam.getShutterTime(shut_open_time);
+	DEB_RETURN() << DEB_VAR1(shut_open_time);
+}
+
+void ShutterCtrlObj::setCloseTime(double shut_close_time)
+{
+	DEB_MEMBER_FUNCT();
+	double settime;
+	double opentime;
+	
+	getOpenTime(opentime);
+	if (shut_close_time != opentime)
+		THROW_HW_ERROR(NotSupported) << "Open and Close times must be same" 
+					     << DEB_VAR1(shut_close_time);
+		
+	m_priam.setShutterTime(shut_close_time, settime);
+}
+
+void ShutterCtrlObj::getCloseTime(double& shut_close_time) const
+{
+	DEB_MEMBER_FUNCT();
+	m_priam.getShutterTime(shut_close_time);
+}
 
 /*******************************************************************
  * \brief Hw Interface constructor
@@ -296,7 +412,8 @@ Interface::Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr,
                      PriamAcq& priam, MaxipixDet& det)
         : m_acq(acq), m_buffer_mgr(buffer_mgr),
           m_priam(priam), m_acq_end_cb(priam), m_det_info(det), 
-	  m_buffer(buffer_mgr), m_sync(acq, m_priam, m_buffer)
+	  m_buffer(buffer_mgr), m_sync(acq, m_priam, m_buffer),
+	  m_shutter(priam)
 {
         DEB_CONSTRUCTOR();
 
@@ -310,6 +427,9 @@ Interface::Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr,
 
         HwSyncCtrlObj *sync = &m_sync;
         m_cap_list.push_back(HwCap(sync));
+
+	HwShutterCtrlObj *shutter = &m_shutter;
+	m_cap_list.push_back(HwCap(shutter));
 
         reset(SoftReset);
 }

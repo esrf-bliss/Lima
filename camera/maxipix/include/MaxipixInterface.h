@@ -118,6 +118,35 @@ class SyncCtrlObj : public HwSyncCtrlObj
     PriamAcq& m_priam;
 };
 
+/*******************************************************************
+ * \class ShutterCtrlObj
+ * \brief Control object providing Frelon shutter interface
+ *******************************************************************/
+
+class ShutterCtrlObj : public HwShutterCtrlObj
+{
+	DEB_CLASS(DebModCamera, "ShutterCtrlObj");
+
+public:
+	ShutterCtrlObj(PriamAcq& priam);
+	virtual ~ShutterCtrlObj();
+
+	virtual bool checkMode(ShutterMode shut_mode) const;
+	virtual void getModeList(ShutterModeList&  mode_list) const;
+	virtual void setMode(ShutterMode  shut_mode);
+	virtual void getMode(ShutterMode& shut_mode) const;
+
+	virtual void setState(bool  shut_open);
+	virtual void getState(bool& shut_open) const;
+
+	virtual void setOpenTime (double  shut_open_time);
+	virtual void getOpenTime (double& shut_open_time) const;
+	virtual void setCloseTime(double  shut_close_time);
+	virtual void getCloseTime(double& shut_close_time) const;
+
+ private:
+	PriamAcq& m_priam;
+};
 
 /*******************************************************************
  * \class Interface
@@ -166,6 +195,7 @@ class Interface : public HwInterface
 	DetInfoCtrlObj m_det_info;
 	BufferCtrlObj  m_buffer;
 	SyncCtrlObj    m_sync;
+	ShutterCtrlObj m_shutter;
 };
 
 } // namespace Maxipix

@@ -14,7 +14,7 @@ PriamAcq::PriamAcq(PriamSerial& priam_serial)
 	 m_ready_level(HIGH_RISE), m_ready_mode(EXPOSURE_READOUT),
 	 m_gate_level(HIGH_RISE), m_gate_mode(INACTIVE),
 	 m_trig_level(HIGH_RISE), m_trig_mode(IntTrig),
-	 m_read_mode(PARALELL), m_img_mode(NORMAL),
+	 m_read_mode(PARALLEL), m_img_mode(NORMAL),
 	 m_flatfield(0), m_nb_frame(-1)
 {
     DEB_CONSTRUCTOR();
@@ -670,7 +670,7 @@ void PriamAcq::setParalellReadout(vector<int> ports)
     for (int i=0; i<(int)ports.size(); i++)
 	m_port_used.push_back(ports[i]);
     
-    m_read_mode= PARALELL;
+    m_read_mode= PARALLEL;
     _writeRomReg();
 }
 

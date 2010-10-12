@@ -324,6 +324,11 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ]],
+	'camera_model'
+	[[PyTango.DevString'
+	  PyTango.SCALAR,
+	  PyTango.READ]],
+	 
        'acc_max_expotime':
         [[PyTango.DevDouble,
           PyTango.SCALAR,

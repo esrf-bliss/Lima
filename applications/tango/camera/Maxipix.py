@@ -122,7 +122,6 @@ class Maxipix(PyTango.Device_4Impl):
             if type(attr) is not types.StringType:
 	        raise PyTango.DevFailed('Wrong value %s: %s'%(attr_name,attr)) 
             if  attr:
-	        print attr
                 attr_value = self.__getDictValue(dictInstance,attr)
                 if attr_value is None:
                     raise PyTango.DevFailed('Wrong value %s: %s'%(attr_name,attr))  

@@ -51,7 +51,7 @@ public:
   };
 
   enum ReadoutMode {
-    PARALELL,
+    PARALLEL,
     SERIAL
   };
 

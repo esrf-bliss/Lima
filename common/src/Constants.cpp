@@ -67,6 +67,19 @@ ostream& lima::operator <<(ostream& os, BufferMode buffer_mode)
 	return os << name;
 }
 
+ostream& lima::operator <<(ostream& os,ShutterMode shutter_mode)
+{
+  const char *name;
+  switch(shutter_mode)
+    {
+    case ShutterManual: 	name = "Manual";	break;
+    case ShutterAutoFrame: 	name = "Auto frame";	break;
+    case ShutterAutoSequence: 	name = "Auto sequence";	break;
+    default: 			name = "Unknown";	break;
+    }
+  return os << name;
+}
+
 ostream& lima::operator <<(ostream& os, AcqStatus acq_status)
 {
 	string name = "Unknown";

@@ -171,9 +171,10 @@ public:
 	ShutterCtrlObj(Frelon::Camera& cam);
 	virtual ~ShutterCtrlObj();
 
-	virtual bool checkMode(Mode shut_mode);
-	virtual void setMode(Mode  shut_mode);
-	virtual void getMode(Mode& shut_mode /Out/);
+	virtual bool checkMode(ShutterMode shut_mode);
+	virtual void getModeList(ShutterModeList&  mode_list /Out/);
+	virtual void setMode(ShutterMode  shut_mode);
+	virtual void getMode(ShutterMode& shut_mode /Out/);
 
 	virtual void setState(bool  shut_open);
 	virtual void getState(bool& shut_open /Out/);
@@ -182,6 +183,7 @@ public:
 	virtual void getOpenTime (double& shut_open_time /Out/);
 	virtual void setCloseTime(double  shut_close_time);
 	virtual void getCloseTime(double& shut_close_time /Out/);
+
 };
 
 

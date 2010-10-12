@@ -7,6 +7,7 @@
 #include "CtAcquisition.h"
 #include "CtImage.h"
 #include "CtBuffer.h"
+#include "CtShutter.h"
 
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
@@ -89,6 +90,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_acq= new CtAcquisition(hw);
   m_ct_image= new CtImage(hw);
   m_ct_buffer= new CtBuffer(hw);
+  m_ct_shutter = new CtShutter(hw);
 
   //Saving
   m_ct_saving= new CtSaving(*this);
