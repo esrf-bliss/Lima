@@ -135,7 +135,10 @@ void CtAcquisition::_apply()
   if(m_changes.acqMode || m_changes.acqNbFrames)
     {
       if(m_inpars.acqMode == Accumulation)
-	m_hw_sync->setNbFrames(m_acc_nframes);
+	{
+	  _updateAccPars();
+	  m_hw_sync->setNbFrames(m_acc_nframes);
+	}
       else
 	m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
     }
