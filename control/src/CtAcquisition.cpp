@@ -307,13 +307,17 @@ void CtAcquisition::_updateAccPars() const
 
   int acc_div;
   acc_div= int(m_inpars.acqExpoTime / m_inpars.accMaxExpoTime);
-  if (fmod(m_inpars.acqExpoTime,m_inpars.accMaxExpoTime)) {
-    m_acc_nframes= acc_div + 1;
-    m_acc_exptime= m_inpars.acqExpoTime / m_acc_nframes;
-  } else {
-    m_acc_nframes= acc_div;
-    m_acc_exptime= m_inpars.accMaxExpoTime;
-  }
+  double expTime = acc_div * m_inpars.accMaxExpoTime;
+  if(m_inpars.acqExpoTime - expTime > 1e-6)
+    {
+      m_acc_nframes= acc_div + 1;
+      m_acc_exptime= m_inpars.acqExpoTime / m_acc_nframes;
+    } 
+  else 
+    {
+      m_acc_nframes= acc_div;
+      m_acc_exptime= m_inpars.accMaxExpoTime;
+    }
 
   DEB_TRACE() << DEB_VAR2(m_acc_nframes,m_acc_exptime);
 }
