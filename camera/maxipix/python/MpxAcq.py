@@ -118,18 +118,19 @@ class MpxAcq:
     @DEB_MEMBER_FUNCT
     def setFillMode(self, fillMode):
         if self.__cam_inited:
-            if type(fillMode) == types.StringType:
-	        if fillMode.upper() not in self.mpxFillModes.keys():
-	            raise MpxError("invalid reconstruction fill mode %s"%fillMode)
-	        self.__reconstructType = fillMode.upper()
-	        self.__reconstruct.setType(self.mpxFillModes[self.__reconstructType])		    
+            if self.__reconstruct:
+                if type(fillMode) == types.StringType:
+	            if fillMode.upper() not in self.mpxFillModes.keys():
+	                raise MpxError("invalid reconstruction fill mode %s"%fillMode)
+	            self.__reconstructType = fillMode.upper()
+	            self.__reconstruct.setType(self.mpxFillModes[self.__reconstructType])		    
 	    
-            if type(fillMode) == types.IntType:
-	        if fillMode not in self.mpxFillModes.values():
-	            raise MpxError("invalid reconstruction fill mode %d"%fillMode)
-                self.__reconstructType = \
-	        self.mpxFillModes.keys()[self.mpxFillModes.values().index(fillMode)]	    
-	        self.__reconstruct.setType(fillMode)		 
+                if type(fillMode) == types.IntType:
+	            if fillMode not in self.mpxFillModes.values():
+	                raise MpxError("invalid reconstruction fill mode %d"%fillMode)
+                    self.__reconstructType = \
+	            self.mpxFillModes.keys()[self.mpxFillModes.values().index(fillMode)]	    
+	            self.__reconstruct.setType(fillMode)		 
 	else:
 	    raise MpxError("init() method must be called first")
     

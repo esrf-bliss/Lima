@@ -18,6 +18,8 @@ namespace lima {
     
     CtShutter(HwInterface *hw);
     ~CtShutter();
+    bool hasCapability() const;
+
     void getModeList(ShutterModeList& mode_list) const;
     
     bool checkMode(ShutterMode shut_mode) const;

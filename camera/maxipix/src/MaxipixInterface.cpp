@@ -376,13 +376,6 @@ void ShutterCtrlObj::setCloseTime(double shut_close_time)
 {
 	DEB_MEMBER_FUNCT();
 	double settime;
-	double opentime;
-	
-	getOpenTime(opentime);
-	if (shut_close_time != opentime)
-		THROW_HW_ERROR(NotSupported) << "Open and Close times must be same" 
-					     << DEB_VAR1(shut_close_time);
-		
 	m_priam.setShutterTime(shut_close_time, settime);
 }
 

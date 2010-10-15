@@ -23,6 +23,12 @@ CtShutter::~CtShutter()
   DEB_DESTRUCTOR();
 }
 
+bool CtShutter::hasCapability() const
+{
+  DEB_MEMBER_FUNCT();
+  return m_has_shutter;
+}
+
 void CtShutter::getModeList(ShutterModeList& mode_list) const
 {
   DEB_MEMBER_FUNCT();
