@@ -419,9 +419,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
     @Core.DEB_MEMBER_FUNCT
     def DevCcdDepth(self):
         control = _control_ref()
-        interface = control.interface()
-        det_info = interface.getHwCtrlObj(Core.HwCap.DetInfo)
-        image_type = det_info.getCurrImageType()
+        image = control.image()
+        image_type = image.getImageType()
         return Core.FrameDim.getImageTypeDepth(image_type)
 
 #------------------------------------------------------------------

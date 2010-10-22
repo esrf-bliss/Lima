@@ -110,11 +110,14 @@ class LimaCCDs(PyTango.Device_4Impl) :
             pass
         else:
             Core.Processlib.PoolThreadMgr.get().setNumberOfThread(nb_thread)
-
-
+            
+            
         self.__ShutterMode = {'MANUAL': Core.ShutterManual, \
-	                      'AUTO_FRAME': Core.ShutterAutoFrame,\
-                              'AUTO_SEQUENCE': Core.ShutterAutoSequence}
+                              'AUTO_FRAME': Core.ShutterAutoFrame,\
+                              'AUTO_SEQUENCE': Core.ShutterAutoSequence}			      
+        self.__AcqMode = {'SINGLE': Core.Single, \
+                          'CONCATENATION': Core.Concatenation,\
+                          'ACCUMULATION': Core.Accumulation}
 
 #==================================================================
 # 
@@ -127,7 +130,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
             ind = dict.values().index(value)                            
         except ValueError:
             return None
-        return dict.keys()[ind].lower()
+        return dict.keys()[ind]
 
     def __getDictValue(self,dict, key):
         try:
@@ -142,12 +145,30 @@ class LimaCCDs(PyTango.Device_4Impl) :
 #
 #==================================================================
 
+    ## @brief Read the Lima Type
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_lima_type(self,attr) :        
+        value  = self.LimaCameraType	
+        attr.set_value(value)
+
     ## @brief Read the Camera Type
     #
     @Core.DEB_MEMBER_FUNCT
     def read_camera_type(self,attr) :        
-	value  = self.LimaCameraType	
+        interface = self.__control.interface()
+	det_info = interface.getHwCtrlObj(Core.HwCap.DetInfo)
+	value = det_info.getDetectorType()
         attr.set_value(value)
+
+    ## @brief Read the Camera Model
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_camera_model(self,attr) :        
+	interface = self.__control.interface()
+	det_info = interface.getHwCtrlObj(Core.HwCap.DetInfo)
+	value = det_info.getDetectorModel() 
+	attr.set_value(value)
 
     ## @brief Read maximum accumulation exposure time
     #
@@ -191,26 +212,34 @@ class LimaCCDs(PyTango.Device_4Impl) :
         attr.set_value(value)
 	
     ## @brief Read acquisition mode
-    # 0-Normal, 1-Accumulation, 2-Concatenation
+    # Single, Concatenation or Accumulation
     #
     @Core.DEB_MEMBER_FUNCT
     def read_acq_mode(self,attr) :        
 	acq = self.__control.acquisition()
 
-        value = acq.getAcqMode()
-	if value is None: value = -1
+	value = self.__getDictKey(self.__AcqMode,acq.getAcqMode())	
+        if value is None: value = "NOT_SUPPORTED"
 	
         attr.set_value(value)
+		
     ## @brief Write Acquisition mode
-    #0-Normal, 1-Accumulation, 2-Concatenation
+    #Single, Concatenation, Accumulation
     #
     @Core.DEB_MEMBER_FUNCT
     def write_acq_mode(self,attr) :
         data = []
         attr.get_write_value(data)
 	acq = self.__control.acquisition()
+	
+	mode = self.__getDictValue(self.__AcqMode,data[0].upper())
+	if mode is None:
+            PyTango.Except.throw_exception('WrongData',\
+                                           'Wrong value %s: %s'%('shutter_mode',data[0].upper()),\
+                                           'LimaCCD Class') 
+                                     
 
-        acq.setAcqMode(*data)
+        acq.setAcqMode(mode)
 
     ## @brief Read latency time 
     #
@@ -250,7 +279,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
     @Core.DEB_MEMBER_FUNCT
     def read_last_image_saved(self,attr) :
         status = self.__control.getStatus()
-	img_counters= status.ImageCounters
+        img_counters= status.ImageCounters
 
         value = img_counters.LastImageSaved
         if value is None: value = -1
@@ -267,27 +296,6 @@ class LimaCCDs(PyTango.Device_4Impl) :
             attr.set_value([-1],len(1))
         else:
             attr.set_value(stat,len(stat))
-
-    ## @brief Read if the device has a shutter capability
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def read_has_shutter_cap(self,attr) :
-        shutter = self.__control.shutter()
-
-        value = shutter.hasCapability()
-        attr.set_value(value)
-
-    ## @brief Read shutter mode list
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def read_shutter_mode_list(self,attr) :
-        shutter = self.__control.shutter()
-
-        value = shutter.getModeList()
-        modeList = [self.__getDictKey(self.__ShutterMode,val) for val in value]
-	if value is None: value = -1
-
-        attr.set_value(modeList,len(modeList))
 	
     ## @brief Read current shutter mode 
     #
@@ -296,7 +304,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
         shutter = self.__control.shutter()
 
         value = self.__getDictKey(self.__ShutterMode,shutter.getMode())	
-        if value is None: value = -1
+        if value is None: value = "NOT_SUPPORTED"
 
         attr.set_value(value)
 
@@ -307,33 +315,30 @@ class LimaCCDs(PyTango.Device_4Impl) :
         data = []
         attr.get_write_value(data)
         
-	mode = self.__getDictValue(self.__ShutterMode,*data)
+        mode = self.__getDictValue(self.__ShutterMode,data[0].upper())
 	if mode is None:
-	    raise PyTango.DevFailed('Wrong value %s: %s'%('shutter_mode',data[0]))
-	shutter = self.__control.shutter()
+            PyTango.Except.throw_exception('WrongData',\
+                                           'Wrong value %s: %s'%('shutter_mode',data[0].upper()),\
+                                           'LimaCCD Class') 
 
+        
+        shutter = self.__control.shutter()
         shutter.setMode(mode)
 
     ## @brief Read current shutter state 
     # True-Open, False-Close
     @Core.DEB_MEMBER_FUNCT
-    def read_shutter_state(self,attr) :
+    def read_shutter_manual_state(self,attr) :
         shutter = self.__control.shutter()
 
-        value = shutter.getState()
-        if value is None: value = -1
-
+	if shutter.hasCapability() and shutter.getModeList().count(Core.ShutterManual):
+            if shutter.getState(): state = "OPEN"
+            else: state = "CLOSED"
+	else:
+            state = "NO_MANUAL_MODE"
+			
         attr.set_value(value)
 
-    ## @brief Write shutter state 
-    # True-Open, False-Close
-    @Core.DEB_MEMBER_FUNCT
-    def write_shutter_state(self,attr) :
-        data = []
-        attr.get_write_value(data)
-        shutter = self.__control.shutter()
-
-        shutter.setState(*data)
 
     ## @brief Read shutter open time
     # True-Open, False-Close
@@ -357,7 +362,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
         shutter.setOpenTime(*data)
 
     ## @brief Read shutter close time
-    # True-Open, False-Close
+    # in seconds
     @Core.DEB_MEMBER_FUNCT
     def read_shutter_close_time(self,attr) :
         shutter = self.__control.shutter()
@@ -368,13 +373,13 @@ class LimaCCDs(PyTango.Device_4Impl) :
         attr.set_value(value)
 
     ## @brief Write shutter close time 
-    # 
+    # in seconds
     @Core.DEB_MEMBER_FUNCT
     def write_shutter_close_time(self,attr) :
         data = []
         attr.get_write_value(data)
         shutter = self.__control.shutter()
-
+        
         shutter.setCloseTime(*data)
 
 #==================================================================
@@ -382,6 +387,53 @@ class LimaCCDs(PyTango.Device_4Impl) :
 #    LimaCCDs command methods
 #
 #==================================================================
+#------------------------------------------------------------------
+#    getAttrStringValueList command:
+#
+#    Description: return a list of authorized values if any
+#    argout: DevVarStringArray   
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
+    def getAttrStringValueList(self, attr_name):
+        valueList=[]
+        if attr_name == "acq_mode":
+            valueList = self.__AcqMode.keys()
+        elif attr_name == 'shutter_mode':
+            shutter = self.__control.shutter()
+            if shutter.hasCapability():
+                #Depending of the camera only a subset of the mode list can be supported
+                values = shutter.getModeList()
+                valueList = [self.__getDictKey(self.__ShutterMode,val) for val in values]
+				
+        return valueList
+#------------------------------------------------------------------
+#    closeShutterManual command:
+#
+#    Description: Close the shutter manual
+#    argout: DevVoid  
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
+    def closeShutterManual(self):
+
+        shutter = self.__control.shutter()
+        
+	if shutter.hasCapability() and shutter.getModeList().count(Core.ShutterManual):
+            shutter.setState(False)
+            
+#------------------------------------------------------------------
+#    openShutterManual command:
+#
+#    Description: Open the shutter manual
+#    argout: DevVoid  
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
+    def openShutterManual(self):
+
+        shutter = self.__control.shutter()
+        
+	if shutter.hasCapability() and shutter.getModeList().count(Core.ShutterManual):
+            shutter.setState(True)
+
 #------------------------------------------------------------------
 #    setDebugFlags command:
 #
@@ -410,14 +462,12 @@ class LimaCCDs(PyTango.Device_4Impl) :
         deb.Trace('FormatFlags: %s' % Core.DebParams.getFormatFlagsNameList())
         deb.Trace('TypeFlags:   %s' % Core.DebParams.getTypeFlagsNameList())
         deb.Trace('ModuleFlags: %s' % Core.DebParams.getModuleFlagsNameList())
-
+        
         deb_flags = (((Core.DebParams.getTypeFlags()    & 0xff)   << 16) |
                      ((Core.DebParams.getModuleFlags()  & 0xffff) <<  0))
         deb_flags &= 0xffffffff
         deb.Return('Getting debug flags: 0x%08x' % deb_flags)
         return deb_flags
-
-
 
 
 
@@ -445,48 +495,61 @@ class LimaCCDsClass(PyTango.DeviceClass) :
     #    Command definitions
     cmd_list = {
         'getDebugFlags':
-            [[PyTango.DevVoid, ""],
-            [PyTango.DevULong, "Debug flag in HEX format"]],
+        [[PyTango.DevVoid, ""],
+         [PyTango.DevULong, "Debug flag in HEX format"]],
         'setDebugFlags':
-            [[PyTango.DevULong, "Debug flag in HEX format"],
-            [PyTango.DevVoid, ""]],
-        }
+        [[PyTango.DevULong, "Debug flag in HEX format"],
+         [PyTango.DevVoid, ""]],
+        'openShutterManual':
+        [[PyTango.DevVoid, ""],
+         [PyTango.DevVoid, ""]],
+        'closeShutterManual':
+        [[PyTango.DevVoid, ""],
+         [PyTango.DevVoid, ""]],
+        'getAttrStringValueList':
+        [[PyTango.DevString, "Attribute name"],
+         [PyTango.DevVarStringArray, "Authorized String value list"]],
+	}
     
     #    Attribute definitions
     attr_list = {
-       'camera_type':
+        'lima_type':
         [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ]],
-	'camera_model':
-	[[PyTango.DevString,
-	  PyTango.SCALAR,
-	  PyTango.READ]],	 
-       'acc_max_expotime':
+        'camera_type':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ]],	 
+        'camera_model':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ]],	 
+        'acc_max_expotime':
         [[PyTango.DevDouble,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
-       'acc_expotime':
+        'acc_expotime':
         [[PyTango.DevDouble,
           PyTango.SCALAR,
           PyTango.READ]],	      	
-       'latency_time':
+        'latency_time':
         [[PyTango.DevDouble,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],	      	
-       'acc_nb_frames':
+        'acc_nb_frames':
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ]],	      	
-       'acq_mode':
-        [[PyTango.DevLong,
+        'acq_mode':
+        [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
-       'last_image_ready':
+        'last_image_ready':
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ]],
-       'last_image_saved':
+        'last_image_saved':
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ]],
@@ -494,22 +557,14 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevDouble,
           PyTango.SPECTRUM,
           PyTango.READ,256]],
-	'has_shutter_cap':
-	[[PyTango.DevBoolean,
-	  PyTango.SCALAR,
-	  PyTango.READ]],
-        'shutter_mode_list':
-        [[PyTango.DevString,
-          PyTango.SPECTRUM,
-          PyTango.READ_WRITE,256]],
         'shutter_mode':
         [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
         'shutter_state':
-        [[PyTango.DevBoolean,
+        [[PyTango.DevString,
           PyTango.SCALAR,
-          PyTango.READ_WRITE]],
+          PyTango.READ]],
         'shutter_open_time':
         [[PyTango.DevDouble,
           PyTango.SCALAR,
