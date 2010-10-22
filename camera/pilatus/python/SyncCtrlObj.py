@@ -91,7 +91,7 @@ class SyncCtrlObj(Core.HwSyncCtrlObj) :
 
     def prepareAcq(self) :
         com = self.__comm()
-        exposure = com.exposure()
+        exposure = self.__exposure
         exposure_period = exposure + self.__latency
         com.set_exposure_period(exposure_period)
         com.set_nb_images_in_sequence(self.__nb_frames)
