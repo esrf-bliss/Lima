@@ -7,7 +7,11 @@ INSTALL_LIMA_DIR = $(INSTALL_DIR)/Lima
 endif
 
 ifndef INSTALL_PLAT
-INSTALL_PLAT = $(shell /csadmin/common/scripts/get_os.share)
+if test -e /csadmin/common/scripts/get_os.share;then \
+INSTALL_PLAT = $(shell /csadmin/common/scripts/get_os.share) \
+else \
+INSTALL_PLAT = "" \
+fi
 endif
 
 ifndef INSTALL_PLAT_DIR

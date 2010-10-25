@@ -78,11 +78,12 @@ endif
 # LIMA - ESPIA
 ############################
 
+
+ifneq ($(COMPILE_ESPIA),0)
+
 include ../camera/common/espia/include/espia.inc
 ESPIA_LDFLAGS	:= $(LDFLAGS) -L$(ESPIA_DRV_LIB)
 ESPIA_LDLIBS	:= $(LDLIBS) -lespia
-
-ifneq ($(COMPILE_ESPIA),0)
 
 name		:= espia
 espia-objs	:= ../camera/common/espia/src/Espia.o
