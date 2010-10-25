@@ -1,6 +1,7 @@
 #include "HwFrameInfo.h"
-#include <iomanip>
 
+#include <cstdlib>
+#include <iomanip>
 #include <iostream>
 
 using namespace lima;

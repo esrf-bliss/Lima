@@ -2,6 +2,7 @@
 #define MISCUTILS_H
 
 #include <map>
+#include <algorithm>
 
 namespace lima
 {

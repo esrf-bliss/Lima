@@ -1,6 +1,7 @@
 #include "MemUtils.h"
 #include "Exceptions.h"
 
+#include <cstdlib>
 #include <sstream>
 #include <sys/sysinfo.h>
 #include <limits.h>
