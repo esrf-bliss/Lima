@@ -129,6 +129,7 @@ namespace lima {
 
     void clear();
 
+
     class SaveContainer
     {
       DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
@@ -186,6 +187,8 @@ namespace lima {
     _SaveCBK* 			m_saving_cbk;
     _CompressionCBK* 		m_compression_cbk;
     Parameters			m_pars;
+    Parameters			m_acquisition_pars;
+    bool			m_pars_dirty_flag;
     HeaderMap			m_common_header;
     std::map<long, HeaderMap>	m_frame_headers;
     FrameMap			m_frame_datas;
@@ -201,8 +204,11 @@ namespace lima {
     void _post_save_task(Data&,_SaveTask*);
     void _save_finished(Data&);
     void _setSavingError(CtControl::ErrorCode);
-    inline void _create_save_cnt(FileFormat);
+    inline void _create_save_cnt();
     inline void _check_if_multi_frame_per_file_allowed(FileFormat,int) const;
+    // --- internal call
+    void _prepare();
+    void _validate_parameters();
   };
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
   {

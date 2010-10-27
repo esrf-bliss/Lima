@@ -83,12 +83,14 @@ CtSaving::Parameters::Parameters()
 //@brief constructor
 CtSaving::CtSaving(CtControl &aCtrl) :
   m_ctrl(aCtrl),
+  m_save_cnt(NULL),
+  m_pars_dirty_flag(false),
   m_ready_flag(true),
   m_end_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
 
-  m_save_cnt = new SaveContainerEdf(*this);
+  _create_save_cnt();
   m_saving_cbk = new _SaveCBK(*this);
   m_compression_cbk = new _CompressionCBK(*this);
   resetLastFrameNb();
@@ -112,8 +114,8 @@ void CtSaving::setParameters(const CtSaving::Parameters &pars)
 
   AutoMutex aLock(m_cond.mutex());
   _check_if_multi_frame_per_file_allowed(pars.fileFormat,pars.framesPerFile);
-  _create_save_cnt(pars.fileFormat);
   m_pars = pars;
+  m_pars_dirty_flag = true;
 }
 
 void CtSaving::getParameters(CtSaving::Parameters &pars) const
@@ -133,6 +135,7 @@ void CtSaving::setDirectory(const std::string &directory)
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.directory = directory;
+  m_pars_dirty_flag = true;
 }
 
 void CtSaving::getDirectory(std::string& directory) const
@@ -152,6 +155,7 @@ void CtSaving::setPrefix(const std::string &prefix)
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.prefix = prefix;
+  m_pars_dirty_flag = true;
 }
 void CtSaving::getPrefix(std::string& prefix) const
 {
@@ -170,6 +174,7 @@ void CtSaving::setSuffix(const std::string &suffix)
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.suffix = suffix;
+  m_pars_dirty_flag = true;
 }
 void CtSaving::getSuffix(std::string& suffix) const
 {
@@ -188,6 +193,7 @@ void CtSaving::setNextNumber(long number)
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.nextNumber = number;
+  m_pars_dirty_flag = true;
 }
 void CtSaving::getNextNumber(long& number) const
 {
@@ -204,45 +210,41 @@ void CtSaving::setFormat(FileFormat format)
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
-  _create_save_cnt(format);
   m_pars.fileFormat = format;
-
+  m_pars_dirty_flag = true;
   DEB_RETURN() << DEB_VAR1(format);
 }
-void CtSaving::_create_save_cnt(FileFormat format)
+void CtSaving::_create_save_cnt()
 {
-  if(format != m_pars.fileFormat)
+  // wait until the container is no more used
+  while(!m_ready_flag) m_cond.wait();
+
+  switch(m_pars.fileFormat)
     {
-      // wait until the container is no more used
-      while(!m_ready_flag) m_cond.wait();
-
-      switch(format)
-	{
-	case CBFFormat :
+    case CBFFormat :
 #ifndef WITH_CBF_SAVING
-	throw LIMA_CTL_EXC(NotSupported,"Lima is not compiled with the cbf saving option, not managed");  
+      throw LIMA_CTL_EXC(NotSupported,"Lima is not compiled with the cbf saving option, not managed");  
 #endif
-	case RAW:
-	case EDF:
-	  delete m_save_cnt;break;
-	default:
-	  throw LIMA_CTL_EXC(NotSupported,"File format not yet managed");
-	}
+    case RAW:
+    case EDF:
+      delete m_save_cnt;break;
+    default:
+      throw LIMA_CTL_EXC(NotSupported,"File format not yet managed");
+    }
 
-      switch(format)
-	{
-	case RAW:
-	case EDF:
-	  m_save_cnt = new SaveContainerEdf(*this);break;
+  switch(m_pars.fileFormat)
+    {
+    case RAW:
+    case EDF:
+      m_save_cnt = new SaveContainerEdf(*this);break;
 #ifdef WITH_CBF_SAVING
-	case CBFFormat:
-	  m_save_cnt = new SaveContainerCbf(*this);
-	  m_pars.framesPerFile = 1;
-	  break;
+    case CBFFormat:
+      m_save_cnt = new SaveContainerCbf(*this);
+      m_pars.framesPerFile = 1;
+      break;
 #endif
-	default:
-	  break;
-	}
+    default:
+      break;
     }
 }
 
@@ -263,6 +265,7 @@ void CtSaving::setSavingMode(SavingMode mode)
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.savingMode = mode;
+  m_pars_dirty_flag = true;
 }
 void CtSaving::getSavingMode(SavingMode& mode) const
 { 
@@ -281,6 +284,7 @@ void CtSaving::setOverwritePolicy(OverwritePolicy policy)
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.overwritePolicy = policy;
+  m_pars_dirty_flag = true;
 }
 
 void CtSaving::getOverwritePolicy(OverwritePolicy& policy) const
@@ -301,6 +305,7 @@ void CtSaving::setFramesPerFile(unsigned long frames_per_file)
   AutoMutex aLock(m_cond.mutex());
   _check_if_multi_frame_per_file_allowed(m_pars.fileFormat,frames_per_file);
   m_pars.framesPerFile = frames_per_file;
+  m_pars_dirty_flag = true;
 }
 
 void CtSaving::_check_if_multi_frame_per_file_allowed(FileFormat format,int frame_per_file) const
@@ -396,7 +401,7 @@ void CtSaving::validateFrameHeader(long frame_nr)
   DEB_PARAM() << DEB_VAR1(frame_nr);
 
   AutoMutex aLock(m_cond.mutex());
-  switch(m_pars.savingMode)
+  switch(m_acquisition_pars.savingMode)
     {
     case CtSaving::AutoHeader:
       {
@@ -544,7 +549,7 @@ void CtSaving::frameReady(Data &aData,bool afterCompressionFlag)
     }
   AutoMutex aLock(m_cond.mutex());
 
-  switch(m_pars.savingMode)
+  switch(m_acquisition_pars.savingMode)
     {
     case CtSaving::AutoFrame:
       {
@@ -683,7 +688,7 @@ void CtSaving::_save_finished(Data &aData)
   AutoMutex aLock(m_cond.mutex());
 
   int next_frame = m_last_frameid_saved + 1;
-  switch(m_pars.savingMode)
+  switch(m_acquisition_pars.savingMode)
     {
     case CtSaving::AutoFrame:
       {
@@ -757,6 +762,35 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
   m_cond.signal();
 
 }
+/** @brief preparing new acquisition
+ *  this methode will resetLastFrameNb if mode is AutoSave
+ *  and validate the parameter for this new acquisition
+ */
+void CtSaving::_prepare()
+{
+  DEB_MEMBER_FUNCT();
+
+  if(hasAutoSaveMode()) 
+    resetLastFrameNb();
+  else
+    DEB_TRACE() << "No auto save activated";
+  _validate_parameters();
+}
+
+/** @brief validate parameters for the new acquisition 
+ */
+void CtSaving::_validate_parameters()
+{
+  DEB_MEMBER_FUNCT();
+  AutoMutex aLock(m_cond.mutex());
+  if(m_pars_dirty_flag)
+    {
+      m_pars_dirty_flag = false;
+      if(m_pars.fileFormat != m_acquisition_pars.fileFormat)
+	_create_save_cnt();
+      m_acquisition_pars = m_pars;
+    }
+}
 
 CtSaving::SaveContainer::SaveContainer(CtSaving &aCtSaving) :
   m_written_frames(0),m_saving(aCtSaving),m_statistic_size(16),m_file_opened(false)
@@ -777,8 +811,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
   struct timeval start_write;
   gettimeofday(&start_write, NULL);
 
-  CtSaving::Parameters pars;
-  m_saving.getParameters(pars);
+  CtSaving::Parameters &pars = m_saving.m_acquisition_pars;
 
   open(pars);
   try
@@ -934,7 +967,5 @@ void CtSaving::SaveContainer::close()
   _close();
   m_file_opened = false;
   m_written_frames = 0;
-  long idx;
-  m_saving.getNextNumber(idx);
-  m_saving.setNextNumber(idx + 1);
+  ++m_saving.m_acquisition_pars.nextNumber;
 }
