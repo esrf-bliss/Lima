@@ -1,0 +1,8 @@
+sip*.cpp
+*.o
+*.P
+*.so
+*.so.*
+*~
+config.inc
+install
