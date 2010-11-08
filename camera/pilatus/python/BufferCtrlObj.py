@@ -250,8 +250,9 @@ class BufferCtrlObj(Core.HwBufferCtrlObj):
                 except:
                     pass
                 else:
-                    return Core.HwFrameInfoType(acq_frame_nb,data,Core.Timestamp(),
+                    frInfo = Core.HwFrameInfoType(acq_frame_nb,data,Core.Timestamp(),
                                                 0,Core.HwFrameInfoType.Transfer)
+                    return frInfo
 
             return hw_frame_info
 
