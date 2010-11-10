@@ -194,8 +194,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
     @Core.DEB_MEMBER_FUNCT
     def DevCcdRead(self, argin):
         control = _control_ref()
-        data = control.ReadImage(int(argin[0]))
-	dataflat = data.buffer.ravel()
+        self._data_cache = control.ReadImage(int(argin[0]))
+	dataflat = self._data_cache.buffer.ravel()
 	dataflat.dtype=numpy.uint8
 	return dataflat
 
