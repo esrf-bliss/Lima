@@ -237,7 +237,7 @@ static inline void _raw_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
   
   aDstPt -= MAXIPIX_NB_COLUMN;
   int aGapSize = aTotalWidth * ySpace;
-  memset(aDstPt,0,aGapSize << 1);
+  memset(aDstPt,0,aGapSize * sizeof(type));
   aDstPt += aGapSize;
 
   aDstPt += MAXIPIX_NB_COLUMN;
@@ -259,7 +259,7 @@ static inline void _zero_2x2(Data &src,Buffer *dst,int xSpace,int ySpace)
   
   aDstPt -= MAXIPIX_NB_COLUMN - 1;
   int aGapSize = aTotalWidth * (ySpace + 2);
-  memset(aDstPt,0,aGapSize << 1);
+  memset(aDstPt,0,aGapSize * sizeof(type));
   aDstPt += aGapSize;
 
   aDstPt += MAXIPIX_NB_COLUMN - 1;
