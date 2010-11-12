@@ -1,10 +1,112 @@
 #include <ctype.h>
 
 #include "CtSaving_Cbf.h"
+#include "SinkTask.h"
+
 using namespace lima;
 
 static const char *DEFAULT_CATEGORY = "Misc";
 static const char LIMA_HEADER_KEY_SEPARATOR = '/';
+
+class SaveContainerCbf::Compression : public SinkTaskBase
+{
+  DEB_CLASS_NAMESPC(DebModControl,"Compression Task","Control");
+
+  SaveContainerCbf& 	m_container;
+  CtSaving::HeaderMap 	m_header;
+
+  int _fillHeader(Data &aData,CtSaving::HeaderMap &aHeader,cbf_handle cbf)
+  {
+    DEB_MEMBER_FUNCT();
+  
+    cbf_failnez(cbf_new_datablock(cbf, "image_0"));
+
+    aData.header.lock();
+    Data::HeaderContainer::Header &aDataHeader = aData.header.header();
+    aHeader.insert(aDataHeader.begin(),aDataHeader.end());
+    aData.header.unlock();
+
+    std::string previousCategory;
+
+    for(CtSaving::HeaderMap::iterator i = aHeader.begin();
+	i != aHeader.end();++i)
+      {
+	size_t found = i->first.find_last_of(LIMA_HEADER_KEY_SEPARATOR);
+	std::string currentCategory = i->first.substr(0,found);
+	std::string key = i->first.substr(found);
+	// no category was find so set it to default
+	if(key.empty())		
+	  {
+	    key = currentCategory;
+	    currentCategory = DEFAULT_CATEGORY;
+	  }
+	else
+	  key = key.substr(1);
+
+	if(previousCategory != currentCategory)
+	  {
+	    previousCategory = currentCategory;
+	    cbf_failnez(cbf_new_category(cbf,currentCategory.c_str()));
+	  }
+	cbf_failnez(cbf_new_column(cbf,key.c_str()));
+	if(!i->second.find_first_of('#')) // Goreterie MOSFLM
+	  {
+	    std::string tmpString = "\n";
+	    tmpString += i->second;
+	    cbf_failnez(cbf_set_value(cbf,tmpString.c_str()));
+	  }
+	else
+	  cbf_failnez(cbf_set_value(cbf,i->second.c_str()));
+      }
+    return 0;
+  }
+
+  int _fillData(Data &aData,cbf_handle cbf)
+  {
+    DEB_MEMBER_FUNCT();
+
+    cbf_failnez(cbf_new_category(cbf, "array_data"));
+    cbf_failnez(cbf_new_column(cbf, "data"));
+
+    cbf_failnez(cbf_set_integerarray_wdims(cbf,
+					   CBF_BYTE_OFFSET,
+					   0,
+					   aData.data(),
+					   aData.depth(),
+					   aData.is_signed(),
+					   aData.size()/aData.depth(),
+					   "little_endian",
+					   aData.width,
+					   aData.height,
+					   0,
+					   128));
+
+    return 0;
+  }
+
+public:
+  Compression(SaveContainerCbf &save_cnt,const CtSaving::HeaderMap &header) :
+    SinkTaskBase(),m_container(save_cnt),m_header(header) {}
+  virtual ~Compression() {};
+
+  virtual void process(Data &aData)
+  {
+    cbf_handle cbf;
+    cbf_make_handle(&cbf);
+    if(_fillHeader(aData,m_header,cbf))
+      {
+	cbf_free_handle(cbf);
+	throw LIMA_CTL_EXC(Error,"Something went wrong during CBF header filling");
+      }
+
+    if(_fillData(aData,cbf))
+      {
+	cbf_free_handle(cbf);
+	throw LIMA_CTL_EXC(Error,"Something went wrong during CBF data filling");
+      }
+    m_container._setHandle(aData.frameNumber,cbf);
+  }
+};
 
 #ifdef DEBUG
 static inline void outerror(int err)
@@ -66,7 +168,8 @@ static inline void outerror(int err)
 
 SaveContainerCbf::SaveContainerCbf(CtSaving &aCtSaving) :
   CtSaving::SaveContainer(aCtSaving),
-  m_fout(NULL)
+  m_fout(NULL),
+  m_lock(MutexAttr::Normal)
 {
   DEB_CONSTRUCTOR();
 }
@@ -75,6 +178,11 @@ SaveContainerCbf::~SaveContainerCbf()
 {
   DEB_DESTRUCTOR();
   _close();
+}
+
+SinkTaskBase* SaveContainerCbf::getCompressionTask(const CtSaving::HeaderMap &header)
+{
+  return new Compression(*this,header);
 }
 
 bool SaveContainerCbf::_open(const std::string &filename,
@@ -95,8 +203,6 @@ bool SaveContainerCbf::_open(const std::string &filename,
 
   DEB_TRACE() << "Open file name: " << filename << " with open flags: " << openFlags;
   m_fout = fopen(filename.c_str(),openFlags);
-  if(m_fout)
-    cbf_make_handle(&m_cbf);
 
   return !!m_fout;
 }
@@ -113,92 +219,56 @@ void SaveContainerCbf::_close()
 
   DEB_TRACE() << "Close current file";
 
-  cbf_free_handle(m_cbf);
+  cbf_free_handle(m_current_cbf);
   fclose(m_fout);
   m_fout = NULL;
 }
 
 void SaveContainerCbf::_writeFile(Data &aData,
-				  CtSaving::HeaderMap &aHeader,
+				  CtSaving::HeaderMap&,
 				  CtSaving::FileFormat)
 {
-  if(_writeCbfHeader(aData,aHeader))
-    throw LIMA_CTL_EXC(Error,"Something went wrong during CBF header writing");
-
   if(_writeCbfData(aData))
     throw LIMA_CTL_EXC(Error,"Something went wrong during CBF data writing");
 }
 
-int SaveContainerCbf::_writeCbfHeader(Data &aData,
-				      CtSaving::HeaderMap &aHeader)
+void SaveContainerCbf::_clear()
 {
-  DEB_MEMBER_FUNCT();
-
-  char imageBuffer[64];
-  snprintf(imageBuffer,sizeof(imageBuffer),"image_%d",m_written_frames);
-  
-  cbf_failnez(cbf_new_datablock (m_cbf, imageBuffer));
-
-  aData.header.lock();
-  Data::HeaderContainer::Header &aDataHeader = aData.header.header();
-  aHeader.insert(aDataHeader.begin(),aDataHeader.end());
-  aData.header.unlock();
-
-  std::string previousCategory;
-
-  for(CtSaving::HeaderMap::iterator i = aHeader.begin();
-      i != aHeader.end();++i)
+  AutoMutex aLock(m_lock);
+  dataId2cbfHandle::iterator i = m_cbfs.begin();
+  while(i != m_cbfs.end())
     {
-      size_t found = i->first.find_last_of(LIMA_HEADER_KEY_SEPARATOR);
-      std::string currentCategory = i->first.substr(0,found);
-      std::string key = i->first.substr(found);
-      // no category was find so set it to default
-      if(key.empty())		
-	{
-	  key = currentCategory;
-	  currentCategory = DEFAULT_CATEGORY;
-	}
-      else
-	key = key.substr(1);
-
-      if(previousCategory != currentCategory)
-	{
-	  previousCategory = currentCategory;
-	  cbf_failnez(cbf_new_category(m_cbf,currentCategory.c_str()));
-	}
-      cbf_failnez(cbf_new_column(m_cbf,key.c_str()));
-      if(!i->second.find_first_of('#')) // Goreterie MOSFLM
-	{
-	  std::string tmpString = "\n";
-	  tmpString += i->second;
-	  cbf_failnez(cbf_set_value(m_cbf,tmpString.c_str()));
-	}
-      else
-	cbf_failnez(cbf_set_value(m_cbf,i->second.c_str()));
+      cbf_free_handle(i->second);
+      dataId2cbfHandle::iterator previous = i++;
+      m_cbfs.erase(previous);
     }
-  return 0;
 }
 
 int SaveContainerCbf::_writeCbfData(Data &aData)
 {
   DEB_MEMBER_FUNCT();
-
-  cbf_failnez(cbf_new_category		(m_cbf, "array_data"));
-  cbf_failnez(cbf_new_column		(m_cbf, "data"));
-
-  cbf_failnez(cbf_set_integerarray_wdims(m_cbf,
-					 CBF_BYTE_OFFSET,
-					 m_written_frames,
-					 aData.data(),
-					 aData.depth(),
-					 aData.is_signed(),
-					 aData.size()/aData.depth(),
-					 "little_endian",
-					 aData.width,
-					 aData.height,
-					 0,
-					 128));
-
-  cbf_failnez(cbf_write_file(m_cbf,m_fout,0,CBF,MSG_DIGEST|MIME_HEADERS,0));
+  m_current_cbf = _takeHandle(aData.frameNumber);
+  cbf_failnez(cbf_write_file(m_current_cbf,m_fout,0,CBF,MSG_DIGEST|MIME_HEADERS,0));
   return 0;
+}
+
+cbf_handle SaveContainerCbf::_takeHandle(int dataId)
+{
+  AutoMutex aLock(m_lock);
+  dataId2cbfHandle::iterator i = m_cbfs.find(dataId);
+  cbf_handle aReturnHandle = i->second;
+  m_cbfs.erase(i);
+  return aReturnHandle;
+}
+
+void SaveContainerCbf::_setHandle(int dataId,cbf_handle cbf)
+{
+  AutoMutex aLock(m_lock);
+  std::pair<dataId2cbfHandle::iterator,bool> result = 
+    m_cbfs.insert(std::pair<int,cbf_handle>(dataId,cbf));
+  if(!result.second)		// It can happend if _open failed
+    {
+      cbf_free_handle(result.first->second);
+      result.first->second = cbf;
+    }
 }
