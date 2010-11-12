@@ -123,7 +123,10 @@ void CtSaving::getParameters(CtSaving::Parameters &pars) const
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
-  pars = m_pars;
+  if(m_pars_dirty_flag)
+    pars = m_pars;
+  else
+    pars = m_acquisition_pars;
 
   DEB_RETURN() << DEB_VAR1(pars);
 }
@@ -200,7 +203,10 @@ void CtSaving::getNextNumber(long& number) const
   DEB_MEMBER_FUNCT();
   
   AutoMutex aLock(m_cond.mutex());
-  number = m_pars.nextNumber;
+  if(m_pars_dirty_flag)
+    number = m_pars.nextNumber;
+  else
+    number = m_acquisition_pars.nextNumber;
 
   DEB_RETURN() << DEB_VAR1(number);
 }
