@@ -21,7 +21,7 @@
 #=============================================================================
 #
 
-import sys,os
+import sys,os,glob
 import PyTango
 import weakref
 
@@ -118,6 +118,22 @@ class LimaCCDs(PyTango.Device_4Impl) :
         self.__AcqMode = {'SINGLE': Core.Single, \
                           'CONCATENATION': Core.Concatenation,\
                           'ACCUMULATION': Core.Accumulation}
+
+        self.__SavingFormat = {'RAW' : Core.RAW,
+                               'EDF' : Core.EDF,
+                               'CBF' : Core.CBFFormat}
+
+        self.__SavingFormatDefaultSuffix = {Core.RAW : '.raw',
+                                            Core.EDF : '.edf',
+                                            Core.CBFFormat : '.cbf'}
+
+        self.__SavingMode = {'MANUAL' : Core.Manual,
+                             'AUTO_FRAME' : Core.AutoFrame,
+                             'AUTO_HEADER' : Core.AutoHeader}
+
+        self.__SavingOverwritePolicy = {'ABORT' : Core.Abort,
+                                        'OVERWRITE' : Core.Overwrite,
+                                        'APPEND' : Core.Append}
 
 #==================================================================
 # 
@@ -382,6 +398,171 @@ class LimaCCDs(PyTango.Device_4Impl) :
         
         shutter.setCloseTime(*data)
 
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_directory(self,attr) :
+        saving = self.__control.saving()
+
+        attr.set_value(saving.getDirectory())
+
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_directory(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+        newDirectory = data[0]
+        if os.access(newDirectory,os.W_OK|os.X_OK) :
+            saving.setDirectory(newDirectory)
+        else:
+            PyTango.Except.throw_exception('Access Error',\
+                                           'Directory %s is not writtable'%(newDirectory),\
+                                           'LimaCCD Class')
+
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_prefix(self,attr) :
+        saving = self.__control.saving()
+
+        attr.set_value(saving.getPrefix())
+
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_prefix(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+        prefix = data[0]
+
+        directory = saving.getDirectory()
+        suffix = saving.getSuffix()
+        overwritePolicy = saving.getOverwritePolicy()
+        if overwritePolicy == Core.CtSaving.Abort:
+            matchFiles = glob.glob(os.path.join(directory,'%s*%s' % (prefix,suffix)))
+            lastnumber = __getLastFileNumber(prefix,suffix,matchFiles)
+        else:
+            lastnumber = 0
+        saving.setPrefix(prefix)
+        saving.setNextNumber(lastnumber)
+
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_suffix(self,attr) :
+        saving = self.__control.saving()
+
+        attr.set_value(saving.getSuffix())
+
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_suffix(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+
+        saving.setSuffix(*data)
+
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_next_number(self,attr) :
+        saving = self.__control.saving()
+
+        attr.set_value(saving.getNextNumber())
+
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_next_number(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+
+        saving.setNextNumber(*data)
+
+    ## @brief Read the saving format
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_format(self,attr) :
+        saving = self.__control.saving()
+
+        value = self.__getDictKey(self.__SavingFormat,saving.getFormat())
+        attr.set_value(value)
+
+    ## @brief Change the saving Format
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_format(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+
+        value = self.__getDictValue(self.__SavingFormat,data[0].upper())
+	if mode is None:
+            PyTango.Except.throw_exception('WrongData',\
+                                           'Wrong value %s: %s'%('saving_format',data[0].upper()),\
+                                           'LimaCCD Class')
+        else:
+            saving.setFormat(value)
+            defaultSuffix = self.__SavingFormatDefaultSuffix.get(value,'.unknown')
+            saving.setSuffix(defaultSuffix)
+
+    ## @brief Read the saving Mode
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_mode(self,attr) :
+        saving = self.__control.saving()
+
+        value = self.__getDictKey(self.__SavingMode,saving.getSavingMode())
+        attr.set_value(value)
+
+    ## @brief Change the saving Mode
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_mode(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+
+        value = self.__getDictValue(self.__SavingMode,data[0].upper())
+	if mode is None:
+            PyTango.Except.throw_exception('WrongData',\
+                                           'Wrong value %s: %s'%('saving_mode',data[0].upper()),\
+                                           'LimaCCD Class')
+        else:
+            saving.setSavingMode(value)
+    ## @brief Read the overwrite policy
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_overwrite_policy(self,attr) :
+        saving = self.__control.saving()
+
+        value = self.__getDictKey(self.__SavingOverwritePolicy,saving.getOverwritePolicy())
+        attr.set_value(value)
+
+    ## @brief Change the saving Mode
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_overwrite_policy(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+
+        value = self.__getDictValue(self.__SavingOverwritePolicy,data[0].upper())
+	if mode is None:
+            PyTango.Except.throw_exception('WrongData',\
+                                           'Wrong value %s: %s'%('saving_overwrite_policy',data[0].upper()),\
+                                           'LimaCCD Class')
+        else:
+            saving.setOverwritePolicy(value)
+    ## @brief Read the frame per file
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_frame_per_file(self,attr) :
+        saving = self.__control.saving()
+
+        value = saving.getFramePerFile())
+        attr.set_value(value)
+
+    ## @brief Change the number of saving frame per file
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_frame_per_file(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+
+        saving.setFramesPerFile(data[0])
+
 #==================================================================
 #
 #    LimaCCDs command methods
@@ -396,15 +577,18 @@ class LimaCCDs(PyTango.Device_4Impl) :
     @Core.DEB_MEMBER_FUNCT
     def getAttrStringValueList(self, attr_name):
         valueList=[]
-        if attr_name == "acq_mode":
-            valueList = self.__AcqMode.keys()
-        elif attr_name == 'shutter_mode':
+        if attr_name == 'shutter_mode':
             shutter = self.__control.shutter()
             if shutter.hasCapability():
                 #Depending of the camera only a subset of the mode list can be supported
                 values = shutter.getModeList()
                 valueList = [self.__getDictKey(self.__ShutterMode,val) for val in values]
-				
+        else:
+            dict_name = '_' + self.__class__.__name__ + '__' + ''.join([x.title() for x in attr_name.split('_')])
+            d = getattr(self,dict_name,None)
+            if d:
+                valueList = d.keys()
+
         return valueList
 #------------------------------------------------------------------
 #    closeShutterManual command:
@@ -573,6 +757,38 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevDouble,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
+        'saving_directory':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'saving_prefix':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'saving_suffix':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'saving_next_number':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'saving_format':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'saving_mode':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'saving_overwrite_policy':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'saving_frame_per_file':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
         }
 
 def declare_camera_n_commun_to_tango_world(util) :
@@ -620,7 +836,26 @@ def _set_control_ref(ctrl_ref) :
 		func(ctrl_ref)
 	    except AttributeError:
 		continue
-	
+
+#============================================================================
+#                                TOOLS
+#============================================================================
+def __getLastFileNumber(prefix,suffix,filesPath) :
+    lastNumber = 0
+    prefixLen = len(prefix)
+    lenSuffix = len(suffix)
+
+    for fPath in filesPath :
+        fName = os.path.split(fPath)[-1]
+        number = fName[prefix:-lenSuffix]
+        try:
+            number = int(number)
+        except ValueError:
+            continue
+        else:
+            if number > lastNumber:
+                lastNumber = number
+    return lastNumber
 #==================================================================
 #
 #    LimaCCDs class main method

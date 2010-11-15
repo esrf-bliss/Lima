@@ -83,6 +83,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
     LiveDisplay  = 1
     StripeConcat = 4
     AutoSave     = 8
+    AutoHeader   = 16
     
 #------------------------------------------------------------------
 #    Device constructor
@@ -369,7 +370,13 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
             if val.endswith(';'):
                 val = val[:-1]
             header_map[key] = val
-        saving.setCommonHeader(header_map)
+        savingMode = saving.getSavingMode()
+        if savingMode != Core.CtSaving.AutoHeader:
+            saving.setCommonHeader(header_map)
+        else:
+            imageStatus = control.getImageStatus()
+            NextImageSaved = imageStatus.LastImageSaved + 1
+            saving.updateFrameHeader(NextImageSaved,header_map);
 
 #------------------------------------------------------------------
 #    DevCcdImageHeader command:
@@ -479,7 +486,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         live_display = (mode & self.LiveDisplay) != 0
         self.setLiveDisplay(live_display)
         auto_save = (mode & self.AutoSave) != 0
-        self.setAutosave(auto_save)
+        auto_header = (mode & self.AutoHeader) != 0
+        self.setAutosave(auto_save,auto_header)
 
 #------------------------------------------------------------------
 #    DevCcdGetMode command:
@@ -498,12 +506,12 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         return mode
 
     @Core.DEB_MEMBER_FUNCT
-    def setAutosave(self, autosave_act):
+    def setAutosave(self, autosave_act,auto_header):
 	control = _control_ref()
         saving = control.saving()
         deb.Param('Setting autosave active: %s' % autosave_act)
         if autosave_act:
-            saving_mode = Core.CtSaving.AutoFrame
+            saving_mode = auto_header and Core.CtSaving.AutoHeader or Core.CtSaving.AutoFrame
         else:
             saving_mode = Core.CtSaving.Manual
         saving.setSavingMode(saving_mode)
