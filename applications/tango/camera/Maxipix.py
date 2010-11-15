@@ -22,7 +22,7 @@ import PyTango
 import sys, types, os, time
 
 from Lima import Core
-
+from Lima.Maxipix.MpxCommon import MpxError
 
 class Maxipix(PyTango.Device_4Impl):
 
