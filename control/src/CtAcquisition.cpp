@@ -191,6 +191,7 @@ void CtAcquisition::setAcqMode(AcqMode mode)
   switch (m_inpars.acqMode) {
   case Single:
     if (m_inpars.acqNbFrames<1) m_inpars.acqNbFrames= 1;
+    m_acc_nframes = 1;
     break;
   case Accumulation:
     if (m_inpars.accMaxExpoTime<=0) {
@@ -200,6 +201,7 @@ void CtAcquisition::setAcqMode(AcqMode mode)
   case Concatenation:
     if (m_inpars.concatNbFrames<1)
       m_inpars.concatNbFrames= 1;
+    m_acc_nframes = 1;
     break;
   }
   
@@ -304,21 +306,22 @@ void CtAcquisition::getAccExpoTime(double& acc_time) const
 void CtAcquisition::_updateAccPars() const
 {
   DEB_MEMBER_FUNCT();
-
-  int acc_div;
-  acc_div= int(m_inpars.acqExpoTime / m_inpars.accMaxExpoTime);
-  double expTime = acc_div * m_inpars.accMaxExpoTime;
-  if(m_inpars.acqExpoTime - expTime > 1e-6)
+  if(m_inpars.acqMode == Accumulation)
     {
-      m_acc_nframes= acc_div + 1;
-      m_acc_exptime= m_inpars.acqExpoTime / m_acc_nframes;
-    } 
-  else 
-    {
-      m_acc_nframes= acc_div;
-      m_acc_exptime= m_inpars.accMaxExpoTime;
+      int acc_div;
+      acc_div= int(m_inpars.acqExpoTime / m_inpars.accMaxExpoTime);
+      double expTime = acc_div * m_inpars.accMaxExpoTime;
+      if(m_inpars.acqExpoTime - expTime > 1e-6)
+	{
+	  m_acc_nframes= acc_div + 1;
+	  m_acc_exptime= m_inpars.acqExpoTime / m_acc_nframes;
+	} 
+      else 
+	{
+	  m_acc_nframes= acc_div;
+	  m_acc_exptime= m_inpars.accMaxExpoTime;
+	}
     }
-
   DEB_TRACE() << DEB_VAR2(m_acc_nframes,m_acc_exptime);
 }
 
