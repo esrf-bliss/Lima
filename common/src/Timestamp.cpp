@@ -1,7 +1,11 @@
 #include "Timestamp.h"
 #include "Exceptions.h"
 
+#ifdef __unix
 #include <sys/time.h>
+#else
+#include <time_compat.h>
+#endif
 #include <unistd.h>
 #include <iostream>
 

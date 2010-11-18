@@ -14,8 +14,11 @@
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
+#ifdef __unix
 #include <sys/time.h>
-
+#else
+#include <time_compat.h>
+#endif
 using namespace lima;
 using namespace std;
 

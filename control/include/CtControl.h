@@ -108,7 +108,7 @@ namespace lima
 
     SoftOpExternalMgr* 	externalOperation() 	{return m_op_ext;}
 
-    HwInterface* 	interface() 		{return m_hw;}
+    HwInterface* 	hwInterface() 		{return m_hw;}
     
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;

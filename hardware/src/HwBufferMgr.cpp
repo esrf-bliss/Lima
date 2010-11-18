@@ -480,7 +480,7 @@ void BufferCtrlMgr::setNbConcatFrames(int nb_concat_frames)
 	if ((getAcqMode() == Acc) && ask_concat)
 		THROW_HW_ERROR(InvalidValue) << "Frame acc. is active";
 
-	bool can_concat = (m_acq_buffer_mgr->getCap() & BufferCbMgr::Concat);
+	bool can_concat = !!(m_acq_buffer_mgr->getCap() & BufferCbMgr::Concat);
 	if (ask_concat && !can_concat)
 		THROW_HW_ERROR(NotSupported) << "Stripe concat. not supported";
 

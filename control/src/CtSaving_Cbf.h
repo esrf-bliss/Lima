@@ -15,7 +15,7 @@ namespace lima {
     virtual ~SaveContainerCbf();
   protected:
     virtual bool _open(const std::string &filename,
-		       std::_Ios_Openmode flags);
+		std::ios::open_mode flags);
     virtual void _close();
     virtual void _writeFile(Data &data,
 			    CtSaving::HeaderMap &aHeader,

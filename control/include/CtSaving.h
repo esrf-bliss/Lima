@@ -5,11 +5,12 @@
 #include <list>
 #include <string>
 #include <fstream>
+#include <ios>
 
 #include "ThreadUtils.h"
 #include "CtControl.h"
 
-class Data;
+struct Data;
 class TaskEventCallback;
 
 namespace lima {
@@ -144,7 +145,7 @@ namespace lima {
 
     protected:
       virtual bool _open(const std::string &filename,
-			 std::_Ios_Openmode flags) = 0;
+		  std::ios::open_mode flags) = 0;
       virtual void _close() = 0;
       virtual void _writeFile(Data &data,
 			      CtSaving::HeaderMap &aHeader,

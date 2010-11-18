@@ -812,7 +812,7 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 	  DEB_ERROR() << output;
 	  throw LIMA_CTL_EXC(Error, output.c_str());
 	}
-      std::_Ios_Openmode openFlags = std::ios_base::out | std::ios_base::binary;
+	  std::ios::open_mode openFlags = std::ios_base::out | std::ios_base::binary;
       if(pars.overwritePolicy == Append)
 	openFlags |= std::ios_base::app;
       else if(pars.overwritePolicy == Overwrite)

@@ -56,8 +56,8 @@ namespace lima
     void setActive(bool activeFlag);
     void getActive(bool &activeFlag);
 
-    void setPixelThresholdValue(int pixelThresholdValue);
-    void getPixelThresholdValue(int &pixelThresholdValue) const;
+    void setPixelThresholdValue(long long pixelThresholdValue);
+    void getPixelThresholdValue(long long &pixelThresholdValue) const;
 
     void getBufferSize(int &aBufferSize) const;
 

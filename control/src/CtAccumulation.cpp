@@ -47,13 +47,13 @@ void CtAccumulation::getActive(bool &activeFlag)
   activeFlag = m_pars.active;
 }
 
-void CtAccumulation::setPixelThresholdValue(int pixelThresholdValue)
+void CtAccumulation::setPixelThresholdValue(long long pixelThresholdValue)
 {
   AutoMutex aLock(m_lock);
   m_pars.pixelThresholdValue = pixelThresholdValue;
 }
 
-void CtAccumulation::getPixelThresholdValue(int &pixelThresholdValue) const
+void CtAccumulation::getPixelThresholdValue(long long &pixelThresholdValue) const
 {
   AutoMutex aLock(m_lock);
   pixelThresholdValue = m_pars.pixelThresholdValue;

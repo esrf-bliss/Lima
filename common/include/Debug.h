@@ -392,7 +392,7 @@ inline DebProxy::~DebProxy()
 
 inline bool DebProxy::isActive() const
 {
-	return m_lock;
+	return !!m_lock;
 }
 
 template <class T>
