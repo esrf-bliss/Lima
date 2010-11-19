@@ -16,20 +16,22 @@ namespace lima
     friend class CtControl;
 
   public:
+    enum AccTimeMode {Live,Real};
 
     struct Parameters {
       DEB_CLASS_NAMESPC(DebModControl,"Acquisition::Parameters","Control");
     public:
       Parameters();
       void reset();
-
-      AcqMode	acqMode;
-      int	acqNbFrames;
-      double	acqExpoTime;
-      double	accMaxExpoTime;
-      int	concatNbFrames;
-      double	latencyTime;
-      TrigMode triggerMode;
+      
+      AcqMode		acqMode;
+      AccTimeMode 	accTimeMode;
+      int		acqNbFrames;
+      double		acqExpoTime;
+      double		accMaxExpoTime;
+      int		concatNbFrames;
+      double		latencyTime;
+      TrigMode 		triggerMode;
       
     };
 
@@ -50,6 +52,9 @@ namespace lima
     void setAcqMode(AcqMode mode);
     void getAcqMode(AcqMode& mode) const;
 
+    void setAccTimeMode(AccTimeMode mode);
+    void getAccTimeMode(AccTimeMode &mode) const;
+
     void setAcqNbFrames(int nframes);
     void getAcqNbFrames(int& nframes) const;
 
@@ -61,6 +66,8 @@ namespace lima
 
     void getAccNbFrames(int& nframes) const;
     void getAccExpoTime(double& acc_time) const;
+    void getAccLiveTime(double& acc_live_time) const;
+    void getAccDeadTime(double& acc_dead_time) const;
 
     void setConcatNbFrames(int nframes);
     void getConcatNbFrames(int& nframes) const; 
@@ -101,8 +108,10 @@ namespace lima
     ChangedPars	m_changes;
     double		m_readout_time;
     double		m_frame_rate;
-    mutable int	m_acc_nframes;
+    mutable int		m_acc_nframes;
     mutable double	m_acc_exptime;
+    mutable double	m_acc_live_time;
+    mutable double	m_acc_dead_time;
     bool		m_applied_once;
 
   };

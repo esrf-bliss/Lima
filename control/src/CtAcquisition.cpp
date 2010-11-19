@@ -5,7 +5,11 @@
 using namespace lima;
 
 
-CtAcquisition::CtAcquisition(HwInterface *hw)
+CtAcquisition::CtAcquisition(HwInterface *hw) :
+  m_acc_nframes(-1),
+  m_acc_exptime(1.),
+  m_acc_live_time(-1.),
+  m_acc_dead_time(-1.)
 {
   DEB_CONSTRUCTOR();
 
@@ -109,12 +113,16 @@ void CtAcquisition::_hwRead()
   case Single:
     m_hwpars.concatNbFrames= 0;
     m_acc_exptime= m_hwpars.accMaxExpoTime;
-    m_acc_nframes= 0;
+    m_acc_nframes= -1;
+    m_acc_live_time = -1.;
+    m_acc_dead_time = -1.;
     break;
   case Concatenation:
     // concatNbFrames unchanged (or read in buffer ??)
     m_acc_exptime= m_hwpars.accMaxExpoTime;
-    m_acc_nframes= 0;
+    m_acc_nframes= -1;
+    m_acc_live_time = -1.;
+    m_acc_dead_time = -1.;
     break;
   case Accumulation:
     m_hwpars.concatNbFrames= 0;
@@ -191,7 +199,9 @@ void CtAcquisition::setAcqMode(AcqMode mode)
   switch (m_inpars.acqMode) {
   case Single:
     if (m_inpars.acqNbFrames<1) m_inpars.acqNbFrames= 1;
-    m_acc_nframes = 1;
+    m_acc_nframes = -1;
+    m_acc_live_time = -1.;
+    m_acc_dead_time = -1.;
     break;
   case Accumulation:
     if (m_inpars.accMaxExpoTime<=0) {
@@ -201,7 +211,9 @@ void CtAcquisition::setAcqMode(AcqMode mode)
   case Concatenation:
     if (m_inpars.concatNbFrames<1)
       m_inpars.concatNbFrames= 1;
-    m_acc_nframes = 1;
+    m_acc_nframes = -1;
+    m_acc_live_time = -1.;
+    m_acc_dead_time = -1.;
     break;
   }
   
@@ -276,6 +288,25 @@ void CtAcquisition::getAccNbFrames(int& nframes) const
   DEB_RETURN() << DEB_VAR1(nframes);
 }
 
+void CtAcquisition::getAccLiveTime(double &acc_live_time) const
+{
+  DEB_MEMBER_FUNCT();
+
+  _updateAccPars();
+  acc_live_time = m_acc_live_time;
+  
+  DEB_RETURN() << DEB_VAR1(acc_live_time);
+}
+
+void CtAcquisition::getAccDeadTime(double &acc_dead_time) const
+{
+  DEB_MEMBER_FUNCT();
+  
+  _updateAccPars();
+  acc_dead_time = m_acc_dead_time;
+
+  DEB_RETURN() << DEB_VAR1(acc_dead_time);
+}
 void CtAcquisition::setAccMaxExpoTime(double acc_time)
 {
   DEB_MEMBER_FUNCT();
@@ -308,19 +339,31 @@ void CtAcquisition::_updateAccPars() const
   DEB_MEMBER_FUNCT();
   if(m_inpars.acqMode == Accumulation)
     {
-      int acc_div;
-      acc_div= int(m_inpars.acqExpoTime / m_inpars.accMaxExpoTime);
-      double expTime = acc_div * m_inpars.accMaxExpoTime;
-      if(m_inpars.acqExpoTime - expTime > 1e-6)
+      if(m_inpars.accTimeMode == Live)
 	{
-	  m_acc_nframes= acc_div + 1;
-	  m_acc_exptime= m_inpars.acqExpoTime / m_acc_nframes;
-	} 
-      else 
-	{
-	  m_acc_nframes= acc_div;
-	  m_acc_exptime= m_inpars.accMaxExpoTime;
+	  int acc_div = int(m_inpars.acqExpoTime / m_inpars.accMaxExpoTime);
+	  double expTime = acc_div * m_inpars.accMaxExpoTime;
+	  if(m_inpars.acqExpoTime - expTime > 1e-6)
+	    {
+	      m_acc_nframes= acc_div + 1;
+	      m_acc_exptime= m_inpars.acqExpoTime / m_acc_nframes;
+	    } 
+	  else 
+	    {
+	      m_acc_nframes= acc_div;
+	      m_acc_exptime= m_inpars.accMaxExpoTime;
+	    }
+	  m_acc_dead_time = (m_acc_nframes - 1) * m_valid_ranges.min_lat_time;
 	}
+      else			// Real
+	{
+	  m_acc_nframes = int(m_inpars.acqExpoTime / (m_inpars.accMaxExpoTime +
+						      m_valid_ranges.min_lat_time)) + 1;
+	  m_acc_dead_time = (m_acc_nframes - 1) * m_valid_ranges.min_lat_time;
+	  m_acc_exptime = (m_inpars.acqExpoTime - m_acc_dead_time) / m_acc_nframes;
+	  
+	}
+      m_acc_live_time = m_acc_nframes * m_acc_exptime;
     }
   DEB_TRACE() << DEB_VAR2(m_acc_nframes,m_acc_exptime);
 }
@@ -379,6 +422,7 @@ void CtAcquisition::Parameters::reset()
   DEB_MEMBER_FUNCT();
 
   acqMode= Single;
+  accTimeMode = Live;
   acqNbFrames= 1;
   acqExpoTime= 1.;
   accMaxExpoTime= 1.;

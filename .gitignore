@@ -1,6 +1,7 @@
 sip*.cpp
 *.o
 *.P
+*.d
 *.so
 *.so.*
 *~
