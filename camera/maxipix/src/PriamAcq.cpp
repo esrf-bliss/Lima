@@ -800,7 +800,7 @@ void PriamAcq::resetFifo(short port)
 
     _checkPortNr(port);
 
-    val= 0x80 | 0x20 | (1<<port);
+    val= 0xc0 | 0x20 | (1<<port);
     sval= string(1, val);
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, sval);
 }
@@ -822,7 +822,7 @@ void PriamAcq::resetChip(short port)
 
     _checkPortNr(port);
 
-    val= 0xc0 | 0x20 | (1<<port);
+    val= 0x80 | 0x20 | (1<<port);
     sval= string(1, val);
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, sval);
 }

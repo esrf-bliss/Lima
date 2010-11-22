@@ -2,6 +2,7 @@
 #define _PRIAM_SERIAL_H
 
 #include "EspiaSerialLine.h"
+#include "ThreadUtils.h"
 #include <string>
 
 namespace lima {
@@ -103,6 +104,7 @@ namespace Maxipix {
     void _writeCommand(short code,const std::string& buf) const;
 
     mutable Espia::SerialLine& m_espia_serial;
+    mutable Mutex m_mutex;
   };
 
 }
