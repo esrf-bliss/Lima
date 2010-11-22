@@ -55,7 +55,7 @@ const PriamSerial::PriamCodeType PriamSerial::PriamSerTxCode[] = {
 };
 
 PriamSerial::PriamSerial(Espia::SerialLine &espia_serial)
-	:m_espia_serial(espia_serial)
+  :m_espia_serial(espia_serial), m_mutex(MutexAttr::Normal)
 {
     DEB_CONSTRUCTOR();
     ostringstream os;
@@ -86,6 +86,8 @@ void PriamSerial::writeRegister(PriamRegister reg,const string& buffer)
 
     DEB_TRACE() << "write" << DEB_VAR2(wreg.name, buffer);
 
+    // Lock here the serial write/read acess to the priam to avoid deadlock due to concurrent access
+    AutoMutex lock(m_mutex);
     _writeCommand(wreg.writeCode, buffer);
     _readAnswer(wreg.writeCode, 0, rbuf);
 }
@@ -104,6 +106,9 @@ void PriamSerial::readRegister(PriamRegister reg,string& buffer, long size) cons
 				     << rreg.name << ") is not readable";
 
     DEB_TRACE() << "read" << DEB_VAR2(rreg.name, size);
+
+    // Lock here the serial write/read acess to the priam to avoid deadlock due to concurrent access
+    AutoMutex lock(m_mutex);
 
     _writeCommand(rreg.readCode, buffer);
 
@@ -187,6 +192,9 @@ void PriamSerial::writeFsr(const string& fsr,string& bid)
 				     << " for Priam transfer; should be "
 				     << DEB_VAR1(long(reg.writeSize));
 
+    // Lock here the serial write/read acess to the priam to avoid deadlock due to concurrent access
+    AutoMutex lock(m_mutex);
+
     _writeCommand(reg.writeCode, fsr);
     _readAnswer(reg.writeCode, reg.readSize, bid);
 }
@@ -217,6 +225,9 @@ void PriamSerial::readMatrix(string& output) const
     PriamCodeType reg;
     string wbuf("");
 
+    // Lock here the serial write/read acess to the priam to avoid deadlock due to concurrent access
+    AutoMutex lock(m_mutex);
+
     reg= PriamSerTxCode[PSER_MATRIX];
     DEB_TRACE() << "Asking matrix";
     _writeCommand(reg.readCode, wbuf);
@@ -241,6 +252,9 @@ void PriamSerial::writeLut(PriamLut lut,const string& buffer)
     wbuf.append(1, (char)reg.writeCode);
     wbuf.append(1, (char)size);
 
+    // Lock here the serial write/read acess to the priam to avoid deadlock due to concurrent access
+    AutoMutex lock(m_mutex);
+
     m_espia_serial.write(wbuf, true);
     m_espia_serial.write(buffer, false);
     _readAnswer(reg.writeCode, 0, wbuf);
@@ -258,6 +272,10 @@ void PriamSerial::readLut(PriamLut lut, string& buffer, long size) const
 				     << DEB_VAR1(size) << ";should be <= 256";
     wbuf.append(1, (char)reg.readCode);
     wbuf.append(1, (char)(size&0xff));
+
+    // Lock here the serial write/read acess to the priam to avoid deadlock due to concurrent access
+    AutoMutex lock(m_mutex);
+
     m_espia_serial.write(wbuf, false);
     _readAnswer(reg.readCode, size, buffer);
 }
