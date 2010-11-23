@@ -170,6 +170,7 @@ void CtAcquisition::_apply()
   DEB_TRACE() << DEB_VAR1(m_hwpars);
   
   m_changes.set(0);
+  m_hw_sync->setAcqMode(m_inpars.acqMode);
 }
 
 void CtAcquisition::setTriggerMode(TrigMode mode)
@@ -226,6 +227,24 @@ void CtAcquisition::getAcqMode(AcqMode& mode) const
 
   mode = m_inpars.acqMode;
   
+  DEB_RETURN() << DEB_VAR1(mode);
+}
+
+void CtAcquisition::getAccTimeMode(AccTimeMode &mode) const
+{
+  DEB_MEMBER_FUNCT();
+  
+  mode = m_inpars.accTimeMode;
+  
+  DEB_RETURN() << DEB_VAR1(mode);
+}
+
+void CtAcquisition::setAccTimeMode(AccTimeMode mode)
+{
+  DEB_MEMBER_FUNCT();
+
+  m_inpars.accTimeMode = mode;
+
   DEB_RETURN() << DEB_VAR1(mode);
 }
 
