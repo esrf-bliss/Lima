@@ -7,7 +7,7 @@ using namespace lima;
 
 CtAcquisition::CtAcquisition(HwInterface *hw) :
   m_acc_nframes(-1),
-  m_acc_exptime(1.),
+  m_acc_exptime(-1.),
   m_acc_live_time(-1.),
   m_acc_dead_time(-1.)
 {
@@ -112,17 +112,9 @@ void CtAcquisition::_hwRead()
   switch (m_hwpars.acqMode) {
   case Single:
     m_hwpars.concatNbFrames= 0;
-    m_acc_exptime= m_hwpars.accMaxExpoTime;
-    m_acc_nframes= -1;
-    m_acc_live_time = -1.;
-    m_acc_dead_time = -1.;
     break;
   case Concatenation:
     // concatNbFrames unchanged (or read in buffer ??)
-    m_acc_exptime= m_hwpars.accMaxExpoTime;
-    m_acc_nframes= -1;
-    m_acc_live_time = -1.;
-    m_acc_dead_time = -1.;
     break;
   case Accumulation:
     m_hwpars.concatNbFrames= 0;
@@ -383,6 +375,13 @@ void CtAcquisition::_updateAccPars() const
 	  
 	}
       m_acc_live_time = m_acc_nframes * m_acc_exptime;
+    }
+  else				// set to -1 all accumulation params
+    {
+      m_acc_nframes = -1;
+      m_acc_exptime = -1.;
+      m_acc_live_time = -1.;
+      m_acc_dead_time = -1.;
     }
   DEB_TRACE() << DEB_VAR2(m_acc_nframes,m_acc_exptime);
 }

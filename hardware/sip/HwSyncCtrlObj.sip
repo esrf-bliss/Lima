@@ -48,5 +48,8 @@ sipRes = str.str().c_str();
 
 
 	virtual void getValidRanges(HwSyncCtrlObj::ValidRangesType& range /Out/) = 0;
+ protected:
+	void getAcqMode(AcqMode &acqMode /Out/);
+	void setAcqMode(AcqMode acqMode);
 };
  
