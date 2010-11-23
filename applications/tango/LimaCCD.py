@@ -1056,10 +1056,6 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
-        'shutter_state':
-        [[PyTango.DevString,
-          PyTango.SCALAR,
-          PyTango.READ]],
         'shutter_open_time':
         [[PyTango.DevDouble,
           PyTango.SCALAR,
