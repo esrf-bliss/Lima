@@ -7,11 +7,12 @@
 namespace lima
 {
 
+class CtAcquisition;
 
 class HwSyncCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwSyncCtrlObj");
-
+	friend class CtAcquisition;
 public:
 	struct ValidRangesType {
 		ValidRangesType() :
@@ -62,9 +63,12 @@ public:
 	virtual void getNbHwFrames(int& nb_frames) = 0;
 
 	virtual void getValidRanges(ValidRangesType& valid_ranges) = 0;
-
+ protected:
+	inline void getAcqMode(AcqMode &acqMode) const {acqMode = m_acq_mode;}
+	inline void setAcqMode(AcqMode acqMode) {m_acq_mode = acqMode;}
  private:
 	HwBufferCtrlObj& m_buffer_ctrl;
+	AcqMode		 m_acq_mode;
 };
 
 std::ostream& operator <<(std::ostream& os, 
