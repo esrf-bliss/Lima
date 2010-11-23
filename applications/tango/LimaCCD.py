@@ -33,6 +33,27 @@ import camera
 class LimaCCDs(PyTango.Device_4Impl) :
 
     Core.DEB_CLASS(Core.DebModApplication, 'LimaCCDs')
+    _debugModuleList = ["None",
+                        "Common",
+                        "Hardware",
+                        "HardwareSerial",
+                        "Control",
+                        "Espia",
+                        "EspiaSerial",
+                        "Focla",
+                        "Camera",
+                        "CameraCom",
+                        "Test",
+                        "Application"]
+    
+    _debugTypeList = ["Fatal",
+                      "Error",
+                      "Warning",
+                      "Trace",
+                      "Funct",
+                      "Param",
+                      "Return",
+                      "Always"]
     
 #------------------------------------------------------------------
 #    Device constructor
@@ -42,7 +63,11 @@ class LimaCCDs(PyTango.Device_4Impl) :
         self.__className2deviceName = {}
         self.init_device()
         self.__lima_control = None
-        
+
+ 	self.__key_header_delimiter = '='
+        self.__entry_header_delimiter = '\n'
+        self.__image_number_header_delimiter = ';'
+       
 #------------------------------------------------------------------
 #    Device destructor
 #------------------------------------------------------------------
@@ -111,49 +136,89 @@ class LimaCCDs(PyTango.Device_4Impl) :
         else:
             Core.Processlib.PoolThreadMgr.get().setNumberOfThread(nb_thread)
             
+        self.__Prefix2SubClass = {'acc' : self.__control.acquisition,
+                                  'acq' : self.__control.acquisition,
+                                  'shutter' : self.__control.shutter,
+                                  'saving' : self.__control.saving}
+
+        self.__Attribute2FunctionBase = {'acq_trigger_mode':'TriggerMode',
+                                         'saving_overwrite_policy' : 'OverwritePolicy',
+                                         'saving_format' : 'Format',
+                                         'shutter_mode' : 'Mode'}
             
-        self.__ShutterMode = {'MANUAL': Core.ShutterManual, \
-                              'AUTO_FRAME': Core.ShutterAutoFrame,\
-                              'AUTO_SEQUENCE': Core.ShutterAutoSequence}			      
-        self.__AcqMode = {'SINGLE': Core.Single, \
-                          'CONCATENATION': Core.Concatenation,\
+        self.__ShutterMode = {'MANUAL': Core.ShutterManual,
+                              'AUTO_FRAME': Core.ShutterAutoFrame,
+                              'AUTO_SEQUENCE': Core.ShutterAutoSequence}
+        
+        self.__AcqMode = {'SINGLE': Core.Single,
+                          'CONCATENATION': Core.Concatenation,
                           'ACCUMULATION': Core.Accumulation}
 
-        self.__SavingFormat = {'RAW' : Core.RAW,
-                               'EDF' : Core.EDF,
-                               'CBF' : Core.CBFFormat}
-
-        self.__SavingFormatDefaultSuffix = {Core.RAW : '.raw',
-                                            Core.EDF : '.edf',
-                                            Core.CBFFormat : '.cbf'}
-
-        self.__SavingMode = {'MANUAL' : Core.Manual,
-                             'AUTO_FRAME' : Core.AutoFrame,
-                             'AUTO_HEADER' : Core.AutoHeader}
-
-        self.__SavingOverwritePolicy = {'ABORT' : Core.Abort,
-                                        'OVERWRITE' : Core.Overwrite,
-                                        'APPEND' : Core.Append}
-
-#==================================================================
-# 
-# Some Utils
-#
-#==================================================================
-
-    def __getDictKey(self,dict, value):
         try:
-            ind = dict.values().index(value)                            
-        except ValueError:
-            return None
-        return dict.keys()[ind]
+            self.__AccTimeMode = {'LIVE' : Core.CtAcquisition.Live,
+                                  'REAL' : Core.CtAcquisition.Real}
+        except AttributeError:          # Core too Old
+            self.__AccTimeMode = {}
+        
+        self.__SavingFormat = {'RAW' : Core.CtSaving.RAW,
+                               'EDF' : Core.CtSaving.EDF,
+                               'CBF' : Core.CtSaving.CBFFormat}
 
-    def __getDictValue(self,dict, key):
-        try:
-            value = dict[key.upper()]
-        except KeyError:
-            return None
-        return value
+        self.__SavingFormatDefaultSuffix = {Core.CtSaving.RAW : '.raw',
+                                            Core.CtSaving.EDF : '.edf',
+                                            Core.CtSaving.CBFFormat : '.cbf'}
+
+        self.__SavingMode = {'MANUAL' : Core.CtSaving.Manual,
+                             'AUTO_FRAME' : Core.CtSaving.AutoFrame,
+                             'AUTO_HEADER' : Core.CtSaving.AutoHeader}
+
+        self.__SavingOverwritePolicy = {'ABORT' : Core.CtSaving.Abort,
+                                        'OVERWRITE' : Core.CtSaving.Overwrite,
+                                        'APPEND' : Core.CtSaving.Append}
+
+        self.__AcqTriggerMode = {'SOFTWARE' : Core.IntTrig, 
+                                 'EXTERNAL_TRIGGER' : Core.ExtTrigSingle,
+                                 'EXTERNAL_MULTI_TRIGGER' : Core.ExtTrigMult,
+                                 'EXTERNAL_GATE' : Core.ExtGate,
+                                 'EXTERNAL_START_STOP' : Core.ExtStartStop}
+
+
+        
+    def __getattr__(self,name) :
+        if name.startswith('is_') and name.endswith('_allowed') :
+            split_name = name.split('_')[1:-1]
+            attr_name = ''.join([x.title() for x in split_name])
+            dict_name = '_' + self.__class__.__name__ + '__' + attr_name
+            d = getattr(self,dict_name,None)
+            func = _allowed
+            if d is not None:
+                if not d:
+                    func = _not_allowed
+            self.__dict__[name] = func
+            return func
+        elif name.startswith('read_') or name.startswith('write_') :
+            split_name = name.split('_')[1:]
+            attr_name = ''.join([x.title() for x in split_name])
+            dict_name = '_' + self.__class__.__name__ + '__' + attr_name
+            d = getattr(self,dict_name,None)
+            getObjectFunc = self.__Prefix2SubClass.get(split_name[0],None)
+            attr_name = self.__Attribute2FunctionBase.get('_'.join(split_name),attr_name)
+            if d and getObjectFunc:
+                obj = getObjectFunc()
+                if name.startswith('read_') :
+                    functionName = 'get' + attr_name
+                    function2Call = getattr(obj,functionName)
+                    callable_obj = CallableReadEnum(d,function2Call)
+                else:
+                    functionName = 'set' + attr_name
+                    function2Call = getattr(obj,functionName)
+                    callable_obj = CallableWriteEnum('_'.join(split_name),
+                                                     d,function2Call)
+                self.__dict__[name] = callable_obj
+                return callable_obj
+        
+        raise AttributeError('LimaCCDs has no attribute %s' % name)
+
 
 #==================================================================
 #
@@ -185,7 +250,51 @@ class LimaCCDs(PyTango.Device_4Impl) :
 	det_info = interface.getHwCtrlObj(Core.HwCap.DetInfo)
 	value = det_info.getDetectorModel() 
 	attr.set_value(value)
+        
+    ## @brief get the status of the acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acq_status(self,attr) :
+        status = self.__control.getStatus()
+        state2string = {Core.AcqReady : "Ready",
+                        Core.AcqRunning : "Running",
+                        Core.AcqFault : "Fault"}
+        attr.set_value(state2string.get(status.AcquisitionStatus,"?"))
 
+    ## @brief read the number of frame for an acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acq_nb_frames(self,attr) :
+        acquisition = self.__control.acquisition()
+        nb_frames = acquisition.getAcqNbFrames()
+        attr.set_value(nb_frames)
+
+    ## @brief write the number of frame for an acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_acq_nb_frames(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        acquisition = self.__control.acquisition()
+        acquisition.setAcqNbFrames(data[0])
+        
+    ## @brief read the number of frame for an acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acq_expo_time(self,attr) :
+        acquisition = self.__control.acquisition()
+        expo_time = acquisition.getAcqExpoTime()
+        attr.set_value(expo_time)
+
+    ## @brief write the number of frame for an acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_acq_expo_time(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        acquisition = self.__control.acquisition()
+        acquisition.setAcqExpoTime(data[0])
+        
     ## @brief Read maximum accumulation exposure time
     #
     @Core.DEB_MEMBER_FUNCT
@@ -205,6 +314,23 @@ class LimaCCDs(PyTango.Device_4Impl) :
         attr.get_write_value(data)
 	acq = self.__control.acquisition()
         acq.setAccMaxExpoTime(*data)
+
+    ## @brief Read maximum accumulation exposure time
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_concat_nb_frames(self,attr) :        
+	acq = self.__control.acquisition()
+        value = acq.getConcatNbFrames()
+        attr.set_value(value)
+
+    ## @brief Write the accumulation max exposure time
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_concat_nb_frames(self,attr) :
+        data = []
+        attr.get_write_value(data)
+	acq = self.__control.acquisition()
+        acq.setConcatNbFrames(*data)
 
     ## @brief Read calculated accumulation exposure time
     #
@@ -227,36 +353,6 @@ class LimaCCDs(PyTango.Device_4Impl) :
 	
         attr.set_value(value)
 	
-    ## @brief Read acquisition mode
-    # Single, Concatenation or Accumulation
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def read_acq_mode(self,attr) :        
-	acq = self.__control.acquisition()
-
-	value = self.__getDictKey(self.__AcqMode,acq.getAcqMode())	
-        if value is None: value = "NOT_SUPPORTED"
-	
-        attr.set_value(value)
-		
-    ## @brief Write Acquisition mode
-    #Single, Concatenation, Accumulation
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def write_acq_mode(self,attr) :
-        data = []
-        attr.get_write_value(data)
-	acq = self.__control.acquisition()
-	
-	mode = self.__getDictValue(self.__AcqMode,data[0].upper())
-	if mode is None:
-            PyTango.Except.throw_exception('WrongData',\
-                                           'Wrong value %s: %s'%('shutter_mode',data[0].upper()),\
-                                           'LimaCCD Class') 
-                                     
-
-        acq.setAcqMode(mode)
-
     ## @brief Read latency time 
     #
     @Core.DEB_MEMBER_FUNCT
@@ -278,6 +374,144 @@ class LimaCCDs(PyTango.Device_4Impl) :
 
         acq.setLatencyTime(*data)
 
+    ## @brief Read image Roi
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_image_roi(self,attr) :
+        image = self.__control.image()
+        roi = image.getRoi()
+        point = roi.getTopLeft()
+        size = roi.getSize()
+        
+        attr.set_value([point.x,point.y,
+                        size.getWidth(),size.getHeight()])
+
+    ## @brief Write image Roi
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_image_roi(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        image = self.__control.image()
+        roi = Core.Roi(*data)
+        image.setRoi(roi)
+
+    ## @brief Read image type
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_image_type(self,attr) :
+        imageType2String = {
+            Core.Bpp8 : "Bpp8" ,
+            Core.Bpp8S : "Bpp8S" ,
+            Core.Bpp10 : "Bpp10" ,
+            Core.Bpp10S : "Bpp10S" ,
+            Core.Bpp12 : "Bpp12" ,
+            Core.Bpp12S : "Bpp12S" ,
+            Core.Bpp14 : "Bpp14" ,
+            Core.Bpp14S : "Bpp14S" , 
+            Core.Bpp16 : "Bpp16" ,
+            Core.Bpp16S : "Bpp16S" ,
+            Core.Bpp32 : "Bpp32" ,
+            Core.Bpp32S : "Bpp32S"
+            }
+        image = self.__control.image()
+        imageType = image.getImageType()
+        stringType = imageType2String.get(imageType,"?")
+                
+        attr.set_value(stringType)
+
+    ## @brief Read image width
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_image_width(self,attr) :
+        image = self.__control.image()
+ 	dim = image.getImageDim()
+                        
+        attr.set_value(dim.getSize().getWidth())
+
+    ## @brief Read image height
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_image_height(self,attr) :
+        image = self.__control.image()
+ 	dim = image.getImageDim()
+                        
+        attr.set_value(dim.getSize().getHeight())
+
+    ## @brief Read image binning
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_image_bin(self,attr) :
+        image = self.__control.image()
+        binValues = image.getBin()
+                        
+        attr.set_value([binValues.getX(),
+                        binValues.getY()],2)
+
+    ## @brief Write image binning
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_image_bin(self,attr) :
+        data = []
+        attr.get_write_value(data)
+
+        image = self.__control.image()
+        binValue = Core.Bin(*data)
+        image.setBin(binValue)
+    
+
+    ## @brief Read image flip
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_image_flip(self,attr) :
+        image = self.__control.image()
+                        
+        attr.set_value([False,False],2)
+
+    ## @brief Write image flip
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_image_flip(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        print 'Try to set flip ;)',data
+
+    ## @brief Read image flip
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_common_header(self,attr) :
+        saving = self.__control.saving()
+        header = saving.getCommonHeader()
+        headerArr = ['%s%s%s' % (k,self.__key_header_delimiter,v) for k,v in header.iteritems()]
+        attr.set_value(headerArr,len(headerArr))
+
+    ## @brief Write image flip
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_common_header(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        header = dict([x.split(self.__key_header_delimiter) for x in data])
+        saving = self.__control.saving()
+        saving.setCommonHeader(header)
+
+    ## @brief Read header delimiter
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_saving_header_delimiter(self,attr) :
+        attr.set_value([self.__key_header_delimiter,
+                        self.__entry_header_delimiter,
+                        self.__image_number_header_delimiter],3)
+
+    ##@brief Write header delimiter
+    #
+    def write_saving_header_delimiter(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        self.__key_header_delimiter = data[0]
+        self.__entry_header_delimiter = data[1]
+        self.__image_number_header_delimiter = data[2]
+    
     ## @brief Read last image acquired
     #
     @Core.DEB_MEMBER_FUNCT
@@ -302,6 +536,25 @@ class LimaCCDs(PyTango.Device_4Impl) :
 
         attr.set_value(value)
 
+    ## @brief this flag is true just after
+    #  the detector readout.
+    #
+    # This attribute should be use
+    #  to test is client can re-trigger an other image
+    @Core.DEB_MEMBER_FUNCT
+    def read_ready_for_next_image(self,attr) :
+        interface = self.__control.interface()
+        status = interface.getStatus()
+        attr.set_value(status.acq == Core.AcqReady)
+
+    ## @brief this flag is true when acquisition is finished
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_ready_for_next_acq(self,attr) :
+        status = self.__control.getStatus()
+        attr.set_value(status.AcquisitionStatus == Core.AcqReady)
+
+    
     ## @brief read write statistic
     #
     @Core.DEB_MEMBER_FUNCT
@@ -309,37 +562,10 @@ class LimaCCDs(PyTango.Device_4Impl) :
         saving = self.__control.saving()
         stat = saving.getWriteTimeStatistic()
         if not len(stat) :
-            attr.set_value([-1],len(1))
+            attr.set_value([-1],1)
         else:
             attr.set_value(stat,len(stat))
 	
-    ## @brief Read current shutter mode 
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def read_shutter_mode(self,attr) :
-        shutter = self.__control.shutter()
-
-        value = self.__getDictKey(self.__ShutterMode,shutter.getMode())	
-        if value is None: value = "NOT_SUPPORTED"
-
-        attr.set_value(value)
-
-    ## @brief Write current shutter mode
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def write_shutter_mode(self,attr) :
-        data = []
-        attr.get_write_value(data)
-        
-        mode = self.__getDictValue(self.__ShutterMode,data[0].upper())
-	if mode is None:
-            PyTango.Except.throw_exception('WrongData',\
-                                           'Wrong value %s: %s'%('shutter_mode',data[0].upper()),\
-                                           'LimaCCD Class') 
-
-        
-        shutter = self.__control.shutter()
-        shutter.setMode(mode)
 
     ## @brief Read current shutter state 
     # True-Open, False-Close
@@ -435,7 +661,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
         overwritePolicy = saving.getOverwritePolicy()
         if overwritePolicy == Core.CtSaving.Abort:
             matchFiles = glob.glob(os.path.join(directory,'%s*%s' % (prefix,suffix)))
-            lastnumber = __getLastFileNumber(prefix,suffix,matchFiles)
+            lastnumber = _getLastFileNumber(prefix,suffix,matchFiles)
         else:
             lastnumber = 0
         saving.setPrefix(prefix)
@@ -469,15 +695,20 @@ class LimaCCDs(PyTango.Device_4Impl) :
 
         saving.setNextNumber(*data)
 
-    ## @brief Read the saving format
-    #
     @Core.DEB_MEMBER_FUNCT
-    def read_saving_format(self,attr) :
+    def read_saving_frame_per_file(self,attr) :
         saving = self.__control.saving()
 
-        value = self.__getDictKey(self.__SavingFormat,saving.getFormat())
-        attr.set_value(value)
+        attr.set_value(saving.getFramePerFile())
 
+    @Core.DEB_MEMBER_FUNCT
+    def write_saving_frame_per_file(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        saving = self.__control.saving()
+
+        saving.setFramesPerFile(*data)
+        
     ## @brief Change the saving Format
     #
     @Core.DEB_MEMBER_FUNCT
@@ -486,8 +717,8 @@ class LimaCCDs(PyTango.Device_4Impl) :
         attr.get_write_value(data)
         saving = self.__control.saving()
 
-        value = self.__getDictValue(self.__SavingFormat,data[0].upper())
-	if mode is None:
+        value = _getDictValue(self.__SavingFormat,data[0].upper())
+	if value is None:
             PyTango.Except.throw_exception('WrongData',\
                                            'Wrong value %s: %s'%('saving_format',data[0].upper()),\
                                            'LimaCCD Class')
@@ -496,61 +727,13 @@ class LimaCCDs(PyTango.Device_4Impl) :
             defaultSuffix = self.__SavingFormatDefaultSuffix.get(value,'.unknown')
             saving.setSuffix(defaultSuffix)
 
-    ## @brief Read the saving Mode
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def read_saving_mode(self,attr) :
-        saving = self.__control.saving()
-
-        value = self.__getDictKey(self.__SavingMode,saving.getSavingMode())
-        attr.set_value(value)
-
-    ## @brief Change the saving Mode
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def write_saving_mode(self,attr) :
-        data = []
-        attr.get_write_value(data)
-        saving = self.__control.saving()
-
-        value = self.__getDictValue(self.__SavingMode,data[0].upper())
-	if mode is None:
-            PyTango.Except.throw_exception('WrongData',\
-                                           'Wrong value %s: %s'%('saving_mode',data[0].upper()),\
-                                           'LimaCCD Class')
-        else:
-            saving.setSavingMode(value)
-    ## @brief Read the overwrite policy
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def read_saving_overwrite_policy(self,attr) :
-        saving = self.__control.saving()
-
-        value = self.__getDictKey(self.__SavingOverwritePolicy,saving.getOverwritePolicy())
-        attr.set_value(value)
-
-    ## @brief Change the saving Mode
-    #
-    @Core.DEB_MEMBER_FUNCT
-    def write_saving_overwrite_policy(self,attr) :
-        data = []
-        attr.get_write_value(data)
-        saving = self.__control.saving()
-
-        value = self.__getDictValue(self.__SavingOverwritePolicy,data[0].upper())
-	if mode is None:
-            PyTango.Except.throw_exception('WrongData',\
-                                           'Wrong value %s: %s'%('saving_overwrite_policy',data[0].upper()),\
-                                           'LimaCCD Class')
-        else:
-            saving.setOverwritePolicy(value)
     ## @brief Read the frame per file
     #
     @Core.DEB_MEMBER_FUNCT
     def read_frame_per_file(self,attr) :
         saving = self.__control.saving()
 
-        value = saving.getFramePerFile())
+        value = saving.getFramePerFile()
         attr.set_value(value)
 
     ## @brief Change the number of saving frame per file
@@ -563,6 +746,50 @@ class LimaCCDs(PyTango.Device_4Impl) :
 
         saving.setFramesPerFile(data[0])
 
+    ##@biref Read possible modules
+    #
+    def read_debug_modules_possible(self,attr) :
+        attr.set_value(LimaCCDs._debugModuleList,len(LimaCCDs._debugModuleList))
+        
+    ##@brief Read list of module which are in debug
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_debug_modules(self,attr) :
+        NameList = Core.DebParams.getModuleFlagsNameList()
+        attr.set_value(NameList,len(NameList))
+
+    ##@brief set debug module list
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_debug_modules(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        Core.DebParams.setModuleFlagsNameList(data)
+    
+    ##@biref Read possible modules
+    #
+    def read_debug_types_possible(self,attr) :
+        attr.set_value(LimaCCDs._debugTypeList,len(LimaCCDs._debugTypeList))
+        
+    ##@brief Read list of module which are in debug
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_debug_types(self,attr) :
+        NameList = Core.DebParams.getTypeFlagsNameList()
+
+        if NameList:
+            attr.set_value(NameList,len(NameList))
+        else:
+            attr.set_value([''],1)
+
+    ##@brief set debug module list
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_debug_types(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        Core.DebParams.setTypeFlagsNameList(data)
+    
 #==================================================================
 #
 #    LimaCCDs command methods
@@ -582,7 +809,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
             if shutter.hasCapability():
                 #Depending of the camera only a subset of the mode list can be supported
                 values = shutter.getModeList()
-                valueList = [self.__getDictKey(self.__ShutterMode,val) for val in values]
+                valueList = [_getDictKey(self.__ShutterMode,val) for val in values]
         else:
             dict_name = '_' + self.__class__.__name__ + '__' + ''.join([x.title() for x in attr_name.split('_')])
             d = getattr(self,dict_name,None)
@@ -590,6 +817,58 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 valueList = d.keys()
 
         return valueList
+
+    ##@brief prepare an acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def prepareAcq(self) :
+        self.__control.prepareAcq()
+
+    ##@brief start an acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def startAcq(self) :
+        self.__control.startAcq()
+
+    ##@brief stop an acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def stopAcq(self) :
+        self.__control.stopAcq()
+
+    ##@brief reset acquisition
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def reset(self) :
+        self.__control.reset()
+
+    ##@brief set images heaaders
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def setImageHeader(self,headers_str) :
+        control = self.__control
+        saving = control.saving()
+        for image_header in headers_str:
+            imageIdSepPos = image_header.find(self.__image_number_header_delimiter)
+            imageId = int(image_header[:imageIdSepPos])
+            header_str = image_header[imageIdSepPos+1:]
+            deb.Param('Setting to image %d file header: %s' % (imageId,header_str))
+            header_map = {}
+            for line in header_str.split(self.__entry_header_delimiter) :
+                token = line.split(self.__key_header_delimiter)
+                key = token[0].strip()
+                if not key:
+                    continue
+                try:
+                    val = '='.join(token[1:]).strip()
+                except ValueError:
+                    continue
+                if val.endswith(';'):
+                    val = val[:-1]
+                header_map[key] = val
+            saving.updateFrameHeader(imageId,header_map)
+
+
 #------------------------------------------------------------------
 #    closeShutterManual command:
 #
@@ -618,40 +897,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
 	if shutter.hasCapability() and shutter.getModeList().count(Core.ShutterManual):
             shutter.setState(True)
 
-#------------------------------------------------------------------
-#    setDebugFlags command:
-#
-#    Description: Get the current acquired frame number
-#    argout: DevVarDoubleArray    
-#------------------------------------------------------------------
-    @Core.DEB_MEMBER_FUNCT
-    def setDebugFlags(self, deb_flags):
-        deb_flags &= 0xffffffff
-        deb.Param('Setting debug flags: 0x%08x' % deb_flags)
-        Core.DebParams.setTypeFlags((deb_flags   >> 16)  & 0xff)
-        Core.DebParams.setModuleFlags((deb_flags >>  0)  & 0xffff)
 
-        deb.Trace('FormatFlags: %s' % Core.DebParams.getFormatFlagsNameList())
-        deb.Trace('TypeFlags:   %s' % Core.DebParams.getTypeFlagsNameList())
-        deb.Trace('ModuleFlags: %s' % Core.DebParams.getModuleFlagsNameList())
-
-#------------------------------------------------------------------
-#    getDebugFlags command:
-#
-#    Description: Get the current acquired frame number
-#    argout: DevVarDoubleArray    
-#------------------------------------------------------------------
-    @Core.DEB_MEMBER_FUNCT
-    def getDebugFlags(self):
-        deb.Trace('FormatFlags: %s' % Core.DebParams.getFormatFlagsNameList())
-        deb.Trace('TypeFlags:   %s' % Core.DebParams.getTypeFlagsNameList())
-        deb.Trace('ModuleFlags: %s' % Core.DebParams.getModuleFlagsNameList())
-        
-        deb_flags = (((Core.DebParams.getTypeFlags()    & 0xff)   << 16) |
-                     ((Core.DebParams.getModuleFlags()  & 0xffff) <<  0))
-        deb_flags &= 0xffffffff
-        deb.Return('Getting debug flags: 0x%08x' % deb_flags)
-        return deb_flags
 
 
 
@@ -678,12 +924,6 @@ class LimaCCDsClass(PyTango.DeviceClass) :
 
     #    Command definitions
     cmd_list = {
-        'getDebugFlags':
-        [[PyTango.DevVoid, ""],
-         [PyTango.DevULong, "Debug flag in HEX format"]],
-        'setDebugFlags':
-        [[PyTango.DevULong, "Debug flag in HEX format"],
-         [PyTango.DevVoid, ""]],
         'openShutterManual':
         [[PyTango.DevVoid, ""],
          [PyTango.DevVoid, ""]],
@@ -693,6 +933,21 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'getAttrStringValueList':
         [[PyTango.DevString, "Attribute name"],
          [PyTango.DevVarStringArray, "Authorized String value list"]],
+        'prepareAcq':
+        [[PyTango.DevVoid,""],
+         [PyTango.DevVoid,""]],
+        'startAcq':
+        [[PyTango.DevVoid,""],
+         [PyTango.DevVoid,""]],
+        'stopAcq':
+        [[PyTango.DevVoid,""],
+         [PyTango.DevVoid,""]],
+        'reset':
+        [[PyTango.DevVoid,""],
+         [PyTango.DevVoid,""]],
+        'setImageHeader':
+        [[PyTango.DevVarStringArray,"ImageId0 SEPARATOR imageHeader0,ImageId1 SEPARATOR imageHeader1..."],
+         [PyTango.DevVoid,""]],
 	}
     
     #    Attribute definitions
@@ -708,19 +963,15 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'camera_model':
         [[PyTango.DevString,
           PyTango.SCALAR,
-          PyTango.READ]],	 
-        'acc_max_expotime':
-        [[PyTango.DevDouble,
+          PyTango.READ]],
+        'acq_status':
+        [[PyTango.DevString,
           PyTango.SCALAR,
-          PyTango.READ_WRITE]],
+          PyTango.READ]],
         'acc_expotime':
         [[PyTango.DevDouble,
           PyTango.SCALAR,
           PyTango.READ]],	      	
-        'latency_time':
-        [[PyTango.DevDouble,
-          PyTango.SCALAR,
-          PyTango.READ_WRITE]],	      	
         'acc_nb_frames':
         [[PyTango.DevLong,
           PyTango.SCALAR,
@@ -729,12 +980,72 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevString,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
+        'acc_time_mode':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'acq_nb_frames':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'acq_expo_time':
+        [[PyTango.DevDouble,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'acc_max_expotime':
+        [[PyTango.DevDouble,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'concat_nb_frames':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'latency_time':
+        [[PyTango.DevDouble,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],	      	
+        'acq_trigger_mode':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'image_roi':
+        [[PyTango.DevLong,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,4]],
+        'image_type':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ]],
+        'image_width':
+        [[PyTango.DevULong,
+          PyTango.SCALAR,
+          PyTango.READ]],
+        'image_height':
+        [[PyTango.DevULong,
+          PyTango.SCALAR,
+          PyTango.READ]],
+        'image_bin':
+        [[PyTango.DevULong,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,2]],
+        'image_flip':
+        [[PyTango.DevBoolean,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,2]],
         'last_image_ready':
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ]],
         'last_image_saved':
         [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ]],
+        'ready_for_next_image':
+        [[PyTango.DevBoolean,
+          PyTango.SCALAR,
+          PyTango.READ]],
+        'ready_for_next_acq':
+        [[PyTango.DevBoolean,
           PyTango.SCALAR,
           PyTango.READ]],
         'write_statistic':
@@ -789,6 +1100,30 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevLong,
           PyTango.SCALAR,
           PyTango.READ_WRITE]],
+        'saving_common_header':
+        [[PyTango.DevString,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,65535]],
+        'saving_header_delimiter':
+        [[PyTango.DevString,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,3]],
+        'debug_modules_possible':
+         [[PyTango.DevString,
+          PyTango.SPECTRUM,
+          PyTango.READ,len(LimaCCDs._debugModuleList)]],
+        'debug_modules':
+        [[PyTango.DevString,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,len(LimaCCDs._debugModuleList)]],
+        'debug_types_possible':
+         [[PyTango.DevString,
+          PyTango.SPECTRUM,
+          PyTango.READ,len(LimaCCDs._debugTypeList)]],
+        'debug_types':
+        [[PyTango.DevString,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE,len(LimaCCDs._debugTypeList)]],
         }
 
 def declare_camera_n_commun_to_tango_world(util) :
@@ -840,7 +1175,7 @@ def _set_control_ref(ctrl_ref) :
 #============================================================================
 #                                TOOLS
 #============================================================================
-def __getLastFileNumber(prefix,suffix,filesPath) :
+def _getLastFileNumber(prefix,suffix,filesPath) :
     lastNumber = 0
     prefixLen = len(prefix)
     lenSuffix = len(suffix)
@@ -856,6 +1191,53 @@ def __getLastFileNumber(prefix,suffix,filesPath) :
             if number > lastNumber:
                 lastNumber = number
     return lastNumber
+
+def _getDictKey(dict, value):
+    try:
+        ind = dict.values().index(value)                            
+    except ValueError:
+        return None
+    return dict.keys()[ind]
+
+def _getDictValue(dict, key):
+    try:
+        value = dict[key.upper()]
+    except KeyError:
+        return None
+    return value
+
+def _allowed(*args) :
+    return True
+
+def _not_allowed(*args) :
+    return False
+
+class CallableReadEnum:
+    def __init__(self,dictionnary,func2Call) :
+        self.__dict = dictionnary
+        self.__func2Call = func2Call
+
+    def __call__(self,attr) :
+        value = _getDictKey(self.__dict,self.__func2Call())
+        attr.set_value(value)
+
+class CallableWriteEnum:
+    def __init__(self,attr_name,dictionnary,func2Call) :
+        self.__attr_name = attr_name
+        self.__dict = dictionnary
+        self.__func2Call = func2Call
+        
+    def __call__(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        value = _getDictValue(self.__dict,data[0].upper())
+        if value is None:
+            PyTango.Except.throw_exception('WrongData',\
+                                           'Wrong value %s: %s'%(self.__attr_name,data[0].upper()),\
+                                           'LimaCCD Class')
+        else:
+            self.__func2Call(value)
+        
 #==================================================================
 #
 #    LimaCCDs class main method

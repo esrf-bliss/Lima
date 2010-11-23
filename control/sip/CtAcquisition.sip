@@ -5,17 +5,20 @@ class CtAcquisition {
 using namespace lima;
 %End
     public:
+     enum AccTimeMode {Live,Real};
+
 	struct Parameters {
 		Parameters();
 		void reset();
 
-		AcqMode	acqMode;
-		int	acqNbFrames;
-		double	acqExpoTime;
-		double	accMaxExpoTime;
-		int	concatNbFrames;
-		double	latencyTime;
-		TrigMode triggerMode;
+		AcqMode	         		acqMode;
+                CtAcquisition::AccTimeMode      accTimeMode;
+		int	         		acqNbFrames;
+		double	         		acqExpoTime;
+		double	         		accMaxExpoTime;
+		int	         		concatNbFrames;
+		double	         		latencyTime;
+		TrigMode         		triggerMode;
 
 		const char* __repr__();
 %MethodCode
@@ -42,8 +45,13 @@ using namespace lima;
 	void setAcqMode(AcqMode mode);
 	void getAcqMode(AcqMode& mode /Out/) const;
 
+        void setAccTimeMode(CtAcquisition::AccTimeMode mode);
+	void getAccTimeMode(CtAcquisition::AccTimeMode &mode /Out/) const;
+
 	void setAcqNbFrames(int nframes);
 	void getAcqNbFrames(int& nframes /Out/) const;
+	void getAccLiveTime(double& acc_live_time /Out/) const;
+        void getAccDeadTime(double& acc_dead_time /Out/) const;
 
 	void setAcqExpoTime(double acq_time);
 	void getAcqExpoTime(double& acq_time /Out/) const;
