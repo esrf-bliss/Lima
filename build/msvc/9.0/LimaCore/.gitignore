@@ -1,2 +1,4 @@
 Debug
 LimaCore.vcproj.*
+*.ncb
+*.suo
