@@ -1,5 +1,5 @@
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
-               BufferSave.o MemUtils.o RegEx.o AcqState.o Debug.o
+               BufferSave.o MemUtils.o RegExUtils.o AcqState.o Debug.o
 
 SRCS = $(common-objs:.o=.cpp)
 
