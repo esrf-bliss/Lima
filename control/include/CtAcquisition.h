@@ -81,6 +81,8 @@ namespace lima
     void getTriggerMode(TrigMode& mode) const;
 
   private:
+    class _ValidRangesCallback;
+    friend class _ValidRangesCallback;
 
     struct ChangedPars {
       DEB_CLASS_NAMESPC(DebModControl,"Acquisition::ChangedPars","Control");
@@ -113,7 +115,7 @@ namespace lima
     mutable double	m_acc_live_time;
     mutable double	m_acc_dead_time;
     bool		m_applied_once;
-
+    _ValidRangesCallback *m_valid_ranges_cb;
   };
 
   inline std::ostream& operator<<(std::ostream &os,const CtAcquisition::Parameters &params)

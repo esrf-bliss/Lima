@@ -14,6 +14,7 @@ class HwSyncCtrlObj
 	DEB_CLASS(DebModHardware, "HwSyncCtrlObj");
 	friend class CtAcquisition;
 public:
+
 	struct ValidRangesType {
 		ValidRangesType() :
 			min_exp_time(-1.),
@@ -43,6 +44,17 @@ public:
 		double min_lat_time, max_lat_time;
 	};
 
+	class ValidRangesCallback
+	{
+	  DEB_CLASS(DebModHardware,"HwSyncCtrlObj::ValidRangesCallback");
+
+	  friend class HwSyncCtrlObj;
+	public:
+	  virtual ~ValidRangesCallback() {};
+	protected:
+	  virtual void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&) = 0;
+	};
+
 	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);
 	virtual ~HwSyncCtrlObj();
 
@@ -63,12 +75,21 @@ public:
 	virtual void getNbHwFrames(int& nb_frames) = 0;
 
 	virtual void getValidRanges(ValidRangesType& valid_ranges) = 0;
+
+	void registerValidRangesCallback(ValidRangesCallback* cb);
+	void unregisterValidRangesCallback(ValidRangesCallback* cb);
  protected:
 	inline void getAcqMode(AcqMode &acqMode) const {acqMode = m_acq_mode;}
 	inline void setAcqMode(AcqMode acqMode) {m_acq_mode = acqMode;}
+        inline void validRangesChanged(const ValidRangesType &ranges)
+        {
+	  if(m_valid_ranges_cb)
+	    m_valid_ranges_cb->validRangesChanged(ranges);
+	}
  private:
-	HwBufferCtrlObj& m_buffer_ctrl;
-	AcqMode		 m_acq_mode;
+	HwBufferCtrlObj& 	m_buffer_ctrl;
+	AcqMode		 	m_acq_mode;
+	ValidRangesCallback* 	m_valid_ranges_cb;
 };
 
 std::ostream& operator <<(std::ostream& os, 

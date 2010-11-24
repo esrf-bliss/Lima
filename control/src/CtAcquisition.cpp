@@ -3,20 +3,40 @@
 #include "math.h"
 
 using namespace lima;
-
+/*----------------------------------------------------------------------
+			 validRangesCallback
+----------------------------------------------------------------------*/
+class CtAcquisition::_ValidRangesCallback : public HwSyncCtrlObj::ValidRangesCallback
+{
+  DEB_CLASS(DebModControl,"_ValidRangesCallback");
+public:
+  _ValidRangesCallback(CtAcquisition &acq) :
+    HwSyncCtrlObj::ValidRangesCallback(),
+    m_acq(acq)
+  {}
+  virtual void validRangesChanged(const HwSyncCtrlObj::ValidRangesType &ranges)
+  {
+    m_acq.m_valid_ranges = ranges;
+  }
+private:
+  CtAcquisition& m_acq;
+};
 
 CtAcquisition::CtAcquisition(HwInterface *hw) :
   m_acc_nframes(-1),
   m_acc_exptime(-1.),
   m_acc_live_time(-1.),
-  m_acc_dead_time(-1.)
+  m_acc_dead_time(-1.),
+  m_valid_ranges_cb(NULL)
 {
   DEB_CONSTRUCTOR();
 
   if (!hw->getHwCtrlObj(m_hw_sync))
     throw LIMA_CTL_EXC(Error, "Cannot get hardware sync object");
 
+  m_valid_ranges_cb = new _ValidRangesCallback(*this);
   m_hw_sync->getValidRanges(m_valid_ranges);
+  m_hw_sync->registerValidRangesCallback(m_valid_ranges_cb);
   DEB_TRACE() << DEB_VAR1(m_valid_ranges);
 
   m_applied_once= false;
@@ -25,6 +45,8 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
 CtAcquisition::~CtAcquisition()
 {
   DEB_DESTRUCTOR();
+  m_hw_sync->unregisterValidRangesCallback(m_valid_ranges_cb);
+  delete m_valid_ranges_cb;
 }
 
 void CtAcquisition::setPars(const Parameters &pars)

@@ -26,6 +26,15 @@ str << *sipCpp;
 sipRes = str.str().c_str();
 %End
 	};
+	
+	class ValidRangesCallback
+	{
+	public:
+	  virtual ~ValidRangesCallback();
+	protected:
+	  virtual void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&) = 0;
+	};
+
 
 	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);
 	virtual ~HwSyncCtrlObj();
@@ -48,8 +57,12 @@ sipRes = str.str().c_str();
 
 
 	virtual void getValidRanges(HwSyncCtrlObj::ValidRangesType& range /Out/) = 0;
+
+	void registerValidRangesCallback(ValidRangesCallback* cb);
+	void unregisterValidRangesCallback(ValidRangesCallback* cb);
  protected:
 	void getAcqMode(AcqMode &acqMode /Out/);
 	void setAcqMode(AcqMode acqMode);
+	void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&);
 };
  
