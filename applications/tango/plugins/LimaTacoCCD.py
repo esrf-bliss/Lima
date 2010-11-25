@@ -239,7 +239,8 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
             acq.setTriggerMode(Core.ExtGate)
         elif exp_time > 0 and trig_mode == Core.ExtGate:
             acq.setTriggerMode(Core.ExtTrigSingle)
-        acq.setAcqExpoTime(exp_time)
+        if exp_time > 0. :
+	    acq.setAcqExpoTime(exp_time)
 
 
 #------------------------------------------------------------------
@@ -616,8 +617,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
         if argin == 0:
             triggerMode = Core.IntTrig
         elif argin == 1:
-            exp_time = acquisition.getAcqExpoTime()
-            triggerMode = (exp_time == 0) and Core.ExtGate or Core.ExtTrigSingle
+            triggerMode = Core.ExtTrigSingle
         elif argin == 2:
             triggerMode = Core.ExtTrigMult
         else:
