@@ -868,7 +868,14 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 header_map[key] = val
             saving.updateFrameHeader(imageId,header_map)
 
-
+    ##@brief get image data
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def getImage(self,image_id) :
+        self._data_cache = self.__control.ReadImage(image_id)
+        dataflat = self._data_cache.buffer.ravel()
+        dataflat.dtype = numpy.uint8
+        return dataflat
 #------------------------------------------------------------------
 #    closeShutterManual command:
 #
@@ -948,6 +955,9 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'setImageHeader':
         [[PyTango.DevVarStringArray,"ImageId0 SEPARATOR imageHeader0,ImageId1 SEPARATOR imageHeader1..."],
          [PyTango.DevVoid,""]],
+        'getImage':
+        [[PyTango.DevVarLong,"The image number"]
+         [PyTango.DevVarCharArray,"The data image"]],
 	}
     
     #    Attribute definitions
