@@ -956,7 +956,7 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevVarStringArray,"ImageId0 SEPARATOR imageHeader0,ImageId1 SEPARATOR imageHeader1..."],
          [PyTango.DevVoid,""]],
         'getImage':
-        [[PyTango.DevVarLong,"The image number"]
+        [[PyTango.DevLong,"The image number"],
          [PyTango.DevVarCharArray,"The data image"]],
 	}
     
