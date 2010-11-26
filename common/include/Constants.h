@@ -30,7 +30,7 @@ enum AcqMode {
 std::ostream& operator <<(std::ostream& os, AcqMode acq_mode);
 
 enum TrigMode {
-	IntTrig, 
+	IntTrig,IntTrigMult,
 	ExtTrigSingle, ExtTrigMult,
 	ExtGate, ExtStartStop,
 };

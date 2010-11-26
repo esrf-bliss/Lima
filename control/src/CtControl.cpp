@@ -222,8 +222,26 @@ void CtControl::startAcq()
 
   if (!m_ready)
 	throw LIMA_CTL_EXC(Error, "Run prepareAcq before starting acquisition");
+  TrigMode trigMode;
+  m_ct_acq->getTriggerMode(trigMode);
 
-  m_ready = false;
+  if(trigMode != IntTrigMult)
+    m_ready = false;
+  else
+    {
+      //First check the detector is in Idle Stat
+      HwInterface::Status hwStatus;
+      m_hw->getStatus(hwStatus);
+      if(hwStatus.acq != AcqReady)
+	throw LIMA_CTL_EXC(Error, "Try to restart before detector is ready");
+
+      //m_ready = false after the last image is triggerred
+      int nbFrames4Acq;
+      m_ct_acq->getAcqNbFrames(nbFrames4Acq);
+      nbFrames4Acq -= 2;
+      m_ready = m_status.ImageCounters.LastImageAcquired != nbFrames4Acq;
+    }
+
   m_hw->startAcq();
   m_started = true;
 

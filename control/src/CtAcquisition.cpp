@@ -168,7 +168,10 @@ void CtAcquisition::_apply()
       if(m_inpars.acqMode == Accumulation)
 	{
 	  _updateAccPars();
-	  m_hw_sync->setNbFrames(m_acc_nframes * m_inpars.acqNbFrames);
+	  if(m_inpars.triggerMode == IntTrigMult)
+	    m_hw_sync->setNbFrames(m_acc_nframes);
+	  else
+	    m_hw_sync->setNbFrames(m_acc_nframes * m_inpars.acqNbFrames);
 	}
       else
 	m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
