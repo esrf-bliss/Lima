@@ -40,6 +40,7 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
   DEB_TRACE() << DEB_VAR1(m_valid_ranges);
 
   m_applied_once= false;
+  reset();
 }
 
 CtAcquisition::~CtAcquisition()
@@ -77,6 +78,7 @@ void CtAcquisition::reset()
   DEB_MEMBER_FUNCT();
   
   m_inpars.reset();
+  m_inpars.latencyTime = m_valid_ranges.min_lat_time;
 }
 
 void CtAcquisition::apply(CtControl::ApplyPolicy policy)
@@ -284,20 +286,18 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(acq_time);
 
-  if (acq_time < 0) {
-    DEB_ERROR() << "Invalid " << DEB_VAR1(acq_time);
-    throw LIMA_CTL_EXC(InvalidValue, "Invalid exposure time");
-  } else if (acq_time == 0) {
-    DEB_TRACE() << "Setting GATE mode";
-  } else if (acq_time < m_valid_ranges.min_exp_time) {
-    DEB_WARNING() << "Exposure time too short, setting to " 
+  if (acq_time < m_valid_ranges.min_exp_time) 
+    {
+      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too short: " 
 		  << DEB_VAR1(m_valid_ranges.min_exp_time);
-    acq_time = m_valid_ranges.min_exp_time;
-  } else if (acq_time > m_valid_ranges.max_exp_time) {
-    DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too long: " 
-		<< DEB_VAR1(m_valid_ranges.max_exp_time);
-    throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");
-  }
+      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too short");
+    }
+  else if (acq_time > m_valid_ranges.max_exp_time)
+    {
+      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too long: " 
+		  << DEB_VAR1(m_valid_ranges.max_exp_time);
+      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");
+    }
 
   m_inpars.acqExpoTime= acq_time;
 }
@@ -431,7 +431,7 @@ void CtAcquisition::setLatencyTime(double lat_time)
   DEB_PARAM() << DEB_VAR1(lat_time);
 
   if (lat_time < m_valid_ranges.min_lat_time)
-    throw LIMA_CTL_EXC(InvalidValue, "Latency time too short");
+    lat_time = m_valid_ranges.min_lat_time;
   if (lat_time > m_valid_ranges.max_lat_time)
     throw LIMA_CTL_EXC(InvalidValue, "Latency time too long");
   m_inpars.latencyTime= lat_time;
