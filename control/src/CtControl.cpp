@@ -330,8 +330,14 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
   
   FrameDim img_dim;
   m_ct_image->getImageDim(img_dim);
-  aReturnData.width = img_dim.getSize().getWidth();
-  aReturnData.height = img_dim.getSize().getHeight();
+  int roiWidth = img_dim.getSize().getWidth();
+  int roiHeight = img_dim.getSize().getHeight();
+  if((roiWidth * roiHeight) >
+     (aReturnData.width * aReturnData.height))
+    throw LIMA_CTL_EXC(Error, "Roi dim > HwBuffer dim");
+
+  aReturnData.width = roiWidth;
+  aReturnData.height = roiHeight;
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }

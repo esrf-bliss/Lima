@@ -6,6 +6,7 @@ import os
 
 from Lima import Core
 import EdfFile
+from PilatusError import PilatusError
 
 def _invert_sort_file(a,b) :
     b1,ext = os.path.splitext(a)
@@ -15,6 +16,8 @@ def _invert_sort_file(a,b) :
     return n2 - n1
 
 class _ImageReader(threading.Thread) :
+    Core.DEB_CLASS(Core.DebModCamera,"_ImageReader")
+
     def __init__(self,buffer_ctrl) :
         threading.Thread.__init__(self)
 
@@ -36,10 +39,12 @@ class _ImageReader(threading.Thread) :
         self.__lastImageRead = -1
         self.__readError = False
         
+    @Core.DEB_MEMBER_FUNCT
     def is_read_error(self) :
         with self.__cond:
             return self.__readError
         
+    @Core.DEB_MEMBER_FUNCT
     def reset(self) :
         with self.__cond:
             self.__waitFlag = True
@@ -60,15 +65,18 @@ class _ImageReader(threading.Thread) :
                         traceback.print_exc()
                         break
 
+    @Core.DEB_MEMBER_FUNCT
     def start_read(self) :
         with self.__cond:
             self.__waitFlag = False
             self.__cond.notify()
 
+    @Core.DEB_MEMBER_FUNCT
     def stop_read(self) :
         with self.__cond:
             self.__waitFlag = True
             
+    @Core.DEB_MEMBER_FUNCT
     def quit(self) :
         with self.__cond:
             self.__waitFlag = False
@@ -76,10 +84,12 @@ class _ImageReader(threading.Thread) :
             self.__cond.notify()
         self.join()
 
+    @Core.DEB_MEMBER_FUNCT
     def getLastAcquiredFrame(self) :
         with self.__cond:
             return self.__lastImageRead
         
+    @Core.DEB_MEMBER_FUNCT
     def run(self) :
         lastDirectoryTime = None
 
@@ -151,7 +161,7 @@ class _ImageReader(threading.Thread) :
                 
             
 class BufferCtrlObj(Core.HwBufferCtrlObj):
-	#Core.Debug.DEB_CLASS(Core.DebModCamera,"BufferCtrlObj")
+	Core.DEB_CLASS(Core.DebModCamera,"BufferCtrlObj")
 
         def __init__(self,comm_object,det_info) :
             Core.HwBufferCtrlObj.__init__(self)
@@ -165,56 +175,59 @@ class BufferCtrlObj(Core.HwBufferCtrlObj):
         def __del__(self) :
             self.__imageReader.quit()
 
+        @Core.DEB_MEMBER_FUNCT
         def quit(self) :
             self.__imageReader.quit()
 
+        @Core.DEB_MEMBER_FUNCT
         def start(self) :
             self.__imageReader.start_read()
 
+        @Core.DEB_MEMBER_FUNCT
         def stop(self) :
             self.__imageReader.stop_read()
 
         def is_error(self) :
             return self.__imageReader.is_read_error()
         
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
 	def setFrameDim(self,frame_dim) :
             pass
             
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getFrameDim(self) :
             det_info = self.__det_info()
             return Core.FrameDim(det_info.getDetectorImageSize(),
                                  det_info.getDefImageType())
         
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def setNbBuffers(self,nb_buffers) :
            self.__nb_buffer = nb_buffers
             
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
 	def getNbBuffers(self) :
             return self.__nb_buffer
 
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def setNbConcatFrames(self,nb_concat_frames) :
             if nb_concat_frames != 1:
                 raise Core.Exceptions(Core.Hardware,Core.NotSupported)
 
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getNbConcatFrames(self) :
             return 1
 
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def setNbAccFrames(self,nb_acc_frames) :
             com = self._com()
             com.set_nb_exposure_per_frame(nb_acc_frames)
             
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
 	def getNbAccFrames(self) :
             com = self._com()
             return com.nb_exposure_per_frame()
         
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getMaxNbBuffers(self) :
             com = self._com()
             det_info = self.__det_info()
@@ -222,27 +235,28 @@ class BufferCtrlObj(Core.HwBufferCtrlObj):
             imageSize = imageFormat.getWidth() * imageFormat.getHeight() * 4 # 4 == image 32bits
             return com.DEFAULT_TMPFS_SIZE / imageSize / 2.
 
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getBufferPtr(self,buffer_nb,concat_frame_nb = 0) :
             pass
         
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getFramePtr(self,acq_frame_nb) :
             pass
 
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getStartTimestamp(self,start_ts) :
             pass
         
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getFrameInfo(self,acq_frame_nb) :
-            hw_frame_info = Core.HwFrameInfoType()
+            deb.Param('acq_frame_nb: %d' % acq_frame_nb)
             com = self._com()            
             fileBase = com.DEFAULT_FILE_BASE
             fileExt = com.DEFAULT_FILE_EXTENTION
             fullPath = os.path.join(com.DEFAULT_PATH,
                                     '%s%.5d%s' % (fileBase,acq_frame_nb,
                                                   fileExt))
+            deb.Trace('Try to read : %s' % fullPath)
             if os.access(fullPath,os.R_OK) :
                 try:
                     f = EdfFile.EdfFile(fullPath)
@@ -254,18 +268,18 @@ class BufferCtrlObj(Core.HwBufferCtrlObj):
                                                 0,Core.HwFrameInfoType.Transfer)
                     return frInfo
 
-            return hw_frame_info
+            raise PilatusError("Problem to read file : %s" % fullPath)
 
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def registerFrameCallback(self,frame_cb) :
             self._cbk = frame_cb
             
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
 	def unregisterFrameCallback(self,frame_cb) :
             self._cbk = None
 
 
-        #@Core.Debug.DEB_MEMBER_FUNCT
+        @Core.DEB_MEMBER_FUNCT
         def getLastAcquiredFrame(self) :
             return self.__imageReader.getLastAcquiredFrame()
 
