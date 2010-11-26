@@ -16,6 +16,9 @@ public:
   {}
   virtual void validRangesChanged(const HwSyncCtrlObj::ValidRangesType &ranges)
   {
+    DEB_MEMBER_FUNCT();
+    DEB_PARAM() << DEB_VAR1(ranges);
+
     m_acq.m_valid_ranges = ranges;
   }
 private:
@@ -151,6 +154,10 @@ void CtAcquisition::_apply()
 {
   DEB_MEMBER_FUNCT();
 
+  //inform first the hardware synch. about the new acquisition mode
+  // can have effect for instance on available trigger mode
+  m_hw_sync->setAcqMode(m_inpars.acqMode);
+
   if (m_changes.triggerMode) m_hw_sync->setTrigMode(m_inpars.triggerMode);
   if (m_changes.latencyTime) m_hw_sync->setLatTime(m_inpars.latencyTime);
   
@@ -184,7 +191,6 @@ void CtAcquisition::_apply()
   DEB_TRACE() << DEB_VAR1(m_hwpars);
   
   m_changes.set(0);
-  m_hw_sync->setAcqMode(m_inpars.acqMode);
 }
 
 void CtAcquisition::setTriggerMode(TrigMode mode)

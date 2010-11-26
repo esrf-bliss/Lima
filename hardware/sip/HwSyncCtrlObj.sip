@@ -60,9 +60,9 @@ sipRes = str.str().c_str();
 
 	void registerValidRangesCallback(ValidRangesCallback* cb);
 	void unregisterValidRangesCallback(ValidRangesCallback* cb);
+	void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&);
  protected:
 	void getAcqMode(AcqMode &acqMode /Out/);
 	void setAcqMode(AcqMode acqMode);
-	void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&);
 };
  

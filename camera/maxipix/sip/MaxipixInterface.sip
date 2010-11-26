@@ -124,7 +124,7 @@ class Interface : HwInterface
 	virtual void stopAcq();
 	virtual void getStatus(HwInterface::StatusType& status /Out/);
 	virtual int getNbHwAcquiredFrames();
-
+	void updateValidRanges();	
 };
 
 }; // namespace Maxipix

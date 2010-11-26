@@ -150,6 +150,11 @@ class MpxAcq:
     def loadConfig(self, name):
 	self.loadDetConfig(name)
 	self.loadChipConfig(name)
+        # Need to inform afterward the hwInterface about new ranges
+        # which are calculated once the configs have been loaded.
+        # By callback the CtAcquisition will be refreshed too.
+        self.__hwInt.updateValidRanges()
+        
 
     @DEB_MEMBER_FUNCT
     def loadDetConfig(self, name):

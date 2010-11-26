@@ -193,15 +193,24 @@ bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
 {
     DEB_MEMBER_FUNCT();
 
+    // Get the Acquisition mode, some trigger mode
+    // are not valid in Accumulation.
+    
+    AcqMode acqMode;
+    this->getAcqMode(acqMode);
+
     bool valid_mode;
     switch (trig_mode) {
     case IntTrig:
     case ExtTrigSingle:
+      valid_mode = true;
+      break;
     case ExtTrigMult:
     case ExtGate:
+      valid_mode = (acqMode != Accumulation);
+      break;
     case ExtStartStop:
-	valid_mode = true;
-	break;
+      // Priam doesn not implement the start-stop mode, only Gate
     default:
 	valid_mode = false;
     }
@@ -468,6 +477,17 @@ int Interface::getNbHwAcquiredFrames()
         int nb_hw_acq_frames = acq_status.last_frame_nb + 1;
         DEB_RETURN() << DEB_VAR1(nb_hw_acq_frames);
         return nb_hw_acq_frames;
+}
+
+void Interface::updateValidRanges()
+{
+  // Call here the HwSyncObj validRangesChanged() method about the
+  // change on ranges, then the CtAcquisition callback will be activated
+  // in order to update the new ranges.
+   HwSyncCtrlObj::ValidRangesType validRanges;
+
+  m_sync.getValidRanges(validRanges);
+  m_sync.validRangesChanged(validRanges);
 }
 
 void Interface::getStatus(StatusType& status)
