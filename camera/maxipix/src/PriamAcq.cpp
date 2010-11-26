@@ -736,11 +736,10 @@ void PriamAcq::startAcq()
 
     switch (m_trig_mode) {
 	case IntTrig: 		msr= 0x01; break;
-        case ExtTrigSingle:	msr= 0x04; break;
-	case ExtTrigMult:	msr= 0x02; break;
-	case ExtGate:		msr= 0x01; break;
-	case ExtStartStop:	msr= 0x06; break;
-	default:
+        case ExtTrigSingle:	msr= 0x02; break;
+	case ExtTrigMult:	msr= 0x04; break;
+	case ExtGate:		msr= 0x06; break;
+default:
 	    THROW_HW_ERROR(Error) << "Invalid " << DEB_VAR1(m_trig_mode);
     }
     if ((msr!=0x01)&&(m_trig_level==LOW_FALL)) msr |= 0x01;

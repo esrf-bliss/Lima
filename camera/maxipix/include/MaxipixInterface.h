@@ -166,6 +166,7 @@ class Interface : public HwInterface
 	virtual void stopAcq();
 	virtual void getStatus(StatusType& status);
 	virtual int getNbHwAcquiredFrames();
+	void updateValidRanges();
 
  private:
 	class AcqEndCallback : public Espia::AcqEndCallback
