@@ -177,11 +177,14 @@ class LimaCCDs(PyTango.Device_4Impl) :
                                         'APPEND' : Core.CtSaving.Append}
 
         self.__AcqTriggerMode = {'SOFTWARE' : Core.IntTrig,
-                                 'SOFTWARE_MULTI_TRIGGER' : Core.IntTrigMult, 
                                  'EXTERNAL_TRIGGER' : Core.ExtTrigSingle,
                                  'EXTERNAL_MULTI_TRIGGER' : Core.ExtTrigMult,
                                  'EXTERNAL_GATE' : Core.ExtGate,
                                  'EXTERNAL_START_STOP' : Core.ExtStartStop}
+	try:
+	    self.__AcqTriggerMode['SOFTWARE_MULTI_TRIGGER'] = Core.IntTrigMult
+	except AttributeError:
+	    pass
 
 
         
