@@ -194,6 +194,7 @@ class Interface : public HwInterface
 	BufferCtrlObj  m_buffer;
 	SyncCtrlObj    m_sync;
 	ShutterCtrlObj m_shutter;
+ 	bool           m_prepare_flag;	
 };
 
 } // namespace Maxipix

@@ -83,8 +83,8 @@ public:
 	  if(m_valid_ranges_cb)
 	    m_valid_ranges_cb->validRangesChanged(ranges);
 	}
- protected:
 	inline void getAcqMode(AcqMode &acqMode) const {acqMode = m_acq_mode;}
+ protected:
 	inline void setAcqMode(AcqMode acqMode) {m_acq_mode = acqMode;}
  private:
 	HwBufferCtrlObj& 	m_buffer_ctrl;

@@ -415,7 +415,7 @@ Interface::Interface(Espia::Acq& acq, BufferCtrlMgr& buffer_mgr,
         : m_acq(acq), m_buffer_mgr(buffer_mgr),
           m_priam(priam), m_acq_end_cb(priam), m_det_info(det), 
 	  m_buffer(buffer_mgr), m_sync(acq, m_priam, m_buffer),
-	  m_shutter(priam)
+	  m_shutter(priam), m_prepare_flag(false)
 {
         DEB_CONSTRUCTOR();
 
@@ -464,13 +464,21 @@ void Interface::reset(ResetLevel reset_level)
 void Interface::prepareAcq()
 {
         DEB_MEMBER_FUNCT();
+	m_prepare_flag = true;
 }
 
 void Interface::startAcq()
 {
         DEB_MEMBER_FUNCT();
-        m_buffer_mgr.setStartTimestamp(Timestamp::now());
-        m_acq.start();
+	AcqMode acqMode;
+    	m_sync.getAcqMode(acqMode);
+
+       	if(m_prepare_flag || acqMode == Accumulation)
+	{
+	  m_buffer_mgr.setStartTimestamp(Timestamp::now());
+          m_acq.start();
+	  m_prepare_flag = false;
+	}
         m_priam.startAcq();
 }
 
@@ -479,6 +487,7 @@ void Interface::stopAcq()
         DEB_MEMBER_FUNCT();
         m_priam.stopAcq();
         m_acq.stop();
+	m_prepare_flag = false;
 }
 
 int Interface::getNbHwAcquiredFrames()
