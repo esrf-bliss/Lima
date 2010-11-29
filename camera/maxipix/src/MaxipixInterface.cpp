@@ -202,6 +202,7 @@ bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
     bool valid_mode;
     switch (trig_mode) {
     case IntTrig:
+    case IntTrigMult:
     case ExtTrigSingle:
       valid_mode = true;
       break;
@@ -259,12 +260,23 @@ void SyncCtrlObj::setNbHwFrames(int  nb_frames)
 {
     DEB_MEMBER_FUNCT();
     m_acq.setNbFrames(nb_frames);
-    m_priam.setNbFrames(nb_frames);
+
+    int priamNbFrames = nb_frames;
+    TrigMode trig_mode;
+    m_priam.getTriggerMode(trig_mode);
+    AcqMode acqMode;
+    this->getAcqMode(acqMode);
+
+    if(trig_mode == IntTrigMult &&
+       acqMode != Accumulation)
+      priamNbFrames = 1;
+
+    m_priam.setNbFrames(priamNbFrames);
 }
 void SyncCtrlObj::getNbHwFrames(int& nb_frames)
 {
     DEB_MEMBER_FUNCT();
-    m_priam.getNbFrames(nb_frames);
+    m_acq.getNbFrames(nb_frames);
 }
 
 void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)

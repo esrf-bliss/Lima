@@ -735,7 +735,9 @@ void PriamAcq::startAcq()
     m_priam_serial.writeRegister(PriamSerial::PR_MCR2, reg);
 
     switch (m_trig_mode) {
-	case IntTrig: 		msr= 0x01; break;
+	case IntTrig:
+        case IntTrigMult:
+ 		msr= 0x01; break;
         case ExtTrigSingle:	msr= 0x02; break;
 	case ExtTrigMult:	msr= 0x04; break;
 	case ExtGate:		msr= 0x06; break;
