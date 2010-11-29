@@ -546,7 +546,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
     def read_ready_for_next_image(self,attr) :
         interface = self.__control.interface()
         status = interface.getStatus()
-        attr.set_value(status.acq == Core.AcqReady)
+        attr.set_value(status.det == Core.DetIdle)
 
     ## @brief this flag is true when acquisition is finished
     #

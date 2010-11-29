@@ -232,7 +232,7 @@ void CtControl::startAcq()
       //First check the detector is in Idle Stat
       HwInterface::Status hwStatus;
       m_hw->getStatus(hwStatus);
-      if(hwStatus.acq != AcqReady)
+      if(hwStatus.det != DetIdle)
 	throw LIMA_CTL_EXC(Error, "Try to restart before detector is ready");
 
       //m_ready = false after the last image is triggerred
