@@ -176,13 +176,13 @@ class LimaCCDs(PyTango.Device_4Impl) :
                                         'OVERWRITE' : Core.CtSaving.Overwrite,
                                         'APPEND' : Core.CtSaving.Append}
 
-        self.__AcqTriggerMode = {'SOFTWARE' : Core.IntTrig,
+        self.__AcqTriggerMode = {'INTERNAL_TRIGGER' : Core.IntTrig,
                                  'EXTERNAL_TRIGGER' : Core.ExtTrigSingle,
-                                 'EXTERNAL_MULTI_TRIGGER' : Core.ExtTrigMult,
+                                 'EXTERNAL_TRIGGER_MULTI' : Core.ExtTrigMult,
                                  'EXTERNAL_GATE' : Core.ExtGate,
                                  'EXTERNAL_START_STOP' : Core.ExtStartStop}
 	try:
-	    self.__AcqTriggerMode['SOFTWARE_MULTI_TRIGGER'] = Core.IntTrigMult
+	    self.__AcqTriggerMode['INTERNAL_TRIGGER_MULTI'] = Core.IntTrigMult
 	except AttributeError:
 	    pass
 
@@ -356,7 +356,25 @@ class LimaCCDs(PyTango.Device_4Impl) :
 	if value is None: value = -1
 	
         attr.set_value(value)
+
+    ## @brief Read calculated accumulation dead time
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_dead_time(self,attr) :        
+	acq = self.__control.acquisition()
+        value = acq.getAccDeadTime()
+
+        attr.set_value(value)
+
+    ## @brief Read calculated accumulation live time
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_live_time(self,attr) :        
+	acq = self.__control.acquisition()
+        value = acq.getAccLiveTime()
 	
+        attr.set_value(value)
+
     ## @brief Read latency time 
     #
     @Core.DEB_MEMBER_FUNCT
@@ -988,6 +1006,14 @@ class LimaCCDsClass(PyTango.DeviceClass) :
           PyTango.READ]],	      	
         'acc_nb_frames':
         [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ]],	      	
+        'acc_dead_time':
+        [[PyTango.DevDouble,
+          PyTango.SCALAR,
+          PyTango.READ]],	      	
+        'acc_live_time':
+        [[PyTango.DevDouble,
           PyTango.SCALAR,
           PyTango.READ]],	      	
         'acq_mode':
