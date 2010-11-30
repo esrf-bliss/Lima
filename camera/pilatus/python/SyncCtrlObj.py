@@ -13,21 +13,28 @@ class SyncCtrlObj(Core.HwSyncCtrlObj) :
         self.__exposure = comm_object.exposure()
         self.__latency = det_info.get_min_latency()
         self.__nb_frames = 1
+        self.__limaTrig2CamTrig = {Core.IntTrig : comm_object.INTERNAL,
+                                   Core.ExtTrigSingle : comm_object.EXTERNAL_START,
+                                   Core.ExtTrigMult : comm_object.EXTERNAL_MULTI_START,
+                                   Core.ExtGate : comm_object.EXTERNAL_GATE}
+
+    #@Core.Debug.DEB_MEMBER_FUNCT
+    def checkTrigMode(self,trig_mode) :
+        tMode = self.__limaTrig2CamTrig.get(trig_mode,None)
+        if tMode is not None:
+            return True
+        else:
+            return False
         
     #@Core.Debug.DEB_MEMBER_FUNCT
     def setTrigMode(self,trig_mode):
         com = self.__comm()
-        cvt_trigger_mode = None
-        if trig_mode == Core.IntTrig:
-            com.set_trigger_mode(com.INTERNAL)
-        elif trig_mode == Core.ExtTrigSingle:
-            com.set_trigger_mode(com.EXTERNAL_START)
-        elif trig_mode == Core.ExtTrigMult:
-            com.set_trigger_mode(com.EXTERNAL_MULTI_START)
-        elif trig_mode == Core.ExtGate :
-            com.set_trigger_mode(com.EXTERNAL_GATE)
+        if self.checkTrigMode(trig_mode) :
+            tMode = self.__limaTrig2CamTrig.get(trig_mode)
+            com.set_trigger_mode(tMode)
         else:
             raise Core.Exceptions(Core.Hardware,Core.NotSupported)
+
 
     #@Core.Debug.DEB_MEMBER_FUNCT
     def getTrigMode(self) :
