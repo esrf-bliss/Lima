@@ -14,17 +14,16 @@ class SyncCtrlObj(Core.HwSyncCtrlObj) :
         self.__latency = det_info.get_min_latency()
         self.__nb_frames = 1
         self.__limaTrig2CamTrig = {Core.IntTrig : comm_object.INTERNAL,
+                                   Core.IntTrigMult : comm_object.INTERNAL_TRIG_MULTI,
                                    Core.ExtTrigSingle : comm_object.EXTERNAL_START,
                                    Core.ExtTrigMult : comm_object.EXTERNAL_MULTI_START,
                                    Core.ExtGate : comm_object.EXTERNAL_GATE}
+        self.__CamTrig2limaTrig = dict([(y,x) for x,y in self.__limaTrig2CamTrig.iteritems()])
 
     #@Core.Debug.DEB_MEMBER_FUNCT
     def checkTrigMode(self,trig_mode) :
         tMode = self.__limaTrig2CamTrig.get(trig_mode,None)
-        if tMode is not None:
-            return True
-        else:
-            return False
+        return tMode is not None
         
     #@Core.Debug.DEB_MEMBER_FUNCT
     def setTrigMode(self,trig_mode):
@@ -41,15 +40,7 @@ class SyncCtrlObj(Core.HwSyncCtrlObj) :
         cvt_trigger_mode = None
         com = self.__comm()
         trig_mode = com.trigger_mode()
-        if trig_mode == com.INTERNAL :
-            cvt_trigger_mode = Core.IntTrig
-        elif trig_mode == com.EXTERNAL_START:
-            cvt_trigger_mode = Core.ExtTrigSingle
-        elif trig_mode == com.EXTERNAL_MULTI_START:
-            cvt_trigger_mode = Core.ExtTrigMult
-        elif trig_mode == com.EXTERNAL_GATE:
-            cvt_trigger_mode = Core.ExtGate
-        return cvt_trigger_mode
+        return self.__CamTrig2limaTrig.get(trigger_mode,None)
     
     #@Core.Debug.DEB_MEMBER_FUNCT
     def setExpTime(self,exp_time):
@@ -101,4 +92,7 @@ class SyncCtrlObj(Core.HwSyncCtrlObj) :
         exposure = self.__exposure
         exposure_period = exposure + self.__latency
         com.set_exposure_period(exposure_period)
-        com.set_nb_images_in_sequence(self.__nb_frames)
+
+        trig_mode = self.getTrigMode()
+        nb_frames = trig_mode == Core.IntTrigMult and 1 or self.__nb_frames
+        com.set_nb_images_in_sequence(nb_frames)
