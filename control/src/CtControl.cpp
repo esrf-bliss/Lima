@@ -100,8 +100,10 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_saving->setEndCallback(aSaveCbkPt);
   aSaveCbkPt->unref();
 
+#ifdef __unix
   //Sps image
   m_ct_sps_image = new CtSpsImage();
+#endif
   m_op_int = new SoftOpInternalMgr();
   m_op_ext = new SoftOpExternalMgr();
 }
@@ -118,7 +120,9 @@ CtControl::~CtControl()
     unregisterImageStatusCallback(*m_img_status_cb);
 
   delete m_ct_saving;
+#ifdef __unix
   delete m_ct_sps_image;
+#endif
   delete m_ct_acq;
   delete m_ct_image;
   delete m_ct_buffer;
@@ -206,6 +210,7 @@ void CtControl::prepareAcq()
     DEB_TRACE() << "No auto save activated";
   m_ready= true;
 
+#ifdef __unix
   m_display_active_flag = m_ct_sps_image->isActive();
   if(m_display_active_flag)
   {
@@ -214,6 +219,7 @@ void CtControl::prepareAcq()
     
     m_ct_sps_image->prepare(dim);
   }
+#endif
 
   m_images_ready.clear();
   m_base_images_ready.clear();
@@ -370,8 +376,10 @@ void CtControl::reset()
   DEB_TRACE() << "Reseting acquisition";
   m_ct_acq->reset();
 
+#ifdef __unix
   DEB_TRACE() << "Reseting display";
   m_ct_sps_image->reset();
+#endif
   resetStatus(false);
 }
 
@@ -462,12 +470,14 @@ void CtControl::newBaseImageReady(Data &aData)
       aLock.lock();
     }
 
+#ifdef __unix
   if(m_display_active_flag)
     {
       aLock.unlock();
       m_ct_sps_image->frameReady(aData);
     }
   else
+#endif
     aLock.unlock();
 
   if (img_status_changed && m_img_status_cb)
