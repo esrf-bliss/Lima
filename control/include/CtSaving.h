@@ -145,7 +145,7 @@ namespace lima {
 
     protected:
       virtual bool _open(const std::string &filename,
-		  std::ios::open_mode flags) = 0;
+		  std::ios_base::openmode flags) = 0;
       virtual void _close() = 0;
       virtual void _writeFile(Data &data,
 			      CtSaving::HeaderMap &aHeader,

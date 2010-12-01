@@ -78,7 +78,7 @@ SaveContainerCbf::~SaveContainerCbf()
 }
 
 bool SaveContainerCbf::_open(const std::string &filename,
-			     std::ios::open_mode stdOpenflags)
+			     std::ios_base::openmode stdOpenflags)
 {
   DEB_MEMBER_FUNCT();
   char openFlags[8];

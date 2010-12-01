@@ -13,7 +13,7 @@ namespace lima {
     virtual ~SaveContainerEdf();
   protected:
     virtual bool _open(const std::string &filename,
-		       std::ios::open_mode flags);
+		       std::ios_base::openmode flags);
     virtual void _close();
     virtual void _writeFile(Data &data,
 			    CtSaving::HeaderMap &aHeader,

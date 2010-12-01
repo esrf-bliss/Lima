@@ -24,7 +24,7 @@ SaveContainerEdf::~SaveContainerEdf()
 }
 
 bool SaveContainerEdf::_open(const std::string &filename,
-			     std::ios::open_mode openFlags)
+			     std::ios_base::openmode openFlags)
 {
   DEB_MEMBER_FUNCT();
   m_fout.clear();
