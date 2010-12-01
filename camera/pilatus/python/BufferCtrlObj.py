@@ -149,6 +149,7 @@ class _ImageReader(threading.Thread) :
                             #We're probably losing some frames
                             if lastImageId - nextFrameId > 10 :
                                 ErrorFlag = True
+                                deb.Error('Missing frame %d, Acquisition is in Fault stat' % nextFrameId) 
                         
                         self.__cond.acquire()
                         if ErrorFlag:

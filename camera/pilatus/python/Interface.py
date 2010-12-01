@@ -68,6 +68,7 @@ class Interface(Core.HwInterface) :
 
         if self.__buffer.is_error() :
             status.det = Core.DetFault
+            status.acq = Core.AcqFault
         elif camserverStatus == self.__comm.ERROR:
             status.det = Core.DetFault
             status.acq = Core.AcqFault
