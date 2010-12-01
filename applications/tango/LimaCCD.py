@@ -487,8 +487,8 @@ class LimaCCDs(PyTango.Device_4Impl) :
     @Core.DEB_MEMBER_FUNCT
     def read_image_flip(self,attr) :
         image = self.__control.image()
-                        
-        attr.set_value([False,False],2)
+        flip = image.getFlip()
+        attr.set_value([flip.x,flip.y],2)
 
     ## @brief Write image flip
     #
@@ -496,7 +496,9 @@ class LimaCCDs(PyTango.Device_4Impl) :
     def write_image_flip(self,attr) :
         data = []
         attr.get_write_value(data)
-        print 'Try to set flip ;)',data
+        flip = Core.Flip(*data)
+        image = self.__control.image()
+        image.setFlip(flip)
 
     ## @brief Read image flip
     #

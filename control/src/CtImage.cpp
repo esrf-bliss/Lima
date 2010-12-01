@@ -7,9 +7,9 @@ using namespace lima;
 static const Bin Bin_1x1(1, 1);
 
 // ----------------------------------------------------------------------------
-// CLASS CtSwBinRoi
+// CLASS CtSwBinRoiFlip
 // ----------------------------------------------------------------------------
-CtSwBinRoi::CtSwBinRoi(Size& size)
+CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size)
 {
 	DEB_CONSTRUCTOR();
 	DEB_PARAM() << DEB_VAR1(size);
@@ -18,7 +18,12 @@ CtSwBinRoi::CtSwBinRoi(Size& size)
 	m_max_roi= Roi(Point(0,0), m_max_size);
 }
 
-void CtSwBinRoi::setMaxSize(Size& size)
+CtSwBinRoiFlip::~CtSwBinRoiFlip()
+{
+  DEB_DESTRUCTOR();
+}
+
+void CtSwBinRoiFlip::setMaxSize(Size& size)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(size);
@@ -38,7 +43,7 @@ void CtSwBinRoi::setMaxSize(Size& size)
 	}		
 }
 
-void CtSwBinRoi::setBin(const Bin& bin)
+void CtSwBinRoiFlip::setBin(const Bin& bin)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(bin);
@@ -52,19 +57,26 @@ void CtSwBinRoi::setBin(const Bin& bin)
 	}
 }
 
-void CtSwBinRoi::setRoi(const Roi& roi)
+void CtSwBinRoiFlip::setRoi(const Roi& roi)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(roi);
 
 	if (roi.isEmpty())
-		throw LIMA_CTL_EXC(InvalidValue, "Hardware roi is empty");
+		throw LIMA_CTL_EXC(InvalidValue, "Software roi is empty");
 	if (!m_max_roi.containsRoi(roi))
 		throw LIMA_CTL_EXC(InvalidValue, "Roi out of limts");
 	m_roi= roi;
 }
 
-const Size& CtSwBinRoi::getSize()
+void CtSwBinRoiFlip::setFlip(const Flip &flip)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(flip);
+  m_flip = flip;
+}
+
+const Size& CtSwBinRoiFlip::getSize()
 {
 	DEB_MEMBER_FUNCT();
 
@@ -80,36 +92,45 @@ const Size& CtSwBinRoi::getSize()
 	return m_size;
 }
 
-void CtSwBinRoi::resetBin()
+void CtSwBinRoiFlip::resetBin()
 {
 	DEB_MEMBER_FUNCT();
 
 	setBin(Bin_1x1);
 }
 
-void CtSwBinRoi::resetRoi()
+void CtSwBinRoiFlip::resetRoi()
 {
 	DEB_MEMBER_FUNCT();
 
 	m_roi.reset();
 }
 
-void CtSwBinRoi::reset()
+void CtSwBinRoiFlip::resetFlip()
+{
+  DEB_MEMBER_FUNCT();
+
+  m_flip.reset();
+}
+
+void CtSwBinRoiFlip::reset()
 {
 	DEB_MEMBER_FUNCT();
 
 	resetBin();
 	resetRoi();
+	resetFlip();
 }
 
-bool CtSwBinRoi::apply(SoftOpInternalMgr *op)
+bool CtSwBinRoiFlip::apply(SoftOpInternalMgr *op)
 {
 	DEB_MEMBER_FUNCT();
 	
 	op->setBin(m_bin);
 	op->setRoi(m_roi);
-	
-	bool is_active = !m_bin.isOne() || !m_roi.isEmpty();
+	op->setFlip(m_flip);
+
+	bool is_active = !m_bin.isOne() || !m_roi.isEmpty() || (m_flip.x || m_flip.y);
 	
 	DEB_RETURN() << DEB_VAR1(is_active);
 
@@ -117,11 +138,11 @@ bool CtSwBinRoi::apply(SoftOpInternalMgr *op)
 }
 	
 // ----------------------------------------------------------------------------
-// CLASS CtSwBinRoi
+// CLASS CtHwBinRoiFlip
 // ----------------------------------------------------------------------------
 
-CtHwBinRoi::CtHwBinRoi(HwInterface *hw, CtSwBinRoi *sw_bin_roi, Size& size)
-	: m_sw_bin_roi(sw_bin_roi)
+CtHwBinRoiFlip::CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi, Size& size)
+	: m_sw_bin_roi_flip(sw_bin_roi)
 {
 	DEB_CONSTRUCTOR();
 	DEB_PARAM() << DEB_VAR2(*sw_bin_roi,size);
@@ -140,12 +161,12 @@ CtHwBinRoi::CtHwBinRoi(HwInterface *hw, CtSwBinRoi *sw_bin_roi, Size& size)
 	m_size= m_max_size;
 }
 
-CtHwBinRoi::~CtHwBinRoi()
+CtHwBinRoiFlip::~CtHwBinRoiFlip()
 {
 	DEB_DESTRUCTOR();
 }
 
-void CtHwBinRoi::setMaxSize(const Size& size)
+void CtHwBinRoiFlip::setMaxSize(const Size& size)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(size);
@@ -167,7 +188,7 @@ void CtHwBinRoi::setMaxSize(const Size& size)
 	_updateSize();
 }
 
-void CtHwBinRoi::setBin(Bin& bin, bool round)
+void CtHwBinRoiFlip::setBin(Bin& bin, bool round)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(bin,round);
@@ -198,7 +219,7 @@ void CtHwBinRoi::setBin(Bin& bin, bool round)
 	}
 }
 
-void CtHwBinRoi::setRoi(Roi& roi, bool round)
+void CtHwBinRoiFlip::setRoi(Roi& roi, bool round)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(roi,round);
@@ -225,8 +246,37 @@ void CtHwBinRoi::setRoi(Roi& roi, bool round)
 		roi= real_roi;
 	}
 }
+/** @brief set Hardware Flip
+ *  @param flip the flip structure
+ *  @param mandatory if all flip should be done by hardware
+ */
+void CtHwBinRoiFlip::setFlip(Flip& flip, bool mandatory)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(flip,mandatory);
 
-void CtHwBinRoi::_updateSize()
+  if (!m_has_bin) 
+    {
+      if (mandatory)
+	throw LIMA_CTL_EXC(NotSupported, "No hardware flip available");
+    }
+  else 
+    {
+      Flip set_flip = flip;
+      if (set_flip.x || set_flip.y)
+	m_hw_flip->checkFlip(set_flip);
+      if (mandatory && set_flip != flip)
+	throw LIMA_CTL_EXC(InvalidValue, "Given hardware flip not possible");
+      if (set_flip != m_flip)
+	{
+	  m_hw_flip->setFlip(set_flip);
+	  m_flip = set_flip;
+	}
+      flip = set_flip;
+    }
+}
+
+void CtHwBinRoiFlip::_updateSize()
 {
 	DEB_MEMBER_FUNCT();
 
@@ -241,10 +291,10 @@ void CtHwBinRoi::_updateSize()
 	}
 
 	if (o_size != m_size)
-		m_sw_bin_roi->setMaxSize(m_size);
+		m_sw_bin_roi_flip->setMaxSize(m_size);
 }
 
-void CtHwBinRoi::resetBin()
+void CtHwBinRoiFlip::resetBin()
 {
 	DEB_MEMBER_FUNCT();
 
@@ -257,7 +307,7 @@ void CtHwBinRoi::resetBin()
 	}
 }
 
-void CtHwBinRoi::resetRoi()
+void CtHwBinRoiFlip::resetRoi()
 {
 	DEB_MEMBER_FUNCT();
 
@@ -265,15 +315,23 @@ void CtHwBinRoi::resetRoi()
 	_updateSize();
 }
 
-void CtHwBinRoi::reset()
+void CtHwBinRoiFlip::resetFlip()
+{
+  DEB_MEMBER_FUNCT();
+
+  m_flip.reset();
+}
+
+void CtHwBinRoiFlip::reset()
 {
 	DEB_MEMBER_FUNCT();
 
 	resetBin();
 	resetRoi();
+	resetFlip();
 }
 
-void CtHwBinRoi::apply()
+void CtHwBinRoiFlip::apply()
 {
 	DEB_MEMBER_FUNCT();
 
@@ -281,6 +339,8 @@ void CtHwBinRoi::apply()
 		m_hw_bin->setBin(m_bin);
 	if (m_has_roi)
 		m_hw_roi->setRoi(m_set_roi);
+	if (m_has_flip)
+		m_hw_flip->setFlip(m_flip);
 }
 	
 // ----------------------------------------------------------------------------
@@ -307,8 +367,8 @@ CtImage::CtImage(HwInterface *hw,CtControl &ct)
 	m_hw_det->getMaxImageSize(m_max_size);
 	m_hw_det->getCurrImageType(m_img_type);
 
-	m_sw= new CtSwBinRoi(m_max_size);
-	m_hw= new CtHwBinRoi(hw, m_sw, m_max_size);
+	m_sw= new CtSwBinRoiFlip(m_max_size);
+	m_hw= new CtHwBinRoiFlip(hw, m_sw, m_max_size);
 
 	m_cb_size= new CtMaxImageSizeCB(this);
 	m_hw_det->registerMaxImageSizeCallback(*m_cb_size);
@@ -375,7 +435,7 @@ void CtImage::getHwImageDim(FrameDim& dim) const
 	DEB_RETURN() << DEB_VAR1(dim);
 }
 
-void CtImage::getSoft(CtSwBinRoi *& soft) const
+void CtImage::getSoft(CtSwBinRoiFlip *& soft) const
 {
 	DEB_MEMBER_FUNCT();
 
@@ -384,7 +444,7 @@ void CtImage::getSoft(CtSwBinRoi *& soft) const
 	DEB_RETURN() << DEB_VAR1(soft);
 }
 
-void CtImage::getHard(CtHwBinRoi *& hard) const
+void CtImage::getHard(CtHwBinRoiFlip *& hard) const
 {
 	DEB_MEMBER_FUNCT();
 
@@ -509,6 +569,53 @@ void CtImage::_setHSRoi(const Roi &roi)
 	}
 }
 
+void CtImage::setFlip(Flip &flip)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(flip);
+
+  if(!flip.x && ! flip.y)
+    {
+      resetFlip();
+      return;
+    }
+
+  switch(m_mode)
+    {
+    case SoftOnly:
+      m_sw->setFlip(flip);
+      break;
+    case HardOnly:
+      m_hw->setFlip(flip,true);
+      break;
+    case HardAndSoft:
+      _setHSFlip(flip);
+      break;
+    }
+}
+
+void CtImage::_setHSFlip(const Flip &flip)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(flip);
+
+  if(m_hw->hasFlipCapability())
+    {
+      Flip set_hw_flip = flip;
+      m_hw->setFlip(set_hw_flip,false);
+      DEB_TRACE() << DEB_VAR2(flip,set_hw_flip);
+      if(set_hw_flip == flip)
+	m_sw->resetFlip();
+      else
+	{
+	  Flip set_sw_flip = flip - set_hw_flip;
+	  m_sw->setFlip(set_hw_flip);
+	}
+    }
+  else
+    m_sw->setFlip(flip);
+}
+
 void CtImage::resetBin() 
 {
 	DEB_MEMBER_FUNCT();
@@ -523,6 +630,14 @@ void CtImage::resetRoi()
 
 	m_hw->resetRoi();
 	m_sw->resetRoi();
+}
+
+void CtImage::resetFlip()
+{
+  DEB_MEMBER_FUNCT();
+  
+  m_hw->resetFlip();
+  m_sw->resetFlip();
 }
 
 void CtImage::reset() 
@@ -568,6 +683,15 @@ void CtImage::getRoi(Roi& roi) const
 	}
 
 	DEB_RETURN() << DEB_VAR1(roi);
+}
+
+void CtImage::getFlip(Flip &flip) const
+{
+  DEB_MEMBER_FUNCT();
+
+  flip = m_hw->getFlip() + m_sw->getFlip();
+  
+  DEB_RETURN() << DEB_VAR1(flip);
 }
 
 void CtImage::applyHard()

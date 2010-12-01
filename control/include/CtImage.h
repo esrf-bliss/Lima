@@ -11,24 +11,28 @@ namespace lima {
 
 class CtImage;
 
-class CtSwBinRoi {
-	DEB_CLASS_NAMESPC(DebModControl,"Sofware BinRoi","Control");
+class CtSwBinRoiFlip {
+	DEB_CLASS_NAMESPC(DebModControl,"Sofware BinRoiFlip","Control");
     public:
-	friend std::ostream& operator<<(std::ostream &os,const CtSwBinRoi &binroi);
+	friend std::ostream& operator<<(std::ostream &os,const CtSwBinRoiFlip &binroi);
 
-	CtSwBinRoi(Size& size);
+	CtSwBinRoiFlip(Size& size);
+	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);
 	void setBin(const Bin& bin);
 	void setRoi(const Roi& roi);
+	void setFlip(const Flip& flip);
 
 	void resetBin();
 	void resetRoi();
+	void resetFlip();
 	void reset();
 
 	const Bin& getBin() const { return m_bin; }
 	const Roi& getRoi() const { return m_roi; }
 	const Size& getSize();
+	const Flip& getFlip() const { return m_flip; }
 
 	bool apply(SoftOpInternalMgr *op);
 
@@ -36,30 +40,35 @@ class CtSwBinRoi {
 	Size	m_max_size, m_size;
 	Bin	m_bin;
 	Roi	m_roi, m_max_roi;
+	Flip    m_flip;
 };
 
 
-class CtHwBinRoi {
-	DEB_CLASS_NAMESPC(DebModControl,"Hardware BinRoi","Control");
+class CtHwBinRoiFlip {
+	DEB_CLASS_NAMESPC(DebModControl,"Hardware BinRoiFlip","Control");
     public:
-	CtHwBinRoi(HwInterface *hw, CtSwBinRoi *sw_bin_roi, Size& size);
-	~CtHwBinRoi();
+	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size);
+	~CtHwBinRoiFlip();
 
-	bool hasBinCapability() { return m_has_bin; }
-	bool hasRoiCapability() { return m_has_roi; }
+	bool hasBinCapability() const { return !!m_has_bin; }
+	bool hasRoiCapability() const { return !!m_has_roi; }
+	bool hasFlipCapability() const { return !!m_has_flip; }
 
 	void setMaxSize(const Size& size);
 	void setBin(Bin& bin, bool round);
 	void setRoi(Roi& roi, bool round);
+	void setFlip(Flip &flip,bool mandatory);
 
 	void resetBin();
 	void resetRoi();
+	void resetFlip();
 	void reset();
 
 	const Bin& getBin()     const { return m_bin; }
 	const Roi& getSetRoi()  const { return m_set_roi; }
 	const Roi& getRealRoi() const { return m_real_roi; }
 	const Size& getSize()   const { return m_size; }
+	const Flip& getFlip()   const { return m_flip; }
 
 	void apply();
 
@@ -69,11 +78,12 @@ class CtHwBinRoi {
 	HwBinCtrlObj	*m_hw_bin;
 	HwRoiCtrlObj	*m_hw_roi;
 	HwFlipCtrlObj	*m_hw_flip;
-	CtSwBinRoi	*m_sw_bin_roi;
+	CtSwBinRoiFlip	*m_sw_bin_roi_flip;
 	bool	m_has_bin, m_has_roi, m_has_flip;
 	Size	m_max_size, m_size;
 	Bin	m_bin;
 	Roi	m_set_roi, m_real_roi, m_max_roi;
+	Flip	m_flip;
 };
 
 
@@ -110,8 +120,8 @@ class CtImage {
 	void getImageDim(FrameDim& dim) const;
 
 	// --- soft
-	void getSoft(CtSwBinRoi *& soft) const;
-	void getHard(CtHwBinRoi *& hard) const;
+	void getSoft(CtSwBinRoiFlip *& soft) const;
+	void getHard(CtHwBinRoiFlip *& hard) const;
 
 	// --- wizard
 	void setMode(ImageOpMode mode);
@@ -119,13 +129,16 @@ class CtImage {
 
 	void setRoi(Roi& roi);
 	void setBin(Bin& bin);
+	void setFlip(Flip &flip);
 
 	void resetRoi();
 	void resetBin();
+	void resetFlip();
 
 	// --- effective
 	void getRoi(Roi& roi) const;
 	void getBin(Bin& bin) const;
+	void getFlip(Flip &flip) const;
 
 	void reset();
 
@@ -135,11 +148,12 @@ class CtImage {
     private:
 	void _setHSRoi(const Roi &roi);
 	void _setHSBin(const Bin &bin);
+	void _setHSFlip(const Flip &flip);
 
 	HwDetInfoCtrlObj* 	m_hw_det;
 	CtMaxImageSizeCB* 	m_cb_size;
-	CtSwBinRoi* 		m_sw;
-	CtHwBinRoi* 		m_hw;
+	CtSwBinRoiFlip* 	m_sw;
+	CtHwBinRoiFlip* 	m_hw;
 	CtControl&		m_ct;
 
 	Size			m_max_size;
@@ -147,14 +161,15 @@ class CtImage {
 	ImageOpMode		m_mode;
 };
  
-inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoi &binroi)
+inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoiFlip &binroi)
 {
 	os << "<"
 	   << "m_max_size=" << binroi.m_max_size << ", "
 	   << "m_size=" << binroi.m_size << ", "
 	   << "m_bin=" << binroi.m_bin << ", "
 	   << "m_roi=" << binroi.m_roi << ", "
-	   << "m_max_roi=" << binroi.m_max_roi
+	   << "m_max_roi=" << binroi.m_max_roi << ","
+	   << "m_flip=" << binroi.m_flip
 	   << ">";
 	return os;
 }

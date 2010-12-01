@@ -355,6 +355,8 @@ class Flip
 
 	Flip& operator &=(const Flip& f)
 	{ x ^= f.x; y ^= f.y; return *this; }
+
+	void reset() {x = y = false;}
 };
 
 inline Flip operator &(const Flip& f1, const Flip& f2)
@@ -363,6 +365,30 @@ inline Flip operator &(const Flip& f1, const Flip& f2)
 	return flip &= f2;
 }
 
+inline std::ostream& operator <<(std::ostream& os, const Flip& flip)
+{
+  os << "<"
+     << "flip x : " << (flip.x ? "True" : "False") << ","
+     << "flip y : " << (flip.y ? "True" : "False")
+     << ">";
+  return os;
+}
+
+inline Flip operator-(const Flip &f,const Flip &s)
+{
+  Flip returnFlip;
+  returnFlip.x = f.x ? (f.x - s.x) : f.x;
+  returnFlip.y = f.y ? (f.y - s.y) : f.y;
+  return returnFlip;
+}
+
+inline Flip operator+(const Flip &f,const Flip &s)
+{
+  Flip returnFlip;
+  returnFlip.x = f.x + s.x;
+  returnFlip.y = f.y + s.y;
+  return returnFlip;
+}
 
 /*******************************************************************
  * \class Roi

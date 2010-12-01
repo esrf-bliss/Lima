@@ -78,12 +78,12 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
       ++aLastStage;
     }
   Tasks::Flip *aFlipTaskPt = NULL;
-  if(m_flip.flip_x || m_flip.flip_y)
+  if(m_flip.x || m_flip.y)
     {
       Tasks::Flip::FLIP_MODE aMode = Tasks::Flip::FLIP_NONE;
-      if(m_flip.flip_x && m_flip.flip_y)
+      if(m_flip.x && m_flip.y)
 	aMode = Tasks::Flip::FLIP_ALL;
-      else if(m_flip.flip_x)
+      else if(m_flip.x)
 	aMode = Tasks::Flip::FLIP_X;
       else
 	aMode = Tasks::Flip::FLIP_Y;

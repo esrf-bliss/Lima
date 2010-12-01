@@ -11,13 +11,6 @@ namespace lima
   {
   public:
 
-    struct Flip
-    {
-      Flip() { flip_x=0; flip_y=0; } ;
-      bool flip_x;
-      bool flip_y;
-    };
-
     SoftOpInternalMgr();
     ~SoftOpInternalMgr();
     

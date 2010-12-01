@@ -169,8 +169,17 @@ using namespace lima;
 	Corner getRefCorner() const;
 
 	Flip& operator &=(const Flip& f);
+	void reset();
+	const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End	
 };
 
+Flip operator-(const Flip &f,const Flip &s);
+Flip operator+(const Flip &f,const Flip &s);
 
 class Roi
 {
