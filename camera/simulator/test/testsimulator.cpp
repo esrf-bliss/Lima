@@ -1,5 +1,5 @@
 #include "Simulator.h"
-#include "BufferSave.h"
+#include "HwBufferSave.h"
 
 #include <iostream>
 
@@ -9,13 +9,13 @@ using namespace std;
 class TestFrameCallback : public HwFrameCallback
 {
 public:
-	TestFrameCallback(Simulator& simu, BufferSave& buffer_save) 
+	TestFrameCallback(Simulator& simu, HwBufferSave& buffer_save) 
 		: m_simu(simu), m_buffer_save(buffer_save) {}
 protected:
 	virtual bool newFrameReady(const HwFrameInfoType& frame_info);
 private:
 	Simulator& m_simu;
-	BufferSave& m_buffer_save;
+	HwBufferSave& m_buffer_save;
 };
 
 bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
@@ -31,7 +31,7 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 int main(int argc, char *argv[])
 {
 	Simulator simu;
-	BufferSave buffer_save(BufferSave::EDF);
+	HwBufferSave buffer_save(HwBufferSave::EDF);
 	TestFrameCallback cb(simu, buffer_save);
 
 	FrameDim frame_dim;

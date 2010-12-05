@@ -1,5 +1,5 @@
 #include "FrelonInterface.h"
-#include "BufferSave.h"
+#include "HwBufferSave.h"
 #include "AcqState.h"
 #include "PoolThreadMgr.h"
 
@@ -15,7 +15,7 @@ class TestFrameCallback : public HwFrameCallback
 
 public:
 	TestFrameCallback(Frelon::Interface& hw_inter, 
-			  BufferSave& buffer_save, AcqState& acq_state);
+			  HwBufferSave& buffer_save, AcqState& acq_state);
 	~TestFrameCallback();
 
 	const HwFrameInfoType& getBufferInfo();
@@ -25,7 +25,7 @@ protected:
 
 private:
 	Frelon::Interface& m_hw_inter;
-	BufferSave& m_buffer_save;
+	HwBufferSave& m_buffer_save;
 	AcqState& m_acq_state;
 
 	void *m_buffer_ptr;
@@ -36,7 +36,7 @@ private:
 };
 
 TestFrameCallback::TestFrameCallback(Frelon::Interface& hw_inter, 
-				     BufferSave& buffer_save, 
+				     HwBufferSave& buffer_save, 
 				     AcqState& acq_state)
 	: m_hw_inter(hw_inter), m_buffer_save(buffer_save), 
 	  m_acq_state(acq_state)
@@ -119,7 +119,7 @@ void test_frelon_spectroscopy()
 	Frelon::Interface hw_inter(acq, buffer_mgr, cam);
 	DEB_TRACE() << "Done!";
 
-	BufferSave buffer_save(BufferSave::EDF, "big_img", 0, ".edf", true, 1);
+	HwBufferSave buffer_save(HwBufferSave::EDF, "big_img", 0, ".edf", true, 1);
 	AcqState acq_state;
 	TestFrameCallback cb(hw_inter, buffer_save, acq_state);
 

@@ -1,7 +1,7 @@
-class BufferSave 
+class HwBufferSave 
 {
 %TypeHeaderCode
-#include <BufferSave.h>
+#include <HwBufferSave.h>
 using namespace lima;
 %End
   public :
@@ -9,11 +9,11 @@ using namespace lima;
 		Raw, EDF,
 	};
 
-	BufferSave( FileFormat format = Raw, 
+	HwBufferSave( FileFormat format = Raw, 
 		    const std::string& prefix = "img", 
 		    int idx = 0, const std::string& suffix = "", 
 		    bool overwrite = false , int tot_file_frames = 1);
-	~BufferSave( );
+	~HwBufferSave( );
 
 	void writeFrame( const HwFrameInfoType& finfo );
 

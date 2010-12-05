@@ -1,6 +1,6 @@
 /***************************************************************//**
  * @file   test.cpp
- * @brief  This file is to test FrameBuilder and BufferSave classes
+ * @brief  This file is to test FrameBuilder and HwBufferSave classes
  *
  * @author A.Kirov, A.Homs
  * @date   03/06/2009
@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include "FrameBuilder.h"
-#include "BufferSave.h"
+#include "HwBufferSave.h"
 #include "SizeUtils.h"
 #include "Exceptions.h"
 #include "AutoObj.h"
@@ -38,7 +38,7 @@ int main( void )
 //	FrameDim fd = full_fd/bin;
 	FrameDim fd = FrameDim(roi.getSize(), full_fd.getImageType());
 
-	BufferSave bs(BufferSave::EDF, "test");
+	HwBufferSave bs(HwBufferSave::EDF, "test");
 	bs.setTotFileFrames(1);
 
 	int size = fd.getMemSize();
