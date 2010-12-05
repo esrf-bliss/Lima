@@ -1,12 +1,12 @@
 /***************************************************************//**
- * @file BufferSave.cpp
- * @brief This file contains the BufferSave class implementation
+ * @file HwBufferSave.cpp
+ * @brief This file contains the HwBufferSave class implementation
  *
  * @author A.Kirov, A.Homs
  * @date 03/06/2009
  *******************************************************************/
 
-#include "BufferSave.h"
+#include "HwBufferSave.h"
 
 #include <ctime>
 #include <cstdio>
@@ -24,7 +24,7 @@ using namespace std;
 
 
 /***************************************************************//**
- * @brief BufferSave class constructor setting member variables
+ * @brief HwBufferSave class constructor setting member variables
  *
  * @param[in] format           EDF or Raw file format
  * @param[in] prefix           File name prefix
@@ -33,7 +33,7 @@ using namespace std;
  * @param[in] overwrite        Whether to overwrite existing files
  * @param[in] tot_file_frames  Frames per file
  *******************************************************************/
-BufferSave::BufferSave( FileFormat format, const string& prefix, int idx,
+HwBufferSave::HwBufferSave( FileFormat format, const string& prefix, int idx,
 			const string& suffix, bool overwrite, 
 			int tot_file_frames ) 
 	: m_format(format), m_prefix(prefix), m_idx(idx), m_suffix(suffix),
@@ -46,17 +46,17 @@ BufferSave::BufferSave( FileFormat format, const string& prefix, int idx,
 }
 
 
-BufferSave::~BufferSave( ) 
+HwBufferSave::~HwBufferSave( ) 
 {
 	closeFile();
 }
 
-string BufferSave::getDefSuffix() const
+string HwBufferSave::getDefSuffix() const
 {
 	return (m_format == EDF) ? ".edf" : ".raw";
 }
 
-void BufferSave::openFile()
+void HwBufferSave::openFile()
 {
 	if (isFileOpen())
 		return;
@@ -72,7 +72,7 @@ void BufferSave::openFile()
 
 }
 
-void BufferSave::closeFile()
+void HwBufferSave::closeFile()
 {
 	if (!isFileOpen())
 		return;
@@ -84,12 +84,12 @@ void BufferSave::closeFile()
 	m_idx++;
 }
 
-void BufferSave::getOpenFileName(std::string& file_name) const
+void HwBufferSave::getOpenFileName(std::string& file_name) const
 {
 	file_name = m_file_name;
 }
 
-void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
+void HwBufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 {
 	time_t ctime_now;
 	time(&ctime_now);
@@ -144,7 +144,7 @@ void BufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
  *
  * @param[in] finfo  HwFrameInfoType structure reference
  *******************************************************************/
-void BufferSave::writeFrame( const HwFrameInfoType& finfo )
+void HwBufferSave::writeFrame( const HwFrameInfoType& finfo )
 {
 	const FrameDim *fdim = &finfo.frame_dim;
 	if (!fdim)
@@ -162,12 +162,12 @@ void BufferSave::writeFrame( const HwFrameInfoType& finfo )
 		closeFile();
 }
 
-bool BufferSave::isFileOpen() const
+bool HwBufferSave::isFileOpen() const
 {
 	return bool(m_fout);
 }
 
-void BufferSave::setPrefix(const string& prefix)
+void HwBufferSave::setPrefix(const string& prefix)
 {
 	if (prefix == m_prefix)
 		return;
@@ -178,12 +178,12 @@ void BufferSave::setPrefix(const string& prefix)
 	m_prefix = prefix;
 }
 
-void BufferSave::getPrefix(string& prefix) const
+void HwBufferSave::getPrefix(string& prefix) const
 {
 	prefix = m_prefix;
 }
 
-void BufferSave::setFormat(FileFormat format)
+void HwBufferSave::setFormat(FileFormat format)
 {
 	if (format == m_format)
 		return;
@@ -196,12 +196,12 @@ void BufferSave::setFormat(FileFormat format)
 
 }
 
-void BufferSave::getFormat(FileFormat& format) const
+void HwBufferSave::getFormat(FileFormat& format) const
 {
 	format = m_format;
 }
 
-void BufferSave::setIndex(int idx)
+void HwBufferSave::setIndex(int idx)
 {
 	if (idx == m_idx)
 		return;
@@ -212,12 +212,12 @@ void BufferSave::setIndex(int idx)
 	m_idx = idx;
 }
 
-void BufferSave::getIndex(int& idx) const
+void HwBufferSave::getIndex(int& idx) const
 {
 	idx = m_idx;
 }
 
-void BufferSave::setTotFileFrames(int tot_file_frames)
+void HwBufferSave::setTotFileFrames(int tot_file_frames)
 {
 	if (tot_file_frames == m_tot_file_frames)
 		return;
@@ -229,7 +229,7 @@ void BufferSave::setTotFileFrames(int tot_file_frames)
 	m_tot_file_frames = tot_file_frames;
 }
 
-void BufferSave::getTotFileFrames(int& tot_file_frames) const
+void HwBufferSave::getTotFileFrames(int& tot_file_frames) const
 {
 	tot_file_frames = m_tot_file_frames;
 }

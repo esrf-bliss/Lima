@@ -1,6 +1,6 @@
 /***************************************************************//**
- * @file BufferSave.h
- * @brief This file contains the BufferSave class used to save frames
+ * @file HwBufferSave.h
+ * @brief This file contains the HwBufferSave class used to save frames
  *
  * @author A.Kirov, A.Homs
  * @date 03/06/2009
@@ -18,22 +18,22 @@ namespace lima {
 
 
 /***************************************************************//**
- * @class BufferSave
+ * @class HwBufferSave
  *
  * The main method is writeFrame(const HwFrameInfoType& finfo).
  * The other methods configure the saving parameters.
  *******************************************************************/
-class BufferSave {
+class HwBufferSave {
   public :
 	enum FileFormat {
 		Raw, EDF,
 	};
 
-	BufferSave( FileFormat format = Raw, 
+	HwBufferSave( FileFormat format = Raw, 
 		    const std::string& prefix = "img", 
 		    int idx = 0, const std::string& suffix = "", 
 		    bool overwrite = false , int tot_file_frames = 1);
-	~BufferSave( );
+	~HwBufferSave( );
 
 	void writeFrame( const HwFrameInfoType& finfo );
 

@@ -10,7 +10,7 @@
 
 #include "EspiaFocla.h"
 #include "EspiaBufferMgr.h"
-#include "BufferSave.h"
+#include "HwBufferSave.h"
 #include "Timestamp.h"
 
 using namespace lima;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	     << "NbConcatFrames " << nb_concat_frames << endl << flush;
 
 
-	BufferSave bs(BufferSave::EDF, "foclatest");
+	HwBufferSave bs(HwBufferSave::EDF, "foclatest");
 	bs.setTotFileFrames(1);
 
 	espia_acq.setNbFrames(1000);

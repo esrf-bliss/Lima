@@ -1,6 +1,6 @@
 #include "FrelonInterface.h"
 #include "PoolThreadMgr.h"
-#include "BufferSave.h"
+#include "HwBufferSave.h"
 #include "Data.h"
 #include "TaskMgr.h"
 #include "TaskEventCallback.h"
@@ -27,7 +27,7 @@ class SoftRoiCallback : public TaskEventCallback
 
 public:
 	SoftRoiCallback(Frelon::Interface& hw_inter, CtSpsImage& m_sps_image, 
-			BufferSave& buffer_save, AcqState& acq_state);
+			HwBufferSave& buffer_save, AcqState& acq_state);
 	~SoftRoiCallback();
 
 	virtual void finished(Data& data);
@@ -37,13 +37,13 @@ private:
 
 	Frelon::Interface& m_hw_inter;
 	CtSpsImage& m_sps_image;
-	BufferSave& m_buffer_save;
+	HwBufferSave& m_buffer_save;
 	AcqState& m_acq_state;
 };
 
 SoftRoiCallback::SoftRoiCallback(Frelon::Interface& hw_inter, 
 				 CtSpsImage& sps_image,
-				 BufferSave& buffer_save,
+				 HwBufferSave& buffer_save,
 				 AcqState& acq_state)
 	: m_hw_inter(hw_inter), m_sps_image(sps_image), 
 	  m_buffer_save(buffer_save), m_acq_state(acq_state) 
@@ -121,7 +121,7 @@ class TestFrameCallback : public HwFrameCallback
 
 public:
 	TestFrameCallback(Frelon::Interface& hw_inter, Roi& soft_roi,
-			  CtSpsImage& sps_image, BufferSave& buffer_save, 
+			  CtSpsImage& sps_image, HwBufferSave& buffer_save, 
 			  AcqState& acq_state);
 	~TestFrameCallback();
 
@@ -139,7 +139,7 @@ private:
 
 TestFrameCallback::TestFrameCallback(Frelon::Interface& hw_inter, 
 				     Roi& soft_roi, CtSpsImage& sps_image,
-				     BufferSave& buffer_save, 
+				     HwBufferSave& buffer_save, 
 				     AcqState& acq_state) 
 	: m_hw_inter(hw_inter), m_soft_roi(soft_roi)
 {
@@ -372,7 +372,7 @@ void test_frelon_hw_inter(bool do_reset)
 	Frelon::Interface hw_inter(acq, buffer_mgr, cam);
 	DEB_TRACE() << "Done!";
 
-	BufferSave buffer_save(BufferSave::EDF, "img", 0, ".edf", true, 1);
+	HwBufferSave buffer_save(HwBufferSave::EDF, "img", 0, ".edf", true, 1);
 
 	CtSpsImage sps_image;
 	sps_image.setNames("_ccd_ds_", "frelon_live");
