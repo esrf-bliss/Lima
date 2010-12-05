@@ -1,7 +1,7 @@
 include ../../config.inc
 
 ct-objs := CtSaving.o CtControl.o CtAcquisition.o CtBuffer.o \
-	   CtImage.o CtSpsImage.o CtSaving_Edf.o CtShutter.o CtAccumulation.o
+	   CtImage.o CtSaving_Edf.o CtShutter.o CtAccumulation.o
 
 INCLUDES = -I. -I../include -I../../common/include -I../../hardware/include \
 		-I../software_operation/include \
@@ -14,9 +14,18 @@ COMPILE_CBF_SAVING = 0
 endif
 
 ifneq ($(COMPILE_CBF_SAVING),0)
-ct-objs += CtSaving_Cbf.o
+ct-objs += CtSaving_Cbf.o 
 INCLUDES += -I../../third-party/CBFLib/include
 CXXFLAGS += -DWITH_CBF_SAVING
+endif
+
+ifndef COMPILE_SPS_IMAGE
+COMPILE_SPS_IMAGE = 0
+endif
+
+ifneq ($(COMPILE_SPS_IMAGE),0)
+ct-objs += CtSpsImage.o  ../../third-party/Sps/Src/sps.o
+CXXFLAGS += -DWITH_SPS_IMAGE
 endif
 
 SRCS = $(ct-objs:.o=.cpp)
@@ -27,8 +36,7 @@ CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread -g
 all: Ct.o
 
 
-Ct.o: $(ct-objs) ../software_operation/src/CtSoftwareOperation.o \
-		 ../../third-party/Sps/Src/sps.o
+Ct.o: $(ct-objs) ../software_operation/src/CtSoftwareOperation.o
 	ld $(LIBS) -o $@ -r $+
 
 clean:

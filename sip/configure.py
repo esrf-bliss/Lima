@@ -166,7 +166,7 @@ def main():
         makefile.extra_include_dirs = extraIncludes
         makefile.extra_libs = ['pthread','lima%s' % modName]
         makefile.extra_lib_dirs = [rootName('build')]
-        makefile.extra_cxxflags = ['-pthread', '-g']
+        makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE']
         makefile.extra_cxxflags.extend(['-I' + x for x in extraIncludes])
         
         # Add the library we are wrapping.  The name doesn't include any 

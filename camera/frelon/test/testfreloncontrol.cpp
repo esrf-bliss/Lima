@@ -114,7 +114,9 @@ private:
 	CtSaving		*m_ct_saving;
 	CtImage			*m_ct_image;
 	CtBuffer		*m_ct_buffer;
+#ifdef WITH_SPS_IMAGE
 	CtSpsImage		*m_ct_display;
+#endif
 
 	ImageStatusCallback	*m_img_status_cb;
 };
@@ -137,17 +139,19 @@ FrelonAcq::FrelonAcq(int espia_dev_nb)
 	m_ct_saving  = ct->saving();
 	m_ct_image   = ct->image();
 	m_ct_buffer  = ct->buffer();
+#ifdef WITH_SPS_IMAGE
 	m_ct_display = ct->display();
+#endif
 
 	printDefaults();
 
 	AutoPtr<ImageStatusCallback> img_status_cb;
 	img_status_cb = new ImageStatusCallback(*ct, m_acq_state);
 	ct->registerImageStatusCallback(*img_status_cb);
-
+#ifdef WITH_SPS_IMAGE
 	m_ct_display->setNames("_ccd_ds_", "frelon_live");
 	m_ct_display->setActive(true);
-
+#endif
 	DEB_TRACE() << "All is OK!";
 	m_ct = ct.forget();
 	m_img_status_cb = img_status_cb.forget();

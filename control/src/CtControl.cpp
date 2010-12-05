@@ -3,7 +3,9 @@
 
 #include "CtControl.h"
 #include "CtSaving.h"
+#ifdef WITH_SPS_IMAGE
 #include "CtSpsImage.h"
+#endif
 #include "CtAcquisition.h"
 #include "CtImage.h"
 #include "CtBuffer.h"
@@ -100,8 +102,10 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_saving->setEndCallback(aSaveCbkPt);
   aSaveCbkPt->unref();
 
+#ifdef WITH_SPS_IMAGE
   //Sps image
   m_ct_sps_image = new CtSpsImage();
+#endif
   m_op_int = new SoftOpInternalMgr();
   m_op_ext = new SoftOpExternalMgr();
 }
@@ -118,7 +122,9 @@ CtControl::~CtControl()
     unregisterImageStatusCallback(*m_img_status_cb);
 
   delete m_ct_saving;
+#ifdef WITH_SPS_IMAGE
   delete m_ct_sps_image;
+#endif
   delete m_ct_acq;
   delete m_ct_image;
   delete m_ct_buffer;
@@ -203,6 +209,7 @@ void CtControl::prepareAcq()
   m_autosave= m_ct_saving->hasAutoSaveMode();
   m_ready= true;
 
+#ifdef WITH_SPS_IMAGE
   m_display_active_flag = m_ct_sps_image->isActive();
   if(m_display_active_flag)
   {
@@ -211,7 +218,7 @@ void CtControl::prepareAcq()
     
     m_ct_sps_image->prepare(dim);
   }
-
+#endif
   m_images_ready.clear();
   m_base_images_ready.clear();
 }
@@ -391,8 +398,10 @@ void CtControl::reset()
   DEB_TRACE() << "Reseting acquisition";
   m_ct_acq->reset();
 
+#ifdef WITH_SPS_IMAGE
   DEB_TRACE() << "Reseting display";
   m_ct_sps_image->reset();
+#endif
   resetStatus(false);
 }
 
@@ -483,12 +492,14 @@ void CtControl::newBaseImageReady(Data &aData)
       aLock.lock();
     }
 
+#ifdef WITH_SPS_IMAGE
   if(m_display_active_flag)
     {
       aLock.unlock();
       m_ct_sps_image->frameReady(aData);
     }
   else
+#endif
     aLock.unlock();
 
   if (img_status_changed && m_img_status_cb)

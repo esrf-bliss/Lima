@@ -19,7 +19,9 @@ namespace lima
   class CtBuffer;
   class CtBufferFrameCB;
   class CtSaving;
+#ifdef WITH_SPS_IMAGE
   class CtSpsImage;
+#endif
   class CtShutter;
   class CtAccumulation;
 
@@ -100,7 +102,9 @@ namespace lima
 
     CtAcquisition* 	acquisition() 		{ return m_ct_acq; }
     CtSaving* 		saving() 		{ return m_ct_saving; }
+#ifdef WITH_SPS_IMAGE
     CtSpsImage* 	display() 		{ return m_ct_sps_image; }
+#endif
     CtImage* 		image() 		{ return m_ct_image; }
     CtBuffer* 		buffer() 		{ return m_ct_buffer; }
     CtAccumulation* 	accumulation() 		{ return m_ct_accumulation; }
@@ -157,7 +161,9 @@ namespace lima
     mutable Status      m_status;
     
     CtSaving		*m_ct_saving;
+#ifdef WITH_SPS_IMAGE
     CtSpsImage		*m_ct_sps_image;
+#endif
     CtAcquisition	*m_ct_acq;
     CtImage		*m_ct_image;
     CtBuffer		*m_ct_buffer;
@@ -177,7 +183,9 @@ namespace lima
     ApplyPolicy		m_policy;
     bool		m_ready;
     bool		m_autosave;
+#ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
+#endif
     bool		m_started;
 
     ImageStatusCallback *m_img_status_cb;

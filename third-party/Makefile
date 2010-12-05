@@ -1,8 +1,8 @@
 include ../config.inc
 
-PROJECTS = processlib.src sps.src
+PROJECTS = processlib.src
 
-PROJECTS_CLEAN = processlib.clean sps.clean
+PROJECTS_CLEAN = processlib.clean
 
 ifndef COMPILE_CBF_SAVING
 COMPILE_CBF_SAVING = 0
@@ -11,6 +11,15 @@ endif
 ifneq ($(COMPILE_CBF_SAVING),0)
 PROJECTS += cbflib.src
 PROJECTS_CLEAN += cbflib.clean
+endif
+
+ifndef COMPILE_SPS_IMAGE
+COMPILE_SPS_IMAGE = 0
+endif
+
+ifneq ($(COMPILE_SPS_IMAGE),0)
+PROJECTS += sps.src
+PROJECTS_CLEAN += sps.clean
 endif
 
 all:	src test
