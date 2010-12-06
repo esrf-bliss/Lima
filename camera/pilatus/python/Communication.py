@@ -372,7 +372,7 @@ class Communication:
             else:
                 self.__asynSock.send('exposure %s' % filename)
                 
-            if(self._trigger_mode != self.INTERNAL ||
+            if(self._trigger_mode != self.INTERNAL or
                self._trigger_mode != self.INTERNAL_TRIG_MULTI):
                 self.__cond.wait(self.__timeout)
              

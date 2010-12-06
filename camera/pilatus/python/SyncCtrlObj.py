@@ -40,7 +40,7 @@ class SyncCtrlObj(Core.HwSyncCtrlObj) :
         cvt_trigger_mode = None
         com = self.__comm()
         trig_mode = com.trigger_mode()
-        return self.__CamTrig2limaTrig.get(trigger_mode,None)
+        return self.__CamTrig2limaTrig.get(trig_mode,None)
     
     #@Core.Debug.DEB_MEMBER_FUNCT
     def setExpTime(self,exp_time):
