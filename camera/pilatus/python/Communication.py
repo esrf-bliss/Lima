@@ -162,13 +162,13 @@ class Communication:
     LOW,MID,HIGH,ULTRA_HIGH = range(4)  # GAIN enum
     GAIN_SERVER_RESPONSE = {'low' : LOW,'mid' : MID,'high' : HIGH,'ultra high' : ULTRA_HIGH}
     GAIN_VALUE2SERVER = {LOW : 'lowG',MID : 'midG',HIGH : 'highG',ULTRA_HIGH : 'uhighG'}
-    INTERNAL,EXTERNAL_START,EXTERNAL_MULTI_START,EXTERNAL_GATE = range(4)
+    INTERNAL,INTERNAL_TRIG_MULTI,EXTERNAL_START,EXTERNAL_MULTI_START,EXTERNAL_GATE = range(5)
 
     DEFAULT_PATH = '/lima_data'
     DEFAULT_TMPFS_SIZE = 8 * 1024 * 1024 * 1024 # 8Go
     DEFAULT_FILE_BASE = 'tmp_img_'
     DEFAULT_FILE_EXTENTION = '.edf'
-    DEFAULT_FILE_NAME = 'tmp_img_00000.edf'
+    DEFAULT_FILE_PATERN = 'tmp_img_%.5d.edf'
     
     def __init__(self, host = None, port = None):
         self.__cond = threading.Condition()
@@ -348,31 +348,32 @@ class Communication:
             if self.INTERNAL <= trigger_mode <= self.EXTERNAL_GATE:
                 self._trigger_mode = trigger_mode
             else:
-                raise 'Trigger can be only:Internal,External start,External multi start or External gate!'
+                raise 'Trigger can be only:Internal,Internal Trig Multi,External start,External multi start or External gate!'
     @Core.DEB_MEMBER_FUNCT
-    def start_acquisition(self) :
+    def start_acquisition(self,image_number = 0) :
         with self.__cond:
             deb.Trace("State : %s, trigger mode : %s" % (self._state,self._trigger_mode))
 	    if self._state == self.RUNNING:
-		raise 'Could not start acquisition, you have to wait the finished of the previous one'
+		raise 'Could not start acquisition, you have to wait the end of the previous one'
 
             if self._trigger_mode != self.EXTERNAL_GATE:
                 while self._exposure_period <= (self._exposure + 0.002999) :
                     self.__asynSock.send('expperiod %f' % (self._exposure + 0.003))
                     self.__cond.wait(self.__timeout)
+
+            filename = self.DEFAULT_FILE_PATERN % image_number
             #Start Acquisition
             if self._trigger_mode == self.EXTERNAL_START:
-                self.__asynSock.send('exttrigger %s' % self.DEFAULT_FILE_NAME)
+                self.__asynSock.send('exttrigger %s' % filename)
             elif self._trigger_mode == self.EXTERNAL_MULTI_START:
-                self.__asynSock.send('extmtrigger %s' % self.DEFAULT_FILE_NAME)
+                self.__asynSock.send('extmtrigger %s' % filename)
             elif self._trigger_mode == self.EXTERNAL_GATE:
-                self.__asynSock.send('exptime 0.003')  # TRICK TO RETURN QUICKLY
-                self.__cond.wait(self.__timeout)
-                self.__asynSock.send('extenable %s' % self.DEFAULT_FILE_NAME)
+                self.__asynSock.send('extenable %s' % filename)
             else:
-                self.__asynSock.send('exposure %s' % self.DEFAULT_FILE_NAME)
+                self.__asynSock.send('exposure %s' % filename)
                 
-            if self._trigger_mode != self.INTERNAL:
+            if(self._trigger_mode != self.INTERNAL or
+               self._trigger_mode != self.INTERNAL_TRIG_MULTI):
                 self.__cond.wait(self.__timeout)
              
             self._state = self.RUNNING

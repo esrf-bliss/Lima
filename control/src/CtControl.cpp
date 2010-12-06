@@ -261,7 +261,7 @@ void CtControl::stopAcq()
 
   m_hw->stopAcq();
   m_started = false;
-
+  m_ready = false;
   DEB_TRACE() << "Hardware Acquisition Stopped";
 }
 

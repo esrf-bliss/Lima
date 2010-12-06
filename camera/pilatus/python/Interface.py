@@ -8,7 +8,7 @@ from Communication import Communication
 DEFAULT_SERVER_PORT = 41234
 
 class Interface(Core.HwInterface) :
-    #Core.Debug.DEB_CLASS(Core.DebModCamera, "Interface")
+    Core.DEB_CLASS(Core.DebModCamera, "Interface")
 
     def __init__(self,port = DEFAULT_SERVER_PORT) :
 	Core.HwInterface.__init__(self)
@@ -20,7 +20,8 @@ class Interface(Core.HwInterface) :
         self.__buffer = BufferCtrlObj(self.__comm,self.__detInfo)
         self.__syncObj = SyncCtrlObj(self.__buffer,self.__comm,self.__detInfo)
 	self.__acquisition_start_flag = False
-
+        self.__image_number = 0
+        
     def __del__(self) :
         self.__comm.quit()
         self.__buffer.quit()
@@ -29,11 +30,11 @@ class Interface(Core.HwInterface) :
         self.__comm.quit()
         self.__buffer.quit()
         
-    #@Core.Debug.DEB_MEMBER_FUNCT
+    @Core.DEB_MEMBER_FUNCT
     def getCapList(self) :
         return [Core.HwCap(x) for x in [self.__detInfo,self.__syncObj,self.__buffer]]
 
-    #@Core.Debug.DEB_MEMBER_FUNCT
+    @Core.DEB_MEMBER_FUNCT
     def reset(self,reset_level):
         if reset_level == self.HardReset:
             self.__comm.hard_reset()
@@ -41,7 +42,7 @@ class Interface(Core.HwInterface) :
         self.__buffer.reset()
         self.__comm.soft_reset()
         
-    #@Core.Debug.DEB_MEMBER_FUNCT
+    @Core.DEB_MEMBER_FUNCT
     def prepareAcq(self):
         camserverStatus = self.__comm.status()
         if camserverStatus == self.__comm.DISCONNECTED:
@@ -49,28 +50,33 @@ class Interface(Core.HwInterface) :
 
         self.__buffer.reset()
         self.__syncObj.prepareAcq()
-        
-    #@Core.Debug.DEB_MEMBER_FUNCT
+        self.__image_number = 0
+
+    @Core.DEB_MEMBER_FUNCT
     def startAcq(self) :
         self.__acquisition_start_flag = True
-        self.__comm.start_acquisition()
+        self.__comm.start_acquisition(self.__image_number)
+        self.__image_number += 1
         self.__buffer.start()
         
-    #@Core.Debug.DEB_MEMBER_FUNCT
+    @Core.DEB_MEMBER_FUNCT
     def stopAcq(self) :
         self.__comm.stop_acquisition()
         self.__buffer.stop()
         
-    #@Core.Debug.DEB_MEMBER_FUNCT
+    @Core.DEB_MEMBER_FUNCT
     def getStatus(self) :
         camserverStatus = self.__comm.status()
         status = Core.HwInterface.StatusType()
 
         if self.__buffer.is_error() :
             status.det = Core.DetFault
+            status.acq = Core.AcqFault
+            deb.Error("Buffer is in Fault stat")
         elif camserverStatus == self.__comm.ERROR:
             status.det = Core.DetFault
             status.acq = Core.AcqFault
+            deb.Error("Detector is in Fault stat")
         else:
             if camserverStatus != self.__comm.OK:
                 status.det = Core.DetExposure
@@ -87,11 +93,11 @@ class Interface(Core.HwInterface) :
         status.det_mask = (Core.DetExposure|Core.DetFault)
         return status
     
-    #@Core.Debug.DEB_MEMBER_FUNCT
+    @Core.DEB_MEMBER_FUNCT
     def getNbAcquiredFrames(self) :
         return self.__buffer.getLastAcquiredFrame() + 1
     
-    #@Core.Debug.DEB_MEMBER_FUNCT
+    @Core.DEB_MEMBER_FUNCT
     def getNbHwAcquiredFrames(self):
         return self.getNbAcquiredFrames()
 
