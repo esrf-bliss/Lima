@@ -328,6 +328,11 @@ void CtAccumulation::readSaturatedSumCounter(int from,
 	  std::list<long long> &satImgCounters = result.back();
 	  satImgCounters.push_back(i->value);
 	}
+      /* Check if last image has the same number of counters
+	 if not remove */
+      if(!result.empty() &&
+	 result.front().size() != result.back().size())
+	result.pop_back();
     }
 }
 
