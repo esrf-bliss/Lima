@@ -304,8 +304,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
     @parameters result It's a list of list of saturated counters. 
     i.e: from == 5 result == [[2,3,2],[4,3,2],...] : so first list [2,3,2] is the saturated counters of image 5
 */
-void CtAccumulation::readSaturatedSumCounter(int from,
-					     CtAccumulation::saturatedCounterResult &result)
+void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterResult &result,int from)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(from);
@@ -315,6 +314,15 @@ void CtAccumulation::readSaturatedSumCounter(int from,
   acquisition->getAccNbFrames(acc_nframes);
   if(acc_nframes > 0)
     {
+      AutoMutex aLock(m_cond.mutex());
+      if(from < 0)
+	{
+	  if(!m_saturated_images.empty())
+	    from = m_saturated_images.back().frameNumber;
+	  else
+	    from = 0;
+	}
+      aLock.unlock();
       std::list<CtAccumulation::_CounterResult> resultList;
       int fromCounterId = from * acc_nframes;
       m_calc_mgr->getHistory(resultList,fromCounterId);
@@ -322,7 +330,7 @@ void CtAccumulation::readSaturatedSumCounter(int from,
       for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
 	  i != resultList.end();++i)
 	{
-	  if(!i->frameNumber % acc_nframes)
+	  if(!(i->frameNumber % acc_nframes))
 	    result.push_back(std::list<long long>());
 	  
 	  std::list<long long> &satImgCounters = result.back();
@@ -390,7 +398,7 @@ void CtAccumulation::_calcSaturatedImageNCounters(Data &src,Data &dst)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(src,dst);
 
-  Data copiedSrc = src.copyHeader(src.type);
+  Data copiedSrc = src.copy();
   AutoMutex Lock(m_cond.mutex());
   if(m_calc_ready)
     {

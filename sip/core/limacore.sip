@@ -295,6 +295,7 @@ for(int i = 0;vIter != sipCpp->end();++vIter,++i)
 {
    std::list<long long> &aList = *vIter;
    PyObject* aListPyPt = PyList_New(aList.size());
+   PyList_SET_ITEM(aReturnListPt,i,aListPyPt);
    std::list<long long>::iterator sIter = aList.begin();
    for(int j = 0;sIter != aList.end();++sIter,++j)
      PyList_SET_ITEM(aListPyPt,j,PyInt_FromLong(*sIter));

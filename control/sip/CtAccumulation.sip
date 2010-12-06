@@ -38,26 +38,26 @@ public:
   // --- accumulation adn concatenation parameters
 
   void setParameters(const Parameters &pars);
-  void getParameters(Parameters& pars) const;
+  void getParameters(Parameters& pars /Out/) const;
   
   void setActive(bool activeFlag);
-  void getActive(bool &activeFlag);
+  void getActive(bool &activeFlag /Out/);
 
   void setPixelThresholdValue(int pixelThresholdValue);
-  void getPixelThresholdValue(int &pixelThresholdValue) const;
+  void getPixelThresholdValue(int &pixelThresholdValue /Out/) const;
 
-  void getBufferSize(int &aBufferSize) const;
+  void getBufferSize(int &aBufferSize /Out/) const;
 
   void setSavingFlag(bool savingFlag);
-  void getSavingFlag(bool &savingFlag) const;
+  void getSavingFlag(bool &savingFlag /Out/) const;
 
   void setSavePrefix(const std::string &savePrefix);
-  void getSavePrefix(std::string &savePrefix) const;
+  void getSavePrefix(std::string &savePrefix /Out/) const;
 
   // --- variable and data result of Concatenation or Accumulation
 
-  void readSaturatedImageCounter(Data&,long frameNumber = -1);
-  void readSaturatedSumCounter(int from,saturatedCounterResult &result);
+  void readSaturatedImageCounter(Data& /Out/,long frameNumber = -1);
+  void readSaturatedSumCounter(saturatedCounterResult &result /Out/,int from = -1);
 
   // --- Mask image to calculate sum counter
   void setMask(Data&);

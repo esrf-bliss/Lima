@@ -72,7 +72,7 @@ namespace lima
     // --- variable and data result of Concatenation or Accumulation
 
     void readSaturatedImageCounter(Data&,long frameNumber = -1);
-    void readSaturatedSumCounter(int from,saturatedCounterResult &result);
+    void readSaturatedSumCounter(saturatedCounterResult &result,int from = -1);
 
     // --- Mask image to calculate sum counter
     void setMask(Data&);
