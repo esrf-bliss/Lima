@@ -253,6 +253,57 @@ return aReturnListPt;
 %End
 };
 
+%MappedType std::list<std::list<long long>>
+{
+%TypeHeaderCode
+#include <list>
+%End
+
+%ConvertToTypeCode
+if(sipIsErr == NULL)
+{
+  bool aReturnFlag = PyList_Check(sipPy);
+  for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
+  {
+    PyObject *listPt = PyList_GET_ITEM(sipPy,i);
+    aReturnFlag = PyList_Check(listPt);
+    for(int j = 0;aReturnFlag && j < PyList_Size(listPt);++j)
+      aReturnFlag = PyInt_Check(PyList_GET_ITEM(listPt,j));
+  }
+  return aReturnFlag;
+}
+
+
+*sipCppPtr = new std::list<std::list<long long> >();
+for(int i = 0;i < PyList_Size(sipPy);++i)
+{
+  PyObject *listPt = PyList_GET_ITEM(sipPy,i);
+  (*sipCppPtr)->push_back(std::list<long long>());
+  std::list<long long> &aList = (*sipCppPtr)->back();
+  for(int j = 0;j <  PyList_Size(listPt);++j)
+    aList.push_back(PyInt_AS_LONG(PyList_GET_ITEM(listPt,j)));
+}
+
+return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+PyObject* aReturnListPt = PyList_New(sipCpp->size());
+std::list<std::list<long long> >::iterator vIter = sipCpp->begin();
+
+for(int i = 0;vIter != sipCpp->end();++vIter,++i)
+{
+   std::list<long long> &aList = *vIter;
+   PyObject* aListPyPt = PyList_New(aList.size());
+   PyList_SET_ITEM(aReturnListPt,i,aListPyPt);
+   std::list<long long>::iterator sIter = aList.begin();
+   for(int j = 0;sIter != aList.end();++sIter,++j)
+     PyList_SET_ITEM(aListPyPt,j,PyInt_FromLong(*sIter));
+}
+return aReturnListPt;
+%End
+};
+
 %ModuleHeaderCode
 extern "C" { void lima_import_array();}
 %End
