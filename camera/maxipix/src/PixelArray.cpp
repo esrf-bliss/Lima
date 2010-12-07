@@ -59,7 +59,7 @@ PixelConfigArray::PixelConfigArray(MaxipixDet::Version version)
     case MaxipixDet::TPX1:
 	m_bit.mask= 7;
         m_bit.test= 13;
-        m_bit.nbLow= 3;
+        m_bit.nbLow= 4;
         m_bit.low[0]= 8;
         m_bit.low[1]= 12;
         m_bit.low[2]= 10;
