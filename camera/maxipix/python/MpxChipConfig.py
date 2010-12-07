@@ -70,7 +70,7 @@ class MpxPixelConfig:
 
     def getChipArray(self, chipid):
 	idx= self.__getChipIdx(chipid, 1)
-	return self.__arr[idx]
+	return self.__arr[idx[0]]
 
     def setTimePixMode(self, mode):
 	for idx in range(self.nchip):
