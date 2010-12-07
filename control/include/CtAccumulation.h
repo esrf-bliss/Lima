@@ -5,6 +5,7 @@
 #include <deque>
 
 #include "CtControl.h"
+#include "SinkTaskMgr.h"
 
 namespace lima
 {
@@ -36,6 +37,7 @@ namespace lima
     {
       DEB_CLASS_NAMESPC(DebModControl,"AccConcat::ThresholdCallback", 
 			"Control");
+      friend class CtAccumulation;
     public:
       ThresholdCallback() {};
       virtual ~ThresholdCallback() {};
@@ -70,7 +72,7 @@ namespace lima
     // --- variable and data result of Concatenation or Accumulation
 
     void readSaturatedImageCounter(Data&,long frameNumber = -1);
-    void readSaturatedSumCounter(int from,saturatedCounterResult &result);
+    void readSaturatedSumCounter(saturatedCounterResult &result,int from = -1);
 
     // --- Mask image to calculate sum counter
     void setMask(Data&);
@@ -81,12 +83,38 @@ namespace lima
     void registerThresholdCallback(ThresholdCallback &cb);
     void unregisterThresholdCallback(ThresholdCallback &cb);
   private:
-    Parameters 		m_pars;
-    long		m_buffers_size;
-    std::deque<Data> 	m_datas;
-    std::deque<Data> 	m_saturated_images;
-    CtControl& 		m_ct;
-    mutable Mutex 	m_lock;
+    struct _CounterResult;
+    typedef SinkTaskMgr<_CounterResult> _CalcSaturatedTaskMgr;
+    struct _CounterResult
+    {
+      _CounterResult() : value(-1),frameNumber(-1),errorCode(_CalcSaturatedTaskMgr::OK) {}
+      explicit _CounterResult(int aFameNumber) :
+	value(0),frameNumber(aFameNumber),errorCode(_CalcSaturatedTaskMgr::OK) {}
+      explicit _CounterResult(_CalcSaturatedTaskMgr::ErrorCode anErrorCode) :
+	value(-1),frameNumber(-1),errorCode(anErrorCode) {}
+
+      long long 			value;
+      int 				frameNumber;
+      _CalcSaturatedTaskMgr::ErrorCode 	errorCode;
+    };
+
+    class _CalcSaturatedTask;
+    friend class _CalcSaturatedTask;
+    class _CalcEndCBK;
+    friend class _CalcEndCBK;
+
+    Parameters 				m_pars;
+    long				m_buffers_size;
+    std::deque<Data> 			m_datas;
+    std::deque<Data> 			m_saturated_images;
+    CtControl& 				m_ct;
+    bool				m_calc_ready;
+    std::deque<std::pair<Data,Data> >	m_calc_pending_data;
+    TaskEventCallback* 			m_calc_end;
+    _CalcSaturatedTaskMgr*		m_calc_mgr;
+    Data				m_calc_mask;
+    mutable Cond 			m_cond;
+    ThresholdCallback*			m_threshold_cb;
 
     // --- Methodes for acquisition
     void prepare();
@@ -94,7 +122,9 @@ namespace lima
     void getFrame(Data &,int frameNumber);
 
     void _accFrame(Data &src,Data &dst);
-    void _calcSaturatedImage(Data &src);
+    void _calcSaturatedImageNCounters(Data &src,Data &dst);
+
+    inline void _callIfNeedThresholdCallback(Data &aData,long long value);
   };
 }
 #endif
