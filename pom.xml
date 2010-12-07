@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <parent>
+       <groupId>fr.soleil</groupId>
+       <artifactId>super-pom-C-CPP</artifactId>
+       <version>RELEASE</version>
+   </parent>
+   
+   <groupId>fr.soleil.lib</groupId>
+   <artifactId>Lima</artifactId>
+   <version>0.0.1-SNAPSHOT</version>
+   
+   <packaging>pom</packaging>
+   <name>Lima Project</name>
+   <description>Lima Project</description>
+    <build>
+		<plugins>
+			<plugin>
+				<groupId>fr.soleil.maven.plugins</groupId>
+				<artifactId>maven-cvs-plugin</artifactId>
+				<configuration>
+					<enable>false</enable>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>	
+   <scm>
+       <connection>${scm.connection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2</connection>
+       <developerConnection>${scm.developerConnection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2</developerConnection>
+       <url>${scm.url.cvs.tango-ds}/InputOutput/Scan/ScanServerV2</url>
+   </scm>
+   <developers>
+       <developer>
+           <id>langlois</id>
+           <name>langlois</name>
+           <url>http://controle/</url>
+           <organization>Synchrotron Soleil</organization>
+           <organizationUrl>http://www.synchrotron-soleil.fr</organizationUrl>
+           <roles>
+               <role>manager</role>
+           </roles>
+           <timezone>1</timezone>
+       </developer>
+       <developer>
+           <id>noureddine</id>
+           <name>noureddine</name>
+           <url>http://controle/</url>
+           <organization>Synchrotron Soleil</organization>
+           <organizationUrl>http://www.synchrotron-soleil.fr</organizationUrl>
+           <roles>
+               <role>developer</role>
+           </roles>
+           <timezone>1</timezone>
+       </developer>
+   </developers>
+   <modules>
+		<module>common</module>
+		<module>camera</module>
+		<module>control</module>
+		<module>hardware</module>
+		<module>third-party</module>
+   </modules>
+</project>

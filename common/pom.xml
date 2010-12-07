@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>fr.soleil.lib</groupId>
+		<artifactId>Lima</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <groupId>fr.soleil.lib.Lima</groupId>
+    <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
+
+    <packaging>nar</packaging>
+    <name>LimaCommon</name>
+    <description>Common lib for Lima</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.freehep</groupId>
+                <artifactId>freehep-nar-plugin</artifactId>
+                <configuration>
+                    <libraries>
+                        <library>
+                            <type>shared</type>
+                            <subSystem>gui</subSystem>
+                        </library>
+                    </libraries>
+                    <cpp>
+                        <sourceDirectory>src</sourceDirectory>
+                        <includePaths>
+                            <includePath>${basedir}/include</includePath>
+                        </includePaths>
+                    </cpp>   
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <scm>
+        <connection>${scm.connection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</connection>
+        <developerConnection>${scm.developerConnection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</developerConnection>
+        <url>${scm.url.cvs.tango-ds}/InputOutput/Scan/ScanServerV2/ScanSL</url>
+    </scm>
+</project>

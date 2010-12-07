@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>fr.soleil.lib</groupId>
+		<artifactId>Lima</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <groupId>fr.soleil.lib.Lima</groupId>
+    <artifactId>LimaControl-${aol}-shared-${mode}</artifactId>
+
+    <packaging>nar</packaging>
+    <name>LimaControl</name>
+    <description>Control lib for Lima</description>
+
+    <dependencies>
+	<dependency>
+		<groupId>fr.soleil.lib.Lima</groupId>
+		<artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+		<groupId>fr.soleil.lib.Lima</groupId>
+		<artifactId>LimaHardware-${aol}-shared-${mode}</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+        	<groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
+		<artifactId>ProcesslibTasks-${aol}-shared-${mode}</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.freehep</groupId>
+                <artifactId>freehep-nar-plugin</artifactId>
+                <configuration>
+                    <libraries>
+                        <library>
+                            <type>shared</type>
+                            <subSystem>gui</subSystem>
+                        </library>
+                    </libraries>
+                    <cpp>
+					<!-- XXX VH/FL : Out of maven convention (multiple source directories)-->
+                        <sourceDirectory>${project.basedir}</sourceDirectory>
+						<includes>
+						  <include>software_operation/src/**/*.cpp</include>
+						  <include>src/**/*.cpp</include>
+						</includes>
+						<excludes>
+						  <exclude>**/CtSaving_Cbf.cpp</exclude>
+						  <exclude>**/CtSpsImage.cpp</exclude>
+						</excludes>
+                        <includePaths>
+                            <includePath>${project.basedir}/include</includePath>
+                            <includePath>${project.basedir}/software_operation/include</includePath>
+                        </includePaths>
+                    </cpp>   
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <scm>
+        <connection>${scm.connection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</connection>
+        <developerConnection>${scm.developerConnection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</developerConnection>
+        <url>${scm.url.cvs.tango-ds}/InputOutput/Scan/ScanServerV2/ScanSL</url>
+    </scm>
+</project>

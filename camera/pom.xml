@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>fr.soleil.lib</groupId>
+		<artifactId>Lima</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <groupId>fr.soleil.lib.Lima</groupId>
+    <artifactId>Camera</artifactId>
+
+    <packaging>pom</packaging>
+    <name>LimaCamera</name>
+    <description>Lima Camera : Basler, Simulator, ...</description>
+
+    <dependencies>
+        <dependency>
+			<groupId>fr.soleil.lib.Lima</groupId>
+			<artifactId>Common-${aol}-shared-${mode}</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>fr.soleil.lib.Lima</groupId>
+			<artifactId>Hardware-${aol}-shared-${mode}</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+    </dependencies>
+	
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.freehep</groupId>
+                <artifactId>freehep-nar-plugin</artifactId>
+                <configuration>
+                    <libraries>
+                        <library>
+                            <subSystem>gui</subSystem>
+                            <type>shared</type>
+                        </library>
+                    </libraries>
+                    <cpp>
+                        <sourceDirectory>src</sourceDirectory>
+                        <includePaths>
+                            <includePath>${basedir}/include</includePath>
+                        </includePaths>
+                    </cpp>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <modules>
+        <module>basler</module>
+        <module>simulator</module>
+    </modules>
+
+</project>

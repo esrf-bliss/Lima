@@ -10,3 +10,4 @@ sip*.cpp
 .\#*
 config.inc
 install
+*target*
