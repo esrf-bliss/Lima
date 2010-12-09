@@ -971,6 +971,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
         self._saturated_image_cache = acc.readSaturatedImageCounter(image_id)
         arr = self._saturated_image_cache.buffer
         if arr is None: arr = []
+        else: arr = arr.ravel()
         return arr
 
     ##@brief get saturated sum counter
