@@ -140,7 +140,25 @@ class LimaCCDs(PyTango.Device_4Impl) :
             pass
         else:
             Core.Processlib.PoolThreadMgr.get().setNumberOfThread(nb_thread)
-            
+
+        self.__accThresholdCallback = None
+        try:
+            accThresholdCallbackModule = int(self.AccThresholdCallbackModule)
+        except ValueError:
+            pass
+        else:
+            try:
+                m = __import__('plugins.%s' % (accThresholdCallbackModule),None,None,
+                               'plugins.%s' % (accThresholdCallbackModule))
+            except ImportError:
+                deb.Error("Couldn't import plugins.%s" % accThresholdCallbackModule)
+            else:
+                try:
+                    func = getattr(m,'get_acc_threshold_callback')
+                    self.__accThresholdCallback = func()
+                except AttributeError:
+                    deb.Error("Accumulation threshold plugins module don't have get_acc_threshold_callback function")
+
         self.__Prefix2SubClass = {'acc' : self.__control.acquisition,
                                   'acq' : self.__control.acquisition,
                                   'shutter' : self.__control.shutter,
@@ -421,10 +439,13 @@ class LimaCCDs(PyTango.Device_4Impl) :
     ## @brief Read if saturated calculation is active
     #
     @Core.DEB_MEMBER_FUNCT
-    def read_acc_saturated_cblevel(self,attr) :        
-	acc = self.__control.accumulation()
-	##@todo
-        attr.set_value(-1)
+    def read_acc_saturated_cblevel(self,attr) :
+        if self.__accThresholdCallback is not None:
+            attr.set_value(self.__accThresholdCallback.m_max)
+        else:
+            msg = "Accumulation threshold plugins not loaded"
+            deb.Error(msg)
+            raise Exception, msg
 
     ## @brief active/unactive calculation of saturated images and counters
     #
@@ -432,9 +453,12 @@ class LimaCCDs(PyTango.Device_4Impl) :
     def write_acc_saturated_threshold(self,attr) :        
         data = []
         attr.get_write_value(data)
-
-	acc = self.__control.accumulation()
-        ##@todo
+        if self.__accThresholdCallback is not None:
+            self.__accThresholdCallback.m_max = data[0]
+        else:
+            msg = "Accumulation threshold plugins not loaded"
+            deb.Error(msg)
+            raise Exception, msg
         
     ## @brief Read latency time 
     #
@@ -1051,6 +1075,9 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'NbProcessingThread' :
         [PyTango.DevString,
          "Number of thread for processing",[2]],
+        'AccThresholdCallbackModule':
+        [PyTango.DevString,
+         "Plugin name file which manage threshold",[]],
         }
 
     #    Command definitions
