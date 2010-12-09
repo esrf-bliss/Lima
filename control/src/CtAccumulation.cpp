@@ -202,20 +202,22 @@ void CtAccumulation::getActive(bool &activeFlag)
   activeFlag = m_pars.active;
 }
 
-void CtAccumulation::setPixelThresholdValue(int pixelThresholdValue)
+void CtAccumulation::setPixelThresholdValue(long long pixelThresholdValue)
 {
   DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(pixelThresholdValue);
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.pixelThresholdValue = pixelThresholdValue;
 }
 
-void CtAccumulation::getPixelThresholdValue(int &pixelThresholdValue) const
+void CtAccumulation::getPixelThresholdValue(long long &pixelThresholdValue) const
 {
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
   pixelThresholdValue = m_pars.pixelThresholdValue;
+  DEB_RETURN() << DEB_VAR1(pixelThresholdValue);
 }
 
 void CtAccumulation::getBufferSize(int &aBufferSize) const
@@ -224,6 +226,7 @@ void CtAccumulation::getBufferSize(int &aBufferSize) const
 
   AutoMutex aLock(m_cond.mutex());
   aBufferSize = m_buffers_size;
+  DEB_RETURN() << DEB_VAR1(aBufferSize);
 }
 
 void CtAccumulation::setSavingFlag(bool savingFlag)
@@ -264,6 +267,7 @@ void CtAccumulation::getSavePrefix(std::string &savePrefix) const
 void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNumber)
 {
   DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(frameNumber);
 
   CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
@@ -298,6 +302,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
       else
 	saturatedImage = m_saturated_images[frameNumber - oldestFrameNumber];
     }
+  DEB_RETURN() << DEB_VAR1(saturatedImage);
 }
 /** @brief read the saturated counters
     @parameters from is the start frame acquisition id

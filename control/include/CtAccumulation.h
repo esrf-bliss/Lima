@@ -42,7 +42,7 @@ namespace lima
       ThresholdCallback() {};
       virtual ~ThresholdCallback() {};
 
-      long long m_max;
+      int m_max;
 
     protected:
       virtual void aboveMax(Data&,long long value) = 0;
@@ -58,8 +58,8 @@ namespace lima
     void setActive(bool activeFlag);
     void getActive(bool &activeFlag);
 
-    void setPixelThresholdValue(int pixelThresholdValue);
-    void getPixelThresholdValue(int &pixelThresholdValue) const;
+    void setPixelThresholdValue(long long pixelThresholdValue);
+    void getPixelThresholdValue(long long &pixelThresholdValue) const;
 
     void getBufferSize(int &aBufferSize) const;
 
