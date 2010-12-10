@@ -143,7 +143,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
 
         self.__accThresholdCallback = None
         try:
-            accThresholdCallbackModule = int(self.AccThresholdCallbackModule)
+            accThresholdCallbackModule = self.AccThresholdCallbackModule
         except ValueError:
             pass
         else:
@@ -156,6 +156,8 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 try:
                     func = getattr(m,'get_acc_threshold_callback')
                     self.__accThresholdCallback = func()
+                    acc = self.__control.accumulation()
+                    acc.registerThresholdCallback(self.__accThresholdCallback)
                 except AttributeError:
                     deb.Error("Accumulation threshold plugins module don't have get_acc_threshold_callback function")
 
@@ -450,7 +452,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
     ## @brief active/unactive calculation of saturated images and counters
     #
     @Core.DEB_MEMBER_FUNCT
-    def write_acc_saturated_threshold(self,attr) :        
+    def write_acc_saturated_cblevel(self,attr) :        
         data = []
         attr.get_write_value(data)
         if self.__accThresholdCallback is not None:
@@ -1338,8 +1340,6 @@ def declare_camera_n_commun_to_tango_world(util) :
             try:
 		func = getattr(m,'get_tango_specific_class_n_device')
             except AttributeError:
-	        import traceback
-	        traceback.print_exc()
                 continue
             else:
                 specificClass,specificDevice = func()
