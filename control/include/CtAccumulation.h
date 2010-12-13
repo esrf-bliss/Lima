@@ -50,7 +50,7 @@ namespace lima
     CtAccumulation(CtControl&);
     ~CtAccumulation();
 
-    // --- accumulation adn concatenation parameters
+    // --- accumulation and concatenation parameters
 
     void setParameters(const Parameters &pars);
     void getParameters(Parameters& pars) const;
