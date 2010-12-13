@@ -1020,7 +1020,9 @@ class LimaCCDs(PyTango.Device_4Impl) :
     def setAccSaturatedMask(self,file_path) :
         if file_path:
             f = EdfFile.EdfFile(file_path)
-            data = f.GetData(0)
+            d = f.GetData(0)
+            data = Core.Processlib.Data()
+            data.buffer = d
         else:                           # UNSET MASK
             data = Core.Processlib.Data()
         acc = self.__control.accumulation()

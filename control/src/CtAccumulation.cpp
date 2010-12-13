@@ -17,15 +17,18 @@ static long long _calc_saturated_image_n_counter(const Data &src,Data &dst,
   aEndPt = aSrcPt + pixelnb;
   long long saturatedCounter = 0;
   unsigned short *saturatedImagePt = (unsigned short*)dst.data();
+  const char *maskPt = (const char*)mask.data();
   while(aSrcPt < aEndPt)
     {
       INPUT pixelValue = *aSrcPt;
-      if(pixelValue > pixelThresholdValue)
+      if((!maskPt || *maskPt) &&
+	 pixelValue > pixelThresholdValue)
 	{
 	  ++(*saturatedImagePt);
 	  ++saturatedCounter;
 	}
       ++aSrcPt,++saturatedImagePt;
+      if(maskPt) ++maskPt;
     }
   return saturatedCounter;
 }
@@ -56,6 +59,21 @@ public:
       {
       	DEB_ERROR() << "Saturated image size is != form data src";
 	return;
+      }
+
+    if(!mask.empty())
+      {
+	if(mask.depth() != 1)
+	  {
+	    DEB_ERROR() << "mask should by an unsigned/signed char";
+	    return;
+	  }
+	if(mask.width != aData.width ||
+	   mask.height != aData.height)
+	  {
+	    DEB_ERROR() << "mask size is != with data size";
+	    return;
+	  }
       }
 
     switch(aData.type)
