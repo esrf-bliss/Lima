@@ -26,7 +26,7 @@ public:
     ThresholdCallback();
     virtual ~ThresholdCallback();
 
-    long long m_max;
+    int m_max;
 
    protected:
     virtual void aboveMax(Data&,long long value) = 0;
@@ -43,8 +43,8 @@ public:
   void setActive(bool activeFlag);
   void getActive(bool &activeFlag /Out/);
 
-  void setPixelThresholdValue(int pixelThresholdValue);
-  void getPixelThresholdValue(int &pixelThresholdValue /Out/) const;
+  void setPixelThresholdValue(long long pixelThresholdValue);
+  void getPixelThresholdValue(long long &pixelThresholdValue /Out/) const;
 
   void getBufferSize(int &aBufferSize /Out/) const;
 

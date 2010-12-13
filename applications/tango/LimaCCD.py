@@ -24,12 +24,17 @@
 import sys,os,glob
 import PyTango
 import weakref
+import itertools
 
 from Lima import Core
 
 import plugins
 import camera
-
+try:
+    import EdfFile
+except ImportError:
+    EdfFile = None
+    
 class LimaCCDs(PyTango.Device_4Impl) :
 
     Core.DEB_CLASS(Core.DebModApplication, 'LimaCCDs')
@@ -135,7 +140,27 @@ class LimaCCDs(PyTango.Device_4Impl) :
             pass
         else:
             Core.Processlib.PoolThreadMgr.get().setNumberOfThread(nb_thread)
-            
+
+        self.__accThresholdCallback = None
+        try:
+            accThresholdCallbackModule = self.AccThresholdCallbackModule
+        except ValueError:
+            pass
+        else:
+            try:
+                m = __import__('plugins.%s' % (accThresholdCallbackModule),None,None,
+                               'plugins.%s' % (accThresholdCallbackModule))
+            except ImportError:
+                deb.Error("Couldn't import plugins.%s" % accThresholdCallbackModule)
+            else:
+                try:
+                    func = getattr(m,'get_acc_threshold_callback')
+                    self.__accThresholdCallback = func()
+                    acc = self.__control.accumulation()
+                    acc.registerThresholdCallback(self.__accThresholdCallback)
+                except AttributeError:
+                    deb.Error("Accumulation threshold plugins module don't have get_acc_threshold_callback function")
+
         self.__Prefix2SubClass = {'acc' : self.__control.acquisition,
                                   'acq' : self.__control.acquisition,
                                   'shutter' : self.__control.shutter,
@@ -375,6 +400,68 @@ class LimaCCDs(PyTango.Device_4Impl) :
 	
         attr.set_value(value)
 
+    ## @brief Read if saturated calculation is active
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_saturated_active(self,attr) :        
+	acc = self.__control.accumulation()
+        value = acc.getActive()
+	
+        attr.set_value(value)
+
+    ## @brief active/unactive calculation of saturated images and counters
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_acc_saturated_active(self,attr) :        
+        data = []
+        attr.get_write_value(data)
+
+	acc = self.__control.accumulation()
+        acc.setActive(data[0])
+
+    ## @brief Read saturated threshold
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_saturated_threshold(self,attr) :        
+	acc = self.__control.accumulation()
+        value = acc.getPixelThresholdValue()
+	
+        attr.set_value(value)
+
+    ## @brief Set saturated threshold
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_acc_saturated_threshold(self,attr) :        
+        data = []
+        attr.get_write_value(data)
+
+	acc = self.__control.accumulation()
+        acc.setPixelThresholdValue(data[0])
+
+    ## @brief Read if saturated calculation is active
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def read_acc_saturated_cblevel(self,attr) :
+        if self.__accThresholdCallback is not None:
+            attr.set_value(self.__accThresholdCallback.m_max)
+        else:
+            msg = "Accumulation threshold plugins not loaded"
+            deb.Error(msg)
+            raise Exception, msg
+
+    ## @brief active/unactive calculation of saturated images and counters
+    #
+    @Core.DEB_MEMBER_FUNCT
+    def write_acc_saturated_cblevel(self,attr) :        
+        data = []
+        attr.get_write_value(data)
+        if self.__accThresholdCallback is not None:
+            self.__accThresholdCallback.m_max = data[0]
+        else:
+            msg = "Accumulation threshold plugins not loaded"
+            deb.Error(msg)
+            raise Exception, msg
+        
     ## @brief Read latency time 
     #
     @Core.DEB_MEMBER_FUNCT
@@ -900,6 +987,47 @@ class LimaCCDs(PyTango.Device_4Impl) :
         dataflat = self._data_cache.buffer.ravel()
         dataflat.dtype = numpy.uint8
         return dataflat
+
+    ##@brief get saturated images
+    #
+    #@params image_id if < 0 read the last image
+    @Core.DEB_MEMBER_FUNCT
+    def readAccSaturatedImageCounter(self,image_id) :
+        acc = self.__control.accumulation()
+        self._saturated_image_cache = acc.readSaturatedImageCounter(image_id)
+        arr = self._saturated_image_cache.buffer
+        if arr is None: arr = []
+        else: arr = arr.ravel()
+        return arr
+
+    ##@brief get saturated sum counter
+    #
+    #@params from_image_id the starting image id
+    @Core.DEB_MEMBER_FUNCT
+    def readAccSaturatedSumCounter(self,from_image_id) :
+        acc = self.__control.accumulation()
+        sumCounters = acc.readSaturatedSumCounter(from_image_id)
+        returnList = []
+        if sumCounters:
+            number_of_counters_per_image = len(sumCounters[0])
+            returnList = list(itertools.chain(*sumCounters))
+            returnList.insert(0,number_of_counters_per_image)
+        return returnList
+    ##@brief set the mask file for saturated counters
+    #
+    #@params file_path the full path of mask image or '' -> unset Mask
+    @Core.DEB_MEMBER_FUNCT
+    def setAccSaturatedMask(self,file_path) :
+        if file_path:
+            f = EdfFile.EdfFile(file_path)
+            d = f.GetData(0)
+            data = Core.Processlib.Data()
+            data.buffer = d
+        else:                           # UNSET MASK
+            data = Core.Processlib.Data()
+        acc = self.__control.accumulation()
+        acc.setMask(data)
+            
 #------------------------------------------------------------------
 #    closeShutterManual command:
 #
@@ -951,6 +1079,9 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'NbProcessingThread' :
         [PyTango.DevString,
          "Number of thread for processing",[2]],
+        'AccThresholdCallbackModule':
+        [PyTango.DevString,
+         "Plugin name file which manage threshold",[]],
         }
 
     #    Command definitions
@@ -982,6 +1113,15 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'getImage':
         [[PyTango.DevLong,"The image number"],
          [PyTango.DevVarCharArray,"The data image"]],
+        'readAccSaturatedImageCounter':
+        [[PyTango.DevLong,"The image number"],
+         [PyTango.DevVarUShortArray,"The image counter"]],
+        'readAccSaturatedSumCounter':
+        [[PyTango.DevLong,"From image id"],
+         [PyTango.DevVarLongArray,"number of result for each images,sum counter of raw image #0 of image #0,sum counter of raw image #1 of image #0,..."]],
+        'setAccSaturatedMask':
+         [[PyTango.DevVarStringArray,"Full path of mask file"],
+         [PyTango.DevVoid,""]],
 	}
     
     #    Attribute definitions
@@ -1018,6 +1158,18 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         [[PyTango.DevDouble,
           PyTango.SCALAR,
           PyTango.READ]],	      	
+        'acc_saturated_active':
+        [[PyTango.DevBoolean,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'acc_saturated_threshold':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        'acc_saturated_cblevel':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
         'acq_mode':
         [[PyTango.DevString,
           PyTango.SCALAR,
@@ -1190,8 +1342,6 @@ def declare_camera_n_commun_to_tango_world(util) :
             try:
 		func = getattr(m,'get_tango_specific_class_n_device')
             except AttributeError:
-	        import traceback
-	        traceback.print_exc()
                 continue
             else:
                 specificClass,specificDevice = func()
