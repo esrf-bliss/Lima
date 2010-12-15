@@ -332,7 +332,7 @@ class Maxipix(PyTango.Device_4Impl):
         self.__setMaxipixAttr('fill_mode',data[0])
 
 
-    ## @brief read the fill mode
+    ## @brief read the board id
     #
     def read_espia_dev_nb(self,attr) :
         espia_dev_nb = 0
