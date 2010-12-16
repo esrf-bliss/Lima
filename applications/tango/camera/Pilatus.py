@@ -26,6 +26,7 @@
 import PyTango
 import sys
 
+from Lima import Core
 
 #==================================================================
 #   Pilatus Class Description:
@@ -37,6 +38,7 @@ import sys
 class Pilatus(PyTango.Device_4Impl):
 
 #--------- Add you global variables here --------------------------
+    Core.DEB_CLASS(Core.DebModApplication, 'LimaCCDs')
 
 #------------------------------------------------------------------
 #    Device constructor
@@ -44,6 +46,13 @@ class Pilatus(PyTango.Device_4Impl):
     def __init__(self,cl, name):
         PyTango.Device_4Impl.__init__(self,cl,name)
         self.init_device()
+
+        self.__FillMode = {'ON':True,
+                           'OFF':False}
+        self.__ThresholdGain = {'LOW' : 0,
+                                'MID' : 1,
+                                'HIGH' : 2,
+                                'ULTRA HIGH' : 3}
 
 #------------------------------------------------------------------
 #    Device destructor
@@ -59,6 +68,20 @@ class Pilatus(PyTango.Device_4Impl):
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
 
+#------------------------------------------------------------------
+#    getAttrStringValueList command:
+#
+#    Description: return a list of authorized values if any
+#    argout: DevVarStringArray   
+#------------------------------------------------------------------
+    @Core.DEB_MEMBER_FUNCT
+    def getAttrStringValueList(self, attr_name):
+        valueList = []
+        dict_name = '_' + self.__class__.__name__ + '__' + ''.join([x.title() for x in attr_name.split('_')])
+        d = getattr(self,dict_name,None)
+        if d:
+            valueList = d.keys()
+        return valueList
 #==================================================================
 #
 #    Pilatus read/write attribute methods
@@ -66,30 +89,33 @@ class Pilatus(PyTango.Device_4Impl):
 #==================================================================
 
 #------------------------------------------------------------------
-#    Read Threshold_gain attribute
+#    Read threshold_gain attribute
 #------------------------------------------------------------------
-    def read_Threshold_gain(self, attr):
+    def read_threshold_gain(self, attr):
         communication = _PilatusIterface.communication()
         gain = communication.gain()
         if gain is None:
-            gain = -1
+            gain = "not set"
+        else:
+            gain = _getDictKey(self.__ThresholdGain,gain)
         attr.set_value(gain)
 
 
 #------------------------------------------------------------------
-#    Write Threshold_gain attribute
+#    Write threshold_gain attribute
 #------------------------------------------------------------------
-    def write_Threshold_gain(self, attr):
+    def write_threshold_gain(self, attr):
         data = []
         attr.get_write_value(data)
+        gain = _getDictValue(self.__ThresholdGain,data[0])
         communication = _PilatusIterface.communication()
         threshold = communication.threshold()
-        communication.set_threshold_gain(threshold,data[0])
+        communication.set_threshold_gain(threshold,gain)
 
 #------------------------------------------------------------------
-#    Read Threshold_value attribute
+#    Read threshold attribute
 #------------------------------------------------------------------
-    def read_Threshold_value(self, attr):
+    def read_threshold(self, attr):
         communication = _PilatusIterface.communication()
         threshold = communication.threshold()
         if threshold == None:           # Not set
@@ -97,18 +123,18 @@ class Pilatus(PyTango.Device_4Impl):
         attr.set_value(threshold)
 
 #------------------------------------------------------------------
-#    Write Threshold_value attribute
+#    Write threshold attribute
 #------------------------------------------------------------------
-    def write_Threshold_value(self, attr):
+    def write_threshold(self, attr):
         data = []
         attr.get_write_value(data)
         communication = _PilatusIterface.communication()
         communication.set_threshold_gain(data[0])
 
 #------------------------------------------------------------------
-#    Read Working_energy attribute
+#    Read energy_threshold attribute
 #------------------------------------------------------------------
-    def read_Working_energy(self, attr):
+    def read_energy_threshold(self, attr):
         communication = _PilatusIterface.communication()
         threshold = communication.threshold()
         if threshold == None:           # Not set
@@ -118,13 +144,13 @@ class Pilatus(PyTango.Device_4Impl):
         attr.set_value(energy)
 
 #------------------------------------------------------------------
-#    Write Working_energy attribute
+#    Write energy_threshold attribute
 #------------------------------------------------------------------
-    def write_Working_energy(self, attr):
+    def write_energy_threshold(self, attr):
         data = []
         attr.get_write_value(data)
         energy = data[0]
-        threshold_value = energy * 600  # 60% of working energy
+        threshold = energy * 600  # 60% of working energy
         if energy > 12 :
             gain = 0                    # Low gain
         elif energy > 8 and energy <= 12 :
@@ -135,23 +161,24 @@ class Pilatus(PyTango.Device_4Impl):
             gain = 3                    # Ultra high gain
         
         communication = _PilatusIterface.communication()
-        communication.set_threshold_gain(threshold_value,gain)
+        communication.set_threshold_gain(threshold,gain)
 
 #------------------------------------------------------------------
 #    Read gapfill attribute
 #------------------------------------------------------------------
-    def read_Gapfill(self, attr):
+    def read_fill_mode(self, attr):
         communication = _PilatusIterface.communication()
         gapfill = communication.gapfill()
+        gapfill = _getDictKey(self.__FillMode,gapfill)
         attr.set_value(gapfill)
 
 #------------------------------------------------------------------
 #    Write gapfill attribute
 #------------------------------------------------------------------
-    def write_Gapfill(self, attr):
+    def write_fill_mode(self, attr):
         data = []
         attr.get_write_value(data)
-        gapfill = data[0]
+        gapfill = _getDictValue(self.__FillMode,data[0])
         communication = _PilatusIterface.communication()
         communication.set_gapfill(gapfill)
 
@@ -180,25 +207,28 @@ class PilatusClass(PyTango.DeviceClass):
 
     #    Command definitions
     cmd_list = {
+        'getAttrStringValueList':
+        [[PyTango.DevString, "Attribute name"],
+         [PyTango.DevVarStringArray, "Authorized String value list"]],
         }
 
 
     #    Attribute definitions
     attr_list = {
-        'Threshold_gain':
+        'threshold_gain':
+            [[PyTango.DevString,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
+        'threshold':
             [[PyTango.DevLong,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
-        'Threshold_value':
-            [[PyTango.DevLong,
-            PyTango.SCALAR,
-            PyTango.READ_WRITE]],
-        'Working_energy':
+        'energy_threshold':
             [[PyTango.DevFloat,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
-        'Gapfill':
-            [[PyTango.DevBoolean,
+        'fill_mode':
+            [[PyTango.DevString,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         }
@@ -211,11 +241,23 @@ class PilatusClass(PyTango.DeviceClass):
         PyTango.DeviceClass.__init__(self, name)
         self.set_type(name)
 
+def _getDictKey(dict, value):
+    try:
+        ind = dict.values().index(value)                            
+    except ValueError:
+        return None
+    return dict.keys()[ind]
+
+def _getDictValue(dict, key):
+    try:
+        value = dict[key.upper()]
+    except KeyError:
+        return None
+    return value
 
 #----------------------------------------------------------------------------
 # Plugins
 #----------------------------------------------------------------------------
-from Lima import Core
 from Lima.Pilatus import Interface
 
 _PilatusIterface = None
