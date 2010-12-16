@@ -26,6 +26,7 @@
 import PyTango
 import sys
 
+from Lima import Core
 
 #==================================================================
 #   Pilatus Class Description:
@@ -37,6 +38,7 @@ import sys
 class Pilatus(PyTango.Device_4Impl):
 
 #--------- Add you global variables here --------------------------
+    Core.DEB_CLASS(Core.DebModApplication, 'LimaCCDs')
 
 #------------------------------------------------------------------
 #    Device constructor
@@ -256,7 +258,6 @@ def _getDictValue(dict, key):
 #----------------------------------------------------------------------------
 # Plugins
 #----------------------------------------------------------------------------
-from Lima import Core
 from Lima.Pilatus import Interface
 
 _PilatusIterface = None
