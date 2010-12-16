@@ -24,6 +24,7 @@ namespace lima
 #endif
   class CtShutter;
   class CtAccumulation;
+  class CtVideo;
 
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
@@ -108,6 +109,7 @@ namespace lima
     CtImage* 		image() 		{ return m_ct_image; }
     CtBuffer* 		buffer() 		{ return m_ct_buffer; }
     CtAccumulation* 	accumulation() 		{ return m_ct_accumulation; }
+    CtVideo*		video()			{ return m_ct_video;}
     CtShutter* 		shutter() 		{ return m_ct_shutter; }
 
     SoftOpExternalMgr* 	externalOperation() 	{return m_op_ext;}
@@ -169,6 +171,7 @@ namespace lima
     CtBuffer		*m_ct_buffer;
     CtShutter		*m_ct_shutter;
     CtAccumulation	*m_ct_accumulation;
+    CtVideo		*m_ct_video;
 
     SoftOpInternalMgr   *m_op_int;
     SoftOpExternalMgr	*m_op_ext;

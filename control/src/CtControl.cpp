@@ -11,6 +11,7 @@
 #include "CtBuffer.h"
 #include "CtShutter.h"
 #include "CtAccumulation.h"
+#include "CtVideo.h"
 
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
@@ -95,6 +96,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_buffer= new CtBuffer(hw);
   m_ct_shutter = new CtShutter(hw);
   m_ct_accumulation = new CtAccumulation(*this);
+  m_ct_video = new CtVideo(*this);
 
   //Saving
   m_ct_saving= new CtSaving(*this);
@@ -130,6 +132,8 @@ CtControl::~CtControl()
   delete m_ct_buffer;
   delete m_ct_shutter;
   delete m_ct_accumulation;
+  delete m_ct_video;
+
   delete m_op_int;
   delete m_op_ext;
 }

@@ -33,6 +33,7 @@ enum TrigMode {
 	IntTrig,IntTrigMult,
 	ExtTrigSingle, ExtTrigMult,
 	ExtGate, ExtStartStop,
+	Live,
 };
 
 std::ostream& operator <<(std::ostream& os, TrigMode trig_mode);
