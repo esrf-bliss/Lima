@@ -75,6 +75,13 @@ DetStatus& operator |=(DetStatus& s1, DetStatus  s2);
 
 std::ostream& operator <<(std::ostream& os, DetStatus det_status);
 
+enum VideoMode {Y8,Y16,Y32,
+		RGB555,RGB565,
+		RGB24,RGB32,
+		BGR24,BGR32,
+		BAYER_RG8,BAYER_RG16,
+		I420,YUV411,YUV422,YUV444};
+
 } // namespace lima
 
 #endif // CONSTANTS_H

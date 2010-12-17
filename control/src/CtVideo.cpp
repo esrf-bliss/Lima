@@ -77,9 +77,11 @@ void CtVideo::getRoi(Roi &aRoi) const
 
 void CtVideo::setBin(const Bin &aBin)
 {
+  m_pars.bin = aBin;
 }
 void CtVideo::getBin(Bin &aBin) const
 {
+  aBin = m_pars.bin;
 }
 
 // --- images
@@ -115,7 +117,7 @@ void CtVideo::Parameters::reset()
   exposure = 1;
   brightness = .5;
   gain = .5;
-  mode = UNDEF;
+  mode = Y8;
   roi.reset();
   bin.reset();
 }

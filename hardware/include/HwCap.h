@@ -17,6 +17,7 @@ public:
 		Timing,			// Read only detector timmings
 		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
+		Video,			// Video capable usualy color camera 
 	};
 	HwCap() : m_type(Undef),m_ctrl_obj(NULL) {}
 	

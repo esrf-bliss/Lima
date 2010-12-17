@@ -12,13 +12,6 @@ namespace lima
     CtVideo(CtControl&);
     ~CtVideo();
     
-    enum VideoMode {UNDEF,Y8,Y16,Y32,
-		    RGB555,RGB565,
-		    RGB24,RGB32,
-		    BGR24,BGR32,
-		    BAYER_RG8,BAYER_RG16,
-		    I420,YUV411,YUV422,YUV444};
-
     struct Parameters
     {
       DEB_CLASS_NAMESPC(DebModControl,"Video::Parameters","Control");
@@ -37,10 +30,10 @@ namespace lima
     };
     struct Image
     {
-      int 			height;
-      int 			width;
-      CtVideo::VideoMode 	mode;
-      char*			buffer;
+      int 	height;
+      int 	width;
+      VideoMode mode;
+      char*	buffer;
     };
 
     class ImageCallback
