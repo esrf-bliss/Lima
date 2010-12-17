@@ -5,6 +5,8 @@
 
 namespace lima
 {
+  class HwVideoCtrlObj;
+
   class CtVideo
   {
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
@@ -82,7 +84,9 @@ namespace lima
     // --- video mode
     void getSupportedVideoMode(std::list<VideoMode> &modeList);
   private:
-    Parameters m_pars;
+    Parameters		m_pars;
+    bool 		m_has_video;
+    HwVideoCtrlObj* 	m_video;
   };
 }
 #endif

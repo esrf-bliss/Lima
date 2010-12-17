@@ -1,10 +1,14 @@
 #include <list>
+#include "HwVideoCtrlObj.h"
 #include "CtVideo.h"
+
 using namespace lima;
 
 
-CtVideo::CtVideo(CtControl&)
+CtVideo::CtVideo(CtControl &ct)
 {
+  HwInterface *hw = ct.interface();
+  m_has_video = hw->getHwCtrlObj(m_video);
 }
 
 CtVideo::~CtVideo()
@@ -102,6 +106,11 @@ void CtVideo::unregisterImageCallback(ImageCallback &cb)
 // --- video mode
 void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList)
 {
+  if(m_has_video)
+    m_video->getSupportedVideoMode(modeList);
+  else				// TODO
+    {
+    }
 }
 //============================================================================
 //			 CtVideo::Parameters
