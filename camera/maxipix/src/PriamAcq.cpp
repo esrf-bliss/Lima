@@ -72,7 +72,7 @@ void PriamAcq::setChipType(MaxipixDet::Version version,
 
     switch (version) {
 	case MaxipixDet::MPX2: val= 0x40; break;
-  	case MaxipixDet::MXR2: val= 0x20; break;
+  	case MaxipixDet::MXR2: val= 0x00; break;
 	case MaxipixDet::TPX1: val= 0x60; break;
 	default: val= 0x00;
     }

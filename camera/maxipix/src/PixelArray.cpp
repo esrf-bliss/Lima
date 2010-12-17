@@ -82,7 +82,9 @@ void PixelConfigArray::convert(string& buffer)
     char maskBit[4];
     int size, base, baseMask, baseTest, baseLow[4], baseHigh[4];
     int ib, irow, wcol, wbit, idx, val;
+    bool is_tpx;
 
+    is_tpx= (m_version == MaxipixDet::TPX1);
     size= (256 * 256 * 14) / 8;
     buffer.assign(size, (char)0x00);
 
@@ -95,9 +97,9 @@ void PixelConfigArray::convert(string& buffer)
 	baseMask= base + 32 * (13 - m_bit.mask);
 	baseTest= base + 32 * (13 - m_bit.test);
 	for (ib= 0; ib<m_bit.nbLow; ib++)
-	    baseLow[ib]= base + 32 * (m_bit.low[ib]);
+	    baseLow[ib]= base + 32 * (13 - m_bit.low[ib]);
 	for (ib= 0; ib<m_bit.nbHigh; ib++)
-	    baseHigh[ib]= base + 32 * (m_bit.high[ib]);
+	    baseHigh[ib]= base + 32 * (13 - m_bit.high[ib]);
 
 	for (wcol= 0; wcol<32; wcol++) {
 	    for (wbit=0; wbit<8; wbit++) {
@@ -106,8 +108,13 @@ void PixelConfigArray::convert(string& buffer)
 
 		if (maskArray[idx] & maskBit[0])
 		    buffer[baseMask + wcol] |= val;
-		if (testArray[idx] & maskBit[0])
-		    buffer[baseTest + wcol] |= val;
+		if (is_tpx) {
+		    if (!(testArray[idx] & maskBit[0]))
+			buffer[baseTest + wcol] |= val;
+		} else {
+		    if (testArray[idx] & maskBit[0])
+		        buffer[baseTest + wcol] |= val;
+		}
 		for (ib=0; ib<m_bit.nbLow; ib++) {
 		    if (lowArray[idx] & maskBit[ib])
 			buffer[baseLow[ib] + wcol] |= val;
