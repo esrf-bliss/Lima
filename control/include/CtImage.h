@@ -1,6 +1,7 @@
 #ifndef CTIMAGE_H
 #define CTIMAGE_H
 
+#include "Compatibility.h"
 #include "CtControl.h"
 #include "Constants.h"
 #include "HwInterface.h"
@@ -11,7 +12,7 @@ namespace lima {
 
 class CtImage;
 
-class CtSwBinRoi {
+class DLL_EXPORT CtSwBinRoi {
 	DEB_CLASS_NAMESPC(DebModControl,"Sofware BinRoi","Control");
     public:
 	friend std::ostream& operator<<(std::ostream &os,const CtSwBinRoi &binroi);
@@ -39,7 +40,7 @@ class CtSwBinRoi {
 };
 
 
-class CtHwBinRoi {
+class DLL_EXPORT CtHwBinRoi {
 	DEB_CLASS_NAMESPC(DebModControl,"Hardware BinRoi","Control");
     public:
 	CtHwBinRoi(HwInterface *hw, CtSwBinRoi *sw_bin_roi, Size& size);
@@ -77,7 +78,7 @@ class CtHwBinRoi {
 };
 
 
-class CtMaxImageSizeCB : public HwMaxImageSizeCallback
+class DLL_EXPORT CtMaxImageSizeCB : public HwMaxImageSizeCallback
 {
     public:
 	CtMaxImageSizeCB(CtImage *ct) : m_ct(ct) {}
@@ -88,7 +89,7 @@ class CtMaxImageSizeCB : public HwMaxImageSizeCallback
 };
 
 	
-class CtImage {
+class DLL_EXPORT CtImage {
 	DEB_CLASS_NAMESPC(DebModControl,"Image","Control");
     public:
 	friend class CtMaxImageSizeCB;

@@ -9,7 +9,11 @@
 #include <ctime>
 #include <cmath>
 #include <vector>
+#ifdef __unix
 #include <sys/time.h>
+#else
+#include <time_compat.h>
+#endif
 #include <unistd.h>
 #include "FrameBuilder.h"
 #include "SizeUtils.h"

@@ -1,6 +1,8 @@
 #ifndef EXCEPTIONS_H
 #define EXCEPTIONS_H
 
+#include "Compatibility.h"
+
 #include "Debug.h"
 
 #include <string.h>
@@ -19,7 +21,7 @@ enum ErrorType {
 };
 
 
-class ExcDebProxy
+class DLL_EXPORT ExcDebProxy
 {
  public:
 	ExcDebProxy(DebProxy *deb_proxy = NULL);
@@ -42,7 +44,7 @@ class ExcDebProxy
 };
 
 
-class Exception
+class DLL_EXPORT Exception
 {
  public:
 	Exception(Layer layer, ErrorType err_type, const std::string& err_desc,

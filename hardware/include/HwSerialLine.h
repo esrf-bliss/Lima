@@ -9,6 +9,7 @@
 #ifndef HWSERIALLINE_H
 #define HWSERIALLINE_H
 
+#include "Compatibility.h"
 #include <string>
 #include "Debug.h"
 #include "Exceptions.h"
@@ -26,7 +27,7 @@ namespace lima {
  *       When implementing the pure virtual functions this has to be
  *       taken into account!
  *******************************************************************/
-class HwSerialLine
+class DLL_EXPORT HwSerialLine
 {
 	DEB_CLASS(DebModHardwareSerial, "HwSerialLine");
 

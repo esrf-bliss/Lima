@@ -1,22 +1,23 @@
 #ifndef MEMUTILS_H
 #define MEMUTILS_H
 
+#include "Compatibility.h"
 #include "SizeUtils.h"
 #include "Debug.h"
 
 namespace lima
 {
 
-void GetSystemMem(int& mem_unit, int& system_mem);
+void DLL_EXPORT GetSystemMem(int& mem_unit, int& system_mem);
 	
-void GetPageSize(int& page_size);
+void DLL_EXPORT GetPageSize(int& page_size);
 
-int GetDefMaxNbBuffers(const FrameDim& frame_dim, double sys_mem_factor = 0);
+int DLL_EXPORT GetDefMaxNbBuffers(const FrameDim& frame_dim, double sys_mem_factor = 0);
 
-void ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
+void DLL_EXPORT ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
 
 
-class MemBuffer 
+class DLL_EXPORT MemBuffer 
 {
  public:
 	enum {

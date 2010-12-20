@@ -20,7 +20,7 @@ class HwFrameCallback;
  * frame callbacks
  *******************************************************************/
 
-class HwFrameCallbackGen
+class DLL_EXPORT HwFrameCallbackGen
 {
 	DEB_CLASS(DebModHardware, "HwFrameCallbackGen");
 
@@ -46,7 +46,7 @@ class HwFrameCallbackGen
  *
  *******************************************************************/
 
-class HwFrameCallback
+class DLL_EXPORT HwFrameCallback
 {
 	DEB_CLASS(DebModHardware, "HwFrameCallback");
 

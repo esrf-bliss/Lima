@@ -1,6 +1,7 @@
 #ifndef HWINTERFACE_H
 #define HWINTERFACE_H
 
+#include "Compatibility.h"
 #include "HwCap.h"
 #include <vector>
 #include <ostream>
@@ -8,7 +9,7 @@
 namespace lima
 {
 
-class HwInterface
+class DLL_EXPORT HwInterface
 {
 	DEB_CLASS(DebModHardware, "HwInterface");
 

@@ -1,6 +1,7 @@
 #ifndef HWSYNCCTRLOBJ_H
 #define HWSYNCCTRLOBJ_H
 
+#include "Compatibility.h"
 #include "Constants.h"
 #include "HwBufferCtrlObj.h"
 
@@ -8,7 +9,7 @@ namespace lima
 {
 
 
-class HwSyncCtrlObj
+class DLL_EXPORT HwSyncCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwSyncCtrlObj");
 

@@ -8,7 +8,9 @@
 #include <sstream>
 #include <vector>
 
-class NullStreamBuf : public std::stringbuf
+#include "Compatibility.h"
+
+class DLL_EXPORT NullStreamBuf : public std::stringbuf
 {
  protected:
 	int sync()
@@ -20,7 +22,7 @@ class NullStreamBuf : public std::stringbuf
 };
 
 
-class CopyStreamBuf : public std::stringbuf
+class DLL_EXPORT CopyStreamBuf : public std::stringbuf
 {
  public:
 	typedef std::vector<std::ostream *> StreamList;
@@ -60,7 +62,7 @@ class CopyStreamBuf : public std::stringbuf
 };
 
 
-class OCopyStream : public std::ostream
+class DLL_EXPORT OCopyStream : public std::ostream
 {
  public:
 	typedef CopyStreamBuf::StreamList StreamList;

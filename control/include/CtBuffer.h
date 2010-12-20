@@ -12,7 +12,7 @@
 
 namespace lima {
 
-  class CtBufferFrameCB : public HwFrameCallback
+  class DLL_EXPORT CtBufferFrameCB : public HwFrameCallback
   {
     DEB_CLASS_NAMESPC(DebModControl,"BufferFrameCB","Control");
     friend class CtBuffer;
@@ -25,12 +25,12 @@ namespace lima {
     CtAccumulation* 	m_ct_accumulation;
   };
 
-  class CtBuffer 
+  class DLL_EXPORT CtBuffer 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Buffer","Control");
 
   public:
-    struct Parameters 
+    struct DLL_EXPORT Parameters 
     {
       DEB_CLASS_NAMESPC(DebModControl,"Buffer::Parameters","Control");
     public:

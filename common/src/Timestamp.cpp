@@ -11,8 +11,14 @@
 
 using namespace lima;
 
-const Timestamp Timestamp::Unset = -12345678901234567890.1234567890;
+static const Timestamp Unset = -12345678901234567890.1234567890;
 
+Timestamp::Timestamp() : m_ts(Unset) {}
+
+bool Timestamp::isSet() const
+{
+  return *this != Unset;
+}
 
 Timestamp Timestamp::now()
 {

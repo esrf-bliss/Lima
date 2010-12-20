@@ -1,4 +1,4 @@
 Debug
-LimaCore.vcproj.*
+*.vcproj.*
 *.ncb
 *.suo

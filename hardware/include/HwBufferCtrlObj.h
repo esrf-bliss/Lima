@@ -1,12 +1,13 @@
 #ifndef HWBUFFERCTRLOBJ_H
 #define HWBUFFERCTRLOBJ_H
 
+#include "Compatibility.h"
 #include "HwFrameCallback.h"
 
 namespace lima
 {
 
-class HwBufferCtrlObj
+class DLL_EXPORT HwBufferCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwBufferCtrlObj");
 

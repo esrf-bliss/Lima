@@ -10,7 +10,7 @@
 namespace lima
 {
 
-class Simulator
+class DLL_EXPORT Simulator
 {
  public:
 	enum Status {
@@ -90,7 +90,7 @@ class Simulator
 	SimuThread m_thread;
 };
 
-std::ostream& operator <<(std::ostream& os, Simulator& simu);
+DLL_EXPORT std::ostream& operator <<(std::ostream& os, Simulator& simu);
 
 } // namespace lima
 

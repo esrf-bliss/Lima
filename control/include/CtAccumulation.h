@@ -1,6 +1,7 @@
 #ifndef CTACCUMULATION_H
 #define CTACCUMULATION_H
 
+#include "Compatibility.h"
 #include <list>
 #include <deque>
 
@@ -8,7 +9,7 @@
 
 namespace lima
 {
-  class CtAccumulation
+  class DLL_EXPORT CtAccumulation
   {
     DEB_CLASS_NAMESPC(DebModControl,"Accumulation","Control");
   public:

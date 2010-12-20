@@ -387,7 +387,6 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 {
 	ostream& os = *DebParams::s_deb_stream;
 	DebParams::Flags& flags = DebParams::s_fmt_flags;
-
 	ConstStr m, sep = "";
 
 	int w = os.width();

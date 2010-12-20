@@ -3,6 +3,8 @@
 
 #include <stdio.h>	// For NULL
 
+#include "Compatibility.h"
+
 namespace lima
 {
 
@@ -10,7 +12,7 @@ namespace lima
  * AutoCounter
  ********************************************************************/
 
-class AutoCounter
+class DLL_EXPORT AutoCounter
 {
 public:
 	AutoCounter() : r(1)
@@ -35,7 +37,7 @@ private:
  ********************************************************************/
 
 template <class M>
-class AutoLock
+class DLL_EXPORT AutoLock
 {
 public:
 	enum { UnLocked, Locked, TryLocked, PrevLocked };
@@ -162,7 +164,7 @@ private:
  ********************************************************************/
 
 template <class T, bool array=false>
-class AutoPtr
+class DLL_EXPORT AutoPtr
 {
 public:
 	AutoPtr() 

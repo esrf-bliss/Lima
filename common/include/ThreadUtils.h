@@ -1,6 +1,7 @@
 #ifndef THREADUTILS_H
 #define THREADUTILS_H
 
+#include "Compatibility.h"
 #include "AutoObj.h"
 #include <pthread.h>
 
@@ -10,7 +11,7 @@ namespace lima
 class Mutex;
 class Cond;
 
-class MutexAttr
+class DLL_EXPORT MutexAttr
 {
  public:
 	enum Type {
@@ -35,7 +36,7 @@ class MutexAttr
 };
 
 
-class Mutex
+class DLL_EXPORT Mutex
 {
  public:
 	Mutex(MutexAttr mutex_attr = MutexAttr::Recursive);
@@ -57,7 +58,7 @@ class Mutex
 
 typedef AutoLock<Mutex> AutoMutex;
 
-class Cond
+class DLL_EXPORT Cond
 {
  public:
 	Cond();
@@ -76,7 +77,7 @@ class Cond
 };
 
 
-class Thread
+class DLL_EXPORT Thread
 {
  public:
 	Thread();
@@ -100,7 +101,7 @@ class Thread
 };
 
 
-class CmdThread
+class DLL_EXPORT CmdThread
 {
  public:
 	enum { // Status
@@ -133,7 +134,7 @@ class CmdThread
 	AutoMutex tryLock();
 
  private:
-	class AuxThread : public Thread
+	class DLL_EXPORT AuxThread : public Thread
 	{
 	public:
 		AuxThread(CmdThread& master);

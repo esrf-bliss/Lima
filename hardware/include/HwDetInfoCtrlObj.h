@@ -1,13 +1,14 @@
 #ifndef HWDETINFOCTRLOBJ_H
 #define HWDETINFOCTRLOBJ_H
 
+#include "Compatibility.h"
 #include "HwMaxImageSizeCallback.h"
 #include <string>
 
 namespace lima
 {
 
-class HwDetInfoCtrlObj
+class DLL_EXPORT HwDetInfoCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwDetInfoCtrlObj");
 
