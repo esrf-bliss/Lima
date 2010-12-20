@@ -3,7 +3,7 @@ common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
 
 SRCS = $(common-objs:.o=.cpp)
 
-CXXFLAGS += -I../include -I../../hardware/include -Wall -pthread -fPIC -g
+CXXFLAGS += -I../include -I../../hardware/include -I../../third-party/Processlib/core/include -Wall -pthread -fPIC -g
 
 all:	Common.o
 

@@ -6,7 +6,7 @@ frelon-objs = FrelonBase.o FrelonSerialLine.o FrelonModel.o FrelonCamera.o \
 
 SRCS = $(frelon-objs:.o=.cpp) 
 
-CXXFLAGS = -I../include -I../../common/espia/include \
+CXXFLAGS = -I../include -I../../common/espia/include -I../../../third-party/Processlib/core/include \
 	   -I../../../hardware/include -I../../../common/include \
 	   -I$(ESPIA_DRV_INCL) -Wall -pthread -fPIC -g
 

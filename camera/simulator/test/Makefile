@@ -14,7 +14,7 @@ testsimuhwinterface-ext-objs = $(simu-objs) $(std-objs)
 SRCS = $(test-objs:.o=.cpp) $(testsimulator-objs:.o=.cpp) \
        $(testsimuhwinterface-objs:.o=.cpp)
 
-INC = -I../include -I../../../common/include -I../../../hardware/include 
+INC = -I../include -I../../../common/include -I../../../hardware/include -I../../../third-party/Processlib/core/include
 CXXFLAGS += $(INC) -Wall -pthread -g
 LDFLAGS = -pthread
 

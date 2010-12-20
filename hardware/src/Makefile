@@ -5,7 +5,7 @@ hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 
 SRCS = $(hw-objs:.o=.cpp)
 
-CXXFLAGS += -I../include -I../../common/include -Wall -pthread -fPIC -g
+CXXFLAGS += -I../include -I../../common/include -I../../third-party/Processlib/core/include -Wall -pthread -fPIC -g
 
 all:	Hw.o
 
