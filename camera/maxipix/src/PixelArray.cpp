@@ -108,13 +108,9 @@ void PixelConfigArray::convert(string& buffer)
 
 		if (maskArray[idx] & maskBit[0])
 		    buffer[baseMask + wcol] |= val;
-		if (is_tpx) {
-		    if (!(testArray[idx] & maskBit[0]))
-			buffer[baseTest + wcol] |= val;
-		} else {
-		    if (testArray[idx] & maskBit[0])
-		        buffer[baseTest + wcol] |= val;
-		}
+	        if (testArray[idx] & maskBit[0])
+		    buffer[baseTest + wcol] |= val;
+		
 		for (ib=0; ib<m_bit.nbLow; ib++) {
 		    if (lowArray[idx] & maskBit[ib])
 			buffer[baseLow[ib] + wcol] |= val;
