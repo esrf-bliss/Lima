@@ -5,7 +5,7 @@ SRCS = $(maxipix-objs:.o=.cpp)
 
 include ../../common/espia/include/espia.inc
 
-INCLUDES = -I../include -I../../../third-party/Processlib/core/include\
+INCLUDES = -I../include \
            -I../../../common/include \
            -I../../../hardware/include \
            -I../../common/espia/include \

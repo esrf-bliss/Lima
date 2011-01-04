@@ -1,7 +1,7 @@
 #ifndef CTACCUMULATION_H
 #define CTACCUMULATION_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include <list>
 #include <deque>
 
@@ -9,7 +9,7 @@
 
 namespace lima
 {
-  class DLL_EXPORT CtAccumulation
+  class LIMACORE_API CtAccumulation
   {
     DEB_CLASS_NAMESPC(DebModControl,"Accumulation","Control");
   public:

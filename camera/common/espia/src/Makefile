@@ -6,7 +6,7 @@ SRCS = $(espia-objs:.o=.cpp)
 
 include ../include/espia.inc
 
-CXXFLAGS = -I../include -I../../../../third-party/Processlib/core/include \
+CXXFLAGS = -I../include \
 	   -I../../../../hardware/include -I../../../../common/include \
 	   -I$(ESPIA_DRV_INCL) -Wall -pthread -fPIC -g
 

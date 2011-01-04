@@ -1,7 +1,7 @@
 #ifndef HWCAP_H
 #define HWCAP_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "Constants.h"
 
 namespace lima
@@ -14,7 +14,7 @@ class HwRoiCtrlObj;
 class HwFlipCtrlObj;
 class HwShutterCtrlObj;
 
-class DLL_EXPORT HwCap
+class LIMACORE_API HwCap
 {
 public:
 	enum Type {

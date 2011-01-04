@@ -4,7 +4,7 @@
 #include <map>
 #include <algorithm>
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 
 namespace lima
 {
@@ -16,7 +16,7 @@ namespace lima
 // Map search helpers
 
 template <class V>
-class DLL_EXPORT SecondIs
+class LIMACORE_API SecondIs
 {
  public:
 	SecondIs(V v) : m_val(v) 

@@ -1,7 +1,7 @@
 #ifndef CTSHUTTER_H
 #define CTSHUTTER_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "Constants.h"
 #include "SizeUtils.h"
 #include "HwInterface.h"
@@ -11,7 +11,7 @@
 
 namespace lima {
 
-  class DLL_EXPORT CtShutter 
+  class LIMACORE_API CtShutter 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Shutter","Control");
 

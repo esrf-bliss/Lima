@@ -3,7 +3,7 @@
 
 #include <set>
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "ThreadUtils.h"
 
 #include "HwInterface.h"
@@ -29,7 +29,7 @@ namespace lima
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
 
-  class DLL_EXPORT CtControl {
+  class LIMACORE_API CtControl {
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
 
     friend class CtBufferFrameCB;
@@ -44,7 +44,7 @@ namespace lima
     };
 
 
-    struct DLL_EXPORT ImageStatus {
+    struct LIMACORE_API ImageStatus {
       DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatus","Control");
     public:
       ImageStatus();
@@ -58,7 +58,7 @@ namespace lima
     };
 
 
-    class DLL_EXPORT ImageStatusCallback 
+    class LIMACORE_API ImageStatusCallback 
     {
       DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatusCallback", 
 			"Control");
@@ -80,7 +80,7 @@ namespace lima
     
     enum CameraErrorCode {NoCameraError}; /* @todo fix this */
 
-    struct DLL_EXPORT Status
+    struct LIMACORE_API Status
     {
       DEB_CLASS_NAMESPC(DebModControl,"Control::Status","Control");
     public:

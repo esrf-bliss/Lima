@@ -7,7 +7,7 @@
 #include <fstream>
 #include <ios>
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "ThreadUtils.h"
 #include "CtControl.h"
 
@@ -16,7 +16,7 @@ class TaskEventCallback;
 
 namespace lima {
 
-  class DLL_EXPORT CtSaving 
+  class LIMACORE_API CtSaving 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving","Control");
 
@@ -46,7 +46,7 @@ namespace lima {
 	Append,
       };	
 
-    struct DLL_EXPORT Parameters 
+    struct LIMACORE_API Parameters 
     {
       std::string directory;
       std::string prefix;

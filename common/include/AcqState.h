@@ -1,7 +1,7 @@
 #ifndef ACQSTATE_H
 #define ACQSTATE_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "ThreadUtils.h"
 
 #include <ostream>
@@ -9,7 +9,7 @@
 namespace lima
 {
 
-class DLL_EXPORT AcqState
+class LIMACORE_API AcqState
 {
 public:
 	enum State {

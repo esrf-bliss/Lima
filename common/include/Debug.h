@@ -4,16 +4,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#ifdef WIN32
-#ifdef LIMACORE_EXPORTS
-#define DEBUG_EXPORT __declspec(dllexport)
-#else
-#define DEBUG_EXPORT __declspec(dllimport)
-#endif
-#else  /* Unix */
-#define DEBUG_EXPORT
-#endif
-
+#include "LimaCompatibility.h"
 #include "StreamUtils.h"
 #include "ThreadUtils.h"
 
@@ -71,7 +62,7 @@ typedef const char *ConstStr;
  *  class DebStream
  *------------------------------------------------------------------*/
 
-class DEBUG_EXPORT DebStream : public std::ostream
+class LIMACORE_API DebStream : public std::ostream
 {
  public:
 	typedef OCopyStream::StreamList StreamList;
@@ -121,7 +112,7 @@ inline DebStream& DebStream::SetStream(Selector new_selector)
 class DebObj;
 class DebProxy;
 
-class DEBUG_EXPORT DebParams
+class LIMACORE_API DebParams
 {
  public:
 	typedef long long Flags;
@@ -220,7 +211,7 @@ std::ostream& operator <<(std::ostream& os,
  *  class DebProxy
  *------------------------------------------------------------------*/
 
-class DEBUG_EXPORT DebProxy
+class LIMACORE_API DebProxy
 {
  public:
 	DebProxy();
@@ -243,7 +234,7 @@ class DEBUG_EXPORT DebProxy
  *  class DebObj
  *------------------------------------------------------------------*/
 
-class DEBUG_EXPORT DebObj
+class LIMACORE_API DebObj
 {
  public:
 	enum {
@@ -289,7 +280,7 @@ class DEBUG_EXPORT DebObj
  *  class DebHex
  *------------------------------------------------------------------*/
 
-class DEBUG_EXPORT DebHex
+class LIMACORE_API DebHex
 {
  public:
 	DebHex(unsigned long val) : m_val(val) 

@@ -1,13 +1,13 @@
 #ifndef TIMESTAMP_H
 #define TIMESTAMP_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "Exceptions.h"
 
 namespace lima
 {
 
-class DLL_EXPORT Timestamp
+class LIMACORE_API Timestamp
 {
  public:
 	Timestamp();
@@ -78,7 +78,7 @@ inline Timestamp operator /(Timestamp t, double factor)
 	return t /= factor;
 }
 
-DLL_EXPORT double Sleep(double sec);
+LIMACORE_API double Sleep(double sec);
 
 }
 

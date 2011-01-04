@@ -20,7 +20,7 @@ class HwFrameCallback;
  * frame callbacks
  *******************************************************************/
 
-class DLL_EXPORT HwFrameCallbackGen
+class LIMACORE_API HwFrameCallbackGen
 {
 	DEB_CLASS(DebModHardware, "HwFrameCallbackGen");
 
@@ -46,7 +46,7 @@ class DLL_EXPORT HwFrameCallbackGen
  *
  *******************************************************************/
 
-class DLL_EXPORT HwFrameCallback
+class LIMACORE_API HwFrameCallback
 {
 	DEB_CLASS(DebModHardware, "HwFrameCallback");
 

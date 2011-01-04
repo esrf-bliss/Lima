@@ -8,9 +8,9 @@
 #include <sstream>
 #include <vector>
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 
-class DLL_EXPORT NullStreamBuf : public std::stringbuf
+class LIMACORE_API NullStreamBuf : public std::stringbuf
 {
  protected:
 	int sync()
@@ -22,7 +22,7 @@ class DLL_EXPORT NullStreamBuf : public std::stringbuf
 };
 
 
-class DLL_EXPORT CopyStreamBuf : public std::stringbuf
+class LIMACORE_API CopyStreamBuf : public std::stringbuf
 {
  public:
 	typedef std::vector<std::ostream *> StreamList;
@@ -62,7 +62,7 @@ class DLL_EXPORT CopyStreamBuf : public std::stringbuf
 };
 
 
-class DLL_EXPORT OCopyStream : public std::ostream
+class LIMACORE_API OCopyStream : public std::ostream
 {
  public:
 	typedef CopyStreamBuf::StreamList StreamList;

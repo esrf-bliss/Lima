@@ -3,7 +3,7 @@ simu-objs = FrameBuilder.o Simulator.o SimuHwInterface.o
 SRCS = $(simu-objs:.o=.cpp)
 
 CXX = g++
-INC = -I../include -I../../../common/include -I../../../hardware/include -I../../../third-party/Processlib/core/include
+INC = -I../include -I../../../common/include -I../../../hardware/include 
 CXXFLAGS += $(INC) -Wall -pthread -fPIC -g
 
 all: 	Simu.o

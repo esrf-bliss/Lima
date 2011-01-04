@@ -1,7 +1,7 @@
 #ifndef EXCEPTIONS_H
 #define EXCEPTIONS_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 
 #include "Debug.h"
 
@@ -21,7 +21,7 @@ enum ErrorType {
 };
 
 
-class DLL_EXPORT ExcDebProxy
+class LIMACORE_API ExcDebProxy
 {
  public:
 	ExcDebProxy(DebProxy *deb_proxy = NULL);
@@ -44,7 +44,7 @@ class DLL_EXPORT ExcDebProxy
 };
 
 
-class DLL_EXPORT Exception
+class LIMACORE_API Exception
 {
  public:
 	Exception(Layer layer, ErrorType err_type, const std::string& err_desc,

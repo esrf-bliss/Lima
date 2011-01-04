@@ -1,7 +1,7 @@
 #ifndef SIMUHWINTERFACE_H
 #define SIMUHWINTERFACE_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "HwInterface.h"
 #include "Simulator.h"
 
@@ -15,7 +15,7 @@ class SimuHwInterface;
  * \brief Control object providing simulator detector info interface
  *******************************************************************/
 
-class DLL_EXPORT SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
+class LIMACORE_API SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
 {
  public:
 	SimuDetInfoCtrlObj(Simulator& simu);
@@ -54,7 +54,7 @@ class DLL_EXPORT SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
  * \brief Control object providing simulator buffering interface
  *******************************************************************/
 
-class DLL_EXPORT SimuBufferCtrlObj : public HwBufferCtrlObj
+class LIMACORE_API SimuBufferCtrlObj : public HwBufferCtrlObj
 {
  public:
 	SimuBufferCtrlObj(Simulator& simu);
@@ -91,7 +91,7 @@ class DLL_EXPORT SimuBufferCtrlObj : public HwBufferCtrlObj
  * \brief Control object providing simulator synchronization interface
  *******************************************************************/
 
-class DLL_EXPORT SimuSyncCtrlObj : public HwSyncCtrlObj
+class LIMACORE_API SimuSyncCtrlObj : public HwSyncCtrlObj
 {
  public:
 	SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl);
@@ -122,7 +122,7 @@ class DLL_EXPORT SimuSyncCtrlObj : public HwSyncCtrlObj
  * \brief Control object providing simulator binning interface
  *******************************************************************/
 
-class DLL_EXPORT SimuBinCtrlObj : public HwBinCtrlObj
+class LIMACORE_API SimuBinCtrlObj : public HwBinCtrlObj
 {
  public:
 	SimuBinCtrlObj(Simulator& simu);
@@ -142,7 +142,7 @@ class DLL_EXPORT SimuBinCtrlObj : public HwBinCtrlObj
  * \brief Simulator hardware interface
  *******************************************************************/
 
-class DLL_EXPORT SimuHwInterface : public HwInterface
+class LIMACORE_API SimuHwInterface : public HwInterface
 {
  public:
 	SimuHwInterface(Simulator& simu);

@@ -1,14 +1,14 @@
 #ifndef HWROICTRLOBJ_H
 #define HWROICTRLOBJ_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "SizeUtils.h"
 #include "Debug.h"
 
 namespace lima
 {
 
-class DLL_EXPORT HwRoiCtrlObj
+class LIMACORE_API HwRoiCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwRoiCtrlObj");
 

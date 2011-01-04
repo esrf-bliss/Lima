@@ -1,7 +1,7 @@
 #ifndef HWSHUTTERCTRLOBJ_H
 #define HWSHUTTERCTRLOBJ_H
 
-#include "Compatibility.h"
+#include "LimaCompatibility.h"
 #include "Constants.h"
 #include "Debug.h"
 #include <vector>
@@ -9,7 +9,7 @@
 namespace lima
 {
 
-class DLL_EXPORT HwShutterCtrlObj
+class LIMACORE_API HwShutterCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwShutterCtrlObj");
 
