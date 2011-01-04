@@ -307,6 +307,14 @@ void CtControl::getStatus(Status& status) const
 	      if (aFalseIdle)
 		m_status.AcquisitionStatus = AcqRunning;
 	    }
+	  else
+	    {
+	      int last_frame_id;
+	      m_ct_acq->getAcqNbFrames(last_frame_id);
+	      last_frame_id -= 1;
+	      if(anImageCnt.LastImageAcquired != last_frame_id)
+		m_status.AcquisitionStatus = AcqRunning;
+	    }
 	}
       else
 	m_status.AcquisitionStatus = AcqRunning;
