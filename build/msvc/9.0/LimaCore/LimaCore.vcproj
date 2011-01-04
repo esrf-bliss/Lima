@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\petitdem\Desktop\Lima\control\src&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\third-party\Processlib\tasks\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\third-party\Processlib\core\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\control\software_operation\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\control\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\hardware\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\common\include&quot;"
+				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -67,7 +67,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libprocesslib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\petitdem\Desktop\Lima\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

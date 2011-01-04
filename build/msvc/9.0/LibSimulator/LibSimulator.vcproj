@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\petitdem\Desktop\Lima\third-party\Processlib\core\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\hardware\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\common\include&quot;;&quot;C:\Documents and Settings\petitdem\Desktop\Lima\camera\simulator\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\hardware\include&quot;;&quot;..\..\..\..\common\include&quot;;&quot;..\..\..\..\camera\simulator\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSIMULATOR_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="liblimacore.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\petitdem\Desktop\Lima\build\msvc\9.0\LimaCore\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\build\msvc\9.0\LimaCore\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

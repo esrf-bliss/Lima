@@ -10,14 +10,14 @@
 #define FRAMEBUILDER_H
 
 #include <vector>
-#include "LimaCompatibility.h"
+#include "SimuCompatibility.h"
 #include "SizeUtils.h"
 #include "Exceptions.h"
 
 namespace lima {
 
 
-struct LIMACORE_API GaussPeak {
+struct LIBSIMULATOR_API GaussPeak {
 	int x0, y0;     /// The center of the peak
 	unsigned fwhm;  /// Full Width at Half Maximum
 	double max;     /// The maximum value
@@ -30,7 +30,7 @@ struct LIMACORE_API GaussPeak {
  * @brief This class configures and generates frames for the Simulator
  *
  *******************************************************************/
-class LIMACORE_API FrameBuilder {
+class LIBSIMULATOR_API FrameBuilder {
 
   public:
 	FrameBuilder();
