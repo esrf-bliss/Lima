@@ -793,7 +793,7 @@ class LimaTacoCCDs(PyTango.Device_4Impl):
     @Core.DEB_MEMBER_FUNCT
     def __getFrameDim(self) :
         control = _control_ref()
-        interface = control.interface()
+        interface = control.hwInterface()
         bufferCtrl = interface.getHwCtrlObj(Core.HwCap.Buffer)
         frame_dim = bufferCtrl.getFrameDim()
         return frame_dim

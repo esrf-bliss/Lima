@@ -266,7 +266,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
     #
     @Core.DEB_MEMBER_FUNCT
     def read_camera_type(self,attr) :        
-        interface = self.__control.interface()
+        interface = self.__control.hwInterface()
 	det_info = interface.getHwCtrlObj(Core.HwCap.DetInfo)
 	value = det_info.getDetectorType()
         attr.set_value(value)
@@ -275,7 +275,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
     #
     @Core.DEB_MEMBER_FUNCT
     def read_camera_model(self,attr) :        
-	interface = self.__control.interface()
+	interface = self.__control.hwInterface()
 	det_info = interface.getHwCtrlObj(Core.HwCap.DetInfo)
 	value = det_info.getDetectorModel() 
 	attr.set_value(value)
@@ -654,7 +654,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
     #  to test is client can re-trigger an other image
     @Core.DEB_MEMBER_FUNCT
     def read_ready_for_next_image(self,attr) :
-        interface = self.__control.interface()
+        interface = self.__control.hwInterface()
         status = interface.getStatus()
         attr.set_value(status.det == Core.DetIdle)
 
