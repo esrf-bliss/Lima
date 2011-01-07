@@ -182,10 +182,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\src\BufferSave.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\common\src\Constants.cpp"
 				>
 			</File>
@@ -239,6 +235,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\hardware\src\HwBufferMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\hardware\src\HwBufferSave.cpp"
 				>
 			</File>
 			<File
