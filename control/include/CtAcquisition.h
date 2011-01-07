@@ -1,6 +1,7 @@
 #ifndef CTACQUISITION_H
 #define CTACQUISITION_H
 
+#include "LimaCompatibility.h"
 #include "Constants.h"
 #include "HwInterface.h"
 #include "HwCap.h"
@@ -10,7 +11,7 @@
 namespace lima 
 {	
 
-  class CtAcquisition 
+  class LIMACORE_API CtAcquisition 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Acquisition","Control");
     friend class CtControl;

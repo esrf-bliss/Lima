@@ -1,6 +1,7 @@
 #ifndef HWFRAMEINFO_H
 #define HWFRAMEINFO_H
 
+#include "LimaCompatibility.h"
 #include "SizeUtils.h"
 #include "Timestamp.h"
 #include <ostream>
@@ -15,7 +16,7 @@ namespace lima
  *
  *******************************************************************/
 
-typedef struct HwFrameInfo {
+typedef struct LIMACORE_API HwFrameInfo {
         enum OwnerShip {Managed,Transfer};
 
 	int acq_frame_nb;

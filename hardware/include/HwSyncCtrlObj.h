@@ -1,6 +1,7 @@
 #ifndef HWSYNCCTRLOBJ_H
 #define HWSYNCCTRLOBJ_H
 
+#include "LimaCompatibility.h"
 #include "Constants.h"
 #include "HwBufferCtrlObj.h"
 
@@ -9,7 +10,7 @@ namespace lima
 
 class CtAcquisition;
 
-class HwSyncCtrlObj
+class LIMACORE_API HwSyncCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwSyncCtrlObj");
 	friend class CtAcquisition;

@@ -1,4 +1,9 @@
+#ifdef __unix
 #include <sys/time.h>
+#else
+#include <time_compat.h>
+#endif
+
 #include "CtSaving_Edf.h"
 
 using namespace lima;
@@ -19,7 +24,7 @@ SaveContainerEdf::~SaveContainerEdf()
 }
 
 bool SaveContainerEdf::_open(const std::string &filename,
-			     std::_Ios_Openmode openFlags)
+			     std::ios_base::openmode openFlags)
 {
   DEB_MEMBER_FUNCT();
   m_fout.clear();

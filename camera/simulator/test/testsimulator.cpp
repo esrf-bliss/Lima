@@ -1,5 +1,6 @@
 #include "Simulator.h"
 #include "HwBufferSave.h"
+#include "PoolThreadMgr.h"
 
 #include <iostream>
 
@@ -66,5 +67,7 @@ int main(int argc, char *argv[])
 	simu.stopAcq();
 	cout << "simu=" << simu << endl;
 
-	return 0;
+	PoolThreadMgr &pMgr = PoolThreadMgr::get();
+	pMgr.quit();
+	exit(0);
 }

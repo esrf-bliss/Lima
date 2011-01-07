@@ -1,13 +1,14 @@
 #ifndef HWFLIPCTRLOBJ_H
 #define HWFLIPCTRLOBJ_H
 
+#include "LimaCompatibility.h"
 #include "SizeUtils.h"
 #include "Debug.h"
 
 namespace lima
 {
 
-class HwFlipCtrlObj
+class LIMACORE_API HwFlipCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwFlipCtrlObj");
 

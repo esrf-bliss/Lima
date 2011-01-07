@@ -1,5 +1,5 @@
 #include "FrelonSerialLine.h"
-#include "RegEx.h"
+#include "RegExUtils.h"
 #include "MiscUtils.h"
 #include <sstream>
 

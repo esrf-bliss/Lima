@@ -12,7 +12,7 @@
 
 namespace lima {
 
-  class CtBufferFrameCB : public HwFrameCallback
+  class LIMACORE_API CtBufferFrameCB : public HwFrameCallback
   {
     DEB_CLASS_NAMESPC(DebModControl,"BufferFrameCB","Control");
     friend class CtBuffer;
@@ -25,12 +25,12 @@ namespace lima {
     CtAccumulation* 	m_ct_accumulation;
   };
 
-  class CtBuffer 
+  class LIMACORE_API CtBuffer 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Buffer","Control");
 
   public:
-    struct Parameters 
+    struct LIMACORE_API Parameters 
     {
       DEB_CLASS_NAMESPC(DebModControl,"Buffer::Parameters","Control");
     public:

@@ -14,8 +14,11 @@
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
+#ifdef __unix
 #include <sys/time.h>
-
+#else
+#include <time_compat.h>
+#endif
 using namespace lima;
 using namespace std;
 
@@ -108,32 +111,32 @@ void HwBufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 
 	char buffer[EDF_HEADER_BUFFER_LEN];
 	char *p = buffer;
-	p += sprintf(p, "{\n");
-	p += sprintf(p, "HeaderID = EH:%06u:000000:000000 ;\n", image_nb);
-	p += sprintf(p, "Image = %u ;\n", image_nb);
-	p += sprintf(p, "ByteOrder = LowByteFirst ;\n");
-	p += sprintf(p, "DataType = %s ;\n", 
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "{\n");
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "HeaderID = EH:%06u:000000:000000 ;\n", image_nb);
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "Image = %u ;\n", image_nb);
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "ByteOrder = LowByteFirst ;\n");
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "DataType = %s ;\n", 
 		      (depth == 1) ? "UnsignedByte" :
 		     ((depth == 2) ? "UnsignedShort" : "UnsignedLong"));
-	p += sprintf(p, "Size = %d ;\n", fdim->getMemSize());
-	p += sprintf(p, "Dim_1 = %d ;\n", frame_size.getWidth());
-	p += sprintf(p, "Dim_2 = %d ;\n", frame_size.getHeight());
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "Size = %d ;\n", fdim->getMemSize());
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "Dim_1 = %d ;\n", frame_size.getWidth());
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "Dim_2 = %d ;\n", frame_size.getHeight());
 
-	p += sprintf(p, "acq_frame_nb = %d ;\n", finfo.acq_frame_nb);
-	p += sprintf(p, "time = %s ;\n", time_str);
-	p += sprintf(p, "time_of_day = %ld.%06ld ;\n", 
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "acq_frame_nb = %d ;\n", finfo.acq_frame_nb);
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "time = %s ;\n", time_str);
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "time_of_day = %ld.%06ld ;\n", 
 		     tod_now.tv_sec, tod_now.tv_usec);
         if (finfo.frame_timestamp.isSet())
-                p += sprintf(p, "time_of_frame = %.6f ;\n",
+                p += snprintf(p, sizeof(buffer) - (p - buffer), "time_of_frame = %.6f ;\n",
                              double(finfo.frame_timestamp));
-	p += sprintf(p, "valid_pixels = %d ;\n", finfo.valid_pixels);
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "valid_pixels = %d ;\n", finfo.valid_pixels);
 
 	int l = p - buffer;
 	int len = l;
 	int rem = len % EDF_HEADER_LEN;
 	if (rem > 0)
 		len += EDF_HEADER_LEN - rem;
-	p += sprintf(p, "%*s}\n", len - (l + 2), "");
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "%*s}\n", len - (l + 2), "");
 	len = p - buffer;
 
 	m_fout->write(buffer, len);
@@ -164,7 +167,7 @@ void HwBufferSave::writeFrame( const HwFrameInfoType& finfo )
 
 bool HwBufferSave::isFileOpen() const
 {
-	return bool(m_fout);
+	return !!m_fout;
 }
 
 void HwBufferSave::setPrefix(const string& prefix)

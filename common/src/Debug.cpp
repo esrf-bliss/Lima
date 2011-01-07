@@ -5,7 +5,11 @@
 #include <ctime>
 #include <iomanip>
 #include <unistd.h>
+#ifdef __unix
 #include <sys/time.h>
+#else
+#include <time_compat.h>
+#endif
 #include <pthread.h>
 
 using namespace lima;
@@ -383,7 +387,6 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 {
 	ostream& os = *DebParams::s_deb_stream;
 	DebParams::Flags& flags = DebParams::s_fmt_flags;
-
 	ConstStr m, sep = "";
 
 	int w = os.width();
@@ -393,10 +396,11 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		gettimeofday(&tod, NULL);
 
 		time_t raw_time = tod.tv_sec;
-		struct tm *tm_info = localtime(&raw_time);
+		struct tm tm_info;
+		localtime_r(&raw_time,&tm_info);
 
 		char buffer[256];
-		strftime(buffer, sizeof(buffer), "%Y/%m/%d %H:%M:%S", tm_info);
+		strftime(buffer, sizeof(buffer), "%Y/%m/%d %H:%M:%S", &tm_info);
 
 		char f = os.fill();
 

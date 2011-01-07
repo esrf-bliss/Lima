@@ -1,12 +1,20 @@
 #ifndef HWCAP_H
 #define HWCAP_H
 
+#include "LimaCompatibility.h"
 #include "Constants.h"
 
 namespace lima
 {
+class HwDetInfoCtrlObj;
+class HwBufferCtrlObj;
+class HwSyncCtrlObj;
+class HwBinCtrlObj;
+class HwRoiCtrlObj;
+class HwFlipCtrlObj;
+class HwShutterCtrlObj;
 
-class HwCap
+class LIMACORE_API HwCap
 {
 public:
 	enum Type {
@@ -29,8 +37,13 @@ public:
 	Type getType() const
 	{ return m_type; }
 
-	template <class CtrlObj>
-	static Type getTypeFromCtrlObj(CtrlObj *ctrl_obj);
+	static Type getTypeFromCtrlObj(HwDetInfoCtrlObj*);
+	static Type getTypeFromCtrlObj(HwBufferCtrlObj*);
+	static Type getTypeFromCtrlObj(HwSyncCtrlObj*);
+	static Type getTypeFromCtrlObj(HwBinCtrlObj*);
+	static Type getTypeFromCtrlObj(HwRoiCtrlObj*);
+	static Type getTypeFromCtrlObj(HwFlipCtrlObj*);
+	static Type getTypeFromCtrlObj(HwShutterCtrlObj*);
 
 	template <class CtrlObj>
 	bool getCtrlObj(CtrlObj *& ctrl_obj) const
@@ -39,7 +52,6 @@ public:
 		ctrl_obj = ok ? (CtrlObj *) m_ctrl_obj : NULL;
 		return ok;
 	}
-
  private:
 	Type m_type;
 	void *m_ctrl_obj;
