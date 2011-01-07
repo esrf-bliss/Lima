@@ -13,3 +13,6 @@
 [submodule "applications/spec"]
 	path = applications/spec
 	url = git://git.epn-campus.eu/repositories/LimaSpec
+[submodule "camera/pco"]
+	path = camera/pco
+	url = git://git.epn-campus.eu/repositories/LimaCameraPco
