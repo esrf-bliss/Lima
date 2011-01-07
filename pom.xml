@@ -10,10 +10,10 @@
    <groupId>fr.soleil.lib</groupId>
    <artifactId>Lima</artifactId>
    <version>0.0.1-SNAPSHOT</version>
-   
    <packaging>pom</packaging>
    <name>Lima Project</name>
    <description>Lima Project</description>
+   
     <build>
 		<plugins>
 			<plugin>
