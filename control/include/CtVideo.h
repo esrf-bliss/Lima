@@ -2,6 +2,7 @@
 #define CTVIDEO_H
 
 #include "CtControl.h"
+#include "VideoUtils.h"
 
 namespace lima
 {
@@ -10,6 +11,8 @@ namespace lima
   class CtVideo
   {
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
+    friend class CtControl;
+
   public:
     CtVideo(CtControl&);
     ~CtVideo();
@@ -30,13 +33,6 @@ namespace lima
       Roi 	roi;
       Bin 	bin;
     };
-    struct Image
-    {
-      int 	height;
-      int 	width;
-      VideoMode mode;
-      char*	buffer;
-    };
 
     class ImageCallback
     {
@@ -47,7 +43,7 @@ namespace lima
       ImageCallback() {}
       virtual ~ImageCallback() {}
     protected:
-      virtual void newImage(const Image&) = 0;
+      virtual void newImage(const VideoImage&) = 0;
     };
     // --- parameters
     void setParameters(const Parameters &pars);
@@ -75,7 +71,7 @@ namespace lima
     void getBin(Bin &aBin) const;
 
     // --- images
-    void getLastImage(Image &anImage) const;
+    void getLastImage(VideoImage &anImage) const;
     void getLastImageCounter(int &anImageCounter) const;
 
     void registerImageCallback(ImageCallback &cb);
@@ -84,9 +80,22 @@ namespace lima
     // --- video mode
     void getSupportedVideoMode(std::list<VideoMode> &modeList);
   private:
+    class _Data2ImageTask;
+    friend class _Data2ImageTask;
+
+    void frameReady(Data&);	// callback from CtControl
+
+    void _data_2_image(Data &aData,Bin &aBin,Roi &aRoi);
+
     Parameters		m_pars;
     bool 		m_has_video;
+    bool		m_ready_flag;
+    Data		m_last_data;
+    _Data2ImageTask*	m_data_2_image_task;
     HwVideoCtrlObj* 	m_video;
+    mutable Cond	m_cond;
+    int			m_image_counter;
+    VideoImage		m_last_image[2];
   };
 }
 #endif

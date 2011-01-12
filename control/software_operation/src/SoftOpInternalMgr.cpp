@@ -111,7 +111,6 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     {
       Point topl= m_roi.getTopLeft();
       Point botr= m_roi.getBottomRight();
-      Size  roi_size= m_roi.getSize();
       aSoftRoiTaskPt = new Tasks::SoftRoi();
       aSoftRoiTaskPt->setRoi(topl.x, botr.x, topl.y, botr.y);
       aTaskMgr.setLinkTask(aLastStage,aSoftRoiTaskPt);

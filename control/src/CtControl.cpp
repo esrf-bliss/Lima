@@ -514,6 +514,8 @@ void CtControl::newBaseImageReady(Data &aData)
 #endif
     aLock.unlock();
 
+  m_ct_video->frameReady(aData);
+
   if (img_status_changed && m_img_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 

@@ -55,5 +55,6 @@ public:
 #include "HwRoiCtrlObj.h"
 #include "HwFlipCtrlObj.h"
 #include "HwShutterCtrlObj.h"
+#include "HwVideoCtrlObj.h"
 
 #endif // HWCAP_H

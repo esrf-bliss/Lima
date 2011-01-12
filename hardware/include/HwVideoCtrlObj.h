@@ -1,5 +1,6 @@
 #ifndef HWVIDEOCTRLOBJ_H
 #define HWVIDEOCTRLOBJ_H
+#include <list>
 #include "Debug.h"
 #include "Constants.h"
 #include "SizeUtils.h"
