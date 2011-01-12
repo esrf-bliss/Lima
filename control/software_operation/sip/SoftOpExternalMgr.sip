@@ -65,8 +65,20 @@ INSTANCE_2_SoftOp
 	{ \
 	case(BACKGROUNDSUBSTRACTION): \
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpBackgroundSubstraction,NULL);break; \
+	case(BINNING): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpBinning,NULL);break; \
+	case(BPM): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpBpm,NULL);break; \
+	case(FLATFIELDCORRECTION): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpFlatfieldCorrection,NULL);break; \
+	case(FLIP): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpFlip,NULL);break; \
+	case(MASK): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpMask,NULL);break; \
 	case(ROICOUNTERS): \
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpRoiCounter,NULL);break; \
+	case(SOFTROI): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpSoftRoi,NULL);break; \
 	default: \
 	  throw LIMA_CTL_EXC(NotSupported,"Sofware class not yet managed"); \
 	} \

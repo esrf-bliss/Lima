@@ -3,13 +3,13 @@ using namespace lima;
 
 static SoftOpKey SoftOpTable[] = {
   SoftOpKey(BACKGROUNDSUBSTRACTION,"Background substraction"),
-  //{BINNING,"Binning"},
-  //{BPM,"Bpm"},
-  //{FLATFIELDCORRECTION,"Flat field correction"},
-  //{FLIP,"Flip"},
-  //{MASK,"Mask"},
+  SoftOpKey(BINNING,"Binning"),
+  SoftOpKey(BPM,"Bpm"),
+  SoftOpKey(FLATFIELDCORRECTION,"Flat field correction"),
+  SoftOpKey(FLIP,"Flip"),
+  SoftOpKey(MASK,"Mask"),
   SoftOpKey(ROICOUNTERS,"Roi counters"),
-  //{SOFTROI,"Software roi"},
+  SoftOpKey(SOFTROI,"Software roi"),
   SoftOpKey()
 };
 
@@ -83,6 +83,33 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
     {
     case ROICOUNTERS:
       newInstance.m_opt = new SoftOpRoiCounter();
+      break;
+    case BPM:
+      newInstance.m_opt = new SoftOpBpm();
+      break;			// always possible
+    case BACKGROUNDSUBSTRACTION:
+      newInstance.m_opt = new SoftOpBackgroundSubstraction();
+      newInstance.m_linkable = true;
+      break;
+    case BINNING:
+      newInstance.m_opt = new SoftOpBinning();
+      newInstance.m_linkable = true;
+      break;
+    case FLATFIELDCORRECTION:
+      newInstance.m_opt = new SoftOpFlatfieldCorrection();
+      newInstance.m_linkable = true;
+      break;
+    case FLIP:
+      newInstance.m_opt = new SoftOpFlip();
+      newInstance.m_linkable = true;
+      break;
+    case MASK:
+      newInstance.m_opt = new SoftOpMask();
+      newInstance.m_linkable = true;
+      break;
+    case SOFTROI:
+      newInstance.m_opt = new SoftOpSoftRoi();
+      newInstance.m_linkable = true;
       break;
     default:
       throw LIMA_CTL_EXC(InvalidValue,"Not yet managed");
@@ -193,13 +220,35 @@ void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
     case ROICOUNTERS:
     case BPM:
       break;			// always possible
+    case BACKGROUNDSUBSTRACTION:
+    case BINNING:
+    case FLATFIELDCORRECTION:
+    case FLIP:
+    case MASK:
+    case SOFTROI:
+      checkLinkable = true;
+      break;
     default:
       throw LIMA_CTL_EXC(InvalidValue,"Not yet managed");
     }
 
   if(checkLinkable)
     {
-      //todo
+      Stage2Instance::iterator i = m_stage2instance.find(stage);
+      if(i != m_stage2instance.end())
+	{
+	  for(std::list<SoftOpInstance>::iterator k = i->second.begin();
+	      k != i->second.end();++k)
+	    {
+	      if(k->m_linkable)
+		{
+		  char buffer[256];
+		  snprintf(buffer,sizeof(buffer),"%s task  %s is already active on that level",
+			   k->m_key.m_name,k->m_alias.c_str());
+		  throw LIMA_CTL_EXC(Error,buffer);
+		}
+	    }
+	}
     }
 }
 

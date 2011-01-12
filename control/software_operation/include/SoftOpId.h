@@ -7,8 +7,13 @@
 #include "TaskMgr.h"
 
 #include "BackgroundSubstraction.h"
+#include "Binning.h"
+#include "Bpm.h"
+#include "FlatfieldCorrection.h"
+#include "Flip.h"
+#include "Mask.h"
 #include "RoiCounter.h"
-
+#include "SoftRoi.h"
 
 namespace lima
 {
@@ -65,7 +70,7 @@ namespace lima
   {
   public:
     SoftOpBackgroundSubstraction();
-    ~SoftOpBackgroundSubstraction();
+    virtual ~SoftOpBackgroundSubstraction();
     
     void setBackgroundImage(Data &aData);
     
@@ -76,13 +81,90 @@ namespace lima
     Tasks::BackgroundSubstraction *m_opt;
   };
 
+  class SoftOpBinning : public SoftOpBaseClass
+  {
+  public:
+    SoftOpBinning();
+    virtual ~SoftOpBinning();
+    
+    void setBinning(int x,int y);
+    
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare() {};
+  private:
+    Tasks::Binning *m_opt;
+  };
+
+  class SoftOpBpm : public SoftOpBaseClass
+  {
+  public:
+    SoftOpBpm();
+    virtual ~SoftOpBpm();
+    
+    Tasks::BpmTask* 	getTask() 	{return m_task;}
+    Tasks::BpmManager* 	getManager() 	{return m_manager;}
+
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare();
+  private:
+    Tasks::BpmManager	*m_manager;
+    Tasks::BpmTask	*m_task;
+  };
+
+  class SoftOpFlatfieldCorrection : public SoftOpBaseClass
+  {
+  public:
+    SoftOpFlatfieldCorrection();
+    virtual ~SoftOpFlatfieldCorrection();
+    
+    void setFlatFieldImage(Data &aData);
+    
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare() {};
+  private:
+    Tasks::FlatfieldCorrection *m_opt;
+  };
+
+  class SoftOpFlip : public SoftOpBaseClass
+  {
+  public:
+    SoftOpFlip();
+    virtual ~SoftOpFlip();
+    
+    void setFlip(bool x,bool y);
+    
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare() {};
+  private:
+    Tasks::Flip *m_opt;
+  };
+
+  class SoftOpMask : public SoftOpBaseClass
+  {
+  public:
+    SoftOpMask();
+    virtual ~SoftOpMask();
+    
+    void setMaskImage(Data &aData);
+    
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare() {};
+  private:
+    Tasks::Mask *m_opt;
+  };
+
   class SoftOpRoiCounter : public SoftOpBaseClass
   {
   public:
     typedef std::pair<int,std::list<Tasks::RoiCounterResult> > RoiIdAndResults;
     typedef std::pair<int,Roi> RoiIdAndRoi;
     SoftOpRoiCounter();
-    ~SoftOpRoiCounter();
+    virtual ~SoftOpRoiCounter();
 
     void add(const std::list<Roi> &rois); 
     void set(const std::list<Roi> &rois); 
@@ -112,5 +194,19 @@ namespace lima
     mutable Cond		m_cond;
   };
 
+  class SoftOpSoftRoi : public SoftOpBaseClass
+  {
+  public:
+    SoftOpSoftRoi();
+    virtual ~SoftOpSoftRoi();
+    
+    void setRoi(int x,int y,int width,int height);
+    
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare() {};
+  private:
+    Tasks::SoftRoi *m_opt;
+  };
 }
 #endif

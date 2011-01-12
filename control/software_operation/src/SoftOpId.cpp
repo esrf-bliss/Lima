@@ -26,6 +26,142 @@ void SoftOpBackgroundSubstraction::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
 }
+//-------------------- BINNING --------------------
+				   
+/** @brief small wrapper around Binning Task
+ */
+SoftOpBinning::SoftOpBinning() : 
+  SoftOpBaseClass()
+{
+  m_opt = new Tasks::Binning();
+}
+
+SoftOpBinning::~SoftOpBinning()
+{
+  m_opt->unref();
+}
+
+void SoftOpBinning::setBinning(int x,int y)
+{
+  m_opt->mXFactor = x;
+  m_opt->mYFactor = y;
+}
+
+void SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
+{
+  aMgr.setLinkTask(stage,m_opt);
+}
+
+//-------------------- BPM --------------------
+				   
+/** @brief small wrapper around Bpm Task
+ */
+SoftOpBpm::SoftOpBpm() : 
+  SoftOpBaseClass()
+{
+  m_manager = new Tasks::BpmManager(DEFAULT_HISTORY_SIZE);
+  m_task = new Tasks::BpmTask(*m_manager);
+}
+
+SoftOpBpm::~SoftOpBpm()
+{
+  m_task->unref();
+  delete m_manager;		///@todo bad should also use ref unref
+}
+
+
+void SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
+{
+  aMgr.addSinkTask(stage,m_task);
+}
+
+void SoftOpBpm::prepare()
+{
+  m_manager->resetHistory();
+}
+
+//-------------------- FLATFIELDCORRECTION --------------------
+				   
+/** @brief small wrapper around FlatfieldCorrection Task
+ */
+SoftOpFlatfieldCorrection::SoftOpFlatfieldCorrection() : 
+  SoftOpBaseClass()
+{
+  m_opt = new Tasks::FlatfieldCorrection();
+}
+
+SoftOpFlatfieldCorrection::~SoftOpFlatfieldCorrection()
+{
+  m_opt->unref();
+}
+
+void SoftOpFlatfieldCorrection::setFlatFieldImage(Data &aData)
+{
+  m_opt->setFlatFieldImageData(aData);
+}
+
+void SoftOpFlatfieldCorrection::addTo(TaskMgr &aMgr,int stage)
+{
+  aMgr.setLinkTask(stage,m_opt);
+}
+
+//-------------------- FLIP --------------------
+				   
+/** @brief small wrapper around Flip Task
+ */
+SoftOpFlip::SoftOpFlip() : 
+  SoftOpBaseClass()
+{
+  m_opt = new Tasks::Flip();
+}
+
+SoftOpFlip::~SoftOpFlip()
+{
+  m_opt->unref();
+}
+
+void SoftOpFlip::setFlip(bool x,bool y)
+{
+  Tasks::Flip::FLIP_MODE flip_mode = Tasks::Flip::FLIP_NONE;
+  if(x && y)
+    flip_mode = Tasks::Flip::FLIP_ALL;
+  else if(x)
+    flip_mode = Tasks::Flip::FLIP_X;
+  else if(y)
+    flip_mode = Tasks::Flip::FLIP_Y;
+    
+  m_opt->setFlip(flip_mode);
+}
+
+void SoftOpFlip::addTo(TaskMgr &aMgr,int stage)
+{
+  aMgr.setLinkTask(stage,m_opt);
+}
+
+//-------------------- MASK --------------------
+				   
+/** @brief small wrapper around Mask Task
+ */
+SoftOpMask::SoftOpMask() : 
+  SoftOpBaseClass()
+{
+  m_opt = new Tasks::Mask();
+}
+
+SoftOpMask::~SoftOpMask()
+{
+  m_opt->unref();
+}
+
+void SoftOpMask::setMaskImage(Data &mask)
+{
+  m_opt->setMaskImageData(mask);
+}
+
+void SoftOpMask::addTo(TaskMgr &aMgr,int stage)
+{
+  aMgr.setLinkTask(stage,m_opt);
+}
 
 //-------------------- ROI COUNTERS --------------------
 
@@ -189,4 +325,29 @@ void SoftOpRoiCounter::prepare()
       i != m_manager_tasks.end();++i)
      i->first->resetHistory();
    m_counter_status = -1;
+}
+
+//-------------------- SOFTROI --------------------
+				   
+/** @brief small wrapper around SoftRoi Task
+ */
+SoftOpSoftRoi::SoftOpSoftRoi() : 
+  SoftOpBaseClass()
+{
+  m_opt = new Tasks::SoftRoi();
+}
+
+SoftOpSoftRoi::~SoftOpSoftRoi()
+{
+  m_opt->unref();
+}
+
+void SoftOpSoftRoi::setRoi(int x,int y,int width,int height)
+{
+  m_opt->setRoi(x,x+width,y,y+width);
+}
+
+void SoftOpSoftRoi::addTo(TaskMgr &aMgr,int stage)
+{
+  aMgr.setLinkTask(stage,m_opt);
 }
