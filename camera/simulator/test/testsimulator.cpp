@@ -3,6 +3,7 @@
 #include "PoolThreadMgr.h"
 
 #include <iostream>
+#include <cstdlib>
 
 using namespace lima;
 using namespace std;
