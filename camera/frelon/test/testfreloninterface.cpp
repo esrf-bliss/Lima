@@ -100,7 +100,7 @@ void SoftRoiCallback::data2FrameInfo(Data& data, HwFrameInfoType& finfo,
 	Timestamp start_ts;
 	buffer_ctrl->getStartTimestamp(start_ts);
 
-	fdim = FrameDim(data.width, data.height, image_type);
+	fdim = FrameDim(data.dimensions[0], data.dimensions[1], image_type);
 	int valid_pixels = Point(fdim.getSize()).getArea();
 
 	finfo = HwFrameInfoType(data.frameNumber, data.data(), &fdim,
@@ -192,8 +192,8 @@ void TestFrameCallback::frameInfo2Data(const HwFrameInfoType& frame_info,
 
 	data.frameNumber = frame_info.acq_frame_nb;
 	const Size &aSize = frame_info.frame_dim.getSize();
-	data.width = aSize.getWidth();
-	data.height = aSize.getHeight();
+	data.dimensions.push_back(aSize.getWidth());
+	data.dimensions.push_back(aSize.getHeight());
 
 	ImageType image_type = frame_info.frame_dim.getImageType();
 	switch (image_type) {

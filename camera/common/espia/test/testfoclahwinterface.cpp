@@ -50,8 +50,8 @@ bool FoclaFrameCallback::newFrameReady( const HwFrameInfoType &frame_info )
 	Data aNewData = Data();
 	aNewData.frameNumber = frame_info.acq_frame_nb;
 	const Size &aSize = frame_info.frame_dim.getSize();
-	aNewData.width = aSize.getWidth();
-	aNewData.height = aSize.getHeight();
+	aNewData.dimensions.push_back(aSize.getWidth());
+	aNewData.dimensions.push_back(aSize.getHeight());
 	aNewData.type = Data::UINT16;
 	
 	Buffer *aNewBuffer = new Buffer();
