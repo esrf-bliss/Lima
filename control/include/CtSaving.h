@@ -26,17 +26,19 @@
 #include <list>
 #include <string>
 #include <fstream>
+#include <ios>
 
+#include "LimaCompatibility.h"
 #include "ThreadUtils.h"
 #include "CtControl.h"
 
-class Data;
+struct Data;
 class TaskEventCallback;
 class SinkTaskBase;
 
 namespace lima {
 
-  class CtSaving 
+  class LIMACORE_API CtSaving 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving","Control");
 
@@ -66,7 +68,7 @@ namespace lima {
 	Append,
       };	
 
-    struct Parameters 
+    struct LIMACORE_API Parameters 
     {
       std::string directory;
       std::string prefix;
@@ -179,7 +181,7 @@ namespace lima {
 
     protected:
       virtual bool _open(const std::string &filename,
-			 std::_Ios_Openmode flags) = 0;
+		  std::ios_base::openmode flags) = 0;
       virtual void _close() = 0;
       virtual void _writeFile(Data &data,
 			      CtSaving::HeaderMap &aHeader,

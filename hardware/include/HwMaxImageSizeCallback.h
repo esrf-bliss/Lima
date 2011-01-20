@@ -22,6 +22,7 @@
 #ifndef HWMAXIMAGESIZECALLBACK_H
 #define HWMAXIMAGESIZECALLBACK_H
 
+#include "LimaCompatibility.h"
 #include "SizeUtils.h"
 #include "Debug.h"
 
@@ -30,7 +31,7 @@ namespace lima
 
 class HwMaxImageSizeCallbackGen;
 
-class HwMaxImageSizeCallback
+class LIMACORE_API HwMaxImageSizeCallback
 {
 	DEB_CLASS(DebModHardware, "HwMaxImageSizeCallback");
 
@@ -58,7 +59,7 @@ HwMaxImageSizeCallback::getMaxImageSizeCallbackGen() const
 }
 
 
-class HwMaxImageSizeCallbackGen
+class LIMACORE_API HwMaxImageSizeCallbackGen
 {
 	DEB_CLASS(DebModHardware, "HwMaxImageSizeCallbackGen");
 

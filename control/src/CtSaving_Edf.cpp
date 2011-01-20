@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
@@ -19,7 +20,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
+#ifdef __unix
 #include <sys/time.h>
+#else
+#include <time_compat.h>
+#endif
+
 #include "CtSaving_Edf.h"
 
 using namespace lima;
@@ -40,7 +47,7 @@ SaveContainerEdf::~SaveContainerEdf()
 }
 
 bool SaveContainerEdf::_open(const std::string &filename,
-			     std::_Ios_Openmode openFlags)
+			     std::ios_base::openmode openFlags)
 {
   DEB_MEMBER_FUNCT();
   m_fout.clear();

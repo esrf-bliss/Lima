@@ -1,3 +1,4 @@
+<<<<<<< HEAD:common/src/RegEx.cpp
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
@@ -19,7 +20,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "RegEx.h"
+#include "RegExUtils.h"
 
 using namespace lima;
 using namespace std;

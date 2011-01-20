@@ -9,7 +9,6 @@
 
     <groupId>fr.soleil.lib.Lima</groupId>
     <artifactId>LimaControl-${aol}-shared-${mode}</artifactId>
-
     <packaging>nar</packaging>
     <name>LimaControl</name>
     <description>Control lib for Lima</description>
@@ -27,9 +26,10 @@
 	</dependency>
 	<dependency>
         	<groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
-		<artifactId>ProcesslibTasks-${aol}-shared-${mode}</artifactId>
+		<artifactId>Tasks-${aol}-shared-${mode}</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</dependency>
+	
     </dependencies>
 
     <build>

@@ -25,6 +25,8 @@
 #include <map>
 #include <algorithm>
 
+#include "LimaCompatibility.h"
+
 namespace lima
 {
 
@@ -35,7 +37,7 @@ namespace lima
 // Map search helpers
 
 template <class V>
-class SecondIs
+class LIMACORE_API SecondIs
 {
  public:
 	SecondIs(V v) : m_val(v) 

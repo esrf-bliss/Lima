@@ -24,6 +24,8 @@
 
 #include <stdio.h>	// For NULL
 
+#include "LimaCompatibility.h"
+
 namespace lima
 {
 
@@ -31,7 +33,7 @@ namespace lima
  * AutoCounter
  ********************************************************************/
 
-class AutoCounter
+class LIMACORE_API AutoCounter
 {
 public:
 	AutoCounter() : r(1)
@@ -56,7 +58,7 @@ private:
  ********************************************************************/
 
 template <class M>
-class AutoLock
+class LIMACORE_API AutoLock
 {
 public:
 	enum { UnLocked, Locked, TryLocked, PrevLocked };
@@ -183,7 +185,7 @@ private:
  ********************************************************************/
 
 template <class T, bool array=false>
-class AutoPtr
+class LIMACORE_API AutoPtr
 {
 public:
 	AutoPtr() 

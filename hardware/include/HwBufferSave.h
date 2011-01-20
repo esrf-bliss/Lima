@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
+
+#include "LimaCompatibility.h"
 #include "HwFrameInfo.h"
 
 namespace lima {
@@ -44,7 +46,7 @@ namespace lima {
  * The main method is writeFrame(const HwFrameInfoType& finfo).
  * The other methods configure the saving parameters.
  *******************************************************************/
-class HwBufferSave {
+class LIMACORE_API HwBufferSave {
   public :
 	enum FileFormat {
 		Raw, EDF,

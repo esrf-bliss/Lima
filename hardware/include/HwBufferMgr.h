@@ -22,6 +22,7 @@
 #ifndef HWBUFFERMGR_H
 #define HWBUFFERMGR_H
 
+#include "LimaCompatibility.h"
 #include "HwFrameCallback.h"
 #include "MemUtils.h"
 
@@ -37,7 +38,7 @@ namespace lima
  * Specifies the basic functionality for allocating frame buffers
  *******************************************************************/
 
-class BufferAllocMgr
+class LIMACORE_API BufferAllocMgr
 {
 	DEB_CLASS(DebModHardware, "BufferAllocMgr");
 
@@ -66,7 +67,7 @@ class BufferAllocMgr
  * This classes uses new and delete to allocate the memory buffers
  *******************************************************************/
 
-class SoftBufferAllocMgr : public BufferAllocMgr
+class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 {
 	DEB_CLASS(DebModHardware, "SoftBufferAllocMgr");
 
@@ -100,7 +101,7 @@ class SoftBufferAllocMgr : public BufferAllocMgr
  * for managing the frame callbacks
  *******************************************************************/
 
-class BufferCbMgr : public HwFrameCallbackGen
+class LIMACORE_API BufferCbMgr : public HwFrameCallbackGen
 {
 	DEB_CLASS(DebModHardware, "BufferCbMgr");
 
@@ -155,7 +156,7 @@ BufferCbMgr::Cap operator &(BufferCbMgr::Cap c1, BufferCbMgr::Cap c2);
  * BufferAllocMgr
  *******************************************************************/
 
-class StdBufferCbMgr : public BufferCbMgr
+class LIMACORE_API StdBufferCbMgr : public BufferCbMgr
 {
 	DEB_CLASS(DebModHardware, "StdBufferCbMgr");
 
@@ -206,7 +207,7 @@ class StdBufferCbMgr : public BufferCbMgr
  * managers and complement their missing functionality.
  *******************************************************************/
 
-class BufferCtrlMgr : public HwFrameCallbackGen
+class LIMACORE_API BufferCtrlMgr : public HwFrameCallbackGen
 {
 	DEB_CLASS(DebModHardware, "BufferCtrlMgr");
 
@@ -244,7 +245,7 @@ class BufferCtrlMgr : public HwFrameCallbackGen
 	virtual void setFrameCallbackActive(bool cb_active);
 	
  private:
-	class AcqFrameCallback : public HwFrameCallback
+	class LIMACORE_API AcqFrameCallback : public HwFrameCallback
 	{
 		DEB_CLASS(DebModHardware, "BufferCtrlMgr::AcqFrameCallback");
 

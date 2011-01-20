@@ -22,6 +22,7 @@
 #ifndef SIMUHWINTERFACE_H
 #define SIMUHWINTERFACE_H
 
+#include "SimuCompatibility.h"
 #include "HwInterface.h"
 #include "Simulator.h"
 
@@ -35,7 +36,7 @@ class SimuHwInterface;
  * \brief Control object providing simulator detector info interface
  *******************************************************************/
 
-class SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
+class LIBSIMULATOR_API SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
 {
  public:
 	SimuDetInfoCtrlObj(Simulator& simu);
@@ -74,7 +75,7 @@ class SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
  * \brief Control object providing simulator buffering interface
  *******************************************************************/
 
-class SimuBufferCtrlObj : public HwBufferCtrlObj
+class LIBSIMULATOR_API SimuBufferCtrlObj : public HwBufferCtrlObj
 {
  public:
 	SimuBufferCtrlObj(Simulator& simu);
@@ -111,7 +112,7 @@ class SimuBufferCtrlObj : public HwBufferCtrlObj
  * \brief Control object providing simulator synchronization interface
  *******************************************************************/
 
-class SimuSyncCtrlObj : public HwSyncCtrlObj
+class LIBSIMULATOR_API SimuSyncCtrlObj : public HwSyncCtrlObj
 {
  public:
 	SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl);
@@ -142,7 +143,7 @@ class SimuSyncCtrlObj : public HwSyncCtrlObj
  * \brief Control object providing simulator binning interface
  *******************************************************************/
 
-class SimuBinCtrlObj : public HwBinCtrlObj
+class LIBSIMULATOR_API SimuBinCtrlObj : public HwBinCtrlObj
 {
  public:
 	SimuBinCtrlObj(Simulator& simu);
@@ -162,7 +163,7 @@ class SimuBinCtrlObj : public HwBinCtrlObj
  * \brief Simulator hardware interface
  *******************************************************************/
 
-class SimuHwInterface : public HwInterface
+class LIBSIMULATOR_API SimuHwInterface : public HwInterface
 {
  public:
 	SimuHwInterface(Simulator& simu);

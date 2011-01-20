@@ -183,6 +183,26 @@ class Pilatus(PyTango.Device_4Impl):
         
         communication = _PilatusIterface.communication()
         communication.set_threshold_gain(threshold,gain)
+#----------------------------------------------------------------------------
+#     Read delay attribute
+#----------------------------------------------------------------------------
+    def read_trigger_delay(self,attr) :
+        communication = _PilatusIterface.communication()
+        delay = communication.hardware_trigger_delay()
+        attr.set_value(delay)
+
+#----------------------------------------------------------------------------
+#     Write delay attribute
+#----------------------------------------------------------------------------
+    def write_trigger_delay(self,attr) :
+        data = []
+        attr.get_write_value(data)
+        delay = data[0]
+        
+        communication = _PilatusIterface.communication()
+        communication.set_hardware_trigger_delay(delay)
+        
+
 
 #------------------------------------------------------------------
 #    Read gapfill attribute
@@ -250,6 +270,10 @@ class PilatusClass(PyTango.DeviceClass):
             PyTango.READ_WRITE]],
         'fill_mode':
             [[PyTango.DevString,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
+        'trigger_delay':
+            [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         }

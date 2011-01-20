@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include "FrelonModel.h"
-#include "RegEx.h"
+#include "RegExUtils.h"
 
 using namespace lima;
 using namespace lima::Frelon;

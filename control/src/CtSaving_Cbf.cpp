@@ -207,7 +207,7 @@ SinkTaskBase* SaveContainerCbf::getCompressionTask(const CtSaving::HeaderMap &he
 }
 
 bool SaveContainerCbf::_open(const std::string &filename,
-			     std::_Ios_Openmode stdOpenflags)
+			     std::ios_base::openmode stdOpenflags)
 {
   DEB_MEMBER_FUNCT();
   char openFlags[8];

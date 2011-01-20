@@ -20,7 +20,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
-               MemUtils.o RegEx.o AcqState.o Debug.o
+               MemUtils.o RegExUtils.o AcqState.o Debug.o
 
 SRCS = $(common-objs:.o=.cpp)
 

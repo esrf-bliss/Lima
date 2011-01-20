@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include "FrelonSerialLine.h"
-#include "RegEx.h"
+#include "RegExUtils.h"
 #include "MiscUtils.h"
 #include <sstream>
 

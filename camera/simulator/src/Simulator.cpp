@@ -22,7 +22,7 @@
 #include "Simulator.h"
 
 #include <string>
-#include <time.h>
+#include <unistd.h>
 #include <cmath>
 
 using namespace lima;
@@ -69,15 +69,12 @@ void Simulator::SimuThread::execStartAcq()
 	int nb_frames = m_simu->m_nb_frames;
 	int& frame_nb = m_acq_frame_nb;
 	for (frame_nb = 0; frame_nb < nb_frames; frame_nb++) {
-		struct timespec treq, trem;
 		double req_time;
 
 		req_time = m_simu->m_exp_time;
 		if (req_time > 0) {	
 			setStatus(Exposure);
-			treq.tv_sec = int(floor(req_time));
-			treq.tv_nsec = int((req_time - treq.tv_sec) * 1e9);
-			nanosleep(&treq, &trem);
+			usleep(long(req_time * 1e6));
 		}
 
 		setStatus(Readout);
@@ -96,9 +93,7 @@ void Simulator::SimuThread::execStartAcq()
 		req_time = m_simu->m_lat_time;
 		if (req_time > 0) {
 			setStatus(Latency);
-			treq.tv_sec = int(floor(req_time));
-			treq.tv_nsec = int((req_time - treq.tv_sec) * 1e9);
-			nanosleep(&treq, &trem);
+			usleep(long(req_time * 1e6));
 		}
 	}
 	setStatus(Ready);

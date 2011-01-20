@@ -22,6 +22,7 @@
 #ifndef SIZEUTILS_H
 #define SIZEUTILS_H
 
+#include "LimaCompatibility.h"
 #include "Constants.h"
 #include "Exceptions.h"
 #include <ostream>
@@ -50,7 +51,7 @@ inline bool IsPowerOf2(int x)
  * This utility class provides basic arithmetic in two dimensions
  *******************************************************************/
 
-class Point
+class LIMACORE_API Point
 {
  public:
 	int x, y;
@@ -149,7 +150,7 @@ enum YBorder {
 std::ostream& operator <<(std::ostream& os, XBorder xb);
 std::ostream& operator <<(std::ostream& os, YBorder yb);
 
-class Corner
+class LIMACORE_API Corner
 {
  public:
 	Corner();
@@ -229,7 +230,7 @@ std::ostream& operator <<(std::ostream& os, const Corner& c);
  * This class helps managing the size of rectangular objects
  *******************************************************************/
 
-class Size
+class LIMACORE_API Size
 {
  public:
 	Size()               : m_xy()                        {}
@@ -298,7 +299,7 @@ std::ostream& operator <<(std::ostream& os, const Size& s);
  * Basic binning handling. The values must be power of 2
  *******************************************************************/
 
-class Bin
+class LIMACORE_API Bin
 {
  public:
 	Bin()		    : m_xy(1)                       {}
@@ -358,7 +359,7 @@ std::ostream& operator <<(std::ostream& os, const Bin& bin);
  *
  *******************************************************************/
 
-class Flip
+class LIMACORE_API Flip
 {
  public:
 	bool x, y;
@@ -419,7 +420,7 @@ inline Flip operator+(const Flip &f,const Flip &s)
  * The bottom_right corner \b belongs to the roi: top_left + size - 1
  *******************************************************************/
 
-class Roi
+class LIMACORE_API Roi
 {
  public:
 	Roi() {}
@@ -610,7 +611,7 @@ std::ostream& operator <<(std::ostream& os, const Roi& roi);
  * practical reasons, it also contains the depth in bytes.
  *******************************************************************/
 
-class FrameDim
+class LIMACORE_API FrameDim
 {
  public:
 	FrameDim();

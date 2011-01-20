@@ -22,7 +22,11 @@
 #include "ThreadUtils.h"
 #include "Exceptions.h"
 #include <errno.h>
+#ifdef __unix
 #include <sys/time.h>
+#else
+#include <time_compat.h>
+#endif
 
 using namespace lima;
 

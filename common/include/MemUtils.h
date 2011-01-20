@@ -22,22 +22,23 @@
 #ifndef MEMUTILS_H
 #define MEMUTILS_H
 
+#include "LimaCompatibility.h"
 #include "SizeUtils.h"
 #include "Debug.h"
 
 namespace lima
 {
 
-void GetSystemMem(int& mem_unit, int& system_mem);
+void LIMACORE_API GetSystemMem(int& mem_unit, int& system_mem);
 	
-void GetPageSize(int& page_size);
+void LIMACORE_API GetPageSize(int& page_size);
 
-int GetDefMaxNbBuffers(const FrameDim& frame_dim, double sys_mem_factor = 0);
+int LIMACORE_API GetDefMaxNbBuffers(const FrameDim& frame_dim, double sys_mem_factor = 0);
 
-void ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
+void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
 
 
-class MemBuffer 
+class LIMACORE_API MemBuffer 
 {
  public:
 	enum {

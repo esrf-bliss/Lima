@@ -25,6 +25,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include "LimaCompatibility.h"
 #include "StreamUtils.h"
 #include "ThreadUtils.h"
 
@@ -82,7 +83,7 @@ typedef const char *ConstStr;
  *  class DebStream
  *------------------------------------------------------------------*/
 
-class DebStream : public std::ostream
+class LIMACORE_API DebStream : public std::ostream
 {
  public:
 	typedef OCopyStream::StreamList StreamList;
@@ -132,7 +133,7 @@ inline DebStream& DebStream::SetStream(Selector new_selector)
 class DebObj;
 class DebProxy;
 
-class DebParams
+class LIMACORE_API DebParams
 {
  public:
 	typedef long long Flags;
@@ -231,7 +232,7 @@ std::ostream& operator <<(std::ostream& os,
  *  class DebProxy
  *------------------------------------------------------------------*/
 
-class DebProxy
+class LIMACORE_API DebProxy
 {
  public:
 	DebProxy();
@@ -254,7 +255,7 @@ class DebProxy
  *  class DebObj
  *------------------------------------------------------------------*/
 
-class DebObj
+class LIMACORE_API DebObj
 {
  public:
 	enum {
@@ -300,7 +301,7 @@ class DebObj
  *  class DebHex
  *------------------------------------------------------------------*/
 
-class DebHex
+class LIMACORE_API DebHex
 {
  public:
 	DebHex(unsigned long val) : m_val(val) 
@@ -413,7 +414,7 @@ inline DebProxy::~DebProxy()
 
 inline bool DebProxy::isActive() const
 {
-	return m_lock;
+	return !!m_lock;
 }
 
 template <class T>

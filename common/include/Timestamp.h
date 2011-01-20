@@ -22,21 +22,21 @@
 #ifndef TIMESTAMP_H
 #define TIMESTAMP_H
 
+#include "LimaCompatibility.h"
 #include "Exceptions.h"
 
 namespace lima
 {
 
-class Timestamp
+class LIMACORE_API Timestamp
 {
  public:
-	Timestamp() : m_ts(Unset) {}
+	Timestamp();
 	Timestamp(double ts) : m_ts(ts) {}
 	Timestamp(const Timestamp& ts) : m_ts(ts.m_ts) {}
 
-	bool isSet() const
-	{ return *this != Unset; }
-
+	bool isSet() const;
+	
 	operator double() const
 	{ return m_ts; }
 
@@ -58,8 +58,6 @@ class Timestamp
 	static Timestamp now();
 
  private:
-	static const Timestamp Unset;
-
 	double& validValue();
 	const double& validValue() const;
 
@@ -101,7 +99,7 @@ inline Timestamp operator /(Timestamp t, double factor)
 	return t /= factor;
 }
 
-double Sleep(double sec);
+LIMACORE_API double Sleep(double sec);
 
 }
 

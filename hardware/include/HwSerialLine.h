@@ -30,6 +30,7 @@
 #ifndef HWSERIALLINE_H
 #define HWSERIALLINE_H
 
+#include "LimaCompatibility.h"
 #include <string>
 #include "Debug.h"
 #include "Exceptions.h"
@@ -47,7 +48,7 @@ namespace lima {
  *       When implementing the pure virtual functions this has to be
  *       taken into account!
  *******************************************************************/
-class HwSerialLine
+class LIMACORE_API HwSerialLine
 {
 	DEB_CLASS(DebModHardwareSerial, "HwSerialLine");
 

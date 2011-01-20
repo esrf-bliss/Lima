@@ -31,7 +31,7 @@
 namespace lima
 {
 
-class Simulator
+class LIBSIMULATOR_API Simulator
 {
  public:
 	enum Status {
@@ -111,7 +111,7 @@ class Simulator
 	SimuThread m_thread;
 };
 
-std::ostream& operator <<(std::ostream& os, Simulator& simu);
+LIBSIMULATOR_API std::ostream& operator <<(std::ostream& os, Simulator& simu);
 
 } // namespace lima
 

@@ -22,13 +22,14 @@
 #ifndef HWBINCTRLOBJ_H
 #define HWBINCTRLOBJ_H
 
+#include "LimaCompatibility.h"
 #include "SizeUtils.h"
 #include "Debug.h"
 
 namespace lima
 {
 
-class HwBinCtrlObj
+class LIMACORE_API HwBinCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwBinCtrlObj");
 

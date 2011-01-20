@@ -21,8 +21,10 @@
 //###########################################################################
 #include "Simulator.h"
 #include "HwBufferSave.h"
+#include "PoolThreadMgr.h"
 
 #include <iostream>
+#include <cstdlib>
 
 using namespace lima;
 using namespace std;
@@ -87,5 +89,7 @@ int main(int argc, char *argv[])
 	simu.stopAcq();
 	cout << "simu=" << simu << endl;
 
-	return 0;
+	PoolThreadMgr &pMgr = PoolThreadMgr::get();
+	pMgr.quit();
+	exit(0);
 }

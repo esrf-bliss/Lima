@@ -103,7 +103,7 @@ ostream& lima::operator <<(ostream& os,ShutterMode shutter_mode)
 
 ostream& lima::operator <<(ostream& os, AcqStatus acq_status)
 {
-	string name = "Unknown";
+	const char* name = "Unknown";
 	switch (acq_status) {
 	case AcqReady:   name = "AcqReady";	break;
 	case AcqRunning: name = "AcqRunning";	break;
@@ -141,7 +141,11 @@ ostream& lima::operator <<(ostream& os, DetStatus det_status)
 		AddToken(name, "Readout", sep);
 	if (det_status & DetLatency)
 		AddToken(name, "Latency", sep);
+#ifdef __unix
 	return os << name;
+#else  // Fucking Window can't stream insertion of string ?!??!!!
+	return os << name.c_str();
+#endif
 }
 
 DetStatus lima::operator |(DetStatus s1, DetStatus s2)

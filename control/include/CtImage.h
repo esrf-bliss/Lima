@@ -22,6 +22,7 @@
 #ifndef CTIMAGE_H
 #define CTIMAGE_H
 
+#include "LimaCompatibility.h"
 #include "CtControl.h"
 #include "Constants.h"
 #include "HwInterface.h"
@@ -32,7 +33,7 @@ namespace lima {
 
 class CtImage;
 
-class CtSwBinRoiFlip {
+class LIMACORE_API CtSwBinRoiFlip {
 	DEB_CLASS_NAMESPC(DebModControl,"Sofware BinRoiFlip","Control");
     public:
 	friend std::ostream& operator<<(std::ostream &os,const CtSwBinRoiFlip &binroi);
@@ -65,7 +66,7 @@ class CtSwBinRoiFlip {
 };
 
 
-class CtHwBinRoiFlip {
+class LIMACORE_API CtHwBinRoiFlip {
 	DEB_CLASS_NAMESPC(DebModControl,"Hardware BinRoiFlip","Control");
     public:
 	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size);
@@ -108,7 +109,7 @@ class CtHwBinRoiFlip {
 };
 
 
-class CtMaxImageSizeCB : public HwMaxImageSizeCallback
+class LIMACORE_API CtMaxImageSizeCB : public HwMaxImageSizeCallback
 {
     public:
 	CtMaxImageSizeCB(CtImage *ct) : m_ct(ct) {}
@@ -119,7 +120,7 @@ class CtMaxImageSizeCB : public HwMaxImageSizeCallback
 };
 
 	
-class CtImage {
+class LIMACORE_API CtImage {
 	DEB_CLASS_NAMESPC(DebModControl,"Image","Control");
     public:
 	friend class CtMaxImageSizeCB;

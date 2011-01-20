@@ -22,6 +22,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include "LimaCompatibility.h"
 #include <ostream>
 #include <vector>
 
@@ -32,7 +33,7 @@ enum AlignDir {
 	Floor, Ceil,
 };
 
-std::ostream& operator <<(std::ostream& os, AlignDir align_dir);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, AlignDir align_dir);
 /**@brief ImageType is the depth of detectors images
  * - Bpp8 means 8 bits unsigned
  * - Bpp8S means 8 bits signed....
@@ -42,13 +43,13 @@ enum ImageType {
 	Bpp16, Bpp16S, Bpp32, Bpp32S
 };
 
-std::ostream& operator <<(std::ostream& os, ImageType image_type);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, ImageType image_type);
 
 enum AcqMode {
 	Single, Concatenation, Accumulation,
 };
 
-std::ostream& operator <<(std::ostream& os, AcqMode acq_mode);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, AcqMode acq_mode);
 
 enum TrigMode {
 	IntTrig,IntTrigMult,
@@ -56,13 +57,13 @@ enum TrigMode {
 	ExtGate, ExtStartStop,
 };
 
-std::ostream& operator <<(std::ostream& os, TrigMode trig_mode);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, TrigMode trig_mode);
 
 enum BufferMode {
 	Linear, Circular,
 };
 
-std::ostream& operator <<(std::ostream& os, BufferMode buffer_mode);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, BufferMode buffer_mode);
 
 enum ShutterMode {
   ShutterManual, ShutterAutoFrame, ShutterAutoSequence
@@ -70,13 +71,13 @@ enum ShutterMode {
 
 typedef std::vector<ShutterMode> ShutterModeList;
 
-std::ostream& operator <<(std::ostream& os, ShutterMode shutter_mode);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, ShutterMode shutter_mode);
 
 enum AcqStatus {
 	AcqReady, AcqRunning, AcqFault,
 };
 
-std::ostream& operator <<(std::ostream& os, AcqStatus acq_status);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, AcqStatus acq_status);
 
 enum DetStatus {
 	DetIdle			= 0x00,
@@ -90,10 +91,10 @@ enum DetStatus {
 	DetLatency		= 0x80,
 };
 
-DetStatus  operator | (DetStatus  s1, DetStatus  s2);
-DetStatus& operator |=(DetStatus& s1, DetStatus  s2);
+LIMACORE_API DetStatus  operator | (DetStatus  s1, DetStatus  s2);
+LIMACORE_API DetStatus& operator |=(DetStatus& s1, DetStatus  s2);
 
-std::ostream& operator <<(std::ostream& os, DetStatus det_status);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, DetStatus det_status);
 
 } // namespace lima
 

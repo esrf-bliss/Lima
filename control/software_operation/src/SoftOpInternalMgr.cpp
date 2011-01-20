@@ -121,7 +121,7 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     {
       aBinTaskPt = new Tasks::Binning();
       aBinTaskPt->mXFactor = m_bin.getX();
-      aBinTaskPt->mXFactor = m_bin.getY();
+      aBinTaskPt->mYFactor = m_bin.getY();
       aTaskMgr.setLinkTask(aLastStage,aBinTaskPt);
       aBinTaskPt->unref();
       ++aLastStage;

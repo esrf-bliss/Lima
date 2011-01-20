@@ -102,7 +102,7 @@ using namespace lima;
 
     SoftOpExternalMgr* externalOperation();
     
-    HwInterface* interface();
+    HwInterface* hwInterface();
 
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy /Out/) const;

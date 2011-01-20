@@ -67,7 +67,12 @@ HwFrameInfo::HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim,
       if(frame_dim.isValid())
 	{
 	  int size = frame_dim.getMemSize();
+#ifdef __unix
 	  if(posix_memalign(&frame_ptr,16,size))
+#else  // Window
+	  frame_ptr = _aligned_malloc(size,16);
+	  if(!frame_ptr)
+#endif
 	    throw LIMA_HW_EXC(Error,"Memory allocation");
 	  memcpy(frame_ptr,ptr,size);
 	}
