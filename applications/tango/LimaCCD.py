@@ -46,6 +46,7 @@ import sys,os,glob
 import PyTango
 import weakref
 import itertools
+import numpy
 
 from Lima import Core
 
