@@ -103,6 +103,7 @@ mod_version_data = {
     'tango/common': 'applications/tango/VERSION',
     'tango/camera/maxipix': 'applications/tango/camera/Maxipix_VERSION',
     'tango/camera/pilatus': 'applications/tango/camera/Pilatus_VERSION',
+    'tango/camera/frelon': 'applications/tango/camera/Frelon_VERSION',
 }
 
 if modules == [ALL]:
