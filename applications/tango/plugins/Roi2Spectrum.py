@@ -197,7 +197,7 @@ class Roi2spectrumDeviceServerClass(PyTango.DeviceClass):
          [PyTango.DevVarLongArray,"roi list mode"]],
         'setRoiMode':
         [[PyTango.DevVarLongArray,"roiId,mode"],
-         PyTango.DevVoid,""],
+         [PyTango.DevVoid,""]],
 	}
 
 

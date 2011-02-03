@@ -24,7 +24,7 @@ import PyTango
 from Lima import Core
 from Utils import getDataFromFile,BasePostProcess
 
-class FaltfieldDeviceServer(BasePostProcess) :
+class FlatfieldDeviceServer(BasePostProcess) :
     FLATFIELD_TASK_NAME = 'FlatField'
 
     def __init__(self,cl,name) :
@@ -32,7 +32,7 @@ class FaltfieldDeviceServer(BasePostProcess) :
         self.__flatFieldImage = Core.Processlib.Data()
         
         BasePostProcess__init__(self,cl,name)
-        FaltfieldDeviceServer.init_device(self)
+        FlatfieldDeviceServer.init_device(self)
 
     def set_state(self,state) :
 	if(state == PyTango.DevState.OFF) :
@@ -57,7 +57,7 @@ class FaltfieldDeviceServer(BasePostProcess) :
             self.__flatFieldTask.setFlatFieldImage(self.__flatFieldImage)
 
 
-class FaltfieldDeviceServerClass(PyTango.DeviceClass) :
+class FlatfieldDeviceServerClass(PyTango.DeviceClass) :
         #	 Class Properties
     class_property_list = {
 	}
@@ -104,4 +104,4 @@ def set_control_ref(control_class_ref) :
     _control_ref= control_class_ref
 
 def get_tango_specific_class_n_device() :
-   return FaltfieldDeviceServerClass,FaltfieldDeviceServer
+   return FlatfieldDeviceServerClass,FlatfieldDeviceServer
