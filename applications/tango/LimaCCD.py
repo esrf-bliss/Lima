@@ -114,18 +114,9 @@ class LimaCCDs(PyTango.Device_4Impl) :
     def init_device(self) :
         self.set_state(PyTango.DevState.ON)
         self.get_device_properties(self.get_device_class())
-        #get sub devices
-        fullpathExecName = sys.argv[0]
-        execName = os.path.split(fullpathExecName)[-1]
-        execName = os.path.splitext(execName)[0]
-        personalName = '/'.join([execName,sys.argv[1]])
+        self.__className2deviceName = get_sub_devices()
         dataBase = PyTango.Database()
-        result = dataBase.get_device_class_list(personalName)
-        for i in range(len(result.value_string) / 2) :
-            class_name = result.value_string[i * 2]
-            deviceName = result.value_string[i * 2 + 1]
-            self.__className2deviceName[deviceName] = class_name
-            
+
         try:
             m = __import__('camera.%s' % (self.LimaCameraType),None,None,'camera.%s' % (self.LimaCameraType))
         except ImportError:
@@ -183,6 +174,7 @@ class LimaCCDs(PyTango.Device_4Impl) :
                 except AttributeError:
                     deb.Error("Accumulation threshold plugins module don't have get_acc_threshold_callback function")
 
+        #Tango Enum to Lima Enum
         self.__Prefix2SubClass = {'acc' : self.__control.acquisition,
                                   'acq' : self.__control.acquisition,
                                   'shutter' : self.__control.shutter,
@@ -1382,6 +1374,36 @@ def declare_camera_n_commun_to_tango_world(util) :
                 specificClass,specificDevice = func()
 		util.add_TgClass(specificClass,specificDevice,specificDevice.__name__)
 
+def export_default_plugins() :
+    #Post processing tango export
+    util = PyTango.Util.instance()
+    className2deviceName = get_sub_devices()
+    masterDeviceName = className2deviceName.get('LimaCCDs',None)
+    if masterDeviceName:
+        beamlineName,_,cameraName = masterDeviceName.split('/')
+        for module_name in plugins.__all__:
+            try:
+                m = __import__('plugins.%s' % (module_name),None,None,'plugins.%s' % (module_name))
+            except ImportError:
+                continue
+            else:
+                try:
+                    specificClass,specificDevice = m.get_tango_specific_class_n_device()
+                except AttributeError:
+                    continue
+
+                deviceName = className2deviceName.get(specificDevice.__name__,None)
+                #only create one if not exist
+                if deviceName is None and specificClass and specificDevice:
+                    deviceName = '%s/%s/%s' % (beamlineName,
+                                               specificDevice.__name__.lower().replace('deviceserver',''),cameraName)
+                    print 'create device',specificDevice.__name__,deviceName
+                    try:
+                        util.create_device(specificClass.__name__,deviceName)
+                    except:
+                        import traceback
+                        traceback.print_exc()
+
 def _set_control_ref(ctrl_ref) :
     for module_name in plugins.__all__:
         try:
@@ -1435,6 +1457,21 @@ def _allowed(*args) :
 def _not_allowed(*args) :
     return False
 
+def get_sub_devices() :
+    className2deviceName = {}
+    #get sub devices
+    fullpathExecName = sys.argv[0]
+    execName = os.path.split(fullpathExecName)[-1]
+    execName = os.path.splitext(execName)[0]
+    personalName = '/'.join([execName,sys.argv[1]])
+    dataBase = PyTango.Database()
+    result = dataBase.get_device_class_list(personalName)
+    for i in range(len(result.value_string) / 2) :
+        class_name = result.value_string[i * 2]
+        deviceName = result.value_string[i * 2 + 1]
+        className2deviceName[deviceName] = class_name
+    return className2deviceName
+
 class CallableReadEnum:
     def __init__(self,dictionnary,func2Call) :
         self.__dict = dictionnary
@@ -1472,6 +1509,7 @@ if __name__ == '__main__':
         py.add_TgClass(LimaCCDsClass,LimaCCDs,'LimaCCDs')
 	try:
         	declare_camera_n_commun_to_tango_world(py)
+                export_default_plugins()
 	except:
 		print 'SEB_EXP'
 		import traceback
