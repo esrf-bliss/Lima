@@ -37,6 +37,7 @@ CtShutter::CtShutter(HwInterface *hw)
   DEB_CONSTRUCTOR();
 
   m_has_shutter = hw->getHwCtrlObj(m_hw_shutter);
+  reset();
 }
 
 CtShutter::~CtShutter()
@@ -69,13 +70,13 @@ bool CtShutter::checkMode(ShutterMode shut_mode) const
 void CtShutter::setMode(ShutterMode  shut_mode)
 {
   DEB_MEMBER_FUNCT();
-  CHECK_AVAILABILITY(m_hw_shutter->setMode(shut_mode));
+  CHECK_AVAILABILITY(m_pars.mode = shut_mode);
 }
 
 void CtShutter::getMode(ShutterMode& shut_mode) const
 {
   DEB_MEMBER_FUNCT();
-  CHECK_AVAILABILITY(m_hw_shutter->getMode(shut_mode));
+  CHECK_AVAILABILITY(shut_mode = m_pars.mode);
 }
 
 void CtShutter::setState(bool  shut_open)
@@ -93,24 +94,60 @@ void CtShutter::getState(bool& shut_open) const
 void CtShutter::setOpenTime (double  shut_open_time)
 {
   DEB_MEMBER_FUNCT();
-  CHECK_AVAILABILITY(m_hw_shutter->setOpenTime(shut_open_time));
+  CHECK_AVAILABILITY(m_pars.open_time = shut_open_time);
  }
 
 void CtShutter::getOpenTime (double& shut_open_time) const
 {
   DEB_MEMBER_FUNCT();
-  CHECK_AVAILABILITY(m_hw_shutter->getOpenTime(shut_open_time));
+  CHECK_AVAILABILITY(shut_open_time = m_pars.open_time);
 }
 
 void CtShutter::setCloseTime(double  shut_close_time)
 {
   DEB_MEMBER_FUNCT();
-  CHECK_AVAILABILITY(m_hw_shutter->setCloseTime(shut_close_time));
+  CHECK_AVAILABILITY(m_pars.close_time = shut_close_time);
 }
 
 void CtShutter::getCloseTime(double& shut_close_time) const
 {
   DEB_MEMBER_FUNCT();
-  CHECK_AVAILABILITY(m_hw_shutter->getCloseTime(shut_close_time));
+  CHECK_AVAILABILITY(shut_close_time = m_pars.close_time);
 }
+/** @brief get hw pars and sync with cache
+ */
+void CtShutter::reset()
+{
+  if(m_has_shutter)
+    {
+      m_hw_shutter->getMode(m_hw_pars.mode);
+      m_hw_shutter->getCloseTime(m_hw_pars.close_time);
+      m_hw_shutter->getOpenTime(m_hw_pars.open_time);
 
+      m_pars = m_hw_pars;
+    }
+}
+/** @brief apply cache parameters to hardware
+ */
+void CtShutter::apply()
+{
+  if(m_has_shutter)
+    {
+      try
+	{
+	  if(m_pars.mode != m_hw_pars.mode)
+	    m_hw_shutter->setMode(m_pars.mode);
+	  if(m_pars.close_time != m_hw_pars.close_time)
+	    m_hw_shutter->setCloseTime(m_pars.close_time);
+	  if(m_pars.open_time != m_hw_pars.open_time)
+	    m_hw_shutter->setOpenTime(m_pars.open_time);
+
+	  m_hw_pars = m_pars;
+	}
+      catch(Exception &exp)			// rollback
+	{
+	  m_pars = m_hw_pars;
+	  throw exp;
+	}
+    }
+}
