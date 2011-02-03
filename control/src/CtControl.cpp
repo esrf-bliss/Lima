@@ -105,6 +105,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_op_ext_sink_task_active(false),
   m_base_images_ready(CtControl::ltData()),
   m_images_ready(CtControl::ltData()),
+  m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_started(false),
   m_img_status_cb(NULL)
@@ -242,6 +243,7 @@ void CtControl::prepareAcq()
 #endif
   m_images_ready.clear();
   m_base_images_ready.clear();
+  m_images_buffer.clear();
 }
 
 void CtControl::startAcq()
@@ -362,8 +364,25 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
-
-  ReadBaseImage(aReturnData,frameNumber); // todo change when external op activated
+  AutoMutex aLock(m_cond.mutex());
+  if(m_op_ext_link_task_active)
+    {
+      std::map<int,Data>::iterator i = m_images_buffer.find(frameNumber);
+      if(i != m_images_buffer.end())
+	aReturnData = i->second;
+      else
+	{
+	  if(frameNumber < m_status.ImageCounters.LastImageReady - m_images_buffer_size)
+	    throw LIMA_CTL_EXC(Error,"Frame no more available");
+	  else
+	    throw LIMA_CTL_EXC(Error,"Frame not available yet");
+	}
+    }
+  else
+    {
+      aLock.unlock();
+      ReadBaseImage(aReturnData,frameNumber); // todo change when external op activated
+    }
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }
@@ -564,6 +583,11 @@ void CtControl::newImageReady(Data &aData)
     }
   else
     m_images_ready.insert(aData);
+
+  m_images_buffer.insert(std::pair<int,Data>(aData.frameNumber,aData));
+  //pop out the oldest Data
+  if(int(m_images_buffer.size()) > m_images_buffer_size)
+    m_images_buffer.erase(m_images_buffer.begin());
 
   if(m_autosave)
     {

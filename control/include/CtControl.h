@@ -202,6 +202,9 @@ namespace lima
     std::set<Data,ltData> m_base_images_ready;
     std::set<Data,ltData> m_images_ready;
 
+    std::map<int,Data>    m_images_buffer;
+    int			  m_images_buffer_size;
+
     ApplyPolicy		m_policy;
     bool		m_ready;
     bool		m_autosave;
