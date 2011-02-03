@@ -1010,6 +1010,16 @@ class LimaCCDs(PyTango.Device_4Impl) :
         dataflat.dtype = numpy.uint8
         return dataflat
 
+    ##@brief get base image data
+    #
+    #image before post processing
+    @Core.DEB_MEMBER_FUNCT
+    def getBaseImage(self,image_id) :
+        self._data_cache = self.__control.ReadBaseImage(image_id)
+        dataflat = self._data_cache.buffer.ravel()
+        dataflat.dtype = numpy.uint8
+        return dataflat
+
     ##@brief get saturated images
     #
     #@params image_id if < 0 read the last image
@@ -1135,6 +1145,9 @@ class LimaCCDsClass(PyTango.DeviceClass) :
         'getImage':
         [[PyTango.DevLong,"The image number"],
          [PyTango.DevVarCharArray,"The data image"]],
+        'getBaseImage':
+        [[PyTango.DevLong,"The image number"],
+         [PyTango.DevVarCharArray,"The base data image"]],
         'readAccSaturatedImageCounter':
         [[PyTango.DevLong,"The image number"],
          [PyTango.DevVarUShortArray,"The image counter"]],
