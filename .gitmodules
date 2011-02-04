@@ -19,3 +19,6 @@
 [submodule "camera/pilatus"]
 	path = camera/pilatus
 	url = git://git.epn-campus.eu/repositories/LimaCameraPilatus
+[submodule "applications/tango"]
+	path = applications/tango
+	url = git://git.epn-campus.eu/repositories/LimaTango
