@@ -16,3 +16,6 @@
 [submodule "camera/pco"]
 	path = camera/pco
 	url = git://git.epn-campus.eu/repositories/LimaCameraPco
+[submodule "camera/pilatus"]
+	path = camera/pilatus
+	url = git://git.epn-campus.eu/repositories/LimaCameraPilatus
