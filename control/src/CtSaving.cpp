@@ -382,7 +382,16 @@ void CtSaving::updateCommonHeader(const HeaderMap &header)
   DEB_PARAM() << DEB_VAR1(header);
 
   AutoMutex aLock(m_cond.mutex());
-  m_common_header.insert(header.begin(),header.end());
+  //Update
+  for(HeaderMap::const_iterator i = header.begin();
+      i != header.end();++i)
+    {
+      std::pair<HeaderMap::iterator,bool> result= 
+	m_common_header.insert(HeaderMap::value_type(i->first,i->second));
+      //if it exist, update
+      if(!result.second)
+	result.first->second = i->second;
+    }
 }
 void CtSaving::getCommonHeader(HeaderMap& header) const
 {
@@ -419,7 +428,15 @@ void CtSaving::updateFrameHeader(long frame_nr,const HeaderMap &header)
 
   AutoMutex aLock(m_cond.mutex());
   HeaderMap &frameHeader = m_frame_headers[frame_nr];
-  frameHeader.insert(header.begin(),header.end());
+  for(HeaderMap::const_iterator i = header.begin();
+      i != header.end();++i)
+    {
+      std::pair<HeaderMap::iterator,bool> result= 
+	frameHeader.insert(HeaderMap::value_type(i->first,i->second));
+      //if it exist, update
+      if(!result.second)
+	result.first->second = i->second;
+    }
 }
 
 void CtSaving::validateFrameHeader(long frame_nr)
