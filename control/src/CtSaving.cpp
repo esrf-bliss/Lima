@@ -550,9 +550,16 @@ void CtSaving::_get_common_header(HeaderMap &header)
 }
 void CtSaving::_takeHeader(std::map<long,HeaderMap>::iterator &headerIter, HeaderMap& header)
 {
-   _get_common_header(header);
+  _get_common_header(header);
   HeaderMap &aFrameHeaderMap = headerIter->second;
-  header.insert(aFrameHeaderMap.begin(),aFrameHeaderMap.end());
+  for(HeaderMap::iterator i = aFrameHeaderMap.begin();
+      i != aFrameHeaderMap.end();++i)
+    {
+      std::pair<HeaderMap::iterator,bool> result = 
+	header.insert(HeaderMap::value_type(i->first,i->second));
+      if(!result.second)
+	result.first->second = i->second;
+    }
   m_frame_headers.erase(headerIter);
 }
 
