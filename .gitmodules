@@ -22,3 +22,6 @@
 [submodule "applications/tango"]
 	path = applications/tango
 	url = git://git.epn-campus.eu/repositories/LimaTango
+[submodule "camera/maxipix"]
+	path = camera/maxipix
+	url = git://git.epn-campus.eu/repositories/LimaCameraMaxipix
