@@ -31,6 +31,7 @@ namespace lima
 {
   class SoftOpExternalMgr
   {
+    DEB_CLASS_NAMESPC(DebModControl,"External Operation","Control");
   public:
     typedef std::string alias;
     typedef int stage;

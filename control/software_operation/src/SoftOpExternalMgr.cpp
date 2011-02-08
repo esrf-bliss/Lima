@@ -181,6 +181,9 @@ void SoftOpExternalMgr::getOpClass(const alias &anAlias,
 
 void SoftOpExternalMgr::setEndLinkTaskCallback(TaskEventCallback *aCbk)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aCbk);
+
   if(m_end_link_callback)
     m_end_link_callback->unref();
   m_end_link_callback = aCbk;
@@ -201,7 +204,10 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
 			      int begin_stage,
 			      int &last_link_task,int &last_sink_task)
 {
-  last_link_task = last_sink_task = begin_stage;
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(begin_stage);
+
+  last_link_task = last_sink_task = -1;
   int nextStage = begin_stage;
   for(Stage2Instance::iterator i = m_stage2instance.begin();
       i != m_stage2instance.end();++i,++nextStage)
@@ -221,15 +227,16 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
 
   aTaskMgr.getLastTask(aLastLink,aLastSink);
 
-  if(aLastLink.first > begin_stage)
+  if(aLastLink.first >= begin_stage)
     aLastLink.second->setEventCallback(m_end_link_callback);
-  if(aLastSink.first > begin_stage)
+  if(aLastSink.first >= begin_stage)
     {
       SinkTaskBase *aDummyPt = new SinkTaskBase();
       aDummyPt->setEventCallback(m_end_sink_callback);
       aTaskMgr.addSinkTask(aLastSink.first + 1,aDummyPt);
       aDummyPt->unref();
     }
+  DEB_RETURN() << DEB_VAR2(last_link_task,last_sink_task);
 }
 
 void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
@@ -275,6 +282,7 @@ void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
 
 void SoftOpExternalMgr::isTaskActive(bool &linkTaskFlag,bool &sinkTaskFlag) const
 {
+  DEB_MEMBER_FUNCT();
   linkTaskFlag = sinkTaskFlag = false;
   for(Stage2Instance::const_iterator i = m_stage2instance.begin();
       i != m_stage2instance.end() && (!linkTaskFlag || !sinkTaskFlag);++i)
@@ -288,6 +296,7 @@ void SoftOpExternalMgr::isTaskActive(bool &linkTaskFlag,bool &sinkTaskFlag) cons
 	    sinkTaskFlag = true;
 	}
     }
+  DEB_RETURN() << DEB_VAR2(linkTaskFlag,sinkTaskFlag);
 }
 
 

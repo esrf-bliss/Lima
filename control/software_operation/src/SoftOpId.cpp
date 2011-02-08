@@ -31,6 +31,7 @@ SoftOpBackgroundSubstraction::SoftOpBackgroundSubstraction() :
   SoftOpBaseClass()
 {
   m_opt = new Tasks::BackgroundSubstraction();
+  m_opt->setProcessingInPlace(false);
 }
 
 SoftOpBackgroundSubstraction::~SoftOpBackgroundSubstraction()
@@ -55,6 +56,7 @@ SoftOpBinning::SoftOpBinning() :
   SoftOpBaseClass()
 {
   m_opt = new Tasks::Binning();
+  m_opt->setProcessingInPlace(false);
 }
 
 SoftOpBinning::~SoftOpBinning()
@@ -109,6 +111,7 @@ SoftOpFlatfieldCorrection::SoftOpFlatfieldCorrection() :
   SoftOpBaseClass()
 {
   m_opt = new Tasks::FlatfieldCorrection();
+  m_opt->setProcessingInPlace(false);
 }
 
 SoftOpFlatfieldCorrection::~SoftOpFlatfieldCorrection()
@@ -134,6 +137,7 @@ SoftOpFlip::SoftOpFlip() :
   SoftOpBaseClass()
 {
   m_opt = new Tasks::Flip();
+  m_opt->setProcessingInPlace(false);
 }
 
 SoftOpFlip::~SoftOpFlip()
@@ -167,6 +171,7 @@ SoftOpMask::SoftOpMask() :
   SoftOpBaseClass()
 {
   m_opt = new Tasks::Mask();
+  m_opt->setProcessingInPlace(false);
 }
 
 SoftOpMask::~SoftOpMask()
@@ -579,6 +584,7 @@ SoftOpSoftRoi::SoftOpSoftRoi() :
   SoftOpBaseClass()
 {
   m_opt = new Tasks::SoftRoi();
+  m_opt->setProcessingInPlace(false);
 }
 
 SoftOpSoftRoi::~SoftOpSoftRoi()
