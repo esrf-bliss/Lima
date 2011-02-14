@@ -55,8 +55,8 @@ class Camera
 	void setFrameTransferMode(Frelon::FrameTransferMode  ftm);
 	void getFrameTransferMode(Frelon::FrameTransferMode& ftm /Out/);
 
-	std::string getInputChanModeName(Frelon::FrameTransferMode ftm, 
-					 Frelon::InputChan input_chan);
+	static std::string getInputChanModeName(Frelon::FrameTransferMode ftm, 
+						Frelon::InputChan input_chan);
 
 	void getFrameDim(FrameDim& frame_dim /Out/);
 

@@ -123,6 +123,23 @@ class SyncCtrlObj : HwSyncCtrlObj
 };
 
 
+class BinChangedCallback 
+{
+
+%TypeHeaderCode
+#include "FrelonInterface.h"
+#include <algorithm>
+%End
+
+ public:
+	BinChangedCallback();
+	virtual ~BinChangedCallback();
+
+ protected:
+	virtual void hwBinChanged(const Bin& hw_bin) = 0;
+};
+
+
 class BinCtrlObj : HwBinCtrlObj
 {
 
@@ -138,6 +155,26 @@ class BinCtrlObj : HwBinCtrlObj
 	virtual void setBin(const Bin& bin);
 	virtual void getBin(Bin& bin /Out/);
 	virtual void checkBin(Bin& bin /In,Out/);
+
+	void registerBinChangedCallback  (Frelon::BinChangedCallback& chg_cb);
+	void unregisterBinChangedCallback(Frelon::BinChangedCallback& chg_cb);
+};
+
+
+class RoiChangedCallback 
+{
+
+%TypeHeaderCode
+#include "FrelonInterface.h"
+#include <algorithm>
+%End
+
+ public:
+	RoiChangedCallback();
+	virtual ~RoiChangedCallback();
+
+ protected:
+	virtual void hwRoiChanged(const Roi& hw_roi) = 0;
 };
 
 
@@ -156,6 +193,9 @@ class RoiCtrlObj : HwRoiCtrlObj
 	virtual void checkRoi(const Roi& set_roi, Roi& hw_roi /Out/);
 	virtual void setRoi(const Roi& set_roi);
 	virtual void getRoi(Roi& hw_roi /Out/);
+
+	void registerRoiChangedCallback  (Frelon::RoiChangedCallback& chg_cb);
+	void unregisterRoiChangedCallback(Frelon::RoiChangedCallback& chg_cb);
 };
 
 
@@ -227,6 +267,19 @@ class Interface : HwInterface
 	virtual void stopAcq();
 	virtual void getStatus(HwInterface::StatusType& status /Out/);
 	virtual int getNbHwAcquiredFrames();
+
+	SIP_PYOBJECT getHwCtrlObj(HwCap::Type cap_type);
+%MethodCode
+	HwInterface::CapList cap_list;
+	sipCpp->getCapList(cap_list);
+
+	typedef HwInterface::CapList::const_iterator It;
+	for (It i = cap_list.begin(); i != cap_list.end(); ++i)
+		if (i->getType() == a0) {
+			LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(i, FRELON);
+			break;
+		}
+%End
 };
 
 

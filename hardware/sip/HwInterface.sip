@@ -106,7 +106,7 @@ using namespace lima;
 	typedef HwInterface::CapList::const_iterator It;
 	for (It i = cap_list.begin(); i != cap_list.end(); ++i)
 		if (i->getType() == a0) {
-			SIP_CONVERT_CTRLOBJECT_TO_SIPOBJECT(i);
+			LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(i, HW);
 			break;
 		}
 %End

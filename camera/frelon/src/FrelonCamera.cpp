@@ -196,7 +196,7 @@ int Camera::getModesAvail()
 string Camera::getInputChanModeName(FrameTransferMode ftm, 
 				    InputChan input_chan)
 {
-	DEB_MEMBER_FUNCT();
+	DEB_STATIC_FUNCT();
 
 	ostringstream os;
 	os << ((ftm == FTM) ? "FTM" : "FFM") << "-";

@@ -119,6 +119,7 @@ using namespace lima;
 
 	void setRoi(Roi &roi);
 	void setBin(Bin &bin);
+	void setFlip(Flip &flip);
 
 	void resetRoi();
 	void resetBin();

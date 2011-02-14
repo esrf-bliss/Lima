@@ -494,11 +494,11 @@ bool CtControl::newFrameReady(Data& fdata)
       int last_link,last_sink;
       m_op_ext->addTo(*mgr, internal_stage, last_link, last_sink);
 
-      if (internal_stage || last_link || last_sink)
+      if (internal_stage || (last_link >= 0) || (last_sink >= 0))
 	PoolThreadMgr::get().addProcess(mgr);
       else
 	delete mgr;
-      if (!internal_stage && !last_link)
+      if (!internal_stage && (last_link < 0))
 	newBaseImageReady(fdata);
 
       if (m_img_status_cb)

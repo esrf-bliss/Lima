@@ -60,8 +60,8 @@ class Camera : public HwMaxImageSizeCallbackGen
 	void setFrameTransferMode(FrameTransferMode  ftm);
 	void getFrameTransferMode(FrameTransferMode& ftm);
 
-	std::string getInputChanModeName(FrameTransferMode ftm, 
-					 InputChan input_chan);
+	static std::string getInputChanModeName(FrameTransferMode ftm, 
+						InputChan input_chan);
 
 	void getFrameDim(FrameDim& frame_dim);
 

@@ -362,8 +362,21 @@ void SyncCtrlObj::AcqEndCallback::acqFinished(const HwFrameInfoType& /*finfo*/)
  * \brief BinCtrlObj constructor
  *******************************************************************/
 
+BinChangedCallback::BinChangedCallback()
+	: m_bin_ctrl_obj(NULL)
+{
+	DEB_CONSTRUCTOR();
+}
+
+BinChangedCallback::~BinChangedCallback()
+{
+	DEB_DESTRUCTOR();
+	if (m_bin_ctrl_obj != NULL)
+		m_bin_ctrl_obj->unregisterBinChangedCallback(*this);
+}
+
 BinCtrlObj::BinCtrlObj(Camera& cam)
-	: m_cam(cam)
+	: m_cam(cam), m_bin_chg_cb(NULL)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -371,12 +384,21 @@ BinCtrlObj::BinCtrlObj(Camera& cam)
 BinCtrlObj::~BinCtrlObj()
 {
 	DEB_DESTRUCTOR();
+	if (m_bin_chg_cb)
+		m_bin_chg_cb->m_bin_ctrl_obj = NULL;
 }
 
 void BinCtrlObj::setBin(const Bin& bin)
 {
 	DEB_MEMBER_FUNCT();
 	m_cam.setBin(bin);
+
+	if (m_bin_chg_cb) {
+		DEB_TRACE() << "Firing change callback";
+		Bin hw_bin;
+		getBin(hw_bin);
+		m_bin_chg_cb->hwBinChanged(hw_bin);
+	}
 }
 
 void BinCtrlObj::getBin(Bin& bin)
@@ -391,13 +413,56 @@ void BinCtrlObj::checkBin(Bin& bin)
 	m_cam.checkBin(bin);
 }
 
+void BinCtrlObj::registerBinChangedCallback(BinChangedCallback& bin_chg_cb)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(&bin_chg_cb, m_bin_chg_cb);
+
+	if (m_bin_chg_cb != NULL)
+		THROW_HW_ERROR(InvalidValue) << "a cb is already registered";
+
+	m_bin_chg_cb = &bin_chg_cb;
+	bin_chg_cb.m_bin_ctrl_obj = this;
+
+	DEB_TRACE() << "Firing first callback for update";
+	Bin hw_bin;
+	getBin(hw_bin);
+	m_bin_chg_cb->hwBinChanged(hw_bin);
+}
+
+void BinCtrlObj::unregisterBinChangedCallback(BinChangedCallback& bin_chg_cb)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(&bin_chg_cb, m_bin_chg_cb);
+
+	if (&bin_chg_cb != m_bin_chg_cb)
+		THROW_HW_ERROR(InvalidValue) << "cb is not registered";
+
+	m_bin_chg_cb = NULL;
+	bin_chg_cb.m_bin_ctrl_obj = NULL;
+}
+
 
 /*******************************************************************
  * \brief RoiCtrlObj constructor
  *******************************************************************/
 
+RoiChangedCallback::RoiChangedCallback()
+	: m_roi_ctrl_obj(NULL)
+{
+	DEB_CONSTRUCTOR();
+}
+
+RoiChangedCallback::~RoiChangedCallback()
+{
+	DEB_DESTRUCTOR();
+
+	if (m_roi_ctrl_obj != NULL)
+		m_roi_ctrl_obj->unregisterRoiChangedCallback(*this);
+}
+
 RoiCtrlObj::RoiCtrlObj(Camera& cam)
-	: m_cam(cam)
+	: m_cam(cam), m_roi_chg_cb(NULL)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -405,6 +470,9 @@ RoiCtrlObj::RoiCtrlObj(Camera& cam)
 RoiCtrlObj::~RoiCtrlObj()
 {
 	DEB_DESTRUCTOR();
+
+	if (m_roi_chg_cb)
+		m_roi_chg_cb->m_roi_ctrl_obj = NULL;
 }
 
 void RoiCtrlObj::checkRoi(const Roi& set_roi, Roi& hw_roi)
@@ -417,12 +485,48 @@ void RoiCtrlObj::setRoi(const Roi& roi)
 {
 	DEB_MEMBER_FUNCT();
 	m_cam.setRoi(roi);
+
+	if (m_roi_chg_cb) {
+		DEB_TRACE() << "Firing change callback";
+		Roi hw_roi;
+		getRoi(hw_roi);
+		m_roi_chg_cb->hwRoiChanged(hw_roi);
+	}
 }
 
 void RoiCtrlObj::getRoi(Roi& roi)
 {
 	DEB_MEMBER_FUNCT();
 	m_cam.getRoi(roi);
+}
+
+void RoiCtrlObj::registerRoiChangedCallback(RoiChangedCallback& roi_chg_cb)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(&roi_chg_cb, m_roi_chg_cb);
+
+	if (m_roi_chg_cb != NULL)
+		THROW_HW_ERROR(InvalidValue) << "a cb is already registered";
+
+	m_roi_chg_cb = &roi_chg_cb;
+	roi_chg_cb.m_roi_ctrl_obj = this;
+
+	DEB_TRACE() << "Firing first callback for update";
+	Roi hw_roi;
+	getRoi(hw_roi);
+	m_roi_chg_cb->hwRoiChanged(hw_roi);
+}
+
+void RoiCtrlObj::unregisterRoiChangedCallback(RoiChangedCallback& roi_chg_cb)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(&roi_chg_cb, m_roi_chg_cb);
+
+	if (&roi_chg_cb != m_roi_chg_cb)
+		THROW_HW_ERROR(InvalidValue) << "cb is not registered";
+
+	m_roi_chg_cb = NULL;
+	roi_chg_cb.m_roi_ctrl_obj = NULL;
 }
 
 
@@ -511,7 +615,8 @@ void ShutterCtrlObj::setMode(ShutterMode shut_mode)
 					     << DEB_VAR1(shut_mode);
 
 	ShutMode cam_mode;
-	cam_mode = (shut_mode == ShutterAutoFrame) ? Frelon::AutoFrame : Frelon::Off;
+	cam_mode = (shut_mode == ShutterAutoFrame) ? Frelon::AutoFrame : 
+	  					     Frelon::Off;
 	m_cam.setShutMode(cam_mode);
 }
 
@@ -521,7 +626,8 @@ void ShutterCtrlObj::getMode(ShutterMode& shut_mode) const
 
 	ShutMode cam_mode;
 	m_cam.getShutMode(cam_mode);
-	shut_mode = (cam_mode == Frelon::AutoFrame) ? ShutterAutoFrame : ShutterManual;
+	shut_mode = (cam_mode == Frelon::AutoFrame) ? ShutterAutoFrame : 
+	  					      ShutterManual;
 	DEB_RETURN() << DEB_VAR1(shut_mode);
 }
 
@@ -653,7 +759,8 @@ void Interface::reset(ResetLevel reset_level)
 	m_sync.setLatTime(0.0);
 	m_sync.setTrigMode(IntTrig);
 
-	m_cam.setShutCloseTime(0.0);
+	m_shutter.setMode(ShutterAutoFrame);
+	m_shutter.setCloseTime(0.0);
 
 	m_bin.setBin(Bin(1));
 	m_roi.setRoi(Roi());

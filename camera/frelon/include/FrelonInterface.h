@@ -139,11 +139,9 @@ class SyncCtrlObj : public HwSyncCtrlObj
 	{
 		DEB_CLASS_NAMESPC(DebModCamera, "SyncCtrlObj::AcqEndCallback", 
 				  "Frelon");
-
 	public:
 		AcqEndCallback(Camera& cam);
 		virtual ~AcqEndCallback();
-
 	protected:
 		virtual void acqFinished(const HwFrameInfoType& /*finfo*/);
 	private:
@@ -161,6 +159,25 @@ class SyncCtrlObj : public HwSyncCtrlObj
  * \brief Control object providing Frelon binning interface
  *******************************************************************/
 
+class BinCtrlObj;
+
+class BinChangedCallback 
+{
+	DEB_CLASS_NAMESPC(DebModCamera, "BinChangedCallback", "Frelon");
+
+ public:
+	BinChangedCallback();
+	virtual ~BinChangedCallback();
+
+ protected:
+	virtual void hwBinChanged(const Bin& hw_bin) = 0;
+	
+ private:
+	friend class BinCtrlObj;
+	BinCtrlObj *m_bin_ctrl_obj;
+};
+
+
 class BinCtrlObj : public HwBinCtrlObj
 {
 	DEB_CLASS_NAMESPC(DebModCamera, "BinCtrlObj", "Frelon");
@@ -173,8 +190,12 @@ class BinCtrlObj : public HwBinCtrlObj
 	virtual void getBin(Bin& bin);
 	virtual void checkBin(Bin& bin);
 
+	void registerBinChangedCallback  (BinChangedCallback& bin_chg_cb);
+	void unregisterBinChangedCallback(BinChangedCallback& bin_chg_cb);
+
  private:
 	Camera& m_cam;
+	BinChangedCallback *m_bin_chg_cb;
 };
 
 
@@ -182,6 +203,25 @@ class BinCtrlObj : public HwBinCtrlObj
  * \class RoiCtrlObj
  * \brief Control object providing Frelon Roi interface
  *******************************************************************/
+
+class RoiCtrlObj;
+
+class RoiChangedCallback 
+{
+	DEB_CLASS_NAMESPC(DebModCamera, "RoiChangedCallback", "Frelon");
+
+ public:
+	RoiChangedCallback();
+	virtual ~RoiChangedCallback();
+
+ protected:
+	virtual void hwRoiChanged(const Roi& hw_roi) = 0;
+
+ private:
+	friend class RoiCtrlObj;
+	RoiCtrlObj *m_roi_ctrl_obj;
+};
+
 
 class RoiCtrlObj : public HwRoiCtrlObj
 {
@@ -195,8 +235,12 @@ class RoiCtrlObj : public HwRoiCtrlObj
 	virtual void getRoi(Roi& hw_roi);
 	virtual void checkRoi(const Roi& set_roi, Roi& hw_roi);
 
+	void registerRoiChangedCallback  (RoiChangedCallback& roi_chg_cb);
+	void unregisterRoiChangedCallback(RoiChangedCallback& roi_chg_cb);
+
  private:
 	Camera& m_cam;
+	RoiChangedCallback *m_roi_chg_cb;
 };
 
 

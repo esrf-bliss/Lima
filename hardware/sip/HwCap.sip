@@ -54,7 +54,7 @@ public:
 	Type getType() const;
 	SIP_PYOBJECT getCtrlObj();
 %MethodCode
-SIP_CONVERT_CTRLOBJECT_TO_SIPOBJECT(sipCpp);
+LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(sipCpp, HW);
 %End
 };
  
