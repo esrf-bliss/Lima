@@ -35,7 +35,7 @@ class E2VCorrection : public LinkTask
 {
  public:
 	static const int FirstCol, LastCol;
-	static const double CorrFactor;
+	static const double ErrorFactor;
 
 	explicit E2VCorrection();
 	E2VCorrection(const E2VCorrection& o);

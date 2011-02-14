@@ -28,7 +28,7 @@ using namespace std;
 
 const int    E2VCorrection::FirstCol    = 1023;
 const int    E2VCorrection::LastCol     = 1024;
-const double E2VCorrection::CorrFactor  = 2.004;
+const double E2VCorrection::ErrorFactor = 0.004;
 
 E2VCorrection::E2VCorrection()
 {
@@ -74,11 +74,9 @@ Data E2VCorrection::process(Data& data)
 		buffer->unref();
 	}
 
-	if (m_hw_bin.getX() > 1)
-		return ret;
-
-	int corr_offset = FirstCol - m_hw_roi.getTopLeft().x;
-	int corr_width  = LastCol - FirstCol + 1;
+	int bin_x = m_hw_bin.getX();
+	int corr_offset = FirstCol / bin_x - m_hw_roi.getTopLeft().x;
+	int corr_width  = LastCol / bin_x - FirstCol / bin_x + 1;
 	int roi_width   = m_hw_roi.getSize().getWidth();
 	if ((corr_offset + corr_width <= 0) || (corr_offset >= roi_width))
 		return ret;
@@ -94,10 +92,11 @@ Data E2VCorrection::process(Data& data)
 	T *ptr = (T *) ret.data();
 	ptr += corr_offset;
 
+	double corr_factor = 1 + ErrorFactor / bin_x;
 	int roi_height = m_hw_roi.getSize().getHeight();
 	for (int y = 0; y < roi_height; ++y, ptr += roi_width)
 		for (int x = 0; x < corr_width; ++x)
-			ptr[x] = T(ptr[x] * CorrFactor);
+			ptr[x] = T(ptr[x] * corr_factor);
 
 	return ret;
 }

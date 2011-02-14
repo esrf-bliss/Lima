@@ -106,9 +106,8 @@ class FrelonAcq:
             if hw_roi.isEmpty():
                 deb.Trace('Empty Roi, getting MaxImageSize')
                 max_size = self.m_det_info_ctrl_obj.getMaxImageSize()
-                w = max_size.getWidth()  / self.m_hw_bin.getX()
-                h = max_size.getHeight() / self.m_hw_bin.getY()
-                hw_roi = Roi(Point(0, 0), Size(w, h))
+                unbinned_roi = Roi(Point(0), max_size)
+                hw_roi = unbinned_roi.getBinned(self.m_hw_bin)
                 deb.Trace('hw_roi=%s' % hw_roi)
             self.m_e2v_corr.setHwRoi(hw_roi);
 
