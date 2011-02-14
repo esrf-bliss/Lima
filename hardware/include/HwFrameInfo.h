@@ -59,7 +59,8 @@ typedef struct LIMACORE_API HwFrameInfo {
 	bool isValid() const;
 } HwFrameInfoType;
 
-std::ostream& operator <<(std::ostream& os, const HwFrameInfoType& info);
+LIMACORE_API std::ostream& operator <<(std::ostream& os,
+				       const HwFrameInfoType& info);
 
 }
 

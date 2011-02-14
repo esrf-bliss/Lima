@@ -126,7 +126,7 @@ inline bool operator !=(const Point& p1, const Point& p2)
 	return !(p1 == p2);
 }
 
-std::ostream& operator <<(std::ostream& os, const Point& p);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const Point& p);
 
 
 
@@ -147,8 +147,8 @@ enum YBorder {
 	Bottom      = 1,
 };
 
-std::ostream& operator <<(std::ostream& os, XBorder xb);
-std::ostream& operator <<(std::ostream& os, YBorder yb);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, XBorder xb);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, YBorder yb);
 
 class LIMACORE_API Corner
 {
@@ -220,7 +220,7 @@ inline bool Corner::operator ==(const Corner& c)
 
 extern const Corner TopLeft, TopRight, BottomLeft, BottomRight;
 
-std::ostream& operator <<(std::ostream& os, const Corner& c);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const Corner& c);
 
 
 /*******************************************************************
@@ -289,7 +289,7 @@ inline Point Size::checkValid(const Point& p)
 	return p;
 }
 
-std::ostream& operator <<(std::ostream& os, const Size& s);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const Size& s);
 
 
 /*******************************************************************
@@ -350,7 +350,7 @@ inline Point Bin::checkValid(const Point& p)
 	return p;
 }
 
-std::ostream& operator <<(std::ostream& os, const Bin& bin);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const Bin& bin);
 
 
 /*******************************************************************
@@ -600,7 +600,7 @@ inline bool operator !=(const Roi& r1, const Roi& r2)
 	return !(r1 == r2);
 }
 
-std::ostream& operator <<(std::ostream& os, const Roi& roi);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const Roi& roi);
 
 
 /*******************************************************************
@@ -754,7 +754,7 @@ inline FrameDim operator /(const FrameDim& fdim, const Point& point)
 	return point_fdim /= point;
 }
 
-std::ostream& operator <<(std::ostream& os, const FrameDim& fdim);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const FrameDim& fdim);
 
 
 } // namespace lima

@@ -21,6 +21,8 @@
 //###########################################################################
 %Module limacore 0
 
+%Platforms {WIN32_PLATFORM POSIX_PLATFORM}
+
 %ModuleHeaderCode
   #include <SoftOpId.h>
 %End

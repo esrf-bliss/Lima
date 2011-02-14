@@ -29,7 +29,7 @@
 
 namespace lima
 {
-  class SoftOpExternalMgr
+  class LIMACORE_API SoftOpExternalMgr
   {
     DEB_CLASS_NAMESPC(DebModControl,"External Operation","Control");
   public:

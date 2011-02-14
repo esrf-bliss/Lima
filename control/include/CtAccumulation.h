@@ -41,7 +41,7 @@ namespace lima
 
     typedef std::list<std::list<long long> > saturatedCounterResult;
 
-    struct Parameters
+    struct LIMACORE_API Parameters
     {
       DEB_CLASS_NAMESPC(DebModControl,"Accumulation::Parameters","Control");
     public:

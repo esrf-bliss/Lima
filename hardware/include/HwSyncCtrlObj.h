@@ -114,8 +114,8 @@ public:
 	ValidRangesCallback* 	m_valid_ranges_cb;
 };
 
-std::ostream& operator <<(std::ostream& os, 
-			  const HwSyncCtrlObj::ValidRangesType&);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, 
+				       const HwSyncCtrlObj::ValidRangesType&);
 
 } // namespace lima
 

@@ -94,7 +94,9 @@ using namespace lima;
 
     CtAcquisition* acquisition();
     CtSaving* saving();
+%If (POSIX_PLATFORM)
     CtSpsImage* display();
+%End
     CtImage* image();
     CtBuffer* buffer();
     CtShutter* shutter();

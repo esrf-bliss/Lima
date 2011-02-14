@@ -33,7 +33,7 @@ namespace lima
  * AutoCounter
  ********************************************************************/
 
-class LIMACORE_API AutoCounter
+class AutoCounter
 {
 public:
 	AutoCounter() : r(1)
@@ -58,7 +58,7 @@ private:
  ********************************************************************/
 
 template <class M>
-class LIMACORE_API AutoLock
+class AutoLock
 {
 public:
 	enum { UnLocked, Locked, TryLocked, PrevLocked };
@@ -185,7 +185,7 @@ private:
  ********************************************************************/
 
 template <class T, bool array=false>
-class LIMACORE_API AutoPtr
+class AutoPtr
 {
 public:
 	AutoPtr() 

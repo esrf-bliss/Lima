@@ -40,7 +40,7 @@ namespace lima
   public:
     enum AccTimeMode {Live,Real};
 
-    struct Parameters {
+    struct LIMACORE_API Parameters {
       DEB_CLASS_NAMESPC(DebModControl,"Acquisition::Parameters","Control");
     public:
       Parameters();

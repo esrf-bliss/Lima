@@ -39,7 +39,7 @@
 
 namespace lima
 {
-  class SoftOpBaseClass
+  class LIMACORE_API SoftOpBaseClass
   {
     friend class SoftOpExternalMgr;
   protected:
@@ -65,7 +65,7 @@ namespace lima
       SOFTROI
     };
 
-  struct SoftOpKey
+  struct LIMACORE_API SoftOpKey
   {
     SoftOpKey() : m_id(UNDEF),m_name(NULL) {};
     SoftOpKey(SoftOpId id,const char *name) : m_id(id),m_name(name) {}
@@ -74,7 +74,7 @@ namespace lima
     const char *m_name;
   };
 
-  struct SoftOpInstance
+  struct LIMACORE_API SoftOpInstance
   {
     SoftOpInstance() : m_linkable(false),
 		       m_opt(NULL) {};
@@ -89,7 +89,7 @@ namespace lima
     SoftOpBaseClass*	m_opt;
   };
   
-  class SoftOpBackgroundSubstraction : public SoftOpBaseClass
+  class LIMACORE_API SoftOpBackgroundSubstraction : public SoftOpBaseClass
   {
   public:
     SoftOpBackgroundSubstraction();
@@ -104,7 +104,7 @@ namespace lima
     Tasks::BackgroundSubstraction *m_opt;
   };
 
-  class SoftOpBinning : public SoftOpBaseClass
+  class LIMACORE_API SoftOpBinning : public SoftOpBaseClass
   {
   public:
     SoftOpBinning();
@@ -119,7 +119,7 @@ namespace lima
     Tasks::Binning *m_opt;
   };
 
-  class SoftOpBpm : public SoftOpBaseClass
+  class LIMACORE_API SoftOpBpm : public SoftOpBaseClass
   {
   public:
     SoftOpBpm();
@@ -136,7 +136,7 @@ namespace lima
     Tasks::BpmTask	*m_task;
   };
 
-  class SoftOpFlatfieldCorrection : public SoftOpBaseClass
+  class LIMACORE_API SoftOpFlatfieldCorrection : public SoftOpBaseClass
   {
   public:
     SoftOpFlatfieldCorrection();
@@ -151,7 +151,7 @@ namespace lima
     Tasks::FlatfieldCorrection *m_opt;
   };
 
-  class SoftOpFlip : public SoftOpBaseClass
+  class LIMACORE_API SoftOpFlip : public SoftOpBaseClass
   {
   public:
     SoftOpFlip();
@@ -166,7 +166,7 @@ namespace lima
     Tasks::Flip *m_opt;
   };
 
-  class SoftOpMask : public SoftOpBaseClass
+  class LIMACORE_API SoftOpMask : public SoftOpBaseClass
   {
   public:
     SoftOpMask();
@@ -181,7 +181,7 @@ namespace lima
     Tasks::Mask *m_opt;
   };
 
-  class SoftOpRoiCounter : public SoftOpBaseClass
+  class LIMACORE_API SoftOpRoiCounter : public SoftOpBaseClass
   {
   public:
     typedef std::pair<int,std::list<Tasks::RoiCounterResult> > RoiIdAndResults;
@@ -217,7 +217,7 @@ namespace lima
     mutable Cond		m_cond;
   };
 
-  class SoftOpRoi2Spectrum : public SoftOpBaseClass
+  class LIMACORE_API SoftOpRoi2Spectrum : public SoftOpBaseClass
   {
   public:
     typedef std::pair<int,std::list<Tasks::Roi2SpectrumResult> > RoiIdAndResults;
@@ -258,7 +258,7 @@ namespace lima
     mutable Cond		m_cond;
   };
 
-  class SoftOpSoftRoi : public SoftOpBaseClass
+  class LIMACORE_API SoftOpSoftRoi : public SoftOpBaseClass
   {
   public:
     SoftOpSoftRoi();

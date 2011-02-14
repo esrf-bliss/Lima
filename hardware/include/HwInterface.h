@@ -79,10 +79,10 @@ bool HwInterface::getHwCtrlObj(CtrlObj *& ctrl_obj) const
 	return false;
 }
 
-std::ostream& operator <<(std::ostream& os, 
-			  const HwInterface::StatusType& status);
-std::ostream& operator <<(std::ostream& os, 
-			  HwInterface::ResetLevel reset_level);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, 
+				       const HwInterface::StatusType& status);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, 
+				       HwInterface::ResetLevel reset_level);
 
 
 } // namespace lima

@@ -9,3 +9,8 @@ espia/
 frelon/
 maxipix/
 simulator/
+*.obj
+lima*.exp
+lima*.lib
+*.pyd.manifest
+*.pyd

@@ -64,6 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="liblimacore.lib"
+				OutputFile="$(OutDir)\liblimasimulator.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;..\..\..\..\build\msvc\9.0\LimaCore\Debug&quot;"
 				GenerateDebugInformation="true"
