@@ -126,6 +126,8 @@ for mod in modules:
 if change_type == JUST_PRINT:
     sys.exit(0)
 
+submodules = []
+
 for mod in modules:
     version = mod_version_objs[mod]
     if change_type == CHG_MAJOR:
@@ -143,10 +145,21 @@ for mod in modules:
     version_str = version_file.write('%s\n' % version)
     version_file.close()
 
-    os.system('git add %s' % version_file_name)
+
+    if os.system('git add %s 2>/dev/null' % version_file_name): # probably a submodule
+        basepath,filename = os.path.split(version_file_name)
+        oldDir = os.getcwd()
+        os.chdir(basepath)
+        os.system('git add %s' % filename) # add in submodule
+        os.system('git commit -m "New tag : %s"' % version)
+        os.chdir(oldDir)
+        os.system('git add %s' % basepath)
+
+        submodules.append(mod)
 
 if os.system('git commit') :
     sys.exit(0)
+
 
 for mod in modules:
     version = mod_version_objs[mod]
@@ -156,3 +169,8 @@ for mod in modules:
     
     cmd = 'git tag %s' % (git_tag)
     os.system(cmd)
+
+if submodules:
+    print 'Don\'t forget to push those submodules:'
+    for mod in submodules:
+        print '\t->',mod
