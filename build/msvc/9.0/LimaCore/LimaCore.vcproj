@@ -121,10 +121,11 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS"
+				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
