@@ -1,0 +1,9 @@
+# Compilation of python Lima Modules for Windows
+  - first copie config.inc_default to config.inc
+  - configure config.inc
+  - then run windowSipCompilation --config
+  - then run windowSipCompilation
+# For Linux platform, It's manage by the master Makefile
+  - got to the Lima root project
+  - then run make config
+  - then run make -C sip -j3

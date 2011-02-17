@@ -207,7 +207,7 @@ def main():
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
             makefile.extra_cxxflags = ['/EHsc']
-            makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Debug'))
+            makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
             makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE']
