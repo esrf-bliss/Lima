@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_option("--set",dest="module_set_list",action="append",
                       help="Set the module list to install, do not read config.inc file")
     parser.add_option("--available-modules",dest="get_module_list_flag",action="store_true",default=False,
-                      help="Specify a module to install")
+                      help="List all possible modules to install")
     parser.add_option("--all",action="store_true",dest="install_all",default=False,
                       help="install all possible module")
     (option,args) = parser.parse_args()
