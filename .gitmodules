@@ -25,3 +25,6 @@
 [submodule "camera/maxipix"]
 	path = camera/maxipix
 	url = git://git.epn-campus.eu/repositories/LimaCameraMaxipix
+[submodule "documentation"]
+	path = documentation
+	url = git://git.epn-campus.eu/repositories/LimaDocumentation
