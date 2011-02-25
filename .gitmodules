@@ -28,3 +28,6 @@
 [submodule "documentation"]
 	path = documentation
 	url = git://git.epn-campus.eu/repositories/LimaDocumentation
+[submodule "camera/frelon"]
+	path = camera/frelon
+	url = git://git.epn-campus.eu/repositories/LimaCameraFrelon
