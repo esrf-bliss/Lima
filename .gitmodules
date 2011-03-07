@@ -31,3 +31,6 @@
 [submodule "camera/frelon"]
 	path = camera/frelon
 	url = git://git.epn-campus.eu/repositories/LimaCameraFrelon
+[submodule "camera/common/espia"]
+	path = camera/common/espia
+	url = git://git.epn-campus.eu/repositories/LimaCameraEspia
