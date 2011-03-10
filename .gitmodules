@@ -34,3 +34,6 @@
 [submodule "camera/common/espia"]
 	path = camera/common/espia
 	url = git://git.epn-campus.eu/repositories/LimaCameraEspia
+[submodule "applications/taco"]
+	path = applications/taco
+	url = git://git.epn-campus.eu/repositories/LimaTaco
