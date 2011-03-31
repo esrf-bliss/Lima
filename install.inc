@@ -84,6 +84,13 @@ PILATUS_MAJ_VERSION = $(shell echo $(PILATUS_FULL_VERSION) | cut -d. -f1)
 INSTALL_PILATUS_VDIR = $(INSTALL_PILATUS_DIR)/v$(PILATUS_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_BASLER), 0)
+INSTALL_BASLER_DIR = $(INSTALL_PLAT_DIR)/Basler
+BASLER_FULL_VERSION = $(shell cat camera/basler/VERSION)
+BASLER_MAJ_VERSION = $(shell echo $(BASLER_FULL_VERSION) | cut -d. -f1)
+INSTALL_BASLER_VDIR = $(INSTALL_BASLER_DIR)/v$(BASLER_FULL_VERSION)
+endif
+
 .PHONY: install
 
 install:
@@ -139,4 +146,12 @@ ifneq ($(COMPILE_PILATUS), 0)
 	mkdir -p $(INSTALL_PILATUS_VDIR)
 	cp camera/pilatus/python/__init__.py $(INSTALL_PILATUS_DIR)
 	cp camera/pilatus/python/*.py $(INSTALL_PILATUS_VDIR)
+endif
+ifneq ($(COMPILE_BASLER), 0)
+	mkdir -p $(INSTALL_BASLER_VDIR)
+	cp camera/basler/python/__init__.py $(INSTALL_BASLER_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimabasler.so*
+	cp build/liblimabasler.so.$(BASLER_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimabasler.so.$(BASLER_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp sip/basler/limabasler.so $(INSTALL_BASLER_VDIR)
 endif

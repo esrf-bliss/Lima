@@ -39,4 +39,14 @@ ifneq ($(COMPILE_MAXIPIX),0)
 sub-dirs += maxipix
 endif
 
+ifndef COMPILE_BASLER
+COMPILE_BASLER = 0
+endif
+
+ifneq ($(COMPILE_BASLER),0)
+sub-dirs += basler
+CXXFLAGS+=-DLESSDEPENDENCY
+export CXXFLAGS
+endif
+
 include ../global.inc

@@ -195,6 +195,38 @@ build_targets += $(maxipix-full)
 
 endif
 
+############################
+# LIMA - BASLER
+############################
+
+ifneq ($(COMPILE_BASLER),0)
+
+BASLER_LDFLAGS	:= -L. -L/opt/pylon/lib64
+BASLER_LDLIBS	:= -lpylonbase
+
+name		:= basler
+basler-objs	:= ../camera/basler/src/Basler.o
+version-file	:= ../camera/basler/VERSION
+basler-flags	:= $(BASLER_LDFLAGS)
+basler-deps	:= $(BASLER_LDLIBS)
+
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+
+basler-base	:= liblima$(name).so
+basler-full	:= $(basler-base).$(full-version)
+basler-maj	:= $(basler-base).$(maj-version)
+basler-flags	+= -fPIC -Wl,-soname,$(basler-maj)
+
+$(basler-full):		$(basler-objs)
+	$(CXX) -shared -o $@ $(basler-flags) $+ $(basler-deps)
+	rm -f $(basler-maj);  ln -s $(basler-full) $(basler-maj)
+	rm -f $(basler-base); ln -s $(basler-maj)  $(basler-base)
+
+build_targets += $(basler-full)
+
+endif
+
 src:		$(build_targets)
 
 test:

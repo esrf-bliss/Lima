@@ -9,6 +9,7 @@ espia/
 frelon/
 maxipix/
 simulator/
+basler/
 *.obj
 lima*.exp
 lima*.lib

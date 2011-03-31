@@ -41,6 +41,10 @@ ifneq ($(COMPILE_MAXIPIX), 0)
 sip-modules += maxipix
 endif
 
+ifneq ($(COMPILE_BASLER), 0)
+sip-modules += basler
+endif
+
 all:	src
 
 src:
