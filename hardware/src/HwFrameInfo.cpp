@@ -91,5 +91,4 @@ HwFrameInfo::HwFrameInfo(const HwFrameInfo &aFrameInfo) :
   valid_pixels(aFrameInfo.valid_pixels),
   buffer_owner_ship(aFrameInfo.buffer_owner_ship)
 {
-  std::cout << "HwFrameInfo::HwFrameInfo copy" << std::endl;
 }
