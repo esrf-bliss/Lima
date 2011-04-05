@@ -34,6 +34,27 @@ namespace lima
       Bin 	bin;
     };
 
+    class Image
+    {
+      friend class CtVideo;
+    public:
+      Image();
+      ~Image();
+      Image(const Image&);
+      
+      const unsigned char* 	buffer() 	const;
+      int 			width() 	const;
+      int 			height() 	const;
+      VideoMode 		mode() 		const;
+    private:
+      Image(const CtVideo*,VideoImage*);
+
+      const CtVideo* 	m_video;
+      VideoImage* 	m_image;
+    };
+
+    friend class Image;
+
     class ImageCallback
     {
       DEB_CLASS_NAMESPC(DebModControl,"Video::ImageCallback", 
@@ -42,8 +63,8 @@ namespace lima
     public:
       ImageCallback() {}
       virtual ~ImageCallback() {}
-    protected:
-      virtual void newImage(const VideoImage&) = 0;
+
+      virtual void newImage(const Image&) = 0;
     };
     // --- parameters
     void setParameters(const Parameters &pars);
@@ -71,7 +92,7 @@ namespace lima
     void getBin(Bin &aBin) const;
 
     // --- images
-    void getLastImage(VideoImage &anImage) const;
+    void getLastImage(Image &anImage) const;
     void getLastImageCounter(int &anImageCounter) const;
 
     void registerImageCallback(ImageCallback &cb);
@@ -82,20 +103,26 @@ namespace lima
   private:
     class _Data2ImageTask;
     friend class _Data2ImageTask;
+    class _Data2ImageCBK;
+    friend class _Data2ImageCBK;
 
     void frameReady(Data&);	// callback from CtControl
 
     void _data_2_image(Data &aData,Bin &aBin,Roi &aRoi);
+    void _data2image_finnished(Data&);
 
     Parameters		m_pars;
     bool 		m_has_video;
     bool		m_ready_flag;
     Data		m_last_data;
     _Data2ImageTask*	m_data_2_image_task;
+    _Data2ImageCBK*	m_data_2_image_cb;
     HwVideoCtrlObj* 	m_video;
     mutable Cond	m_cond;
     int			m_image_counter;
-    VideoImage		m_last_image[2];
+    mutable VideoImage*	m_read_image;
+    mutable VideoImage*	m_write_image;
+    ImageCallback*	m_image_callback;
   };
 }
 #endif

@@ -23,32 +23,114 @@ public:
     DEB_PARAM() << DEB_VAR1(aData);
     
     AutoMutex aLock(m_cnt.m_cond.mutex());
-    int nextImageNumber = m_cnt.m_image_counter;
-    VideoImage &anImage = m_cnt.m_last_image[nextImageNumber & 0x1];
+    VideoImage *anImage = m_cnt.m_write_image;
+    while(anImage->inused)
+      m_cnt.m_cond.wait();
+    anImage->inused = -1;	// Write Mode
     aLock.unlock();
     
     
-    data2Image(aData,anImage);
-    //@todo call the image callback....
+    data2Image(aData,*anImage);
+
+    aLock.lock();
+    anImage->inused = 0;	// Unlock
+    // if read Image is not use, swap
+    if(!m_cnt.m_read_image->inused)
+      {
+	m_cnt.m_write_image = m_cnt.m_read_image;
+	m_cnt.m_write_image->frameNumber = -1;
+	m_cnt.m_read_image = anImage;
+      }
+
+    ++m_cnt.m_image_counter;
+
+    if(m_cnt.m_image_callback)
+      {
+	CtVideo::Image anImageWrapper(&m_cnt,anImage);
+	ImageCallback *cb = m_cnt.m_image_callback;
+	aLock.unlock();
+	cb->newImage(anImageWrapper);
+      }
+    else
+      m_cnt.m_cond.broadcast();
   }
 private:
   CtVideo &m_cnt;
 };
 
+// --- CtVideo::_Data2ImageCBK 
+class CtVideo::_Data2ImageCBK : public TaskEventCallback
+{
+  DEB_CLASS_NAMESPC(DebModControl,"CtVideo::_Data2ImageCBK","Control");
+public:
+  _Data2ImageCBK(CtVideo &aCtVideo) : m_video(aCtVideo) {}
+  virtual void finnished(Data &aData)
+  {
+    DEB_MEMBER_FUNCT();
+    DEB_PARAM() << DEB_VAR1(aData);
+
+    m_video._data2image_finnished(aData);
+  }
+private:
+  CtVideo &m_video;
+};
+// --- CtVideo::Image
+CtVideo::Image::Image() : m_video(NULL),m_image(NULL) {}
+
+CtVideo::Image::~Image()
+{
+  if(m_video)
+    {
+      AutoMutex aLock(m_video->m_cond.mutex());
+      --(m_image->inused);
+      m_video->m_cond.broadcast();
+    }
+}
+
+CtVideo::Image::Image(const Image &anOther) :
+  m_video(anOther.m_video),
+  m_image(anOther.m_image)
+{
+  if(m_video)
+    {
+      AutoMutex aLock(m_video->m_cond.mutex());
+      ++(m_image->inused);
+    }
+}
+
+/** @brief an other contructor
+ *  This methode should be call under Lock
+ */
+CtVideo::Image::Image(const CtVideo *video,VideoImage *image) :
+  m_video(video),
+  m_image(image)
+{
+  ++(m_image->inused);
+}
+
+// --- CtVideo class
 CtVideo::CtVideo(CtControl &ct) :
-  m_image_counter(0)
+  m_ready_flag(true),
+  m_image_counter(0),
+  m_read_image(new VideoImage()),
+  m_write_image(new VideoImage()),
+  m_image_callback(NULL)
 {
   HwInterface *hw = ct.interface();
   m_has_video = hw->getHwCtrlObj(m_video);
 
   m_data_2_image_task = new _Data2ImageTask(*this);
+
+  m_data_2_image_cb = new _Data2ImageCBK(*this);
+  m_data_2_image_task->setEventCallback(m_data_2_image_cb);
 }
 
 CtVideo::~CtVideo()
 {
   m_data_2_image_task->unref();
-  delete [] m_last_image[0].buffer;
-  delete [] m_last_image[1].buffer;
+  m_data_2_image_cb->unref();
+  delete m_read_image;
+  delete m_write_image;
 }
 
 // --- parameters
@@ -141,18 +223,58 @@ void CtVideo::getBin(Bin &aBin) const
 }
 
 // --- images
-void CtVideo::getLastImage(VideoImage &anImage) const
+void CtVideo::getLastImage(CtVideo::Image &anImage) const
 {
+  AutoMutex aLock(m_cond.mutex());
+  if(m_write_image->inused >= 0 && // No writter
+     m_write_image->frameNumber >= m_read_image->frameNumber)
+    {
+      VideoImage *tmp = m_read_image;
+      m_read_image = m_write_image;
+      m_write_image = tmp;
+      m_write_image->frameNumber = -1;
+    }
+  CtVideo::Image tmpImage(this,m_read_image);
+  aLock.unlock();
+  
+  anImage = tmpImage;
 }
+
 void CtVideo::getLastImageCounter(int &anImageCounter) const
 {
+  AutoMutex aLock(m_cond.mutex());
+  anImageCounter = m_image_counter;
 }
 
 void CtVideo::registerImageCallback(ImageCallback &cb)
 {
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  DEB_PARAM() << DEB_VAR2(&cb, m_image_callback);
+  
+  if(m_image_callback)
+    {
+      DEB_ERROR() << "ImageCallback already registered";
+      throw LIMA_CTL_EXC(InvalidValue, "ImageCallback already registered");
+    }
+
+  m_image_callback = &cb;
 }
+
 void CtVideo::unregisterImageCallback(ImageCallback &cb)
 {
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  DEB_PARAM() << DEB_VAR2(&cb, m_image_callback);
+  if(m_image_callback != &cb)
+    {
+      DEB_ERROR() << "ImageCallback not registered";
+      throw LIMA_CTL_EXC(InvalidValue, "ImageCallback not registered"); 
+    }
+
+  m_image_callback = NULL;
 }
 
 // --- video mode
@@ -212,6 +334,22 @@ void CtVideo::_data_2_image(Data &aData,Bin &aBin,Roi &aRoi)
   anImageCopy->setInputData(aData);
   
   PoolThreadMgr::get().addProcess(anImageCopy);
+}
+
+void CtVideo::_data2image_finnished(Data&)
+{
+  AutoMutex aLock(m_cond.mutex());
+  if(!m_last_data.empty())
+    {
+      Data aData = m_last_data;
+      m_last_data = Data();
+      Bin aBin = m_pars.bin;
+      Roi aRoi = m_pars.roi;
+      aLock.unlock();
+      _data_2_image(aData,aBin,aRoi);
+    }
+  else
+    m_ready_flag = true;
 }
 //============================================================================
 //			 CtVideo::Parameters

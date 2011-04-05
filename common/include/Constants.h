@@ -75,7 +75,7 @@ DetStatus& operator |=(DetStatus& s1, DetStatus  s2);
 
 std::ostream& operator <<(std::ostream& os, DetStatus det_status);
 
-enum VideoMode {Y8,Y16,Y32,
+enum VideoMode {Y8,Y16,Y32,Y64,
 		RGB555,RGB565,
 		RGB24,RGB32,
 		BGR24,BGR32,
