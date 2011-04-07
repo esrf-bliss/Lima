@@ -140,6 +140,7 @@ class LIMACORE_API CmdThread
 	virtual void abort();
 
 	void sendCmd(int cmd);
+	void sendCmdIf(int cmd,bool (*if_test)(int,int));
 	int getStatus() const;
 	int getNextCmd() const;
 	void waitStatus(int status);

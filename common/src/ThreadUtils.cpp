@@ -350,6 +350,18 @@ void CmdThread::sendCmd(int cmd)
 	m_cond.signal();
 }
 
+void CmdThread::sendCmdIf(int cmd,bool (*if_test)(int,int))
+{
+  AutoMutex l = lock();
+  bool sendFlag = true;
+  if(if_test)
+    sendFlag = if_test(m_cmd,m_status);
+  if(sendFlag)
+    {
+      m_cmd = cmd;
+      m_cond.signal();
+    }
+}
 void CmdThread::start()
 {
 	if (m_thread.hasStarted())
