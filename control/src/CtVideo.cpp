@@ -98,6 +98,28 @@ CtVideo::Image::Image(const Image &anOther) :
     }
 }
 
+CtVideo::Image& CtVideo::Image::operator=(const CtVideo::Image &other)
+{
+  if(this != &other)
+    {
+      if(other.m_video)
+	{
+	  AutoMutex aLock(other.m_video->m_cond.mutex());
+	  ++(other.m_image->inused);
+	}
+
+      if(m_video)
+	{
+	  AutoMutex aLock(m_video->m_cond.mutex());
+	  --(m_image->inused);
+	  m_video->m_cond.broadcast();
+	}
+
+      m_video = other.m_video;
+      m_image = other.m_image;
+    }
+  return *this;
+}
 /** @brief an other contructor
  *  This methode should be call under Lock
  */
@@ -123,6 +145,13 @@ CtVideo::CtVideo(CtControl &ct) :
 
   m_data_2_image_cb = new _Data2ImageCBK(*this);
   m_data_2_image_task->setEventCallback(m_data_2_image_cb);
+
+  // Params init
+  if(m_has_video)
+    {
+      m_video->getBrightness(m_pars.brightness);
+      m_video->getGain(m_pars.gain);
+    }
 }
 
 CtVideo::~CtVideo()
@@ -138,6 +167,8 @@ void CtVideo::setParameters(const Parameters &pars)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars = pars;
+  if(m_pars.live)
+    _apply_params();
 }
 void CtVideo::getParameters(Parameters &pars) const
 {
@@ -149,6 +180,8 @@ void CtVideo::setLive(bool liveFlag)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.live = liveFlag;
+  if(liveFlag)
+    _apply_params();
 }
 void CtVideo::getLive(bool &liveFlag) const
 {
@@ -350,6 +383,10 @@ void CtVideo::_data2image_finnished(Data&)
     }
   else
     m_ready_flag = true;
+}
+
+void CtVideo::_apply_params()
+{
 }
 //============================================================================
 //			 CtVideo::Parameters

@@ -41,7 +41,8 @@ namespace lima
       Image();
       ~Image();
       Image(const Image&);
-      
+      Image& operator=(const Image&);
+
       const unsigned char* 	buffer() 	const;
       int 			width() 	const;
       int 			height() 	const;
@@ -110,6 +111,7 @@ namespace lima
 
     void _data_2_image(Data &aData,Bin &aBin,Roi &aRoi);
     void _data2image_finnished(Data&);
+    void _apply_params();
 
     Parameters		m_pars;
     bool 		m_has_video;
