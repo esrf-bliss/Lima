@@ -349,7 +349,10 @@ void CmdThread::sendCmd(int cmd)
 	m_cmd = cmd;
 	m_cond.signal();
 }
-
+/** @brief send a command only if the return of if_test is true.
+ *  
+ *  function if_test get as argument the command and status
+ */
 void CmdThread::sendCmdIf(int cmd,bool (*if_test)(int,int))
 {
   AutoMutex l = lock();
