@@ -295,8 +295,11 @@ CmdThread::CmdThread()
 
 CmdThread::~CmdThread()
 {
-	abort();
-	waitStatus(Finished);
+	if(m_thread.hasStarted())
+	{
+		abort();
+		waitStatus(Finished);
+	}
 }
 
 AutoMutex CmdThread::lock() const
