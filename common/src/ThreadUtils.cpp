@@ -299,20 +299,26 @@ CmdThread::~CmdThread()
 	waitStatus(Finished);
 }
 
-AutoMutex CmdThread::lock()
+AutoMutex CmdThread::lock() const
 {
   return AutoMutex(m_cond.mutex(), AutoMutex::Locked);
 }
 
-AutoMutex CmdThread::tryLock()
+AutoMutex CmdThread::tryLock() const
 {
   return AutoMutex(m_cond.mutex(), AutoMutex::TryLocked);
 }
 
-int CmdThread::getStatus()
+int CmdThread::getStatus() const
 {
 	AutoMutex l = lock();
 	return m_status;
+}
+
+int CmdThread::getNextCmd() const
+{
+  AutoMutex l = lock();
+  return m_cmd;
 }
 
 void CmdThread::setStatus(int status)
