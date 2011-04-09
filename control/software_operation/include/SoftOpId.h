@@ -34,6 +34,7 @@
 #include "Flip.h"
 #include "Mask.h"
 #include "RoiCounter.h"
+#include "Roi2Spectrum.h"
 #include "SoftRoi.h"
 
 namespace lima
@@ -60,6 +61,7 @@ namespace lima
       FLIP,
       MASK,
       ROICOUNTERS,
+      ROI2SPECTRUM,
       SOFTROI
     };
 
@@ -212,6 +214,43 @@ namespace lima
     int				m_history_size;
     int				m_counter_status;
     Data			m_mask;
+    mutable Cond		m_cond;
+  };
+
+  class SoftOpRoi2Spectrum : public SoftOpBaseClass
+  {
+  public:
+    typedef std::pair<int,std::list<Tasks::Roi2SpectrumResult> > RoiIdAndResults;
+    typedef std::pair<int,Roi> RoiIdAndRoi;
+    SoftOpRoi2Spectrum();
+    virtual ~SoftOpRoi2Spectrum();
+
+    void add(const std::list<Roi> &rois); 
+    void set(const std::list<Roi> &rois); 
+    void get(std::list<Roi>&) const;
+    void del(const std::list<int> &roiIds);
+    void clearAllRoi();		/* clear all roi */
+
+    void clearCounterStatus();
+    int  getCounterStatus() const;
+
+    // probably needed in future
+    //void setMask(Data &aMask);
+
+    void setBufferSize(int size);
+    void getBufferSize(int &size) const;
+    
+    void readCounters(int from,std::list<RoiIdAndResults> &result) const;
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare();
+  private:
+    typedef std::pair<Tasks::Roi2SpectrumManager*,Tasks::Roi2SpectrumTask*> ManagerNCounter;
+
+    std::list<ManagerNCounter>  m_manager_tasks;
+    int				m_history_size;
+    int				m_counter_status;
+    //Data			m_mask;
     mutable Cond		m_cond;
   };
 

@@ -189,7 +189,7 @@ void SoftOpMask::addTo(TaskMgr &aMgr,int stage)
 SoftOpRoiCounter::SoftOpRoiCounter() : 
   SoftOpBaseClass(),
   m_history_size(DEFAULT_HISTORY_SIZE),
-  m_counter_status(-1)
+  m_counter_status(-2)
 {
 }
 
@@ -340,6 +340,171 @@ void SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
 }
 
 void SoftOpRoiCounter::prepare()
+{
+  AutoMutex aLock(m_cond.mutex());
+   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+     i->first->resetHistory();
+   m_counter_status = -1;
+}
+
+//-------------------- ROI TO SPECTRUM --------------------
+
+SoftOpRoi2Spectrum::SoftOpRoi2Spectrum() : 
+  SoftOpBaseClass(),
+  m_history_size(DEFAULT_HISTORY_SIZE),
+  m_counter_status(-2)
+{
+}
+
+SoftOpRoi2Spectrum::~SoftOpRoi2Spectrum()
+{
+  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+    {
+      i->second->unref();
+      delete i->first;
+    }
+}
+
+void SoftOpRoi2Spectrum::add(const std::list<Roi> &rois)
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(std::list<Roi>::const_iterator i = rois.begin();
+      i != rois.end();++i)
+    {
+      Tasks::Roi2SpectrumManager *aCounterMgrPt = new Tasks::Roi2SpectrumManager(m_history_size);
+      Tasks::Roi2SpectrumTask *aCounterTaskPt = new Tasks::Roi2SpectrumTask(*aCounterMgrPt);
+
+      const Point &aOri = i->getTopLeft();
+      const Size &aSize = i->getSize();
+      aCounterTaskPt->setRoi(aOri.x,aOri.y,aSize.getWidth(),aSize.getHeight());
+      //aCounterTaskPt->setMask(m_mask);
+
+      m_manager_tasks.push_back(ManagerNCounter(aCounterMgrPt,aCounterTaskPt));
+    }
+}
+void SoftOpRoi2Spectrum::set(const std::list<Roi> &rois)
+{
+  clearAllRoi();
+  add(rois);
+}
+/** @brief return the list of roi set
+ */
+void SoftOpRoi2Spectrum::get(std::list<Roi> &aReturnList) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+    {
+      int x,y,width,height;
+      i->second->getRoi(x,y,width,height);
+      aReturnList.push_back(Roi(x,y,width,height));
+    }
+}
+/** @brief remove roi with roi index.
+    roi index start at 1
+*/
+void SoftOpRoi2Spectrum::del(const std::list<int> &roiIds)
+{
+  std::list<int> aTmpList = roiIds;
+  aTmpList.sort();
+  
+  AutoMutex aLock(m_cond.mutex());
+  std::list<int>::iterator i = aTmpList.begin();
+  std::list<ManagerNCounter>::iterator k = m_manager_tasks.begin();
+  for(int index = 1;i != aTmpList.end() && k != m_manager_tasks.end();++i)
+    {
+      while(index != *i && k != m_manager_tasks.end())
+	++k,++index;
+
+      if(index == *i)
+	{
+	  k->second->unref();
+	  delete k->first;
+	  k = m_manager_tasks.erase(k),++index;
+	}
+    }
+}
+
+/** @brief remove all roi
+ */
+void SoftOpRoi2Spectrum::clearAllRoi()
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
+    {
+      i->second->unref();
+      delete i->first;
+    }
+}
+
+void SoftOpRoi2Spectrum::clearCounterStatus()
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_counter_status = -2;
+}
+/** @brief get the counter status
+ *  counter status indicate the status of roi counters
+ *  if counterStatus == -2 acquisition didn't started
+ *  if counterStatus == -1 acquisition has started
+ *  counterStatus > -1 == nb image pending :
+ *  i.e: if counterStatus == 10, it's mean image id 10 is in progress or finnished
+ */
+int SoftOpRoi2Spectrum::getCounterStatus() const
+{
+  AutoMutex aLock(m_cond.mutex());
+  return m_counter_status;
+}
+
+// void SoftOpRoi2Spectrum::setMask(Data &aMask)
+// {
+//   AutoMutex aLock(m_cond.mutex());
+//   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+//       i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
+//       i->second->setMask(aMask);
+//   m_mask = aMask;
+// }
+
+void SoftOpRoi2Spectrum::setBufferSize(int size)
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+    i->first->resizeHistory(size);
+  m_history_size = size;
+}
+
+void SoftOpRoi2Spectrum::getBufferSize(int &size) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  size = m_history_size;
+}
+
+void SoftOpRoi2Spectrum::readCounters(int from,std::list<RoiIdAndResults> &result) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  int roiIndex = 1;
+  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i,++roiIndex)
+    {
+      result.push_back(RoiIdAndResults(roiIndex,std::list<Tasks::Roi2SpectrumResult>()));
+      RoiIdAndResults &roiAndResults = result.back();
+      i->first->getHistory(roiAndResults.second,from);
+    }
+}
+
+void SoftOpRoi2Spectrum::addTo(TaskMgr &aMgr,int stage)
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+    aMgr.addSinkTask(stage,i->second);
+  ++m_counter_status;
+}
+
+void SoftOpRoi2Spectrum::prepare()
 {
   AutoMutex aLock(m_cond.mutex());
    for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();

@@ -98,6 +98,8 @@ INSTANCE_2_SoftOp
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpMask,NULL);break; \
 	case(ROICOUNTERS): \
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpRoiCounter,NULL);break; \
+	case(ROI2SPECTRUM): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpRoi2Spectrum,NULL);break; \
 	case(SOFTROI): \
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpSoftRoi,NULL);break; \
 	default: \
