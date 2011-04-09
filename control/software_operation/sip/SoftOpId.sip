@@ -167,10 +167,72 @@ using namespace lima;
   ~SoftOpBackgroundSubstraction();
     
   void setBackgroundImage(Data &aData);
+};
+
+class SoftOpBinning
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftOpBinning();
+  virtual ~SoftOpBinning();
     
- protected:
-  virtual void addTo(TaskMgr&,int stage);
-  virtual void prepare();
+  void setBinning(int x,int y);
+};
+
+class SoftOpBpm
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftOpBpm();
+  virtual ~SoftOpBpm();
+    
+  Tasks::BpmTask* 	getTask();
+  Tasks::BpmManager* 	getManager();
+};
+
+class SoftOpFlatfieldCorrection
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftOpFlatfieldCorrection();
+  virtual ~SoftOpFlatfieldCorrection();
+    
+  void setFlatFieldImage(Data &aData);
+};
+
+class SoftOpFlip
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftOpFlip();
+  virtual ~SoftOpFlip();
+    
+  void setFlip(bool x,bool y);
+};
+
+class SoftOpMask
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftOpMask();
+  virtual ~SoftOpMask();
+    
+  void setMaskImage(Data &aData);
 };
 
 class SoftOpRoiCounter
@@ -200,8 +262,18 @@ using namespace lima;
   void getBufferSize(int &size /Out/) const;
     
   void readCounters(int from,std::list<SoftOpRoiCounter::RoiIdAndResults> &result /Out/) const;
- protected:
-  virtual void addTo(TaskMgr&,int stage);
-  virtual void prepare();
+};
+
+class SoftOpSoftRoi
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftOpSoftRoi();
+  virtual ~SoftOpSoftRoi();
+    
+  void setRoi(int x,int y,int width,int height);
 };
 
