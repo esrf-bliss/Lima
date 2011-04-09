@@ -231,6 +231,9 @@ namespace lima
     void del(const std::list<int> &roiIds);
     void clearAllRoi();		/* clear all roi */
 
+    void getRoiMode(std::list<int>&) const;
+    void setRoiMode(int roiId,int mode);
+
     void clearCounterStatus();
     int  getCounterStatus() const;
 
@@ -241,6 +244,7 @@ namespace lima
     void getBufferSize(int &size) const;
     
     void readCounters(int from,std::list<RoiIdAndResults> &result) const;
+    void createImage(int roiId,int &from,Data &aData) const;
   protected:
     virtual void addTo(TaskMgr&,int stage);
     virtual void prepare();

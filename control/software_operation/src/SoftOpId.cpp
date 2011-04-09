@@ -440,6 +440,30 @@ void SoftOpRoi2Spectrum::clearAllRoi()
     }
 }
 
+void SoftOpRoi2Spectrum::getRoiMode(std::list<int> &aReturnList) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+      aReturnList.push_back(i->second->getMode());
+}
+
+void SoftOpRoi2Spectrum::setRoiMode(int roiId,int mode)
+{
+  AutoMutex aLock(m_cond.mutex());
+  int rId = 1;
+  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i,++rId)
+    {
+      if(rId == roiId)
+	{
+	  i->second->setMode(mode == Tasks::Roi2SpectrumTask::COLUMN_SUM ?
+			     Tasks::Roi2SpectrumTask::COLUMN_SUM :
+			     Tasks::Roi2SpectrumTask::LINES_SUM);
+	  break;
+	}
+    }
+}
 void SoftOpRoi2Spectrum::clearCounterStatus()
 {
   AutoMutex aLock(m_cond.mutex());
@@ -495,6 +519,40 @@ void SoftOpRoi2Spectrum::readCounters(int from,std::list<RoiIdAndResults> &resul
     }
 }
 
+void SoftOpRoi2Spectrum::createImage(int roiId,int &from,Data &aData) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  int roiIndex = 1;
+  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i,++roiIndex)
+    {
+      if(roiIndex == roiId)
+	{
+	  std::list<Tasks::Roi2SpectrumResult> aResult;
+	  i->first->getHistory(aResult,from);
+	  if(!aResult.empty())
+	    {
+	      Tasks::Roi2SpectrumResult &firstResult = aResult.front();
+	      int aSize = firstResult.spectrum.size();
+	      from = firstResult.frameNumber;
+	      if(aSize)
+		{
+		  Buffer *aBuffer = new Buffer(aSize * aResult.size());
+		  char *dataPt = (char*)aBuffer->data;
+		  for(std::list<Tasks::Roi2SpectrumResult>::iterator k = aResult.begin();
+		      k != aResult.end();++k,dataPt += aSize)
+		    memcpy(dataPt,k->spectrum.data(),aSize);
+		  aData.type = firstResult.spectrum.type;
+		  aData.width = firstResult.spectrum.width;
+		  aData.height = aResult.size();
+		  aData.setBuffer(aBuffer);
+		  aBuffer->unref();
+		}
+	    }
+	  break;
+	}
+    }
+}
 void SoftOpRoi2Spectrum::addTo(TaskMgr &aMgr,int stage)
 {
   AutoMutex aLock(m_cond.mutex());

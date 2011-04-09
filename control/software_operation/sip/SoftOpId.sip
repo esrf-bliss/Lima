@@ -392,6 +392,9 @@ public:
   void del(const std::list<int> &roiIds);
   void clearAllRoi();		/* clear all roi */
 
+  void getRoiMode(std::list<int>& /Out/) const;
+  void setRoiMode(int roiId,int mode);
+
   void clearCounterStatus();
   int  getCounterStatus() const;
 
@@ -402,6 +405,7 @@ public:
   void getBufferSize(int &size /Out/) const;
     
   void readCounters(int from,std::list<SoftOpRoi2Spectrum::RoiIdAndResults> &result /Out/) const;
+  void createImage(int roiId,int &from /In,Out/,Data &aData /Out/) const;
 };
 
 class SoftOpSoftRoi
