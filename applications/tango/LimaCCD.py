@@ -21,13 +21,13 @@
 ############################################################################
 #=============================================================================
 #
-# file :        LimaTacoCCDs.py
+# file :        LimaCCDs.py
 #
 # description : Python source for the LimaCCDs and its commands. 
-#                The class is derived from Device. It represents the
-#                CORBA servant object which will be accessed from the
-#                network. All commands which can be executed on the
-#         LimaTacoCCDs are implemented in this file.
+#               The class is derived from Device. It represents the
+#               CORBA servant object which will be accessed from the
+#               network. All commands which can be executed on the
+#               LimaCCDs are implemented in this file.
 #
 # project :    TANGO Device Server
 #
