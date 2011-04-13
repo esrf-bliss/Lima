@@ -160,7 +160,10 @@ class _AsyncSocket(threading.Thread) :
                                     if msg[2:4] == 'OK':
                                         self.__cnt._state = Communication.OK
                                     else:
-                                        self.__cnt._state = Communication.ERROR
+                                        if self.__cnt._state == Communication.KILL_ACQUISITION :
+                                            self.__cnt._state = Communication.OK
+                                        else:
+                                            self.__cnt._state = Communication.ERROR
                                         msg = msg[2:]
                                         self.__cnt._error_message = msg[msg.find(' '):]
                                         
@@ -281,7 +284,7 @@ class Communication:
         with self.__cond:
 	    # yet an other border-effect with the SPEC CCD interface
 	    # to reach the GATE mode SPEC programs extgate + expotime = 0
-            if self._trigger_mode == self.EXTERNAL_GATE:
+            if self._trigger_mode == self.EXTERNAL_GATE and val <= 0:
 	    	return
 	    if self._state != self.OK :
                 self.__cond.wait(self.__timeout)
