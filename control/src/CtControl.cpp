@@ -403,7 +403,7 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
   if(acqMode == Accumulation)
     {
       if(frameNumber < 0)
-	frameNumber = imgStatus.LastBaseImageReady + 1;
+	frameNumber = imgStatus.LastBaseImageReady;
       else if(frameNumber > imgStatus.LastBaseImageReady + 1)
 	throw LIMA_CTL_EXC(Error,"Frame not available yet");
     }
