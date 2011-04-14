@@ -395,25 +395,13 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
-  AcqMode acqMode;
-  m_ct_acq->getAcqMode(acqMode);
 
   AutoMutex aLock(m_cond.mutex());
   ImageStatus &imgStatus = m_status.ImageCounters;
-  if(acqMode == Accumulation)
-    {
-      if(frameNumber < 0)
-	frameNumber = imgStatus.LastBaseImageReady;
-      else if(frameNumber > imgStatus.LastBaseImageReady + 1)
-	throw LIMA_CTL_EXC(Error,"Frame not available yet");
-    }
-  else
-    {
-      if(frameNumber < 0)
-	frameNumber = imgStatus.LastBaseImageReady;
-      else if(frameNumber > imgStatus.LastBaseImageReady)
-	throw LIMA_CTL_EXC(Error, "Frame not available yet");
-    }
+  if(frameNumber < 0)
+    frameNumber = imgStatus.LastBaseImageReady;
+  else if(frameNumber > imgStatus.LastBaseImageReady)
+    throw LIMA_CTL_EXC(Error, "Frame not available yet");
   aLock.unlock();
   m_ct_buffer->getFrame(aReturnData,frameNumber);
   
