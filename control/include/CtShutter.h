@@ -34,10 +34,17 @@ namespace lima {
 
   class LIMACORE_API CtShutter 
   {
+    friend class CtControl;
     DEB_CLASS_NAMESPC(DebModControl,"Shutter","Control");
 
   public:
-    
+    struct Parameters
+    {
+      ShutterMode 	mode;
+      double	  	close_time;
+      double 		open_time;
+    };
+
     CtShutter(HwInterface *hw);
     ~CtShutter();
     bool hasCapability() const;
@@ -57,8 +64,13 @@ namespace lima {
     void getCloseTime(double& shut_close_time) const;
 
   private:
+    void apply();		/* internal/CtControl call only */
+    void reset();		/* internal/CtControl call only */
+
     bool 		m_has_shutter;
     HwShutterCtrlObj* 	m_hw_shutter;
+    Parameters		m_hw_pars;
+    Parameters		m_pars;
   };
   
 } // namespace lima

@@ -187,6 +187,9 @@ void CtControl::prepareAcq()
   DEB_TRACE() << "Apply Acquisition Parameters";
   m_ct_acq->apply(m_policy);
 
+  DEB_TRACE() << "Apply Shutter Parameters";
+  m_ct_shutter->apply();
+
   DEB_TRACE() << "Prepare Accumulation if needed";
   m_ct_accumulation->prepare();
 
@@ -426,6 +429,9 @@ void CtControl::reset()
 
   DEB_TRACE() << "Reseting acquisition";
   m_ct_acq->reset();
+  
+  DEB_TRACE() << "Reseting shutter parameters";
+  m_ct_shutter->reset();
 
 #ifdef WITH_SPS_IMAGE
   DEB_TRACE() << "Reseting display";
