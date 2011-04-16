@@ -295,24 +295,33 @@ CmdThread::CmdThread()
 
 CmdThread::~CmdThread()
 {
-	abort();
-	waitStatus(Finished);
+	if(m_thread.hasStarted())
+	{
+		abort();
+		waitStatus(Finished);
+	}
 }
 
-AutoMutex CmdThread::lock()
+AutoMutex CmdThread::lock() const
 {
   return AutoMutex(m_cond.mutex(), AutoMutex::Locked);
 }
 
-AutoMutex CmdThread::tryLock()
+AutoMutex CmdThread::tryLock() const
 {
   return AutoMutex(m_cond.mutex(), AutoMutex::TryLocked);
 }
 
-int CmdThread::getStatus()
+int CmdThread::getStatus() const
 {
 	AutoMutex l = lock();
 	return m_status;
+}
+
+int CmdThread::getNextCmd() const
+{
+  AutoMutex l = lock();
+  return m_cmd;
 }
 
 void CmdThread::setStatus(int status)
@@ -343,7 +352,22 @@ void CmdThread::sendCmd(int cmd)
 	m_cmd = cmd;
 	m_cond.signal();
 }
-
+/** @brief send a command only if the return of if_test is true.
+ *  
+ *  function if_test get as argument the command and status
+ */
+void CmdThread::sendCmdIf(int cmd,bool (*if_test)(int,int))
+{
+  AutoMutex l = lock();
+  bool sendFlag = true;
+  if(if_test)
+    sendFlag = if_test(m_cmd,m_status);
+  if(sendFlag)
+    {
+      m_cmd = cmd;
+      m_cond.signal();
+    }
+}
 void CmdThread::start()
 {
 	if (m_thread.hasStarted())

@@ -188,6 +188,9 @@ void CtBuffer::setup(CtControl *ct)
 
   int hwNbBuffer = acq_nframes,nbuffers = acq_nframes;
   m_ct_accumulation = NULL;
+  if(!acq_nframes)		// continous mode
+    hwNbBuffer = nbuffers = 16;
+
   switch (mode) {
   case Single:
     concat_nframes= 1;

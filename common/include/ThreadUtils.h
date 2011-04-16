@@ -140,7 +140,9 @@ class LIMACORE_API CmdThread
 	virtual void abort();
 
 	void sendCmd(int cmd);
-	int getStatus();
+	void sendCmdIf(int cmd,bool (*if_test)(int,int));
+	int getStatus() const;
+	int getNextCmd() const;
 	void waitStatus(int status);
 	int waitNotStatus(int status);
 	
@@ -151,8 +153,8 @@ class LIMACORE_API CmdThread
 	int waitNextCmd();
 	void setStatus(int status);
 
-	AutoMutex lock();
-	AutoMutex tryLock();
+	AutoMutex lock() const;
+	AutoMutex tryLock() const;
 
  private:
 	class LIMACORE_API AuxThread : public Thread
@@ -168,9 +170,9 @@ class LIMACORE_API CmdThread
 	void cmdLoop();
 
 	AuxThread m_thread;
-	Cond m_cond;
-	int m_status;
-	int m_cmd;
+	mutable Cond m_cond;
+	volatile int m_status;
+	volatile int m_cmd;
 };
 
 #define EXEC_ONCE(statement)						\

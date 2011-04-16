@@ -31,7 +31,8 @@ modules = [('core',		['common', 'hardware', 'control']),
 	   ('simulator',	[os.path.join('camera','simulator')]),
 	   ('espia',		[os.path.join('camera','common','espia')]),
 	   ('frelon',		[os.path.join('camera','frelon')]),
-	   ('maxipix',		[os.path.join('camera','maxipix')])]
+	   ('maxipix',		[os.path.join('camera','maxipix')]),
+           ('basler',           [os.path.join('camera','basler')])]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
 
@@ -75,6 +76,7 @@ def main():
                 excludeMods.add(var.split('_')[-1].lower())
 
     for modName, modDirs in modules:
+        extra_cxxflags = []
         if modName in excludeMods:
             continue
     
@@ -125,7 +127,11 @@ def main():
             espia_base = '/segfs/bliss/source/driver/linux-2.6/espia'
             espia_incl = os.path.join(espia_base,'src')
             extraIncludes += [espia_incl]
-   
+
+        if(modName == 'basler') :
+            extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam']
+            extra_cxxflags += ['-DLESSDEPENDENCY','-DUSE_GIGE']
+
         extraIncludes += findModuleIncludes(modName)
 
         sipFile = open(sipFileName,"a")
@@ -206,11 +212,11 @@ def main():
             makefile.extra_libs = ['liblima%s' % modName,'libprocesslib']
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
-            makefile.extra_cxxflags = ['/EHsc']
+            makefile.extra_cxxflags = ['/EHsc'] + extra_cxxflags
             makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
-            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE']
+            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE'] + extra_cxxflags
             makefile.extra_lib_dirs = [rootName('build')]
         makefile.extra_cxxflags.extend(['-I' + x for x in extraIncludes])
         

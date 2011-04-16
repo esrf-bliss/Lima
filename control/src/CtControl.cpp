@@ -349,7 +349,8 @@ void CtControl::getStatus(Status& status) const
     m_status.AcquisitionStatus = AcqReady;
   
   status= m_status;
-  
+  if(m_status.AcquisitionStatus == AcqReady)
+    m_started = false;
   DEB_RETURN() << DEB_VAR1(status);
 }
 
