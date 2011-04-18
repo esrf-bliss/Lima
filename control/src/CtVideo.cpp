@@ -79,7 +79,7 @@ class CtVideo::_InternalImageCBK : public HwVideoCtrlObj::ImageCallback
 public:
   _InternalImageCBK(CtVideo &video) : 
     HwVideoCtrlObj::ImageCallback(),
-    m_video(video),m_buffer(video.m_video->getHwBufferCtrlObj()) {}
+    m_video(video),m_buffer(video.m_video->getBuffer()) {}
   virtual ~_InternalImageCBK() {}
   
 protected:
@@ -107,6 +107,9 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
       try
 	{
 	  lima::image2YUV((unsigned char*)data,width,height,mode,(unsigned char*)ptr);
+	  HwFrameInfoType frame_info;
+	  frame_info.acq_frame_nb = image_counter;
+	  m_buffer.newFrameReady(frame_info);
 	}
       // Should happen only when video format is not implemented (Debug mode)
       catch(Exception &exc)
@@ -220,7 +223,6 @@ CtVideo::CtVideo(CtControl &ct) :
   if(m_has_video)
     {
       m_internal_image_callback = new _InternalImageCBK(*this);
-      m_video->getBrightness(m_pars.brightness);
       m_video->getGain(m_pars.gain);
       m_video->registerImageCallback(*m_internal_image_callback);
     }
@@ -292,20 +294,11 @@ void CtVideo::getFrameRate(double &aFrameRate) const
   AutoMutex aLock(m_cond.mutex());
   aFrameRate = m_pars.framerate;
 }
-
-void CtVideo::setBrightness(double aBrightness)
-{
-  AutoMutex aLock(m_cond.mutex());
-  m_pars.brightness = aBrightness;
-}
-void CtVideo::getBrightness(double &aBrightness) const
-{
-  AutoMutex aLock(m_cond.mutex());
-  aBrightness = m_pars.brightness;
-}
-
 void CtVideo::setGain(double aGain)
 {
+  if(aGain < 0. || aGain > 1.)
+    throw LIMA_CTL_EXC(InvalidValue,"Gain should be between 0. and 1.");
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.gain = aGain;
 }
@@ -502,7 +495,6 @@ void CtVideo::Parameters::reset()
   live = false;
   framerate = -1.;
   exposure = 1;
-  brightness = .5;
   gain = .5;
   mode = Y8;
   roi.reset();

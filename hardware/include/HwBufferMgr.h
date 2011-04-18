@@ -2,6 +2,7 @@
 #define HWBUFFERMGR_H
 
 #include "HwFrameCallback.h"
+#include "HwBufferCtrlObj.h"
 #include "MemUtils.h"
 
 #include <vector>
@@ -248,10 +249,53 @@ class BufferCtrlMgr : public HwFrameCallbackGen
 	AcqFrameCallback m_frame_cb;
 	bool m_frame_cb_act;
 };
+/** @brief this class is a basic software allocation class,
+ *  It can be directly provide to the control layer as a HwBufferCtrlObj
+ */
+class SoftBufferCtrlMgr : public HwBufferCtrlObj
+{
+ public:
+  SoftBufferCtrlMgr() :
+    HwBufferCtrlObj(),
+    m_buffer_cb_mgr(m_buffer_alloc_mgr),
+    m_mgr(m_buffer_cb_mgr) {}
 
+    virtual void setFrameDim(const FrameDim& frame_dim) {m_mgr.setFrameDim(frame_dim);}
+    virtual void getFrameDim(FrameDim& frame_dim) {m_mgr.getFrameDim(frame_dim);}
 
+    virtual void setNbBuffers(int  nb_buffers) {m_mgr.setNbBuffers(nb_buffers);}
+    virtual void getNbBuffers(int& nb_buffers) {m_mgr.getNbBuffers(nb_buffers);}
 
+    virtual void setNbConcatFrames(int nb_concat_frames) {m_mgr.setNbConcatFrames(nb_concat_frames);}
+    virtual void getNbConcatFrames(int& nb_concat_frames) {m_mgr.getNbConcatFrames(nb_concat_frames);}
 
+    virtual void getMaxNbBuffers(int& max_nb_buffers) {m_mgr.getMaxNbBuffers(max_nb_buffers);}
+
+    virtual void *getBufferPtr(int buffer_nb,int concat_frame_nb = 0)
+    {return m_mgr.getBufferPtr(buffer_nb,concat_frame_nb);}
+
+    virtual void *getFramePtr(int acq_frame_nb)
+    {return m_mgr.getFramePtr(acq_frame_nb);}
+
+    virtual void getStartTimestamp(Timestamp& start_ts) 
+    {m_mgr.getStartTimestamp(start_ts);}
+    virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
+    {m_mgr.getFrameInfo(acq_frame_nb,info);}
+
+    virtual void   registerFrameCallback(HwFrameCallback& frame_cb)
+    {m_mgr.registerFrameCallback(frame_cb);}
+    virtual void unregisterFrameCallback(HwFrameCallback& frame_cb) 
+    {m_mgr.unregisterFrameCallback(frame_cb);}
+
+    StdBufferCbMgr&  getBuffer() {return m_buffer_cb_mgr;}
+
+    int		     getNbAcquiredFrames() {return m_acq_frame_nb;}
+ protected:
+    SoftBufferAllocMgr 	m_buffer_alloc_mgr;
+    StdBufferCbMgr 	m_buffer_cb_mgr;
+    BufferCtrlMgr	m_mgr;
+    int			m_acq_frame_nb;
+};
 } // namespace lima
 
 #endif // HWBUFFERMGR_H

@@ -15,6 +15,7 @@ namespace lima
   public:
     class ImageCallback
     {
+      friend class HwVideoCtrlObj;
       DEB_CLASS_NAMESPC(DebModControl,"Video::ImageCallback", 
 			"Hardware");
 
@@ -25,21 +26,15 @@ namespace lima
       virtual bool newImage(char *,int width,int height,VideoMode) = 0;
     };
 
-    HwVideoCtrlObj() :
-      m_image_cbk(NULL),
-      m_buffer_cb_mgr(m_buffer_alloc_mgr),
-      m_buffer_ctrl_mgr(m_buffer_cb_mgr),
-      m_hw_buffer_ctrl_mgr(m_buffer_ctrl_mgr) {}
-
+    HwVideoCtrlObj() : m_image_cbk(NULL) {}
+      
       virtual ~HwVideoCtrlObj() {}
  
       virtual void getSupportedVideoMode(std::list<VideoMode> &aList) const = 0;
       virtual void setVideoMode(VideoMode) = 0;
 
       virtual void setLive(bool) = 0;
-
-      virtual void getBrightness(double&) const = 0;
-      virtual void setBrightness(double) = 0;
+      virtual void getLive(bool&) const = 0;
 
       virtual void getGain(double&) const = 0;
       virtual void setGain(double) = 0;
@@ -50,51 +45,20 @@ namespace lima
       void registerImageCallback(ImageCallback &cb);
       void unregisterImageCallback(ImageCallback &cb);
 
-      StdBufferCbMgr& getHwBufferCtrlObj() {return m_buffer_cb_mgr;}
+      HwBufferCtrlObj& getHwBufferCtrlObj() {return m_hw_buffer_ctrl_mgr;}
+      StdBufferCbMgr& getBuffer() {return m_hw_buffer_ctrl_mgr.getBuffer();}
+
+      bool callNewImage(char *data,int width,int height,VideoMode aVideoMode)
+      {
+	bool continueFlag = false;
+	if(m_image_cbk)
+	  continueFlag = m_image_cbk->newImage(data,width,height,aVideoMode);
+	return continueFlag;
+      }
   protected:
       ImageCallback* m_image_cbk;
   private:
-      class _BufferCtrlMgr : public  HwBufferCtrlObj
-      {
-      public:
-	_BufferCtrlMgr(BufferCtrlMgr &buffer_mgr) :
-	  HwBufferCtrlObj(),
-	  m_mgr(buffer_mgr) {}
-
-	  virtual void setFrameDim(const FrameDim& frame_dim) {m_mgr.setFrameDim(frame_dim);}
-	  virtual void getFrameDim(FrameDim& frame_dim) {m_mgr.getFrameDim(frame_dim);}
-
-	  virtual void setNbBuffers(int  nb_buffers) {m_mgr.setNbBuffers(nb_buffers);}
-	  virtual void getNbBuffers(int& nb_buffers) {m_mgr.getNbBuffers(nb_buffers);}
-
-	  virtual void setNbConcatFrames(int nb_concat_frames) {m_mgr.setNbConcatFrames(nb_concat_frames);}
-	  virtual void getNbConcatFrames(int& nb_concat_frames) {m_mgr.getNbConcatFrames(nb_concat_frames);}
-
-	  virtual void getMaxNbBuffers(int& max_nb_buffers) {m_mgr.getMaxNbBuffers(max_nb_buffers);}
-
-	  virtual void *getBufferPtr(int buffer_nb,int concat_frame_nb = 0)
-	  {return m_mgr.getBufferPtr(buffer_nb,concat_frame_nb);}
-
-	  virtual void *getFramePtr(int acq_frame_nb)
-	  {return m_mgr.getFramePtr(acq_frame_nb);}
-
-	  virtual void getStartTimestamp(Timestamp& start_ts) 
-	  {m_mgr.getStartTimestamp(start_ts);}
-	  virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
-	  {m_mgr.getFrameInfo(acq_frame_nb,info);}
-
-	  virtual void   registerFrameCallback(HwFrameCallback& frame_cb)
-	  {m_mgr.registerFrameCallback(frame_cb);}
-	  virtual void unregisterFrameCallback(HwFrameCallback& frame_cb) 
-	  {m_mgr.unregisterFrameCallback(frame_cb);}
-      private:
-	  BufferCtrlMgr  m_mgr;
-      };
-
-      SoftBufferAllocMgr 	m_buffer_alloc_mgr;
-      StdBufferCbMgr 		m_buffer_cb_mgr;
-      BufferCtrlMgr		m_buffer_ctrl_mgr;
-      _BufferCtrlMgr 		m_hw_buffer_ctrl_mgr;
+      SoftBufferCtrlMgr		m_hw_buffer_ctrl_mgr;
   };
 }
 #endif

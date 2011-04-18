@@ -167,7 +167,7 @@ void SimuBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
  *******************************************************************/
 
 SimuSyncCtrlObj::SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl)
-	: HwSyncCtrlObj(buffer_ctrl), m_simu(simu)
+	: HwSyncCtrlObj(), m_simu(simu)
 {
 }
 

@@ -2,9 +2,8 @@
 
 using namespace lima;
 
-HwSyncCtrlObj::HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl)
-  : m_buffer_ctrl(buffer_ctrl),
-    m_acq_mode(Single),
+HwSyncCtrlObj::HwSyncCtrlObj()
+  : m_acq_mode(Single),
     m_valid_ranges_cb(NULL)
 {
 	DEB_CONSTRUCTOR();

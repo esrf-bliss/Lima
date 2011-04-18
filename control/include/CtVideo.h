@@ -27,7 +27,6 @@ namespace lima
       bool 	live;
       double 	framerate;	///< frame/second
       double 	exposure;	///< exposure time in second
-      double 	brightness;	///< % of brightness (0. <= brightness <= 1.)
       double 	gain;		///< % of gain (0. <= gain <= 1.)
       VideoMode mode;
       Roi 	roi;
