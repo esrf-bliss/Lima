@@ -37,3 +37,6 @@
 [submodule "applications/taco"]
 	path = applications/taco
 	url = git://git.epn-campus.eu/repositories/LimaTaco
+[submodule "camera/prosilica"]
+	path = camera/prosilica
+	url = git://git.epn-campus.eu/repositories/LimaCameraProsilica

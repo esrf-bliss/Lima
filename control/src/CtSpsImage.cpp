@@ -135,7 +135,7 @@ void CtSpsImage::_check_data_size(Data &data)
 					      << DEB_VAR1(data.type);
 	}
 	
-	FrameDim frame_dim(Size(data.width, data.height), image_type);
+	FrameDim frame_dim(Size(data.dimensions[0], data.dimensions[1]), image_type);
 	if (frame_dim != m_sps_cnt->m_frame_dim)
 		THROW_CTL_ERROR(InvalidValue) 
 			<< "Data " << DEB_VAR1(frame_dim) << " does not match "

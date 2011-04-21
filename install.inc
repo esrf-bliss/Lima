@@ -91,6 +91,13 @@ BASLER_MAJ_VERSION = $(shell echo $(BASLER_FULL_VERSION) | cut -d. -f1)
 INSTALL_BASLER_VDIR = $(INSTALL_BASLER_DIR)/v$(BASLER_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_PROSILICA), 0)
+INSTALL_PROSILICA_DIR = $(INSTALL_PLAT_DIR)/Prosilica
+PROSILICA_FULL_VERSION = $(shell cat camera/prosilica/VERSION)
+PROSILICA_MAJ_VERSION = $(shell echo $(PROSILICA_FULL_VERSION) | cut -d. -f1)
+INSTALL_PROSILICA_VDIR = $(INSTALL_PROSILICA_DIR)/v$(PROSILICA_FULL_VERSION)
+endif
+
 .PHONY: install
 
 install:
@@ -147,6 +154,7 @@ ifneq ($(COMPILE_PILATUS), 0)
 	cp camera/pilatus/python/__init__.py $(INSTALL_PILATUS_DIR)
 	cp camera/pilatus/python/*.py $(INSTALL_PILATUS_VDIR)
 endif
+
 ifneq ($(COMPILE_BASLER), 0)
 	mkdir -p $(INSTALL_BASLER_VDIR)
 	cp camera/basler/python/__init__.py $(INSTALL_BASLER_DIR)
@@ -154,4 +162,15 @@ ifneq ($(COMPILE_BASLER), 0)
 	cp build/liblimabasler.so.$(BASLER_FULL_VERSION) $(INSTALL_LIB_DIR)
 	cp -d build/liblimabasler.so.$(BASLER_MAJ_VERSION) $(INSTALL_LIB_DIR)
 	cp sip/basler/limabasler.so $(INSTALL_BASLER_VDIR)
+endif
+
+ifneq ($(COMPILE_PROSILICA), 0)
+	mkdir -p $(INSTALL_PROSILICA_VDIR)
+	cp camera/prosilica/python/__init__.py $(INSTALL_PROSILICA_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimaprosilica.so*
+	rm -rf $(INSTALL_LIB_DIR)/libPvAPI.so
+	cp build/liblimaprosilica.so.$(PROSILICA_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimaprosilica.so.$(PROSILICA_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp camera/prosilica/sdk/bin/x64/libPvAPI.so $(INSTALL_LIB_DIR)
+	cp sip/prosilica/limaprosilica.so $(INSTALL_PROSILICA_VDIR)
 endif

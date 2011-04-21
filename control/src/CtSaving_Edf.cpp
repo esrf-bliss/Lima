@@ -122,8 +122,8 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
   m_fout << "DataType = " << aStringType << " ;\n";
 
   m_fout << "Size = " << aData.size() << " ;\n";
-  m_fout << "Dim_1 = " << aData.width << " ;\n";
-  m_fout << "Dim_2 = " << aData.height << " ;\n";
+  m_fout << "Dim_1 = " << aData.dimensions[0] << " ;\n";
+  m_fout << "Dim_2 = " << aData.dimensions[1] << " ;\n";
   m_fout << "Image = " << m_written_frames << " ;\n";
 
   m_fout << "acq_frame_nb = " << aData.frameNumber << " ;\n";
