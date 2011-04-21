@@ -1,10 +1,10 @@
 prosilica-objs = ProsilicaBufferCtrlObj.o ProsilicaCamera.o ProsilicaInterface.o \
-		 ProsilicaSyncCtrlObj.o  ProsilicaVideoCtrlObj.o
+		 ProsilicaSyncCtrlObj.o  ProsilicaVideoCtrlObj.o ProsilicaDetInfoCtrlObj.o
 
 SRCS = $(prosilica-objs:.o=.cpp) 
 
 CXXFLAGS += -I../include -I../../../hardware/include -I../../../common/include -I../sdk/include \
-	-pthread -g
+	-pthread -fPIC -g
 
 all:	Prosilica.o
 

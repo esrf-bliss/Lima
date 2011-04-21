@@ -106,22 +106,31 @@ VideoMode Camera::getVideoMode() const
   return m_video_mode;
 }
 
+void Camera::getCameraName(std::string& name)
+{
+  name = m_camera_name;
+}
 void Camera::setVideoMode(VideoMode aMode)
 {
+  ImageType anImageType;
   tPvErr error;
   switch(aMode)
     {
     case Y8:
-      error = PvAttrEnumSet(m_handle, "PixelFormat", "Mono16");
+      error = PvAttrEnumSet(m_handle, "PixelFormat", "Mono8");
+      anImageType = Bpp8;
       break;
     case Y16:
       error = PvAttrEnumSet(m_handle, "PixelFormat", "Mono16");
+      anImageType = Bpp16;
       break;
     case BAYER_RG8:
-      error = PvAttrEnumSet(m_handle, "PixelFormat", "Mono16");
+      error = PvAttrEnumSet(m_handle, "PixelFormat", "Bayer8");
+      anImageType = Bpp8;
       break;
     case BAYER_RG16:
-      error = PvAttrEnumSet(m_handle, "PixelFormat", "Mono16");
+      error = PvAttrEnumSet(m_handle, "PixelFormat", "Bayer16");
+      anImageType = Bpp16;
       break;
     default:
       throw LIMA_HW_EXC(InvalidValue,"This video mode is not managed!");
@@ -131,6 +140,7 @@ void Camera::setVideoMode(VideoMode aMode)
     throw LIMA_HW_EXC(Error,"Can't change video mode");
   
   m_video_mode = aMode;
+  maxImageSizeChanged(Size(m_maxwidth,m_maxheight),anImageType);
 }
 
 void Camera::_allocBuffer()

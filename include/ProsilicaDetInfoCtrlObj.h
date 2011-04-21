@@ -1,7 +1,9 @@
 #ifndef PROSILICADETINFOCTRLOBJ_H
 #define PROSILICADETINFOCTRLOBJ_H
 
+#include "Prosilica.h"
 #include "HwDetInfoCtrlObj.h"
+#include "Debug.h"
 
 namespace lima
 {
@@ -29,6 +31,9 @@ namespace lima
 
       virtual void registerMaxImageSizeCallback(HwMaxImageSizeCallback& cb);
       virtual void unregisterMaxImageSizeCallback(HwMaxImageSizeCallback& cb);
+    private:
+      Camera* 			m_cam;
+      tPvHandle& 		m_handle;
     };
 
   } // namespace Prosilica

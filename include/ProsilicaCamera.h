@@ -3,6 +3,7 @@
 #include "Prosilica.h"
 #include "Debug.h"
 #include "Constants.h"
+#include "HwMaxImageSizeCallback.h"
 
 namespace lima
 {
@@ -10,7 +11,7 @@ namespace lima
   {
     class SyncCtrlObj;
     class VideoCtrlObj;
-    class Camera
+    class Camera : public HwMaxImageSizeCallbackGen
     {
       friend class Interface;
       DEB_CLASS_NAMESPC(DebModCamera,"Camera","Prosilica");
@@ -27,6 +28,8 @@ namespace lima
       VideoMode getVideoMode() const;
       void 	setVideoMode(VideoMode);
       
+      void	getCameraName(std::string& name);
+	
       void 	startAcq();
       void	reset();
 
