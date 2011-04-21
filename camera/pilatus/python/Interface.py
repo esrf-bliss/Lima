@@ -18,7 +18,7 @@ class Interface(Core.HwInterface) :
         self.__detInfo = DetInfoCtrlObj()
         self.__detInfo.init()
         self.__buffer = BufferCtrlObj(self.__comm,self.__detInfo)
-        self.__syncObj = SyncCtrlObj(self.__buffer,self.__comm,self.__detInfo)
+        self.__syncObj = SyncCtrlObj(self.__comm,self.__detInfo)
 	self.__acquisition_start_flag = False
         self.__image_number = 0
         

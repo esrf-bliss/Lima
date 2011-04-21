@@ -83,3 +83,9 @@ enum DetStatus {
 	DetLatency		= 0x80,
 };
 
+enum VideoMode {Y8,Y16,Y32,Y64,
+		RGB555,RGB565,
+		RGB24,RGB32,
+		BGR24,BGR32,
+		BAYER_RG8,BAYER_RG16,
+		I420,YUV411,YUV422,YUV444};

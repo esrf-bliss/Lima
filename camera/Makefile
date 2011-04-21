@@ -18,4 +18,12 @@ ifneq ($(COMPILE_MAXIPIX),0)
 sub-dirs += maxipix
 endif
 
+ifndef COMPILE_PROSILICA
+COMPILE_PROSILICA = 0
+endif
+
+ifneq ($(COMPILE_PROSILICA),0)
+sub-dirs += prosilica
+endif
+
 include ../global.inc

@@ -174,6 +174,38 @@ build_targets += $(maxipix-full)
 
 endif
 
+############################
+# LIMA - PROSILICA
+############################
+
+ifneq ($(COMPILE_PROSILICA),0)
+
+PROSILICA_LDFLAGS	:= -L. -L../camera/prosilica/sdk/bin/x64 -L../camera/prosilica/sdk/bin/x86
+PROSILICA_LDLIBS	:= -lPvAPI
+
+name		:= prosilica
+prosilica-objs	:= ../camera/prosilica/src/Prosilica.o
+version-file	:= ../camera/prosilica/VERSION
+prosilica-flags	:= $(PROSILICA_LDFLAGS)
+prosilica-deps	:= $(PROSILICA_LDLIBS)
+
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+
+prosilica-base	:= liblima$(name).so
+prosilica-full	:= $(prosilica-base).$(full-version)
+prosilica-maj	:= $(prosilica-base).$(maj-version)
+prosilica-flags	+= -fPIC -Wl,-soname,$(prosilica-maj)
+
+$(prosilica-full):		$(prosilica-objs)
+	$(CXX) -shared -o $@ $(prosilica-flags) $+ $(prosilica-deps)
+	rm -f $(prosilica-maj);  ln -s $(prosilica-full) $(prosilica-maj)
+	rm -f $(prosilica-base); ln -s $(prosilica-maj)  $(prosilica-base)
+
+build_targets += $(prosilica-full)
+
+endif
+
 src:		$(build_targets)
 
 test:

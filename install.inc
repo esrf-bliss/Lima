@@ -118,3 +118,10 @@ ifneq ($(COMPILE_PILATUS), 0)
 	cp camera/pilatus/python/__init__.py $(INSTALL_PILATUS_DIR)
 	cp camera/pilatus/python/*.py $(INSTALL_PILATUS_VDIR)
 endif
+
+ifneq ($(COMPILE_PROSILICA), 0)
+INSTALL_PROSILICA_DIR = $(INSTALL_PLAT_DIR)/Prosilica
+PROSILICA_FULL_VERSION = $(shell cat camera/prosilica/VERSION)
+PROSILICA_MAJ_VERSION = $(shell echo $(PROSILICA_FULL_VERSION) | cut -d. -f1)
+INSTALL_PROSILICA_VDIR = $(INSTALL_PROSILICA_DIR)/v$(PROSILICA_FULL_VERSION)
+endif
