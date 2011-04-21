@@ -8,7 +8,7 @@
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
-    <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
+    <artifactId>Common-${aol}-shared-${mode}</artifactId>
 
     <packaging>nar</packaging>
     <name>LimaCommon</name>

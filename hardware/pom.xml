@@ -8,7 +8,7 @@
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
-    <artifactId>LimaHardware-${aol}-shared-${mode}</artifactId>
+    <artifactId>Hardware-${aol}-shared-${mode}</artifactId>
 
     <packaging>nar</packaging>
     <name>LimaHardware</name>
@@ -18,7 +18,7 @@
     <dependencies>
         <dependency>
 			<groupId>fr.soleil.lib.Lima</groupId>
-			<artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
+			<artifactId>Common-${aol}-shared-${mode}</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
     </dependencies>
