@@ -1,0 +1,52 @@
+#
+device_server= YAT
+#
+#  Les PATHS des includes propres à ce DServer
+#  Mettre /IC:\monchemin\include /ID:\monautrechemininclude
+INCUSER=/I../include
+
+#
+#  Si vous voulez compiler en mode DEBUG decommenter la ligne suivante
+#DEBUG=
+
+#
+!ifdef DEBUG
+!message "Compiling library in Debug..."
+LIBRARY_NAME=..\lib\static\libYATd.lib
+!else
+!message "Compiling library in Release..."
+LIBRARY_NAME=..\lib\static\libYAT.lib
+!endif
+
+CPPDIRUSER=.\bitsstream
+CPPDIRUSER1=.\network
+CPPDIRUSER2=.\plugin
+CPPDIRUSER3=.\threading
+
+#
+# ------------------Fin des modifications pour le end user -------------------------------------
+#
+make_dir=$(SOLEIL_ROOT)\env
+
+!include $(make_dir)\tango.opt
+
+LISTEOBJ = \
+   $(OBJDIR)\Exception.obj\
+   $(OBJDIR)\BitsStream.obj\
+   $(OBJDIR)\Endianness.obj\
+   $(OBJDIR)\PlugIn.obj\
+   $(OBJDIR)\PlugInManager.obj\
+   $(OBJDIR)\PlugInWin32.obj\
+   $(OBJDIR)\Barrier.obj\
+   $(OBJDIR)\Message.obj\
+   $(OBJDIR)\MessageQ.obj\
+   $(OBJDIR)\SharedObject.obj\
+   $(OBJDIR)\Task.obj\
+   $(OBJDIR)\WinNtThreadingImpl.obj\
+   $(OBJDIR)\Address.obj\
+   $(OBJDIR)\Socket.obj\
+   $(OBJDIR)\ClientSocket.obj\
+   $(OBJDIR)\SocketException.obj
+
+!include $(make_dir)\common_target.opt
+

@@ -1,0 +1,113 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "YAT_Sample_bitsstream"=.\YAT_Sample_bitsstream.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name YAT_Static
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "YAT_Sample_callback"=.\YAT_Sample_callback.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name YAT_Static
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "YAT_Sample_clientsocket"=.\YAT_Sample_clientsocket.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "YAT_Sample_misc"=.\YAT_Sample_misc.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name YAT_Static
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "YAT_Sample_task"=.\YAT_Sample_task.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name YAT_Static
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "YAT_Shared"=.\YAT_Shared.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "YAT_Static"=.\YAT_Static.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+

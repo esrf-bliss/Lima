@@ -1,0 +1,192 @@
+#------------------------------------------------------------------------------
+#-- TANGO_HOME
+#------------------------------------------------------------------------------
+ifndef TANGO_HOME
+	TANGO_HOME = $(SOLEIL_ROOT)/sw-support/Tango
+endif
+
+#------------------------------------------------------------------------------
+#-- OMNI_HOME
+#------------------------------------------------------------------------------
+ifndef OMNI_HOME
+	OMNI_HOME = $(SOLEIL_ROOT)/sw-support/OmniORB
+endif
+
+#------------------------------------------------------------------------------
+#--  CXX
+#------------------------------------------------------------------------------
+ifndef CXX
+	CXX = gcc
+endif
+
+#------------------------------------------------------------------------------
+#--  CC
+#------------------------------------------------------------------------------
+ifndef CC
+	CC = gcc
+endif
+
+#------------------------------------------------------------------------------
+#-- AR
+#------------------------------------------------------------------------------
+ifndef AR
+	AR = ar rv
+endif
+
+#------------------------------------------------------------------------------
+#-- OUTPUT_TYPE (BACKWARD COMPATIBILITY)
+#------------------------------------------------------------------------------
+ifdef OUTPUT_TYPE
+	PROJECT_TYPE = $(OUTPUT_TYPE)
+endif 
+
+#------------------------------------------------------------------------------
+#-- LDFLAGS_USER (BACKWARD COMPATIBILITY)
+#------------------------------------------------------------------------------
+ifdef LFLAGS_USR
+	LDFLAGS_USER = $(LFLAGS_USR)
+endif 
+
+#------------------------------------------------------------------------------
+#-- PROJECT_TYPE (BACKWARD COMPATIBILITY)
+#------------------------------------------------------------------------------
+ifeq ($(PROJECT_TYPE),DYNAMIC_LIB)
+	PROJECT_TYPE = $(SHARED_LIB)
+endif 
+
+#------------------------------------------------------------------------------
+#-- PACKAGE_NAME (BACKWARD COMPATIBILITY)
+#------------------------------------------------------------------------------
+ifdef PACKAGE_NAME
+	PROJECT_NAME = $(PACKAGE_NAME)
+endif 
+
+#------------------------------------------------------------------------------
+#-- TANGO_REQUIRED
+#------------------------------------------------------------------------------
+ifndef TANGO_REQUIRED
+ifeq ($(PROJECT_TYPE),DEVICE)
+	TANGO_REQUIRED = TRUE
+else
+	TANGO_REQUIRED = FALSE
+endif
+endif
+
+#------------------------------------------------------------------------------
+#-- INCLUDE_DIRS 
+#------------------------------------------------------------------------------
+INCLUDE_DIRS =	-I../include -I.
+
+ifeq ($(TANGO_REQUIRED),TRUE)
+	INCLUDE_DIRS +=	-I$(TANGO_HOME)/include -I$(OMNI_HOME)/include
+endif
+
+INCLUDE_DIRS += $(INC_DIR_USER)
+
+#------------------------------------------------------------------------------
+#-- LIB_DIRS 
+#------------------------------------------------------------------------------
+LIB_DIRS = -L ../lib 
+
+ifeq ($(TANGO_REQUIRED),TRUE)
+	LIB_DIRS += -L $(TANGO_HOME)/lib -L $(OMNI_HOME)/lib
+endif
+
+LIB_DIRS += $(LIB_DIR_USER)
+
+#------------------------------------------------------------------------------
+#-- OBJ_DIR
+#------------------------------------------------------------------------------
+ifndef OBJ_DIR
+	OBJ_DIR = /tmp/$(USER)/$(PROJECT_NAME)
+endif
+
+OBJDIR = $(OBJ_DIR)
+
+#------------------------------------------------------------------------------
+#-- OUTPUT_DIR
+#------------------------------------------------------------------------------
+ifndef OUTPUT_DIR
+ifeq ($(PROJECT_TYPE),DEVICE)
+	OUTPUT_DIR= $(HOME)/DeviceServers
+else
+ifeq ($(PROJECT_TYPE),STATIC_LIB)
+	OUTPUT_DIR= ../lib
+else
+ifeq ($(PROJECT_TYPE),SHARED_LIB)
+	OUTPUT_DIR= ../lib
+else
+	OUTPUT_DIR= ../bin
+endif
+endif
+endif
+endif
+
+#------------------------------------------------------------------------------
+#-- RELEASE_TYPE
+#------------------------------------------------------------------------------
+ifndef RELEASE_TYPE
+	RELEASE_TYPE = OPTIMIZED
+endif
+
+#------------------------------------------------------------------------------
+#-- CXXFLAGS
+#------------------------------------------------------------------------------
+CXXFLAGS =
+
+ifeq ($(RELEASE_TYPE),DEBUG)
+	CXXFLAGS +=	-g -D_DEBUG
+else
+	CXXFLAGS +=	-O2
+endif
+
+ifeq ($(PROJECT_TYPE),SHARED_LIB)
+	CXXFLAGS +=	-fPIC
+endif
+
+ifdef CXXFLAGS_USR
+	CXXFLAGS_USER = $(CXXFLAGS_USR)
+endif
+
+CXXFLAGS += -D_REENTRANT -W -Wall -pipe -fno-enforce-eh-specs $(INCLUDE_DIRS) $(CXXFLAGS_USER)
+
+#------------------------------------------------------------------------------
+#-- CFLAGS
+#------------------------------------------------------------------------------
+CFLAGS =
+
+ifeq ($(RELEASE_TYPE),DEBUG)
+	CFLAGS +=	-g -D_DEBUG
+else
+	CFLAGS +=	-O2
+endif
+
+ifeq ($(PROJECT_TYPE),SHARED_LIB)
+	CFLAGS +=	-fPIC
+endif
+
+ifdef CFLAGS_USR
+	CFLAGS_USER = $(CFLAGS_USR)
+endif
+
+CFLAGS +=	-D_REENTRANT -W -Wall -pipe $(INCLUDE_DIRS) $(CFLAGS_USER)
+
+#------------------------------------------------------------------------------
+#-- LDFLAGS
+#------------------------------------------------------------------------------
+LDFLAGS =
+
+ifeq ($(PROJECT_TYPE),SHARED_LIB)
+	LDFLAGS +=	-shared -O -Wl,-soname,lib$(PROJECT_NAME).so
+endif
+
+ifeq ($(TANGO_REQUIRED),TRUE)
+	LDFLAGS +=	-L$(TANGO_HOME)/lib -ltango -llog4tango
+	LDFLAGS +=	-L$(OMNI_HOME)/lib -lCOS4 -lomniORB4 -lomniDynamic4 -lomnithread
+endif
+
+ifdef LDFLAGS_USR
+	LDFLAGS_USER = $(LDFLAGS_USR)
+endif
+
+LDFLAGS +=	$(LDFLAGS_USER) $(LIB_DIR_USER) -ldl -lpthread -lstdc++
