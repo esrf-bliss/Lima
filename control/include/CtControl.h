@@ -211,7 +211,7 @@ namespace lima
 #ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
 #endif
-    bool		m_started;
+    mutable bool	m_started;
 
     ImageStatusCallback *m_img_status_cb;
 
