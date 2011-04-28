@@ -26,6 +26,9 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <stdlib.h>
+
+
 using namespace lima;
 using namespace std;
 
