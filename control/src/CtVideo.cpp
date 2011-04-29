@@ -13,12 +13,11 @@
 using namespace lima;
 enum ParModifyMask
   {
-    PARMODIFYMASK_FRAMERATE 	= 1U << 0,
-    PARMODIFYMASK_EXPOSURE 	= 1U << 1,
-    PARMODIFYMASK_GAIN 		= 1U << 2,
-    PARMODIFYMASK_MODE	 	= 1U << 3,
-    PARMODIFYMASK_ROI 		= 1U << 4,
-    PARMODIFYMASK_BIN 		= 1U << 5
+    PARMODIFYMASK_EXPOSURE 	= 1U << 0,
+    PARMODIFYMASK_GAIN 		= 1U << 1,
+    PARMODIFYMASK_MODE	 	= 1U << 2,
+    PARMODIFYMASK_ROI 		= 1U << 3,
+    PARMODIFYMASK_BIN 		= 1U << 4
   };
 // --- CtVideo::Data2Imagetask
 class CtVideo::_Data2ImageTask : public SinkTaskBase
@@ -225,7 +224,7 @@ CtVideo::CtVideo(CtControl &ct) :
 {
   HwInterface *hw = ct.hwInterface();
   m_has_video = hw->getHwCtrlObj(m_video);
-
+  hw->getHwCtrlObj(m_sync);
   m_data_2_image_task = new _Data2ImageTask(*this);
 
   m_data_2_image_cb = new _Data2ImageCBK(*this);
@@ -257,7 +256,6 @@ void CtVideo::setParameters(const Parameters &pars)
 
   AutoMutex aLock(m_cond.mutex());
 
-  if(m_pars.framerate != pars.framerate) 	m_pars_modify_mask |= PARMODIFYMASK_FRAMERATE;
   if(m_pars.exposure != pars.exposure) 		m_pars_modify_mask |= PARMODIFYMASK_EXPOSURE;
   if(m_pars.gain != pars.gain) 			m_pars_modify_mask |= PARMODIFYMASK_GAIN;
   if(m_pars.mode != pars.mode) 			m_pars_modify_mask |= PARMODIFYMASK_MODE;
@@ -323,24 +321,13 @@ void CtVideo::getLive(bool &liveFlag) const
   liveFlag = m_pars.live;
 }
 
-void CtVideo::setFrameRate(double aFrameRate)
-{
-  AutoMutex aLock(m_cond.mutex());
-  m_pars.framerate = aFrameRate,m_pars_modify_mask |= PARMODIFYMASK_FRAMERATE;
-  _apply_params();
-}
-void CtVideo::getFrameRate(double &aFrameRate) const
-{
-  AutoMutex aLock(m_cond.mutex());
-  aFrameRate = m_pars.framerate;
-}
-
 void CtVideo::setExposure(double anExposure)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.exposure = anExposure,m_pars_modify_mask |= PARMODIFYMASK_EXPOSURE;
   _apply_params();
 }
+
 void CtVideo::getExposure(double &anExposure) const
 {
   AutoMutex aLock(m_cond.mutex());
@@ -349,6 +336,8 @@ void CtVideo::getExposure(double &anExposure) const
 
 void CtVideo::setGain(double aGain)
 {
+  if(!m_has_video)
+    throw LIMA_CTL_EXC(Error,"Can't change the gain on Scientific camera");
   if(aGain < 0. || aGain > 1.)
     throw LIMA_CTL_EXC(InvalidValue,"Gain should be between 0. and 1.");
 
@@ -586,18 +575,24 @@ void CtVideo::_apply_params(bool aForceLiveFlag)
 	    }
 	  if(m_pars_modify_mask & PARMODIFYMASK_EXPOSURE)
 	    {
-	      m_video->setExposure(m_pars.exposure);
+	      m_sync->setExpTime(m_pars.exposure);
 	      CtAcquisition* acquisition = m_ct.acquisition();
 	      acquisition->setAcqExpoTime(m_pars.exposure);
-	    }
-	  if(m_pars_modify_mask & PARMODIFYMASK_FRAMERATE)
-	    {
-	      m_video->setFrameRate(m_pars.framerate);
-	      // @todo Synchro with standard acquisition
 	    }
 	}
       else			// Scientific Camera
 	{
+          if(m_pars_modify_mask & PARMODIFYMASK_EXPOSURE)
+            {
+              CtAcquisition* acquisition = m_ct.acquisition();
+              acquisition->setAcqExpoTime(m_pars.exposure);
+	      if(m_pars.live)
+	        {
+		  m_ct.stopAcq();
+		  m_ct.prepareAcq();
+		  m_ct.startAcq();
+		}
+            }
 	}
       m_pars_modify_mask = 0;	// reset
     }
@@ -607,10 +602,6 @@ void CtVideo::_read_hw_params()
 {
   CtAcquisition *acquisition = m_ct.acquisition();
   acquisition->getAcqExpoTime(m_pars.exposure);
-
-  double latency;
-  acquisition->getLatencyTime(latency);
-  m_pars.framerate = 1 / (m_pars.exposure + latency);
 
   CtImage* image = m_ct.image();
   image->getRoi(m_hw_roi);
@@ -669,9 +660,8 @@ CtVideo::Parameters::Parameters()
 void CtVideo::Parameters::reset()
 {
   live = false;
-  framerate = -1.;
-  exposure = 1;
-  gain = .5;
+  exposure = 1.;
+  gain = -1.;
   mode = Y8;
   roi.reset();
   bin.reset();

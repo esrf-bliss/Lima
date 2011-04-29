@@ -39,12 +39,6 @@ namespace lima
       virtual void getGain(double&) const = 0;
       virtual void setGain(double) = 0;
 
-      virtual void getExposure(double&) const = 0;
-      virtual void setExposure(double) = 0;
-
-      virtual void getFrameRate(double&) const = 0;
-      virtual void setFrameRate(double) = 0;
-
       virtual void checkBin(Bin& bin) = 0;
       virtual void checkRoi(const Roi& set_roi, Roi& hw_roi) = 0;
 

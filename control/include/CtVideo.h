@@ -7,6 +7,7 @@
 namespace lima
 {
   class HwVideoCtrlObj;
+  class HwSyncCtrlObj;
 
   class CtVideo
   {
@@ -25,7 +26,6 @@ namespace lima
       void reset();
       
       bool 	live;
-      double 	framerate;	///< frame/second
       double 	exposure;	///< exposure time in second
       double 	gain;		///< % of gain (0. <= gain <= 1.)
       VideoMode mode;
@@ -72,9 +72,6 @@ namespace lima
 
     void setLive(bool liveFlag);
     void getLive(bool &liveFlag) const;
-
-    void setFrameRate(double aFrameRate);
-    void getFrameRate(double &aFrameRate) const;
 
     void setExposure(double);
     void getExposure(double&) const;
@@ -125,6 +122,7 @@ namespace lima
     _Data2ImageTask*	m_data_2_image_task;
     _Data2ImageCBK*	m_data_2_image_cb;
     HwVideoCtrlObj* 	m_video;
+    HwSyncCtrlObj*      m_sync;
     mutable Cond	m_cond;
     int			m_image_counter;
     mutable VideoImage*	m_read_image;
