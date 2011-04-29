@@ -63,32 +63,6 @@ void VideoCtrlObj::setGain(double aGain)
     throw LIMA_HW_EXC(Error,"Can't set gain to asked value");
 }
 
-void VideoCtrlObj::getExposure(double &expotime) const
-{
-  m_sync->getExpTime(expotime);
-}
-
-void VideoCtrlObj::setExposure(double expotime)
-{
-  m_sync->setExpTime(expotime);
-}
-
-void VideoCtrlObj::getFrameRate(double &framerate) const
-{
-  // This is not true but ....
-  double exptime;
-  m_sync->getExpTime(exptime);
-  framerate = 1 / exptime;
-}
-
-void VideoCtrlObj::setFrameRate(double framerate)
-{
-  if(framerate > 1e-6)
-    m_sync->setExpTime(1 / framerate);
-  else
-    throw LIMA_HW_EXC(Error,"Frame rate too low");
-}
-
 void VideoCtrlObj::checkBin(Bin& bin)
 {
   bin = Bin(1,1);		// Do not manage Hw Bin
