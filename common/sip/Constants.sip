@@ -110,3 +110,47 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 		BGR24,BGR32,
 		BAYER_RG8,BAYER_RG16,
 		I420,YUV411,YUV422,YUV444};
+
+%MappedType std::list<VideoMode>
+{
+%TypeHeaderCode
+#include <list>
+%End
+
+%ConvertToTypeCode
+  if(sipIsErr == NULL)
+    {
+      bool aReturnFlag = PySequence_Check(sipPy);
+      for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
+        aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+                                          sipType_VideoMode);
+      return aReturnFlag;
+    }
+  std::list<VideoMode> *modeListPt = new std::list<VideoMode>();
+  for(int i = 0;i < PySequence_Size(sipPy);++i)
+    modeListPt->push_back(static_cast<VideoMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+  *sipCppPtr = modeListPt;
+  return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+  PyObject *l;
+  if(!(l = PyList_New(sipCpp->size())))
+    return NULL;
+
+  int listPos = 0;
+  for(std::list<VideoMode>::iterator i = sipCpp->begin();
+      i != sipCpp->end();++i,++listPos)
+    {
+      PyObject *tobj = sipConvertFromEnum(*i, sipType_VideoMode);
+      if(!tobj)
+        {
+          Py_DECREF(l);
+          return NULL;
+        }
+      PyList_SET_ITEM(l, listPos, tobj);
+    }
+  return l;
+%End
+};
+
