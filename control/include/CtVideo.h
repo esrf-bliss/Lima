@@ -76,8 +76,8 @@ namespace lima
     void setFrameRate(double aFrameRate);
     void getFrameRate(double &aFrameRate) const;
 
-    void setBrightness(double aBrightness);
-    void getBrightness(double &aBrightness) const;
+    void setExposure(double);
+    void getExposure(double&) const;
 
     void setGain(double aGain);
     void getGain(double &aGain) const;
@@ -112,10 +112,13 @@ namespace lima
 
     void _data_2_image(Data &aData,Bin &aBin,Roi &aRoi);
     void _data2image_finnished(Data&);
-    void _apply_params();
+    void _apply_params(bool = false);
+    void _read_hw_params();
+    void _check_video_mode(VideoMode);
     void _prepareAcq();
 
     Parameters		m_pars;
+    int			m_pars_modify_mask;
     bool 		m_has_video;
     bool		m_ready_flag;
     Data		m_last_data;
@@ -129,6 +132,9 @@ namespace lima
     ImageCallback*	m_image_callback;
     _InternalImageCBK*	m_internal_image_callback;
     CtControl&		m_ct;
+    Roi			m_hw_roi;
+    Bin			m_hw_bin;
+    bool		m_stopping_live; ///< variable to avoid deadlock when stopping live
   };
 }
 #endif

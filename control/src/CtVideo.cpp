@@ -2,6 +2,7 @@
 #include "HwVideoCtrlObj.h"
 #include "CtVideo.h"
 #include "CtAcquisition.h"
+#include "CtImage.h"
 
 #include "PoolThreadMgr.h"
 #include "SinkTask.h"
@@ -10,7 +11,15 @@
 #include "SoftRoi.h"
 
 using namespace lima;
-
+enum ParModifyMask
+  {
+    PARMODIFYMASK_FRAMERATE 	= 1U << 0,
+    PARMODIFYMASK_EXPOSURE 	= 1U << 1,
+    PARMODIFYMASK_GAIN 		= 1U << 2,
+    PARMODIFYMASK_MODE	 	= 1U << 3,
+    PARMODIFYMASK_ROI 		= 1U << 4,
+    PARMODIFYMASK_BIN 		= 1U << 5
+  };
 // --- CtVideo::Data2Imagetask
 class CtVideo::_Data2ImageTask : public SinkTaskBase
 {
@@ -93,6 +102,8 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
 {
   bool liveFlag;
   AutoMutex aLock(m_video.m_cond.mutex());
+  if(m_video.m_stopping_live) return false;
+
   liveFlag = m_video.m_pars.live;
   int image_counter = m_video.m_image_counter + 1;
   aLock.unlock();
@@ -203,6 +214,7 @@ CtVideo::Image::Image(const CtVideo *video,VideoImage *image) :
 
 // --- CtVideo class
 CtVideo::CtVideo(CtControl &ct) :
+  m_pars_modify_mask(0),
   m_ready_flag(true),
   m_image_counter(0),
   m_read_image(new VideoImage()),
@@ -240,10 +252,20 @@ CtVideo::~CtVideo()
 // --- parameters
 void CtVideo::setParameters(const Parameters &pars)
 {
+  //All check
+  _check_video_mode(pars.mode);
+
   AutoMutex aLock(m_cond.mutex());
+
+  if(m_pars.framerate != pars.framerate) 	m_pars_modify_mask |= PARMODIFYMASK_FRAMERATE;
+  if(m_pars.exposure != pars.exposure) 		m_pars_modify_mask |= PARMODIFYMASK_EXPOSURE;
+  if(m_pars.gain != pars.gain) 			m_pars_modify_mask |= PARMODIFYMASK_GAIN;
+  if(m_pars.mode != pars.mode) 			m_pars_modify_mask |= PARMODIFYMASK_MODE;
+  if(m_pars.roi != pars.roi) 			m_pars_modify_mask |= PARMODIFYMASK_ROI;
+  if(m_pars.bin != pars.bin) 			m_pars_modify_mask |= PARMODIFYMASK_BIN;
+
   m_pars = pars;
-  if(m_pars.live)
-    _apply_params();
+  _apply_params();
 }
 void CtVideo::getParameters(Parameters &pars) const
 {
@@ -254,16 +276,33 @@ void CtVideo::getParameters(Parameters &pars) const
 void CtVideo::setLive(bool liveFlag)
 {
   AutoMutex aLock(m_cond.mutex());
+
+  while(m_stopping_live) m_cond.wait();
+
   CtControl::Status status;
   m_ct.getStatus(status);
   if(liveFlag && status.AcquisitionStatus != AcqReady)
     throw LIMA_CTL_EXC(Error, "Can't set live mode if an acquisition is running");
 
-  if(liveFlag)
-    _apply_params();
+  _apply_params(liveFlag);
   
   if(m_has_video)
-    m_video->setLive(liveFlag);
+    {
+      if(!liveFlag)
+	{
+	  m_stopping_live = true;
+	  aLock.unlock();
+	}
+
+      m_video->setLive(liveFlag);
+
+      if(!liveFlag)
+	{
+	  aLock.lock();
+	  m_stopping_live = false;
+	  m_cond.signal();
+	}
+    }
   else
     {
       if(liveFlag)
@@ -287,20 +326,35 @@ void CtVideo::getLive(bool &liveFlag) const
 void CtVideo::setFrameRate(double aFrameRate)
 {
   AutoMutex aLock(m_cond.mutex());
-  m_pars.framerate = aFrameRate;
+  m_pars.framerate = aFrameRate,m_pars_modify_mask |= PARMODIFYMASK_FRAMERATE;
+  _apply_params();
 }
 void CtVideo::getFrameRate(double &aFrameRate) const
 {
   AutoMutex aLock(m_cond.mutex());
   aFrameRate = m_pars.framerate;
 }
+
+void CtVideo::setExposure(double anExposure)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.exposure = anExposure,m_pars_modify_mask |= PARMODIFYMASK_EXPOSURE;
+  _apply_params();
+}
+void CtVideo::getExposure(double &anExposure) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  anExposure = m_pars.exposure;
+}
+
 void CtVideo::setGain(double aGain)
 {
   if(aGain < 0. || aGain > 1.)
     throw LIMA_CTL_EXC(InvalidValue,"Gain should be between 0. and 1.");
 
   AutoMutex aLock(m_cond.mutex());
-  m_pars.gain = aGain;
+  m_pars.gain = aGain,m_pars_modify_mask |= PARMODIFYMASK_GAIN;
+  _apply_params();
 }
 void CtVideo::getGain(double &aGain) const
 {
@@ -310,8 +364,10 @@ void CtVideo::getGain(double &aGain) const
 
 void CtVideo::setMode(VideoMode aMode)
 {
+  _check_video_mode(aMode);
   AutoMutex aLock(m_cond.mutex());
-  m_pars.mode = aMode;
+  m_pars.mode = aMode,m_pars_modify_mask |= PARMODIFYMASK_MODE;
+  _apply_params();
 }
 void CtVideo::getMode(VideoMode &aMode) const
 {
@@ -322,7 +378,8 @@ void CtVideo::getMode(VideoMode &aMode) const
 void CtVideo::setRoi(const Roi &aRoi)
 {
   AutoMutex aLock(m_cond.mutex());
-  m_pars.roi = aRoi;
+  m_pars.roi = aRoi,m_pars_modify_mask |= PARMODIFYMASK_ROI;
+  _apply_params();
 }
 void CtVideo::getRoi(Roi &aRoi) const
 {
@@ -333,7 +390,8 @@ void CtVideo::getRoi(Roi &aRoi) const
 void CtVideo::setBin(const Bin &aBin)
 {
   AutoMutex aLock(m_cond.mutex());
-  m_pars.bin = aBin;
+  m_pars.bin = aBin,m_pars_modify_mask |= PARMODIFYMASK_BIN;
+  _apply_params();
 }
 void CtVideo::getBin(Bin &aBin) const
 {
@@ -399,10 +457,36 @@ void CtVideo::unregisterImageCallback(ImageCallback &cb)
 // --- video mode
 void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList)
 {
+  DEB_MEMBER_FUNCT();
+
   if(m_has_video)
     m_video->getSupportedVideoMode(modeList);
   else				// TODO
     {
+      CtImage* image = m_ct.image();
+      ImageType anImageType;
+      image->getImageType(anImageType);
+      switch(anImageType)
+	{
+	case Bpp8:
+	case Bpp8S:
+	  modeList.push_back(Y8); break;
+	case Bpp10:
+	case Bpp10S: 
+	case Bpp12:
+	case Bpp12S:
+	case Bpp14:
+	case Bpp14S:
+	case Bpp16:
+	case Bpp16S:
+	  modeList.push_back(Y16); break;
+	case Bpp32:
+	case Bpp32S:
+	  modeList.push_back(Y32); break;
+	default:
+	  DEB_ERROR() << "Image type not yet managed";
+	  throw LIMA_CTL_EXC(Error, "Image type not yet managed");
+	}
     }
 }
 
@@ -471,17 +555,109 @@ void CtVideo::_data2image_finnished(Data&)
     m_ready_flag = true;
 }
 
-void CtVideo::_apply_params()
+void CtVideo::_apply_params(bool aForceLiveFlag)
 {
-  m_image_counter = -1;
+  if(aForceLiveFlag && !m_pars.live) m_image_counter = -1;
+  
+  if(aForceLiveFlag || m_pars.live)
+    {
+      if(m_has_video)
+	{
+	  if(m_pars_modify_mask & PARMODIFYMASK_MODE)
+	    m_video->setVideoMode(m_pars.mode);
+	  if(m_pars_modify_mask & PARMODIFYMASK_GAIN)
+	    m_video->setGain(m_pars.gain);
+	  if(m_pars_modify_mask & PARMODIFYMASK_BIN)
+	    {
+	      m_hw_bin = m_pars.bin;
+	      m_video->checkBin(m_hw_bin);
+	      m_video->setBin(m_hw_bin);
+	      // Synchronisation with standard acquisition
+	      CtImage* image = m_ct.image();
+	      image->setBin(m_hw_bin);
+	    }
+	  if(m_pars_modify_mask & PARMODIFYMASK_ROI)
+	    {
+	      m_video->checkRoi(m_pars.roi,m_hw_roi);
+	      m_video->setRoi(m_hw_roi);
+	      // Synchronisation with standard acquisition
+	      CtImage* image = m_ct.image();
+	      image->setRoi(m_hw_roi);
+	    }
+	  if(m_pars_modify_mask & PARMODIFYMASK_EXPOSURE)
+	    {
+	      m_video->setExposure(m_pars.exposure);
+	      CtAcquisition* acquisition = m_ct.acquisition();
+	      acquisition->setAcqExpoTime(m_pars.exposure);
+	    }
+	  if(m_pars_modify_mask & PARMODIFYMASK_FRAMERATE)
+	    {
+	      m_video->setFrameRate(m_pars.framerate);
+	      // @todo Synchro with standard acquisition
+	    }
+	}
+      else			// Scientific Camera
+	{
+	}
+      m_pars_modify_mask = 0;	// reset
+    }
 }
+
+void CtVideo::_read_hw_params()
+{
+  CtAcquisition *acquisition = m_ct.acquisition();
+  acquisition->getAcqExpoTime(m_pars.exposure);
+
+  double latency;
+  acquisition->getLatencyTime(latency);
+  m_pars.framerate = 1 / (m_pars.exposure + latency);
+
+  CtImage* image = m_ct.image();
+  image->getRoi(m_hw_roi);
+  if(!m_hw_roi.containsRoi(m_pars.roi))
+    m_pars.roi = m_hw_roi;
+  
+  image->getBin(m_hw_bin);
+  if(m_hw_bin.getX() > m_pars.bin.getX() ||
+     m_hw_bin.getY() > m_pars.bin.getY())
+    m_pars.bin = m_hw_bin;
+}
+
+void CtVideo::_check_video_mode(VideoMode aMode)
+{
+  std::list<VideoMode> aModeList;
+  getSupportedVideoMode(aModeList);
+  bool findMode = false;
+  for(std::list<VideoMode>::iterator i = aModeList.begin();
+      !findMode && i != aModeList.end();++i)
+    findMode = aMode == *i;
+
+  if(!findMode)
+    throw LIMA_CTL_EXC(Error,"Video mode is not available for this camera");
+}
+
 /** @brief an Acquisition will start so,
  *  we have to stop video mode
  */ 
 void CtVideo::_prepareAcq()
 {
-  setLive(false);
+  AutoMutex aLock(m_cond.mutex());
+
+  while(m_stopping_live) m_cond.wait();
+
+  m_stopping_live = true;
+  aLock.unlock();
+
+  if(m_has_video)
+    m_video->setLive(false);
+  
+  aLock.lock();
+  m_stopping_live = false;
+  m_cond.signal();
+
+  m_pars.live = false;
   m_image_counter = -1;
+  _read_hw_params();
 }
 //============================================================================
 //			 CtVideo::Parameters
