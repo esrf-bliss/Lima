@@ -26,8 +26,18 @@ namespace lima
       virtual void getGain(double&) const;
       virtual void setGain(double);
 
+      virtual void getExposure(double&) const;
+      virtual void setExposure(double);
+
+      virtual void getFrameRate(double&) const;
+      virtual void setFrameRate(double);
+
       virtual void checkBin(Bin& bin);
       virtual void checkRoi(const Roi& set_roi, Roi& hw_roi);
+
+      virtual void setBin(const Bin&){};
+      virtual void setRoi(const Roi&){};
+
     private:
       Camera*	 	m_cam;
       tPvHandle& 	m_handle;
