@@ -6,7 +6,7 @@
 #ifdef __x86_64
 	#define _x64
 #else
-	#define _x32
+	#define _x86
 #endif
 
 #include <PvApi.h>

@@ -81,6 +81,8 @@ Camera::Camera(const char *ip_addr) :
 
 Camera::~Camera()
 {
+  DEB_DESTRUCTOR();
+
   if(m_cam_connected)
     {
       PvCommandRun(m_handle,"AcquisitionStop");
@@ -98,20 +100,31 @@ Camera::~Camera()
  */
 bool Camera::isMonochrome() const
 {
+  DEB_MEMBER_FUNCT();
+
   return !strcmp(m_sensor_type,"Mono");
 }
 
 VideoMode Camera::getVideoMode() const
 {
+  DEB_MEMBER_FUNCT();
+  DEB_RETURN() << DEB_VAR1(m_video_mode);
+
   return m_video_mode;
 }
 
 void Camera::getCameraName(std::string& name)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_RETURN() << DEB_VAR1(m_camera_name);
+
   name = m_camera_name;
 }
 void Camera::setVideoMode(VideoMode aMode)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aMode);
+
   ImageType anImageType;
   tPvErr error;
   switch(aMode)
@@ -145,6 +158,8 @@ void Camera::setVideoMode(VideoMode aMode)
 
 void Camera::_allocBuffer()
 {
+  DEB_MEMBER_FUNCT();
+
   tPvUint32 imageSize;
   tPvErr error = PvAttrUint32Get(m_handle, "TotalBytesPerFrame", &imageSize);
   if(error)
@@ -169,12 +184,15 @@ void Camera::_allocBuffer()
 */
 void Camera::startAcq()
 {
+  DEB_MEMBER_FUNCT();
+
   m_acq_frame_nb = 0;
   tPvErr error = PvCaptureQueueFrame(m_handle,&m_frame[0],_newFrameCBK);
 }
 
 void Camera::reset()
 {
+  DEB_MEMBER_FUNCT();
   //@todo maybe something to do!
 }
 

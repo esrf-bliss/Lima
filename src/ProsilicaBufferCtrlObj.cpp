@@ -6,27 +6,52 @@ using namespace lima;
 using namespace lima::Prosilica;
 
 BufferCtrlObj::BufferCtrlObj(Camera *cam) :
-  m_handle(cam->getHandle())
+  m_handle(cam->getHandle()),
+  m_status(ePvErrSuccess),
+  m_exposing(false)
 {
-  m_acq_frame_nb = 0;
+  DEB_CONSTRUCTOR();
+
   m_frame[0].Context[0] = this;
   m_frame[1].Context[0] = this;
 }
-
-void BufferCtrlObj::startAcq()
+void BufferCtrlObj::prepareAcq()
 {
-  m_acq_frame_nb = 0;
+  DEB_MEMBER_FUNCT();
+  FrameDim dim;
+  getFrameDim(dim);
+  m_frame[0].ImageBufferSize = m_frame[1].ImageBufferSize = dim.getMemSize();
+  
+  m_acq_frame_nb = -1;
   int buffer_nb,concat_frame_nb;
   m_buffer_cb_mgr.acqFrameNb2BufferNb(0,buffer_nb,concat_frame_nb);
   tPvFrame& frame = m_frame[0];
   frame.ImageBuffer = (char*) m_buffer_cb_mgr.getBufferPtr(buffer_nb,
 							   concat_frame_nb);
-  tPvErr error = PvCaptureQueueFrame(m_handle,&frame,_newFrame);
+}
+
+void BufferCtrlObj::startAcq()
+{
+  DEB_MEMBER_FUNCT();
+
+  m_exposing = true;
+  tPvFrame& frame = m_frame[0];
+  m_status = PvCaptureQueueFrame(m_handle,&frame,_newFrame);
 }
 
 void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
 {
+  DEB_STATIC_FUNCT();
   BufferCtrlObj *bufferPt = (BufferCtrlObj*)aFrame->Context[0];
+
+  bufferPt->m_exposing = false;
+  if(aFrame->Status != ePvErrSuccess) // error
+    {
+      DEB_ERROR() << DEB_VAR1(aFrame->Status);
+      bufferPt->m_status = aFrame->Status;
+      return;
+    }
+
   int requested_nb_frames;
   bufferPt->m_sync->getNbFrames(requested_nb_frames);
   
@@ -34,7 +59,7 @@ void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
   
   bool stopAcq = false;
   if(!requested_nb_frames || 
-     bufferPt->m_acq_frame_nb < requested_nb_frames)
+     bufferPt->m_acq_frame_nb < (requested_nb_frames - 1))
     {
       int buffer_nb, concat_frame_nb;
       bufferPt->m_buffer_cb_mgr.acqFrameNb2BufferNb(bufferPt->m_acq_frame_nb,
@@ -43,7 +68,8 @@ void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
       tPvFrame& frame = bufferPt->m_frame[bufferPt->m_acq_frame_nb & 0x1];
       frame.ImageBuffer = (char*)bufferPt->m_buffer_cb_mgr.getBufferPtr(buffer_nb,
 									concat_frame_nb);
-      tPvErr error = PvCaptureQueueFrame(bufferPt->m_handle,&frame,_newFrame);
+      bufferPt->m_exposing = true;
+      bufferPt->m_status = PvCaptureQueueFrame(bufferPt->m_handle,&frame,_newFrame);
     }
   else
     stopAcq = true;

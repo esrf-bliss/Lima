@@ -12,6 +12,7 @@ using namespace lima::Prosilica;
 Interface::Interface(Camera *cam) :
   m_cam(cam)
 {
+  DEB_CONSTRUCTOR();
   m_det_info = new DetInfoCtrlObj(cam);
   if(m_cam->isMonochrome())
     {
@@ -34,6 +35,7 @@ Interface::Interface(Camera *cam) :
 
 Interface::~Interface()
 {
+  DEB_DESTRUCTOR();
   if(m_video)
     {
       delete m_video;
@@ -59,35 +61,53 @@ void Interface::getCapList(CapList &cap_list) const
 
 void Interface::reset(ResetLevel reset_level)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(reset_level);
+
   m_sync->stopAcq();
   m_cam->reset();
 }
 
 void Interface::prepareAcq()
 {
+  DEB_MEMBER_FUNCT();
+  if(m_buffer)
+    m_buffer->prepareAcq();
 }
 
 void Interface::startAcq()
 {
+  DEB_MEMBER_FUNCT();
+
+  if(m_buffer)
+    m_buffer->getBuffer().setStartTimestamp(Timestamp::now());
   m_sync->startAcq();
 }
 
 void Interface::stopAcq()
 {
+  DEB_MEMBER_FUNCT();
+
   m_sync->stopAcq();
 }
 
 void Interface::getStatus(StatusType& status)
 {
-  
+  m_sync->getStatus(status);
 }
 
 int Interface::getNbAcquiredFrames()
 {
+  DEB_MEMBER_FUNCT();
+
+  int aNbAcquiredFrames;
   if(m_buffer)
-    return m_buffer->getNbAcquiredFrames();
+    aNbAcquiredFrames = m_buffer->getNbAcquiredFrames();
   else
-    return m_cam->getNbAcquiredFrames();
+    aNbAcquiredFrames = m_cam->getNbAcquiredFrames();
+
+  DEB_RETURN() << DEB_VAR1(aNbAcquiredFrames);
+  return aNbAcquiredFrames;
 }
 
 int Interface::getNbHwAcquiredFrames()

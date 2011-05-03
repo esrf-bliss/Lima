@@ -1,3 +1,4 @@
+#include <sstream>
 #include "ProsilicaSyncCtrlObj.h"
 #include "ProsilicaBufferCtrlObj.h"
 #include "ProsilicaCamera.h"
@@ -10,18 +11,22 @@ SyncCtrlObj::SyncCtrlObj(Camera *cam,BufferCtrlObj *buffer) :
   m_handle(cam->getHandle()),
   m_trig_mode(IntTrig),
   m_buffer(buffer),
-  m_nb_frames(1)
+  m_nb_frames(1),
+  m_started(false)
 {
-  
+  DEB_CONSTRUCTOR();
 }
 
 SyncCtrlObj::~SyncCtrlObj()
 {
-
+  DEB_DESTRUCTOR();
 }
 
 bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(trig_mode);
+
   switch(trig_mode)
     {
     case IntTrig:
@@ -35,6 +40,9 @@ bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
 
 void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(trig_mode);
+
   tPvErr error;
   if(checkTrigMode(trig_mode))
     {
@@ -51,7 +59,11 @@ void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 	default:		// Software
 	  error = PvAttrEnumSet(m_handle, "FrameStartTriggerMode", "FixedRate");
 	  if(error)
-	    throw LIMA_HW_EXC(Error,"could not set trigger mode to FixedRate");
+	    {
+	      std::stringstream message;
+	      message << "could not set trigger mode to FixedRate " << error;
+	      throw LIMA_HW_EXC(Error,message.str().c_str());
+	    }
 	  break;
 	}
       m_trig_mode = trig_mode;
@@ -67,6 +79,9 @@ void SyncCtrlObj::getTrigMode(TrigMode &trig_mode)
 
 void SyncCtrlObj::setExpTime(double exp_time)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(exp_time);
+
   tPvErr error = PvAttrEnumSet(m_handle, "ExposureMode", "Manual");
   if(error != ePvErrSuccess)
     throw LIMA_HW_EXC(Error,"Can't set manual exposure");
@@ -79,9 +94,13 @@ void SyncCtrlObj::setExpTime(double exp_time)
 
 void SyncCtrlObj::getExpTime(double &exp_time)
 {
+  DEB_MEMBER_FUNCT();
+
   tPvUint32 exposure_value;
   PvAttrUint32Get(m_handle, "ExposureValue", &exposure_value);
   exp_time = exposure_value / 1e6;
+
+  DEB_RETURN() << DEB_VAR1(exp_time);
 }
 
 void SyncCtrlObj::setLatTime(double  lat_time)
@@ -96,6 +115,9 @@ void SyncCtrlObj::getLatTime(double& lat_time)
 
 void SyncCtrlObj::setNbFrames(int  nb_frames)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(nb_frames);
+
   m_nb_frames = nb_frames;
 }
 
@@ -124,31 +146,88 @@ void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 
 void SyncCtrlObj::startAcq()
 {
-  tPvErr error = PvCaptureStart(m_handle);
-  if(error)
-    throw LIMA_HW_EXC(Error,"Can't start acquisition capture");
+  DEB_MEMBER_FUNCT();
+  if(!m_started)
+    {
+      tPvErr error = PvCaptureStart(m_handle);
+      if(error)
+	throw LIMA_HW_EXC(Error,"Can't start acquisition capture");
 
-  error = PvCommandRun(m_handle, "AcquisitionStart");
-  if(error)
-    throw LIMA_HW_EXC(Error,"Can't start acquisition");
+      error = PvCommandRun(m_handle, "AcquisitionStart");
+      if(error)
+	throw LIMA_HW_EXC(Error,"Can't start acquisition");
   
-  if(m_buffer)
-    m_buffer->startAcq();
-  else
-    m_cam->startAcq();
+      if(m_buffer)
+	m_buffer->startAcq();
+      else
+	m_cam->startAcq();
+    }
+  m_started = true;
 }
 
 void SyncCtrlObj::stopAcq()
 {
-  tPvErr error = PvCommandRun(m_handle,"AcquisitionStop");
-  if(error)
-    throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
-  
-  error = PvCaptureEnd(m_handle);
-  if(error)
-    throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
+  DEB_MEMBER_FUNCT();
+  if(m_started)
+    {
+      DEB_TRACE() << "Try to stop Acq";
+      tPvErr error = PvCommandRun(m_handle,"AcquisitionStop");
+      if(error)
+	{
+	  DEB_ERROR() << "Failed to stop acquisition";
+	  throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
+	}
 
-  error = PvCaptureQueueClear(m_handle);
-  if(error)
-    throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
+      DEB_TRACE() << "Try to stop Capture";
+      error = PvCaptureEnd(m_handle);
+      if(error)
+	{
+	  DEB_ERROR() << "Failed to stop acquisition";
+	  throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
+	}
+
+//       DEB_TRACE() << "Try to clear queue";
+//       error = PvCaptureQueueClear(m_handle);
+//       if(error)
+// 	{
+// 	  DEB_ERROR() << "Failed to stop acquisition";
+// 	  throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
+// 	}
+    }
+  m_started = false;
+}
+
+void SyncCtrlObj::getStatus(HwInterface::StatusType& status)
+{
+  DEB_MEMBER_FUNCT();
+  if(m_started)
+    {
+      tPvErr error = ePvErrSuccess;
+      if(m_buffer)
+	{
+	  bool exposing;
+	  m_buffer->getStatus(error,exposing);
+	  if(error)
+	    {
+	      status.acq = AcqFault;
+	      status.det = DetFault;
+	    }
+	  else
+	    {
+	      status.acq = AcqRunning;
+	      status.det = exposing ? DetExposure : DetIdle;
+	    }
+	}
+      else			// video mode, don't need to be precise
+	{
+	  status.acq = AcqRunning;
+	  status.det = DetExposure;
+	}
+    }
+  else
+    {
+      status.acq = AcqReady;
+      status.det = DetIdle;
+    }
+  DEB_RETURN() << DEB_VAR1(status);
 }

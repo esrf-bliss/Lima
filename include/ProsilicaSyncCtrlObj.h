@@ -4,6 +4,7 @@
 #include "Prosilica.h"
 
 #include "HwSyncCtrlObj.h"
+#include "HwInterface.h"
 
 namespace lima
 {
@@ -39,12 +40,16 @@ namespace lima
 
       void startAcq();
       void stopAcq();
+      
+      void getStatus(HwInterface::StatusType&);
+
     private:
       Camera*		m_cam;
       tPvHandle&	m_handle;
       TrigMode		m_trig_mode;
       BufferCtrlObj*	m_buffer;
       int		m_nb_frames;
+      bool		m_started;
     };
 
   } // namespace Prosilica
