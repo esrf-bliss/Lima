@@ -139,7 +139,6 @@ void lima::data2Image(Data &aData,VideoImage &anImage)
 {
   if(!aData.empty())
     {
-      VideoMode mode;
       switch(aData.type)
 	{
 	case Data::UINT8:
@@ -161,7 +160,6 @@ void lima::data2Image(Data &aData,VideoImage &anImage)
 	}
       anImage.alloc(aData.size());
       memcpy(anImage.buffer,aData.data(),aData.size());
-      anImage.mode = mode;
       anImage.width = aData.dimensions[0];
       anImage.height = aData.dimensions[1];
       anImage.frameNumber = aData.frameNumber;

@@ -211,6 +211,35 @@ CtVideo::Image::Image(const CtVideo *video,VideoImage *image) :
   ++(m_image->inused);
 }
 
+const char* CtVideo::Image::buffer() const
+{
+  return m_image ? m_image->buffer : NULL;
+}
+
+int CtVideo::Image::width() const
+{
+  return m_image ? m_image->width : -1;
+}
+
+int CtVideo::Image::height() const
+{
+  return m_image ? m_image->height : -1;
+}
+
+VideoMode CtVideo::Image::mode() const
+{
+  return m_image ? m_image->mode : Y8;
+}
+
+int CtVideo::Image::size() const
+{
+  return m_image ? int(m_image->size() + 0.5) : 0;
+}
+
+int CtVideo::Image::frameNumber() const
+{
+  return m_image ? m_image->frameNumber : -1;
+}
 // --- CtVideo class
 CtVideo::CtVideo(CtControl &ct) :
   m_pars_modify_mask(0),

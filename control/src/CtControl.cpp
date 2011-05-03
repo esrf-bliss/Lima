@@ -716,6 +716,7 @@ bool CtControl::_checkOverrun(Data &aData) const
 
       DEB_ERROR() << DEB_VAR1(m_status);
     }
+  DEB_PARAM() << DEB_VAR1(overrunFlag);
   return overrunFlag;
 }
 // ----------------------------------------------------------------------------

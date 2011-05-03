@@ -280,7 +280,9 @@ class SoftBufferCtrlMgr : public HwBufferCtrlObj
   SoftBufferCtrlMgr() :
     HwBufferCtrlObj(),
     m_buffer_cb_mgr(m_buffer_alloc_mgr),
-    m_mgr(m_buffer_cb_mgr) {}
+    m_mgr(m_buffer_cb_mgr),
+    m_acq_frame_nb(-1)
+      {}
 
     virtual void setFrameDim(const FrameDim& frame_dim) {m_mgr.setFrameDim(frame_dim);}
     virtual void getFrameDim(FrameDim& frame_dim) {m_mgr.getFrameDim(frame_dim);}
@@ -311,7 +313,7 @@ class SoftBufferCtrlMgr : public HwBufferCtrlObj
 
     StdBufferCbMgr&  getBuffer() {return m_buffer_cb_mgr;}
 
-    int		     getNbAcquiredFrames() {return m_acq_frame_nb;}
+    int		     getNbAcquiredFrames() {return m_acq_frame_nb + 1;}
  protected:
     SoftBufferAllocMgr 	m_buffer_alloc_mgr;
     StdBufferCbMgr 	m_buffer_cb_mgr;

@@ -2,6 +2,7 @@
 #define VIDEOUTILS_H
 
 #include <cstdlib>
+#include <iostream>
 
 #include "Constants.h"
 
@@ -34,11 +35,7 @@ namespace lima
     inline void alloc(int size)
     {
       if(!buffer || double(size) > this->size())
-	{
-	  double allocSize = this->size();
-	  size = int(allocSize + 0.5);
-	  buffer = (char*)realloc(buffer,size);
-	}
+	buffer = (char*)realloc(buffer,size);
     }
     inline void setParams(int fNumber,int w,int h,VideoMode m)
     {
@@ -85,7 +82,7 @@ namespace lima
 	}
     }
     
-   inline double depth() const
+    inline double depth() const
     {
       return mode_depth(mode);
     } 
@@ -95,5 +92,43 @@ namespace lima
   void data2Image(Data &aData,VideoImage &anImage);
   void image2YUV(const unsigned char *srcPt,int width,int height,VideoMode mode,
 		 unsigned char *dst);
+
+  inline std::ostream& operator<<(std::ostream &os,
+				  const VideoImage &anImage)
+  {
+    const char *stringMode;
+    switch(anImage.mode)
+      {
+      case Y8: stringMode = "Y8";break;
+      case Y16: stringMode = "Y16";break;
+      case Y32: stringMode = "Y32";break;
+      case Y64: stringMode = "Y64";break;
+      case RGB555: stringMode = "RGB555";break;
+      case RGB565: stringMode = "RGB565";break;
+      case RGB24: stringMode = "RGB24";break;
+      case RGB32: stringMode = "RGB32";break;
+      case BGR24: stringMode = "BGR24";break;
+      case BGR32: stringMode = "BGR32";break;
+      case BAYER_RG8: stringMode = "BAYER_RG8";break;
+      case BAYER_RG16: stringMode = "BAYER_RG16";break;
+      case I420: stringMode = "I420";break;
+      case YUV411: stringMode = "YUV411";break;
+      case YUV422: stringMode = "YUV422";break;
+      case YUV444: stringMode = "YUV444";break;
+      default:
+	stringMode = "Unknowed";
+	break;
+      }
+
+    os << "<"
+       << "frameNumber=" << anImage.frameNumber << ", "
+       << "height=" << anImage.height << ", "
+       << "width=" << anImage.width << ", "
+       << "inused=" << anImage.inused << ", "
+       << "mode=" << stringMode << ", "
+       << "buffer=" << (void*)anImage.buffer
+       << ">";
+    return os;
+  }
 }
 #endif

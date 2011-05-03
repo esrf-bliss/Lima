@@ -50,10 +50,25 @@ using namespace lima;
       ~Image();
       Image(const CtVideo::Image&);
 
-      const unsigned char* 	buffer() 	const;
+      SIP_PYOBJECT		buffer() 	const;
+%MethodCode
+  Py_BEGIN_ALLOW_THREADS
+  const char* buffer = sipCpp->buffer();
+  Py_ssize_t size = sipCpp->size();
+  sipRes = PyByteArray_FromStringAndSize(buffer ? buffer : "",size);
+  Py_END_ALLOW_THREADS
+%End
       int 			width() 	const;
       int 			height() 	const;
       VideoMode 		mode() 		const;
+      int			size()		const;
+      int			frameNumber()	const;
+      const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	sipRes = str.str().c_str();
+%End  
     };
 
     class ImageCallback

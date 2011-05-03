@@ -362,6 +362,7 @@ bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 	if (!frame_info.frame_ptr) {
 		frame_info.frame_ptr = ptr;
 	} else if (frame_info.frame_ptr != ptr) {
+	  	DEB_ERROR() << "Invalid " << DEB_VAR1(frame_info.frame_ptr);
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
 					     << DEB_VAR1(frame_info.frame_ptr);
 	}

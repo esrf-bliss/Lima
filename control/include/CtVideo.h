@@ -14,6 +14,9 @@ namespace lima
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
     friend class CtControl;
 
+    class _Data2ImageTask;
+    friend class _Data2ImageTask;
+
   public:
     CtVideo(CtControl&);
     ~CtVideo();
@@ -36,16 +39,21 @@ namespace lima
     class Image
     {
       friend class CtVideo;
+      friend class _Data2ImageTask;
+      friend std::ostream& operator<<(std::ostream &os,CtVideo::Image& im);
     public:
       Image();
       ~Image();
       Image(const Image&);
       Image& operator=(const Image&);
 
-      const unsigned char* 	buffer() 	const;
-      int 			width() 	const;
-      int 			height() 	const;
-      VideoMode 		mode() 		const;
+      const char* 	buffer() 	const;
+      int 		width() 	const;
+      int 		height() 	const;
+      VideoMode 	mode() 		const;
+      int		size()		const;
+      int		frameNumber()	const;
+      
     private:
       Image(const CtVideo*,VideoImage*);
 
@@ -98,8 +106,6 @@ namespace lima
     // --- video mode
     void getSupportedVideoMode(std::list<VideoMode> &modeList);
   private:
-    class _Data2ImageTask;
-    friend class _Data2ImageTask;
     class _Data2ImageCBK;
     friend class _Data2ImageCBK;
     class _InternalImageCBK;
@@ -134,5 +140,16 @@ namespace lima
     Bin			m_hw_bin;
     bool		m_stopping_live; ///< variable to avoid deadlock when stopping live
   };
+
+  inline std::ostream& operator<<(std::ostream &os,
+				  CtVideo::Image& im)
+  {
+    if(im.m_image)
+      os << *(im.m_image);
+    else
+      os << "<No image>";
+    return os;
+  }
+
 }
 #endif
