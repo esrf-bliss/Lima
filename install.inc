@@ -172,7 +172,11 @@ ifneq ($(COMPILE_PROSILICA), 0)
 	cp build/liblimaprosilica.so.$(PROSILICA_FULL_VERSION) $(INSTALL_LIB_DIR)
 	cp -d build/liblimaprosilica.so.$(PROSILICA_MAJ_VERSION) $(INSTALL_LIB_DIR)
 ifeq ($(PROCESSOR_TYPE),i386)
+ifeq ($(INSTALL_PLAT),redhate4) 
+	cp camera/prosilica/sdk/bin/x86/old_libPvApi.so $(INSTALL_LIB_DIR)/libPvAPI.so
+else
 	cp camera/prosilica/sdk/bin/x86/libPvAPI.so $(INSTALL_LIB_DIR)
+endif
 else
 	cp camera/prosilica/sdk/bin/x64/libPvAPI.so $(INSTALL_LIB_DIR)
 endif
