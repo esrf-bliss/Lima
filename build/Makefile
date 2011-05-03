@@ -234,7 +234,7 @@ PROCESSOR_TYPE := $(shell uname -i)
 ifeq ($(PROCESSOR_TYPE),i386)
 PROSILICA_LDFLAGS	:= -L. -L../camera/prosilica/sdk/bin/x86
 else
-PROSILICA_LDFLAGS	:= -L. -L../camera/prosilica/sdk/bin/x64
+PROSILICA_LDFLAGS	:= -L. -L../camera/prosilica/sdk/bin/x64 -L../camera/prosilica/sdk/bin/x86
 endif
 PROSILICA_LDLIBS	:= -lPvAPI
 
