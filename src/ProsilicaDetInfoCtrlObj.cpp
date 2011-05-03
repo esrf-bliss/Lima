@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "ProsilicaDetInfoCtrlObj.h"
 #include "ProsilicaCamera.h"
 
