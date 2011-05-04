@@ -33,14 +33,14 @@ public:
     
     AutoMutex aLock(m_cnt.m_cond.mutex());
     VideoImage *anImage = m_cnt.m_write_image;
+    DEB_TRACE() << DEB_VAR1(*anImage);
     while(anImage->inused)
       m_cnt.m_cond.wait();
     anImage->inused = -1;	// Write Mode
     aLock.unlock();
     
-    
     data2Image(aData,*anImage);
-
+    
     aLock.lock();
     anImage->inused = 0;	// Unlock
     ++m_cnt.m_image_counter;
@@ -71,7 +71,7 @@ class CtVideo::_Data2ImageCBK : public TaskEventCallback
   DEB_CLASS_NAMESPC(DebModControl,"CtVideo::_Data2ImageCBK","Control");
 public:
   _Data2ImageCBK(CtVideo &aCtVideo) : m_video(aCtVideo) {}
-  virtual void finnished(Data &aData)
+  virtual void finished(Data &aData)
   {
     DEB_MEMBER_FUNCT();
     DEB_PARAM() << DEB_VAR1(aData);
@@ -530,6 +530,7 @@ void CtVideo::frameReady(Data &aData)
 
 void CtVideo::_data_2_image(Data &aData,Bin &aBin,Roi &aRoi)
 {
+  DEB_MEMBER_FUNCT();
   TaskMgr *anImageCopy = new TaskMgr();
   int runLevel = 0;
   if(aBin.getX() > 1 || aBin.getY() > 1)
@@ -559,6 +560,7 @@ void CtVideo::_data_2_image(Data &aData,Bin &aBin,Roi &aRoi)
 
 void CtVideo::_data2image_finnished(Data&)
 {
+  DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
   if(!m_last_data.empty())
     {

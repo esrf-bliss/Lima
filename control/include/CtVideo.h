@@ -11,7 +11,7 @@ namespace lima
 
   class CtVideo
   {
-    DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
+    DEB_CLASS_NAMESPC(DebModControl,"Video","Control");
     friend class CtControl;
 
     class _Data2ImageTask;
