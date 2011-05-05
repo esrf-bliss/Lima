@@ -1,4 +1,4 @@
 src-dirs  = src
-test-dirs = 
+test-dirs = sdk
 
 include ../../global.inc
