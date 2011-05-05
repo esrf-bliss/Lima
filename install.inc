@@ -178,7 +178,11 @@ else
 	cp camera/prosilica/sdk/bin/x86/libPvAPI.so $(INSTALL_LIB_DIR)
 endif
 else
+ifeq ($(INSTALL_PLAT),redhate5) 
+	cp camera/prosilica/sdk/bin/x64/old_libPvApi.so $(INSTALL_LIB_DIR)/libPvAPI.so
+else
 	cp camera/prosilica/sdk/bin/x64/libPvAPI.so $(INSTALL_LIB_DIR)
+endif
 endif
 	cp sip/prosilica/limaprosilica.so $(INSTALL_PROSILICA_VDIR)
 endif
