@@ -25,9 +25,14 @@ void BufferCtrlObj::prepareAcq()
   m_acq_frame_nb = -1;
   int buffer_nb,concat_frame_nb;
   m_buffer_cb_mgr.acqFrameNb2BufferNb(0,buffer_nb,concat_frame_nb);
-  tPvFrame& frame = m_frame[0];
-  frame.ImageBuffer = (char*) m_buffer_cb_mgr.getBufferPtr(buffer_nb,
-							   concat_frame_nb);
+  tPvFrame& frame0 = m_frame[0];
+  frame0.ImageBuffer = (char*) m_buffer_cb_mgr.getBufferPtr(buffer_nb,
+							    concat_frame_nb);
+
+  m_buffer_cb_mgr.acqFrameNb2BufferNb(1,buffer_nb,concat_frame_nb);
+  tPvFrame& frame1 = m_frame[1];
+  frame1.ImageBuffer = (char*) m_buffer_cb_mgr.getBufferPtr(buffer_nb,
+							    concat_frame_nb);
 }
 
 void BufferCtrlObj::startAcq()
@@ -37,6 +42,14 @@ void BufferCtrlObj::startAcq()
   m_exposing = true;
   tPvFrame& frame = m_frame[0];
   m_status = PvCaptureQueueFrame(m_handle,&frame,_newFrame);
+  
+  int requested_nb_frames;
+  m_sync->getNbFrames(requested_nb_frames);
+  if(!requested_nb_frames || requested_nb_frames > 1)
+    {
+      tPvFrame& frame = m_frame[1];
+      m_status = PvCaptureQueueFrame(m_handle,&frame,_newFrame);
+    }
 }
 
 void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
@@ -44,16 +57,28 @@ void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
   DEB_STATIC_FUNCT();
   BufferCtrlObj *bufferPt = (BufferCtrlObj*)aFrame->Context[0];
 
-  bufferPt->m_exposing = false;
-  if(aFrame->Status != ePvErrSuccess) // error
-    {
-      DEB_ERROR() << DEB_VAR1(aFrame->Status);
-      bufferPt->m_status = aFrame->Status;
-      return;
-    }
-
   int requested_nb_frames;
   bufferPt->m_sync->getNbFrames(requested_nb_frames);
+
+  bufferPt->m_exposing = false;
+  if(bufferPt->m_status || aFrame->Status != ePvErrSuccess) // error
+    {
+      // if we miss a frame in live mode, it's not really an error,continue
+      if(aFrame->Status == ePvErrDataMissing && !requested_nb_frames)
+	DEB_WARNING() << DEB_VAR1(aFrame->Status);
+      else if(aFrame->Status == ePvErrCancelled) // we stopped the acqusition so not an error
+	return;
+      else 
+	{
+	  if(!bufferPt->m_status) // Keep error status
+	    bufferPt->m_status = aFrame->Status;
+
+	  if(aFrame->Status)
+	    DEB_ERROR() << DEB_VAR1(aFrame->Status);
+	    
+	  return;
+	}
+    }
   
   ++bufferPt->m_acq_frame_nb;
   
@@ -62,14 +87,17 @@ void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
      bufferPt->m_acq_frame_nb < (requested_nb_frames - 1))
     {
       int buffer_nb, concat_frame_nb;
-      bufferPt->m_buffer_cb_mgr.acqFrameNb2BufferNb(bufferPt->m_acq_frame_nb,
+      bufferPt->m_buffer_cb_mgr.acqFrameNb2BufferNb(bufferPt->m_acq_frame_nb + 1,
 						    buffer_nb,
 						    concat_frame_nb);
-      tPvFrame& frame = bufferPt->m_frame[bufferPt->m_acq_frame_nb & 0x1];
-      frame.ImageBuffer = (char*)bufferPt->m_buffer_cb_mgr.getBufferPtr(buffer_nb,
-									concat_frame_nb);
-      bufferPt->m_exposing = true;
-      bufferPt->m_status = PvCaptureQueueFrame(bufferPt->m_handle,&frame,_newFrame);
+      aFrame->ImageBuffer = (char*)bufferPt->m_buffer_cb_mgr.getBufferPtr(buffer_nb,
+									  concat_frame_nb);
+      if(!requested_nb_frames ||
+	 bufferPt->m_acq_frame_nb < (requested_nb_frames - 2))
+	{
+	  bufferPt->m_exposing = true;
+	  bufferPt->m_status = PvCaptureQueueFrame(bufferPt->m_handle,aFrame,_newFrame);
+	}
     }
   else
     stopAcq = true;
@@ -79,5 +107,5 @@ void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
   bufferPt->m_buffer_cb_mgr.newFrameReady(frame_info);
   
   if(stopAcq)
-   bufferPt->m_sync->stopAcq();
+    bufferPt->m_sync->stopAcq(false);
 }

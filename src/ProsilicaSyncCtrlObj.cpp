@@ -165,7 +165,7 @@ void SyncCtrlObj::startAcq()
   m_started = true;
 }
 
-void SyncCtrlObj::stopAcq()
+void SyncCtrlObj::stopAcq(bool clearQueue)
 {
   DEB_MEMBER_FUNCT();
   if(m_started)
@@ -186,13 +186,16 @@ void SyncCtrlObj::stopAcq()
 	  throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
 	}
 
-//       DEB_TRACE() << "Try to clear queue";
-//       error = PvCaptureQueueClear(m_handle);
-//       if(error)
-// 	{
-// 	  DEB_ERROR() << "Failed to stop acquisition";
-// 	  throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
-// 	}
+      if(clearQueue)
+	{
+	  DEB_TRACE() << "Try to clear queue";
+	  error = PvCaptureQueueClear(m_handle);
+	  if(error)
+	    {
+	      DEB_ERROR() << "Failed to stop acquisition";
+	      throw LIMA_HW_EXC(Error,"Failed to stop acquisition");
+	    }
+	}
     }
   m_started = false;
 }

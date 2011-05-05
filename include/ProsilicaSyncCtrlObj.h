@@ -39,7 +39,7 @@ namespace lima
       virtual void getValidRanges(ValidRangesType& valid_ranges);
 
       void startAcq();
-      void stopAcq();
+      void stopAcq(bool clearQueue = true);
       
       void getStatus(HwInterface::StatusType&);
 
