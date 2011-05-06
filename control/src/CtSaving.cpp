@@ -825,6 +825,10 @@ void CtSaving::_prepare()
     resetLastFrameNb();
   else
     DEB_TRACE() << "No auto save activated";
+
+  //New set of files for a new acquisition
+  m_save_cnt->close();
+
   _validate_parameters();
 }
 
@@ -1015,8 +1019,11 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 void CtSaving::SaveContainer::close()
 {
   DEB_MEMBER_FUNCT();
-  _close();
-  m_file_opened = false;
-  m_written_frames = 0;
-  ++m_saving.m_acquisition_pars.nextNumber;
+  if(m_file_opened)
+    {
+      _close();
+      m_file_opened = false;
+      m_written_frames = 0;
+      ++m_saving.m_acquisition_pars.nextNumber;
+    }
 }
