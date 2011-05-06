@@ -80,12 +80,13 @@ namespace lima {
     void registerFrameCallback(CtControl *ct);
     void unregisterFrameCallback();
 	
-    void getFrame(Data&,int frameNumber);
+    void getFrame(Data&,int frameNumber,int readBlockLen=1);
 
     void reset();
     void setup(CtControl *ct);
 
-    static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);
+    static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&,
+				       int readBlockLen=1);
   private:
 
     HwBufferCtrlObj* 	m_hw_buffer;

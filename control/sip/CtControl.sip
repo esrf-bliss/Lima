@@ -112,8 +112,10 @@ using namespace lima;
     void getStatus(Status& status /Out/) const;
     void getImageStatus(ImageStatus &imageStatus /Out/) const;
 
-    void ReadImage(Data& data /Out/,long frameNumber = -1);
-    void ReadBaseImage(Data& data /Out/,long frameNumber = -1);
+    void ReadImage(Data& data /Out/,long frameNumber = -1, 
+				    long readBlockLen = 1);
+    void ReadBaseImage(Data& data /Out/,long frameNumber = -1,
+					long readBlockLen = 1);
 
     void reset();
     void resetStatus(bool only_acq_status);

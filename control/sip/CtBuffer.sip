@@ -55,10 +55,11 @@ using namespace lima;
 	void registerFrameCallback(CtControl *ct);
         void unregisterFrameCallback();
 
-	void getFrame(Data &data /Out/,int frameNumber);
+	void getFrame(Data &data /Out/,int frameNumber,int readBlockLen=1);
 
 	void reset();
 	void setup(CtControl *ct);
 
-	static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&);
+	static void getDataFromHwFrameInfo(Data& /Out/,const HwFrameInfoType&,
+					   int readBlockLen=1);
 };
