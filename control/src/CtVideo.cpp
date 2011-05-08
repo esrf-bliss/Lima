@@ -1,6 +1,7 @@
 #include <list>
 #include "HwVideoCtrlObj.h"
 #include "CtVideo.h"
+#include "CtAcquisition.h"
 
 #include "PoolThreadMgr.h"
 #include "SinkTask.h"
@@ -34,25 +35,23 @@ public:
 
     aLock.lock();
     anImage->inused = 0;	// Unlock
+    ++m_cnt.m_image_counter;
+
     // if read Image is not use, swap
     if(!m_cnt.m_read_image->inused)
       {
 	m_cnt.m_write_image = m_cnt.m_read_image;
 	m_cnt.m_write_image->frameNumber = -1;
 	m_cnt.m_read_image = anImage;
-      }
 
-    ++m_cnt.m_image_counter;
-
-    if(m_cnt.m_image_callback)
-      {
-	CtVideo::Image anImageWrapper(&m_cnt,anImage);
-	ImageCallback *cb = m_cnt.m_image_callback;
-	aLock.unlock();
-	cb->newImage(anImageWrapper);
+	if(m_cnt.m_image_callback)
+	  {
+	    CtVideo::Image anImageWrapper(&m_cnt,anImage);
+	    ImageCallback *cb = m_cnt.m_image_callback;
+	    aLock.unlock();
+	    cb->newImage(anImageWrapper);
+	  }
       }
-    else
-      m_cnt.m_cond.broadcast();
   }
 private:
   CtVideo &m_cnt;
@@ -74,6 +73,75 @@ public:
 private:
   CtVideo &m_video;
 };
+// --- CtVideo::_InternalImageCBK
+class CtVideo::_InternalImageCBK : public HwVideoCtrlObj::ImageCallback
+{
+public:
+  _InternalImageCBK(CtVideo &video) : 
+    HwVideoCtrlObj::ImageCallback(),
+    m_video(video),m_buffer(video.m_video->getHwBufferCtrlObj()) {}
+  virtual ~_InternalImageCBK() {}
+  
+protected:
+  virtual bool newImage(char * data,int width,int height,VideoMode mode);
+private:
+  CtVideo& 		m_video;
+  StdBufferCbMgr& 	m_buffer;
+};
+
+bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,VideoMode mode)
+{
+  bool liveFlag;
+  AutoMutex aLock(m_video.m_cond.mutex());
+  liveFlag = m_video.m_pars.live;
+  int image_counter = m_video.m_image_counter + 1;
+  aLock.unlock();
+    
+  if(!liveFlag)			// Classic acquisition
+    {
+      int buffer_nb, concat_frame_nb;
+      m_buffer.acqFrameNb2BufferNb(image_counter, buffer_nb, 
+				     concat_frame_nb);
+      void *ptr = m_buffer.getBufferPtr(buffer_nb,
+					concat_frame_nb);
+      try
+	{
+	  lima::image2YUV((unsigned char*)data,width,height,mode,(unsigned char*)ptr);
+	}
+      // Should happen only when video format is not implemented (Debug mode)
+      catch(Exception &exc)
+	{
+	  std::cerr << exc.getErrMsg() << std::endl;
+	  return false;
+	}
+    }
+
+  aLock.lock();
+  ++m_video.m_image_counter;
+  VideoImage *anImage = m_video.m_write_image;
+  if(anImage->inused) return true;			// Skip it (Should never happen!)
+  anImage->inused = -1;		// Write Mode
+  aLock.unlock();
+
+  anImage->setParams(image_counter,width,height,mode);
+  memcpy(anImage->buffer,data,int(anImage->size()));
+
+  aLock.lock();
+  anImage->inused = 0;
+  // if read Image is not use, swap
+  if(!m_video.m_read_image->inused)
+    {
+      m_video.m_write_image = m_video.m_read_image;
+      m_video.m_write_image->frameNumber = -1;
+      m_video.m_read_image = anImage;
+   
+      if(m_video.m_image_callback)
+	{
+	  //TODO should be done in background
+	}
+    }
+  return true;
+}
 // --- CtVideo::Image
 CtVideo::Image::Image() : m_video(NULL),m_image(NULL) {}
 
@@ -136,7 +204,9 @@ CtVideo::CtVideo(CtControl &ct) :
   m_image_counter(0),
   m_read_image(new VideoImage()),
   m_write_image(new VideoImage()),
-  m_image_callback(NULL)
+  m_image_callback(NULL),
+  m_internal_image_callback(NULL),
+  m_ct(ct)
 {
   HwInterface *hw = ct.interface();
   m_has_video = hw->getHwCtrlObj(m_video);
@@ -149,8 +219,10 @@ CtVideo::CtVideo(CtControl &ct) :
   // Params init
   if(m_has_video)
     {
+      m_internal_image_callback = new _InternalImageCBK(*this);
       m_video->getBrightness(m_pars.brightness);
       m_video->getGain(m_pars.gain);
+      m_video->registerImageCallback(*m_internal_image_callback);
     }
 }
 
@@ -160,6 +232,7 @@ CtVideo::~CtVideo()
   m_data_2_image_cb->unref();
   delete m_read_image;
   delete m_write_image;
+  delete m_internal_image_callback;
 }
 
 // --- parameters
@@ -179,9 +252,29 @@ void CtVideo::getParameters(Parameters &pars) const
 void CtVideo::setLive(bool liveFlag)
 {
   AutoMutex aLock(m_cond.mutex());
-  m_pars.live = liveFlag;
+  CtControl::Status status;
+  m_ct.getStatus(status);
+  if(liveFlag && status.AcquisitionStatus != AcqReady)
+    throw LIMA_CTL_EXC(Error, "Can't set live mode if an acquisition is running");
+
   if(liveFlag)
     _apply_params();
+  
+  if(m_has_video)
+    m_video->setLive(liveFlag);
+  else
+    {
+      if(liveFlag)
+	{
+	  CtAcquisition *acqPt = m_ct.acquisition();
+	  acqPt->setAcqNbFrames(0);	// Live
+	  m_ct.prepareAcq();
+	  m_ct.startAcq();
+	}
+      else
+	m_ct.stopAcq();
+    }
+  m_pars.live = liveFlag;
 }
 void CtVideo::getLive(bool &liveFlag) const
 {
@@ -387,6 +480,15 @@ void CtVideo::_data2image_finnished(Data&)
 
 void CtVideo::_apply_params()
 {
+  m_image_counter = -1;
+}
+/** @brief an Acquisition will start so,
+ *  we have to stop video mode
+ */ 
+void CtVideo::_prepareAcq()
+{
+  setLive(false);
+  m_image_counter = -1;
 }
 //============================================================================
 //			 CtVideo::Parameters

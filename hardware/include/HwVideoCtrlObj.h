@@ -22,10 +22,11 @@ namespace lima
       ImageCallback() {}
       virtual ~ImageCallback() {}
     protected:
-      virtual void newImage(char *,int width,int height,VideoMode) = 0;
+      virtual bool newImage(char *,int width,int height,VideoMode) = 0;
     };
 
-    HwVideoCtrlObj() : 
+    HwVideoCtrlObj() :
+      m_image_cbk(NULL),
       m_buffer_cb_mgr(m_buffer_alloc_mgr),
       m_buffer_ctrl_mgr(m_buffer_cb_mgr),
       m_hw_buffer_ctrl_mgr(m_buffer_ctrl_mgr) {}
@@ -49,7 +50,9 @@ namespace lima
       void registerImageCallback(ImageCallback &cb);
       void unregisterImageCallback(ImageCallback &cb);
 
-      HwBufferCtrlObj& getHwBufferCtrlObj() {return m_hw_buffer_ctrl_mgr;}
+      StdBufferCbMgr& getHwBufferCtrlObj() {return m_buffer_cb_mgr;}
+  protected:
+      ImageCallback* m_image_cbk;
   private:
       class _BufferCtrlMgr : public  HwBufferCtrlObj
       {

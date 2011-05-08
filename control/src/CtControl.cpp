@@ -225,6 +225,7 @@ void CtControl::prepareAcq()
 #endif
   m_images_ready.clear();
   m_base_images_ready.clear();
+  m_ct_video->_prepareAcq();
 }
 
 void CtControl::startAcq()

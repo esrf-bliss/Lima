@@ -106,12 +106,15 @@ namespace lima
     friend class _Data2ImageTask;
     class _Data2ImageCBK;
     friend class _Data2ImageCBK;
+    class _InternalImageCBK;
+    friend class _InternalImageCBK;
 
     void frameReady(Data&);	// callback from CtControl
 
     void _data_2_image(Data &aData,Bin &aBin,Roi &aRoi);
     void _data2image_finnished(Data&);
     void _apply_params();
+    void _prepareAcq();
 
     Parameters		m_pars;
     bool 		m_has_video;
@@ -125,6 +128,8 @@ namespace lima
     mutable VideoImage*	m_read_image;
     mutable VideoImage*	m_write_image;
     ImageCallback*	m_image_callback;
+    _InternalImageCBK*	m_internal_image_callback;
+    CtControl&		m_ct;
   };
 }
 #endif

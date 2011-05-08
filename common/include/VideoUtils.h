@@ -40,10 +40,24 @@ namespace lima
 	  buffer = (char*)realloc(buffer,size);
 	}
     }
-    inline double size() const {return buffer ? height * width * depth() : 0;}
-    inline double depth() const
+    inline void setParams(int fNumber,int w,int h,VideoMode m)
     {
-      switch(mode)
+      double oldSize = size();
+      frameNumber = fNumber;
+      width = w;
+      height = h;
+      mode = m;
+      double newSize = size();
+      if(!buffer || newSize > oldSize)
+	{
+	  int size = int(newSize + 0.5);
+	  buffer = (char*)realloc(buffer,size);
+	}
+    }
+    inline double size() const {return buffer ? height * width * depth() : 0;}
+    static inline double mode_depth(VideoMode m)
+    {
+      switch(m)
 	{
 	case YUV411:
 	  return 1.5;
@@ -69,11 +83,17 @@ namespace lima
 	default:
 	  return -1;	/* ERROR */
 	}
+    }
+    
+   inline double depth() const
+    {
+      return mode_depth(mode);
     } 
 
   };
 
   void data2Image(Data &aData,VideoImage &anImage);
-  void image2Data(VideoImage &anImage,Data &aData);
+  void image2YUV(const unsigned char *srcPt,int width,int height,VideoMode mode,
+		 unsigned char *dst);
 }
 #endif
