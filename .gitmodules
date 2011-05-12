@@ -37,3 +37,6 @@
 [submodule "applications/taco"]
 	path = applications/taco
 	url = git://git.epn-campus.eu/repositories/LimaTaco
+[submodule "third-party/yat"]
+	path = third-party/yat
+	url = git://git.epn-campus.eu/repositories/yat

@@ -182,6 +182,8 @@ bool Cond::wait(double timeout)
       waitTimeout.tv_sec = now.tv_sec + long(timeout);
       waitTimeout.tv_nsec = (now.tv_usec * 1000) + 
 	long((timeout - long(timeout)) * 1e9);
+      if(waitTimeout.tv_nsec >= 1000000000L) // Carry
+	++waitTimeout.tv_sec,waitTimeout.tv_nsec -= 1000000000L;
       retcode = pthread_cond_timedwait(&m_cond,&m_mutex.m_mutex,&waitTimeout);
     }
   else

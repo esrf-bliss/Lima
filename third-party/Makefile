@@ -32,6 +32,12 @@ endif
 ifneq ($(COMPILE_CBF_SAVING),0)
 PROJECTS += cbflib.src
 PROJECTS_CLEAN += cbflib.clean
+GCCABOVE42 := $(shell expr 4.2 \<= `gcc -dumpversion | cut -f1-2 -d.`)
+  ifeq "$(GCCABOVE42)" "1"
+    CBFMAKEFILE=Makefile_LINUX_gcc42
+  else
+    CBFMAKEFILE=Makefile_LINUX
+  endif
 endif
 
 ifndef COMPILE_SPS_IMAGE
@@ -71,10 +77,10 @@ Sps/Src/sps.o:	Sps/Src/sps.c Sps/Include/sps.h
 	make -C Sps/Src CPPFLAGS=-I../Include CFLAGS=-fPIC sps.o
 
 cbflib.src:
-	$(MAKE) CFLAGS=-fPIC -C CBFLib/ -f Makefile_LINUX all
+	$(MAKE) CFLAGS=-fPIC -C CBFLib/ -f $(CBFMAKEFILE) all
 
 cbflib.clean:
-	$(MAKE) -C CBFLib/ -f Makefile_LINUX clean
+	$(MAKE) -C CBFLib/ -f $(CBFMAKEFILE) clean
 
 test:
 	@echo
