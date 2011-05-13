@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
 		<artifactId>Lima</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.0.3-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -18,12 +18,12 @@
         <dependency>
 			<groupId>fr.soleil.lib.Lima</groupId>
 			<artifactId>Common-${aol}-shared-${mode}</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.soleil.lib.Lima</groupId>
 			<artifactId>Hardware-${aol}-shared-${mode}</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.3-SNAPSHOT</version>
 		</dependency>
     </dependencies>
 	
@@ -50,9 +50,13 @@
         </plugins>
     </build>
 
-    <modules>
-        <module>basler</module>
+	<!-- ENABLE/DISABLE a specific plugin--> 
+    <modules>        
         <module>simulator</module>
+		<module>basler</module>
+		<module>pilatus</module>		
+        <!--<module>marccd</module>-->
+		<!--<module>xpad</module>-->
     </modules>
 
 </project>
