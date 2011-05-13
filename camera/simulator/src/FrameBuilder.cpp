@@ -39,6 +39,7 @@
 #include "FrameBuilder.h"
 #include "SizeUtils.h"
 
+
 using namespace lima;
 using namespace std;
 
@@ -49,7 +50,7 @@ using namespace std;
  *******************************************************************/
 FrameBuilder::FrameBuilder()
 {
-	m_frame_dim = FrameDim(1024, 1024, Bpp16);
+	m_frame_dim = FrameDim(1024, 1024, Bpp32);
 	m_bin = Bin(1,1);
 	m_roi = Roi(0, Size(0,0));  // Or the whole frame?
 	GaussPeak p={512, 512, 100, 100}; // in unbinned units!
@@ -431,6 +432,6 @@ unsigned long FrameBuilder::getFrameNr()
  *******************************************************************/
 void FrameBuilder::getMaxImageSize(Size& max_size)
 {
-	int max_dim = 8 * 1024;
+	int max_dim = 1024;
 	max_size = Size(max_dim, max_dim);
 }

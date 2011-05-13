@@ -51,7 +51,9 @@ void SimuDetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
 
 void SimuDetInfoCtrlObj::getDefImageType(ImageType& def_image_type)
 {
-	def_image_type = Bpp16;
+	FrameDim fdim;
+	m_simu.getFrameDim(fdim);
+	def_image_type = fdim.getImageType();
 }
 
 void SimuDetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
