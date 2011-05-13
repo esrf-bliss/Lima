@@ -52,6 +52,7 @@ namespace lima {
 	RAW,
 	EDF,
 	CBFFormat,
+	NXS
       };
 
     enum SavingMode 
@@ -70,7 +71,8 @@ namespace lima {
 
     struct LIMACORE_API Parameters 
     {
-      std::string directory;
+      std::string temporaryPath;
+	  std::string directory;
       std::string prefix;
       std::string suffix;
       long nextNumber;
@@ -79,7 +81,8 @@ namespace lima {
       OverwritePolicy overwritePolicy;
       std::string indexFormat;
       long framesPerFile;
-      Parameters();
+	  long nbframes;
+      Parameters();	
     };
 
     typedef std::pair<std::string, std::string> HeaderValue;
@@ -165,6 +168,7 @@ namespace lima {
       void writeFile(Data&,CtSaving::HeaderMap &);
       void setStatisticSize(int aSize);
       void getStatistic(std::list<double>&) const;
+      void getParameters(CtSaving::Parameters&) const;	  	  
       void clear();
       
       /** @brief should return true if container has compression or
@@ -242,10 +246,13 @@ namespace lima {
 	aFileFormatHumanPt = "EDF";break;
       case CtSaving::CBFFormat:
 	aFileFormatHumanPt = "CBF";break;
+      case CtSaving::NXS:
+	aFileFormatHumanPt = "NXS";break;	
       default:
 	aFileFormatHumanPt = "RAW";break;
       }
     os << "<"
+	   << "temporaryPath=" << params.temporaryPath << ", "	
        << "directory=" << params.directory << ", "
        << "prefix=" << params.prefix << ", "
        << "suffix=" << params.suffix << ", "
@@ -253,7 +260,8 @@ namespace lima {
        << "fileFormat=" << params.fileFormat << "," << aFileFormatHumanPt << ", "
        << "savingMode=" << params.savingMode << ", "
        << "overwritePolicy=" << params.overwritePolicy << ", "
-       << "framesPerFile=" << params.framesPerFile
+       << "framesPerFile=" << params.framesPerFile << ", "
+	   << "nbframes=" << params.nbframes
        << ">";
     return os;
   }
