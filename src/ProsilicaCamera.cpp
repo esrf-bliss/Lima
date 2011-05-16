@@ -165,6 +165,8 @@ void Camera::_allocBuffer()
   tPvErr error = PvAttrUint32Get(m_handle, "TotalBytesPerFrame", &imageSize);
   if(error)
     throw LIMA_HW_EXC(Error,"Can't get camera image size");
+
+  DEB_TRACE() << DEB_VAR1(imageSize);
   //realloc
   if(!m_frame[0].ImageBuffer || m_frame[0].ImageBufferSize < imageSize)
     {
@@ -187,8 +189,17 @@ void Camera::startAcq()
 {
   DEB_MEMBER_FUNCT();
 
+  m_continue_acq = true;
   m_acq_frame_nb = 0;
   tPvErr error = PvCaptureQueueFrame(m_handle,&m_frame[0],_newFrameCBK);
+
+  int requested_nb_frames;
+  m_sync->getNbFrames(requested_nb_frames);
+  bool isLive;
+  m_video->getLive(isLive);
+
+  if(!requested_nb_frames || requested_nb_frames > 1 || isLive)
+    error = PvCaptureQueueFrame(m_handle,&m_frame[1],_newFrameCBK);
 }
 
 void Camera::reset()
@@ -207,6 +218,19 @@ void Camera::_newFrameCBK(tPvFrame* aFrame)
 void Camera::_newFrame(tPvFrame* aFrame)
 {
   DEB_MEMBER_FUNCT();
+
+  if(!m_continue_acq) return;
+
+  if(aFrame->Status != ePvErrSuccess)
+    {
+      if(aFrame->Status != ePvErrCancelled)
+	{
+	  DEB_WARNING() << DEB_VAR1(aFrame->Status);
+	  PvCaptureQueueFrame(m_handle,aFrame,_newFrameCBK);
+	}
+      return;
+    }
+  
   int requested_nb_frames;
   m_sync->getNbFrames(requested_nb_frames);
   bool isLive;
@@ -214,10 +238,11 @@ void Camera::_newFrame(tPvFrame* aFrame)
   ++m_acq_frame_nb;
 
   bool stopAcq = false;
-  if(isLive || !requested_nb_frames || m_acq_frame_nb < requested_nb_frames)
+  if(isLive || !requested_nb_frames || m_acq_frame_nb < (requested_nb_frames - 1))
     {
-      tPvFrame& frame = m_frame[m_acq_frame_nb & 0x1];
-      tPvErr error = PvCaptureQueueFrame(m_handle,&frame,_newFrameCBK);
+      if(isLive || requested_nb_frames ||
+	 m_acq_frame_nb < (requested_nb_frames - 2))
+	tPvErr error = PvCaptureQueueFrame(m_handle,aFrame,_newFrameCBK);
     }
   else
     stopAcq = true;
@@ -235,10 +260,10 @@ void Camera::_newFrame(tPvFrame* aFrame)
       return;
     }
 
-  bool continueAcq =  m_video->callNewImage((char*)aFrame->ImageBuffer,
-					    aFrame->Width,
-					    aFrame->Height,
-					    mode);
-  if(stopAcq || !continueAcq)
-    m_sync->stopAcq();
+  m_continue_acq =  m_video->callNewImage((char*)aFrame->ImageBuffer,
+					  aFrame->Width,
+					  aFrame->Height,
+					  mode);
+  if(stopAcq || !m_continue_acq)
+    m_sync->stopAcq(false);
 }

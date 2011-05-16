@@ -28,7 +28,9 @@ Interface::Interface(Camera *cam) :
     }
   m_sync = new SyncCtrlObj(cam,m_video ? NULL : m_buffer);
   cam->m_sync = m_sync;
-  m_buffer->m_sync = m_sync;
+
+  if(m_buffer)
+    m_buffer->m_sync = m_sync;
   if(m_video)
     m_video->m_sync = m_sync;
 }
@@ -81,6 +83,8 @@ void Interface::startAcq()
 
   if(m_buffer)
     m_buffer->getBuffer().setStartTimestamp(Timestamp::now());
+  else
+    m_video->getBuffer().setStartTimestamp(Timestamp::now());
   m_sync->startAcq();
 }
 

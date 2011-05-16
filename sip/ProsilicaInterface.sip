@@ -6,7 +6,7 @@ namespace Prosilica
 #include <ProsilicaInterface.h>
 %End
   public:
-    Interface(Prosilica::Camera* /KeepReference/);
+    Interface(Prosilica::Camera*);
     virtual ~Interface();
 
     virtual void getCapList(std::vector<HwCap> &cap_list /Out/) const;

@@ -51,6 +51,7 @@ namespace lima
       VideoCtrlObj*	m_video;
       VideoMode		m_video_mode;
       int		m_acq_frame_nb;
+      bool		m_continue_acq;
     };
   }
 }
