@@ -84,6 +84,7 @@ private:
 // --- CtVideo::_InternalImageCBK
 class CtVideo::_InternalImageCBK : public HwVideoCtrlObj::ImageCallback
 {
+  DEB_CLASS_NAMESPC(DebModControl,"CtVideo::_InternalImageCBK","Control");
 public:
   _InternalImageCBK(CtVideo &video) : 
     HwVideoCtrlObj::ImageCallback(),
@@ -99,6 +100,9 @@ private:
 
 bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,VideoMode mode)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR4((void*)data,width,height,mode);
+
   bool liveFlag;
   AutoMutex aLock(m_video.m_cond.mutex());
   if(m_video.m_stopping_live) return false;
@@ -135,7 +139,7 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
   if(anImage->inused) return true;			// Skip it (Should never happen!)
   anImage->inused = -1;		// Write Mode
   aLock.unlock();
-
+  
   anImage->setParams(image_counter,width,height,mode);
   memcpy(anImage->buffer,data,int(anImage->size()));
 
@@ -305,6 +309,9 @@ void CtVideo::setLive(bool liveFlag)
   AutoMutex aLock(m_cond.mutex());
 
   while(m_stopping_live) m_cond.wait();
+
+  if(m_pars.live == liveFlag)	// nothing to do
+    return;
 
   CtControl::Status status;
   m_ct.getStatus(status);

@@ -44,8 +44,8 @@ namespace lima
       width = w;
       height = h;
       mode = m;
-      double newSize = size();
-      if(!buffer || newSize > oldSize)
+      double newSize = height * width * depth();
+     if(!buffer || newSize > oldSize)
 	{
 	  int size = int(newSize + 0.5);
 	  buffer = (char*)realloc(buffer,size);

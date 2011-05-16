@@ -53,7 +53,7 @@ inline void _bayer_rg_2_yuv(const IN* bayer0,IN* luma,
   int bayer_step = column;
   IN *luma0 = (IN*)luma;
   memset( luma0, 0, luma_step);
-  memset( luma0 + (row - 1)*luma_step, 0, luma_step);
+  memset( luma0 + (row - 1)*bayer_step, 0, luma_step);
   luma0 += column + 1;
   row -= 2;
   column -= 2;
