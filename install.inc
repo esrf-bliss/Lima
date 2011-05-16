@@ -91,7 +91,16 @@ BASLER_MAJ_VERSION = $(shell echo $(BASLER_FULL_VERSION) | cut -d. -f1)
 INSTALL_BASLER_VDIR = $(INSTALL_BASLER_DIR)/v$(BASLER_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_PROSILICA), 0)
+INSTALL_PROSILICA_DIR = $(INSTALL_PLAT_DIR)/Prosilica
+PROSILICA_FULL_VERSION = $(shell cat camera/prosilica/VERSION)
+PROSILICA_MAJ_VERSION = $(shell echo $(PROSILICA_FULL_VERSION) | cut -d. -f1)
+INSTALL_PROSILICA_VDIR = $(INSTALL_PROSILICA_DIR)/v$(PROSILICA_FULL_VERSION)
+endif
+
 .PHONY: install
+
+PROCESSOR_TYPE := $(shell uname -i)
 
 install:
 	mkdir -p $(INSTALL_LIMA_DIR)
@@ -154,4 +163,26 @@ ifneq ($(COMPILE_BASLER), 0)
 	cp build/liblimabasler.so.$(BASLER_FULL_VERSION) $(INSTALL_LIB_DIR)
 	cp -d build/liblimabasler.so.$(BASLER_MAJ_VERSION) $(INSTALL_LIB_DIR)
 	cp sip/basler/limabasler.so $(INSTALL_BASLER_VDIR)
+endif
+ifneq ($(COMPILE_PROSILICA), 0)
+	mkdir -p $(INSTALL_PROSILICA_VDIR)
+	cp camera/prosilica/python/__init__.py $(INSTALL_PROSILICA_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimaprosilica.so*
+	rm -rf $(INSTALL_LIB_DIR)/libPvAPI.so
+	cp build/liblimaprosilica.so.$(PROSILICA_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimaprosilica.so.$(PROSILICA_MAJ_VERSION) $(INSTALL_LIB_DIR)
+ifeq ($(PROCESSOR_TYPE),i386)
+ifeq ($(INSTALL_PLAT),redhate4) 
+	cp camera/prosilica/sdk/bin/x86/old_libPvApi.so $(INSTALL_LIB_DIR)/libPvAPI.so
+else
+	cp camera/prosilica/sdk/bin/x86/libPvAPI.so $(INSTALL_LIB_DIR)
+endif
+else
+ifeq ($(INSTALL_PLAT),redhate5) 
+	cp camera/prosilica/sdk/bin/x64/old_libPvApi.so $(INSTALL_LIB_DIR)/libPvAPI.so
+else
+	cp camera/prosilica/sdk/bin/x64/libPvAPI.so $(INSTALL_LIB_DIR)
+endif
+endif
+	cp sip/prosilica/limaprosilica.so $(INSTALL_PROSILICA_VDIR)
 endif

@@ -49,4 +49,12 @@ CXXFLAGS+=-DLESSDEPENDENCY
 export CXXFLAGS
 endif
 
+ifndef COMPILE_PROSILICA
+COMPILE_PROSILICA = 0
+endif
+
+ifneq ($(COMPILE_PROSILICA),0)
+sub-dirs += prosilica
+endif
+
 include ../global.inc

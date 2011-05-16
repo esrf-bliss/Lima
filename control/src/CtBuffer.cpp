@@ -265,8 +265,8 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
   }
 
   fsize= frame_info.frame_dim.getSize();
-  fdata.width= fsize.getWidth();
-  fdata.height= fsize.getHeight() * readBlockLen;
+  fdata.dimensions.push_back(fsize.getWidth());
+  fdata.dimensions.push_back(fsize.getHeight() * readBlockLen);
   fdata.frameNumber= frame_info.acq_frame_nb;
   fdata.timestamp = frame_info.frame_timestamp;
 

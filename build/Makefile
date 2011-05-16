@@ -209,11 +209,9 @@ basler-objs	:= ../camera/basler/src/Basler.o
 version-file	:= ../camera/basler/VERSION
 basler-flags	:= $(BASLER_LDFLAGS)
 basler-deps	:= $(BASLER_LDLIBS)
-
+basler-base	:= liblima$(name).so
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
-
-basler-base	:= liblima$(name).so
 basler-full	:= $(basler-base).$(full-version)
 basler-maj	:= $(basler-base).$(maj-version)
 basler-flags	+= -fPIC -Wl,-soname,$(basler-maj)
@@ -224,7 +222,40 @@ $(basler-full):		$(basler-objs)
 	rm -f $(basler-base); ln -s $(basler-maj)  $(basler-base)
 
 build_targets += $(basler-full)
+endif
 
+############################
+# LIMA - PROSILICA
+############################
+
+ifneq ($(COMPILE_PROSILICA),0)
+
+PROCESSOR_TYPE := $(shell uname -i)
+ifeq ($(PROCESSOR_TYPE),i386)
+PROSILICA_LDFLAGS	:= -L. -L../camera/prosilica/sdk/bin/x86
+else
+PROSILICA_LDFLAGS	:= -L. -L../camera/prosilica/sdk/bin/x64 -L../camera/prosilica/sdk/bin/x86
+endif
+PROSILICA_LDLIBS	:= -lPvAPI
+
+name		:= prosilica
+prosilica-objs	:= ../camera/prosilica/src/Prosilica.o
+version-file	:= ../camera/prosilica/VERSION
+prosilica-flags	:= $(PROSILICA_LDFLAGS)
+prosilica-deps	:= $(PROSILICA_LDLIBS)
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+prosilica-base	:= liblima$(name).so
+prosilica-full	:= $(prosilica-base).$(full-version)
+prosilica-maj	:= $(prosilica-base).$(maj-version)
+prosilica-flags	+= -fPIC -Wl,-soname,$(prosilica-maj)
+
+$(prosilica-full):		$(prosilica-objs)
+	$(CXX) -shared -o $@ $(prosilica-flags) $+ $(prosilica-deps)
+	rm -f $(prosilica-maj);  ln -s $(prosilica-full) $(prosilica-maj)
+	rm -f $(prosilica-base); ln -s $(prosilica-maj)  $(prosilica-base)
+
+build_targets += $(prosilica-full)
 endif
 
 src:		$(build_targets)

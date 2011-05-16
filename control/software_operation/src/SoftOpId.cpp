@@ -548,8 +548,8 @@ void SoftOpRoi2Spectrum::createImage(int roiId,int &from,Data &aData) const
 		      k != aResult.end();++k,dataPt += aSize)
 		    memcpy(dataPt,k->spectrum.data(),aSize);
 		  aData.type = firstResult.spectrum.type;
-		  aData.width = firstResult.spectrum.width;
-		  aData.height = aResult.size();
+		  aData.dimensions = firstResult.spectrum.dimensions;
+		  aData.dimensions.push_back(aResult.size());
 		  aData.setBuffer(aBuffer);
 		  aBuffer->unref();
 		}

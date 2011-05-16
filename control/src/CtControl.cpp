@@ -32,6 +32,7 @@
 #include "CtBuffer.h"
 #include "CtShutter.h"
 #include "CtAccumulation.h"
+#include "CtVideo.h"
 
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
@@ -117,6 +118,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_ct_buffer= new CtBuffer(hw);
   m_ct_shutter = new CtShutter(hw);
   m_ct_accumulation = new CtAccumulation(*this);
+  m_ct_video = new CtVideo(*this);
 
   //Saving
   m_ct_saving= new CtSaving(*this);
@@ -152,6 +154,8 @@ CtControl::~CtControl()
   delete m_ct_buffer;
   delete m_ct_shutter;
   delete m_ct_accumulation;
+  delete m_ct_video;
+
   delete m_op_int;
   delete m_op_ext;
 }
@@ -247,6 +251,7 @@ void CtControl::prepareAcq()
   m_images_ready.clear();
   m_base_images_ready.clear();
   m_images_buffer.clear();
+  m_ct_video->_prepareAcq();
 }
 
 void CtControl::startAcq()
@@ -420,11 +425,11 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
   int roiWidth = img_dim.getSize().getWidth();
   int roiHeight = img_dim.getSize().getHeight() * readBlockLen;
   if((roiWidth * roiHeight) >
-     (aReturnData.width * aReturnData.height))
+     (aReturnData.dimensions[0] * aReturnData.dimensions[1]))
     throw LIMA_CTL_EXC(Error, "Roi dim > HwBuffer dim");
 
-  aReturnData.width = roiWidth;
-  aReturnData.height = roiHeight;
+  aReturnData.dimensions[0] = roiWidth;
+  aReturnData.dimensions[1] = roiHeight;
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }
@@ -566,6 +571,8 @@ void CtControl::newBaseImageReady(Data &aData)
   else
 #endif
     aLock.unlock();
+
+  m_ct_video->frameReady(aData);
 
   if (img_status_changed && m_img_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
@@ -719,6 +726,7 @@ bool CtControl::_checkOverrun(Data &aData) const
 
       DEB_ERROR() << DEB_VAR1(m_status);
     }
+  DEB_PARAM() << DEB_VAR1(overrunFlag);
   return overrunFlag;
 }
 // ----------------------------------------------------------------------------
