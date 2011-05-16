@@ -21,12 +21,18 @@ VideoCtrlObj::~VideoCtrlObj()
 void VideoCtrlObj::getSupportedVideoMode(std::list<VideoMode> &aList) const
 {
   aList.push_back(Y8);
-  aList.push_back(Y16);
   if(!m_cam->isMonochrome())
     {
       aList.push_back(BAYER_RG8);
       aList.push_back(BAYER_RG16);
     }
+  else
+    aList.push_back(Y16);
+}
+
+void VideoCtrlObj::getVideoMode(VideoMode &aMode) const
+{
+  aMode = m_cam->getVideoMode();
 }
 
 void VideoCtrlObj::setVideoMode(VideoMode aMode)
@@ -36,11 +42,11 @@ void VideoCtrlObj::setVideoMode(VideoMode aMode)
 
 void VideoCtrlObj::setLive(bool flag)
 {
+  m_live = flag;
   if(flag)
-    m_cam->startAcq();
+    m_sync->startAcq();
   else
     m_sync->stopAcq();
-  m_live = flag;
 }
 
 void VideoCtrlObj::getLive(bool &flag) const
