@@ -32,6 +32,7 @@ namespace lima
  
       virtual void getSupportedVideoMode(std::list<VideoMode> &aList) const = 0;
       virtual void setVideoMode(VideoMode) = 0;
+      virtual void getVideoMode(VideoMode&) const = 0;
 
       virtual void setLive(bool) = 0;
       virtual void getLive(bool&) const = 0;

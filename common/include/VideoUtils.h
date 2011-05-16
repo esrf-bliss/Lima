@@ -25,7 +25,7 @@ namespace lima
       if(buffer)
 	free(buffer);
     }
-    int		frameNumber;
+    long long   frameNumber;
     int 	height;
     int 	width;
     int		inused;

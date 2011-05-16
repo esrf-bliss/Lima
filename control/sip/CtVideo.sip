@@ -62,7 +62,7 @@ using namespace lima;
       int 			height() 	const;
       VideoMode 		mode() 		const;
       int			size()		const;
-      int			frameNumber()	const;
+      long long			frameNumber()	const;
       const char* __repr__();
 %MethodCode
 	std::ostringstream str;

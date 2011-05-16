@@ -52,7 +52,7 @@ namespace lima
       int 		height() 	const;
       VideoMode 	mode() 		const;
       int		size()		const;
-      int		frameNumber()	const;
+      long long		frameNumber()	const;
       
     private:
       Image(const CtVideo*,VideoImage*);
@@ -130,7 +130,7 @@ namespace lima
     HwVideoCtrlObj* 	m_video;
     HwSyncCtrlObj*      m_sync;
     mutable Cond	m_cond;
-    int			m_image_counter;
+    long long		m_image_counter;
     mutable VideoImage*	m_read_image;
     mutable VideoImage*	m_write_image;
     ImageCallback*	m_image_callback;

@@ -240,7 +240,7 @@ int CtVideo::Image::size() const
   return m_image ? int(m_image->size() + 0.5) : 0;
 }
 
-int CtVideo::Image::frameNumber() const
+long long CtVideo::Image::frameNumber() const
 {
   return m_image ? m_image->frameNumber : -1;
 }
@@ -268,6 +268,7 @@ CtVideo::CtVideo(CtControl &ct) :
     {
       m_internal_image_callback = new _InternalImageCBK(*this);
       m_video->getGain(m_pars.gain);
+      m_video->getVideoMode(m_pars.mode);
       m_video->registerImageCallback(*m_internal_image_callback);
     }
 }
@@ -584,7 +585,8 @@ void CtVideo::_data2image_finnished(Data&)
 
 void CtVideo::_apply_params(bool aForceLiveFlag)
 {
-  if(aForceLiveFlag && !m_pars.live) m_image_counter = -1;
+  if(aForceLiveFlag && !m_pars.live)
+      m_read_image->frameNumber = m_write_image->frameNumber = m_image_counter = -1;
   
   if(aForceLiveFlag || m_pars.live)
     {
@@ -687,6 +689,9 @@ void CtVideo::_prepareAcq()
   m_pars.live = false;
   m_image_counter = -1;
   _read_hw_params();
+  
+  m_read_image->frameNumber = -1;
+  m_write_image->frameNumber = -1;
 }
 //============================================================================
 //			 CtVideo::Parameters
