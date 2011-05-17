@@ -43,13 +43,14 @@ void BufferCtrlObj::startAcq()
   tPvFrame& frame = m_frame[0];
   m_status = PvCaptureQueueFrame(m_handle,&frame,_newFrame);
   
-  int requested_nb_frames;
+/**  int requested_nb_frames;
   m_sync->getNbFrames(requested_nb_frames);
   if(!requested_nb_frames || requested_nb_frames > 1)
     {
       tPvFrame& frame = m_frame[1];
       m_status = PvCaptureQueueFrame(m_handle,&frame,_newFrame);
     }
+*/
 }
 
 void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
@@ -63,9 +64,13 @@ void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
   bufferPt->m_exposing = false;
   if(bufferPt->m_status || aFrame->Status != ePvErrSuccess) // error
     {
-      // if we miss a frame in live mode, it's not really an error,continue
-      if(aFrame->Status == ePvErrDataMissing && !requested_nb_frames)
-	DEB_WARNING() << DEB_VAR1(aFrame->Status);
+      // it's not really an error,continue
+      if(aFrame->Status == ePvErrDataMissing)
+	{
+	  DEB_WARNING() << DEB_VAR1(aFrame->Status);
+          PvCaptureQueueFrame(bufferPt->m_handle,aFrame,_newFrame);
+	  return;
+	}
       else if(aFrame->Status == ePvErrCancelled) // we stopped the acqusition so not an error
 	return;
       else 
@@ -87,17 +92,13 @@ void BufferCtrlObj::_newFrame(tPvFrame* aFrame)
      bufferPt->m_acq_frame_nb < (requested_nb_frames - 1))
     {
       int buffer_nb, concat_frame_nb;
-      bufferPt->m_buffer_cb_mgr.acqFrameNb2BufferNb(bufferPt->m_acq_frame_nb + 1,
+      bufferPt->m_buffer_cb_mgr.acqFrameNb2BufferNb(bufferPt->m_acq_frame_nb,
 						    buffer_nb,
 						    concat_frame_nb);
       aFrame->ImageBuffer = (char*)bufferPt->m_buffer_cb_mgr.getBufferPtr(buffer_nb,
 									  concat_frame_nb);
-      if(!requested_nb_frames ||
-	 bufferPt->m_acq_frame_nb < (requested_nb_frames - 2))
-	{
-	  bufferPt->m_exposing = true;
-	  bufferPt->m_status = PvCaptureQueueFrame(bufferPt->m_handle,aFrame,_newFrame);
-	}
+      bufferPt->m_exposing = true;
+      bufferPt->m_status = PvCaptureQueueFrame(bufferPt->m_handle,aFrame,_newFrame);
     }
   else
     stopAcq = true;
