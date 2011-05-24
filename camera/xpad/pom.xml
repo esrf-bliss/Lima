@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib.Lima</groupId>
 		<artifactId>Camera</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.3-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima.Camera</groupId>
@@ -28,13 +28,17 @@
 										<lib>
 												<name>xpci_lib</name>
 												<type>static</type>
-												<directory>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</directory>
+										<directory>/home/bompard/ICA/Xpix/xpci_lib</directory>
+										<!--directory>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</directory-->
+												<!--<directory>/home/informatique/ica/noureddine/DeviceSources/PCIex280311/trunk/sw/xpci_lib</directory>-->
 										</lib>
 								</libs>
 						</linker>
 						<cpp>
 								<systemIncludePaths>
-										<systemIncludePath>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</systemIncludePath>
+									<systemIncludePath>/home/bompard/ICA/Xpix/xpci_lib</systemIncludePath>
+										<!--systemIncludePath>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</systemIncludePath-->
+										<!--<systemIncludePath>/home/informatique/ica/noureddine/DeviceSources/PCIex280311/trunk/sw/xpci_lib</systemIncludePath>-->
 								</systemIncludePaths>
 								<defines>
 										<define>

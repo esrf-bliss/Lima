@@ -12,9 +12,8 @@
 #define kPOST_MSG_TMO       2
 
 const size_t  XPAD_DLL_START_FAST_MSG		=	(yat::FIRST_USER_MSG + 100);
-const size_t  XPAD_DLL_START_SLOW_MSG		=	(yat::FIRST_USER_MSG + 103);
-const size_t  XPAD_DLL_STOP_MSG			=	(yat::FIRST_USER_MSG + 101);
-const size_t  XPAD_DLL_GET_IMAGE_MSG	=	(yat::FIRST_USER_MSG + 102);
+const size_t  XPAD_DLL_START_SLOW_B2_MSG	=	(yat::FIRST_USER_MSG + 103);
+const size_t  XPAD_DLL_START_SLOW_B4_MSG	=	(yat::FIRST_USER_MSG + 104);
 
 ///////////////////////////////////////////////////////////
 
@@ -44,7 +43,7 @@ namespace lima
 	public:
 
 		enum Status {
-			Ready, Exposure, Readout,
+			Ready, Exposure, Readout,Latency,Fault
 		};
 
 		XpadCamera();
@@ -72,24 +71,32 @@ namespace lima
 		void setExpTime(double  exp_time);
 		void getExpTime(double& exp_time);
 		
+		//- Status
 		void getStatus(XpadCamera::Status& status);
 	
 		//---------------------------------------------------------------
+		//- XPAD Stuff
 		//- Set all the config G
-		void setAllConfigG(vector<long> allConfigG)
+		void setAllConfigG(const vector<long>& allConfigG);
 		//- Set the F parameters
 		void setFParameters(unsigned deadtime, unsigned init,
 			unsigned shutter, unsigned ovf,    unsigned mode,
 			unsigned n,       unsigned p,
 			unsigned GP1,     unsigned GP2,    unsigned GP3,      unsigned GP4);
-		//-	set the Acquisition type between fast and slow
+		//-	Set the Acquisition type between fast and slow
 		void setAcquisitionType(short acq_type);
 		//-	Load of flat config of value: flat_value (on each pixel)
 		void loadFlatConfig(unsigned flat_value);
 		//- Load all the config G with predefined values (on each chip)
 		void loadAllConfigG();
 		//- Load a wanted config G with a wanted value
-		void loadConfigG(unsigned* config_g_and_value);
+		void loadConfigG(const vector<unsigned long>& reg_and_value);
+		//- Load a known value to the pixel counters
+		void loadAutoTest(unsigned known_value);
+		//- Get the DACL values
+		vector<uint16_t> getDacl();
+		//- Save and load Dacl
+		void saveAndloadDacl(uint16_t* all_dacls);
 
 	protected:
 		virtual void setMaxImageSizeCallbackActive(bool cb_active);	
@@ -98,14 +105,11 @@ namespace lima
 	protected: 
 		virtual void handle_message( yat::Message& msg )throw (yat::Exception);
 	private:
-		void GetImage();
-		void FreeImage();
-
 		//- lima stuff
 		SoftBufferAllocMgr 	m_buffer_alloc_mgr;
 		StdBufferCbMgr 		m_buffer_cb_mgr;
 		BufferCtrlMgr 		m_buffer_ctrl_mgr;
-		bool 			m_mis_cb_act;
+		bool 				m_mis_cb_act;
 
 		//- img stuff
 		int 			m_nb_frames;		
@@ -117,16 +121,14 @@ namespace lima
 		uint16_t**	pSeqImage;
 		uint16_t*	pOneImage;
 
+		//---------------------------------
 		//- xpad stuff 
 		short			m_acquisition_type;
 		unsigned		m_modules_mask;
 		int				m_module_number;
 		unsigned		m_chip_number;
-		int				m_full_image_size;
+		int				m_full_image_size_in_bytes;
 		unsigned		m_time_unit;
-
-		bool			m_stop_asked;
-
 		vector<long>	m_all_config_g;
 
 		//- FParameters
@@ -143,6 +145,8 @@ namespace lima
 		unsigned		m_fparameter_GP4;
 
 		XpadCamera::Status	m_status;
+		bool			m_stop_asked;
+		bool			m_video_mode;
 
 
 
