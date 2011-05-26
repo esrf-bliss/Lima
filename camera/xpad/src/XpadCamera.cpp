@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <math.h>
+
 using namespace lima;
 using namespace std;
 
@@ -19,7 +20,7 @@ XpadCamera::XpadCamera(): 	m_buffer_cb_mgr(m_buffer_alloc_mgr),
 							m_modules_mask(0x00),
 							m_chip_number(7),
 							m_exp_time(1000),
-							m_pixel_depth(B2),
+							m_pixel_depth(B4),
 							m_trigger_type(INTERN_GATE),
 							m_nb_frames(1)
 {
@@ -28,11 +29,12 @@ XpadCamera::XpadCamera(): 	m_buffer_cb_mgr(m_buffer_alloc_mgr),
 
 	//- Hardcoded temporarly
 	m_time_unit				= MILLISEC_GATE; // 1=MICROSEC_GATE; 2=MILLISEC_GATE; 3=SECONDS_GATE
+	m_pixel_depth = B4;
 
 	//- FParameters
-	m_fparameter_deadtime	= 0;
+	m_fparameter_deadtime		= 0;
 	m_fparameter_init		= 0;
-	m_fparameter_shutter	= 0;
+	m_fparameter_shutter		= 0;
 	m_fparameter_ovf		= 0;
 	m_fparameter_mode		= 0;
 	m_fparameter_n			= 0;
@@ -42,47 +44,48 @@ XpadCamera::XpadCamera(): 	m_buffer_cb_mgr(m_buffer_alloc_mgr),
 	m_fparameter_GP3		= 0;
 	m_fparameter_GP4		= 0;
 
-	m_acquisition_type		= 0; // Slow
+	m_acquisition_type		= 2; // Slow B4
+	m_video_mode 			= false;
 
 	
-
 	//-------------------------------------------------------------
 
 	//Reset of the PICExpress
-	if(xpci_resetBoard(BOARDNUM) == 0)
+	//- Removed because not used in the example program: DAQ_FRED and xpad_simple
+	/*if(xpci_resetBoard(BOARDNUM) == 0)
 	{
-		DEB_TRACE << "PCIe hardware reset is OK" << endl;
+		DEB_TRACE() << "PCIe hardware reset is OK";
 	}
 	else
 	{
-		DEB_ERROR << "PCIe hardware reset has FAILED:" << endl;
+		DEB_ERROR() << "PCIe hardware reset has FAILED:" ;
 		throw LIMA_HW_EXC(Error, "Error in PCIe hardware reset!");
-	}
+	}*/
 
 	//-------------------------------------------------------------
 	//- Get Modules that are ready
 	if (xpci_modAskReady(&m_modules_mask) == 0)
 	{
-		DEB_TRACE << "Ask modules that are ready: OK (modules mask = " << std::hex << m_modules_mask << ")" << endl;
+		DEB_TRACE() << "Ask modules that are ready: OK (modules mask = " << std::hex << m_modules_mask << ")" ;
 		m_module_number = xpci_getModNb(m_modules_mask);
 		if (m_module_number !=0)
 		{
-			DEB_TRACE << "--> Number of Modules 		 = " << m_module_number << endl;			
+			DEB_TRACE() << "--> Number of Modules 		 = " << m_module_number ;			
 		}
 		else
 		{
-			DEB_ERROR << "No modules found: retry to Init" << endl;
+			DEB_ERROR() << "No modules found: retry to Init" ;
 			//- Test if PCIe is OK
 			if(xpci_isPCIeOK() == 0) 
 			{
-				DEB_TRACE << "PCIe hardware check is OK" << endl;
+				DEB_TRACE() << "PCIe hardware check is OK" ;
 			}
 			else
 			{
-				DEB_ERROR << "PCIe hardware check has FAILED:" << endl;
-				DEB_ERROR << "1. Check if green led is ON (if not go to p.3)" << endl;
-				DEB_ERROR << "2. Reset PCIe board" << endl;
-				DEB_ERROR << "3. Power off and power on PC (do not reboot, power has to be cut off)\n" << endl;
+				DEB_ERROR() << "PCIe hardware check has FAILED:" ;
+				DEB_ERROR() << "1. Check if green led is ON (if not go to p.3)" ;
+				DEB_ERROR() << "2. Reset PCIe board" ;
+				DEB_ERROR() << "3. Power off and power on PC (do not reboot, power has to be cut off)\n" ;
 				throw LIMA_HW_EXC(Error, "PCIe hardware check has FAILED!");
 			}
 			throw LIMA_HW_EXC(Error, "No modules found: retry to Init");			
@@ -90,16 +93,16 @@ XpadCamera::XpadCamera(): 	m_buffer_cb_mgr(m_buffer_alloc_mgr),
 	}
 	else
 	{
-		DEB_ERROR << "Ask modules that are ready: FAILED" << endl;
+		DEB_ERROR() << "Ask modules that are ready: FAILED" ;
 		throw LIMA_HW_EXC(Error, "No Modules are ready");
 	}
 
 
 	//ATTENTION: We consider that image size is with always 8 modules ! 
 	m_image_size = Size(80 * m_chip_number ,120 * 8);
-	DEB_TRACE << "--> Number of chips 		 = " << std::dec << m_chip_number << endl;
-	DEB_TRACE << "--> Image width 	(pixels) = " << std::dec << m_image_size.getWidth() << endl;
-	DEB_TRACE << "--> Image height	(pixels) = " << std::dec << m_image_size.getHeight() << endl;
+	DEB_TRACE() << "--> Number of chips 		 = " << std::dec << m_chip_number ;
+	DEB_TRACE() << "--> Image width 	(pixels) = " << std::dec << m_image_size.getWidth() ;
+	DEB_TRACE() << "--> Image height	(pixels) = " << std::dec << m_image_size.getHeight() ;
 }
 
 //---------------------------
@@ -118,23 +121,31 @@ void XpadCamera::start()
 	DEB_MEMBER_FUNCT();
 
 	//-	((80 colonnes * 7 chips) * taille du pixel + 6 word de control ) * 120 lignes * nb_modules
-	if (m_pixel_depth == B2) 
-			m_full_image_size = ((80 * m_chip_number) * 2 + 6*2)  * 120 * m_module_number; 
-	else (m_pixel_depth == B4);
-			m_full_image_size = ((80 * m_chip_number) * 4 + 6*2)  * 120 * m_module_number; 
+	if (m_pixel_depth == B2)
+	{
+		m_full_image_size_in_bytes = ((80 * m_chip_number) * 2 + 6*2)  * 120 * m_module_number;
+	} 
+	else if(m_pixel_depth == B4)
+	{
+		m_full_image_size_in_bytes = ((80 * m_chip_number) * 4 + 6*2)  * 120 * m_module_number;
+	} 
 
 	m_stop_asked = false;
 
-	DEB_TRACE << "m_acquisition_type = " << m_acquisition_type <<endl;
+	DEB_TRACE() << "m_acquisition_type = " << m_acquisition_type ;
+
 	if(m_acquisition_type == 0)
 		 //- Post XPAD_DLL_START_SLOW_MSG msg (aka getOneImage)
-		this->post(new yat::Message(XPAD_DLL_START_SLOW_MSG), kPOST_MSG_TMO);
+		this->post(new yat::Message(XPAD_DLL_START_SLOW_B2_MSG), kPOST_MSG_TMO);
 	else if (m_acquisition_type == 1)
 		//- Post XPAD_DLL_START_FAST_MSG msg (aka getImgSeq)
 		this->post(new yat::Message(XPAD_DLL_START_FAST_MSG), kPOST_MSG_TMO);
+	else if (m_acquisition_type == 2)
+		//- Post XPAD_DLL_START_SLOW_MSG_B4 msg (aka getOneImage)
+		this->post(new yat::Message(XPAD_DLL_START_SLOW_B4_MSG), kPOST_MSG_TMO);
 	else
 	{
-		DEB_ERROR << "Acquisition type not supported" << endl;
+		DEB_ERROR() << "Acquisition type not supported" ;
 		throw LIMA_HW_EXC(Error, "Acquisition type not supported");
 	}
 }
@@ -146,22 +157,8 @@ void XpadCamera::stop()
 {
 	DEB_MEMBER_FUNCT();
 
+	m_status = XpadCamera::Ready;
 	m_stop_asked = true;
-}
-//---------------------------
-//- XpadCamera::FreeImage()
-//---------------------------
-void XpadCamera::FreeImage()
-{
-}
-		
-//---------------------------
-//- XpadCamera::GetImage()
-//---------------------------
-void XpadCamera::GetImage()
-{
-	
-	
 }
 
 //-----------------------------------------------------
@@ -199,7 +196,7 @@ void XpadCamera::setPixelDepth(ImageType pixel_depth)
 			m_pixel_depth = B4;
 		break;
 		default:
-			DEB_ERROR << "Pixel Depth is unsupported: only 16 or 32 bits is supported"<< endl;
+			DEB_ERROR() << "Pixel Depth is unsupported: only 16 or 32 bits is supported" ;
 			throw LIMA_HW_EXC(Error, "Pixel Depth is unsupported: only 16 or 32 bits is supported");
 		break;
 	}
@@ -277,7 +274,7 @@ void XpadCamera::setTrigMode(TrigMode mode)
 			m_trigger_type = EXTERN_GATE;
 		break;
 		default:
-			DEB_ERROR << "Error: Trigger mode unsupported: only INTERN_GATE or EXTERN_GATE"<< endl;
+			DEB_ERROR() << "Error: Trigger mode unsupported: only INTERN_GATE or EXTERN_GATE" ;
 			throw LIMA_HW_EXC(Error, "Trigger mode unsupported: only INTERN_GATE or EXTERN_GATE");
 		break;
 	}
@@ -302,7 +299,7 @@ void XpadCamera::getTrigMode(TrigMode& mode)
 			mode = ExtGate;
 		break;
 		default:
-			DEB_ERROR << "Error: Trigger mode unsupported: only INTERN_GATE or EXTERN_GATE"<< endl;
+			DEB_ERROR() << "Error: Trigger mode unsupported: only INTERN_GATE or EXTERN_GATE" ;
 			throw LIMA_HW_EXC(Error, "Trigger mode unsupported: only INTERN_GATE or EXTERN_GATE");
 		break;
 	}
@@ -313,24 +310,52 @@ void XpadCamera::getTrigMode(TrigMode& mode)
 //-----------------------------------------------------
 //
 //-----------------------------------------------------
-void XpadCamera::setExpTime(double exp_time_ms)
+void XpadCamera::setExpTime(double exp_time_sec)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(exp_time_ms);
+	DEB_PARAM() << DEB_VAR1(exp_time_sec);
 
-	m_exp_time = exp_time_ms;
+	//- 1=MICROSEC_GATE; 2=MILLISEC_GATE; 3=SECONDS_GATE
+	switch(m_time_unit)
+	{
+		case MICROSEC_GATE:
+		m_exp_time = (unsigned) (exp_time_sec * 1000000);
+		break;
+
+		case MILLISEC_GATE:
+		m_exp_time = (unsigned) (exp_time_sec * 1000);
+		break;
+
+		case SECONDS_GATE:
+		m_exp_time = (unsigned) (exp_time_sec * 1);
+		break;
+	}
 }
 
 //-----------------------------------------------------
 //
 //-----------------------------------------------------
-void XpadCamera::getExpTime(double& exp_time_ms)
+void XpadCamera::getExpTime(double& exp_time_sec)
 {
 	DEB_MEMBER_FUNCT();
 
-	exp_time_ms = m_exp_time;
+	//- 1=MICROSEC_GATE; 2=MILLISEC_GATE; 3=SECONDS_GATE
+	switch(m_time_unit)
+	{
+		case MICROSEC_GATE:
+		exp_time_sec = m_exp_time / 1000000;
+		break;
+
+		case MILLISEC_GATE:
+		exp_time_sec = m_exp_time / 1000;
+		break;
+
+		case SECONDS_GATE:
+		exp_time_sec = m_exp_time / 1;
+		break;
+	}
 	
-	DEB_RETURN() << DEB_VAR1(exp_time_ms);
+	DEB_RETURN() << DEB_VAR1(exp_time_sec);
 }
 
 
@@ -342,6 +367,15 @@ void XpadCamera::setNbFrames(int nb_frames)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(nb_frames);
 	m_nb_frames = nb_frames;
+	if(m_nb_frames == 0) //- Video mode
+	{
+		m_nb_frames = 1;
+		m_video_mode = true;
+	}
+	else
+	{
+		m_video_mode = false;
+	}
 }
 
 //-----------------------------------------------------
@@ -378,25 +412,25 @@ void XpadCamera::handle_message( yat::Message& msg )  throw( yat::Exception )
       //-----------------------------------------------------	
       case yat::TASK_INIT:
       {
-        std::cout <<"XpadCamera::->TASK_INIT"<<std::endl;          
+        DEB_TRACE() <<"XpadCamera::->TASK_INIT";          
       }
       break;
       //-----------------------------------------------------    
       case yat::TASK_EXIT:
       {
-        std::cout <<"XpadCamera::->TASK_EXIT"<<std::endl;                
+        DEB_TRACE() <<"XpadCamera::->TASK_EXIT";                
       }
       break;
       //-----------------------------------------------------    
       case yat::TASK_TIMEOUT:
       {
-		std::cout <<"XpadCamera::->TASK_TIMEOUT"<<std::endl;       
+		DEB_TRACE() <<"XpadCamera::->TASK_TIMEOUT";       
       }
       break;
 	  //-----------------------------------------------------    
-	  case XPAD_DLL_START_SLOW_MSG:
+	  case XPAD_DLL_START_SLOW_B2_MSG:
       {
-		std::cout <<"XpadCamera::->XPAD_DLL_START_SLOW_MSG"<<std::endl;       
+		DEB_TRACE() <<"XpadCamera::->XPAD_DLL_START_SLOW_B2_MSG";       
 
 		m_status = XpadCamera::Exposure;
 		
@@ -404,33 +438,33 @@ void XpadCamera::handle_message( yat::Message& msg )  throw( yat::Exception )
 		{
 			if (m_stop_asked == true)
 			{
-				std::cout <<"Stop asked: exit without allocating new images..." <<std::endl;
+				DEB_TRACE() <<"Stop asked: exit without allocating new images..." ;
 				m_status = XpadCamera::Ready;
 				return;
 			}
 			
 
-			pOneImage = new uint8_t[ m_full_image_size ];
+			pOneImage = new uint16_t[ m_full_image_size_in_bytes / 2 ]; //- Divided by 2 because of uint16
 			
 			if (xpci_getOneImage(	m_pixel_depth,
 									m_modules_mask,
 									m_chip_number,
-									(uint8_t *)pOneImage,
+									(uint16_t *)pOneImage,
 									m_trigger_type,
 									m_exp_time,
 									m_time_unit,
 									30000)==-1)
 			{
-				DEB_ERROR() << "Error: readOneImage as returned an error..." ;
+				DEB_ERROR()<< "Error: readOneImage as returned an error..." ;
 			}
 
 			m_status = XpadCamera::Readout;
 
-			std::cout <<"Image# "<< i << " acquired" <<std::endl;
+			DEB_TRACE() <<"Image# "<< i << " acquired" ;
 
 			//- clean the image and call new frame for each frame
 			StdBufferCbMgr& buffer_mgr = m_buffer_cb_mgr;
-			std::cout <<"-> clean acquired image and publish it through newFrameReady()"<<std::endl;
+			DEB_TRACE() <<"-> clean acquired image and publish it through newFrameReady()";
 
 			int buffer_nb, concat_frame_nb;
 			buffer_mgr.setStartTimestamp(Timestamp::now());
@@ -458,37 +492,137 @@ void XpadCamera::handle_message( yat::Message& msg )  throw( yat::Exception )
 					ptr[(offset*80*m_chip_number)+k] = OneLine[5+k];
 			}
 				
-			cout << "image# " << i <<" cleaned" << endl;
+			DEB_TRACE() << "image# " << i <<" cleaned" ;
 			HwFrameInfoType frame_info;
 			frame_info.acq_frame_nb = i;
 			//- raise the image to lima
 			buffer_mgr.newFrameReady(frame_info);
 
-			std::cout <<"free image pointer"<<std::endl;
+			DEB_TRACE() <<"free image pointer";
 			delete[] pOneImage;
+		}
+
+		m_status = XpadCamera::Ready;
+      	}
+      	break;
+	//-----------------------------------------------------    
+	case XPAD_DLL_START_SLOW_B4_MSG:
+      	{
+		DEB_TRACE() <<"XpadCamera::->XPAD_DLL_START_SLOW_B4_MSG";       
+
+		m_status = XpadCamera::Exposure;
+		
+		for( int i=0 ; i < m_nb_frames ;  )
+		{
+			if (m_video_mode == true)
+			{
+				//- Re init i
+				i = 0;
+			}
+			if (m_stop_asked == true)
+			{
+				DEB_TRACE() <<"Stop asked: exit without allocating new images..." ;
+				m_status = XpadCamera::Ready;
+				return;
+			}
+			
+			pOneImage = new uint16_t[ m_full_image_size_in_bytes/2 ];
+			
+			if (xpci_getOneImage(	m_pixel_depth,
+									m_modules_mask,
+									m_chip_number,
+									(uint16_t *)pOneImage,
+									m_trigger_type,
+									m_exp_time,
+									m_time_unit,
+									30000)==-1)
+			{
+				DEB_ERROR()<< "Error: readOneImage as returned an error..." ;
+			}
+
+			m_status = XpadCamera::Readout;
+
+			DEB_TRACE() <<"Image# "<< i << " acquired" ;
+
+			//- clean the image and call new frame for each frame
+			StdBufferCbMgr& buffer_mgr = m_buffer_cb_mgr;
+			DEB_TRACE() <<"-> clean acquired image and publish it through newFrameReady()";
+
+			int buffer_nb, concat_frame_nb;
+			buffer_mgr.setStartTimestamp(Timestamp::now());
+			buffer_mgr.acqFrameNb2BufferNb(i, buffer_nb, concat_frame_nb);
+
+			uint32_t *ptr = (uint32_t*)(buffer_mgr.getBufferPtr(buffer_nb,concat_frame_nb));
+			//clean the ptr with zero memory, pixels of a not available module are set to "0" 
+			memset((uint32_t *)ptr,0,m_image_size.getWidth() * m_image_size.getHeight() * 4);
+
+			//iterate on all lines of all modules returned by xpix API 
+			int k=0;
+			for(int j = 0; j < 120 * m_module_number; j++) 
+			{
+				uint16_t	OneLine[6+(80*m_chip_number)*2];
+				uint32_t	OneLinePix[80*m_chip_number];
+				
+				//copy entire line with its header and footer
+				for(k = 0; k < (6+(80*m_chip_number)*2); k++)
+					OneLine[k] = pOneImage[j*(6+(80*m_chip_number)*2)+k];
+
+				//copy entire line without header&footer into OneLinePix
+				memcpy((uint32_t *)OneLinePix,(uint16_t *)(&OneLine[5]),80*m_chip_number*4);
+
+				//compute "offset line" where to copy OneLine[] in the *ptr, to ensure that the lines are copied in order of modules
+				int offset = ((120*(OneLine[1]-1))+(OneLine[4]-1)); 
+
+				//copy cleaned line in the lima buffer
+				for(k = 0; k < (80*m_chip_number); k++)
+					ptr[(offset*80*m_chip_number)+k] = OneLinePix[k];
+			}
+				
+			DEB_TRACE() << "Image# " << i <<" cleaned" ;
+			HwFrameInfoType frame_info;
+			frame_info.acq_frame_nb = i;
+
+			//- raise the image to lima
+			buffer_mgr.newFrameReady(frame_info);
+
+			DEB_TRACE() <<"free image pointer";
+			delete[] pOneImage;
+
+			i++;
 		}
 
 		m_status = XpadCamera::Ready;
       }
       break;
+
       //-----------------------------------------------------    
       case XPAD_DLL_START_FAST_MSG:	
       {
-		std::cout <<"XpadCamera::->XPAD_DLL_START_FAST_MSG"<<std::endl;
+		DEB_TRACE() <<"XpadCamera::->XPAD_DLL_START_FAST_MSG";
 	
 		//- A mettre dans le prepareAcq?
 		// allocate multiple buffers
-		std::cout <<"allocating images array"<<std::endl;
+		DEB_TRACE() <<"allocating images array (" << m_nb_frames << " images)";
 		pSeqImage = new uint16_t* [ m_nb_frames ];
 
-		std::cout <<"allocating every image pointer of the images array"<<std::endl;
+		DEB_TRACE() <<"allocating every image pointer of the images array (1 image full size = "<< m_full_image_size_in_bytes << ") ";
 		for( int i=0 ; i < m_nb_frames ; i++ )
-			pSeqImage[i] = new uint16_t[ m_full_image_size ];
+			pSeqImage[i] = new uint16_t[ m_full_image_size_in_bytes / 2 ];
 
 		m_status = XpadCamera::Exposure;
 	
 		//- Start the img sequence
-		std::cout <<"start acquiring a sequence of images"<<std::endl;		
+		DEB_TRACE() <<"start acquiring a sequence of images";	
+		cout << " ============================================== " << endl;
+		cout << "Parametres pour getImgSeq: "<< endl;
+		cout << "m_pixel_depth 	= "<< m_pixel_depth << endl;
+		cout << "m_modules_mask = "<< m_modules_mask << endl;
+		cout << "m_chip_number 	= "<< m_chip_number << endl;
+		cout << "m_trigger_type = "<< m_trigger_type << endl;
+		cout << "m_exp_time 	= "<< m_exp_time << endl;
+		cout << "m_time_unit 	= "<< m_time_unit << endl;
+		cout << "m_nb_frames 	= "<< m_nb_frames << endl;
+
 		if ( xpci_getImgSeq(	m_pixel_depth, 
 								m_modules_mask,
 								m_chip_number,
@@ -501,15 +635,14 @@ void XpadCamera::handle_message( yat::Message& msg )  throw( yat::Exception )
 		{
 			DEB_ERROR() << "Error: getImgSeq as returned an error..." ;
 			
-			std::cout <<"free every image pointer of the images array"<<std::endl;
+			DEB_TRACE() << "Freeing every image pointer of the images array";
 			for(int i=0 ; i < m_nb_frames ; i++)
 				delete[] pSeqImage[i];
 			
-			std::cout <<"free images array"<<std::endl;
+			DEB_TRACE() << "Freeing images array";
 			delete[] pSeqImage;			
 
-			m_status = XpadCamera::Ready;
-			
+			m_status = XpadCamera::Fault;
 			throw LIMA_HW_EXC(Error, "getImgSeq as returned an error...");
 
 			
@@ -517,9 +650,9 @@ void XpadCamera::handle_message( yat::Message& msg )  throw( yat::Exception )
 
 		m_status = XpadCamera::Readout;
 		
-		cout << "#######################" << endl;
-		cout << "all images are acquired" << endl;
-		cout << "#######################" << endl;
+		DEB_TRACE() 	<< "#######################"
+				<< "\nall images are acquired"
+				<< "\n#######################" ;
 		
 		//- ATTENTION :
 		//- Xpix acquires a buffer sized according to m_module_number.
@@ -552,7 +685,7 @@ void XpadCamera::handle_message( yat::Message& msg )  throw( yat::Exception )
 
 		//- clean each image and call new frame for each frame
 		StdBufferCbMgr& buffer_mgr = m_buffer_cb_mgr;
-		std::cout <<"clean each acquired image and publish it through newFrameReady()"<<std::endl;
+		DEB_TRACE() <<"Cleanning each acquired image and publish it through newFrameReady()";
 		for(i=0; i<m_nb_frames; i++)
 		{
 			pOneImage = pSeqImage[i];
@@ -582,44 +715,27 @@ void XpadCamera::handle_message( yat::Message& msg )  throw( yat::Exception )
 					ptr[(offset*80*m_chip_number)+k] = OneLine[5+k];
 			}
 			
-			cout << "image# " << i <<" cleaned" << endl;
+			DEB_TRACE() << "image# " << i <<" cleaned" ;
 			HwFrameInfoType frame_info;
 			frame_info.acq_frame_nb = i;
 			//- raise the image to lima
 			buffer_mgr.newFrameReady(frame_info);
 		}
 
-		std::cout <<"free every image pointer of the images array"<<std::endl;
+		DEB_TRACE() <<"Freeing every image pointer of the images array";
 		for(i=0 ; i < m_nb_frames ; i++)
 			delete[] pSeqImage[i];
-		std::cout <<"free images array"<<std::endl;
+		DEB_TRACE() <<"Freeing images array";
 		delete[] pSeqImage;
 		m_status = XpadCamera::Ready;
-
+		DEB_TRACE() <<"m_status is Ready";
       }
       break;
-      //-----------------------------------------------------
-      case XPAD_DLL_GET_IMAGE_MSG:
-      {
-		std::cout <<"XpadCamera::->XPAD_DLL_GET_IMAGE_MSG"<<std::endl;
-
-		
-
-      }
-      break;	
-      //-----------------------------------------------------
-      case XPAD_DLL_STOP_MSG:
-      {
-		std::cout <<"XpadCamera::->DLL_STOP_MSG"<<std::endl;
-		
-      }
-      break;
-      //-----------------------------------------------------
     }
   }
   catch( yat::Exception& ex )
   {
-      std::cout << "Error : " << ex.errors[0].desc;
+      DEB_ERROR() << "Error : " << ex.errors[0].desc;
     throw;
   }
 }
@@ -640,7 +756,9 @@ void XpadCamera::setFParameters(unsigned deadtime, unsigned init,
 			unsigned GP1,     unsigned GP2,    unsigned GP3,      unsigned GP4)
 {
 
-	cout << " FFFFFFFFF --> setting all F Parameters ..." << endl;
+	DEB_MEMBER_FUNCT();
+
+	DEB_TRACE() << "Setting all F Parameters ..." ;
 	m_fparameter_deadtime	= deadtime; //- Temps entre chaque image
 	m_fparameter_init		= init;		//- Temps initial
 	m_fparameter_shutter	= shutter;	//- 
@@ -659,14 +777,11 @@ void XpadCamera::setFParameters(unsigned deadtime, unsigned init,
 //-----------------------------------------------------
 void XpadCamera::setAcquisitionType(short acq_type)
 {
-	cout<<"XpadCamera::setAcquisitionType() - [BEGIN]"<<endl;
-	
 	DEB_MEMBER_FUNCT();
 	m_acquisition_type = acq_type;
 
-	cout<<"m_acquisition_type = " << m_acquisition_type <<endl;
+	DEB_TRACE() << "m_acquisition_type = " << m_acquisition_type  ;
 
-	cout<<"XpadCamera::setAcquisitionType() - [END]"<<endl;
 }
 
 //-----------------------------------------------------
@@ -678,11 +793,11 @@ void XpadCamera::loadFlatConfig(unsigned flat_value)
 
 	if (xpci_modLoadFlatConfig(m_modules_mask, m_chip_number, flat_value) == 0)
 	{
-		DEB_TRACE << "Load flat config, with value: " <<  flat_value << " : OK"<< endl;
+		DEB_TRACE() << "loadFlatConfig, with value: " <<  flat_value << " -> OK" ;
 	}
 	else
 	{
-		throw LIMA_HW_EXC(Error, "Error in Load flat config!");
+		throw LIMA_HW_EXC(Error, "Error in loadFlatConfig!");
 	}
 	
 	
@@ -706,14 +821,14 @@ void XpadCamera::loadAllConfigG()
 												m_all_config_g[7],//- IPRE, 
 												m_all_config_g[8],//- ITHL, 
 												m_all_config_g[9],//- ITUNE, 
-												m_all_config_g[10],//- IBUFFER
+												m_all_config_g[10]//- IBUFFER
 												) == 0)
 	{
-		DEB_TRACE << "Load all config G : OK"<< endl;
+		DEB_TRACE() << "loadAllConfigG -> OK" ;
 	}
 	else
 	{
-		throw LIMA_HW_EXC(Error, "Error in Load all config G!");
+		throw LIMA_HW_EXC(Error, "Error in loadAllConfigG!");
 	}
 	
 }
@@ -721,9 +836,99 @@ void XpadCamera::loadAllConfigG()
 //-----------------------------------------------------
 //
 //-----------------------------------------------------
-void XpadCamera::loadConfigG(unsigned* config_g_and_value)
+void XpadCamera::loadConfigG(const vector<unsigned long>& reg_and_value)
 {
 	DEB_MEMBER_FUNCT();
+
+	if(xpci_modLoadConfigG(m_modules_mask, m_chip_number, reg_and_value[0], reg_and_value[1])==0)
+	{
+		DEB_TRACE() << "loadConfigG: " << reg_and_value[0] << ", with value: " << reg_and_value[1] << " -> OK" ;
+	}
+	else
+	{
+		throw LIMA_HW_EXC(Error, "Error in loadConfigG!");
+	}
 	
 }
+
+//-----------------------------------------------------
+//
+//-----------------------------------------------------
+void XpadCamera::loadAutoTest(unsigned known_value)
+{
+	DEB_MEMBER_FUNCT();
+
+	if(xpci_modLoadAutoTest(m_modules_mask, known_value)==0)
+	{
+		DEB_TRACE() << "loadAutoTest with value: " << known_value << " -> OK" ;
+	}
+	else
+	{
+		throw LIMA_HW_EXC(Error, "Error in loadAutoTest!");
+	}
+	
+}
+
+//-----------------------------------------------------
+//		Get the DACL values
+//-----------------------------------------------------
+vector<uint16_t> XpadCamera::getDacl()
+{
+	DEB_MEMBER_FUNCT();
+
+	size_t image_size_in_bytes = ((80 * m_chip_number) * 2 + 6*2)  * 120 * m_module_number;
+	pOneImage = new uint16_t[ image_size_in_bytes / 2 ];
+	
+	if(xpci_getModConfig(m_modules_mask, m_chip_number,pOneImage)==0)
+	{
+		DEB_TRACE() << "getDacl -> OK" ;
+		DEB_TRACE() << "Cleanning DACL image and getting DACL values..." ;
+
+		//iterate on all lines of all modules returned by xpix API 
+		vector<uint16_t> clean_image;
+		int k = 0;
+		uint16_t temp = 0;
+		for(int j = 0; j < 120 * m_module_number; j++) 
+		{
+			uint16_t	OneLine[6+80*m_chip_number];
+			
+			//copy entire line with its header and footer
+			for(k = 0; k < (6+80*m_chip_number); k++)
+				OneLine[k] = pOneImage[j*(6+80*m_chip_number)+k];
+			
+			//compute "offset line" where to copy OneLine[] in the *clean_image, to ensure that the lines are copied in order of modules
+			int offset = ((120*(OneLine[1]-1))+(OneLine[4]-1)); 
+			
+			//copy cleaned line in the lima buffer
+			for(k = 0; k < (80*m_chip_number); k++)
+				clean_image[(offset*80*m_chip_number)+k] = OneLine[5+k];
+			
+			//get the DACL values: bits 3 to 8 (ie remove 3 first bits)
+			for(k = 0; k < (80*m_chip_number); k++)
+			{
+				temp = clean_image[k];
+				clean_image[k] = ((temp & 0x1ff)>>3);
+			}
+		}
+		delete[] pOneImage; 
+		DEB_TRACE() << "Image cleaned and DACL values getted" ;
+	}
+	else
+	{
+		throw LIMA_HW_EXC(Error, "Error in getDacl!");
+	}
+
+	return clean_image;
+	
+}
+
+
+//-----------------------------------------------------
+//		Get the DACL values
+//-----------------------------------------------------
+void saveAndloadDacl(uint16_t* all_dacls);
+{
+}
+
+
 

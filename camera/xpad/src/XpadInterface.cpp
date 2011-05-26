@@ -275,6 +275,7 @@ bool XpadSyncCtrlObj::checkTrigMode(TrigMode trig_mode)
 	{
 		case IntTrig:
 		case ExtTrigSingle:
+		case ExtGate:
 			valid_mode = true;
 		break;
 
@@ -451,8 +452,16 @@ void XpadInterface::getStatus(StatusType& status)
 			status.det = DetReadout;
 			status.acq = AcqRunning;
 			break;
+		case XpadCamera::Latency:
+			status.det = DetLatency;
+			status.acq = AcqRunning;
+			break;
+		case XpadCamera::Fault:
+		  	status.det = DetFault;
+		  	status.acq = AcqFault;
+			break;
 	}
-	status.det_mask = DetExposure | DetReadout;
+	status.det_mask = DetExposure | DetReadout | DetLatency;
 }
 
 //-----------------------------------------------------
@@ -461,12 +470,9 @@ void XpadInterface::getStatus(StatusType& status)
 int XpadInterface::getNbHwAcquiredFrames()
 {
 	DEB_MEMBER_FUNCT();
-	/*Acq::Status acq_status;
-	m_acq.getStatus(acq_status);
-	int nb_hw_acq_frames = acq_status.last_frame_nb + 1;
-	DEB_RETURN() << DEB_VAR1(nb_hw_acq_frames);
-	return nb_hw_acq_frames;*/
-	return 0;
+	int acq_frames;
+	m_cam.getNbFrames(acq_frames);
+	return acq_frames;
 }
 
 //-----------------------------------------------------
@@ -511,9 +517,9 @@ void XpadInterface::loadAllConfigG()
 //-----------------------------------------------------
 //
 //-----------------------------------------------------
-void XpadInterface::loadConfigG(unsigned* config_g_and_value)
+void XpadInterface::loadConfigG(const vector<unsigned long>& reg_and_value)
 {
 	DEB_MEMBER_FUNCT();
-	m_cam.loadConfigG(configg_and_value);
+	m_cam.loadConfigG(reg_and_value);
 }
 

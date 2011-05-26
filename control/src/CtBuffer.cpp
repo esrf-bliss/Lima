@@ -146,10 +146,21 @@ void CtBuffer::getMaxMemory(short& max_memory) const
   DEB_RETURN() << DEB_VAR1(max_memory);
 }
 
-void CtBuffer::getFrame(Data &aReturnData,int frameNumber)
+void CtBuffer::getFrame(Data &aReturnData,int frameNumber,int readBlockLen)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR1(frameNumber);
+  DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
+
+  int concat_frames;
+  m_hw_buffer->getNbConcatFrames(concat_frames);
+  if (readBlockLen != 1) {
+    if (concat_frames == 1)
+      throw LIMA_CTL_EXC(InvalidValue, "Cannot read block of frames "
+			 "if not in Concatenation mode");
+    else if (frameNumber % concat_frames + readBlockLen > concat_frames)
+      throw LIMA_CTL_EXC(InvalidValue, "Reading block of frames cannot cross "
+			 "boundaries given by specified nb_concat_frames");
+  }
 
   if(m_ct_accumulation)
     m_ct_accumulation->getFrame(aReturnData,frameNumber);
@@ -157,7 +168,7 @@ void CtBuffer::getFrame(Data &aReturnData,int frameNumber)
     {
       HwFrameInfo info;
       m_hw_buffer->getFrameInfo(frameNumber,info);
-      getDataFromHwFrameInfo(aReturnData,info);
+      getDataFromHwFrameInfo(aReturnData,info,readBlockLen);
     }
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }
@@ -202,6 +213,8 @@ void CtBuffer::setup(CtControl *ct)
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
+    hwNbBuffer = (acq_nframes + concat_nframes - 1) / concat_nframes;
+    nbuffers = hwNbBuffer;
     break;
   }
   m_hw_buffer->setFrameDim(fdim);
@@ -221,10 +234,11 @@ void CtBuffer::setup(CtControl *ct)
 }
 
 void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
-				      const HwFrameInfoType& frame_info)
+				      const HwFrameInfoType& frame_info,
+				      int readBlockLen)
 {
   DEB_STATIC_FUNCT();
-  DEB_PARAM() << DEB_VAR1(frame_info);
+  DEB_PARAM() << DEB_VAR2(frame_info, readBlockLen);
 
   ImageType ftype;
   Size fsize;
@@ -252,7 +266,7 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
 
   fsize= frame_info.frame_dim.getSize();
   fdata.width= fsize.getWidth();
-  fdata.height= fsize.getHeight();
+  fdata.height= fsize.getHeight() * readBlockLen;
   fdata.frameNumber= frame_info.acq_frame_nb;
   fdata.timestamp = frame_info.frame_timestamp;
 

@@ -364,13 +364,19 @@ void CtControl::getImageStatus(ImageStatus& status) const
   DEB_RETURN() << DEB_VAR1(status);
 }
 
-void CtControl::ReadImage(Data &aReturnData,long frameNumber)
+void CtControl::ReadImage(Data &aReturnData,long frameNumber, 
+			  long readBlockLen)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR1(frameNumber);
+  DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
+
   AutoMutex aLock(m_cond.mutex());
   if(m_op_ext_link_task_active)
     {
+      if (readBlockLen != 1)
+	throw LIMA_CTL_EXC(NotSupported, "Cannot read more than one frame "
+			   "at a time with External Operations");
+
       std::map<int,Data>::iterator i = m_images_buffer.find(frameNumber);
       if(i != m_images_buffer.end())
 	aReturnData = i->second;
@@ -385,30 +391,34 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber)
   else
     {
       aLock.unlock();
-      ReadBaseImage(aReturnData,frameNumber); // todo change when external op activated
+      ReadBaseImage(aReturnData,frameNumber,readBlockLen); // todo change when external op activated
     }
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }
 
-void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber)
+void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber, 
+			      long readBlockLen)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR1(frameNumber);
+  DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
 
   AutoMutex aLock(m_cond.mutex());
   ImageStatus &imgStatus = m_status.ImageCounters;
-  if(frameNumber < 0)
-    frameNumber = imgStatus.LastBaseImageReady;
-  else if(frameNumber > imgStatus.LastBaseImageReady)
-    throw LIMA_CTL_EXC(Error, "Frame not available yet");
+  long lastFrame = imgStatus.LastBaseImageReady;
+  if (frameNumber < 0) {
+    frameNumber = lastFrame - (readBlockLen - 1);
+    if (frameNumber < 0)
+      throw LIMA_CTL_EXC(Error, "Frame(s) not available yet");
+  } else if (frameNumber + readBlockLen - 1 > lastFrame)
+    throw LIMA_CTL_EXC(Error, "Frame(s) not available yet");
   aLock.unlock();
-  m_ct_buffer->getFrame(aReturnData,frameNumber);
+  m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
   
   FrameDim img_dim;
   m_ct_image->getImageDim(img_dim);
   int roiWidth = img_dim.getSize().getWidth();
-  int roiHeight = img_dim.getSize().getHeight();
+  int roiHeight = img_dim.getSize().getHeight() * readBlockLen;
   if((roiWidth * roiHeight) >
      (aReturnData.width * aReturnData.height))
     throw LIMA_CTL_EXC(Error, "Roi dim > HwBuffer dim");
