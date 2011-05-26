@@ -14,11 +14,7 @@
    <packaging>pom</packaging>
    <name>Lima Project</name>
    <description>Lima Project</description>
-    <scm>
-        <connection>${scm.connection.cvs.soleil}:Libraries/LIMA/LimaLib</connection>
-        <developerConnection>${scm.developerConnection.cvs.soleil}:Libraries/LIMA/LimaLib</developerConnection>
-        <url>${scm.url.cvs.soleil}/Libraries/LIMA/LimaLib</url>
-    </scm>
+
      <dependencies>
 	  <dependency>
 		 <groupId>fr.soleil.lib</groupId>
@@ -30,6 +26,17 @@
 	  </dependency>
     </dependencies>
 
+   <build>
+       <plugins>
+			<plugin>
+				 <groupId>fr.soleil.maven.plugins</groupId>
+				 <artifactId>maven-cvs-plugin</artifactId>
+				 <configuration>
+				 <enable>false</enable>
+				 </configuration>
+			</plugin>
+       </plugins>			
+   </build>
    <developers>
        <developer>
            <id>langlois</id>

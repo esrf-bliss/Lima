@@ -15,16 +15,25 @@
     <description>Lima Camera : Basler, Simulator, ...</description>
 
     <dependencies>
-        <dependency>
-			<groupId>fr.soleil.lib.Lima</groupId>
-			<artifactId>Common-${aol}-shared-${mode}</artifactId>
-			<version>1.0.3-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>fr.soleil.lib.Lima</groupId>
-			<artifactId>Hardware-${aol}-shared-${mode}</artifactId>
-			<version>1.0.3-SNAPSHOT</version>
-		</dependency>
+	<dependency>
+		<groupId>fr.soleil.lib.Lima</groupId>
+		<artifactId>Common-${aol}-shared-${mode}</artifactId>
+		<version>1.0.3-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+		<groupId>fr.soleil.lib.Lima</groupId>
+		<artifactId>Hardware-${aol}-shared-${mode}</artifactId>
+		<version>1.0.3-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+        <groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
+		<artifactId>Tasks-${aol}-shared-${mode}</artifactId>
+		<version>1.0.3-SNAPSHOT</version>
+	</dependency>
+	  <dependency>
+		<groupId>fr.soleil.lib</groupId>
+		<artifactId>GDShare-${aol}-${library}-${mode}</artifactId>
+	  </dependency>   		
     </dependencies>
 	
     <build>
@@ -53,8 +62,8 @@
 	<!-- ENABLE/DISABLE a specific plugin--> 
     <modules>        
         <module>simulator</module>
-		<module>basler</module>
-		<module>pilatus</module>		
+		<!--<module>basler</module>-->
+		<!--<module>pilatus</module>-->
         <!--<module>marccd</module>-->
 		<!--<module>xpad</module>-->
     </modules>
