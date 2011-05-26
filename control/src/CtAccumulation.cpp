@@ -509,7 +509,7 @@ bool CtAccumulation::newFrameReady(Data &aData)
 	nextFrameNumber = m_datas.back().frameNumber + 1;
 
       Data newData;
-      newData.type = Data::INT32;
+      newData.type = aData.type/*Data::INT32*/;//@@@TODO VERIFY why INT32
       newData.width = aData.width;
       newData.height = aData.height;
       newData.frameNumber = nextFrameNumber;
@@ -598,14 +598,15 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
   DEB_PARAM() << DEB_VAR2(src,dst);
 
   int nb_items = src.width * src.height;
+  //@@@ TODO VERIFY why int 
   switch(src.type)
     {
-    case Data::UINT8: 	accumulateFrame<unsigned char,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT8: 	accumulateFrame<char,int>(src.data(),dst.data(),nb_items);break;
-    case Data::UINT16: 	accumulateFrame<unsigned short,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT16: 	accumulateFrame<short,int>(src.data(),dst.data(),nb_items);break;
-    case Data::UINT32: 	accumulateFrame<unsigned int,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT32: 	accumulateFrame<int,int>(src.data(),dst.data(),nb_items);break;
+    case Data::UINT8: 	accumulateFrame<unsigned char,unsigned char/*int*/>		(src.data(),dst.data(),nb_items);break;
+    case Data::INT8: 	accumulateFrame<char,char/*int*/>						(src.data(),dst.data(),nb_items);break;
+    case Data::UINT16: 	accumulateFrame<unsigned short,unsigned short/*int*/>	(src.data(),dst.data(),nb_items);break;
+    case Data::INT16: 	accumulateFrame<short,short/*int*/>						(src.data(),dst.data(),nb_items);break;
+    case Data::UINT32: 	accumulateFrame<unsigned int,unsigned int/*int*/>		(src.data(),dst.data(),nb_items);break;
+    case Data::INT32: 	accumulateFrame<int,int/*int*/>							(src.data(),dst.data(),nb_items);break;
     default:
       THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
     }
