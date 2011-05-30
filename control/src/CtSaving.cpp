@@ -28,7 +28,10 @@
 
 #include "CtSaving.h"
 #include "CtSaving_Edf.h"
+
+#ifdef WITH_NXS_SAVING
 #include "CtSaving_Nxs.h"
+#endif
 
 #ifdef WITH_CBF_SAVING
 #include "CtSaving_Cbf.h"
@@ -272,8 +275,11 @@ void CtSaving::_create_save_cnt()
       m_pars.framesPerFile = 1;
       break;
 #endif
-	case NXS:
-	  m_save_cnt = new SaveContainerNxs(*this);break;
+#ifdef WITH_NXS_SAVING
+     case NXS:
+       m_save_cnt = new SaveContainerNxs(*this);
+       break;
+#endif
     default:
       break;
     }
