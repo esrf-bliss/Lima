@@ -73,6 +73,7 @@
 						</includePaths>
 						<defines>
 							<define>_THREAD_SUPPORT</define>
+							<define>WITH_NXS_SAVING</define>
 						</defines>
 					</cpp>   
                 </configuration>

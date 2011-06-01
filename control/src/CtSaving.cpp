@@ -256,9 +256,12 @@ void CtSaving::_create_save_cnt()
 #ifndef WITH_CBF_SAVING
       throw LIMA_CTL_EXC(NotSupported,"Lima is not compiled with the cbf saving option, not managed");  
 #endif
+    case NXS:
+#ifndef WITH_NXS_SAVING
+      throw LIMA_CTL_EXC(NotSupported,"Lima is not compiled with the nxs saving option, not managed");  
+#endif        
     case RAW:
     case EDF:
-    case NXS:
       delete m_save_cnt;break;
     default:
       throw LIMA_CTL_EXC(NotSupported,"File format not yet managed");
