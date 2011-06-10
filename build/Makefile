@@ -201,8 +201,8 @@ endif
 
 ifneq ($(COMPILE_BASLER),0)
 
-BASLER_LDFLAGS	:= -L. -L/opt/pylon/lib64
-BASLER_LDLIBS	:= -lpylonbase
+BASLER_LDFLAGS	:= -L. -L/opt/pylon/lib -L/opt/pylon/lib64
+BASLER_LDLIBS	:= -lpylongigesupp
 
 name		:= basler
 basler-objs	:= ../camera/basler/src/Basler.o
