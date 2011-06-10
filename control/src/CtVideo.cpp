@@ -253,7 +253,8 @@ CtVideo::CtVideo(CtControl &ct) :
   m_write_image(new VideoImage()),
   m_image_callback(NULL),
   m_internal_image_callback(NULL),
-  m_ct(ct)
+  m_ct(ct),
+  m_stopping_live(false)
 {
   HwInterface *hw = ct.hwInterface();
   m_has_video = hw->getHwCtrlObj(m_video);
@@ -672,6 +673,9 @@ void CtVideo::_check_video_mode(VideoMode aMode)
  */ 
 void CtVideo::_prepareAcq()
 {
+  DEB_MEMBER_FUNCT();
+  DEB_TRACE() << DEB_VAR1(m_stopping_live);
+
   AutoMutex aLock(m_cond.mutex());
 
   while(m_stopping_live) m_cond.wait();
