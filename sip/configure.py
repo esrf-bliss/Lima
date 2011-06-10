@@ -130,7 +130,7 @@ def main():
             extraIncludes += [espia_incl]
 
         if(modName == 'basler') :
-            extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam']
+            extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
             extra_cxxflags += ['-DLESSDEPENDENCY','-DUSE_GIGE']
 
         extraIncludes += findModuleIncludes(modName)
