@@ -596,13 +596,14 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
   int nb_items = src.dimensions[0] * src.dimensions[1];
   switch(src.type)
     {
-    case Data::UINT8: 	accumulateFrame<unsigned char,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT8: 	accumulateFrame<char,int>(src.data(),dst.data(),nb_items);break;
-    case Data::UINT16: 	accumulateFrame<unsigned short,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT16: 	accumulateFrame<short,int>(src.data(),dst.data(),nb_items);break;
-    case Data::UINT32: 	accumulateFrame<unsigned int,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT32: 	accumulateFrame<int,int>(src.data(),dst.data(),nb_items);break;
+    case Data::UINT8: 	accumulateFrame<unsigned char,int>	(src.data(),dst.data(),nb_items);break;
+    case Data::INT8: 	accumulateFrame<char,int>		(src.data(),dst.data(),nb_items);break;
+    case Data::UINT16: 	accumulateFrame<unsigned short,int>	(src.data(),dst.data(),nb_items);break;
+    case Data::INT16: 	accumulateFrame<short,int>		(src.data(),dst.data(),nb_items);break;
+    case Data::UINT32: 	accumulateFrame<unsigned int,int>	(src.data(),dst.data(),nb_items);break;
+    case Data::INT32: 	accumulateFrame<int,int>		(src.data(),dst.data(),nb_items);break;
     default:
       THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
     }
 }
+

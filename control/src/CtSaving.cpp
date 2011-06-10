@@ -29,6 +29,10 @@
 #include "CtSaving.h"
 #include "CtSaving_Edf.h"
 
+#ifdef WITH_NXS_SAVING
+#include "CtSaving_Nxs.h"
+#endif
+
 #ifdef WITH_CBF_SAVING
 #include "CtSaving_Cbf.h"
 #endif
@@ -252,6 +256,10 @@ void CtSaving::_create_save_cnt()
 #ifndef WITH_CBF_SAVING
       throw LIMA_CTL_EXC(NotSupported,"Lima is not compiled with the cbf saving option, not managed");  
 #endif
+    case NXS:
+#ifndef WITH_NXS_SAVING
+      throw LIMA_CTL_EXC(NotSupported,"Lima is not compiled with the nxs saving option, not managed");  
+#endif        
     case RAW:
     case EDF:
       delete m_save_cnt;break;
@@ -269,6 +277,11 @@ void CtSaving::_create_save_cnt()
       m_save_cnt = new SaveContainerCbf(*this);
       m_pars.framesPerFile = 1;
       break;
+#endif
+#ifdef WITH_NXS_SAVING
+     case NXS:
+       m_save_cnt = new SaveContainerNxs(*this);
+       break;
 #endif
     default:
       break;
@@ -909,7 +922,13 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
       close();
       return;
     }
-
+    catch(...)
+    {
+      m_saving._setSavingError(CtControl::SaveUnknownError);
+      close();
+      return;
+    }
+    
   if(++m_written_frames == pars.framesPerFile)
     close();
 
@@ -948,6 +967,13 @@ void CtSaving::SaveContainer::getStatistic(std::list<double> &aReturnList) const
       i != m_statistic_list.end();++i)
     aReturnList.push_back(*i);
 }
+
+
+void CtSaving::SaveContainer::getParameters(CtSaving::Parameters& pars) const
+{
+	m_saving.getParameters(pars);
+}
+
 
 void CtSaving::SaveContainer::clear()
 {

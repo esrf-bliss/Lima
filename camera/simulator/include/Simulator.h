@@ -86,14 +86,14 @@ class LIBSIMULATOR_API Simulator
 		virtual void start();
 		
 		int getNbAcquiredFrames();
+		bool m_force_stop;
 
 	protected:
 		virtual void init();
 		virtual void execCmd(int cmd);
 	private:
 		void execStartAcq();
-
-		Simulator *m_simu;
+		Simulator* m_simu;
 		int m_acq_frame_nb;
 	};
 	friend class SimuThread;

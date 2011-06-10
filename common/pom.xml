@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
 		<artifactId>Lima</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.0.3-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -12,7 +12,12 @@
 
     <packaging>nar</packaging>
     <name>LimaCommon</name>
+    <!-- use for the name of executable -->
     <description>Common lib for Lima</description>
+
+    <dependencies>
+      
+    </dependencies>
 
     <build>
         <plugins>
@@ -36,10 +41,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <scm>
-        <connection>${scm.connection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</connection>
-        <developerConnection>${scm.developerConnection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</developerConnection>
-        <url>${scm.url.cvs.tango-ds}/InputOutput/Scan/ScanServerV2/ScanSL</url>
-    </scm>
 </project>
