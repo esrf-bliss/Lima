@@ -241,8 +241,11 @@ void CtSaving::setFormat(FileFormat format)
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
-  m_pars.fileFormat = format;
-  m_pars_dirty_flag = true;
+  if(format != m_pars.fileFormat)
+    {
+      m_pars.fileFormat = format;
+      m_pars_dirty_flag = true;
+    }
   DEB_RETURN() << DEB_VAR1(format);
 }
 void CtSaving::_create_save_cnt()
@@ -304,8 +307,11 @@ void CtSaving::setSavingMode(SavingMode mode)
   DEB_PARAM() << DEB_VAR1(mode);
 
   AutoMutex aLock(m_cond.mutex());
-  m_pars.savingMode = mode;
-  m_pars_dirty_flag = true;
+  if(mode != m_pars.savingMode)
+    {
+      m_pars.savingMode = mode;
+      m_pars_dirty_flag = true;
+    }
 }
 void CtSaving::getSavingMode(SavingMode& mode) const
 { 
@@ -323,8 +329,11 @@ void CtSaving::setOverwritePolicy(OverwritePolicy policy)
   DEB_PARAM() << DEB_VAR1(policy);
 
   AutoMutex aLock(m_cond.mutex());
-  m_pars.overwritePolicy = policy;
-  m_pars_dirty_flag = true;
+  if(policy != m_pars.overwritePolicy)
+    {
+      m_pars.overwritePolicy = policy;
+      m_pars_dirty_flag = true;
+    }
 }
 
 void CtSaving::getOverwritePolicy(OverwritePolicy& policy) const
