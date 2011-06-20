@@ -25,6 +25,9 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#pragma warning(disable:4251)
+
+
 #include "LimaCompatibility.h"
 #include "StreamUtils.h"
 #include "ThreadUtils.h"

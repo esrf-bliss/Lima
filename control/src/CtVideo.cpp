@@ -108,7 +108,7 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
   if(m_video.m_stopping_live) return false;
 
   liveFlag = m_video.m_pars.live;
-  int image_counter = m_video.m_image_counter + 1;
+  int image_counter = (int) m_video.m_image_counter + 1;
   aLock.unlock();
     
   if(!liveFlag)			// Classic acquisition
@@ -458,7 +458,7 @@ void CtVideo::getLastImage(CtVideo::Image &anImage) const
 void CtVideo::getLastImageCounter(long long &anImageCounter) const
 {
   AutoMutex aLock(m_cond.mutex());
-  anImageCounter = m_image_counter;
+  anImageCounter = (int) m_image_counter;
 }
 
 void CtVideo::registerImageCallback(ImageCallback &cb)

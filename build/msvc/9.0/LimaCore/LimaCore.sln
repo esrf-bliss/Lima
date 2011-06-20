@@ -8,6 +8,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibLimaCore", "LimaCore.vcp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libprocesslib", "..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\libprocesslib.vcproj", "{F6556656-D091-43AF-B46F-355F4ABA5DB6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pco", "..\..\..\..\camera\pco\pco.vcproj", "{2B94198E-6D3C-4169-8274-A02FC408FE45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -22,6 +24,10 @@ Global
 		{F6556656-D091-43AF-B46F-355F4ABA5DB6}.Debug|Win32.Build.0 = Debug|Win32
 		{F6556656-D091-43AF-B46F-355F4ABA5DB6}.Release|Win32.ActiveCfg = Release|Win32
 		{F6556656-D091-43AF-B46F-355F4ABA5DB6}.Release|Win32.Build.0 = Release|Win32
+		{2B94198E-6D3C-4169-8274-A02FC408FE45}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2B94198E-6D3C-4169-8274-A02FC408FE45}.Debug|Win32.Build.0 = Debug|Win32
+		{2B94198E-6D3C-4169-8274-A02FC408FE45}.Release|Win32.ActiveCfg = Release|Win32
+		{2B94198E-6D3C-4169-8274-A02FC408FE45}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

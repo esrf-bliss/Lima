@@ -122,6 +122,7 @@ void CtSaving::Parameters::checkValid() const
 	throw LIMA_CTL_EXC(InvalidValue, "CBF file format does not support "
 			                 "multi frame per file");
       break;
+#pragma message ( "--- WARNING / TODO - no cases???" )
 #endif
     default:
       break;

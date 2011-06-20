@@ -219,6 +219,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\control\src\CtVideo.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\common\src\Debug.cpp"
 				>
 			</File>
@@ -298,6 +302,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\..\hardware\src\HwVideoCtrlObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\common\src\MemUtils.cpp"
 				>
 			</File>
@@ -323,6 +331,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\common\src\Timestamp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\src\VideoUtils.cpp"
 				>
 			</File>
 		</Filter>
@@ -381,6 +393,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\control\include\CtShutter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\control\include\CtVideo.h"
 				>
 			</File>
 			<File
@@ -448,6 +464,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\hardware\include\HwVideoCtrlObj.h"
+				>
+			</File>
+			<File
 				RelativePath=".\LimaCore.h"
 				>
 			</File>
@@ -489,6 +509,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\common\include\Timestamp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\include\VideoUtils.h"
 				>
 			</File>
 		</Filter>
