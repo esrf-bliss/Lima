@@ -75,6 +75,7 @@ namespace lima {
 	  std::string directory;
       std::string prefix;
       std::string suffix;
+	  ImageType   imageType;
       long nextNumber;
       FileFormat fileFormat;
       SavingMode savingMode;

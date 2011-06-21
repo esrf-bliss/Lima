@@ -88,21 +88,38 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			
 			//create N4T main object needed to generate Nexus file
 			m_writer = new Nexus4Tango::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
+						
 			m_writer->Initialize(m_pars.temporaryPath, m_pars.directory);
 
+			//Set device name
+			m_writer->SetDeviceName("tmp/dt/detector.1");
+			
+			//clean remainig files in temporary & spool directory : false => only temporary, true => both of them
+			m_writer->Clean(true);
+			
 			//Add sensor 2D (image)
 			m_writer->AddDataItem2D(m_pars.prefix, aData.height,aData.width);
-
-			//Set sensors' path
-			m_writer->SetPath(m_pars.prefix, "scan_data");
 		  
 			//Set sensors node's name
 			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
 		  }
 		  
-		  //push data into file
-		  m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
-	  
+		  switch(m_pars.imageType)
+		  {
+		    case Bpp8:
+		    //push data into file
+		    m_writer->PushData( m_pars.prefix, (unsigned char*)(aData.data()));
+		    break;
+		    case Bpp32:
+		    //push data into file
+		    m_writer->PushData( m_pars.prefix, (unsigned int*)(aData.data()));
+		    break;
+		    default:  //UINT16 by default
+		    //push data into file
+		    m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
+		    break;
+			
+	    }
 		  //destroy Nexus object : to do once for each new sequence at the last image
 		  if( (aData.frameNumber+1) == (m_pars.nbframes))
 		  {
