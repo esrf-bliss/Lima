@@ -106,6 +106,7 @@ class LIMACORE_API Thread
 
 	virtual void start();
 	virtual void abort();
+	void join();
 
 	bool hasStarted();
 	bool hasFinished();

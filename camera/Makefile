@@ -45,7 +45,6 @@ endif
 
 ifneq ($(COMPILE_BASLER),0)
 sub-dirs += basler
-CXXFLAGS+=-DLESSDEPENDENCY
 export CXXFLAGS
 endif
 

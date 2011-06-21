@@ -240,6 +240,11 @@ void Thread::start()
 	m_started = true;
 }
 
+void Thread::join()
+{
+  pthread_join(m_thread,NULL);
+}
+
 void Thread::abort()
 {
 	if (!m_started)
