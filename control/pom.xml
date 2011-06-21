@@ -3,45 +3,45 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fr.soleil.lib</groupId>
-		<artifactId>Lima</artifactId>
-		<version>1.0.3-SNAPSHOT</version>
+        <artifactId>Lima</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
-    <artifactId>Control-${aol}-shared-${mode}</artifactId>
+    <artifactId>LimaControl-${aol}-shared-${mode}</artifactId>
     <packaging>nar</packaging>
     <name>LimaControl</name>
     <!-- use for the name of executable -->
     <description>Control lib for Lima</description>
 
     <dependencies>
-	<dependency>
-		<groupId>fr.soleil.lib.Lima</groupId>
-		<artifactId>Common-${aol}-shared-${mode}</artifactId>
-		<version>1.0.3-SNAPSHOT</version>
-	</dependency>
-	<dependency>
-		<groupId>fr.soleil.lib.Lima</groupId>
-		<artifactId>Hardware-${aol}-shared-${mode}</artifactId>
-		<version>1.0.3-SNAPSHOT</version>
-	</dependency>
-	<dependency>
-        	<groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
-		<artifactId>Tasks-${aol}-shared-${mode}</artifactId>
-		<version>1.0.3-SNAPSHOT</version>
-	</dependency>
+    <dependency>
+        <groupId>fr.soleil.lib.Lima</groupId>
+        <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>fr.soleil.lib.Lima</groupId>
+        <artifactId>LimaHardware-${aol}-shared-${mode}</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+            <groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
+        <artifactId>LimaTasks-${aol}-shared-${mode}</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
+    </dependency>
        <dependency>
            <groupId>fr.soleil.lib</groupId>
            <artifactId>Nexus4Tango-${aol}-${library}-${mode}</artifactId>
-       </dependency>	
+       </dependency>
         <dependency>
             <groupId>fr.soleil.lib</groupId>
             <artifactId>NexusCPP-${aol}-${library}-${mode}</artifactId>
-        </dependency>		
-	  <dependency>
-		<groupId>fr.soleil.lib</groupId>
-		<artifactId>GDShare-${aol}-${library}-${mode}</artifactId>
-	  </dependency>   	
+        </dependency>
+      <dependency>
+        <groupId>fr.soleil.lib</groupId>
+        <artifactId>GDShare-${aol}-${library}-${mode}</artifactId>
+      </dependency>
     </dependencies>
 
     <build>
@@ -50,32 +50,32 @@
                 <groupId>org.freehep</groupId>
                 <artifactId>freehep-nar-plugin</artifactId>
                 <configuration>
-					<libraries>
-						<library>
-							<type>shared</type>
-							<subSystem>gui</subSystem>
-						</library>
-					</libraries>
-					<cpp>
-						<!-- XXX VH/FL : Out of maven convention (multiple source directories)-->
-						<sourceDirectory>${project.basedir}</sourceDirectory>
-						<includes>
-							<include>software_operation/src/**/*.cpp</include>
-							<include>src/**/*.cpp</include>
-						</includes>
-						<excludes>
-							<exclude>**/CtSaving_Cbf.cpp</exclude>
-							<exclude>**/CtSpsImage.cpp</exclude>
-						</excludes>
-						<includePaths>
-							<includePath>${project.basedir}/include</includePath>
-							<includePath>${project.basedir}/software_operation/include</includePath>
-						</includePaths>
-						<defines>
-							<define>_THREAD_SUPPORT</define>
-							<define>WITH_NXS_SAVING</define>
-						</defines>
-					</cpp>   
+                    <libraries>
+                        <library>
+                            <type>shared</type>
+                            <subSystem>gui</subSystem>
+                        </library>
+                    </libraries>
+                    <cpp>
+                        <!-- XXX VH/FL : Out of maven convention (multiple source directories)-->
+                        <sourceDirectory>${project.basedir}</sourceDirectory>
+                        <includes>
+                            <include>software_operation/src/**/*.cpp</include>
+                            <include>src/**/*.cpp</include>
+                        </includes>
+                        <excludes>
+                            <exclude>**/CtSaving_Cbf.cpp</exclude>
+                            <exclude>**/CtSpsImage.cpp</exclude>
+                        </excludes>
+                        <includePaths>
+                            <includePath>${project.basedir}/include</includePath>
+                            <includePath>${project.basedir}/software_operation/include</includePath>
+                        </includePaths>
+                        <defines>
+                            <define>_THREAD_SUPPORT</define>
+                            <define>WITH_NXS_SAVING</define>
+                        </defines>
+                    </cpp>
                 </configuration>
             </plugin>
         </plugins>

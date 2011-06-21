@@ -3,52 +3,51 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fr.soleil.lib.Lima</groupId>
-		<artifactId>Camera</artifactId>
-        <version>1.0.3-SNAPSHOT</version>
+        <artifactId>Camera</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima.Camera</groupId>
-    <artifactId>Xpad-${aol}-shared-${mode}</artifactId>
+    <artifactId>LimaXpad-${aol}-shared-${mode}</artifactId>
     <packaging>nar</packaging>
-	
-    <name>Xpad</name>    <!-- use for the name of executable -->
+    <name>LimaXpad</name>    <!-- use for the name of executable -->
     <description>This module controls the Xpad Detector</description>
 
     <dependencies>
-	</dependencies>
-		
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.freehep</groupId>
                 <artifactId>freehep-nar-plugin</artifactId>
-				<configuration>
-						<linker>
-								<libs>
-										<lib>
-												<name>xpci_lib</name>
-												<type>static</type>
-										<directory>/home/bompard/ICA/Xpix/xpci_lib</directory>
-										<!--directory>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</directory-->
-												<!--<directory>/home/informatique/ica/noureddine/DeviceSources/PCIex280311/trunk/sw/xpci_lib</directory>-->
-										</lib>
-								</libs>
-						</linker>
-						<cpp>
-								<systemIncludePaths>
-									<systemIncludePath>/home/bompard/ICA/Xpix/xpci_lib</systemIncludePath>
-										<!--systemIncludePath>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</systemIncludePath-->
-										<!--<systemIncludePath>/home/informatique/ica/noureddine/DeviceSources/PCIex280311/trunk/sw/xpci_lib</systemIncludePath>-->
-								</systemIncludePaths>
-								<defines>
-										<define>
-												
-										</define>
-								</defines>
-						</cpp>
-				</configuration>
+                <configuration>
+                        <linker>
+                                <libs>
+                                        <lib>
+                                                <name>xpci_lib</name>
+                                                <type>static</type>
+                                        <directory>/home/bompard/ICA/Xpix/xpci_lib</directory>
+                                        <!--directory>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</directory-->
+                                                <!--<directory>/home/informatique/ica/noureddine/DeviceSources/PCIex280311/trunk/sw/xpci_lib</directory>-->
+                                        </lib>
+                                </libs>
+                        </linker>
+                        <cpp>
+                                <systemIncludePaths>
+                                    <systemIncludePath>/home/bompard/ICA/Xpix/xpci_lib</systemIncludePath>
+                                        <!--systemIncludePath>/home/informatique/ica/langlois/DEV/flosvn/Xpix/xpci_lib</systemIncludePath-->
+                                        <!--<systemIncludePath>/home/informatique/ica/noureddine/DeviceSources/PCIex280311/trunk/sw/xpci_lib</systemIncludePath>-->
+                                </systemIncludePaths>
+                                <defines>
+                                        <define>
+
+                                        </define>
+                                </defines>
+                        </cpp>
+                </configuration>
             </plugin>
         </plugins>
     </build>
-		
+
 </project>
