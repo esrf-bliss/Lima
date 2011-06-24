@@ -97,8 +97,8 @@ class SaveContainerCbf::Compression : public SinkTaskBase
 					   aData.is_signed(),
 					   aData.size()/aData.depth(),
 					   "little_endian",
-					   aData.width,
-					   aData.height,
+					   aData.dimensions[0],
+					   aData.dimensions[1],
 					   0,
 					   128));
 

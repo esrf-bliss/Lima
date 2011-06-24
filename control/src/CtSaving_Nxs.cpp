@@ -98,7 +98,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			m_writer->Clean(true);
 			
 			//Add sensor 2D (image)
-			m_writer->AddDataItem2D(m_pars.prefix, aData.height,aData.width);
+			m_writer->AddDataItem2D(m_pars.prefix, aData.dimensions[1],aData.dimensions[0]);
 		  
 			//Set sensors node's name
 			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);

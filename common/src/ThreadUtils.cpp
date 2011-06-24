@@ -219,6 +219,7 @@ void Cond::broadcast()
 Thread::Thread()
 {
 	m_started = m_finished = false;
+	pthread_attr_init(&m_thread_attr);
 }
 
 Thread::~Thread()
@@ -227,6 +228,7 @@ Thread::~Thread()
 		abort();
 		pthread_join(m_thread, NULL);
 	}
+	pthread_attr_destroy(&m_thread_attr);
 }
 
 void Thread::start()
@@ -234,10 +236,15 @@ void Thread::start()
 	if (m_started)
 		throw LIMA_COM_EXC(Error, "Thread already started");
 
-	if (pthread_create(&m_thread, NULL, staticThreadFunction, this) != 0)
+	if (pthread_create(&m_thread, &m_thread_attr, staticThreadFunction, this) != 0)
 		throw LIMA_HW_EXC(Error, "Error creating thread");
 
 	m_started = true;
+}
+
+void Thread::join()
+{
+  pthread_join(m_thread,NULL);
 }
 
 void Thread::abort()

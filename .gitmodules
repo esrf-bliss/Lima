@@ -40,6 +40,9 @@
 [submodule "third-party/yat"]
 	path = third-party/yat
 	url = git://git.epn-campus.eu/repositories/yat
+[submodule "camera/prosilica"]
+	path = camera/prosilica
+	url = git://git.epn-campus.eu/repositories/LimaCameraProsilica
 [submodule "camera/xpad"]
 	path = camera/xpad
 	url = git://git.epn-campus.eu/repositories/LimaCameraXpad

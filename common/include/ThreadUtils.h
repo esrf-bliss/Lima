@@ -106,13 +106,15 @@ class LIMACORE_API Thread
 
 	virtual void start();
 	virtual void abort();
+	void join();
 
 	bool hasStarted();
 	bool hasFinished();
 
  protected:
 	virtual void threadFunction() = 0;
-	
+
+	pthread_attr_t	m_thread_attr;
  private:
 	static void *staticThreadFunction(void *data);
 

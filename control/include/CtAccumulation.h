@@ -57,7 +57,7 @@ namespace lima
     
     class ThresholdCallback
     {
-      DEB_CLASS_NAMESPC(DebModControl,"AccConcat::ThresholdCallback", 
+      DEB_CLASS_NAMESPC(DebModControl,"Accumulation::ThresholdCallback", 
 			"Control");
       friend class CtAccumulation;
     public:

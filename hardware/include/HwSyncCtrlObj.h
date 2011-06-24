@@ -77,7 +77,7 @@ public:
 	  virtual void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&) = 0;
 	};
 
-	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);
+	HwSyncCtrlObj();
 	virtual ~HwSyncCtrlObj();
 
 	virtual bool checkTrigMode(TrigMode trig_mode) = 0;
@@ -109,7 +109,6 @@ public:
  protected:
 	inline void setAcqMode(AcqMode acqMode) {m_acq_mode = acqMode;}
  private:
-	HwBufferCtrlObj& 	m_buffer_ctrl;
 	AcqMode		 	m_acq_mode;
 	ValidRangesCallback* 	m_valid_ranges_cb;
 };

@@ -32,7 +32,8 @@ modules = [('core',		['common', 'hardware', 'control']),
 	   ('espia',		[os.path.join('camera','common','espia')]),
 	   ('frelon',		[os.path.join('camera','frelon')]),
 	   ('maxipix',		[os.path.join('camera','maxipix')]),
-           ('basler',           [os.path.join('camera','basler')])]
+           ('basler',           [os.path.join('camera','basler')]),
+           ('prosilica',        [os.path.join('camera','prosilica')])]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
 
@@ -129,8 +130,8 @@ def main():
             extraIncludes += [espia_incl]
 
         if(modName == 'basler') :
-            extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam']
-            extra_cxxflags += ['-DLESSDEPENDENCY','-DUSE_GIGE']
+            extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
+            extra_cxxflags += ['-DUSE_GIGE']
 
         extraIncludes += findModuleIncludes(modName)
 
