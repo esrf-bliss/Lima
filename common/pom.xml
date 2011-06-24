@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fr.soleil.lib</groupId>
-		<artifactId>Lima</artifactId>
-		<version>1.0.3-SNAPSHOT</version>
+        <artifactId>Lima</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
-    <artifactId>Common-${aol}-shared-${mode}</artifactId>
+    <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
 
     <packaging>nar</packaging>
     <name>LimaCommon</name>
@@ -16,7 +16,7 @@
     <description>Common lib for Lima</description>
 
     <dependencies>
-      
+
     </dependencies>
 
     <build>
@@ -36,7 +36,7 @@
                         <includePaths>
                             <includePath>${basedir}/include</includePath>
                         </includePaths>
-                    </cpp>   
+                    </cpp>
                 </configuration>
             </plugin>
         </plugins>

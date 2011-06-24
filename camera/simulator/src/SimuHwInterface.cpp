@@ -246,7 +246,7 @@ void SimuSyncCtrlObj::getNbHwFrames(int& nb_frames)
 
 void SimuSyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 {
-	double min_time = 10e-9;;
+	double min_time = 10e-9;
 	double max_time = 1e6;
 	valid_ranges.min_exp_time = min_time;
 	valid_ranges.max_exp_time = max_time;
