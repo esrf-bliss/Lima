@@ -57,7 +57,7 @@ sipRes = str.str().c_str();
 	};
 
 
-	HwSyncCtrlObj(HwBufferCtrlObj& buffer_ctrl);
+	HwSyncCtrlObj();
 	virtual ~HwSyncCtrlObj();
 
 	virtual bool checkTrigMode(TrigMode trig_mode) = 0;

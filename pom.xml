@@ -6,30 +6,37 @@
        <artifactId>super-pom-C-CPP</artifactId>
        <version>RELEASE</version>
    </parent>
-   
+
    <groupId>fr.soleil.lib</groupId>
    <artifactId>Lima</artifactId>
-   <version>0.0.1-SNAPSHOT</version>
+   <version>1.0.4-SNAPSHOT</version>
+
    <packaging>pom</packaging>
-   <name>Lima Project</name>
+   <name>[Lima Project]</name>
    <description>Lima Project</description>
-   
-    <build>
-		<plugins>
-			<plugin>
-				<groupId>fr.soleil.maven.plugins</groupId>
-				<artifactId>maven-cvs-plugin</artifactId>
-				<configuration>
-					<enable>false</enable>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>	
-   <scm>
-       <connection>${scm.connection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2</connection>
-       <developerConnection>${scm.developerConnection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2</developerConnection>
-       <url>${scm.url.cvs.tango-ds}/InputOutput/Scan/ScanServerV2</url>
-   </scm>
+
+     <dependencies>
+      <dependency>
+         <groupId>fr.soleil.lib</groupId>
+         <artifactId>YAT-${aol}-${library}-${mode}</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>fr.soleil.lib</groupId>
+         <artifactId>YAT4Tango-${aol}-${library}-${mode}</artifactId>
+      </dependency>
+    </dependencies>
+
+   <build>
+       <plugins>
+            <plugin>
+                 <groupId>fr.soleil.maven.plugins</groupId>
+                 <artifactId>maven-cvs-plugin</artifactId>
+                 <configuration>
+                 <enable>false</enable>
+                 </configuration>
+            </plugin>
+       </plugins>
+   </build>
    <developers>
        <developer>
            <id>langlois</id>
@@ -55,10 +62,10 @@
        </developer>
    </developers>
    <modules>
-		<module>common</module>
-		<module>camera</module>
-		<module>control</module>
-		<module>hardware</module>
-		<module>third-party</module>
+        <module>control</module>
+        <module>common</module>
+        <module>hardware</module>
+        <module>third-party</module>
+        <module>camera</module>
    </modules>
 </project>

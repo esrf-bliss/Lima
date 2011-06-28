@@ -34,7 +34,7 @@ static long long _calc_saturated_image_n_counter(const Data &src,Data &dst,
 {
   const INPUT *aSrcPt,*aEndPt;
   aSrcPt = (const INPUT*)src.data();
-  int pixelnb = src.width * src.height;
+  int pixelnb = src.dimensions[0] * src.dimensions[1];
   aEndPt = aSrcPt + pixelnb;
   long long saturatedCounter = 0;
   unsigned short *saturatedImagePt = (unsigned short*)dst.data();
@@ -75,8 +75,7 @@ public:
     CtAccumulation::_CounterResult result(aData.frameNumber);
     Data &mask = m_cnt.m_calc_mask;
 
-    if(aData.width != m_dst.width ||
-       aData.height != m_dst.height)
+    if(aData.dimensions != m_dst.dimensions)
       {
       	DEB_ERROR() << "Saturated image size is != form data src";
 	return;
@@ -89,8 +88,7 @@ public:
 	    DEB_ERROR() << "mask should by an unsigned/signed char";
 	    return;
 	  }
-	if(mask.width != aData.width ||
-	   mask.height != aData.height)
+	if(mask.dimensions != aData.dimensions)
 	  {
 	    DEB_ERROR() << "mask size is != with data size";
 	    return;
@@ -510,8 +508,7 @@ bool CtAccumulation::newFrameReady(Data &aData)
 
       Data newData;
       newData.type = Data::INT32;
-      newData.width = aData.width;
-      newData.height = aData.height;
+      newData.dimensions = aData.dimensions;
       newData.frameNumber = nextFrameNumber;
       newData.timestamp = aData.timestamp;
       newData.buffer = new Buffer(newData.size());
@@ -526,8 +523,7 @@ bool CtAccumulation::newFrameReady(Data &aData)
 	{
 	  Data newSatImg;
 	  newData.type = Data::UINT16;
-	  newData.width = aData.width;
-	  newData.height = aData.height;
+	  newData.dimensions = aData.dimensions;
 	  newData.frameNumber = nextFrameNumber;
 	  newData.timestamp = aData.timestamp;
 	  newData.buffer = new Buffer(newData.size());
@@ -597,16 +593,17 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(src,dst);
 
-  int nb_items = src.width * src.height;
+  int nb_items = src.dimensions[0] * src.dimensions[1];
   switch(src.type)
     {
-    case Data::UINT8: 	accumulateFrame<unsigned char,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT8: 	accumulateFrame<char,int>(src.data(),dst.data(),nb_items);break;
-    case Data::UINT16: 	accumulateFrame<unsigned short,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT16: 	accumulateFrame<short,int>(src.data(),dst.data(),nb_items);break;
-    case Data::UINT32: 	accumulateFrame<unsigned int,int>(src.data(),dst.data(),nb_items);break;
-    case Data::INT32: 	accumulateFrame<int,int>(src.data(),dst.data(),nb_items);break;
+    case Data::UINT8: 	accumulateFrame<unsigned char,int>	(src.data(),dst.data(),nb_items);break;
+    case Data::INT8: 	accumulateFrame<char,int>		(src.data(),dst.data(),nb_items);break;
+    case Data::UINT16: 	accumulateFrame<unsigned short,int>	(src.data(),dst.data(),nb_items);break;
+    case Data::INT16: 	accumulateFrame<short,int>		(src.data(),dst.data(),nb_items);break;
+    case Data::UINT32: 	accumulateFrame<unsigned int,int>	(src.data(),dst.data(),nb_items);break;
+    case Data::INT32: 	accumulateFrame<int,int>		(src.data(),dst.data(),nb_items);break;
     default:
       THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
     }
 }
+

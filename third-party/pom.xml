@@ -3,19 +3,18 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fr.soleil.lib</groupId>
-		<artifactId>Lima</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+        <artifactId>Lima</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
     <artifactId>Third-party</artifactId>
-
     <packaging>pom</packaging>
-    <name>LimaThird-party</name>
+    <name>[Third-party]</name>
     <description>Lima Third-party : ProcessLib, CBFLib, ...</description>
 
     <dependencies>
-        
+
     </dependencies>
     <build>
         <plugins>
@@ -42,12 +41,10 @@
 
     <modules>
         <module>Processlib</module>
-		
-		<!-- CBFLib: Not used for now, maybe later: use it as a third party with maven?-->
-		<!--module>CBFLib</module-->
-		<!-- Sps: Not used for now, maybe later-->
-		<!--module>Sps</module-->
-        
+        <!-- CBFLib: Not used for now, maybe later: use it as a third party with maven?-->
+        <!--module>CBFLib</module-->
+        <!-- Sps: Not used for now, maybe later-->
+        <!--module>Sps</module-->
     </modules>
 
 </project>

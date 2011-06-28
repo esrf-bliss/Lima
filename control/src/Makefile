@@ -22,7 +22,7 @@
 include ../../config.inc
 
 ct-objs := CtSaving.o CtControl.o CtAcquisition.o CtBuffer.o \
-	   CtImage.o CtSaving_Edf.o CtShutter.o CtAccumulation.o
+	   CtImage.o CtSaving_Edf.o CtShutter.o CtAccumulation.o CtVideo.o
 
 INCLUDES = -I. -I../include -I../../common/include -I../../hardware/include \
 		-I../software_operation/include \
@@ -34,10 +34,21 @@ ifndef COMPILE_CBF_SAVING
 COMPILE_CBF_SAVING = 0
 endif
 
+ifndef COMPILE_NXS_SAVING
+COMPILE_NXS_SAVING = 0
+endif
+
 ifneq ($(COMPILE_CBF_SAVING),0)
 ct-objs += CtSaving_Cbf.o 
 INCLUDES += -I../../third-party/CBFLib/include
 CXXFLAGS += -DWITH_CBF_SAVING
+endif
+
+ifneq ($(COMPILE_NXS_SAVING),0)
+ct-objs += CtSaving_Nxs.o 
+# nexus4tango lib is not yet available but soon !
+#INCLUDES += -I../../third-party/NXSLib/include
+CXXFLAGS += -DWITH_NXS_SAVING
 endif
 
 ifndef COMPILE_SPS_IMAGE

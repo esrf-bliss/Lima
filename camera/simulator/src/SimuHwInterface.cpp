@@ -51,7 +51,9 @@ void SimuDetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
 
 void SimuDetInfoCtrlObj::getDefImageType(ImageType& def_image_type)
 {
-	def_image_type = Bpp16;
+	FrameDim fdim;
+	m_simu.getFrameDim(fdim);
+	def_image_type = fdim.getImageType();
 }
 
 void SimuDetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
@@ -187,8 +189,8 @@ void SimuBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
  * \brief SimuSyncCtrlObj constructor
  *******************************************************************/
 
-SimuSyncCtrlObj::SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl)
-	: HwSyncCtrlObj(buffer_ctrl), m_simu(simu)
+SimuSyncCtrlObj::SimuSyncCtrlObj(Simulator& simu)
+	: HwSyncCtrlObj(), m_simu(simu)
 {
 }
 
@@ -244,7 +246,7 @@ void SimuSyncCtrlObj::getNbHwFrames(int& nb_frames)
 
 void SimuSyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 {
-	double min_time = 10e-9;;
+	double min_time = 10e-9;
 	double max_time = 1e6;
 	valid_ranges.min_exp_time = min_time;
 	valid_ranges.max_exp_time = max_time;
@@ -288,7 +290,7 @@ void SimuBinCtrlObj::checkBin(Bin& bin)
 
 SimuHwInterface::SimuHwInterface(Simulator& simu)
 	: m_simu(simu), m_det_info(simu), m_buffer(simu), 
-	  m_sync(simu, m_buffer), m_bin(simu)
+	  m_sync(simu), m_bin(simu)
 {
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));

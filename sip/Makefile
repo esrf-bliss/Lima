@@ -45,6 +45,10 @@ ifneq ($(COMPILE_BASLER), 0)
 sip-modules += basler
 endif
 
+ifneq ($(COMPILE_PROSILICA), 0)
+sip-modules += prosilica
+endif
+
 all:	src
 
 src:

@@ -27,35 +27,22 @@ import glob
 import shutil
 
 from configure import modules
+f = file('.gitignore')
+patterns = [x.strip() for x in f]
 
-p = os.popen('svn propget svn:ignore . 2> /dev/null')
-patterns = p.readlines()
-if not p.close():
-    for pat in patterns:
-        for f in glob.glob(pat.strip()):
-            if os.path.isdir(f):
-                print "exec: rmtree", f
-                shutil.rmtree(f)
-            else:
-                print "exec: rm ", f
-                os.remove(f)
-            
 
-for mod, dirs in modules:
-    try:
-        os.chdir(mod)
-    except OSError:
-        continue
+rmList = []
+
+for pat in patterns:
+    if pat.find('*') > -1:
+        rmList.extend(glob.glob(os.path.join('*',pat)))
+    rmList.extend(glob.glob(pat))
+
     
-    if os.access('./Makefile',os.R_OK) :
-        os.system('make clean')
-
-    p = os.popen('svn propget svn:ignore . 2> /dev/null')
-    patterns = p.readlines()
-    if not p.close():
-        for pat in patterns:
-            for f in glob.glob(pat.strip()):
-                print "execute: rm ", f
-                os.remove(f)
-            
-    os.chdir('..')
+for filename in rmList :
+    if os.path.isdir(filename):
+        print "exec: rmtree", filename
+        shutil.rmtree(filename)
+    else:
+        print "exec: rm ", filename
+        os.remove(filename)

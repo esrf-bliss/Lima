@@ -115,7 +115,7 @@ class LIBSIMULATOR_API SimuBufferCtrlObj : public HwBufferCtrlObj
 class LIBSIMULATOR_API SimuSyncCtrlObj : public HwSyncCtrlObj
 {
  public:
-	SimuSyncCtrlObj(Simulator& simu, HwBufferCtrlObj& buffer_ctrl);
+	SimuSyncCtrlObj(Simulator& simu);
 	virtual ~SimuSyncCtrlObj();
 
 	virtual bool checkTrigMode(TrigMode trig_mode);

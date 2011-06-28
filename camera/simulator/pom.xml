@@ -3,15 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fr.soleil.lib.Lima</groupId>
-		<artifactId>Camera</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <artifactId>Camera</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima.Camera</groupId>
-    <artifactId>Simulator-${aol}-shared-${mode}</artifactId>
+    <artifactId>LimaSimulator-${aol}-shared-${mode}</artifactId>
 
     <packaging>nar</packaging>
-    <name>Simulator</name>    <!-- use for the name of executable -->
+    <name>LimaSimulator</name>    <!-- use for the name of executable -->
     <description>This module controls the Simulator Camera</description>
 
     <build>

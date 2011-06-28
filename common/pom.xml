@@ -3,16 +3,25 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fr.soleil.lib</groupId>
-		<artifactId>Lima</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+        <artifactId>Lima</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
-    <artifactId>Common-${aol}-shared-${mode}</artifactId>
+    <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
 
     <packaging>nar</packaging>
     <name>LimaCommon</name>
+    <!-- use for the name of executable -->
     <description>Common lib for Lima</description>
+
+    <dependencies>
+		<dependency>
+			<groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
+			<artifactId>LimaTasks-${aol}-shared-${mode}</artifactId>
+			<version>1.0.4-SNAPSHOT</version>
+		</dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -31,15 +40,9 @@
                         <includePaths>
                             <includePath>${basedir}/include</includePath>
                         </includePaths>
-                    </cpp>   
+                    </cpp>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <scm>
-        <connection>${scm.connection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</connection>
-        <developerConnection>${scm.developerConnection.cvs.tango-ds}:InputOutput/Scan/ScanServerV2/ScanSL</developerConnection>
-        <url>${scm.url.cvs.tango-ds}/InputOutput/Scan/ScanServerV2/ScanSL</url>
-    </scm>
 </project>

@@ -32,6 +32,7 @@ Simulator::SimuThread::SimuThread(Simulator& simu)
 	: m_simu(&simu)
 {
 	m_acq_frame_nb = 0;
+	m_force_stop = false;
 }
 
 void Simulator::SimuThread::start()
@@ -51,8 +52,7 @@ void Simulator::SimuThread::execCmd(int cmd)
 	switch (cmd) {
 	case StartAcq:
 		if (status != Ready)
-			throw LIMA_HW_EXC(InvalidValue, 
-					  "Not Ready to StartAcq");
+			throw LIMA_HW_EXC(InvalidValue,  "Not Ready to StartAcq");
 		execStartAcq();
 		break;
 	}
@@ -68,9 +68,14 @@ void Simulator::SimuThread::execStartAcq()
 
 	int nb_frames = m_simu->m_nb_frames;
 	int& frame_nb = m_acq_frame_nb;
-	for (frame_nb = 0; frame_nb < nb_frames; frame_nb++) {
+	for (frame_nb = 0; (frame_nb < nb_frames)||(nb_frames==0); frame_nb++) {
 		double req_time;
-
+		if(m_force_stop)
+		{
+			m_force_stop = false;
+			setStatus(Ready);
+			return;
+		}
 		req_time = m_simu->m_exp_time;
 		if (req_time > 0) {	
 			setStatus(Exposure);
@@ -79,10 +84,8 @@ void Simulator::SimuThread::execStartAcq()
 
 		setStatus(Readout);
 		int buffer_nb, concat_frame_nb;
-		buffer_mgr.acqFrameNb2BufferNb(frame_nb, buffer_nb, 
-					       concat_frame_nb);
-		void *ptr = buffer_mgr.getBufferPtr(buffer_nb,
-						    concat_frame_nb);
+		buffer_mgr.acqFrameNb2BufferNb(frame_nb, buffer_nb, concat_frame_nb);
+		void *ptr = buffer_mgr.getBufferPtr(buffer_nb,  concat_frame_nb);
 		typedef unsigned char *BufferPtr;
 		frame_builder.getNextFrame(BufferPtr(ptr));
 
@@ -225,6 +228,7 @@ Simulator::Status Simulator::getStatus()
 
 void Simulator::startAcq()
 {
+	m_thread.m_force_stop = false;//uggly but work	
 	m_buffer_ctrl_mgr.setStartTimestamp(Timestamp::now());
 
 	m_thread.sendCmd(SimuThread::StartAcq);
@@ -232,7 +236,8 @@ void Simulator::startAcq()
 }
 
 void Simulator::stopAcq()
-{
+{		
+	m_thread.m_force_stop = true;//uggly but work
 	m_thread.sendCmd(SimuThread::StopAcq);
 	m_thread.waitStatus(SimuThread::Ready);
 }
