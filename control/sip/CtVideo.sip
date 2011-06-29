@@ -79,6 +79,9 @@ using namespace lima;
 
       virtual void newImage(const CtVideo::Image&) = 0;
     };
+    void setActive(bool aFlag);
+    bool isActive() const;
+
     // --- parameters
     void setParameters(const Parameters &pars);
     void getParameters(Parameters &pars /Out/) const;

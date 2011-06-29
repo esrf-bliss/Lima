@@ -19,7 +19,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+#include <cmath>
 #include <sstream>
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #ifdef __linux__ 
@@ -28,6 +32,7 @@
 
 #include "CtSaving.h"
 #include "CtSaving_Edf.h"
+#include "CtAcquisition.h"
 
 #ifdef WITH_NXS_SAVING
 #include "CtSaving_Nxs.h"
@@ -852,6 +857,9 @@ void CtSaving::_prepare()
   m_save_cnt->close();
 
   _validate_parameters();
+  
+  if(hasAutoSaveMode())
+    _check_write_access();
 }
 
 /** @brief validate parameters for the new acquisition 
@@ -866,6 +874,99 @@ void CtSaving::_validate_parameters()
       if(m_pars.fileFormat != m_acquisition_pars.fileFormat)
 	_create_save_cnt();
       m_acquisition_pars = m_pars;
+    }
+}
+
+/** @brief check if all file can be written
+ */
+void CtSaving::_check_write_access()
+{
+  DEB_MEMBER_FUNCT();
+  std::string output;
+  // check if directory exist
+  DEB_TRACE() << "Check if directory exist";
+  if(!access(m_pars.directory.c_str(),F_OK))
+    {
+      // check if it's a directory
+      struct stat aDirectoryStat;
+      if(stat(m_pars.directory.c_str(),&aDirectoryStat))
+	{
+	  output = "Can stat directory : " + m_pars.directory;
+	  throw LIMA_CTL_EXC(Error,output.c_str());
+	}
+      DEB_TRACE() << "Check if it's really a directory";
+      if(!S_ISDIR(aDirectoryStat.st_mode))
+	{
+	  output = "Path : " + m_pars.directory + " is not a directory";
+	  throw LIMA_CTL_EXC(Error,output.c_str());
+	}
+
+      // check if it's writtable
+      DEB_TRACE() << "Check if directory is writtable";
+      if(access(m_pars.directory.c_str(),W_OK))
+	{
+	  output = "Directory : " + m_pars.directory + " is not writtable";
+	  throw LIMA_CTL_EXC(Error,output.c_str());
+	}
+    }
+  else
+    {
+      output = "Directory : " + m_pars.directory + " doesn't exist";
+      throw LIMA_CTL_EXC(Error,output.c_str());
+    }
+
+  // test all file is mode == Abort
+  if(m_pars.overwritePolicy == Abort)
+    {
+      
+      CtAcquisition *anAcq = m_ctrl.acquisition();
+      int nbAcqFrames;
+      anAcq->getAcqNbFrames(nbAcqFrames);
+      int firstFileNumber = m_acquisition_pars.nextNumber;
+      int lastFileNumber = m_acquisition_pars.nextNumber + 
+	int(ceil(nbAcqFrames / double(m_pars.framesPerFile)));
+      DIR *aDirPt = opendir(m_pars.directory.c_str());
+      if(!aDirPt)
+	{
+	  output = "Can't open directory : " + m_pars.directory;
+	  throw LIMA_CTL_EXC(Error,output.c_str());
+	}
+      
+      struct dirent buffer;
+      struct dirent* result;
+      
+      bool errorFlag = false;
+      char testString[256];
+      snprintf(testString,sizeof(testString),
+	       "%s%s%s",
+	       m_pars.prefix.c_str(),
+	       m_pars.indexFormat.c_str(),
+	       m_pars.suffix.c_str());
+
+      char firstFileName[256],lastFileName[256];
+      snprintf(firstFileName,sizeof(firstFileName),testString,firstFileNumber);
+      snprintf(lastFileName,sizeof(lastFileName),testString,lastFileNumber);
+      DEB_TRACE() << "Test if file between: " DEB_VAR2(firstFileName,lastFileName);
+
+      int returnFlag;
+      while(!errorFlag && 
+	    !(returnFlag = readdir_r(aDirPt,&buffer,&result)) && result)
+	{
+	  int fileIndex;
+	  if(sscanf(result->d_name,testString,&fileIndex) == 1)
+	    {
+	      if(fileIndex < lastFileNumber && fileIndex >= firstFileNumber)
+		{
+		  output = "File : ";
+		  output += (char*)result->d_name;
+		  output += " already exist";
+		  errorFlag = true;
+		}
+	    }
+	}
+      closedir(aDirPt);
+      if(errorFlag)
+	throw LIMA_CTL_EXC(Error,output.c_str());
     }
 }
 

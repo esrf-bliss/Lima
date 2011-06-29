@@ -237,6 +237,7 @@ namespace lima {
     // --- internal call
     void _prepare();
     void _validate_parameters();
+    void _check_write_access();
   };
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
   {
@@ -252,6 +253,29 @@ namespace lima {
       default:
 	aFileFormatHumanPt = "RAW";break;
       }
+
+    const char *aSavingModeHumanPt;
+    switch(params.savingMode)
+      {
+      case CtSaving::AutoFrame:
+	aSavingModeHumanPt = "Auto frame";break;
+      case CtSaving::AutoHeader:
+	aSavingModeHumanPt = "Auto header";break;
+      default: //	Manual
+	aSavingModeHumanPt = "Manual";break;
+      }
+
+    const char *anOverwritePolicyHumanPt;
+    switch(params.overwritePolicy)
+      {
+      case CtSaving::Overwrite:
+	anOverwritePolicyHumanPt = "Overwrite";break;
+      case CtSaving::Append:
+	anOverwritePolicyHumanPt = "Append";break;
+      default:		// Abort
+	  anOverwritePolicyHumanPt = "Abort";break;
+      }
+
     os << "<"
 	   << "temporaryPath=" << params.temporaryPath << ", "	
        << "directory=" << params.directory << ", "
@@ -259,8 +283,8 @@ namespace lima {
        << "suffix=" << params.suffix << ", "
        << "nextNumber=" << params.nextNumber << ", "
        << "fileFormat=" << params.fileFormat << "," << aFileFormatHumanPt << ", "
-       << "savingMode=" << params.savingMode << ", "
-       << "overwritePolicy=" << params.overwritePolicy << ", "
+       << "savingMode=" << params.savingMode << "," << aSavingModeHumanPt << ", "
+       << "overwritePolicy=" << params.overwritePolicy << "," << anOverwritePolicyHumanPt << ", "
        << "framesPerFile=" << params.framesPerFile << ", "
 	   << "nbframes=" << params.nbframes
        << ">";

@@ -74,6 +74,9 @@ namespace lima
 
       virtual void newImage(const Image&) = 0;
     };
+    void setActive(bool aFlag);
+    bool isActive() const;
+
     // --- parameters
     void setParameters(const Parameters &pars);
     void getParameters(Parameters &pars) const;
@@ -139,6 +142,7 @@ namespace lima
     Roi			m_hw_roi;
     Bin			m_hw_bin;
     bool		m_stopping_live; ///< variable to avoid deadlock when stopping live
+    bool		m_active_flag; ///< flag if video is active
   };
 
   inline std::ostream& operator<<(std::ostream &os,

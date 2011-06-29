@@ -46,3 +46,6 @@
 [submodule "camera/xpad"]
 	path = camera/xpad
 	url = git://git.epn-campus.eu/repositories/LimaCameraXpad
+[submodule "camera/marccd"]
+	path = camera/marccd
+	url = git://git.epn-campus.eu/repositories/LimaCameraMarCCD

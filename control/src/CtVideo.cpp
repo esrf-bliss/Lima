@@ -283,6 +283,17 @@ CtVideo::~CtVideo()
   delete m_internal_image_callback;
 }
 
+void CtVideo::setActive(bool aFlag)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_active_flag = aFlag;
+}
+
+bool CtVideo::isActive() const
+{
+  AutoMutex aLock(m_cond.mutex());
+  return m_active_flag;
+}
 // --- parameters
 void CtVideo::setParameters(const Parameters &pars)
 {
@@ -524,16 +535,19 @@ void CtVideo::frameReady(Data &aData)
   if(!m_has_video)
     {
       AutoMutex aLock(m_cond.mutex());
-      if(m_ready_flag)
+      if(m_active_flag)
 	{
-	  m_ready_flag = false;
-	  Bin aBin = m_pars.bin;
-	  Roi aRoi = m_pars.roi;
-	  aLock.unlock();
-	  _data_2_image(aData,aBin,aRoi);
+	  if(m_ready_flag)
+	    {
+	      m_ready_flag = false;
+	      Bin aBin = m_pars.bin;
+	      Roi aRoi = m_pars.roi;
+	      aLock.unlock();
+	      _data_2_image(aData,aBin,aRoi);
+	    }
+	  else
+	    m_last_data = aData;
 	}
-      else
-	m_last_data = aData;
     }
 }
 
@@ -548,6 +562,7 @@ void CtVideo::_data_2_image(Data &aData,Bin &aBin,Roi &aRoi)
       aBinTaskPt->mXFactor = aBin.getX();
       aBinTaskPt->mYFactor = aBin.getY();
       anImageCopy->setLinkTask(runLevel,aBinTaskPt);
+      aBinTaskPt->setProcessingInPlace(false);
       aBinTaskPt->unref();
       ++runLevel;
     }
@@ -558,6 +573,7 @@ void CtVideo::_data_2_image(Data &aData,Bin &aBin,Roi &aRoi)
       Tasks::SoftRoi *aSoftRoiTaskPt = new Tasks::SoftRoi();
       aSoftRoiTaskPt->setRoi(topl.x, botr.x, topl.y, botr.y);
       anImageCopy->setLinkTask(runLevel,aSoftRoiTaskPt);
+      aSoftRoiTaskPt->setProcessingInPlace(!runLevel);
       aSoftRoiTaskPt->unref();
       ++runLevel;
     }
@@ -643,16 +659,6 @@ void CtVideo::_read_hw_params()
 {
   CtAcquisition *acquisition = m_ct.acquisition();
   acquisition->getAcqExpoTime(m_pars.exposure);
-
-  CtImage* image = m_ct.image();
-  image->getRoi(m_hw_roi);
-  if(!m_hw_roi.containsRoi(m_pars.roi))
-    m_pars.roi = m_hw_roi;
-  
-  image->getBin(m_hw_bin);
-  if(m_hw_bin.getX() > m_pars.bin.getX() ||
-     m_hw_bin.getY() > m_pars.bin.getY())
-    m_pars.bin = m_hw_bin;
 }
 
 void CtVideo::_check_video_mode(VideoMode aMode)
