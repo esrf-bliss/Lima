@@ -237,6 +237,7 @@ namespace lima {
     // --- internal call
     void _prepare();
     void _validate_parameters();
+    void _check_write_access();
   };
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
   {
