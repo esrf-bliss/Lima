@@ -858,7 +858,8 @@ void CtSaving::_prepare()
 
   _validate_parameters();
   
-  _check_write_access();
+  if(hasAutoSaveMode())
+    _check_write_access();
 }
 
 /** @brief validate parameters for the new acquisition 
