@@ -254,7 +254,8 @@ CtVideo::CtVideo(CtControl &ct) :
   m_image_callback(NULL),
   m_internal_image_callback(NULL),
   m_ct(ct),
-  m_stopping_live(false)
+  m_stopping_live(false),
+  m_active_flag(false)
 {
   HwInterface *hw = ct.hwInterface();
   m_has_video = hw->getHwCtrlObj(m_video);

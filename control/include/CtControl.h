@@ -211,14 +211,14 @@ namespace lima
     ApplyPolicy		m_policy;
     bool		m_ready;
     bool		m_autosave;
+    bool		m_running;
 #ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
 #endif
-    mutable bool	m_started;
-
     ImageStatusCallback *m_img_status_cb;
 
     inline bool _checkOverrun(Data&) const;
+    inline void _calcAcqStatus();
   };
 
   inline std::ostream& operator<<(std::ostream &os,
