@@ -63,6 +63,7 @@ namespace lima
 
     void _checkIfPossible(SoftOpId aSoftOpId,
 			  int stage);
+    mutable Cond	m_cond;
   };
 }
 #endif

@@ -331,7 +331,7 @@ void CtControl::_calcAcqStatus()
       m_ct_acq->getAcqNbFrames(acq_nb_frames);
       if((!m_running ||
 	  anImageCnt.LastImageAcquired == (acq_nb_frames - 1)) && // we reach the nb frames asked
-	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finnished
+	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finished
 	{
 	  if(m_ct_saving->hasAutoSaveMode())
 	    {
