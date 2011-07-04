@@ -201,7 +201,7 @@ CtAccumulation::~CtAccumulation()
     m_cond.wait();
 
   m_calc_end->unref();
-  delete m_calc_mgr;
+  m_calc_mgr->unref();
 }
 
 void CtAccumulation::setParameters(const Parameters &pars)

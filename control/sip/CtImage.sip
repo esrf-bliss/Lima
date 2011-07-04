@@ -107,6 +107,8 @@ using namespace lima;
 	void setMaxImage(const Size &size, ImageType type);
 
 	void getImageType(ImageType& imageType /Out/) const;
+	void setImageType(ImageType imageType);
+
 	void getHwImageDim(FrameDim& dim /Out/) const;
 	void getImageDim(FrameDim& dim /Out/) const;
 	// --- soft

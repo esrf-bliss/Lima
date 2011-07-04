@@ -71,6 +71,7 @@ void SoftOpExternalMgr::getAvailableOp(const SoftOpKey* &available) const
 
 void SoftOpExternalMgr::getActiveOp(std::map<stage,std::list<alias> > &activeOp) const
 {
+  AutoMutex aLock(m_cond.mutex());
   for(Stage2Instance::const_iterator i = m_stage2instance.begin();
       i != m_stage2instance.end();++i)
     {
@@ -86,6 +87,7 @@ void SoftOpExternalMgr::getActiveOp(std::map<stage,std::list<alias> > &activeOp)
 
 void SoftOpExternalMgr::getActiveStageOp(stage aStage,std::list<alias> &activeOp) const
 {
+  AutoMutex aLock(m_cond.mutex());
   Stage2Instance::const_iterator i = m_stage2instance.find(aStage);
   if(i != m_stage2instance.end())
     for(std::list<SoftOpInstance>::const_iterator k = i->second.begin();
@@ -97,6 +99,7 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
 			      const alias &anAlias,int aStage,
 			      SoftOpInstance &anInstance)
 {
+  AutoMutex aLock(m_cond.mutex());
   _checkIfPossible(aSoftOpId,aStage);
   SoftOpInstance newInstance(getSoftOpKey(aSoftOpId),anAlias);
   
@@ -143,6 +146,7 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
 
 void SoftOpExternalMgr::delOp(const alias &anAlias)
 {
+   AutoMutex aLock(m_cond.mutex());
    for(Stage2Instance::iterator i = m_stage2instance.begin();
       i != m_stage2instance.end();++i)
     {
@@ -164,6 +168,7 @@ void SoftOpExternalMgr::delOp(const alias &anAlias)
 void SoftOpExternalMgr::getOpClass(const alias &anAlias,
 				   SoftOpInstance &aSoftOpInstance) const
 {
+  AutoMutex aLock(m_cond.mutex());
   for(Stage2Instance::const_iterator i = m_stage2instance.begin();
       i != m_stage2instance.end();++i)
     {
@@ -207,6 +212,7 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(begin_stage);
 
+  AutoMutex aLock(m_cond.mutex());
   last_link_task = last_sink_task = -1;
   int nextStage = begin_stage;
   for(Stage2Instance::iterator i = m_stage2instance.begin();
@@ -283,6 +289,8 @@ void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
 void SoftOpExternalMgr::isTaskActive(bool &linkTaskFlag,bool &sinkTaskFlag) const
 {
   DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
   linkTaskFlag = sinkTaskFlag = false;
   for(Stage2Instance::const_iterator i = m_stage2instance.begin();
       i != m_stage2instance.end() && (!linkTaskFlag || !sinkTaskFlag);++i)
@@ -302,6 +310,7 @@ void SoftOpExternalMgr::isTaskActive(bool &linkTaskFlag,bool &sinkTaskFlag) cons
 
 void SoftOpExternalMgr::prepare()
 {
+  AutoMutex aLock(m_cond.mutex());
   for(Stage2Instance::iterator i = m_stage2instance.begin();
       i != m_stage2instance.end();++i)
     for(std::list<SoftOpInstance>::iterator k = i->second.begin();

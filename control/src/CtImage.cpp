@@ -387,6 +387,7 @@ CtImage::CtImage(HwInterface *hw,CtControl &ct)
 
 	m_hw_det->getMaxImageSize(m_max_size);
 	m_hw_det->getCurrImageType(m_img_type);
+	m_next_image_type = m_img_type;
 
 	m_sw= new CtSwBinRoiFlip(m_max_size);
 	m_hw= new CtHwBinRoiFlip(hw, m_sw, m_max_size);
@@ -419,7 +420,7 @@ void CtImage::setMaxImage(const Size &size, ImageType type)
 	DEB_PARAM() << DEB_VAR2(size,type);
 
 	m_max_size= size;
-	m_img_type= type;
+	m_next_image_type = m_img_type = type;
 
 	m_hw->setMaxSize(m_max_size);
 }
@@ -433,6 +434,12 @@ void CtImage::getImageType(ImageType& type) const
 	type= mode == Accumulation ? Bpp32S : m_img_type;
 
 	DEB_RETURN() << DEB_VAR1(type);
+}
+
+void CtImage::setImageType(ImageType type)
+{
+	DEB_MEMBER_FUNCT();
+	m_next_image_type = type;
 }
 
 void CtImage::getImageDim(FrameDim& dim) const
@@ -667,6 +674,11 @@ void CtImage::reset()
 
 	m_hw->reset();
 	m_sw->reset();
+
+	// Resync FrameDim just in case
+	m_hw_det->getMaxImageSize(m_max_size);
+	m_hw_det->getCurrImageType(m_img_type);
+	m_next_image_type = m_img_type;
 }
 
 void CtImage::getBin(Bin& bin) const
@@ -718,6 +730,12 @@ void CtImage::getFlip(Flip &flip) const
 void CtImage::applyHard()
 {
 	DEB_MEMBER_FUNCT();
+
+	if(m_img_type != m_next_image_type)
+	  {
+	    m_hw_det->setCurrImageType(m_next_image_type);
+	    m_img_type = m_next_image_type;
+	  }
 
 	m_hw->apply();
 }

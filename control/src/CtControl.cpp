@@ -108,7 +108,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_ready(CtControl::ltData()),
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
-  m_autosave(false), m_started(false),
+  m_autosave(false), m_running(false),
   m_img_status_cb(NULL)
 {
   DEB_CONSTRUCTOR();
@@ -180,6 +180,12 @@ void CtControl::getApplyPolicy(ApplyPolicy &policy) const
 void CtControl::prepareAcq()
 {
   DEB_MEMBER_FUNCT();
+
+  Status aStatus;
+  getStatus(aStatus);
+
+  if(aStatus.AcquisitionStatus != AcqReady)
+    throw LIMA_CTL_EXC(Error,"Acquisition not finnished");
 
   resetStatus(false);
 
@@ -260,6 +266,7 @@ void CtControl::startAcq()
 
   if (!m_ready)
 	throw LIMA_CTL_EXC(Error, "Run prepareAcq before starting acquisition");
+  m_running = true;
   TrigMode trigMode;
   m_ct_acq->getTriggerMode(trigMode);
 
@@ -281,8 +288,7 @@ void CtControl::startAcq()
     }
 
   m_hw->startAcq();
-  m_started = true;
-
+  m_status.AcquisitionStatus = AcqRunning;
   DEB_TRACE() << "Hardware Acquisition started";
 }
  
@@ -291,72 +297,53 @@ void CtControl::stopAcq()
   DEB_MEMBER_FUNCT();
 
   m_hw->stopAcq();
-  m_started = false;
   m_ready = false;
+  m_running = false;
   DEB_TRACE() << "Hardware Acquisition Stopped";
+  _calcAcqStatus();
 }
-
 void CtControl::getStatus(Status& status) const
 {
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
+  status = m_status;
+  if(status.AcquisitionStatus == AcqReady)
+    {
+      HwInterface::Status aHwStatus;
+      m_hw->getStatus(aHwStatus);
+      DEB_TRACE() << DEB_VAR1(aHwStatus);
+      status.AcquisitionStatus = aHwStatus.acq;
+    }
+}
 
-  DEB_TRACE() << DEB_VAR2(m_status.AcquisitionStatus, m_started);
-  bool fault = (m_status.AcquisitionStatus == AcqFault);
-  if(!fault && m_started)
+/** @brief an event arrived, calc the new status
+ */
+void CtControl::_calcAcqStatus()
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  if(m_status.AcquisitionStatus == AcqRunning)
     {
       const ImageStatus &anImageCnt = m_status.ImageCounters;
-
-      // Check if save has finnished
-      CtSaving::SavingMode aSavemode;
-      m_ct_saving->getSavingMode(aSavemode);
-      
-      bool aSavingIdleFlag = true;
-      if(aSavemode != CtSaving::Manual)
-	aSavingIdleFlag = anImageCnt.LastImageAcquired == anImageCnt.LastImageSaved;
-      // End Check Save
-
-      // Check if processing has finnished
-      bool aProcessingIdle = anImageCnt.LastImageAcquired == anImageCnt.LastImageReady;
-
-      if(aSavingIdleFlag && aProcessingIdle)
+      int acq_nb_frames;
+      m_ct_acq->getAcqNbFrames(acq_nb_frames);
+      if((!m_running ||
+	  anImageCnt.LastImageAcquired == (acq_nb_frames - 1)) && // we reach the nb frames asked
+	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finished
 	{
-	  HwInterface::Status aHwStatus;
-	  m_hw->getStatus(aHwStatus);
-	  DEB_TRACE() << DEB_VAR1(aHwStatus);
-	  // set the status to hw acquisition status
-	  m_status.AcquisitionStatus = aHwStatus.acq;
-	  AcqMode anAcqMode;
-	  m_ct_acq->getAcqMode(anAcqMode);
-
-	  if(anAcqMode != Accumulation)
+	  if(m_ct_saving->hasAutoSaveMode())
 	    {
-	      int last_hw_frame = m_hw->getNbAcquiredFrames() - 1;
-	      bool aFalseIdle = ((aHwStatus.acq == AcqReady) && 
-				 (anImageCnt.LastImageAcquired != last_hw_frame));
-	      if (aFalseIdle)
-		m_status.AcquisitionStatus = AcqRunning;
+	      // Saving is finnished
+	      if(anImageCnt.LastImageAcquired == anImageCnt.LastImageSaved)
+		m_status.AcquisitionStatus = AcqReady;
 	    }
 	  else
-	    {
-	      int last_frame_id;
-	      m_ct_acq->getAcqNbFrames(last_frame_id);
-	      last_frame_id -= 1;
-	      if(anImageCnt.LastImageAcquired != last_frame_id)
-		m_status.AcquisitionStatus = AcqRunning;
-	    }
+	    m_status.AcquisitionStatus = AcqReady;
+	  DEB_TRACE() << DEB_VAR1(m_status);
 	}
-      else
-	m_status.AcquisitionStatus = AcqRunning;
     }
-  else if (!fault)
-    m_status.AcquisitionStatus = AcqReady;
-  
-  status= m_status;
-  if(m_status.AcquisitionStatus == AcqReady)
-    m_started = false;
-  DEB_RETURN() << DEB_VAR1(status);
 }
 
 void CtControl::getImageStatus(ImageStatus& status) const
@@ -473,6 +460,7 @@ void CtControl::reset()
   m_ct_sps_image->reset();
 #endif
   resetStatus(false);
+  m_status.AcquisitionStatus = AcqReady;
 }
 
 void CtControl::resetStatus(bool only_acq_status)
@@ -519,6 +507,7 @@ bool CtControl::newFrameReady(Data& fdata)
 
       if (m_img_status_cb)
 	m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+      _calcAcqStatus();
     }
   return aContinueFlag;
 }
@@ -576,7 +565,7 @@ void CtControl::newBaseImageReady(Data &aData)
 
   if (img_status_changed && m_img_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
-
+  _calcAcqStatus();
 }
 
 void CtControl::newImageReady(Data &aData)
@@ -623,7 +612,7 @@ void CtControl::newImageReady(Data &aData)
 
   if (m_img_status_cb && img_status_changed)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
-
+  _calcAcqStatus();
 }
 
 void CtControl::newCounterReady(Data&)
@@ -645,6 +634,7 @@ void CtControl::newImageSaved(Data&)
 
   if (m_img_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+  _calcAcqStatus();
 }
 
 void CtControl::newFrameToSave(Data& fdata)

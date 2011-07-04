@@ -155,7 +155,7 @@ namespace lima {
     // --- misc
 
     void clear();
-
+    void writeFrame(int frame_nr = -1);	///< frame_nr == -1 => last frame
 
     class SaveContainer
     {

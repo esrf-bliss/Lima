@@ -89,7 +89,7 @@ SoftOpBpm::SoftOpBpm() :
 SoftOpBpm::~SoftOpBpm()
 {
   m_task->unref();
-  delete m_manager;		///@todo bad should also use ref unref
+  m_manager->unref();
 }
 
 
@@ -204,7 +204,7 @@ SoftOpRoiCounter::~SoftOpRoiCounter()
       i != m_manager_tasks.end();++i)
     {
       i->second->unref();
-      delete i->first;
+      i->first->unref();
     }
 }
 
@@ -262,7 +262,7 @@ void SoftOpRoiCounter::del(const std::list<int> &roiIds)
       if(index == *i)
 	{
 	  k->second->unref();
-	  delete k->first;
+	  k->first->unref();
 	  k = m_manager_tasks.erase(k),++index;
 	}
     }
@@ -277,7 +277,7 @@ void SoftOpRoiCounter::clearAllRoi()
       i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
     {
       i->second->unref();
-      delete i->first;
+      i->first->unref();
     }
 }
 
@@ -368,7 +368,7 @@ SoftOpRoi2Spectrum::~SoftOpRoi2Spectrum()
       i != m_manager_tasks.end();++i)
     {
       i->second->unref();
-      delete i->first;
+      i->first->unref();
     }
 }
 
@@ -426,7 +426,7 @@ void SoftOpRoi2Spectrum::del(const std::list<int> &roiIds)
       if(index == *i)
 	{
 	  k->second->unref();
-	  delete k->first;
+	  k->first->unref();
 	  k = m_manager_tasks.erase(k),++index;
 	}
     }
@@ -441,7 +441,7 @@ void SoftOpRoi2Spectrum::clearAllRoi()
       i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
     {
       i->second->unref();
-      delete i->first;
+      i->first->unref();
     }
 }
 

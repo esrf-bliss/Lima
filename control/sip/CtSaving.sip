@@ -211,4 +211,5 @@ using namespace lima;
     // --- misc
 
     void clear();
+    void writeFrame(int frame_nr = -1);
  };

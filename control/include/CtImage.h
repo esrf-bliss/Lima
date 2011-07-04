@@ -138,6 +138,8 @@ class LIMACORE_API CtImage {
 	void setMaxImage(const Size &size, ImageType type);
 
 	void getImageType(ImageType& type) const;
+	void setImageType(ImageType type);
+
 	void getHwImageDim(FrameDim& dim) const;
 	void getImageDim(FrameDim& dim) const;
 
@@ -180,6 +182,7 @@ class LIMACORE_API CtImage {
 
 	Size			m_max_size;
 	ImageType		m_img_type;
+	ImageType		m_next_image_type;
 	ImageOpMode		m_mode;
 };
  
