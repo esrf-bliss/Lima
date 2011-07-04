@@ -287,6 +287,8 @@ void CtControl::startAcq()
       m_ready = m_status.ImageCounters.LastImageAcquired != nbFrames4Acq;
     }
 
+  AutoMutex aLock(m_cond.mutex());
+
   m_hw->startAcq();
   m_status.AcquisitionStatus = AcqRunning;
   DEB_TRACE() << "Hardware Acquisition started";
