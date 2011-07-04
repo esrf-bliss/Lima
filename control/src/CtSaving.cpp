@@ -739,6 +739,48 @@ void CtSaving::clear()
   
 }
 
+void CtSaving::writeFrame(int aFrameNumber)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aFrameNumber);
+
+  AutoMutex aLock(m_cond.mutex());
+
+  if(m_pars.savingMode != Manual)
+    throw LIMA_CTL_EXC(Error,"Manual saving is only permitted when saving mode == Manual");
+
+  Data anImage2Save;
+  m_ctrl.ReadImage(anImage2Save,aFrameNumber);
+
+  if(m_pars_dirty_flag)
+    {
+      m_save_cnt->close();
+      
+      if(m_pars.fileFormat != m_acquisition_pars.fileFormat)
+	_create_save_cnt();
+      m_acquisition_pars = m_pars;
+      m_pars_dirty_flag = false;
+    }
+
+  // Saving
+  CtSaving::HeaderMap header;
+  std::map<long,HeaderMap>::iterator aHeaderIter = m_frame_headers.find(anImage2Save.frameNumber);
+  if(aHeaderIter != m_frame_headers.end())
+    _takeHeader(aHeaderIter,header);
+  else
+    _get_common_header(header);
+  
+  
+  if(m_save_cnt->needParralelCompression())
+    {
+      SinkTaskBase *aCompressionTaskPt = m_save_cnt->getCompressionTask(header);
+      aCompressionTaskPt->process(anImage2Save);
+      aCompressionTaskPt->unref();
+    }
+  
+  m_save_cnt->writeFile(anImage2Save,header);
+}
+
 void CtSaving::_post_save_task(Data &aData,_SaveTask *aSaveTaskPt)
 {
   DEB_MEMBER_FUNCT();
@@ -870,10 +912,10 @@ void CtSaving::_validate_parameters()
   AutoMutex aLock(m_cond.mutex());
   if(m_pars_dirty_flag)
     {
-      m_pars_dirty_flag = false;
       if(m_pars.fileFormat != m_acquisition_pars.fileFormat)
 	_create_save_cnt();
       m_acquisition_pars = m_pars;
+      m_pars_dirty_flag = false;
     }
 }
 
