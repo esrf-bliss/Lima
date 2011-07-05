@@ -744,6 +744,9 @@ void CtSaving::writeFrame(int aFrameNumber)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aFrameNumber);
 
+  if(m_pars.savingMode != Manual)
+    throw LIMA_CTL_EXC(Error,"Manual saving is only permitted when saving mode == Manual");
+
   class WaitAndCleanupReadyFlag
   {
   public:
@@ -762,8 +765,6 @@ void CtSaving::writeFrame(int aFrameNumber)
     Cond&      	m_cond;
     bool&	m_ready_flag;
   } wait_and_cleanup_ready_flag(m_ready_flag,m_cond);
-  if(m_pars.savingMode != Manual)
-    throw LIMA_CTL_EXC(Error,"Manual saving is only permitted when saving mode == Manual");
  
   while(!m_ready_flag)
     m_cond.wait();
