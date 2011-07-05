@@ -184,13 +184,8 @@ void CtControl::prepareAcq()
   Status aStatus;
   getStatus(aStatus);
 
-  if(aStatus.AcquisitionStatus != AcqReady)
-    {
-      if(aStatus.AcquisitionStatus == AcqRunning)
-	throw LIMA_CTL_EXC(Error,"Acquisition not finnished");
-      else
-	throw LIMA_CTL_EXC(Error,"Acquisition error");
-    }
+  if(aStatus.AcquisitionStatus == AcqRunning)
+    throw LIMA_CTL_EXC(Error,"Acquisition not finnished");
 
   resetStatus(false);
 
