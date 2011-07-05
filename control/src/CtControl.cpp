@@ -185,7 +185,12 @@ void CtControl::prepareAcq()
   getStatus(aStatus);
 
   if(aStatus.AcquisitionStatus != AcqReady)
-    throw LIMA_CTL_EXC(Error,"Acquisition not finnished");
+    {
+      if(aStatus.AcquisitionStatus == AcqRunning)
+	throw LIMA_CTL_EXC(Error,"Acquisition not finnished");
+      else
+	throw LIMA_CTL_EXC(Error,"Acquisition error");
+    }
 
   resetStatus(false);
 
@@ -310,7 +315,12 @@ void CtControl::getStatus(Status& status) const
 
   AutoMutex aLock(m_cond.mutex());
   status = m_status;
-  if(status.AcquisitionStatus == AcqReady)
+  HwInterface::Status aHwStatus;
+  m_hw->getStatus(aHwStatus);
+  DEB_TRACE() << DEB_VAR1(aHwStatus);
+  if(aHwStatus.acq == AcqFault)
+    status.AcquisitionStatus = AcqFault;
+  else if(status.AcquisitionStatus == AcqReady)
     {
       HwInterface::Status aHwStatus;
       m_hw->getStatus(aHwStatus);
