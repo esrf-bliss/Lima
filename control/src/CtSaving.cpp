@@ -744,13 +744,29 @@ void CtSaving::writeFrame(int aFrameNumber)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aFrameNumber);
 
-  AutoMutex aLock(m_cond.mutex());
+  class WaitAndCleanupReadyFlag
+  {
+  public:
+    WaitAndCleanupReadyFlag(bool &ready_flag,Cond& aCond) :
+      m_lock(aCond.mutex()),m_cond(aCond),m_ready_flag(ready_flag) {}
 
+    ~WaitAndCleanupReadyFlag() 
+    {
+      m_lock.lock();
+      m_ready_flag = true;
+      m_cond.broadcast();
+    }
+    void toggleReadyFlag() { m_ready_flag = false;m_lock.unlock();}
+  private:
+    AutoMutex 	m_lock;
+    Cond&      	m_cond;
+    bool&	m_ready_flag;
+  } wait_and_cleanup_ready_flag(m_ready_flag,m_cond);
   if(m_pars.savingMode != Manual)
     throw LIMA_CTL_EXC(Error,"Manual saving is only permitted when saving mode == Manual");
-
-  Data anImage2Save;
-  m_ctrl.ReadImage(anImage2Save,aFrameNumber);
+ 
+  while(!m_ready_flag)
+    m_cond.wait();
 
   if(m_pars_dirty_flag)
     {
@@ -761,6 +777,10 @@ void CtSaving::writeFrame(int aFrameNumber)
       m_acquisition_pars = m_pars;
       m_pars_dirty_flag = false;
     }
+  wait_and_cleanup_ready_flag.toggleReadyFlag();
+
+  Data anImage2Save;
+  m_ctrl.ReadImage(anImage2Save,aFrameNumber);
 
   // Saving
   CtSaving::HeaderMap header;
@@ -863,6 +883,10 @@ void CtSaving::_save_finished(Data &aData)
 void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
 {
   DEB_MEMBER_FUNCT();
+  // We do not stop the acquisition if we are in Manual Saving
+  if(m_acquisition_pars.savingMode == Manual)
+    return;
+
   AutoMutex aLock(m_ctrl.m_cond.mutex());
   if(m_ctrl.m_status.AcquisitionStatus != AcqFault)
     {
@@ -1062,25 +1086,23 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
 	  if(vfs.f_favail < 1024 || vfs.f_bavail < 1024)
 	    {
 	      m_saving._setSavingError(CtControl::SaveDiskFull);
-	      DEB_ERROR() << "Disk full!!!";
 	      close();
-	      return;
+	      THROW_CTL_ERROR(Error) << "Disk full!!!";
 	    }
 	};
 
   
 #endif
-      m_saving._setSavingError(CtControl::SaveUnknownError);
       close();
-      return;
+      m_saving._setSavingError(CtControl::SaveUnknownError);
+      THROW_CTL_ERROR(Error) << "Save unknown error";
     }
     catch(...)
     {
       m_saving._setSavingError(CtControl::SaveUnknownError);
-      close();
-      return;
+      THROW_CTL_ERROR(Error) << "Save unknown error";
     }
-    
+
   if(++m_written_frames == pars.framesPerFile)
     close();
 
@@ -1153,8 +1175,7 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 	  m_saving._setSavingError(CtControl::SaveOverwriteError);
 	  std::string output;
 	  output = "Try to over write file: " + aFileName;
-	  DEB_ERROR() << output;
-	  throw LIMA_CTL_EXC(Error, output.c_str());
+	  THROW_CTL_ERROR(Error) << output;
 	}
 	  std::ios_base::openmode openFlags = std::ios_base::out | std::ios_base::binary;
       if(pars.overwritePolicy == Append)
@@ -1168,8 +1189,9 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 	  try {
 	    succeed = _open(aFileName,openFlags);
 	  } catch (std::ios_base::failure &error) {
-	    DEB_ERROR() << "Failure opening " << aFileName << ":" 
-			<< error.what();
+	    std::string output;
+	    output = "Failure opening " + aFileName + ":" + error.what();
+	    THROW_CTL_ERROR(Error) << output;
 	  }
 
 	  if(!succeed)
@@ -1180,8 +1202,7 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 		{
 		  m_saving._setSavingError(CtControl::SaveAccessError);
 		  output = "Can not write in directory: " + pars.directory;
-		  DEB_ERROR() << output;
-		  throw LIMA_CTL_EXC(Error,output.c_str());
+		  THROW_CTL_ERROR(Error) << output;
 		}
 	    }
 	  else
