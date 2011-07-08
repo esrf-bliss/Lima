@@ -87,16 +87,11 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			getParameters(m_pars);
 			
 			//create N4T main object needed to generate Nexus file
-			m_writer = new Nexus4Tango::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
+			m_writer = new n4t::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
 						
-			m_writer->Initialize(m_pars.temporaryPath, m_pars.directory);
+			//
+			m_writer->Initialize(m_pars.directory, "scan_data");
 
-			//Set device name
-			m_writer->SetDeviceName("tmp/dt/detector.1");
-			
-			//clean remainig files in temporary & spool directory : false => only temporary, true => both of them
-			m_writer->Clean(true);
-			
 			//Add sensor 2D (image)
 			m_writer->AddDataItem2D(m_pars.prefix, aData.height,aData.width);
 		  
@@ -131,11 +126,10 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			m_writer = 0;
 		  }
 	  }
-	  catch(NexusException &n)
+	  catch(yat::Exception &n)
 	  {
-		  cout<<"SaveContainerNxs::_writeFile() - catch NexusException"<<endl;
-		  cout<<n.Reason()<<endl;
-		  throw LIMA_CTL_EXC(Error,n.Reason());
+		n.dump();
+		throw LIMA_CTL_EXC(Error,"Write data error (N4T)");
 	  }
 	  catch(...)
 	  {

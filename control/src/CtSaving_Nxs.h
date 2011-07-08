@@ -20,7 +20,7 @@ namespace lima
 	  virtual void _close();
 	  virtual void _writeFile(Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
 	private:
-	  Nexus4Tango::BufferedData1D* 	m_writer;
+	  n4t::BufferedData1D* 	m_writer;
 	  CtSaving::Parameters			m_pars;
   };
 
