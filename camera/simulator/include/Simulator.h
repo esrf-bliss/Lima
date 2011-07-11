@@ -41,7 +41,7 @@ class LIBSIMULATOR_API Simulator
 	Simulator();
 	~Simulator();
 
-	BufferCtrlMgr& getBufferMgr();
+	HwBufferCtrlObj* getBufferMgr();
 	
 	void startAcq();
 	void stopAcq();
@@ -100,9 +100,7 @@ class LIBSIMULATOR_API Simulator
 
 	void init();
 
-	SoftBufferAllocMgr m_buffer_alloc_mgr;
-	StdBufferCbMgr m_buffer_cb_mgr;
-	BufferCtrlMgr m_buffer_ctrl_mgr;
+	SoftBufferCtrlMgr m_buffer_ctrl_mgr;
 	FrameBuilder m_frame_builder;
 	double m_exp_time;
 	double m_lat_time;

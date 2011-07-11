@@ -64,10 +64,10 @@ int main(int argc, char *argv[])
 	simu.getFrameDim(frame_dim);
 	Size size = frame_dim.getSize();
 
-	BufferCtrlMgr& buffer_mgr = simu.getBufferMgr();
-	buffer_mgr.setFrameDim(frame_dim);
-	buffer_mgr.setNbBuffers(10);
-	buffer_mgr.registerFrameCallback(cb);
+	HwBufferCtrlObj *buffer_mgr = simu.getBufferMgr();
+	buffer_mgr->setFrameDim(frame_dim);
+	buffer_mgr->setNbBuffers(10);
+	buffer_mgr->registerFrameCallback(cb);
 
 	cout << "simu=" << simu << endl;
 	simu.startAcq();

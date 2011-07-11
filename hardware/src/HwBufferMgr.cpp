@@ -419,6 +419,13 @@ void *StdBufferCbMgr::getBufferPtr(int buffer_nb, int concat_frame_nb)
 	return ptr + concat_frame_nb * m_frame_dim.getMemSize();
 }
 
+void* StdBufferCbMgr::getFrameBufferPtr(int frame_nb)
+{
+  int buffer_nb, concat_frame_nb;
+  acqFrameNb2BufferNb(frame_nb, buffer_nb,concat_frame_nb);
+  return getBufferPtr(buffer_nb,concat_frame_nb);
+}
+
 void StdBufferCbMgr::clearBuffer(int buffer_nb)
 {
 	m_alloc_mgr->clearBuffer(buffer_nb);
