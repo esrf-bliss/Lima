@@ -37,7 +37,7 @@ class Simulator
 	Simulator();
 	~Simulator();
 
-	BufferCtrlMgr& getBufferMgr();
+	HwBufferCtrlObj* getBufferMgr();
 	
 	void startAcq();
 	void stopAcq();

@@ -98,6 +98,18 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
       aTaskMgr.setLinkTask(aLastStage,m_reconstruction_task);
       ++aLastStage;
     }
+
+  Tasks::Binning *aBinTaskPt = NULL;
+  if(m_bin.getX() > 1 || m_bin.getY() > 1)
+    {
+      aBinTaskPt = new Tasks::Binning();
+      aBinTaskPt->mXFactor = m_bin.getX();
+      aBinTaskPt->mYFactor = m_bin.getY();
+      aTaskMgr.setLinkTask(aLastStage,aBinTaskPt);
+      aBinTaskPt->unref();
+      ++aLastStage;
+    }
+
   Tasks::Flip *aFlipTaskPt = NULL;
   if(m_flip.x || m_flip.y)
     {
@@ -116,17 +128,6 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
       ++aLastStage;
     }
   
-  Tasks::Binning *aBinTaskPt = NULL;
-  if(m_bin.getX() > 1 || m_bin.getY() > 1)
-    {
-      aBinTaskPt = new Tasks::Binning();
-      aBinTaskPt->mXFactor = m_bin.getX();
-      aBinTaskPt->mYFactor = m_bin.getY();
-      aTaskMgr.setLinkTask(aLastStage,aBinTaskPt);
-      aBinTaskPt->unref();
-      ++aLastStage;
-    }
-  
   Tasks::SoftRoi *aSoftRoiTaskPt = NULL;
   if(m_roi.isActive())
     {
@@ -142,10 +143,10 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
   //Check now what is the last task to add a callback
   if(aSoftRoiTaskPt)
     aSoftRoiTaskPt->setEventCallback(m_end_callback);
-  else if(aBinTaskPt)
-    aBinTaskPt->setEventCallback(m_end_callback);
   else if(aFlipTaskPt)
     aFlipTaskPt->setEventCallback(m_end_callback);
+  else if(aBinTaskPt)
+    aBinTaskPt->setEventCallback(m_end_callback);
   else if(m_reconstruction_task)
     m_reconstruction_task->setEventCallback(m_end_callback),removeReconstructionTaskCallback = false;
 

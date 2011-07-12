@@ -113,11 +113,7 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
     
   if(!liveFlag)			// Classic acquisition
     {
-      int buffer_nb, concat_frame_nb;
-      m_buffer.acqFrameNb2BufferNb(image_counter, buffer_nb, 
-				     concat_frame_nb);
-      void *ptr = m_buffer.getBufferPtr(buffer_nb,
-					concat_frame_nb);
+      void *ptr = m_buffer.getFrameBufferPtr(image_counter);
       try
 	{
 	  lima::image2YUV((unsigned char*)data,width,height,mode,(unsigned char*)ptr);

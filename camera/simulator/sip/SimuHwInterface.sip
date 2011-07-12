@@ -47,40 +47,6 @@ class SimuDetInfoCtrlObj : HwDetInfoCtrlObj
 					HwMaxImageSizeCallback& cb);
 };
 
-
-class SimuBufferCtrlObj : HwBufferCtrlObj
-{
-%TypeHeaderCode
-#include "SimuHwInterface.h"
-%End
-
- public:
-	SimuBufferCtrlObj(Simulator& simu);
-	virtual ~SimuBufferCtrlObj();
-
-	virtual void setFrameDim(const FrameDim& frame_dim);
-	virtual void getFrameDim(      FrameDim& frame_dim /Out/);
-
-	virtual void setNbBuffers(int  nb_buffers);
-	virtual void getNbBuffers(int& nb_buffers /Out/);
-
-	virtual void setNbConcatFrames(int  nb_concat_frames);
-	virtual void getNbConcatFrames(int& nb_concat_frames /Out/);
-
-	virtual void getMaxNbBuffers(int& max_nb_buffers /Out/);
-
-	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0);
-	virtual void *getFramePtr(int acq_frame_nb);
-
-	virtual void getStartTimestamp(Timestamp& start_ts /Out/);
-	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info /Out/);
-
-	virtual void   registerFrameCallback(HwFrameCallback& frame_cb);
-	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb);
-
-};
-
-
 class SimuSyncCtrlObj : HwSyncCtrlObj
 {
 %TypeHeaderCode

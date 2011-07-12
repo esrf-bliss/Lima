@@ -176,6 +176,7 @@ class LIMACORE_API StdBufferCbMgr : public BufferCbMgr
 	virtual void getNbConcatFrames(int& nb_concat_frames);
 	virtual void releaseBuffers();
 
+	virtual void* getFrameBufferPtr(int frame_nb);
 	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb);
 
 	virtual void clearBuffer(int buffer_nb);

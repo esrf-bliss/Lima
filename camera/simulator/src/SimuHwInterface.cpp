@@ -104,87 +104,6 @@ void SimuDetInfoCtrlObj::
 {
 }
 
-
-/*******************************************************************
- * \brief SimuBufferCtrlObj constructor
- *******************************************************************/
-
-SimuBufferCtrlObj::SimuBufferCtrlObj(Simulator& simu)
-	: m_simu(simu), 
-	  m_buffer_mgr(simu.getBufferMgr())
-{
-}
-
-SimuBufferCtrlObj::~SimuBufferCtrlObj()
-{
-}
-
-void SimuBufferCtrlObj::setFrameDim(const FrameDim& frame_dim)
-{
-	m_buffer_mgr.setFrameDim(frame_dim);
-}
-
-void SimuBufferCtrlObj::getFrameDim(FrameDim& frame_dim)
-{
-	m_buffer_mgr.getFrameDim(frame_dim);
-}
-
-void SimuBufferCtrlObj::setNbBuffers(int nb_buffers)
-{
-	m_buffer_mgr.setNbBuffers(nb_buffers);
-}
-
-void SimuBufferCtrlObj::getNbBuffers(int& nb_buffers)
-{
-	m_buffer_mgr.getNbBuffers(nb_buffers);
-}
-
-void SimuBufferCtrlObj::setNbConcatFrames(int nb_concat_frames)
-{
-	m_buffer_mgr.setNbConcatFrames(nb_concat_frames);
-}
-
-void SimuBufferCtrlObj::getNbConcatFrames(int& nb_concat_frames)
-{
-	m_buffer_mgr.getNbConcatFrames(nb_concat_frames);
-}
-
-void SimuBufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers)
-{
-	m_buffer_mgr.getMaxNbBuffers(max_nb_buffers);
-}
-
-void *SimuBufferCtrlObj::getBufferPtr(int buffer_nb, int concat_frame_nb)
-{
-	return m_buffer_mgr.getBufferPtr(buffer_nb, concat_frame_nb);
-}
-
-void *SimuBufferCtrlObj::getFramePtr(int acq_frame_nb)
-{
-	return m_buffer_mgr.getFramePtr(acq_frame_nb);
-}
-
-void SimuBufferCtrlObj::getStartTimestamp(Timestamp& start_ts)
-{
-	m_buffer_mgr.getStartTimestamp(start_ts);
-}
-
-void SimuBufferCtrlObj::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
-{
-	m_buffer_mgr.getFrameInfo(acq_frame_nb, info);
-}
-
-void SimuBufferCtrlObj::registerFrameCallback(HwFrameCallback& frame_cb)
-{
-	m_buffer_mgr.registerFrameCallback(frame_cb);
-}
-
-void SimuBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb)
-{
-	m_buffer_mgr.unregisterFrameCallback(frame_cb);
-}
-
-
 /*******************************************************************
  * \brief SimuSyncCtrlObj constructor
  *******************************************************************/
@@ -289,14 +208,13 @@ void SimuBinCtrlObj::checkBin(Bin& bin)
  *******************************************************************/
 
 SimuHwInterface::SimuHwInterface(Simulator& simu)
-	: m_simu(simu), m_det_info(simu), m_buffer(simu), 
+	: m_simu(simu), m_det_info(simu),
 	  m_sync(simu), m_bin(simu)
 {
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));
 
-	HwBufferCtrlObj *buffer = &m_buffer;
-	m_cap_list.push_back(HwCap(buffer));
+	m_cap_list.push_back(HwCap(simu.getBufferMgr()));
 
 	HwSyncCtrlObj *sync = &m_sync;
 	m_cap_list.push_back(HwCap(sync));

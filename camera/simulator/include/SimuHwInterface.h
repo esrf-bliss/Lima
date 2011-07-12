@@ -69,44 +69,6 @@ class LIBSIMULATOR_API SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
 	MaxImageSizeCallbackGen m_mis_cb_gen;
 };
 
-
-/*******************************************************************
- * \class SimuBufferCtrlObj
- * \brief Control object providing simulator buffering interface
- *******************************************************************/
-
-class LIBSIMULATOR_API SimuBufferCtrlObj : public HwBufferCtrlObj
-{
- public:
-	SimuBufferCtrlObj(Simulator& simu);
-	virtual ~SimuBufferCtrlObj();
-
-	virtual void setFrameDim(const FrameDim& frame_dim);
-	virtual void getFrameDim(      FrameDim& frame_dim);
-
-	virtual void setNbBuffers(int  nb_buffers);
-	virtual void getNbBuffers(int& nb_buffers);
-
-	virtual void setNbConcatFrames(int  nb_concat_frames);
-	virtual void getNbConcatFrames(int& nb_concat_frames);
-
-	virtual void getMaxNbBuffers(int& max_nb_buffers);
-
-	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0);
-	virtual void *getFramePtr(int acq_frame_nb);
-
-	virtual void getStartTimestamp(Timestamp& start_ts);
-	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info);
-
-	virtual void   registerFrameCallback(HwFrameCallback& frame_cb);
-	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb);
-
- private:
-	Simulator& m_simu;
-	BufferCtrlMgr& m_buffer_mgr;
-};
-
-
 /*******************************************************************
  * \class SimuSyncCtrlObj
  * \brief Control object providing simulator synchronization interface
@@ -182,7 +144,6 @@ class LIBSIMULATOR_API SimuHwInterface : public HwInterface
 	Simulator& m_simu;
 	CapList m_cap_list;
 	SimuDetInfoCtrlObj m_det_info;
-	SimuBufferCtrlObj  m_buffer;
 	SimuSyncCtrlObj    m_sync;
 	SimuBinCtrlObj     m_bin;
 };

@@ -60,7 +60,7 @@ void Simulator::SimuThread::execCmd(int cmd)
 
 void Simulator::SimuThread::execStartAcq()
 {
-	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_cb_mgr;
+	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_ctrl_mgr.getBuffer();
 	buffer_mgr.setStartTimestamp(Timestamp::now());
 
 	FrameBuilder& frame_builder = m_simu->m_frame_builder;
@@ -83,9 +83,7 @@ void Simulator::SimuThread::execStartAcq()
 		}
 
 		setStatus(Readout);
-		int buffer_nb, concat_frame_nb;
-		buffer_mgr.acqFrameNb2BufferNb(frame_nb, buffer_nb, concat_frame_nb);
-		void *ptr = buffer_mgr.getBufferPtr(buffer_nb,  concat_frame_nb);
+		void *ptr = buffer_mgr.getFrameBufferPtr(frame_nb);
 		typedef unsigned char *BufferPtr;
 		frame_builder.getNextFrame(BufferPtr(ptr));
 
@@ -107,10 +105,8 @@ int Simulator::SimuThread::getNbAcquiredFrames()
 	return m_acq_frame_nb;
 }
 
-Simulator::Simulator()
-	: m_buffer_cb_mgr(m_buffer_alloc_mgr),
-	  m_buffer_ctrl_mgr(m_buffer_cb_mgr),
-	  m_thread(*this)
+Simulator::Simulator() : 
+  m_thread(*this)
 {
 	init();
 
@@ -128,9 +124,9 @@ Simulator::~Simulator()
 {
 }
 
-BufferCtrlMgr& Simulator::getBufferMgr()
+HwBufferCtrlObj* Simulator::getBufferMgr()
 {
-	return m_buffer_ctrl_mgr;
+  return &m_buffer_ctrl_mgr;
 }
 
 void Simulator::getMaxImageSize(Size& max_image_size)
@@ -229,7 +225,7 @@ Simulator::Status Simulator::getStatus()
 void Simulator::startAcq()
 {
 	m_thread.m_force_stop = false;//uggly but work	
-	m_buffer_ctrl_mgr.setStartTimestamp(Timestamp::now());
+	m_buffer_ctrl_mgr.getBuffer().setStartTimestamp(Timestamp::now());
 
 	m_thread.sendCmd(SimuThread::StartAcq);
 	m_thread.waitNotStatus(SimuThread::Ready);
