@@ -52,3 +52,6 @@
 [submodule "camera/adsc"]
 	path = camera/adsc
 	url = git://git.epn-campus.eu/repositories/LimaCameraADSC
+[submodule "camera/roper_scientific"]
+	path = camera/roper_scientific
+	url = git://git.epn-campus.eu/repositories/LimaCameraRoperScientific

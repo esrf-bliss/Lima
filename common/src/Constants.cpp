@@ -70,6 +70,7 @@ ostream& lima::operator <<(ostream& os, TrigMode trig_mode)
 	const char *name = "Unknown";
 	switch (trig_mode) {
 	case IntTrig:		name = "IntTrig";	break;
+	case IntTrigMult:	name = "IntTrigMult";	break;
 	case ExtTrigSingle:	name = "ExtTrigSingle";	break;
 	case ExtTrigMult:	name = "ExtTrigMult";	break;
 	case ExtGate:		name = "ExtGate";	break;
