@@ -158,3 +158,42 @@ DetStatus& lima::operator |=(DetStatus& s1, DetStatus  s2)
 	return s1 = s1 | s2;
 }
 
+ostream& lima::operator <<(ostream& os, VideoMode aVideoMode)
+{
+  const char *aHumanReadablePt;
+  switch(aVideoMode)
+    {
+    case Y8: 		aHumanReadablePt = "Y8";		break;
+    case Y16: 		aHumanReadablePt = "Y16";		break;
+    case Y32: 		aHumanReadablePt = "Y32";		break;
+    case Y64: 		aHumanReadablePt = "Y64";		break;
+    case RGB555: 	aHumanReadablePt = "RGB555";		break;
+    case RGB565: 	aHumanReadablePt = "RGB565";		break;
+    case RGB24: 	aHumanReadablePt = "RGB24";		break;
+    case RGB32: 	aHumanReadablePt = "RGB32";		break;
+    case BGR24: 	aHumanReadablePt = "BGR24";		break;
+    case BGR32: 	aHumanReadablePt = "BGR32";		break;
+    case BAYER_RG8: 	aHumanReadablePt = "BAYER_RG8";		break;
+    case BAYER_RG16: 	aHumanReadablePt = "BAYER_RG16";	break;
+    case I420: 		aHumanReadablePt = "I420";		break;
+    case YUV411: 	aHumanReadablePt = "YUV411";		break;
+    case YUV422: 	aHumanReadablePt = "YUV422";		break;
+    case YUV444: 	aHumanReadablePt = "YUV444";		break;
+    default: 		aHumanReadablePt = "Unknown";		break;
+    }
+  return os << aHumanReadablePt;
+}
+
+ostream& lima::operator <<(ostream& os,RotationMode rotationMode)
+{
+  const char *aHumanReadablePt;
+  switch(rotationMode)
+    {
+    case Rotation_0: 	aHumanReadablePt = "Rotation_0";	break;
+    case Rotation_90: 	aHumanReadablePt = "Rotation_90";	break;
+    case Rotation_180: 	aHumanReadablePt = "Rotation_180";	break;
+    case Rotation_270: 	aHumanReadablePt = "Rotation_270";	break;
+    default: 		aHumanReadablePt = "Unknown";		break;
+    }
+  return os << aHumanReadablePt;
+}

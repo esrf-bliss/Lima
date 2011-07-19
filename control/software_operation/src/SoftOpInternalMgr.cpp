@@ -25,7 +25,7 @@ using namespace lima;
 #include "Flip.h"
 #include "Binning.h"
 #include "SoftRoi.h"
-
+#include "Rotation.h"
 
 SoftOpInternalMgr::SoftOpInternalMgr() :
   m_reconstruction_task(NULL),m_end_callback(NULL)
@@ -71,6 +71,15 @@ void SoftOpInternalMgr::getFlip(Flip &aFlip) const
   aFlip = m_flip;
 }
 
+void SoftOpInternalMgr::setRotation(RotationMode mode)
+{
+  m_rotation = mode;
+}
+
+void SoftOpInternalMgr::getRotation(RotationMode &mode) const
+{
+  mode = m_rotation;
+}
 /** @brief set the reconstruction task.
  *  reconstruction task will be the first task
  */
@@ -103,8 +112,16 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
   if(m_bin.getX() > 1 || m_bin.getY() > 1)
     {
       aBinTaskPt = new Tasks::Binning();
-      aBinTaskPt->mXFactor = m_bin.getX();
-      aBinTaskPt->mYFactor = m_bin.getY();
+      if(m_rotation == Rotation_90 || m_rotation == Rotation_270)
+	{
+	  aBinTaskPt->mXFactor = m_bin.getY();
+	  aBinTaskPt->mYFactor = m_bin.getX();
+	}
+      else
+	{
+	  aBinTaskPt->mXFactor = m_bin.getX();
+	  aBinTaskPt->mYFactor = m_bin.getY();
+	}
       aTaskMgr.setLinkTask(aLastStage,aBinTaskPt);
       aBinTaskPt->unref();
       ++aLastStage;
@@ -128,6 +145,22 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
       ++aLastStage;
     }
   
+  Tasks::Rotation *aRotationTaskPt = NULL;
+  if(m_rotation != Rotation_0)
+    {
+      Tasks::Rotation::Type aMode;
+      switch(m_rotation)
+	{
+	case Rotation_180: aMode = Tasks::Rotation::R_180;break;
+	case Rotation_270: aMode = Tasks::Rotation::R_270;break;
+	default: aMode = Tasks::Rotation::R_90;break;
+	}
+      aRotationTaskPt = new Tasks::Rotation();
+      aRotationTaskPt->setType(aMode);
+      aTaskMgr.setLinkTask(aLastStage,aRotationTaskPt);
+      aRotationTaskPt->unref();
+      ++aLastStage;
+    }
   Tasks::SoftRoi *aSoftRoiTaskPt = NULL;
   if(m_roi.isActive())
     {
@@ -143,6 +176,8 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
   //Check now what is the last task to add a callback
   if(aSoftRoiTaskPt)
     aSoftRoiTaskPt->setEventCallback(m_end_callback);
+  else if(aRotationTaskPt)
+    aRotationTaskPt->setEventCallback(m_end_callback);
   else if(aFlipTaskPt)
     aFlipTaskPt->setEventCallback(m_end_callback);
   else if(aBinTaskPt)

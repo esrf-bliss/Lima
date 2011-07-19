@@ -154,3 +154,9 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 %End
 };
 
+enum RotationMode {
+  Rotation_0,
+  Rotation_90,
+  Rotation_180,
+  Rotation_270
+};

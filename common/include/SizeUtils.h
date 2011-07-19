@@ -89,6 +89,7 @@ class LIMACORE_API Point
 	{ return (p.x <= x) && (p.y <= y); }
 
 	void alignTo(const Point& p, AlignDir align_dir);
+	void swap();
 };
 
 inline Point operator +(const Point& p1, const Point& p2)
@@ -246,6 +247,9 @@ class LIMACORE_API Size
 
 	bool isEmpty() const
 	{ return m_xy.getArea() == 0; }
+
+	void swapDimensions()
+	{ m_xy.swap();}
 
 	operator Point() const
 	{ return m_xy; }
@@ -638,6 +642,8 @@ class LIMACORE_API FrameDim
 	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
 
+	void swapDimensions()
+	{m_size.swapDimensions();}
  private:
 	Size m_size;
 	ImageType m_type;

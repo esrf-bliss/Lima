@@ -104,6 +104,16 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 		BAYER_RG8,BAYER_RG16,
 		I420,YUV411,YUV422,YUV444};
 
+LIMACORE_API std::ostream& operator <<(std::ostream& os,VideoMode videoMode);
+
+enum RotationMode {
+  Rotation_0,
+  Rotation_90,
+  Rotation_180,
+  Rotation_270
+};
+
+LIMACORE_API std::ostream& operator <<(std::ostream& os,RotationMode rotationMode);
 } // namespace lima
 
 #endif // CONSTANTS_H

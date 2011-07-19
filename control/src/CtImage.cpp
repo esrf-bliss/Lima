@@ -27,10 +27,19 @@ using namespace lima;
 
 static const Bin Bin_1x1(1, 1);
 
+#define SWAP_DIM_IF_ROTATION(dimStruct) \
+  RotationMode aRotationMode;		\
+  getRotation(aRotationMode);		\
+  if(aRotationMode == Rotation_90 ||	\
+     aRotationMode == Rotation_270)	\
+    dimStruct.swapDimensions();
+
 // ----------------------------------------------------------------------------
 // CLASS CtSwBinRoiFlip
 // ----------------------------------------------------------------------------
-CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size)
+CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size) :
+  m_rotation(Rotation_0),
+  m_next_rotation(m_rotation)
 {
 	DEB_CONSTRUCTOR();
 	DEB_PARAM() << DEB_VAR1(size);
@@ -97,7 +106,14 @@ void CtSwBinRoiFlip::setFlip(const Flip &flip)
   m_flip = flip;
 }
 
-const Size& CtSwBinRoiFlip::getSize()
+void CtSwBinRoiFlip::setRotation(RotationMode rotation)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(rotation);
+  m_next_rotation = rotation;
+}
+
+const Size& CtSwBinRoiFlip::getSize() const
 {
 	DEB_MEMBER_FUNCT();
 
@@ -134,6 +150,13 @@ void CtSwBinRoiFlip::resetFlip()
   m_flip.reset();
 }
 
+void CtSwBinRoiFlip::resetRotation()
+{
+  DEB_MEMBER_FUNCT();
+
+  m_next_rotation = m_rotation = Rotation_0;
+}
+
 void CtSwBinRoiFlip::reset()
 {
 	DEB_MEMBER_FUNCT();
@@ -141,6 +164,7 @@ void CtSwBinRoiFlip::reset()
 	resetBin();
 	resetRoi();
 	resetFlip();
+	resetRotation();
 }
 
 bool CtSwBinRoiFlip::apply(SoftOpInternalMgr *op)
@@ -150,8 +174,11 @@ bool CtSwBinRoiFlip::apply(SoftOpInternalMgr *op)
 	op->setBin(m_bin);
 	op->setRoi(m_roi);
 	op->setFlip(m_flip);
+	op->setRotation(m_next_rotation);
+	m_rotation = m_next_rotation;
 
-	bool is_active = !m_bin.isOne() || !m_roi.isEmpty() || (m_flip.x || m_flip.y);
+	bool is_active = !m_bin.isOne() || !m_roi.isEmpty() || 
+	  (m_flip.x || m_flip.y) || (m_rotation != Rotation_0);
 	
 	DEB_RETURN() << DEB_VAR1(is_active);
 
@@ -371,7 +398,7 @@ void CtHwBinRoiFlip::apply()
 void CtMaxImageSizeCB::maxImageSizeChanged(const Size& size, ImageType 
 					   image_type)
 {
-	m_ct->setMaxImage(size, image_type);
+	m_ct->_setMaxImage(size, image_type);
 }
 
 // ----------------------------------------------------------------------------
@@ -411,10 +438,12 @@ void CtImage::getMaxImageSize(Size& size) const
 
 	size= m_max_size;
 
+	SWAP_DIM_IF_ROTATION(size);
+
 	DEB_RETURN() << DEB_VAR1(size);
 }
 
-void CtImage::setMaxImage(const Size &size, ImageType type)
+void CtImage::_setMaxImage(const Size &size, ImageType type)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(size,type);
@@ -450,6 +479,8 @@ void CtImage::getImageDim(FrameDim& dim) const
 	acq->getAcqMode(mode);
 	ImageType imageType = mode == Accumulation ? Bpp32S : m_img_type;
 	dim= FrameDim(m_sw->getSize(), imageType);
+
+	SWAP_DIM_IF_ROTATION(dim);
 
 	DEB_RETURN() << DEB_VAR1(dim);
 }
@@ -622,6 +653,14 @@ void CtImage::setFlip(Flip &flip)
     }
 }
 
+void CtImage::setRotation(RotationMode rotation)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(rotation);
+
+  m_sw->setRotation(rotation);
+}
+
 void CtImage::_setHSFlip(const Flip &flip)
 {
   DEB_MEMBER_FUNCT();
@@ -666,6 +705,13 @@ void CtImage::resetFlip()
   
   m_hw->resetFlip();
   m_sw->resetFlip();
+}
+
+void CtImage::resetRotation()
+{
+  DEB_MEMBER_FUNCT();
+
+  m_sw->resetRotation();
 }
 
 void CtImage::reset() 
@@ -725,6 +771,15 @@ void CtImage::getFlip(Flip &flip) const
   flip = m_hw->getFlip() + m_sw->getFlip();
   
   DEB_RETURN() << DEB_VAR1(flip);
+}
+
+void CtImage::getRotation(RotationMode &rotation) const
+{
+  DEB_MEMBER_FUNCT();
+
+  rotation = m_sw->getRotation();
+
+  DEB_RETURN() << DEB_VAR1(rotation);
 }
 
 void CtImage::applyHard()

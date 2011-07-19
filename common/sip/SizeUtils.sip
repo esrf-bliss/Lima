@@ -52,6 +52,7 @@ class Point
 	bool contains(const Point& p) const;
 
 	void alignTo(const Point& p, AlignDir align_dir);
+	void swap();
 	const char* __repr__();
 %MethodCode
 	std::ostringstream str;
@@ -115,6 +116,8 @@ using namespace lima;
 	int getHeight() const;
 
 	bool isEmpty() const;
+
+	void swapDimensions();
 
 	operator Point() const;
 
@@ -361,6 +364,7 @@ using namespace lima;
 
 	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
+	void swapDimensions();
 	const char* __repr__();
 %MethodCode
 	std::ostringstream str;
