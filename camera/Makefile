@@ -19,17 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-sub-dirs = common
+sub-dirs = common simulator
 
 include ../config.inc
-
-ifndef COMPILE_SIMULATOR
-COMPILE_SIMULATOR = 0
-endif
-
-ifneq ($(COMPILE_SIMULATOR),0)
-sub-dirs += simulator
-endif
 
 ifndef COMPILE_FRELON
 COMPILE_FRELON = 0
@@ -62,6 +54,14 @@ endif
 
 ifneq ($(COMPILE_PROSILICA),0)
 sub-dirs += prosilica
+endif
+
+ifndef COMPILE_ROPERSCIENTIFIC
+COMPILE_ROPERSCIENTIFIC = 0
+endif
+
+ifneq ($(COMPILE_ROPERSCIENTIFIC),0)
+sub-dirs += roperscientific
 endif
 
 include ../global.inc

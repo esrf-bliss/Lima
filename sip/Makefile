@@ -49,6 +49,12 @@ ifneq ($(COMPILE_PROSILICA), 0)
 sip-modules += prosilica
 endif
 
+
+ifneq ($(COMPILE_ROPERSCIENTIFIC), 0)
+sip-modules += roperscientific
+endif
+
+
 all:	src
 
 src:

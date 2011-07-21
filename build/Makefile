@@ -258,6 +258,39 @@ $(prosilica-full):		$(prosilica-objs)
 build_targets += $(prosilica-full)
 endif
 
+
+############################
+# LIMA - ROPERSCIENTIFIC
+############################
+
+ifneq ($(COMPILE_ROPERSCIENTIFIC),0)
+
+ROPERSCIENTIFIC_LDLIBS	:= -lpvcam -lraw1394
+name		:= roperscientific
+roperscientific-objs	:= ../camera/roperscientific/src/RoperScientific.o
+version-file	:= ../camera/roperscientific/VERSION
+roperscientific-flags	:= $(LDFLAGS)
+roperscientific-deps	:= $(ROPERSCIENTIFIC_LDLIBS)
+
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+
+roperscientific-base	:= liblima$(name).so
+roperscientific-full	:= $(roperscientific-base).$(full-version)
+roperscientific-maj	:= $(roperscientific-base).$(maj-version)
+roperscientific-flags	+= -fPIC -Wl,-soname,$(roperscientific-maj)
+
+$(roperscientific-full):		$(roperscientific-objs)
+	$(CXX) -shared -o $@ $(roperscientific-flags) $+ $(roperscientific-deps)
+	rm -f $(roperscientific-maj);  ln -s $(roperscientific-full) $(roperscientific-maj)
+	rm -f $(roperscientific-base); ln -s $(roperscientific-maj)  $(roperscientific-base)
+
+build_targets += $(roperscientific-full)
+
+endif
+
+
+
 src:		$(build_targets)
 
 test:
