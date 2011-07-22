@@ -77,9 +77,9 @@ class LIMACORE_API CtHwBinRoiFlip {
 	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size);
 	~CtHwBinRoiFlip();
 
-	bool hasBinCapability() const { return !!m_has_bin; }
-	bool hasRoiCapability() const { return !!m_has_roi; }
-	bool hasFlipCapability() const { return !!m_has_flip; }
+	bool hasBinCapability() const { return m_has_bin; }
+	bool hasRoiCapability() const { return m_has_roi; }
+	bool hasFlipCapability() const { return m_has_flip; }
 
 	void setMaxSize(const Size& size);
 	void setBin(Bin& bin, bool round);
@@ -95,6 +95,7 @@ class LIMACORE_API CtHwBinRoiFlip {
 	const Roi& getSetRoi()  const { return m_set_roi; }
 	const Roi& getRealRoi() const { return m_real_roi; }
 	const Size& getSize()   const { return m_size; }
+	const Size& getMaxSize() const { return m_max_size; }
 	const Flip& getFlip()   const { return m_flip; }
 
 	void apply();
