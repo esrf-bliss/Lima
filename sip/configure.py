@@ -33,7 +33,8 @@ modules = [('core',		['common', 'hardware', 'control']),
 	   ('frelon',		[os.path.join('camera','frelon')]),
 	   ('maxipix',		[os.path.join('camera','maxipix')]),
            ('basler',           [os.path.join('camera','basler')]),
-           ('prosilica',        [os.path.join('camera','prosilica')])]
+           ('prosilica',        [os.path.join('camera','prosilica')]),
+           ('roperscientific',  [os.path.join('camera','roperscientific')])]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
 

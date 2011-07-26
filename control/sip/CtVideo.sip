@@ -54,8 +54,12 @@ using namespace lima;
 %MethodCode
   Py_BEGIN_ALLOW_THREADS
   const char* buffer = sipCpp->buffer();
-  Py_ssize_t size = sipCpp->size();
+  SIP_SSIZE_T size = sipCpp->size();
+#if PY_VERSION_HEX >= 0x02050000
   sipRes = PyByteArray_FromStringAndSize(buffer ? buffer : "",size);
+#else
+  sipRes = PyString_FromStringAndSize(buffer ? buffer : "",size);
+#endif
   Py_END_ALLOW_THREADS
 %End
       int 			width() 	const;

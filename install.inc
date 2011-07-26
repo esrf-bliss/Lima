@@ -98,6 +98,13 @@ PROSILICA_MAJ_VERSION = $(shell echo $(PROSILICA_FULL_VERSION) | cut -d. -f1)
 INSTALL_PROSILICA_VDIR = $(INSTALL_PROSILICA_DIR)/v$(PROSILICA_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_ROPERSCIENTIFIC), 0)
+INSTALL_ROPERSCIENTIFIC_DIR = $(INSTALL_PLAT_DIR)/RoperScientific
+ROPERSCIENTIFIC_FULL_VERSION = $(shell cat camera/roperscientific/VERSION)
+ROPERSCIENTIFIC_MAJ_VERSION = $(shell echo $(ROPERSCIENTIFIC_FULL_VERSION) | cut -d. -f1)
+INSTALL_ROPERSCIENTIFIC_VDIR = $(INSTALL_ROPERSCIENTIFIC_DIR)/v$(ROPERSCIENTIFIC_FULL_VERSION)
+endif
+
 .PHONY: install
 
 PROCESSOR_TYPE := $(shell uname -i)
@@ -185,4 +192,13 @@ else
 endif
 endif
 	cp sip/prosilica/limaprosilica.so $(INSTALL_PROSILICA_VDIR)
+endif
+
+ifneq ($(COMPILE_ROPERSCIENTIFIC), 0)
+	mkdir -p $(INSTALL_ROPERSCIENTIFIC_VDIR)
+	cp camera/roperscientific/python/__init__.py $(INSTALL_ROPERSCIENTIFIC_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimaroperscientific.so*
+	cp build/liblimaroperscientific.so.$(ROPERSCIENTIFIC_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimaroperscientific.so.$(ROPERSCIENTIFIC_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp sip/roperscientific/limaroperscientific.so $(INSTALL_ROPERSCIENTIFIC_VDIR)
 endif

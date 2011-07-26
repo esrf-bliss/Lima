@@ -40,6 +40,8 @@ LDFLAGS = -pthread
 LDLIBS = -L../../build -llimacore \
          -L../../third-party/Processlib/build -lprocesslib
 
+build_targets = roicountertest
+
 ifndef COMPILE_CBF_SAVING
 COMPILE_CBF_SAVING = 0
 endif
@@ -48,7 +50,16 @@ ifneq ($(COMPILE_CBF_SAVING),0)
 LDLIBS += -L../../third-party/CBFLib/lib -lcbf
 endif
 
-all: 	simutest roicountertest
+ifndef COMPILE_SIMULATOR
+COMPILE_SIMULATOR = 0
+endif
+
+ifneq ($(COMPILE_SIMULATOR),0)
+build_targets += simutest
+endif
+
+
+all:	$(build_targets)
 
 simutest: $(simutest-objs) $(simutest-ext-objs) 
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)

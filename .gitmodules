@@ -49,3 +49,9 @@
 [submodule "camera/marccd"]
 	path = camera/marccd
 	url = git://git.epn-campus.eu/repositories/LimaCameraMarCCD
+[submodule "camera/adsc"]
+	path = camera/adsc
+	url = git://git.epn-campus.eu/repositories/LimaCameraADSC
+[submodule "camera/roperscientific"]
+	path = camera/roperscientific
+	url = git://git.epn-campus.eu/repositories/LimaCameraRoperScientific
