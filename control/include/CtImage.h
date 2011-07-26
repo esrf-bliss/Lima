@@ -45,24 +45,29 @@ class LIMACORE_API CtSwBinRoiFlip {
 	void setBin(const Bin& bin);
 	void setRoi(const Roi& roi);
 	void setFlip(const Flip& flip);
+	void setRotation(RotationMode);
 
 	void resetBin();
 	void resetRoi();
 	void resetFlip();
+	void resetRotation();
 	void reset();
 
-	const Bin& getBin() const { return m_bin; }
-	const Roi& getRoi() const { return m_roi; }
-	const Size& getSize();
-	const Flip& getFlip() const { return m_flip; }
+	const Bin& 	getBin() 	const {return m_bin;}
+	const Roi& 	getRoi() 	const {return m_roi;}
+	const Size& 	getSize()	const;
+	const Flip& 	getFlip() 	const {return m_flip;}
+	RotationMode 	getRotation() 	const {return m_rotation;}
 
 	bool apply(SoftOpInternalMgr *op);
 
     private:
-	Size	m_max_size, m_size;
-	Bin	m_bin;
-	Roi	m_roi, m_max_roi;
-	Flip    m_flip;
+	Size		m_max_size;
+	mutable Size	m_size;
+	Bin		m_bin;
+	Roi		m_roi, m_max_roi;
+	Flip    	m_flip;
+	RotationMode 	m_rotation;
 };
 
 
@@ -72,9 +77,9 @@ class LIMACORE_API CtHwBinRoiFlip {
 	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size);
 	~CtHwBinRoiFlip();
 
-	bool hasBinCapability() const { return !!m_has_bin; }
-	bool hasRoiCapability() const { return !!m_has_roi; }
-	bool hasFlipCapability() const { return !!m_has_flip; }
+	bool hasBinCapability() const { return m_has_bin; }
+	bool hasRoiCapability() const { return m_has_roi; }
+	bool hasFlipCapability() const { return m_has_flip; }
 
 	void setMaxSize(const Size& size);
 	void setBin(Bin& bin, bool round);
@@ -90,6 +95,7 @@ class LIMACORE_API CtHwBinRoiFlip {
 	const Roi& getSetRoi()  const { return m_set_roi; }
 	const Roi& getRealRoi() const { return m_real_roi; }
 	const Size& getSize()   const { return m_size; }
+	const Size& getMaxSize() const { return m_max_size; }
 	const Flip& getFlip()   const { return m_flip; }
 
 	void apply();
@@ -135,7 +141,6 @@ class LIMACORE_API CtImage {
 	~CtImage();
 
 	void getMaxImageSize(Size& size) const;
-	void setMaxImage(const Size &size, ImageType type);
 
 	void getImageType(ImageType& type) const;
 	void setImageType(ImageType type);
@@ -154,15 +159,18 @@ class LIMACORE_API CtImage {
 	void setRoi(Roi& roi);
 	void setBin(Bin& bin);
 	void setFlip(Flip &flip);
+	void setRotation(RotationMode rotation);
 
 	void resetRoi();
 	void resetBin();
 	void resetFlip();
+	void resetRotation();
 
 	// --- effective
 	void getRoi(Roi& roi) const;
 	void getBin(Bin& bin) const;
 	void getFlip(Flip &flip) const;
+	void getRotation(RotationMode &rotation) const;
 
 	void reset();
 
@@ -170,9 +178,11 @@ class LIMACORE_API CtImage {
 	bool applySoft(SoftOpInternalMgr *op);
 
     private:
+	void _setMaxImage(const Size &size, ImageType type);
 	void _setHSRoi(const Roi &roi);
 	void _setHSBin(const Bin &bin);
 	void _setHSFlip(const Flip &flip);
+	void _resetFlip();
 
 	HwDetInfoCtrlObj* 	m_hw_det;
 	CtMaxImageSizeCB* 	m_cb_size;

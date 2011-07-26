@@ -52,6 +52,7 @@ class Point
 	bool contains(const Point& p) const;
 
 	void alignTo(const Point& p, AlignDir align_dir);
+	void swap();
 	const char* __repr__();
 %MethodCode
 	std::ostringstream str;
@@ -116,6 +117,8 @@ using namespace lima;
 
 	bool isEmpty() const;
 
+	void swapDimensions();
+
 	operator Point() const;
 
 	Size& operator +=(const Point& p);
@@ -162,6 +165,7 @@ using namespace lima;
 	Bin& operator *=(const Point& p);
 
 	Bin& operator /=(const Point& p);
+	void swap();
 	const char* __repr__();
 %MethodCode
 	std::ostringstream str;
@@ -234,6 +238,11 @@ using namespace lima;
 
 	Roi getBinned(const Bin& b) const;
 	Roi getUnbinned(const Bin& b) const;
+
+	Roi getFlipped(const Flip& f,const Size &image_size) const;
+
+	Roi getRotated(RotationMode r,const Size &image_size) const;
+	Roi getUnrotated(RotationMode r,const Size &image_size) const;
 
 	bool isActive() const;
 
@@ -361,6 +370,7 @@ using namespace lima;
 
 	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
+	void swapDimensions();
 	const char* __repr__();
 %MethodCode
 	std::ostringstream str;

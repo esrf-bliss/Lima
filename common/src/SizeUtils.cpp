@@ -42,6 +42,12 @@ void Point::alignTo(const Point& p, AlignDir align_dir)
 	*this *= p;
 }
 
+void Point::swap()
+{
+	int tmp = x;
+	x = y,y = tmp;
+}
+
 ostream& lima::operator <<(ostream& os, const Point& p)
 {
 	return os << "<" << p.x << "," << p.y << ">";

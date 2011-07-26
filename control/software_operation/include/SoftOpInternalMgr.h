@@ -43,7 +43,10 @@ namespace lima
 
     void setFlip(const Flip&);
     void getFlip(Flip&) const;
-    
+
+    void setRotation(RotationMode);
+    void getRotation(RotationMode&) const;
+
     void setReconstructionTask(LinkTask*);
     bool hasReconstructionTask();
 
@@ -64,6 +67,7 @@ namespace lima
     Bin			m_bin;
     Flip		m_flip;
     Roi			m_roi;
+    RotationMode	m_rotation;
     mutable LinkTask	*m_reconstruction_task;
     TaskEventCallback	*m_end_callback;
   };

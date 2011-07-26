@@ -89,6 +89,7 @@ class LIMACORE_API Point
 	{ return (p.x <= x) && (p.y <= y); }
 
 	void alignTo(const Point& p, AlignDir align_dir);
+	void swap();
 };
 
 inline Point operator +(const Point& p1, const Point& p2)
@@ -247,6 +248,9 @@ class LIMACORE_API Size
 	bool isEmpty() const
 	{ return m_xy.getArea() == 0; }
 
+	void swapDimensions()
+	{ m_xy.swap();}
+
 	operator Point() const
 	{ return m_xy; }
 
@@ -330,7 +334,8 @@ class LIMACORE_API Bin
 
 	Bin& operator /=(const Point& p)
 	{ m_xy = checkValid(m_xy / p); return *this; }
-
+	void swap()
+	{ m_xy.swap(); }
  private:
 	static bool isValidCoord(int i);
 	static Point checkValid(const Point& p);
@@ -461,6 +466,11 @@ class LIMACORE_API Roi
 	Roi getBinned(const Bin& b) const;
 	Roi getUnbinned(const Bin& b) const;
 
+	Roi getFlipped(const Flip& f,const Size &image_size) const;
+
+	Roi getRotated(RotationMode r,const Size &image_size) const;
+	Roi getUnrotated(RotationMode r,const Size &image_size) const;
+
 	bool isActive() const;
 
 	void alignSizeTo(const Point& p, AlignDir align_dir);
@@ -568,6 +578,79 @@ inline Roi Roi::getUnbinned(const Bin& b) const
 	return Roi(m_top_left * b, Size(m_size * b));
 }
 
+inline Roi Roi::getFlipped(const Flip& f,const Size &image_size) const
+{
+  int x,y;
+
+  if(f.x)
+    x = image_size.getWidth() - m_top_left.x - m_size.getWidth();
+  else
+    x = m_top_left.x;
+
+  if(f.y)
+    y = image_size.getHeight() - m_top_left.y - m_size.getHeight();
+  else
+    y = m_top_left.y;
+
+  return Roi(x,y,m_size.getWidth(),m_size.getHeight());
+}
+
+inline Roi Roi::getRotated(RotationMode rotationMode,const Size &image_size) const
+{
+  int x,y;
+  Size aSize = m_size;
+  switch(rotationMode)
+    {
+    case Rotation_90:
+      x = image_size.getHeight() - m_top_left.y - m_size.getHeight();
+      y = m_top_left.x;
+      aSize.swapDimensions();
+      break;
+    case Rotation_180:
+      x = image_size.getWidth() - m_top_left.x - m_size.getWidth();
+      y = image_size.getHeight() - m_top_left.y - m_size.getHeight();
+      break;
+    case Rotation_270:
+      x = m_top_left.y;
+      y = image_size.getWidth() - m_top_left.x - m_size.getWidth();
+      aSize.swapDimensions();
+      break;
+    default:
+      x = m_top_left.x,y = m_top_left.y;
+      aSize = m_size;
+      break;
+    }
+  return Roi(x,y,aSize.getWidth(),aSize.getHeight());
+}
+
+inline Roi Roi::getUnrotated(RotationMode rotationMode,const Size &image_size) const
+{
+  int x,y;
+  Size aSize = m_size;
+  switch(rotationMode)
+    {
+    case Rotation_90:
+      x = m_top_left.y;
+      y = image_size.getHeight() - m_top_left.x - m_size.getWidth();
+      aSize.swapDimensions();
+      break;
+    case Rotation_180:
+      x = image_size.getWidth() - m_top_left.x - m_size.getWidth();
+      y = image_size.getHeight() - m_top_left.y - m_size.getHeight();
+      break;
+    case Rotation_270:
+      x = image_size.getWidth() - m_top_left.y - m_size.getHeight();
+      y = m_top_left.x;
+      aSize.swapDimensions();
+      break;
+    default:
+      x = m_top_left.x,y = m_top_left.y;
+      aSize = m_size;
+      break;
+    }
+  return Roi(x,y,aSize.getWidth(),aSize.getHeight());
+}
+
 inline bool Roi::isActive() const
 {
 	return !m_size.isEmpty();
@@ -638,6 +721,8 @@ class LIMACORE_API FrameDim
 	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
 
+	void swapDimensions()
+	{m_size.swapDimensions();}
  private:
 	Size m_size;
 	ImageType m_type;
