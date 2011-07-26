@@ -38,8 +38,7 @@ static const Bin Bin_1x1(1, 1);
 // CLASS CtSwBinRoiFlip
 // ----------------------------------------------------------------------------
 CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size) :
-  m_rotation(Rotation_0),
-  m_next_rotation(m_rotation)
+  m_rotation(Rotation_0)
 {
 	DEB_CONSTRUCTOR();
 	DEB_PARAM() << DEB_VAR1(size);
@@ -110,7 +109,7 @@ void CtSwBinRoiFlip::setRotation(RotationMode rotation)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(rotation);
-  m_next_rotation = rotation;
+  m_rotation = rotation;
 }
 
 const Size& CtSwBinRoiFlip::getSize() const
@@ -154,7 +153,7 @@ void CtSwBinRoiFlip::resetRotation()
 {
   DEB_MEMBER_FUNCT();
 
-  m_next_rotation = m_rotation = Rotation_0;
+  m_rotation = Rotation_0;
 }
 
 void CtSwBinRoiFlip::reset()
@@ -174,8 +173,7 @@ bool CtSwBinRoiFlip::apply(SoftOpInternalMgr *op)
 	op->setBin(m_bin);
 	op->setRoi(m_roi);
 	op->setFlip(m_flip);
-	op->setRotation(m_next_rotation);
-	m_rotation = m_next_rotation;
+	op->setRotation(m_rotation);
 
 	bool is_active = !m_bin.isOne() || !m_roi.isEmpty() || 
 	  (m_flip.x || m_flip.y) || (m_rotation != Rotation_0);
@@ -567,11 +565,19 @@ void CtImage::setRoi(Roi& roi)
 			break;
 		case HardOnly:
 		  {
-		    // Apply the software Flip the hardware Roi
+		    // Remove the software Rotation to hardware Roi
+		    RotationMode aSoftwareRotation = m_sw->getRotation();
+		    roi = roi.getUnrotated(aSoftwareRotation,m_hw->getMaxSize());
+		    // Remove the software Flip to hardware Roi
 		    const Flip &aSoftwareFlip = m_sw->getFlip();
 		    roi = roi.getFlipped(aSoftwareFlip,m_hw->getMaxSize());
+
 		    m_hw->setRoi(roi, false);
+
+		    // Add Flip
 		    roi = roi.getFlipped(aSoftwareFlip,m_hw->getMaxSize());
+		    // Add Rotation
+		    roi = roi.getRotated(aSoftwareRotation,m_hw->getMaxSize());
 		  }
 		  break;
 		case HardAndSoft:
@@ -610,16 +616,24 @@ void CtImage::_setHSRoi(const Roi &roi)
 		Roi roi_unbin, roi_by_hw, roi_set_hw, roi_by_sw;
 		Bin bin_total, bin_by_hw, bin_by_sw;
 
+		RotationMode aSoftwareRotation = m_sw->getRotation();
+
 		bin_by_hw= m_hw->getBin();
+
 		bin_by_sw= m_sw->getBin();
 		bin_total= bin_by_hw * bin_by_sw;
 		DEB_TRACE() << DEB_VAR3(bin_by_hw, bin_by_sw, bin_total);
 
 		roi_unbin= roi.getUnbinned(bin_total);
 		roi_by_hw= roi_unbin.getBinned(bin_by_hw);
-		// Apply the software Flip the hardware Roi
+
+		// Remove the rotation to hardware Roi
+		roi_by_hw= roi_by_hw.getUnrotated(aSoftwareRotation,m_hw->getMaxSize());
+
+		// Remove the software Flip to hardware Roi
 		const Flip &aSoftwareFlip = m_sw->getFlip();
 		roi_by_hw= roi_by_hw.getFlipped(aSoftwareFlip,m_hw->getMaxSize());
+
 		roi_set_hw= roi_by_hw;
 
 		m_hw->setRoi(roi_set_hw, true);
@@ -628,8 +642,10 @@ void CtImage::_setHSRoi(const Roi &roi)
 		if (roi_set_hw==roi_by_hw) {
 			m_sw->resetRoi();
 		} else {
-			// Unflip hardware roi for software
+			// Apply software flip to hardware roi
 			roi_set_hw = roi_set_hw.getFlipped(aSoftwareFlip,m_hw->getMaxSize());
+			//Apply software rotation to hardware roi
+			roi_set_hw = roi_set_hw.getRotated(aSoftwareRotation,m_hw->getMaxSize());
 			roi_by_sw= roi_set_hw.subRoiAbs2Rel(roi_by_hw);
 			roi_by_sw= roi_by_sw.getBinned(bin_by_sw);
 			m_sw->setRoi(roi_by_sw);
@@ -648,13 +664,14 @@ void CtImage::setFlip(Flip &flip)
   getFlip(currentFlip);
   Roi currentRoi;
   getRoi(currentRoi);
-  Size maxCurrentSize;
-  getMaxImageSize(maxCurrentSize);
+  RotationMode currentRotation;
+  getRotation(currentRotation);
 
-  currentRoi = currentRoi.getFlipped(currentFlip,maxCurrentSize);
+  currentRoi = currentRoi.getUnrotated(currentRotation,m_hw->getMaxSize());
+  currentRoi = currentRoi.getFlipped(currentFlip,m_hw->getMaxSize());
 
   if(!flip.x && ! flip.y)
-    resetFlip();
+    _resetFlip();
   else
     {
       switch(m_mode)
@@ -672,7 +689,8 @@ void CtImage::setFlip(Flip &flip)
     }
   //Set the previous roi
   resetRoi();
-  currentRoi = currentRoi.getFlipped(flip,maxCurrentSize);
+  currentRoi = currentRoi.getFlipped(flip,m_hw->getMaxSize());
+  currentRoi = currentRoi.getRotated(currentRotation,m_hw->getMaxSize());
   setRoi(currentRoi);
 }
 
@@ -680,8 +698,22 @@ void CtImage::setRotation(RotationMode rotation)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(rotation);
+  // Get previous roi unrotated
+  RotationMode currentRotation;
+  getRotation(currentRotation);
+  Roi currentRoi;
+  getRoi(currentRoi);
+  Bin currentBin;
+  getBin(currentBin);
+
+  currentRoi = currentRoi.getUnrotated(currentRotation,m_hw->getMaxSize());
 
   m_sw->setRotation(rotation);
+
+  resetRoi();
+
+  currentRoi = currentRoi.getRotated(rotation,m_hw->getMaxSize());
+  setRoi(currentRoi);
 }
 
 void CtImage::_setHSFlip(const Flip &flip)
@@ -721,8 +753,13 @@ void CtImage::resetRoi()
 	m_hw->resetRoi();
 	m_sw->resetRoi();
 }
-
 void CtImage::resetFlip()
+{
+  Flip aFlip(false,false);
+  setFlip(aFlip);
+}
+
+void CtImage::_resetFlip()
 {
   DEB_MEMBER_FUNCT();
   
@@ -734,7 +771,7 @@ void CtImage::resetRotation()
 {
   DEB_MEMBER_FUNCT();
 
-  m_sw->resetRotation();
+  setRotation(Rotation_0);
 }
 
 void CtImage::reset() 
@@ -768,8 +805,12 @@ void CtImage::getRoi(Roi& roi) const
 
 	if (m_hw->hasRoiCapability()) {
 		Roi roi_by_hw= m_hw->getRealRoi();
+		// Add software Flip to Roi
 		const Flip &aSoftwareFlip = m_sw->getFlip();
 		roi_by_hw = roi_by_hw.getFlipped(aSoftwareFlip,m_hw->getMaxSize());
+		// Add rotation to Roi
+		RotationMode aSoftRotation = m_sw->getRotation();
+		roi_by_hw = roi_by_hw.getRotated(aSoftRotation,m_hw->getMaxSize());
 
 		Roi roi_by_sw= m_sw->getRoi();
 		Bin bin_by_sw= m_sw->getBin();

@@ -67,7 +67,7 @@ class LIMACORE_API CtSwBinRoiFlip {
 	Bin		m_bin;
 	Roi		m_roi, m_max_roi;
 	Flip    	m_flip;
-	RotationMode 	m_rotation,m_next_rotation;
+	RotationMode 	m_rotation;
 };
 
 
@@ -182,6 +182,7 @@ class LIMACORE_API CtImage {
 	void _setHSRoi(const Roi &roi);
 	void _setHSBin(const Bin &bin);
 	void _setHSFlip(const Flip &flip);
+	void _resetFlip();
 
 	HwDetInfoCtrlObj* 	m_hw_det;
 	CtMaxImageSizeCB* 	m_cb_size;

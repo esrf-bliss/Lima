@@ -165,6 +165,7 @@ using namespace lima;
 	Bin& operator *=(const Point& p);
 
 	Bin& operator /=(const Point& p);
+	void swap();
 	const char* __repr__();
 %MethodCode
 	std::ostringstream str;

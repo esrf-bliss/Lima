@@ -334,7 +334,8 @@ class LIMACORE_API Bin
 
 	Bin& operator /=(const Point& p)
 	{ m_xy = checkValid(m_xy / p); return *this; }
-
+	void swap()
+	{ m_xy.swap(); }
  private:
 	static bool isValidCoord(int i);
 	static Point checkValid(const Point& p);
