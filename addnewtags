@@ -99,11 +99,15 @@ mod_version_data = {
     'frelon': 'camera/frelon/VERSION',
     'maxipix': 'camera/maxipix/VERSION',
     'pilatus': 'camera/pilatus/VERSION',
+    'basler': 'camera/basler/VERSION',
+    'prosilica': 'camera/prosilica/VERSION',
     'taco/camera/frelon': 'applications/taco/VERSION',
     'tango/common': 'applications/tango/VERSION',
     'tango/camera/maxipix': 'applications/tango/camera/Maxipix_VERSION',
     'tango/camera/pilatus': 'applications/tango/camera/Pilatus_VERSION',
     'tango/camera/frelon': 'applications/tango/camera/Frelon_VERSION',
+    'tango/camera/basler': 'applications/tango/camera/Basler_VERSION',
+    'tango/camera/prosilica': 'applications/tango/camera/Prosilica_VERSION',
 }
 
 if modules == [ALL]:
