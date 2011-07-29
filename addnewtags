@@ -153,7 +153,8 @@ for mod in modules:
         os.system('git add %s' % filename) # add in submodule
         os.system('git commit -m "New tag : %s"' % version)
         os.chdir(oldDir)
-        os.system('git add %s' % basepath)
+        while basepath and os.system('git add %s 2>/dev/null' % basepath):
+		basepath,_ = os.path.split(basepath)
 
         submodules.append(mod)
 
