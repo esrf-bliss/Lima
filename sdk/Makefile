@@ -19,6 +19,7 @@ endif
 else
 ifeq ($(INSTALL_PLAT),redhate5)
 	LDFLAGS = -L.
+	DEP_FILES += libPvAPI.so
 else
 	LDFLAGS = -Lbin/x64 -Lbin/x86
 endif
