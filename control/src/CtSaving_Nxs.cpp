@@ -15,7 +15,6 @@ using namespace lima;
 SaveContainerNxs::SaveContainerNxs(CtSaving &aCtSaving)	: CtSaving::SaveContainer(aCtSaving)
 {
   DEB_CONSTRUCTOR();
-  cout<<"SaveContainerNxs::SaveContainerNxs()"<<endl;
   m_writer = 0;
 }
 
@@ -25,7 +24,6 @@ SaveContainerNxs::SaveContainerNxs(CtSaving &aCtSaving)	: CtSaving::SaveContaine
 SaveContainerNxs::~SaveContainerNxs()
 {
   DEB_DESTRUCTOR();
-  cout<<"SaveContainerNxs::~SaveContainerNxs()"<<endl;
 }
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -34,7 +32,6 @@ SaveContainerNxs::~SaveContainerNxs()
 bool SaveContainerNxs::_open(const std::string &filename, std::_Ios_Openmode openFlags)
 {
   DEB_MEMBER_FUNCT();
-  cout<<"SaveContainerNxs::_open"<<endl;
   return true;
 }
 
@@ -44,7 +41,6 @@ bool SaveContainerNxs::_open(const std::string &filename, std::_Ios_Openmode ope
 void SaveContainerNxs::_close()
 {
   DEB_MEMBER_FUNCT();
-  cout<<"SaveContainerNxs::_close()"<<endl;
 }
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -63,7 +59,6 @@ void SaveContainerNxs::_writeFile(Data &aData,
 								  CtSaving::FileFormat aFormat)
 {
 	DEB_MEMBER_FUNCT();
-	cout<<"SaveContainerNxs::_writeFile()"<<endl;
 
 	  try
 	  {
@@ -71,11 +66,12 @@ void SaveContainerNxs::_writeFile(Data &aData,
 		  //so me must clean the N4T object
 		  if(m_writer && aData.frameNumber==0)
 		  {
-			cout<<"SaveContainerNxs::_writeFile() - Abort current Nexus writer"<<endl;
+			cout<<"SaveContainerNxs::_writeFile() - Abort() current Nexus writer"<<endl;
 			//Abort every current task && go away
 			m_writer->Abort();
 			
 			//destroy object
+			cout<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()"<<endl;
 			delete m_writer;
 			m_writer = 0;			
 		  }
@@ -87,15 +83,11 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			getParameters(m_pars);
 			
 			//create N4T main object needed to generate Nexus file
-			m_writer = new Nexus4Tango::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
+			cout<<"SaveContainerNxs::_writeFile() - new BufferedData1D()"<<endl;
+			m_writer = new n4t::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
 						
-			m_writer->Initialize(m_pars.temporaryPath, m_pars.directory);
+			m_writer->Initialize(m_pars.directory, "");
 
-			//Set device name
-			m_writer->SetDeviceName("tmp/dt/detector.1");
-			
-			//clean remainig files in temporary & spool directory : false => only temporary, true => both of them
-			m_writer->Clean(true);
 			
 			//Add sensor 2D (image)
 			m_writer->AddDataItem2D(m_pars.prefix, aData.height,aData.width);
@@ -104,6 +96,8 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
 		  }
 		  
+		  //write data in Nexys file
+		  cout<<"SaveContainerNxs::_writeFile() - PushData()"<<endl;
 		  switch(m_pars.imageType)
 		  {
 		    case Bpp8:
@@ -118,24 +112,31 @@ void SaveContainerNxs::_writeFile(Data &aData,
 		    //push data into file
 		    m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
 		    break;
-			
 	    }
 		  //destroy Nexus object : to do once for each new sequence at the last image
 		  if( (aData.frameNumber+1) == (m_pars.nbframes))
 		  {
 			//Finalize
+			cout<<"SaveContainerNxs::_writeFile() - Finalize()"<<endl;
 			m_writer->Finalize();
 
 			//destroy object
+			cout<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()"<<endl;
 			delete m_writer;
 			m_writer = 0;
 		  }
 	  }
-	  catch(NexusException &n)
+	  catch(yat::Exception& ex)
 	  {
 		  cout<<"SaveContainerNxs::_writeFile() - catch NexusException"<<endl;
-		  cout<<n.Reason()<<endl;
-		  throw LIMA_CTL_EXC(Error,n.Reason());
+		  std::stringstream my_error;
+		  my_error.str("");
+		  for(unsigned i = 0; i < ex.errors.size(); i++)
+		  {
+			  my_error<<ex.errors[i].desc<<endl;
+		  }
+		  std::cout<<my_error.str()<<std::endl;
+		  throw LIMA_CTL_EXC(Error,my_error.str());
 	  }
 	  catch(...)
 	  {
