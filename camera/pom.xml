@@ -57,7 +57,7 @@
 
     <!-- ENABLE/DISABLE a specific plugin-->
     <modules>
-        <module>simulator</module>        
+        <module>simulator</module>
         <!--<module>basler</module>-->
         <!--<module>marccd</module>-->        
         <!--<module>pilatus</module>-->
