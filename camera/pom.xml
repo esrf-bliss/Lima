@@ -30,6 +30,21 @@
         <artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
         <version>1.0.4-SNAPSHOT</version>
     </dependency>
+    
+      <dependency>
+         <groupId>fr.soleil.lib</groupId>
+         <artifactId>GDShare-${aol}-${library}-${mode}</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>fr.soleil.lib</groupId>
+         <artifactId>Nexus4Tango-${aol}-${library}-${mode}</artifactId>
+         <version>2.5.0</version>
+      </dependency>
+      <dependency>
+         <groupId>fr.soleil.lib</groupId>
+         <artifactId>NexusCPP-${aol}-${library}-${mode}</artifactId>
+      </dependency>
+          
     </dependencies>
 
     <build>
