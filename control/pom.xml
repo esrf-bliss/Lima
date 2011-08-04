@@ -30,7 +30,6 @@
         <artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
         <version>1.0.4-SNAPSHOT</version>
     </dependency>
-
       <dependency>
          <groupId>fr.soleil.lib</groupId>
          <artifactId>GDShare-${aol}-${library}-${mode}</artifactId>
