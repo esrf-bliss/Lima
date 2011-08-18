@@ -300,30 +300,30 @@ ConstStr DebParams::getTypeName(DebType type)
 {
 	checkInit();
 
-	string name = (*s_type_name_map)[type];
-	if (name.empty())
+	ConstStr name = (*s_type_name_map)[type].c_str();
+	if (!name || !name[0])
 		name = "Unknown";
-	return name.c_str();
+	return name;
 }
 
 ConstStr DebParams::getFormatName(DebFormat fmt)
 {
 	checkInit();
 
-	string name = (*s_fmt_name_map)[fmt];
-	if (name.empty())
+	ConstStr name = (*s_fmt_name_map)[fmt].c_str();
+	if (!name || !name[0])
 		name = "Unknown";
-	return name.c_str();
+	return name;
 }
 
 ConstStr DebParams::getModuleName(DebModule mod)
 {
 	checkInit();
 
-	string name = (*s_mod_name_map)[mod];
-	if (name.empty())
+	ConstStr name = (*s_mod_name_map)[mod].c_str();
+	if (!name || !name[0])
 		name = "Unknown";
-	return name.c_str();
+	return name;
 }
 
 void DebParams::doInit()
@@ -459,6 +459,7 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 
 	if (DebHasFlag(flags, DebFmtFunct)) {
 		ConstStr csep = sep;
+#ifndef WIN32
 		if ((m = m_deb_params->m_name_space)) {
 			os << csep << m;
 			csep = "::";
@@ -467,6 +468,7 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 			os << csep << m;
 			csep = "::";
 		}
+#endif
 		if ((m = m_funct_name)) {
 			bool need_tilde = m_destructor && (m[0] != '~');
 			ConstStr destruct = need_tilde ? "~" : "";
