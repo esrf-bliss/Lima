@@ -12,6 +12,7 @@ maxipix
 simulator
 basler
 prosilica
+adsc
 *.obj
 lima*.exp
 lima*.lib
