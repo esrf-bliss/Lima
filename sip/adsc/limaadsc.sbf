@@ -1,0 +1,3 @@
+target = limaadsc
+sources  = lima_init_numpy.cpp  siplimaadsccmodule.cpp siplimaadscAdscCamera.cpp siplimaadscAdscHwInterface.cpp siplimaadscAdscBinCtrlObj.cpp siplimaadscAdscSyncCtrlObj.cpp siplimaadscAdscDetInfoCtrlObj.cpp
+headers = sipAPIlimaadsc.h

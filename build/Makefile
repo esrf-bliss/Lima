@@ -289,6 +289,40 @@ build_targets += $(roperscientific-full)
 
 endif
 
+############################
+# LIMA - ADSC
+############################
+
+ifneq ($(COMPILE_ADSC),0)
+
+ADSC_LDFLAGS	:= -L. -L../camera/adsc/sdk/adsc_sources/lib/linux
+ADSC_LDLIBS	:= -lauxlib -ldetcon_th
+name		:= adsc
+adsc-objs	:= ../camera/adsc/src/Adsc.o
+version-file	:= ../camera/adsc/VERSION
+adsc-flags	:= $(ADSC_LDFLAGS)
+adsc-deps	:= $(ADSC_LDLIBS)
+
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+
+adsc-base	:= liblima$(name).so
+adsc-full	:= $(adsc-base).$(full-version)
+adsc-maj	:= $(adsc-base).$(maj-version)
+adsc-flags	+= -fPIC -Wl,-soname,$(adsc-maj)
+
+$(adsc-full):		$(adsc-objs)
+	$(CXX) -shared -o $@ $(adsc-flags) $+ $(adsc-deps)
+	rm -f $(adsc-maj);  ln -s $(adsc-full) $(adsc-maj)
+	rm -f $(adsc-base); ln -s $(adsc-maj)  $(adsc-base)
+
+build_targets += $(adsc-full)
+
+endif
+
+
+
+
 
 
 src:		$(build_targets)
