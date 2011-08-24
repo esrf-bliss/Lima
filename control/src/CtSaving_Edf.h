@@ -30,7 +30,7 @@ namespace lima {
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving EDF Container","Control");
   public:
-    SaveContainerEdf(CtSaving &ct_saving);
+    SaveContainerEdf(CtSaving::Stream& stream);
     virtual ~SaveContainerEdf();
   protected:
     virtual bool _open(const std::string &filename,

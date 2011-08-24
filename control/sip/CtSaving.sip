@@ -114,6 +114,7 @@ using namespace lima;
       RAW,
       EDF,
       CBFFormat,
+      NXS,
     };
 
     enum SavingMode {
@@ -132,13 +133,18 @@ using namespace lima;
       std::string directory;
       std::string prefix;
       std::string suffix;
+      ImageType   imageType;
       long nextNumber;
       CtSaving::FileFormat fileFormat;
       CtSaving::SavingMode savingMode;
       CtSaving::OverwritePolicy overwritePolicy;
       std::string indexFormat;
       long framesPerFile;
+      long nbframes;
+
       Parameters();
+      void checkValid() const;
+
       const char* __repr__();
 %MethodCode
 	std::ostringstream str;
@@ -150,34 +156,36 @@ using namespace lima;
 
     // --- file parameters
 
-    void setParameters(const Parameters &pars);
-    void getParameters(Parameters& pars /Out/) const;
+    void setParameters(const Parameters &pars, int stream_idx=0);
+    void getParameters(Parameters& pars /Out/, int stream_idx=0) const;
 
-    void setDirectory(const std::string &directory);
-    void getDirectory(std::string &directory /Out/) const;
+    void setDirectory(const std::string &directory, int stream_idx=0);
+    void getDirectory(std::string &directory /Out/, int stream_idx=0) const;
 
-    void setPrefix(const std::string &prefix);
-    void getPrefix(std::string &prefix /Out/) const;
+    void setPrefix(const std::string &prefix, int stream_idx=0);
+    void getPrefix(std::string &prefix /Out/, int stream_idx=0) const;
 
-    void setSuffix(const std::string &suffix);
-    void getSuffix(std::string &suffix /Out/) const;
+    void setSuffix(const std::string &suffix, int stream_idx=0);
+    void getSuffix(std::string &suffix /Out/, int stream_idx=0) const;
 
-    void setNextNumber(long number);
-    void getNextNumber(long& number) const;
+    void setNextNumber(long number, int stream_idx=0);
+    void getNextNumber(long& number, int stream_idx=0) const;
 
-    void setFormat(FileFormat format);
-    void getFormat(FileFormat &format /Out/) const;
+    void setFormat(FileFormat format, int stream_idx=0);
+    void getFormat(FileFormat &format /Out/, int stream_idx=0) const;
 
     // --- saving modes
 
     void setSavingMode(SavingMode mode);
     void getSavingMode(SavingMode& mode /Out/) const;
 
-    void setOverwritePolicy(OverwritePolicy policy);
-    void getOverwritePolicy(OverwritePolicy& policy /Out/) const;
+    void setOverwritePolicy(OverwritePolicy policy, int stream_idx=0);
+    void getOverwritePolicy(OverwritePolicy& policy /Out/, 
+                            int stream_idx=0) const;
 
-    void setFramesPerFile(unsigned long frames_per_file);
-    void getFramePerFile(unsigned long& frames_per_file /Out/) const;
+    void setFramesPerFile(unsigned long frames_per_file, int stream_idx=0);
+    void getFramePerFile(unsigned long& frames_per_file /Out/, 
+                         int stream_idx=0) const;
 
     // --- common headers
 
@@ -205,11 +213,15 @@ using namespace lima;
     void setEndCallback(TaskEventCallback *);
     // --- statistic
 
-    void getWriteTimeStatistic(std::list<double>& /Out/) const;
-    void setStatisticHistorySize(int aSize);
+    void getWriteTimeStatistic(std::list<double>& /Out/, 
+                               int stream_idx=0) const;
+    void setStatisticHistorySize(int aSize, int stream_idx=0);
 
     // --- misc
 
     void clear();
     void writeFrame(int frame_nr = -1);
+
+    void setStreamActive(int stream_idx, bool  active);
+    void getStreamActive(int stream_idx, bool& active /Out/) const;
  };

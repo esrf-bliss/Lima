@@ -12,7 +12,8 @@ using namespace lima;
 //--------------------------------------------------------------------------------------------------------------------
 //- ctor
 //--------------------------------------------------------------------------------------------------------------------
-SaveContainerNxs::SaveContainerNxs(CtSaving &aCtSaving)	: CtSaving::SaveContainer(aCtSaving)
+SaveContainerNxs::SaveContainerNxs(CtSaving::Stream& stream)
+  : CtSaving::SaveContainer(stream)
 {
   DEB_CONSTRUCTOR();
   cout<<"SaveContainerNxs::SaveContainerNxs()"<<endl;

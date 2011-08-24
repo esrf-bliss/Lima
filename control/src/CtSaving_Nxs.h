@@ -13,7 +13,7 @@ namespace lima
   {
 	  DEB_CLASS_NAMESPC(DebModControl,"Saving NXS Container","Control");
 	public:
-	  SaveContainerNxs(CtSaving &ct_saving);
+	  SaveContainerNxs(CtSaving::Stream& stream);
 	  virtual ~SaveContainerNxs();
 	protected:
 	  virtual bool _open(const std::string &filename, std::_Ios_Openmode flags);
