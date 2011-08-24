@@ -54,6 +54,9 @@ ifneq ($(COMPILE_ROPERSCIENTIFIC), 0)
 sip-modules += roperscientific
 endif
 
+ifneq ($(COMPILE_ADSC), 0)
+sip-modules += adsc
+endif
 
 all:	src
 

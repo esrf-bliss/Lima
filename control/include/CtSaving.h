@@ -71,7 +71,6 @@ namespace lima {
 
     struct LIMACORE_API Parameters 
     {
-      std::string temporaryPath;
 	  std::string directory;
       std::string prefix;
       std::string suffix;
@@ -277,7 +276,6 @@ namespace lima {
       }
 
     os << "<"
-	   << "temporaryPath=" << params.temporaryPath << ", "	
        << "directory=" << params.directory << ", "
        << "prefix=" << params.prefix << ", "
        << "suffix=" << params.suffix << ", "

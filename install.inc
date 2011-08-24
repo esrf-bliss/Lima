@@ -105,6 +105,13 @@ ROPERSCIENTIFIC_MAJ_VERSION = $(shell echo $(ROPERSCIENTIFIC_FULL_VERSION) | cut
 INSTALL_ROPERSCIENTIFIC_VDIR = $(INSTALL_ROPERSCIENTIFIC_DIR)/v$(ROPERSCIENTIFIC_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_ADSC), 0)
+INSTALL_ADSC_DIR = $(INSTALL_PLAT_DIR)/Adsc
+ADSC_FULL_VERSION = $(shell cat camera/adsc/VERSION)
+ADSC_MAJ_VERSION = $(shell echo $(ADSC_FULL_VERSION) | cut -d. -f1)
+INSTALL_ADSC_VDIR = $(INSTALL_ADSC_DIR)/v$(ADSC_FULL_VERSION)
+endif
+
 .PHONY: install
 
 PROCESSOR_TYPE := $(shell uname -i)
@@ -202,3 +209,15 @@ ifneq ($(COMPILE_ROPERSCIENTIFIC), 0)
 	cp -d build/liblimaroperscientific.so.$(ROPERSCIENTIFIC_MAJ_VERSION) $(INSTALL_LIB_DIR)
 	cp sip/roperscientific/limaroperscientific.so $(INSTALL_ROPERSCIENTIFIC_VDIR)
 endif
+
+ifneq ($(COMPILE_ADSC), 0)
+	mkdir -p $(INSTALL_ADSC_VDIR)
+	cp camera/adsc/python/__init__.py $(INSTALL_ADSC_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimaadsc.so*
+	cp build/liblimaadsc.so.$(ADSC_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimaadsc.so.$(ADSC_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp sip/adsc/limaadsc.so $(INSTALL_ADSC_VDIR)
+	cp camera/adsc/sdk/adsc_sources/lib/linux/libauxlib.so $(INSTALL_LIB_DIR)/libauxlib.so
+	cp camera/adsc/sdk/adsc_sources/lib/linux/libdetcon_th.so $(INSTALL_LIB_DIR)/libdetcon_th.so
+endif
+

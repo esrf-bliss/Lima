@@ -13,6 +13,7 @@ simulator
 basler
 prosilica
 roperscientific
+adsc
 *.obj
 lima*.exp
 lima*.lib

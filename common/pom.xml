@@ -18,7 +18,7 @@
     <dependencies>
 		<dependency>
 			<groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
-			<artifactId>LimaTasks-${aol}-shared-${mode}</artifactId>
+			<artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
 			<version>1.0.4-SNAPSHOT</version>
 		</dependency>
     </dependencies>

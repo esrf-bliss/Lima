@@ -72,4 +72,12 @@ ifneq ($(COMPILE_ROPERSCIENTIFIC),0)
 sub-dirs += roperscientific
 endif
 
+ifndef COMPILE_ADSC
+COMPILE_ADSC = 0
+endif
+
+ifneq ($(COMPILE_ADSC),0)
+sub-dirs += adsc
+endif
+
 include ../global.inc
