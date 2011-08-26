@@ -411,7 +411,7 @@ void CtAccumulation::setMask(Data &mask)
   while(!m_calc_ready)
     m_cond.wait();
 
-  m_calc_mask = mask;
+  m_calc_mask = mask.mask();
 }
 
 void CtAccumulation::registerThresholdCallback(ThresholdCallback &cb)
