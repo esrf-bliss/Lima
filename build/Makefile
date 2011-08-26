@@ -349,6 +349,8 @@ $(mythen-full):		$(mythen-objs)
 
 build_targets += $(mythen-full)
 
+endif
+
 src:		$(build_targets)
 
 test:
