@@ -321,9 +321,33 @@ build_targets += $(adsc-full)
 endif
 
 
+############################
+# LIMA - MYTHEN
+############################
 
+ifneq ($(COMPILE_MYTHEN),0)
 
+MYTHEN_LDLIBS	:= -lSlsDetector
+name		:= mythen
+mythen-objs	:= ../camera/mythen/src/Mythen.o
+version-file	:= ../camera/mythen/VERSION
+mythen-flags	:= $(LDFLAGS)
+mythen-deps	:= $(MYTHEN_LDLIBS)
 
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+
+mythen-base	:= liblima$(name).so
+mythen-full	:= $(mythen-base).$(full-version)
+mythen-maj	:= $(mythen-base).$(maj-version)
+mythen-flags	+= -fPIC -Wl,-soname,$(mythen-maj)
+
+$(mythen-full):		$(mythen-objs)
+	$(CXX) -shared -o $@ $(mythen-flags) $+ $(mythen-deps)
+	rm -f $(mythen-maj);  ln -s $(mythen-full) $(mythen-maj)
+	rm -f $(mythen-base); ln -s $(mythen-maj)  $(mythen-base)
+
+build_targets += $(mythen-full)
 
 src:		$(build_targets)
 
