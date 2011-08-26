@@ -85,6 +85,8 @@ namespace lima {
     void reset();
     void setup(CtControl *ct);
 
+    bool isAccumulationActive() const {return !!m_ct_accumulation;}
+
     static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&,
 				       int readBlockLen=1);
   private:

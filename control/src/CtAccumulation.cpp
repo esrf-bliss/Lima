@@ -25,6 +25,17 @@
 #include "SinkTask.h"
 
 using namespace lima;
+/****************************************************************************
+CtAccumulation::_ImageReady4AccCallback
+****************************************************************************/
+CtAccumulation::_ImageReady4AccCallback::_ImageReady4AccCallback(CtAccumulation &acc) :
+  TaskEventCallback(),m_acc(acc) {}
+
+void CtAccumulation::_ImageReady4AccCallback::finished(Data &aData)
+{
+  m_acc._newBaseFrameReady(aData);
+}
+
 /*********************************************************************************
 			   calculation task
 *********************************************************************************/
@@ -188,7 +199,9 @@ CtAccumulation::CtAccumulation(CtControl &ct) :
   m_buffers_size(16),
   m_ct(ct),
   m_calc_ready(true),
-  m_threshold_cb(NULL)
+  m_threshold_cb(NULL),
+  m_last_acc_frame_nb(-1),
+  m_last_continue_flag(true)
 {
   m_calc_end = new _CalcEndCBK(*this);
   m_calc_mgr = new _CalcSaturatedTaskMgr();
@@ -485,10 +498,33 @@ void CtAccumulation::prepare()
   if(acc_nframes < 0) acc_nframes = 1;
 
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
+  m_last_continue_flag = true;
+  m_last_acc_frame_nb = -1;
 }
-/** @brief this is an intergnal call from CtBuffer in case of accumulation
+/** @brief this is an internal call from CtBuffer in case of accumulation
  */
-bool CtAccumulation::newFrameReady(Data &aData)
+bool CtAccumulation::_newFrameReady(Data &aData)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData);
+
+  TaskMgr *mgr = new TaskMgr();
+  mgr->setInputData(aData);
+  int internal_stage = 0;
+  m_ct.m_op_int->addTo(*mgr,internal_stage);
+
+  if(internal_stage)
+    PoolThreadMgr::get().addProcess(mgr);
+  else
+    {
+      delete mgr;
+      m_last_continue_flag = m_last_continue_flag && _newBaseFrameReady(aData);
+    }
+  return m_last_continue_flag;
+}
+/** @brief this is an internal call at the end of internal process or from CtBuffer
+ */
+bool CtAccumulation::_newBaseFrameReady(Data &aData)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
@@ -497,6 +533,9 @@ bool CtAccumulation::newFrameReady(Data &aData)
   int nb_acc_frame;
   acq->getAccNbFrames(nb_acc_frame);
   AutoMutex aLock(m_cond.mutex());
+  while(aData.frameNumber != (m_last_acc_frame_nb + 1))
+    m_cond.wait();
+
   bool active = m_pars.active;
   if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
     {
@@ -547,9 +586,13 @@ bool CtAccumulation::newFrameReady(Data &aData)
   _accFrame(aData,accFrame);
 
   if(!((aData.frameNumber + 1) % nb_acc_frame))
-    return m_ct.newFrameReady(accFrame);
-  else
-    return true;			// Always continue @see if it may have an overun
+    m_last_continue_flag = m_ct.newFrameReady(accFrame);
+
+  aLock.lock();
+  m_last_acc_frame_nb = aData.frameNumber;
+  m_cond.broadcast();
+
+  return m_last_continue_flag;
 }
 /** @brief retrived the image from the buffer
     @parameters frameNumber == acquisition image id
