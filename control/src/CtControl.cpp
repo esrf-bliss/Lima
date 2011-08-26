@@ -405,9 +405,19 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
 
+  AcqMode acqMode;
+  m_ct_acq->getAcqMode(acqMode);
+  int acq_nb_frames;
+  m_ct_acq->getAcqNbFrames(acq_nb_frames);
+
   AutoMutex aLock(m_cond.mutex());
   ImageStatus &imgStatus = m_status.ImageCounters;
   long lastFrame = imgStatus.LastBaseImageReady;
+
+  //Authorize to read the current frame in Accumulation Mode
+  if(acqMode == Accumulation && lastFrame < acq_nb_frames - 1)
+    ++lastFrame;
+
   if (frameNumber < 0) {
     frameNumber = lastFrame - (readBlockLen - 1);
     if (frameNumber < 0)
