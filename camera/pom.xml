@@ -76,6 +76,7 @@
         <!--<module>marccd</module>-->        
         <!--<module>pilatus</module>-->
         <!--<module>xpad</module>-->
+	<module>adsc</module>
     </modules>
 
 </project>
