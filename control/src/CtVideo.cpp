@@ -353,13 +353,16 @@ void CtVideo::setLive(bool liveFlag)
 	{
 	  CtAcquisition *acqPt = m_ct.acquisition();
 	  acqPt->setAcqNbFrames(0);	// Live
+	  aLock.unlock();
 	  m_ct.prepareAcq();
+	  aLock.lock();
 	  m_ct.startAcq();
 	}
       else
 	m_ct.stopAcq();
     }
   m_pars.live = liveFlag;
+  m_active_flag = m_active_flag || m_pars.live;
 }
 void CtVideo::getLive(bool &liveFlag) const
 {
