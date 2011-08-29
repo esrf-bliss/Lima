@@ -34,10 +34,12 @@ namespace lima
   class LIMACORE_API CtAccumulation
   {
     DEB_CLASS_NAMESPC(DebModControl,"Accumulation","Control");
+    class _ImageReady4AccCallback;
   public:
     friend class CtControl;
     friend class CtBuffer;
     friend class CtBufferFrameCB;
+    friend class _ImageReady4AccCallback;
 
     typedef std::list<std::list<long long> > saturatedCounterResult;
 
@@ -124,6 +126,14 @@ namespace lima
     friend class _CalcSaturatedTask;
     class _CalcEndCBK;
     friend class _CalcEndCBK;
+    class _ImageReady4AccCallback : public TaskEventCallback
+    {
+    public:
+      _ImageReady4AccCallback(CtAccumulation &);
+      virtual void finished(Data &aData);
+    private:
+      CtAccumulation &m_acc;
+    };
 
     Parameters 				m_pars;
     long				m_buffers_size;
@@ -137,10 +147,14 @@ namespace lima
     Data				m_calc_mask;
     mutable Cond 			m_cond;
     ThresholdCallback*			m_threshold_cb;
+    int 				m_last_acc_frame_nb;
+    bool 				m_last_continue_flag;
 
     // --- Methodes for acquisition
     void prepare();
-    bool newFrameReady(Data&);
+    bool _newFrameReady(Data&);
+    bool _newBaseFrameReady(Data&);
+
     void getFrame(Data &,int frameNumber);
 
     void _accFrame(Data &src,Data &dst);

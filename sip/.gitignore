@@ -14,6 +14,7 @@ basler
 prosilica
 roperscientific
 adsc
+mythen
 *.obj
 lima*.exp
 lima*.lib
