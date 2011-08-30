@@ -101,7 +101,7 @@ namespace lima
 
     // --- images
     void getLastImage(Image &anImage) const;
-    void getLastImageCounter(int &anImageCounter) const;
+    void getLastImageCounter(long long &anImageCounter) const;
 
     void registerImageCallback(ImageCallback &cb);
     void unregisterImageCallback(ImageCallback &cb);
@@ -118,7 +118,7 @@ namespace lima
 
     void _data_2_image(Data &aData,Bin &aBin,Roi &aRoi);
     void _data2image_finnished(Data&);
-    void _apply_params(bool = false);
+    void _apply_params(AutoMutex &,bool = false);
     void _read_hw_params();
     void _check_video_mode(VideoMode);
     void _prepareAcq();

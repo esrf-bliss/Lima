@@ -55,11 +55,12 @@ using namespace lima;
   Py_BEGIN_ALLOW_THREADS
   const char* buffer = sipCpp->buffer();
   SIP_SSIZE_T size = sipCpp->size();
-#if PY_VERSION_HEX >= 0x02050000
-  sipRes = PyByteArray_FromStringAndSize(buffer ? buffer : "",size);
-#else
+//PyTango don't manage ByteArray so use string instead
+//#if PY_VERSION_HEX >= 0x02050000
+//  sipRes = PyByteArray_FromStringAndSize(buffer ? buffer : "",size);
+//#else
   sipRes = PyString_FromStringAndSize(buffer ? buffer : "",size);
-#endif
+//#endif
   Py_END_ALLOW_THREADS
 %End
       int 			width() 	const;
@@ -110,7 +111,7 @@ using namespace lima;
 
     // --- images
     void getLastImage(CtVideo::Image &anImage /Out/) const;
-    void getLastImageCounter(int &anImageCounter /Out/) const;
+    void getLastImageCounter(long long &anImageCounter /Out/) const;
 
     void registerImageCallback(CtVideo::ImageCallback &cb);
     void unregisterImageCallback(CtVideo::ImageCallback &cb);

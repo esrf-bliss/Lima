@@ -306,7 +306,7 @@ void CtVideo::setParameters(const Parameters &pars)
   if(m_pars.bin != pars.bin) 			m_pars_modify_mask |= PARMODIFYMASK_BIN;
 
   m_pars = pars;
-  _apply_params();
+  _apply_params(aLock);
 }
 void CtVideo::getParameters(Parameters &pars) const
 {
@@ -328,7 +328,7 @@ void CtVideo::setLive(bool liveFlag)
   if(liveFlag && status.AcquisitionStatus != AcqReady)
     throw LIMA_CTL_EXC(Error, "Can't set live mode if an acquisition is running");
 
-  _apply_params(liveFlag);
+  _apply_params(aLock,liveFlag);
   
   if(m_has_video)
     {
@@ -374,7 +374,7 @@ void CtVideo::setExposure(double anExposure)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.exposure = anExposure,m_pars_modify_mask |= PARMODIFYMASK_EXPOSURE;
-  _apply_params();
+  _apply_params(aLock);
 }
 
 void CtVideo::getExposure(double &anExposure) const
@@ -392,7 +392,7 @@ void CtVideo::setGain(double aGain)
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.gain = aGain,m_pars_modify_mask |= PARMODIFYMASK_GAIN;
-  _apply_params();
+  _apply_params(aLock);
 }
 void CtVideo::getGain(double &aGain) const
 {
@@ -405,7 +405,7 @@ void CtVideo::setMode(VideoMode aMode)
   _check_video_mode(aMode);
   AutoMutex aLock(m_cond.mutex());
   m_pars.mode = aMode,m_pars_modify_mask |= PARMODIFYMASK_MODE;
-  _apply_params();
+  _apply_params(aLock);
 }
 void CtVideo::getMode(VideoMode &aMode) const
 {
@@ -417,7 +417,7 @@ void CtVideo::setRoi(const Roi &aRoi)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.roi = aRoi,m_pars_modify_mask |= PARMODIFYMASK_ROI;
-  _apply_params();
+  _apply_params(aLock);
 }
 void CtVideo::getRoi(Roi &aRoi) const
 {
@@ -429,7 +429,7 @@ void CtVideo::setBin(const Bin &aBin)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.bin = aBin,m_pars_modify_mask |= PARMODIFYMASK_BIN;
-  _apply_params();
+  _apply_params(aLock);
 }
 void CtVideo::getBin(Bin &aBin) const
 {
@@ -455,7 +455,7 @@ void CtVideo::getLastImage(CtVideo::Image &anImage) const
   anImage = tmpImage;
 }
 
-void CtVideo::getLastImageCounter(int &anImageCounter) const
+void CtVideo::getLastImageCounter(long long &anImageCounter) const
 {
   AutoMutex aLock(m_cond.mutex());
   anImageCounter = m_image_counter;
@@ -600,7 +600,7 @@ void CtVideo::_data2image_finnished(Data&)
     m_ready_flag = true;
 }
 
-void CtVideo::_apply_params(bool aForceLiveFlag)
+void CtVideo::_apply_params(AutoMutex &aLock,bool aForceLiveFlag)
 {
   if(aForceLiveFlag && !m_pars.live)
       m_read_image->frameNumber = m_write_image->frameNumber = m_image_counter = -1;
@@ -646,8 +646,11 @@ void CtVideo::_apply_params(bool aForceLiveFlag)
 	      if(m_pars.live)
 	        {
 		  m_ct.stopAcq();
+		  aLock.unlock();
 		  m_ct.prepareAcq();
+		  aLock.lock();
 		  m_ct.startAcq();
+		  m_pars.live = true;
 		}
             }
 	}
