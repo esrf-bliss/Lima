@@ -112,6 +112,14 @@ ADSC_MAJ_VERSION = $(shell echo $(ADSC_FULL_VERSION) | cut -d. -f1)
 INSTALL_ADSC_VDIR = $(INSTALL_ADSC_DIR)/v$(ADSC_FULL_VERSION)
 endif
 
+
+ifneq ($(COMPILE_MYTHEN), 0)
+INSTALL_MYTHEN_DIR = $(INSTALL_PLAT_DIR)/Mythen
+MYTHEN_FULL_VERSION = $(shell cat camera/mythen/VERSION)
+MYTHEN_MAJ_VERSION = $(shell echo $(MYTHEN_FULL_VERSION) | cut -d. -f1)
+INSTALL_MYTHEN_VDIR = $(INSTALL_MYTHEN_DIR)/v$(MYTHEN_FULL_VERSION)
+endif
+
 .PHONY: install
 
 PROCESSOR_TYPE := $(shell uname -i)
@@ -221,3 +229,11 @@ ifneq ($(COMPILE_ADSC), 0)
 	cp camera/adsc/sdk/adsc_sources/lib/linux/libdetcon_th.so $(INSTALL_LIB_DIR)/libdetcon_th.so
 endif
 
+ifneq ($(COMPILE_MYTHEN), 0)
+	mkdir -p $(INSTALL_MYTHEN_VDIR)
+	cp camera/mythen/python/__init__.py $(INSTALL_MYTHEN_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimamythen.so*
+	cp build/liblimamythen.so.$(MYTHEN_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimamythen.so.$(MYTHEN_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp sip/mythen/limamythen.so $(INSTALL_MYTHEN_VDIR)
+endif

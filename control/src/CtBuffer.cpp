@@ -32,7 +32,7 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
   Data fdata;
   CtBuffer::getDataFromHwFrameInfo(fdata,frame_info);
   if(m_ct_accumulation)
-    return m_ct_accumulation->newFrameReady(fdata);
+    return m_ct_accumulation->_newFrameReady(fdata);
   else
     return m_ct->newFrameReady(fdata);
 }

@@ -60,6 +60,8 @@ using namespace lima;
 	void reset();
 	void setup(CtControl *ct);
 
+	bool isAccumulationActive() const;
+
 	static void getDataFromHwFrameInfo(Data& /Out/,const HwFrameInfoType&,
 					   int readBlockLen=1);
 };

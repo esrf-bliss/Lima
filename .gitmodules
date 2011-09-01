@@ -55,3 +55,6 @@
 [submodule "camera/roperscientific"]
 	path = camera/roperscientific
 	url = git://git.epn-campus.eu/repositories/LimaCameraRoperScientific
+[submodule "camera/mythen"]
+	path = camera/mythen
+	url = git://git.epn-campus.eu/repositories/LimaCameraMythen

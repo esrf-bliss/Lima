@@ -80,4 +80,12 @@ ifneq ($(COMPILE_ADSC),0)
 sub-dirs += adsc
 endif
 
+ifndef COMPILE_MYTHEN
+COMPILE_MYTHEN = 0
+endif
+
+ifneq ($(COMPILE_MYTHEN),0)
+sub-dirs += mythen
+endif
+
 include ../global.inc
