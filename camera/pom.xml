@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
         <artifactId>Lima</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -18,17 +18,17 @@
     <dependency>
         <groupId>fr.soleil.lib.Lima</groupId>
         <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>fr.soleil.lib.Lima</groupId>
         <artifactId>LimaHardware-${aol}-shared-${mode}</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
         <artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6-SNAPSHOT</version>
     </dependency>
     
       <dependency>
@@ -75,7 +75,7 @@
         <!--<module>basler</module>-->
         <!--<module>marccd</module>-->        
         <!--<module>pilatus</module>-->
-        <!--<module>xpad</module>-->
+        <module>xpad</module>
 	<!--<module>adsc</module>-->
     </modules>
 
