@@ -58,6 +58,11 @@ ifneq ($(COMPILE_ADSC), 0)
 sip-modules += adsc
 endif
 
+ifneq ($(COMPILE_MYTHEN), 0)
+sip-modules += mythen
+endif
+
+
 all:	src
 
 src:

@@ -208,12 +208,15 @@ void CtControl::prepareAcq()
   m_hw->prepareAcq();
 
   DEB_TRACE() << "Apply software bin/roi";
-  m_op_int_active= m_ct_image->applySoft(m_op_int);
-  if (m_op_int->hasReconstructionTask())
-    m_op_int_active= true;
+  m_op_int_active= m_ct_image->applySoft(m_op_int) || m_op_int->hasReconstructionTask();
+
   if(m_op_int_active)
     {
-      _LastBaseImageReadyCallback *aCbkPt = new _LastBaseImageReadyCallback(*this);
+      TaskEventCallback *aCbkPt;
+      if(m_ct_buffer->isAccumulationActive())
+	aCbkPt = new CtAccumulation::_ImageReady4AccCallback(*this->m_ct_accumulation);
+      else
+	aCbkPt = new _LastBaseImageReadyCallback(*this);
       m_op_int->setEndCallback(aCbkPt);
       aCbkPt->unref();
     }
@@ -402,9 +405,19 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
 
+  AcqMode acqMode;
+  m_ct_acq->getAcqMode(acqMode);
+  int acq_nb_frames;
+  m_ct_acq->getAcqNbFrames(acq_nb_frames);
+
   AutoMutex aLock(m_cond.mutex());
   ImageStatus &imgStatus = m_status.ImageCounters;
   long lastFrame = imgStatus.LastBaseImageReady;
+
+  //Authorize to read the current frame in Accumulation Mode
+  if(acqMode == Accumulation && lastFrame < acq_nb_frames - 1)
+    ++lastFrame;
+
   if (frameNumber < 0) {
     frameNumber = lastFrame - (readBlockLen - 1);
     if (frameNumber < 0)
@@ -499,8 +512,9 @@ bool CtControl::newFrameReady(Data& fdata)
       TaskMgr *mgr = new TaskMgr();
       mgr->setInputData(fdata);
 
-      int internal_stage;
-      m_op_int->addTo(*mgr, internal_stage);
+      int internal_stage = 0;
+      if(!m_ct_buffer->isAccumulationActive())
+	m_op_int->addTo(*mgr, internal_stage);
   
       int last_link,last_sink;
       m_op_ext->addTo(*mgr, internal_stage, last_link, last_sink);
