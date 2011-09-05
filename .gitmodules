@@ -1,60 +1,60 @@
 [submodule "third-party/CBFLib"]
 	path = third-party/CBFLib
-	url = /usr/Local/git-repo/CBFlib.git
+	url = git://git.epn-campus.eu/repositories/CBFlib.git
 [submodule "third-party/Sps"]
 	path = third-party/Sps
-	url = /usr/Local/git-repo/Sps.git
+	url = git://git.epn-campus.eu/repositories/Sps.git
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
-	url = /usr/Local/git-repo/Processlib.git
+	url = git://git.epn-campus.eu/repositories/Processlib.git
 [submodule "camera/basler"]
 	path = camera/basler
-	url = /usr/Local/git-repo/LimaCameraBasler
+	url = git://git.epn-campus.eu/repositories/LimaCameraBasler
 [submodule "applications/spec"]
 	path = applications/spec
-	url = /usr/Local/git-repo/LimaSpec
+	url = git://git.epn-campus.eu/repositories/LimaSpec
 [submodule "camera/pco"]
 	path = camera/pco
-	url = /usr/Local/git-repo/LimaCameraPco
+	url = git://git.epn-campus.eu/repositories/LimaCameraPco
 [submodule "camera/pilatus"]
 	path = camera/pilatus
-	url = /usr/Local/git-repo/LimaCameraPilatus
+	url = git://git.epn-campus.eu/repositories/LimaCameraPilatus
 [submodule "applications/tango"]
 	path = applications/tango
-	url = /usr/Local/git-repo/LimaTango
+	url = git://git.epn-campus.eu/repositories/LimaTango
 [submodule "camera/maxipix"]
 	path = camera/maxipix
-	url = /usr/Local/git-repo/LimaCameraMaxipix
+	url = git://git.epn-campus.eu/repositories/LimaCameraMaxipix
 [submodule "documentation"]
 	path = documentation
-	url = /usr/Local/git-repo/LimaDocumentation
+	url = git://git.epn-campus.eu/repositories/LimaDocumentation
 [submodule "camera/frelon"]
 	path = camera/frelon
-	url = /usr/Local/git-repo/LimaCameraFrelon
+	url = git://git.epn-campus.eu/repositories/LimaCameraFrelon
 [submodule "camera/common/espia"]
 	path = camera/common/espia
-	url = /usr/Local/git-repo/LimaCameraEspia
+	url = git://git.epn-campus.eu/repositories/LimaCameraEspia
 [submodule "applications/taco"]
 	path = applications/taco
-	url = /usr/Local/git-repo/LimaTaco
+	url = git://git.epn-campus.eu/repositories/LimaTaco
 [submodule "third-party/yat"]
 	path = third-party/yat
-	url = /usr/Local/git-repo/yat
+	url = git://git.epn-campus.eu/repositories/yat
 [submodule "camera/prosilica"]
 	path = camera/prosilica
-	url = /usr/Local/git-repo/LimaCameraProsilica
+	url = git://git.epn-campus.eu/repositories/LimaCameraProsilica
 [submodule "camera/xpad"]
 	path = camera/xpad
-	url = /usr/Local/git-repo/LimaCameraXpad
+	url = git://git.epn-campus.eu/repositories/LimaCameraXpad
 [submodule "camera/marccd"]
 	path = camera/marccd
-	url = /usr/Local/git-repo/LimaCameraMarCCD
+	url = git://git.epn-campus.eu/repositories/LimaCameraMarCCD
 [submodule "camera/adsc"]
 	path = camera/adsc
-	url = /usr/Local/git-repo/LimaCameraADSC
+	url = git://git.epn-campus.eu/repositories/LimaCameraADSC
 [submodule "camera/roperscientific"]
 	path = camera/roperscientific
-	url = /usr/Local/git-repo/LimaCameraRoperScientific
+	url = git://git.epn-campus.eu/repositories/LimaCameraRoperScientific
 [submodule "camera/mythen"]
 	path = camera/mythen
-	url = /usr/Local/git-repo/LimaCameraMythen
+	url = git://git.epn-campus.eu/repositories/LimaCameraMythen
