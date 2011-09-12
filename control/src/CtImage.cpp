@@ -276,7 +276,7 @@ void CtHwBinRoiFlip::setFlip(Flip& flip, bool mandatory)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(flip,mandatory);
 
-  if (!m_has_bin) 
+  if (!m_has_flip) 
     {
       if (mandatory)
 	throw LIMA_CTL_EXC(NotSupported, "No hardware flip available");

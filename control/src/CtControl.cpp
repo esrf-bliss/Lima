@@ -340,7 +340,7 @@ void CtControl::_calcAcqStatus()
 	  anImageCnt.LastImageAcquired == (acq_nb_frames - 1)) && // we reach the nb frames asked
 	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finished
 	{
-	  if(m_ct_saving->hasAutoSaveMode())
+	  if(m_autosave)
 	    {
 	      // Saving is finnished
 	      if(anImageCnt.LastImageAcquired == anImageCnt.LastImageSaved)
@@ -550,28 +550,28 @@ void CtControl::newBaseImageReady(Data &aData)
     }
   else
     m_base_images_ready.insert(aData);
-  
-  if(m_autosave && !m_op_ext_link_task_active)
-    {
-      aLock.unlock();
-      newFrameToSave(aData);
-      aLock.lock();
-    }
+
+  bool do_save = (m_autosave && !m_op_ext_link_task_active);
+  bool do_status_cb = img_status_changed && m_img_status_cb;
+#ifdef WITH_SPS_IMAGE
+  bool do_display = m_display_active_flag;
+#endif
+
+  aLock.unlock();
+
+  if (do_save)
+    newFrameToSave(aData);
 
 #ifdef WITH_SPS_IMAGE
-  if(m_display_active_flag)
-    {
-      aLock.unlock();
-      m_ct_sps_image->frameReady(aData);
-    }
-  else
+  if (do_display)
+    m_ct_sps_image->frameReady(aData);
 #endif
-    aLock.unlock();
 
   m_ct_video->frameReady(aData);
 
-  if (img_status_changed && m_img_status_cb)
+  if (do_status_cb)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+
   _calcAcqStatus();
 }
 

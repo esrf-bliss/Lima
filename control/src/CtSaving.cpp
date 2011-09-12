@@ -170,6 +170,9 @@ void CtSaving::Stream::setParameters(const CtSaving::Parameters& pars)
 { 
   DEB_MEMBER_FUNCT();
 
+  if (pars.nextNumber == m_acquisition_pars.nextNumber)
+    m_pars.nextNumber = pars.nextNumber;
+
   if (pars == m_pars)
     return;
 
