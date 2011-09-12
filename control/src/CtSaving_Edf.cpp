@@ -34,8 +34,8 @@ using namespace lima;
  *
  *  This class manage file saving
  */
-SaveContainerEdf::SaveContainerEdf(CtSaving &aCtSaving) :
-  CtSaving::SaveContainer(aCtSaving)
+SaveContainerEdf::SaveContainerEdf(CtSaving::Stream& stream) :
+  CtSaving::SaveContainer(stream)
 {
   DEB_CONSTRUCTOR();
 }

@@ -33,10 +33,10 @@ namespace lima {
     DEB_CLASS_NAMESPC(DebModControl,"Saving CBF Container","Control");
     class Compression;
   public:
-    SaveContainerCbf(CtSaving &ct_saving);
+    SaveContainerCbf(CtSaving::Stream& stream);
     virtual ~SaveContainerCbf();
 
-    virtual bool needParralelCompression() const {return true;}
+    virtual bool needParallelCompression() const {return true;}
     virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 
   protected:
