@@ -187,8 +187,8 @@ static inline void outerror(int err)
  
 #endif
 
-SaveContainerCbf::SaveContainerCbf(CtSaving &aCtSaving) :
-  CtSaving::SaveContainer(aCtSaving),
+SaveContainerCbf::SaveContainerCbf(CtSaving::Stream& stream) :
+  CtSaving::SaveContainer(stream),
   m_fout(NULL),
   m_lock(MutexAttr::Normal)
 {
