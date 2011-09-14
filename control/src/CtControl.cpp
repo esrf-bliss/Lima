@@ -208,8 +208,8 @@ void CtControl::prepareAcq()
   m_hw->prepareAcq();
 
   DEB_TRACE() << "Apply software bin/roi";
-  m_op_int_active= m_ct_image->applySoft(m_op_int) || m_op_int->hasReconstructionTask();
-
+  m_op_int_active= (m_ct_image->applySoft(m_op_int) ||
+		    m_op_int->hasReconstructionTask());
   if(m_op_int_active)
     {
       TaskEventCallback *aCbkPt;
@@ -343,7 +343,7 @@ void CtControl::_calcAcqStatus()
 	  anImageCnt.LastImageAcquired == (acq_nb_frames - 1)) && // we reach the nb frames asked
 	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finished
 	{
-	  if(m_ct_saving->hasAutoSaveMode())
+	  if(m_autosave)
 	    {
 	      // Saving is finnished
 	      if(anImageCnt.LastImageAcquired == anImageCnt.LastImageSaved)
@@ -513,7 +513,7 @@ bool CtControl::newFrameReady(Data& fdata)
       mgr->setInputData(fdata);
 
       int internal_stage = 0;
-      if(!m_ct_buffer->isAccumulationActive())
+      if (!m_ct_buffer->isAccumulationActive())
 	m_op_int->addTo(*mgr, internal_stage);
   
       int last_link,last_sink;
@@ -564,28 +564,22 @@ void CtControl::newBaseImageReady(Data &aData)
     }
   else
     m_base_images_ready.insert(aData);
-  
+
+  aLock.unlock();
+
   if(m_autosave && !m_op_ext_link_task_active)
-    {
-      aLock.unlock();
-      newFrameToSave(aData);
-      aLock.lock();
-    }
+    newFrameToSave(aData);
 
 #ifdef WITH_SPS_IMAGE
   if(m_display_active_flag)
-    {
-      aLock.unlock();
-      m_ct_sps_image->frameReady(aData);
-    }
-  else
+    m_ct_sps_image->frameReady(aData);
 #endif
-    aLock.unlock();
 
   m_ct_video->frameReady(aData);
 
-  if (img_status_changed && m_img_status_cb)
+  if(m_img_status_cb && img_status_changed)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+
   _calcAcqStatus();
 }
 
@@ -623,13 +617,10 @@ void CtControl::newImageReady(Data &aData)
   if(int(m_images_buffer.size()) > m_images_buffer_size)
     m_images_buffer.erase(m_images_buffer.begin());
 
+  aLock.unlock();
+
   if(m_autosave)
-    {
-      aLock.unlock();
-      newFrameToSave(aData);
-    }
-  else
-    aLock.unlock();
+    newFrameToSave(aData);
 
   if (m_img_status_cb && img_status_changed)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);

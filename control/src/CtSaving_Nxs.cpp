@@ -12,7 +12,7 @@ using namespace lima;
 //--------------------------------------------------------------------------------------------------------------------
 //- ctor
 //--------------------------------------------------------------------------------------------------------------------
-SaveContainerNxs::SaveContainerNxs(CtSaving &aCtSaving)	: CtSaving::SaveContainer(aCtSaving)
+SaveContainerNxs::SaveContainerNxs(CtSaving::Stream& stream)	: CtSaving::SaveContainer(stream)
 {
   DEB_CONSTRUCTOR();
   m_writer = 0;
@@ -91,7 +91,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			
 			//Add sensor 2D (image) // height,width
 			m_writer->AddDataItem2D(m_pars.prefix, aData.dimensions[1],aData.dimensions[0]);
-		  
+
 			//Set sensors node's name
 			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
 		  }
