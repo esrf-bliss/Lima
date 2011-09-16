@@ -561,13 +561,13 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
       if(active)
 	{
 	  Data newSatImg;
-	  newData.type = Data::UINT16;
-	  newData.dimensions = aData.dimensions;
-	  newData.frameNumber = nextFrameNumber;
-	  newData.timestamp = aData.timestamp;
-	  newData.buffer = new Buffer(newData.size());
-	  memset(newData.data(),0,newData.size());
-	  m_saturated_images.push_back(newData);
+	  newSatImg.type = Data::UINT16;
+	  newSatImg.dimensions = aData.dimensions;
+	  newSatImg.frameNumber = nextFrameNumber;
+	  newSatImg.timestamp = aData.timestamp;
+	  newSatImg.buffer = new Buffer(newSatImg.size());
+	  memset(newSatImg.data(),0,newSatImg.size());
+	  m_saturated_images.push_back(newSatImg);
 
 	  if(long(m_saturated_images.size()) > m_buffers_size)
 	    m_saturated_images.pop_front();

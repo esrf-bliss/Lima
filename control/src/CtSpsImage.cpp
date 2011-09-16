@@ -150,6 +150,7 @@ void CtSpsImage::_post_sps_task(Data &aData)
 
 	TaskMgr *aSpsTaskPt = new TaskMgr();
 	aSpsTaskPt->addSinkTask(0,newTaskPt);
+	newTaskPt->unref();
 	aSpsTaskPt->setInputData(aData);
 
 	PoolThreadMgr::get().addProcess(aSpsTaskPt);
