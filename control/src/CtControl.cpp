@@ -525,7 +525,7 @@ bool CtControl::newFrameReady(Data& fdata)
 	PoolThreadMgr::get().addProcess(mgr);
       else
 	delete mgr;
-      if (!internal_stage && (last_link < 0))
+      if (!internal_stage)
 	newBaseImageReady(fdata);
 
       if (m_img_status_cb)
