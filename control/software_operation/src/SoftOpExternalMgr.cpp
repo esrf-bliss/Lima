@@ -31,6 +31,8 @@ static SoftOpKey SoftOpTable[] = {
   SoftOpKey(MASK,"Mask"),
   SoftOpKey(ROICOUNTERS,"Roi counters"),
   SoftOpKey(SOFTROI,"Software roi"),
+  SoftOpKey(USER_LINK_TASK,"User link task"),
+  SoftOpKey(USER_SINK_TASK,"User sink task"),
   SoftOpKey()
 };
 
@@ -99,6 +101,9 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
 			      const alias &anAlias,int aStage,
 			      SoftOpInstance &anInstance)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR3(aSoftOpId,anAlias,aStage);
+
   AutoMutex aLock(m_cond.mutex());
   _checkIfPossible(aSoftOpId,aStage);
   SoftOpInstance newInstance(getSoftOpKey(aSoftOpId),anAlias);
@@ -110,7 +115,7 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
       break;
     case BPM:
       newInstance.m_opt = new SoftOpBpm();
-      break;			// always possible
+      break;
     case BACKGROUNDSUBSTRACTION:
       newInstance.m_opt = new SoftOpBackgroundSubstraction();
       newInstance.m_linkable = true;
@@ -134,6 +139,13 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
     case SOFTROI:
       newInstance.m_opt = new SoftOpSoftRoi();
       newInstance.m_linkable = true;
+      break;
+    case USER_LINK_TASK:
+      newInstance.m_opt = new SoftUserLinkTask();
+      newInstance.m_linkable = true;
+      break;
+    case USER_SINK_TASK:
+      newInstance.m_opt = new SoftUserSinkTask();
       break;
     default:
       throw LIMA_CTL_EXC(InvalidValue,"Not yet managed");
@@ -248,11 +260,15 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
 void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
 					 int stage)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(aSoftOpId,stage);
+
   bool checkLinkable = false;
   switch(aSoftOpId) 
     {
     case ROICOUNTERS:
     case BPM:
+    case USER_SINK_TASK:
       break;			// always possible
     case BACKGROUNDSUBSTRACTION:
     case BINNING:
@@ -260,11 +276,14 @@ void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
     case FLIP:
     case MASK:
     case SOFTROI:
+    case USER_LINK_TASK:
       checkLinkable = true;
       break;
     default:
       throw LIMA_CTL_EXC(InvalidValue,"Not yet managed");
     }
+
+  DEB_TRACE() << DEB_VAR1(checkLinkable);
 
   if(checkLinkable)
     {
