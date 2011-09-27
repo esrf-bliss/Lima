@@ -83,7 +83,7 @@ using namespace lima;
 	const Roi& getSetRoi() const;
 	const Roi& getRealRoi() const;
 	const Size& getSize() const;
-	const Size& getMaxSize() const;
+	const Size& getMaxRoiSize() const;
 	const Flip& getFlip() const;
 
 	void apply();

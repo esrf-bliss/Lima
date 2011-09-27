@@ -1020,7 +1020,7 @@ void CtSaving::clear()
   
 }
 
-void CtSaving::writeFrame(int aFrameNumber)
+void CtSaving::writeFrame(int aFrameNumber, int aNbFrames)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aFrameNumber);
@@ -1054,7 +1054,7 @@ void CtSaving::writeFrame(int aFrameNumber)
   wait_and_cleanup_ready_flag.toggleReadyFlag();
 
   Data anImage2Save;
-  m_ctrl.ReadImage(anImage2Save,aFrameNumber);
+  m_ctrl.ReadImage(anImage2Save,aFrameNumber,aNbFrames);
 
   // Saving
   HeaderMap header;
@@ -1296,25 +1296,41 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
 	  if(vfs.f_favail < 1024 || vfs.f_bavail < 1024)
 	    {
 	      m_stream.setSavingError(CtControl::SaveDiskFull);
-	      close();
+	      try {
+		close();
+	      } catch (...) {
+	      }
 	      THROW_CTL_ERROR(Error) << "Disk full!!!";
 	    }
 	};
 
   
 #endif
-      close();
       m_stream.setSavingError(CtControl::SaveUnknownError);
+      try {
+	close();
+      } catch (...) {
+      }
       THROW_CTL_ERROR(Error) << "Save unknown error";
     }
     catch(...)
     {
       m_stream.setSavingError(CtControl::SaveUnknownError);
+      try {
+	close();
+      } catch (...) {
+      }
       THROW_CTL_ERROR(Error) << "Save unknown error";
     }
 
-  if(++m_written_frames == pars.framesPerFile)
-    close();
+  if(++m_written_frames == pars.framesPerFile) {
+    try {
+      close();
+    } catch (...) {
+      m_stream.setSavingError(CtControl::SaveCloseError);
+      THROW_CTL_ERROR(Error) << "Save file close error";
+    }
+  }
 
   struct timeval end_write;
   gettimeofday(&end_write, NULL);
@@ -1393,15 +1409,20 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
       else if(pars.overwritePolicy == Overwrite)
 	openFlags |= std::ios_base::trunc;
 
+      std::string error_desc;
       for(int nbTry = 0;nbTry < 5;++nbTry)
 	{
 	  bool succeed = false;
 	  try {
 	    succeed = _open(aFileName,openFlags);
 	  } catch (std::ios_base::failure &error) {
-	    std::string output;
-	    output = "Failure opening " + aFileName + ":" + error.what();
-	    THROW_CTL_ERROR(Error) << output;
+	    error_desc = error.what();
+	    DEB_WARNING() << "Could not open " << aFileName << ": " 
+			  << error_desc;
+	  } catch (...) {
+	    error_desc = "Unknown error";
+	    DEB_WARNING() << "Could not open " << aFileName << ": " 
+			  << error_desc;
 	  }
 
 	  if(!succeed)
@@ -1421,6 +1442,16 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 	      m_file_opened = true;
 	      break;
 	    }
+	}
+
+      if (!m_file_opened) 
+	{
+	  m_stream.setSavingError(CtControl::SaveOpenError);
+	  std::string output;
+	  output = "Failure opening " + aFileName;
+	  if (!error_desc.empty())
+	    output += ": " + error_desc;
+	  THROW_CTL_ERROR(Error) << output;
 	}
     }
 }

@@ -91,12 +91,12 @@ class LIMACORE_API CtHwBinRoiFlip {
 	void resetFlip();
 	void reset();
 
-	const Bin& getBin()     const { return m_bin; }
-	const Roi& getSetRoi()  const { return m_set_roi; }
-	const Roi& getRealRoi() const { return m_real_roi; }
-	const Size& getSize()   const { return m_size; }
-	const Size& getMaxSize() const { return m_max_size; }
-	const Flip& getFlip()   const { return m_flip; }
+	const Bin& getBin()         const { return m_bin; }
+	const Roi& getSetRoi()      const { return m_set_roi; }
+	const Roi& getRealRoi()     const { return m_real_roi; }
+	const Size& getSize()       const { return m_size; }
+	const Size& getMaxRoiSize() const { return m_max_roi.getSize(); }
+	const Flip& getFlip()       const { return m_flip; }
 
 	void apply();
 

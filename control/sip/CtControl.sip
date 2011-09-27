@@ -61,7 +61,8 @@ using namespace lima;
     };
 
     enum ErrorCode {NoError,
-		    SaveAccessError,SaveDiskFull,SaveOverun,
+		    SaveUnknownError,SaveOpenError,SaveCloseError,
+		    SaveAccessError,SaveOverwriteError,SaveDiskFull,SaveOverun,
 		    ProcessingOverun,
 		    CameraError};
     
