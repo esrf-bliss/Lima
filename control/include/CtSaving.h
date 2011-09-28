@@ -158,7 +158,9 @@ namespace lima {
     // --- misc
 
     void clear();
-    void writeFrame(int frame_nr = -1);	///< frame_nr == -1 => last frame
+    //                  frame_nr == -1 => last frame
+    void writeFrame(int frame_nr = -1, int nb_frames = 1); 
+
 
     void setStreamActive(int stream_idx, bool  active);
     void getStreamActive(int stream_idx, bool& active) const;

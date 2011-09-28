@@ -601,3 +601,117 @@ void SoftOpSoftRoi::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
 }
+
+//-------------------------- SOFTCALLBACK --------------------------
+SoftCallback::~SoftCallback()
+{
+  if(m_callback_gen)
+    m_callback_gen->unregisterCallback(*this);
+}
+
+//--------------------- SOFTPREPARECALLBACKGEN ---------------------
+
+SoftPrepareCallbackGen::SoftPrepareCallbackGen() : m_cb(NULL)
+{
+  DEB_CONSTRUCTOR();
+}
+
+SoftPrepareCallbackGen::~SoftPrepareCallbackGen()
+{
+  DEB_DESTRUCTOR();
+}
+
+void SoftPrepareCallbackGen::registerCallback(SoftCallback& cb)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(&cb,m_cb);
+
+  if(m_cb)
+    THROW_CTL_ERROR(InvalidValue) << "Software callback has already registered";
+
+  m_cb = &cb;
+  cb.m_callback_gen = this;
+}
+
+void SoftPrepareCallbackGen::unregisterCallback(SoftCallback& cb)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(&cb,m_cb);
+
+  if(m_cb != &cb)
+    THROW_CTL_ERROR(InvalidValue) << "Requested Callback not registered";
+
+  m_cb = NULL;
+  cb.m_callback_gen = NULL;
+}
+
+void SoftPrepareCallbackGen::prepare_cb()
+{
+  DEB_MEMBER_FUNCT();
+  if(!m_cb)
+    DEB_TRACE() << "No cb registered";
+  else
+    m_cb->prepare();
+}
+
+//------------------------ SOFTUSERLINKTASK -------------------------
+
+SoftUserLinkTask::SoftUserLinkTask() :
+  SoftOpBaseClass(),
+  SoftPrepareCallbackGen(),
+  m_link_task(NULL)
+{
+}
+
+SoftUserLinkTask::~SoftUserLinkTask()
+{
+  setLinkTask(NULL);
+}
+
+void SoftUserLinkTask::setLinkTask(LinkTask *aTaskPt)
+{
+  if(aTaskPt)
+    aTaskPt->ref();
+
+  if(m_link_task)
+    m_link_task->unref();
+
+  m_link_task = aTaskPt;
+}
+
+void SoftUserLinkTask::addTo(TaskMgr &aMgr,int stage)
+{
+  if(m_link_task)
+    aMgr.setLinkTask(stage,m_link_task);
+}
+
+//------------------------ SoftUserSinkTask ------------------------
+
+SoftUserSinkTask::SoftUserSinkTask() :
+  SoftOpBaseClass(),
+  SoftPrepareCallbackGen(),
+  m_sink_task(NULL)
+{
+}
+
+SoftUserSinkTask::~SoftUserSinkTask()
+{
+  setSinkTask(NULL);
+}
+
+void SoftUserSinkTask::setSinkTask(SinkTaskBase *aTaskPt)
+{
+  if(aTaskPt)
+    aTaskPt->ref();
+
+  if(m_sink_task)
+    m_sink_task->unref();
+
+  m_sink_task = aTaskPt;
+}
+
+void SoftUserSinkTask::addTo(TaskMgr &aMgr,int stage)
+{
+  if(m_sink_task)
+    aMgr.addSinkTask(stage,m_sink_task);
+}

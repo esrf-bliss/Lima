@@ -466,10 +466,10 @@ class LIMACORE_API Roi
 	Roi getBinned(const Bin& b) const;
 	Roi getUnbinned(const Bin& b) const;
 
-	Roi getFlipped(const Flip& f,const Size &image_size) const;
+	Roi getFlipped(const Flip& f, const Size& image_size) const;
 
-	Roi getRotated(RotationMode r,const Size &image_size) const;
-	Roi getUnrotated(RotationMode r,const Size &image_size) const;
+	Roi getRotated(RotationMode r, const Size& image_size) const;
+	Roi getUnrotated(RotationMode r, const Size& image_size) const;
 
 	bool isActive() const;
 
@@ -482,6 +482,9 @@ class LIMACORE_API Roi
  private:
 	static bool isValidCoord(int i);
 	static Point checkCorner(const Point& TopLeft);
+
+	int complementX(const Size& image_size, bool swapped=false) const;
+	int complementY(const Size& image_size, bool swapped=false) const;
 
 	Point m_top_left;
 	Size m_size;
@@ -578,77 +581,77 @@ inline Roi Roi::getUnbinned(const Bin& b) const
 	return Roi(m_top_left * b, Size(m_size * b));
 }
 
-inline Roi Roi::getFlipped(const Flip& f,const Size &image_size) const
+inline int Roi::complementX(const Size& image_size, bool swapped) const
 {
-  int x,y;
-
-  if(f.x)
-    x = image_size.getWidth() - m_top_left.x - m_size.getWidth();
-  else
-    x = m_top_left.x;
-
-  if(f.y)
-    y = image_size.getHeight() - m_top_left.y - m_size.getHeight();
-  else
-    y = m_top_left.y;
-
-  return Roi(x,y,m_size.getWidth(),m_size.getHeight());
+	int width = swapped ? image_size.getHeight() : image_size.getWidth();
+	return width - m_top_left.x - m_size.getWidth();
 }
 
-inline Roi Roi::getRotated(RotationMode rotationMode,const Size &image_size) const
+inline int Roi::complementY(const Size& image_size, bool swapped) const
 {
-  int x,y;
-  Size aSize = m_size;
-  switch(rotationMode)
-    {
-    case Rotation_90:
-      x = image_size.getHeight() - m_top_left.y - m_size.getHeight();
-      y = m_top_left.x;
-      aSize.swapDimensions();
-      break;
-    case Rotation_180:
-      x = image_size.getWidth() - m_top_left.x - m_size.getWidth();
-      y = image_size.getHeight() - m_top_left.y - m_size.getHeight();
-      break;
-    case Rotation_270:
-      x = m_top_left.y;
-      y = image_size.getWidth() - m_top_left.x - m_size.getWidth();
-      aSize.swapDimensions();
-      break;
-    default:
-      x = m_top_left.x,y = m_top_left.y;
-      aSize = m_size;
-      break;
-    }
-  return Roi(x,y,aSize.getWidth(),aSize.getHeight());
+	int height = swapped ? image_size.getWidth() : image_size.getHeight();
+	return height - m_top_left.y - m_size.getHeight();
 }
 
-inline Roi Roi::getUnrotated(RotationMode rotationMode,const Size &image_size) const
+inline Roi Roi::getFlipped(const Flip& f, const Size& image_size) const
 {
-  int x,y;
-  Size aSize = m_size;
-  switch(rotationMode)
-    {
-    case Rotation_90:
-      x = m_top_left.y;
-      y = image_size.getHeight() - m_top_left.x - m_size.getWidth();
-      aSize.swapDimensions();
-      break;
-    case Rotation_180:
-      x = image_size.getWidth() - m_top_left.x - m_size.getWidth();
-      y = image_size.getHeight() - m_top_left.y - m_size.getHeight();
-      break;
-    case Rotation_270:
-      x = image_size.getWidth() - m_top_left.y - m_size.getHeight();
-      y = m_top_left.x;
-      aSize.swapDimensions();
-      break;
-    default:
-      x = m_top_left.x,y = m_top_left.y;
-      aSize = m_size;
-      break;
-    }
-  return Roi(x,y,aSize.getWidth(),aSize.getHeight());
+	int x = f.x ? complementX(image_size) : m_top_left.x;
+	int y = f.y ? complementY(image_size) : m_top_left.y;
+	return Roi(Point(x, y), m_size);
+}
+
+inline Roi Roi::getRotated(RotationMode rotationMode,
+			   const Size& image_size) const
+{
+	int x, y;
+	Size size = m_size;
+	switch (rotationMode) {
+	case Rotation_90:
+		x = complementY(image_size);
+		y = m_top_left.x;
+		size.swapDimensions();
+		break;
+	case Rotation_180:
+		x = complementX(image_size);
+		y = complementY(image_size);
+		break;
+	case Rotation_270:
+		x = m_top_left.y;
+		y = complementX(image_size);
+		size.swapDimensions();
+		break;
+	default:
+		x = m_top_left.x;
+		y = m_top_left.y;
+	}
+	return Roi(Point(x, y), size);
+}
+
+inline Roi Roi::getUnrotated(RotationMode rotationMode,
+			     const Size& image_size) const
+{
+	int x, y;
+	Size size = m_size;
+	switch (rotationMode) {
+	case Rotation_90:
+		x = m_top_left.y;
+		y = complementX(image_size, true);
+		size.swapDimensions();
+		break;
+	case Rotation_180:
+		x = complementX(image_size, false);
+		y = complementY(image_size, false);
+		break;
+	case Rotation_270:
+		x = complementY(image_size, true);
+		y = m_top_left.x;
+		size.swapDimensions();
+		break;
+	default:
+		x = m_top_left.x;
+		y = m_top_left.y;
+	}
+	return Roi(Point(x, y), size);
 }
 
 inline bool Roi::isActive() const

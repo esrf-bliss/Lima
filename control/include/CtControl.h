@@ -96,7 +96,8 @@ namespace lima
     };
 
     enum ErrorCode {NoError,
-		    SaveUnknownError,SaveAccessError,SaveOverwriteError,SaveDiskFull,SaveOverun,
+		    SaveUnknownError,SaveOpenError,SaveCloseError,
+		    SaveAccessError,SaveOverwriteError,SaveDiskFull,SaveOverun,
 		    ProcessingOverun,
 		    CameraError};
     
@@ -243,6 +244,8 @@ namespace lima
     {
     case CtControl::NoError:           desc = "No error"; break;
     case CtControl::SaveUnknownError:  desc = "Saving  error"; break;
+    case CtControl::SaveOpenError:     desc = "Save file open error"; break;
+    case CtControl::SaveCloseError:    desc = "Save file close error"; break;
     case CtControl::SaveAccessError:   desc = "Save access error"; break;
     case CtControl::SaveOverwriteError: desc = "Save overwrite error"; break;
     case CtControl::SaveDiskFull:      desc = "Save disk full"; break;

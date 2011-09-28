@@ -239,10 +239,10 @@ using namespace lima;
 	Roi getBinned(const Bin& b) const;
 	Roi getUnbinned(const Bin& b) const;
 
-	Roi getFlipped(const Flip& f,const Size &image_size) const;
+	Roi getFlipped(const Flip& f,const Size& image_size) const;
 
-	Roi getRotated(RotationMode r,const Size &image_size) const;
-	Roi getUnrotated(RotationMode r,const Size &image_size) const;
+	Roi getRotated(RotationMode r,const Size& image_size) const;
+	Roi getUnrotated(RotationMode r,const Size& image_size) const;
 
 	bool isActive() const;
 

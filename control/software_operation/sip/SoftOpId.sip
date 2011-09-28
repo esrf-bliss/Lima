@@ -255,7 +255,9 @@ enum SoftOpId
  MASK,
  ROICOUNTERS,
  ROI2SPECTRUM,
- SOFTROI
+ SOFTROI,
+ USER_LINK_TASK,
+ USER_SINK_TASK,
 };
 
 struct SoftOpKey
@@ -421,3 +423,47 @@ public:
   void setRoi(int x,int y,int width,int height);
 };
 
+class SoftCallback
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftCallback();
+  virtual ~SoftCallback();
+protected:
+  virtual void prepare() = 0;
+};
+
+class SoftUserLinkTask
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftUserLinkTask();
+  virtual ~SoftUserLinkTask();
+
+  void setLinkTask(LinkTask*);
+
+  void registerCallback(SoftCallback&);
+  void unregisterCallback(SoftCallback&);
+};
+
+class SoftUserSinkTask
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+public:
+  SoftUserSinkTask();
+  virtual ~SoftUserSinkTask();
+
+  void setSinkTask(SinkTaskBase*);
+
+  void registerCallback(SoftCallback&);
+  void unregisterCallback(SoftCallback&);
+};

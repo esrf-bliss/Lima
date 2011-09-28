@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
         <artifactId>Lima</artifactId>
-        <version>1.0.6-SNAPSHOT</version>
+        <version>1.0.7</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -15,20 +15,23 @@
     <description>Lima Camera : Basler, Simulator, ...</description>
 
     <dependencies>
+    
     <dependency>
         <groupId>fr.soleil.lib.Lima</groupId>
         <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
-        <version>1.0.6-SNAPSHOT</version>
+        <version>1.0.7</version>
     </dependency>
+    
     <dependency>
         <groupId>fr.soleil.lib.Lima</groupId>
         <artifactId>LimaHardware-${aol}-shared-${mode}</artifactId>
-        <version>1.0.6-SNAPSHOT</version>
+        <version>1.0.7</version>
     </dependency>
+    
     <dependency>
         <groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
         <artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
-        <version>1.0.6-SNAPSHOT</version>
+        <version>1.0.7</version>
     </dependency>
     
       <dependency>
@@ -39,6 +42,7 @@
          <groupId>fr.soleil.lib</groupId>
          <artifactId>Nexus4Tango-${aol}-${library}-${mode}</artifactId>
       </dependency>
+      
       <dependency>
          <groupId>fr.soleil.lib</groupId>
          <artifactId>NexusCPP-${aol}-${library}-${mode}</artifactId>
@@ -70,13 +74,14 @@
     </build>
 
     <!-- ENABLE/DISABLE a specific plugin-->
-    <modules>
+    <modules>        
+        <module>adsc</module>
+        <module>basler</module>
+        <module>marccd</module>       
+        <module>pilatus</module>
+        <module>prosilica</module>
         <module>simulator</module>
-        <!--<module>basler</module>-->
-        <!--<module>marccd</module>-->        
-        <!--<module>pilatus</module>-->
         <module>xpad</module>
-	<!--<module>adsc</module>-->
     </modules>
 
 </project>
