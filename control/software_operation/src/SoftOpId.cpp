@@ -594,7 +594,7 @@ SoftOpSoftRoi::~SoftOpSoftRoi()
 
 void SoftOpSoftRoi::setRoi(int x,int y,int width,int height)
 {
-  m_opt->setRoi(x,x+width,y,y+width);
+  m_opt->setRoi(x,x+width,y,y+height);
 }
 
 void SoftOpSoftRoi::addTo(TaskMgr &aMgr,int stage)
