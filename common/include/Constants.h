@@ -75,7 +75,7 @@ typedef std::vector<ShutterMode> ShutterModeList;
 LIMACORE_API std::ostream& operator <<(std::ostream& os, ShutterMode shutter_mode);
 
 enum AcqStatus {
-	AcqReady, AcqRunning, AcqFault,
+	AcqReady, AcqRunning, AcqFault, AcqConfig
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, AcqStatus acq_status);

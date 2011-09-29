@@ -89,7 +89,7 @@ enum ShutterMode {
 };
 
 enum AcqStatus {
-	AcqReady, AcqRunning, AcqFault,
+	AcqReady, AcqRunning, AcqFault, AcqConfig
 };
 
 enum DetStatus {

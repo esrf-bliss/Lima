@@ -109,6 +109,7 @@ ostream& lima::operator <<(ostream& os, AcqStatus acq_status)
 	case AcqReady:   name = "AcqReady";	break;
 	case AcqRunning: name = "AcqRunning";	break;
 	case AcqFault:   name = "AcqFault";	break;
+	case AcqConfig:   name = "AcqConfig";	break;
 	}
 	return os << name;
 }
