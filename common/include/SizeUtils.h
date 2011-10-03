@@ -345,7 +345,7 @@ class LIMACORE_API Bin
 
 inline bool Bin::isValidCoord(int i)
 {
-	return IsPowerOf2(i);
+  return i > 0;
 }
 
 inline Point Bin::checkValid(const Point& p)

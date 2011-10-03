@@ -25,6 +25,28 @@
 
 using namespace lima;
 
+static void _get_prime_decomposition(int val,std::list<int> &posDiv)
+{
+  int div = 2;
+  int rDiv;
+  int previous = 1;
+  do
+    {
+      rDiv = val / div;
+      if(!(val % div))
+	{
+	  posDiv.push_back(div * previous);
+
+	  val = rDiv;
+	  previous *= div;
+	}
+      else
+	++div,previous = 1;
+    }
+  while(rDiv >= 1);
+  posDiv.sort();
+}
+
 static const Bin Bin_1x1(1, 1);
 
 #define SWAP_DIM_IF_ROTATION(dimStruct) \
@@ -252,7 +274,34 @@ void CtHwBinRoiFlip::setBin(Bin& bin, bool round)
 		if (set_bin != m_bin) {
 			if (!m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getUnbinned(m_bin);
-
+			if(set_bin != bin)
+			  {
+			    // test X
+			    std::list<int> primeX;
+			    _get_prime_decomposition(bin.getX(),primeX);
+			    set_bin = Bin(1,1);
+			    for(std::list<int>::iterator i = primeX.begin();
+				i != primeX.end();++i)
+			      {
+				Bin askedBin = Bin(*i,1);
+				Bin tmpBin = askedBin;;
+				m_hw_bin->checkBin(tmpBin);
+				if(tmpBin == askedBin)
+				  set_bin = askedBin;
+			      }
+			    // test Y
+			    std::list<int> primeY;
+			    _get_prime_decomposition(bin.getY(),primeY);
+			    for(std::list<int>::iterator i = primeY.begin();
+				i != primeY.end();++i)
+			      {
+				Bin askedBin = Bin(set_bin.getX(),*i);
+				Bin tmpBin = askedBin;
+				m_hw_bin->checkBin(tmpBin);
+				if(tmpBin == askedBin)
+				  set_bin = askedBin;
+			      }
+			  }
 			m_hw_bin->setBin(set_bin);
 			m_bin= set_bin;
 
