@@ -117,9 +117,9 @@ void DebStream::RemoveError(ostream *os)
 
 const DebParams::Flags DebParams::AllFlags = 0xffffffff;
 
-DebParams::Flags DebParams::s_type_flags;
-DebParams::Flags DebParams::s_fmt_flags;
-DebParams::Flags DebParams::s_mod_flags;
+DebParams::Flags DebParams::s_type_flags = 0;
+DebParams::Flags DebParams::s_fmt_flags = 0;
+DebParams::Flags DebParams::s_mod_flags = 0;
 
 DebStream *DebParams::s_deb_stream = NULL;
 
@@ -514,3 +514,52 @@ void DebObj::deleteThreadData(void *thread_data)
 	ThreadData *d = (ThreadData *) thread_data;
 	delete d;
 }
+#ifdef WIN32
+bool DebParams::checkModule() const
+{ 
+	return DebHasFlag(s_mod_flags, m_mod); 
+}
+
+bool DebParams::checkType(DebType type) const
+{ 
+	return DebHasFlag(s_type_flags, type); 
+}
+
+DebProxy::DebProxy(DebObj *deb_obj, DebType type, ConstStr file_name, 
+			  int line_nr)
+{
+	AutoMutex lock(*DebParams::s_mutex);
+
+	deb_obj->heading(type, file_name, line_nr);
+
+	m_lock = new AutoMutex(lock);
+}
+
+DebProxy::~DebProxy()
+{
+	if (!m_lock)
+		return;
+
+	*DebParams::s_deb_stream << std::endl;
+	delete m_lock;
+}
+
+DebObj::DebObj(DebParams& deb_params, bool destructor, 
+		      ConstStr funct_name, ConstStr obj_name, 
+		      ConstStr file_name, int line_nr)
+	: m_deb_params(&deb_params), m_destructor(destructor), 
+	  m_funct_name(funct_name), m_obj_name(obj_name), 
+	  m_file_name(file_name), m_line_nr(line_nr)
+{
+	getThreadData()->indent++;
+	write(DebTypeFunct, m_file_name, m_line_nr) << "Enter";
+}
+
+DebObj::~DebObj()
+{
+	write(DebTypeFunct, m_file_name, m_line_nr) << "Exit";
+	getThreadData()->indent--;
+}
+
+
+#endif

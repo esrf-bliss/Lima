@@ -1473,3 +1473,6 @@ void CtSaving::SaveContainer::close()
   Parameters& pars = m_stream.getParameters(Acq);
   ++pars.nextNumber;
 }
+
+tota::tota() {};
+tota::~tota() {};

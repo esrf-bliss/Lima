@@ -1,6 +1,7 @@
 #ifndef CTVIDEO_H
 #define CTVIDEO_H
 
+#include "LimaCompatibility.h"
 #include "CtControl.h"
 #include "VideoUtils.h"
 
@@ -9,7 +10,7 @@ namespace lima
   class HwVideoCtrlObj;
   class HwSyncCtrlObj;
 
-  class CtVideo
+  class LIMACORE_API CtVideo
   {
     DEB_CLASS_NAMESPC(DebModControl,"Video","Control");
     friend class CtControl;
@@ -21,7 +22,7 @@ namespace lima
     CtVideo(CtControl&);
     ~CtVideo();
     
-    struct Parameters
+    struct LIMACORE_API Parameters
     {
       DEB_CLASS_NAMESPC(DebModControl,"Video::Parameters","Control");
     public:
@@ -36,7 +37,7 @@ namespace lima
       Bin 	bin;
     };
 
-    class Image
+    class LIMACORE_API Image
     {
       friend class CtVideo;
       friend class _Data2ImageTask;
@@ -63,7 +64,7 @@ namespace lima
 
     friend class Image;
 
-    class ImageCallback
+    class LIMACORE_API ImageCallback
     {
       DEB_CLASS_NAMESPC(DebModControl,"Video::ImageCallback", 
 			"Control");

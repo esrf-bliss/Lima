@@ -36,6 +36,14 @@ struct Data;
 class TaskEventCallback;
 class SinkTaskBase;
 
+class LIMACORE_API tota {
+public:
+    tota();
+    ~tota();
+
+};
+
+
 namespace lima {
 
   class LIMACORE_API CtSaving 

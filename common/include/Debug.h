@@ -31,7 +31,6 @@
 #include "LimaCompatibility.h"
 #include "StreamUtils.h"
 #include "ThreadUtils.h"
-
 #include <string>
 #include <map>
 
@@ -195,6 +194,13 @@ class LIMACORE_API DebParams
 
 	static void checkInit();
 
+
+//	static Flags s_type_flags;
+//	static Flags s_mod_flags;
+//	static Mutex *s_mutex;
+//	static DebStream *s_deb_stream;
+
+
 private:
 	friend class DebProxy;
 	friend class DebObj;
@@ -226,6 +232,7 @@ private:
 	ConstStr m_class_name;
 	ConstStr m_name_space;
 };
+
 
 std::ostream& operator <<(std::ostream& os, 
 			  const DebParams::NameList& name_list);
@@ -375,7 +382,7 @@ inline ConstStr DebParams::getNameSpace() const
 { 
 	return m_name_space; 
 }
-
+#ifndef WIN32
 inline bool DebParams::checkModule() const
 { 
 	return DebHasFlag(s_mod_flags, m_mod); 
@@ -385,7 +392,7 @@ inline bool DebParams::checkType(DebType type) const
 { 
 	return DebHasFlag(s_type_flags, type); 
 }
-
+#endif
 
 /*------------------------------------------------------------------
  *  class DebProxy inline functions
@@ -396,6 +403,7 @@ inline DebProxy::DebProxy()
 {
 }
 
+#ifndef WIN32
 inline DebProxy::DebProxy(DebObj *deb_obj, DebType type, ConstStr file_name, 
 			  int line_nr)
 {
@@ -414,12 +422,14 @@ inline DebProxy::~DebProxy()
 	*DebParams::s_deb_stream << std::endl;
 	delete m_lock;
 }
+#endif
 
 inline bool DebProxy::isActive() const
 {
 	return !!m_lock;
 }
 
+#ifndef WIN32
 template <class T>
 inline const DebProxy& DebProxy::operator <<(const T& o) const
 {
@@ -428,11 +438,26 @@ inline const DebProxy& DebProxy::operator <<(const T& o) const
 	return *this;
 }
 
+#endif
+
+
+#ifdef WIN32
+template <class T>
+const DebProxy& DebProxy::operator <<(const T& o) const
+{
+	if (isActive()) 
+		*DebParams::s_deb_stream << o;
+	return *this;
+}
+
+#endif
+
 
 /*------------------------------------------------------------------
  *  class DebObj inline functions
  *------------------------------------------------------------------*/
 
+#ifndef WIN32
 inline DebObj::DebObj(DebParams& deb_params, bool destructor, 
 		      ConstStr funct_name, ConstStr obj_name, 
 		      ConstStr file_name, int line_nr)
@@ -449,6 +474,7 @@ inline DebObj::~DebObj()
 	write(DebTypeFunct, m_file_name, m_line_nr) << "Exit";
 	getThreadData()->indent--;
 }
+#endif
 
 inline bool DebObj::checkOut(DebType type)
 {
@@ -481,7 +507,6 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 	else
 		return DebProxy();
 }
-
 
 /*------------------------------------------------------------------
  *  debug macros

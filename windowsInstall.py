@@ -2,14 +2,20 @@ import os,shutil
 from windowsSipCompilation import getModuleConfig
 from optparse import OptionParser
 
+
 module2Installfiles = {
     'core' : [('__init__.py','Lima'),
               ('common/python/Core.py','Lima'),
               ('common/python/Debug.py','Lima'),
-              ('build/msvc/9.0/LimaCore/Release/LibLimaCore.dll','Lima'),
+              ('build/msvc/9.0/LimaCore/Debug/LibLimaCore.dll','Lima'),
               ('sip/core/limacore.pyd','Lima'),
               ('third-party/Processlib/sip/processlib.pyd','Lima'),
-              ('third-party/Processlib/build/msvc/9.0/libprocesslib/Release/libprocesslib.dll','Lima')],
+              ('third-party/Processlib/build/msvc/9.0/libprocesslib/Debug/libprocesslib.dll','Lima')],
+    'pco' : [('camera/pco/python/pco.py','Lima'),
+                   ('camera/pco/build/msvc/9.0/liblimapco/Debug/liblimapco.dll','Lima'),
+                   ('camera/pco/sdk/pco-sdk-113/bin/SC2_Cam.dll','Lima'),
+                   ('camera/pco/sdk/Digital_Camera_Toolbox/CamWare/sc2_cl_me4.dll','Lima'),
+                   ('sip/pco/limapco.pyd','Lima')],
     'simulator' : [('camera/simulator/python/Simulator.py','Lima'),
                    ('build/msvc/9.0/LibSimulator/Release/liblimasimulator.dll','Lima'),
                    ('sip/simulator/limasimulator.pyd','Lima')],
@@ -22,6 +28,11 @@ module2Installfiles = {
 def copyModule(filesList,baseDestPath) :
     for src,dest in filesList:
         dst = os.path.join(baseDestPath,dest)
+        print "---------- src", src
+        print "---------- dst", dst
+        print "--------- dest", dest
+        print "---------- base", baseDestPath
+        
             
         if not os.access(dst,os.F_OK) :
             print 'Makedir',dst
@@ -35,7 +46,9 @@ def copyModule(filesList,baseDestPath) :
             shutil.copytree(src,dst)
             print 'Copytree',src,dst
         elif not os.access(src,os.F_OK) :
-            dstFile = os.path.join(dst,src)
+            base,srcDir = os.path.split(src)
+            dstFile = os.path.join(dst,srcDir)
+            print "--------- dstFile", dstFile
             f = file(dstFile,'w')
             f.close()
             print 'Create empty file',dstFile
@@ -74,9 +87,15 @@ if __name__ == '__main__':
         if option.install_all:
             module_list = list(module2Installfiles.keys())
         else:
-            module_list = list(getModuleConfig())
+            dict = getModuleConfig()
+            module_list = []
+            for key,value in dict.iteritems():
+                if value:
+                    module_list.append(key)
             module_list += option.module_list
+            module_list += ["core"]
             
+        print  "--------- mod list", module_list
         for moduleName in set(module_list) :
             filesList = module2Installfiles.get(moduleName,None)
             if filesList:

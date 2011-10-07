@@ -65,7 +65,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libprocesslib.lib"
+				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug\libprocesslib.lib"
+				OutputFile="$(InputDir)Debug\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug&quot;"
 				GenerateDebugInformation="true"
@@ -477,6 +478,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\common\include\MiscUtils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\pco\include\PcoInterface.h"
 				>
 			</File>
 			<File
