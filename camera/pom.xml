@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
         <artifactId>Lima</artifactId>
-        <version>1.0.7</version>
+        <version>1.1.0</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -19,19 +19,19 @@
     <dependency>
         <groupId>fr.soleil.lib.Lima</groupId>
         <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
-        <version>1.0.7</version>
+        <version>1.1.0</version>
     </dependency>
     
     <dependency>
         <groupId>fr.soleil.lib.Lima</groupId>
         <artifactId>LimaHardware-${aol}-shared-${mode}</artifactId>
-        <version>1.0.7</version>
+        <version>1.1.0</version>
     </dependency>
     
     <dependency>
         <groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
         <artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
-        <version>1.0.7</version>
+        <version>1.1.0</version>
     </dependency>
     
       <dependency>
@@ -75,12 +75,12 @@
 
     <!-- ENABLE/DISABLE a specific plugin-->
     <modules>        
-        <module>adsc</module>
         <module>basler</module>
+		<module>simulator</module>
+        <module>adsc</module>
         <module>marccd</module>       
         <module>pilatus</module>
-        <module>prosilica</module>
-        <module>simulator</module>
+        <module>prosilica</module>        
         <module>xpad</module>
     </modules>
 
