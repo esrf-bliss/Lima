@@ -88,4 +88,8 @@ ifneq ($(COMPILE_MYTHEN),0)
 sub-dirs += mythen
 endif
 
+ifneq ($(COMPILE_UEYE),0)
+sub-dirs += ueye
+endif
+
 include ../global.inc

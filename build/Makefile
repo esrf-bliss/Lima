@@ -225,6 +225,35 @@ build_targets += $(basler-full)
 endif
 
 ############################
+# LIMA - UEYE
+############################
+
+ifneq ($(COMPILE_UEYE),0)
+
+UEYE_LDFLAGS	:=
+UEYE_LDLIBS	:= -lueye_api
+
+name		:= ueye
+ueye-objs	:= ../camera/ueye/src/Ueye.o
+version-file	:= ../camera/ueye/VERSION
+ueye-flags	:= $(UEYE_LDFLAGS)
+ueye-deps	:= $(UEYE_LDLIBS)
+ueye-base	:= liblima$(name).so
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ueye-full	:= $(ueye-base).$(full-version)
+ueye-maj	:= $(ueye-base).$(maj-version)
+ueye-flags	+= -fPIC -Wl,-soname,$(ueye-maj)
+
+$(ueye-full):		$(ueye-objs)
+	$(CXX) -shared -o $@ $(ueye-flags) $+ $(ueye-deps)
+	rm -f $(ueye-maj);  ln -s $(ueye-full) $(ueye-maj)
+	rm -f $(ueye-base); ln -s $(ueye-maj)  $(ueye-base)
+
+build_targets += $(ueye-full)
+endif
+
+############################
 # LIMA - PROSILICA
 ############################
 

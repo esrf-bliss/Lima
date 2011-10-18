@@ -34,6 +34,7 @@ modules = [('core',		['common', 'hardware', 'control']),
 	   ('maxipix',		[os.path.join('camera','maxipix')]),
            ('basler',           [os.path.join('camera','basler')]),
            ('prosilica',        [os.path.join('camera','prosilica')]),
+           ('ueye',             [os.path.join('camera','ueye')]),
            ('roperscientific',  [os.path.join('camera','roperscientific')]),
            ('adsc',  		[os.path.join('camera','adsc')]),
            ('mythen',           [os.path.join('camera','mythen')])]
@@ -135,6 +136,8 @@ def main():
         if(modName == 'basler') :
             extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
             extra_cxxflags += ['-DUSE_GIGE']
+        elif(modName == 'ueye') and platform.system() != 'Windows':
+            extra_cxxflags += ['-D__LINUX__']
 
         extraIncludes += findModuleIncludes(modName)
 

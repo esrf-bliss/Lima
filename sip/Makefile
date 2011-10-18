@@ -63,6 +63,10 @@ sip-modules += mythen
 endif
 
 
+ifneq ($(COMPILE_UEYE), 0)
+sip-modules += ueye
+endif
+
 all:	src
 
 src:
