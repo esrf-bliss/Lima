@@ -394,7 +394,7 @@ void FrameBuilder::getNextFrame( unsigned char *ptr ) throw (Exception)
 			fillData<unsigned short>(ptr);
 			break;
 		case 4 :
-			fillData<unsigned long>(ptr);
+			fillData<unsigned int>(ptr);
 			break;
 		default:
 			throw LIMA_HW_EXC(NotSupported, "Invalid depth");
