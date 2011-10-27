@@ -31,7 +31,7 @@
 #include <exception>
 #include <iostream>
 
-#include "FrameBuilder.h"
+#include "SimulatorFrameBuilder.h"
 #include "HwBufferSave.h"
 #include "SizeUtils.h"
 #include "Exceptions.h"
@@ -39,6 +39,7 @@
 
 using namespace std;
 using namespace lima;
+using namespace lima::Simulator;
 
 int main( void )
 {

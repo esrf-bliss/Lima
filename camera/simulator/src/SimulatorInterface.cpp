@@ -19,44 +19,45 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SimuHwInterface.h"
+#include "SimulatorInterface.h"
 
 using namespace lima;
+using namespace lima::Simulator;
 using namespace std;
 
 /*******************************************************************
- * \brief SimuDetInfoCtrlObj constructor
+ * \brief DetInfoCtrlObj constructor
  *******************************************************************/
 
-SimuDetInfoCtrlObj::SimuDetInfoCtrlObj(Simulator& simu)
+DetInfoCtrlObj::DetInfoCtrlObj(Camera& simu)
 	: m_simu(simu)
 {
 }
 
-SimuDetInfoCtrlObj::~SimuDetInfoCtrlObj()
+DetInfoCtrlObj::~DetInfoCtrlObj()
 {
 }
 
-void SimuDetInfoCtrlObj::getMaxImageSize(Size& max_image_size)
+void DetInfoCtrlObj::getMaxImageSize(Size& max_image_size)
 {
 	FrameDim fdim;
 	m_simu.getFrameDim(fdim);
 	max_image_size = fdim.getSize();
 }
 
-void SimuDetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
+void DetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
 {
 	m_simu.getMaxImageSize(det_image_size);
 }
 
-void SimuDetInfoCtrlObj::getDefImageType(ImageType& def_image_type)
+void DetInfoCtrlObj::getDefImageType(ImageType& def_image_type)
 {
 	FrameDim fdim;
 	m_simu.getFrameDim(fdim);
 	def_image_type = fdim.getImageType();
 }
 
-void SimuDetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
+void DetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
 {
 	FrameDim fdim;
 	m_simu.getFrameDim(fdim);
@@ -64,106 +65,106 @@ void SimuDetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
 	m_simu.setFrameDim(fdim);
 }
 
-void SimuDetInfoCtrlObj::getCurrImageType(ImageType& curr_image_type)
+void DetInfoCtrlObj::getCurrImageType(ImageType& curr_image_type)
 {
 	FrameDim fdim;
 	m_simu.getFrameDim(fdim);
 	curr_image_type = fdim.getImageType();
 }
 
-void SimuDetInfoCtrlObj::getPixelSize(double& pixel_size)
+void DetInfoCtrlObj::getPixelSize(double& pixel_size)
 {
 	pixel_size = 1e-6;
 }
 
-void SimuDetInfoCtrlObj::getDetectorType(string& det_type)
+void DetInfoCtrlObj::getDetectorType(string& det_type)
 {
 	det_type = "Simulator";
 }
 
-void SimuDetInfoCtrlObj::getDetectorModel(string& det_model)
+void DetInfoCtrlObj::getDetectorModel(string& det_model)
 {
 	det_model = "PeakGenerator";
 }
 
-void SimuDetInfoCtrlObj::registerMaxImageSizeCallback(
+void DetInfoCtrlObj::registerMaxImageSizeCallback(
 						HwMaxImageSizeCallback& cb)
 {
 	m_mis_cb_gen.registerMaxImageSizeCallback(cb);
 }
 
-void SimuDetInfoCtrlObj::unregisterMaxImageSizeCallback(
+void DetInfoCtrlObj::unregisterMaxImageSizeCallback(
 						HwMaxImageSizeCallback& cb)
 {
 	m_mis_cb_gen.unregisterMaxImageSizeCallback(cb);
 }
 
 
-void SimuDetInfoCtrlObj::
+void DetInfoCtrlObj::
      MaxImageSizeCallbackGen::setMaxImageSizeCallbackActive(bool cb_active)
 {
 }
 
 /*******************************************************************
- * \brief SimuSyncCtrlObj constructor
+ * \brief SyncCtrlObj constructor
  *******************************************************************/
 
-SimuSyncCtrlObj::SimuSyncCtrlObj(Simulator& simu)
+SyncCtrlObj::SyncCtrlObj(Camera& simu)
 	: HwSyncCtrlObj(), m_simu(simu)
 {
 }
 
-SimuSyncCtrlObj::~SimuSyncCtrlObj()
+SyncCtrlObj::~SyncCtrlObj()
 {
 }
 
-bool SimuSyncCtrlObj::checkTrigMode(TrigMode trig_mode)
+bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
 {
 	return (trig_mode == IntTrig);
 }
 
-void SimuSyncCtrlObj::setTrigMode(TrigMode trig_mode)
+void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
 	if (!checkTrigMode(trig_mode))
 		throw LIMA_HW_EXC(InvalidValue, "Invalid (external) trigger");
 }
 
-void SimuSyncCtrlObj::getTrigMode(TrigMode& trig_mode)
+void SyncCtrlObj::getTrigMode(TrigMode& trig_mode)
 {
 	trig_mode = IntTrig;
 }
 
-void SimuSyncCtrlObj::setExpTime(double exp_time)
+void SyncCtrlObj::setExpTime(double exp_time)
 {
 	m_simu.setExpTime(exp_time);
 }
 
-void SimuSyncCtrlObj::getExpTime(double& exp_time)
+void SyncCtrlObj::getExpTime(double& exp_time)
 {
 	m_simu.getExpTime(exp_time);
 }
 
-void SimuSyncCtrlObj::setLatTime(double lat_time)
+void SyncCtrlObj::setLatTime(double lat_time)
 {
 	m_simu.setLatTime(lat_time);
 }
 
-void SimuSyncCtrlObj::getLatTime(double& lat_time)
+void SyncCtrlObj::getLatTime(double& lat_time)
 {
 	m_simu.getLatTime(lat_time);
 }
 
-void SimuSyncCtrlObj::setNbHwFrames(int nb_frames)
+void SyncCtrlObj::setNbHwFrames(int nb_frames)
 {
 	m_simu.setNbFrames(nb_frames);
 }
 
-void SimuSyncCtrlObj::getNbHwFrames(int& nb_frames)
+void SyncCtrlObj::getNbHwFrames(int& nb_frames)
 {
 	m_simu.getNbFrames(nb_frames);
 }
 
-void SimuSyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
+void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 {
 	double min_time = 10e-9;
 	double max_time = 1e6;
@@ -175,39 +176,39 @@ void SimuSyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 
 
 /*******************************************************************
- * \brief SimuBinCtrlObj constructor
+ * \brief BinCtrlObj constructor
  *******************************************************************/
 
-SimuBinCtrlObj::SimuBinCtrlObj(Simulator& simu)
+BinCtrlObj::BinCtrlObj(Camera& simu)
 	: m_simu(simu)
 {
 }
 
-SimuBinCtrlObj::~SimuBinCtrlObj()
+BinCtrlObj::~BinCtrlObj()
 {
 }
 
-void SimuBinCtrlObj::setBin(const Bin& bin)
+void BinCtrlObj::setBin(const Bin& bin)
 {
 	m_simu.setBin(bin);
 }
 
-void SimuBinCtrlObj::getBin(Bin& bin)
+void BinCtrlObj::getBin(Bin& bin)
 {
 	m_simu.getBin(bin);
 }
 
-void SimuBinCtrlObj::checkBin(Bin& bin)
+void BinCtrlObj::checkBin(Bin& bin)
 {
 	m_simu.checkBin(bin);
 }
 
 
 /*******************************************************************
- * \brief SimuHwInterface constructor
+ * \brief Interface constructor
  *******************************************************************/
 
-SimuHwInterface::SimuHwInterface(Simulator& simu)
+Interface::Interface(Camera& simu)
 	: m_simu(simu), m_det_info(simu),
 	  m_sync(simu), m_bin(simu)
 {
@@ -223,49 +224,49 @@ SimuHwInterface::SimuHwInterface(Simulator& simu)
 	m_cap_list.push_back(HwCap(bin));
 }
 
-SimuHwInterface::~SimuHwInterface()
+Interface::~Interface()
 {
 }
 
-void SimuHwInterface::getCapList(HwInterface::CapList &aReturnCapList) const
+void Interface::getCapList(HwInterface::CapList &aReturnCapList) const
 {
   aReturnCapList = m_cap_list;
 }
 
-void SimuHwInterface::reset(ResetLevel reset_level)
+void Interface::reset(ResetLevel reset_level)
 {
 	m_simu.reset();
 }
 
-void SimuHwInterface::prepareAcq()
+void Interface::prepareAcq()
 {
 }
 
-void SimuHwInterface::startAcq()
+void Interface::startAcq()
 {
 	m_simu.startAcq();
 }
 
-void SimuHwInterface::stopAcq()
+void Interface::stopAcq()
 {
 	m_simu.stopAcq();
 }
 
-void SimuHwInterface::getStatus(StatusType& status)
+void Interface::getStatus(StatusType& status)
 {
-	Simulator::Status simu_status = m_simu.getStatus();
+	Camera::Status simu_status = m_simu.getStatus();
 	switch (simu_status) {
-	case Simulator::Ready:
+	case Camera::Ready:
 		status.acq = AcqReady;
 		status.det = DetIdle;
 		break;
-	case Simulator::Exposure:
+	case Camera::Exposure:
 		status.det = DetExposure;
 		goto Running;
-	case Simulator::Readout:
+	case Camera::Readout:
 		status.det = DetReadout;
 		goto Running;
-	case Simulator::Latency:
+	case Camera::Latency:
 		status.det = DetLatency;
 	Running:
 		status.acq = AcqRunning;
@@ -274,7 +275,7 @@ void SimuHwInterface::getStatus(StatusType& status)
 	status.det_mask = DetExposure | DetReadout | DetLatency;
 }
 
-int SimuHwInterface::getNbHwAcquiredFrames()
+int Interface::getNbHwAcquiredFrames()
 {
 	return m_simu.getNbAcquiredFrames();
 }

@@ -19,34 +19,35 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "Simulator.h"
+#include "SimulatorCamera.h"
 
 #include <string>
 #include <unistd.h>
 #include <cmath>
 
 using namespace lima;
+using namespace lima::Simulator;
 using namespace std;
 
-Simulator::SimuThread::SimuThread(Simulator& simu)
+Camera::SimuThread::SimuThread(Camera& simu)
 	: m_simu(&simu)
 {
 	m_acq_frame_nb = 0;
 	m_force_stop = false;
 }
 
-void Simulator::SimuThread::start()
+void Camera::SimuThread::start()
 {
 	CmdThread::start();
 	waitStatus(Ready);
 }
 
-void Simulator::SimuThread::init()
+void Camera::SimuThread::init()
 {
 	setStatus(Ready);
 }
 
-void Simulator::SimuThread::execCmd(int cmd)
+void Camera::SimuThread::execCmd(int cmd)
 {
 	int status = getStatus();
 	switch (cmd) {
@@ -58,7 +59,7 @@ void Simulator::SimuThread::execCmd(int cmd)
 	}
 }
 
-void Simulator::SimuThread::execStartAcq()
+void Camera::SimuThread::execStartAcq()
 {
 	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_ctrl_mgr.getBuffer();
 	buffer_mgr.setStartTimestamp(Timestamp::now());
@@ -100,12 +101,12 @@ void Simulator::SimuThread::execStartAcq()
 	setStatus(Ready);
 }
 
-int Simulator::SimuThread::getNbAcquiredFrames()
+int Camera::SimuThread::getNbAcquiredFrames()
 {
 	return m_acq_frame_nb;
 }
 
-Simulator::Simulator() : 
+Camera::Camera() : 
   m_thread(*this)
 {
 	init();
@@ -113,28 +114,28 @@ Simulator::Simulator() :
 	m_thread.start();
 }
 
-void Simulator::init()
+void Camera::init()
 {
 	m_exp_time = 1.0;
 	m_lat_time = 0.0;
 	m_nb_frames = 1;
 }
 
-Simulator::~Simulator()
+Camera::~Camera()
 {
 }
 
-HwBufferCtrlObj* Simulator::getBufferMgr()
+HwBufferCtrlObj* Camera::getBufferMgr()
 {
   return &m_buffer_ctrl_mgr;
 }
 
-void Simulator::getMaxImageSize(Size& max_image_size)
+void Camera::getMaxImageSize(Size& max_image_size)
 {
 	m_frame_builder.getMaxImageSize(max_image_size);
 }
 
-void Simulator::setNbFrames(int nb_frames)
+void Camera::setNbFrames(int nb_frames)
 {
 	if (nb_frames < 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid nb of frames");
@@ -142,12 +143,12 @@ void Simulator::setNbFrames(int nb_frames)
 	m_nb_frames = nb_frames;
 }
 
-void Simulator::getNbFrames(int& nb_frames)
+void Camera::getNbFrames(int& nb_frames)
 {
 	nb_frames = m_nb_frames;
 }
 
-void Simulator::setExpTime(double exp_time)
+void Camera::setExpTime(double exp_time)
 {
 	if (exp_time <= 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid exposure time");
@@ -155,12 +156,12 @@ void Simulator::setExpTime(double exp_time)
 	m_exp_time = exp_time;
 }
 
-void Simulator::getExpTime(double& exp_time)
+void Camera::getExpTime(double& exp_time)
 {
 	exp_time = m_exp_time;
 }
 
-void Simulator::setLatTime(double lat_time)
+void Camera::setLatTime(double lat_time)
 {
 	if (lat_time < 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid latency time");
@@ -168,61 +169,61 @@ void Simulator::setLatTime(double lat_time)
 	m_lat_time = lat_time;
 }
 
-void Simulator::getLatTime(double& lat_time)
+void Camera::getLatTime(double& lat_time)
 {
 	lat_time = m_lat_time;
 }
 
-void Simulator::setBin(const Bin& bin)
+void Camera::setBin(const Bin& bin)
 {
 	m_frame_builder.setBin(bin);
 }
 
-void Simulator::getBin(Bin& bin)
+void Camera::getBin(Bin& bin)
 {
 	m_frame_builder.getBin(bin);
 }
 
-void Simulator::checkBin(Bin& bin)
+void Camera::checkBin(Bin& bin)
 {
 	m_frame_builder.checkBin(bin);
 }
 
-void Simulator::setFrameDim(const FrameDim& frame_dim)
+void Camera::setFrameDim(const FrameDim& frame_dim)
 {
 	m_frame_builder.setFrameDim(frame_dim);
 }
 
-void Simulator::getFrameDim(FrameDim& frame_dim)
+void Camera::getFrameDim(FrameDim& frame_dim)
 {
 	m_frame_builder.getFrameDim(frame_dim);
 }
 
-void Simulator::reset()
+void Camera::reset()
 {
 	stopAcq();
 
 	init();
 }
 
-Simulator::Status Simulator::getStatus()
+Camera::Status Camera::getStatus()
 {
 	int thread_status = m_thread.getStatus();
 	switch (thread_status) {
 	case SimuThread::Ready:
-		return Simulator::Ready;
+		return Camera::Ready;
 	case SimuThread::Exposure:
-		return Simulator::Exposure;
+		return Camera::Exposure;
 	case SimuThread::Readout:
-		return Simulator::Readout;
+		return Camera::Readout;
 	case SimuThread::Latency:
-		return Simulator::Latency;
+		return Camera::Latency;
 	default:
 		throw LIMA_HW_EXC(Error, "Invalid thread status");
 	}
 }
 
-void Simulator::startAcq()
+void Camera::startAcq()
 {
 	m_thread.m_force_stop = false;//uggly but work	
 	m_buffer_ctrl_mgr.getBuffer().setStartTimestamp(Timestamp::now());
@@ -231,29 +232,29 @@ void Simulator::startAcq()
 	m_thread.waitNotStatus(SimuThread::Ready);
 }
 
-void Simulator::stopAcq()
-{		
+void Camera::stopAcq()
+{
 	m_thread.m_force_stop = true;//uggly but work
 	m_thread.sendCmd(SimuThread::StopAcq);
 	m_thread.waitStatus(SimuThread::Ready);
 }
 
-int Simulator::getNbAcquiredFrames()
+int Camera::getNbAcquiredFrames()
 {
 	return m_thread.getNbAcquiredFrames();
 }
 
-ostream& lima::operator <<(ostream& os, Simulator& simu)
+ostream& lima::Simulator::operator <<(ostream& os, Camera& simu)
 {
 	string status;
 	switch (simu.getStatus()) {
-	case Simulator::Ready:
+	case Camera::Ready:
 		status = "Ready"; break;
-	case Simulator::Exposure:
+	case Camera::Exposure:
 		status = "Exposure"; break;
-	case Simulator::Readout:
+	case Camera::Readout:
 		status = "Readout"; break;
-	case Simulator::Latency:
+	case Camera::Latency:
 		status = "Latency"; break;
 	default:
 		status = "Unknown";
