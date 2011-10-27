@@ -38,6 +38,9 @@ class LIMACORE_API HwInterface
 	typedef std::vector<HwCap> CapList;
 
 	typedef struct Status {
+	  enum Basic {Ready,Exposure,Readout,Latency};
+	  inline void set(Basic);
+
 		AcqStatus acq;
 		DetStatus det;
 		DetStatus det_mask;
@@ -84,6 +87,28 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os,
 LIMACORE_API std::ostream& operator <<(std::ostream& os, 
 				       HwInterface::ResetLevel reset_level);
 
+void HwInterface::StatusType::set(HwInterface::StatusType::Basic basic_status)
+{
+  switch (basic_status) 
+    {
+    case HwInterface::StatusType::Ready:
+      acq = AcqReady;
+      det = DetIdle;
+      break;
+    case HwInterface::StatusType::Exposure:
+      det = DetExposure;
+      goto Running;
+    case HwInterface::StatusType::Readout:
+      det = DetReadout;
+      goto Running;
+    case HwInterface::StatusType::Latency:
+      det = DetLatency;
+    Running:
+      acq = AcqRunning;
+      break;
+    }
+  det_mask = DetExposure | DetReadout | DetLatency;
+}
 
 } // namespace lima
 

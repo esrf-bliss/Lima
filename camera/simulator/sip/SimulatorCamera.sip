@@ -31,10 +31,6 @@ class Camera
 %End
 
  public:
-	enum Status {
-		Ready, Exposure, Readout, Latency,
-	};
-
 	Camera();
 	~Camera();
 
@@ -59,7 +55,7 @@ class Camera
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(FrameDim& frame_dim /Out/);
 	
-	Status getStatus();
+	HwInterface::StatusType::Basic getStatus();
 	int getNbAcquiredFrames();
 
 	void getMaxImageSize(Size& max_image_size /Out/);

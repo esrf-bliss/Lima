@@ -22,6 +22,7 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include "HwInterface.h"
 #include "HwBufferMgr.h"
 #include "SimulatorFrameBuilder.h"
 #include "ThreadUtils.h"
@@ -37,10 +38,6 @@ namespace Simulator
 class LIBSIMULATOR_API Camera
 {
  public:
-	enum Status {
-		Ready, Exposure, Readout, Latency,
-	};
-
 	Camera();
 	~Camera();
 
@@ -65,7 +62,7 @@ class LIBSIMULATOR_API Camera
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(FrameDim& frame_dim);
 	
-	Status getStatus();
+	HwInterface::StatusType::Basic getStatus();
 	int getNbAcquiredFrames();
 
 	void getMaxImageSize(Size& max_image_size);

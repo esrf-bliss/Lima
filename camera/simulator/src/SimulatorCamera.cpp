@@ -206,18 +206,18 @@ void Camera::reset()
 	init();
 }
 
-Camera::Status Camera::getStatus()
+HwInterface::StatusType::Basic Camera::getStatus()
 {
 	int thread_status = m_thread.getStatus();
 	switch (thread_status) {
 	case SimuThread::Ready:
-		return Camera::Ready;
+		return HwInterface::StatusType::Ready;
 	case SimuThread::Exposure:
-		return Camera::Exposure;
+		return HwInterface::StatusType::Exposure;
 	case SimuThread::Readout:
-		return Camera::Readout;
+		return HwInterface::StatusType::Readout;
 	case SimuThread::Latency:
-		return Camera::Latency;
+		return HwInterface::StatusType::Latency;
 	default:
 		throw LIMA_HW_EXC(Error, "Invalid thread status");
 	}
@@ -248,13 +248,13 @@ ostream& lima::Simulator::operator <<(ostream& os, Camera& simu)
 {
 	string status;
 	switch (simu.getStatus()) {
-	case Camera::Ready:
+	case HwInterface::StatusType::Ready:
 		status = "Ready"; break;
-	case Camera::Exposure:
+	case HwInterface::StatusType::Exposure:
 		status = "Exposure"; break;
-	case Camera::Readout:
+	case HwInterface::StatusType::Readout:
 		status = "Readout"; break;
-	case Camera::Latency:
+	case HwInterface::StatusType::Latency:
 		status = "Latency"; break;
 	default:
 		status = "Unknown";

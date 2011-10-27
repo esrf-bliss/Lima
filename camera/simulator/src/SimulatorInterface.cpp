@@ -254,25 +254,7 @@ void Interface::stopAcq()
 
 void Interface::getStatus(StatusType& status)
 {
-	Camera::Status simu_status = m_simu.getStatus();
-	switch (simu_status) {
-	case Camera::Ready:
-		status.acq = AcqReady;
-		status.det = DetIdle;
-		break;
-	case Camera::Exposure:
-		status.det = DetExposure;
-		goto Running;
-	case Camera::Readout:
-		status.det = DetReadout;
-		goto Running;
-	case Camera::Latency:
-		status.det = DetLatency;
-	Running:
-		status.acq = AcqRunning;
-		break;
-	}
-	status.det_mask = DetExposure | DetReadout | DetLatency;
+  status.set(m_simu.getStatus());
 }
 
 int Interface::getNbHwAcquiredFrames()
