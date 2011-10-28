@@ -36,11 +36,11 @@
 #include <time_compat.h>
 #endif
 #include <unistd.h>
-#include "FrameBuilder.h"
+#include "SimulatorFrameBuilder.h"
 #include "SizeUtils.h"
 
-
 using namespace lima;
+using namespace lima::Simulator;
 using namespace std;
 
 

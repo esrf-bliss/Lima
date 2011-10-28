@@ -179,15 +179,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\FrameBuilder.cpp"
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorFrameBuilder.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimuHwInterface.cpp"
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorInterface.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\Simulator.cpp"
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorCamera.cpp"
 				>
 			</File>
 		</Filter>
@@ -197,15 +197,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\include\FrameBuilder.h"
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorFrameBuilder.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\include\SimuHwInterface.h"
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorInterface.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\include\Simulator.h"
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCamera.h"
 				>
 			</File>
 		</Filter>
