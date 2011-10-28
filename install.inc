@@ -29,10 +29,11 @@ INSTALL_LIMA_DIR = $(INSTALL_DIR)/Lima
 endif
 
 ifndef INSTALL_PLAT
-ifeq (/csadmin/common/scripts/get_os.share,)
-INSTALL_PLAT=""
+GET_OS_SHARE = $(shell ls /csadmin/common/scripts/get_os.share 2> /dev/null)
+ifeq ($(GET_OS_SHARE),)
+INSTALL_PLAT=
 else
-INSTALL_PLAT=$(shell /csadmin/common/scripts/get_os.share)
+INSTALL_PLAT=$(shell $(GET_OS_SHARE))
 endif
 endif
 
