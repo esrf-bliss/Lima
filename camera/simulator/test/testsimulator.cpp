@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "Simulator.h"
+#include "SimulatorCamera.h"
 #include "HwBufferSave.h"
 #include "PoolThreadMgr.h"
 
@@ -30,17 +30,18 @@
 
 
 using namespace lima;
+using namespace lima::Simulator;
 using namespace std;
 
 class TestFrameCallback : public HwFrameCallback
 {
 public:
-	TestFrameCallback(Simulator& simu, HwBufferSave& buffer_save) 
+	TestFrameCallback(Camera& simu, HwBufferSave& buffer_save) 
 		: m_simu(simu), m_buffer_save(buffer_save) {}
 protected:
 	virtual bool newFrameReady(const HwFrameInfoType& frame_info);
 private:
-	Simulator& m_simu;
+	Camera& m_simu;
 	HwBufferSave& m_buffer_save;
 };
 
@@ -56,7 +57,7 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 
 int main(int argc, char *argv[])
 {
-	Simulator simu;
+	Camera simu;
 	HwBufferSave buffer_save(HwBufferSave::EDF);
 	TestFrameCallback cb(simu, buffer_save);
 

@@ -27,18 +27,13 @@
          <version>1.6.6</version>
       </dependency>
     </dependencies>
+	
+	<scm>
+       <connection>scm:git:git://git.epn-campus.eu/repositories/Lima</connection>
+       <developerConnection>scm:git:git://git@git.epn-campus.eu/repositories/Lima</developerConnection>
+       <url>https://forge.epn-campus.eu/projects/show/lima</url>
+   </scm>
 
-   <build>
-       <plugins>
-            <plugin>
-                 <groupId>fr.soleil.maven.plugins</groupId>
-                 <artifactId>maven-cvs-plugin</artifactId>
-                 <configuration>
-                 <enable>false</enable>
-                 </configuration>
-            </plugin>
-       </plugins>
-   </build>
    <developers>
        <developer>
            <id>langlois</id>

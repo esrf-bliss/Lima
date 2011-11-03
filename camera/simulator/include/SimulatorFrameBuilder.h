@@ -31,12 +31,13 @@
 #define FRAMEBUILDER_H
 
 #include <vector>
-#include "SimuCompatibility.h"
+#include "SimulatorCompatibility.h"
 #include "SizeUtils.h"
 #include "Exceptions.h"
 
 namespace lima {
 
+namespace Simulator {
 
 struct LIBSIMULATOR_API GaussPeak {
 	int x0, y0;     /// The center of the peak
@@ -98,6 +99,8 @@ class LIBSIMULATOR_API FrameBuilder {
 	template <class depth> void fillData( unsigned char *ptr );
 };
 
+
+}
 
 }
 

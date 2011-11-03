@@ -19,23 +19,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-
-class Simulator
+namespace Simulator
+{
+class Camera
 {
 %TypeHeaderCode
-#include "Simulator.h"
+#include "SimulatorCamera.h"
 #include <string>
 #include <time.h>
 #include <cmath>
 %End
 
  public:
-	enum Status {
-		Ready, Exposure, Readout, Latency,
-	};
-
-	Simulator();
-	~Simulator();
+	Camera();
+	~Camera();
 
 	HwBufferCtrlObj* getBufferMgr();
 	
@@ -58,7 +55,7 @@ class Simulator
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(FrameDim& frame_dim /Out/);
 	
-	Status getStatus();
+	HwInterface::StatusType::Basic getStatus();
 	int getNbAcquiredFrames();
 
 	void getMaxImageSize(Size& max_image_size /Out/);
@@ -71,5 +68,6 @@ class Simulator
 	str << *sipCpp;	
 	sipRes = str.str().c_str();
 %End
+};
 };
 

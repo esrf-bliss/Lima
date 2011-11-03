@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-simu-objs = FrameBuilder.o Simulator.o SimuHwInterface.o
+simu-objs = SimulatorFrameBuilder.o SimulatorCamera.o SimulatorInterface.o
 
 SRCS = $(simu-objs:.o=.cpp)
 

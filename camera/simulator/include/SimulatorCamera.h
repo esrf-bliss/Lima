@@ -22,8 +22,9 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include "HwInterface.h"
 #include "HwBufferMgr.h"
-#include "FrameBuilder.h"
+#include "SimulatorFrameBuilder.h"
 #include "ThreadUtils.h"
 #include "SizeUtils.h"
 #include <ostream>
@@ -31,15 +32,14 @@
 namespace lima
 {
 
-class LIBSIMULATOR_API Simulator
+namespace Simulator
+{
+
+class LIBSIMULATOR_API Camera
 {
  public:
-	enum Status {
-		Ready, Exposure, Readout, Latency,
-	};
-
-	Simulator();
-	~Simulator();
+	Camera();
+	~Camera();
 
 	HwBufferCtrlObj* getBufferMgr();
 	
@@ -62,7 +62,7 @@ class LIBSIMULATOR_API Simulator
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(FrameDim& frame_dim);
 	
-	Status getStatus();
+	HwInterface::StatusType::Basic getStatus();
 	int getNbAcquiredFrames();
 
 	void getMaxImageSize(Size& max_image_size);
@@ -81,7 +81,7 @@ class LIBSIMULATOR_API Simulator
 			StartAcq = MaxThreadCmd, StopAcq,
 		};
 		
-		SimuThread(Simulator& simu);
+		SimuThread(Camera& simu);
 
 		virtual void start();
 		
@@ -93,7 +93,7 @@ class LIBSIMULATOR_API Simulator
 		virtual void execCmd(int cmd);
 	private:
 		void execStartAcq();
-		Simulator* m_simu;
+		Camera* m_simu;
 		int m_acq_frame_nb;
 	};
 	friend class SimuThread;
@@ -109,8 +109,11 @@ class LIBSIMULATOR_API Simulator
 	SimuThread m_thread;
 };
 
-LIBSIMULATOR_API std::ostream& operator <<(std::ostream& os, Simulator& simu);
+LIBSIMULATOR_API std::ostream& operator <<(std::ostream& os, Camera& simu);
+
+}
 
 } // namespace lima
+
 
 #endif // SIMULATOR_H

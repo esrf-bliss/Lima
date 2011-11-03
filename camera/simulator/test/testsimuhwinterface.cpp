@@ -19,23 +19,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SimuHwInterface.h"
+#include "SimulatorInterface.h"
 #include "HwBufferSave.h"
 
 #include <iostream>
 
 using namespace lima;
+using namespace lima::Simulator;
 using namespace std;
 
 class TestFrameCallback : public HwFrameCallback
 {
 public:
-	TestFrameCallback(SimuHwInterface& simu_hw, HwBufferSave& buffer_save) 
+	TestFrameCallback(Interface& simu_hw, HwBufferSave& buffer_save) 
 		: m_simu_hw(simu_hw), m_buffer_save(buffer_save) {}
 protected:
 	virtual bool newFrameReady(const HwFrameInfoType& frame_info);
 private:
-	SimuHwInterface& m_simu_hw;
+	Interface& m_simu_hw;
 	HwBufferSave& m_buffer_save;
 };
 
@@ -51,7 +52,7 @@ bool TestFrameCallback::newFrameReady(const HwFrameInfoType& frame_info)
 	return true;
 }
 
-void print_status(SimuHwInterface& simu_hw)
+void print_status(Interface& simu_hw)
 {
 	HwInterface::Status status;
 
@@ -61,8 +62,8 @@ void print_status(SimuHwInterface& simu_hw)
 
 void test_simu_hw_interface()
 {
-	Simulator simu;
-	SimuHwInterface simu_hw(simu);
+	Camera simu;
+	Interface simu_hw(simu);
 	HwBufferSave buffer_save(HwBufferSave::EDF);
 	TestFrameCallback cb(simu_hw, buffer_save);
 
