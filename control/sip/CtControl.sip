@@ -93,6 +93,9 @@ using namespace lima;
     void startAcq();
     void stopAcq();
 
+    void abortAcq(AcqStatus acq_status, CtControl::ErrorCode error_code, 
+		  Data &data, bool ctrl_mutex_locked=false);
+
     CtAcquisition* acquisition();
     CtSaving* saving();
 %If (POSIX_PLATFORM)

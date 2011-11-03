@@ -97,6 +97,20 @@ private:
   CtControl &_ctrl;
 };
 
+class CtControl::_AbortAcqCallback : public TaskEventCallback
+{
+public:
+  _AbortAcqCallback(CtControl &ctrl) :
+    TaskEventCallback(),_ctrl(ctrl) {}
+  
+  virtual void finished(Data &aData)
+  {
+    _ctrl.stopAcq();
+  }
+private:
+  CtControl &_ctrl;
+};
+
 
 
 CtControl::CtControl(HwInterface *hw) :
@@ -327,6 +341,42 @@ void CtControl::getStatus(Status& status) const
     }
 }
 
+/** @brief aborts an acquisiton from a callback thread: it's safe to call 
+ *  from a HW thread. Creates a dummy task that calls stopAcq()
+ */
+
+void CtControl::abortAcq(AcqStatus acq_status, ErrorCode error_code, 
+			 Data& data, bool ctrl_mutex_locked)
+{
+  DEB_MEMBER_FUNCT();
+
+  if (!ctrl_mutex_locked)
+    m_cond.mutex().lock();
+
+  bool status_change = (m_status.AcquisitionStatus != acq_status);
+  if (status_change) {
+    m_status.AcquisitionStatus = acq_status;
+    m_status.Error = error_code;
+  }
+
+  if (!ctrl_mutex_locked)
+    m_cond.mutex().unlock();
+
+  typedef SinkTaskBase AbortAcqTask;
+  AbortAcqTask *abort_task = new AbortAcqTask();
+  _AbortAcqCallback *abort_cb = new _AbortAcqCallback(*this);
+  abort_task->setEventCallback(abort_cb);
+  abort_cb->unref();
+
+  TaskMgr *mgr = new TaskMgr();
+  mgr->setInputData(data);
+  mgr->addSinkTask(0, abort_task);
+  abort_task->unref();
+  
+  PoolThreadMgr::get().addProcess(mgr);
+}
+
+
 /** @brief an event arrived, calc the new status
  */
 void CtControl::_calcAcqStatus()
@@ -530,6 +580,7 @@ bool CtControl::newFrameReady(Data& fdata)
 	m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
       _calcAcqStatus();
     }
+
   return aContinueFlag;
 }
 
@@ -690,7 +741,7 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
 /** @brief this methode check if an overrun 
  *  @warning this methode is call under lock
  */
-bool CtControl::_checkOverrun(Data &aData) const
+bool CtControl::_checkOverrun(Data &aData)
 {
   DEB_MEMBER_FUNCT();
   if(m_status.AcquisitionStatus == AcqFault) return true;
@@ -707,28 +758,34 @@ bool CtControl::_checkOverrun(Data &aData) const
   m_ct_buffer->getNumber(nb_buffers);
   
   CtSaving::SavingMode mode;
-  m_ct_saving->getSavingMode(mode) ;
+  m_ct_saving->getSavingMode(mode);
 
   bool overrunFlag = false;
+  ErrorCode error_code = NoError;
   if(imageToProcess >= nb_buffers) // Process overrun
     {
       overrunFlag = true;
-
-      m_status.AcquisitionStatus = AcqFault;
-      m_status.Error = ProcessingOverun;
-      
-      DEB_ERROR() << DEB_VAR1(m_status);
+      error_code = ProcessingOverun;
     }
   else if(mode != CtSaving::Manual && imageToSave >= nb_buffers) // Save overrun
     {
       overrunFlag = true;
-      
-      m_status.AcquisitionStatus = AcqFault;
-      m_status.Error = SaveOverun;
-
-      DEB_ERROR() << DEB_VAR1(m_status);
+      int first_to_save, last_to_save;
+      m_ct_saving->getSaveCounters(first_to_save, last_to_save);
+      DEB_ERROR() << DEB_VAR2(first_to_save, last_to_save);
+      int frames_to_save = last_to_save - first_to_save + 1;
+      int frames_to_compress = imageStatus.LastBaseImageReady - last_to_save;
+      bool slow_processing = frames_to_compress > frames_to_save;
+      DEB_ERROR() << DEB_VAR2(frames_to_compress, frames_to_save);
+      error_code = slow_processing ? ProcessingOverun : SaveOverun;
     }
+
   DEB_PARAM() << DEB_VAR1(overrunFlag);
+  if (overrunFlag) {
+    DEB_ERROR() << DEB_VAR2(m_status, error_code);
+    abortAcq(AcqFault, error_code, aData, true);
+  }
+
   return overrunFlag;
 }
 // ----------------------------------------------------------------------------

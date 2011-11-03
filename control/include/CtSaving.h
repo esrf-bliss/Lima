@@ -326,6 +326,19 @@ namespace lima {
     SavingMode getAcqSavingMode() const
     { return getStream(0).getParameters(Acq).savingMode; }
 
+    // --- from control
+    void getSaveCounters(int& first_to_save, int& last_to_save)
+    { AutoMutex lock(m_cond.mutex());
+      first_to_save = last_to_save = -1;
+      FrameMap::const_iterator it, end = m_frame_datas.end();
+      for (it = m_frame_datas.begin(); it != end; ++it) {
+	if (it->first > last_to_save)
+	  last_to_save = it->first;
+	if ((first_to_save == -1) || (it->first < first_to_save))
+	  first_to_save = it->first;
+      }
+    }
+
     // --- internal call
     void _prepare();
     void _getCommonHeader(HeaderMap&);

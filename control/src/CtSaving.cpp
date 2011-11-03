@@ -232,6 +232,8 @@ void CtSaving::Stream::createSaveContainer()
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the cbf "
                                      "saving option, not managed";  
 #endif
+    goto common;
+
   case NXS:
 #ifndef WITH_NXS_SAVING
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the nxs "
@@ -239,6 +241,8 @@ void CtSaving::Stream::createSaveContainer()
 #endif        
   case RAW:
   case EDF:
+
+  common:
     if (m_save_cnt) {
       m_save_cnt->close();
       delete m_save_cnt;

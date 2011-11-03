@@ -123,6 +123,8 @@ namespace lima
     void startAcq();
     void stopAcq();
 
+    void abortAcq(AcqStatus acq_status, ErrorCode error_code, Data &data,
+		  bool ctrl_mutex_locked=false);
 
     CtAcquisition* 	acquisition() 		{ return m_ct_acq; }
     CtSaving* 		saving() 		{ return m_ct_saving; }
@@ -181,6 +183,9 @@ namespace lima
     class _LastCounterReadyCallback;
     friend class _LastCounterReadyCallback;
 
+    class _AbortAcqCallback;
+    friend class _AbortAcqCallback;
+
     HwInterface		*m_hw;
     mutable Cond	m_cond;
     mutable Status      m_status;
@@ -218,7 +223,7 @@ namespace lima
 #endif
     ImageStatusCallback *m_img_status_cb;
 
-    inline bool _checkOverrun(Data&) const;
+    inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();
   };
 
