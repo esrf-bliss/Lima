@@ -62,7 +62,9 @@ namespace lima
       MASK,
       ROICOUNTERS,
       ROI2SPECTRUM,
-      SOFTROI
+      SOFTROI,
+      USER_LINK_TASK,
+      USER_SINK_TASK,
     };
 
   struct LIMACORE_API SoftOpKey
@@ -271,6 +273,65 @@ namespace lima
     virtual void prepare() {};
   private:
     Tasks::SoftRoi *m_opt;
+  };
+
+  class SoftPrepareCallbackGen;
+  class LIMACORE_API SoftCallback
+  {
+    friend class SoftPrepareCallbackGen;
+  public:
+    SoftCallback() : m_callback_gen(NULL) {}
+    virtual ~SoftCallback();
+  protected:
+    virtual void prepare() = 0;
+  private:
+    SoftPrepareCallbackGen* m_callback_gen;
+  };
+
+  class LIMACORE_API SoftPrepareCallbackGen
+  {
+    DEB_CLASS(DebModControl, "SoftPrepareCallbackGen");
+  public:
+    SoftPrepareCallbackGen();
+    virtual ~SoftPrepareCallbackGen();
+
+    void registerCallback(SoftCallback&);
+    void unregisterCallback(SoftCallback&);
+  protected:
+    virtual void prepare_cb();
+  private:
+    SoftCallback* m_cb;
+  };
+
+  class LIMACORE_API SoftUserLinkTask : public SoftOpBaseClass,
+					public SoftPrepareCallbackGen
+  {
+  public:
+    SoftUserLinkTask();
+    virtual ~SoftUserLinkTask();
+
+    void setLinkTask(LinkTask*);
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare() {prepare_cb();}
+  private:
+    LinkTask*	m_link_task;
+  };
+
+  class LIMACORE_API SoftUserSinkTask : public SoftOpBaseClass,
+					public SoftPrepareCallbackGen
+  {
+  public:
+    SoftUserSinkTask();
+    virtual ~SoftUserSinkTask();
+
+    void setSinkTask(SinkTaskBase*);
+
+  protected:
+    virtual void addTo(TaskMgr&,int stage);
+    virtual void prepare() {prepare_cb();}
+  private:
+    SinkTaskBase* m_sink_task;
   };
 }
 #endif

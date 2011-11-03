@@ -102,6 +102,10 @@ INSTANCE_2_SoftOp
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpRoi2Spectrum,NULL);break; \
 	case(SOFTROI): \
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpSoftRoi,NULL);break; \
+	case(USER_LINK_TASK): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftUserLinkTask,NULL);break; \
+	case(USER_SINK_TASK): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftUserSinkTask,NULL);break; \
 	default: \
 	  throw LIMA_CTL_EXC(NotSupported,"Sofware class not yet managed"); \
 	} \

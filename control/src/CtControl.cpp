@@ -428,6 +428,8 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber,
       if (readBlockLen != 1)
 	throw LIMA_CTL_EXC(NotSupported, "Cannot read more than one frame "
 			   "at a time with External Operations");
+      if(frameNumber < 0)
+	frameNumber = m_status.ImageCounters.LastImageReady;
 
       std::map<int,Data>::iterator i = m_images_buffer.find(frameNumber);
       if(i != m_images_buffer.end())
@@ -573,7 +575,7 @@ bool CtControl::newFrameReady(Data& fdata)
 	PoolThreadMgr::get().addProcess(mgr);
       else
 	delete mgr;
-      if (!internal_stage && (last_link < 0))
+      if (!internal_stage)
 	newBaseImageReady(fdata);
 
       if (m_img_status_cb)
