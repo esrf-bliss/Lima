@@ -62,6 +62,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 
 	  try
 	  {
+		  cout<<"SaveContainerNxs::_writeFile() aData.frameNumber = "<<aData.frameNumber<<endl;
 		  //that's mean that snap was stopped previous by user command or device was hang
 		  //so me must clean the N4T object
 		  if(m_writer && aData.frameNumber==0)

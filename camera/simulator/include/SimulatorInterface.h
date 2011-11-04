@@ -22,25 +22,29 @@
 #ifndef SIMUHWINTERFACE_H
 #define SIMUHWINTERFACE_H
 
-#include "SimuCompatibility.h"
+#include "SimulatorCompatibility.h"
 #include "HwInterface.h"
-#include "Simulator.h"
+#include "SimulatorCamera.h"
 
 namespace lima
 {
 
-class SimuHwInterface;
+class HwInterface;
+
+namespace Simulator
+{
+
 
 /*******************************************************************
- * \class SimuDetInfoCtrlObj
+ * \class DetInfoCtrlObj
  * \brief Control object providing simulator detector info interface
  *******************************************************************/
 
-class LIBSIMULATOR_API SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
+class LIBSIMULATOR_API DetInfoCtrlObj : public HwDetInfoCtrlObj
 {
  public:
-	SimuDetInfoCtrlObj(Simulator& simu);
-	virtual ~SimuDetInfoCtrlObj();
+	DetInfoCtrlObj(Camera& simu);
+	virtual ~DetInfoCtrlObj();
 
 	virtual void getMaxImageSize(Size& max_image_size);
 	virtual void getDetectorImageSize(Size& det_image_size);
@@ -65,20 +69,20 @@ class LIBSIMULATOR_API SimuDetInfoCtrlObj : public HwDetInfoCtrlObj
 		virtual void setMaxImageSizeCallbackActive(bool cb_active);
 	};
 
-	Simulator& m_simu;
+	Camera& 		m_simu;
 	MaxImageSizeCallbackGen m_mis_cb_gen;
 };
 
 /*******************************************************************
- * \class SimuSyncCtrlObj
+ * \class SyncCtrlObj
  * \brief Control object providing simulator synchronization interface
  *******************************************************************/
 
-class LIBSIMULATOR_API SimuSyncCtrlObj : public HwSyncCtrlObj
+class LIBSIMULATOR_API SyncCtrlObj : public HwSyncCtrlObj
 {
  public:
-	SimuSyncCtrlObj(Simulator& simu);
-	virtual ~SimuSyncCtrlObj();
+	SyncCtrlObj(Camera& simu);
+	virtual ~SyncCtrlObj();
 
 	virtual bool checkTrigMode(TrigMode trig_mode);
 	virtual void setTrigMode(TrigMode  trig_mode);
@@ -96,40 +100,40 @@ class LIBSIMULATOR_API SimuSyncCtrlObj : public HwSyncCtrlObj
 	virtual void getValidRanges(ValidRangesType& valid_ranges);
 
  private:
-	Simulator& m_simu;
+	Camera& m_simu;
 };
 
 
 /*******************************************************************
- * \class SimuBinCtrlObj
+ * \class BinCtrlObj
  * \brief Control object providing simulator binning interface
  *******************************************************************/
 
-class LIBSIMULATOR_API SimuBinCtrlObj : public HwBinCtrlObj
+class LIBSIMULATOR_API BinCtrlObj : public HwBinCtrlObj
 {
  public:
-	SimuBinCtrlObj(Simulator& simu);
-	virtual ~SimuBinCtrlObj();
+	BinCtrlObj(Camera& simu);
+	virtual ~BinCtrlObj();
 
 	virtual void setBin(const Bin& bin);
 	virtual void getBin(Bin& bin);
 	virtual void checkBin(Bin& bin);
 
  private:
-	Simulator& m_simu;
+	Camera& m_simu;
 };
 
 
 /*******************************************************************
- * \class SimuHwInterface
+ * \class HwInterface
  * \brief Simulator hardware interface
  *******************************************************************/
 
-class LIBSIMULATOR_API SimuHwInterface : public HwInterface
+class LIBSIMULATOR_API Interface : public HwInterface
 {
  public:
-	SimuHwInterface(Simulator& simu);
-	virtual ~SimuHwInterface();
+	Interface(Camera& simu);
+	virtual ~Interface();
 
 	virtual void getCapList(CapList&) const;
 
@@ -141,13 +145,14 @@ class LIBSIMULATOR_API SimuHwInterface : public HwInterface
 	virtual int getNbHwAcquiredFrames();
 
  private:
-	Simulator& m_simu;
-	CapList m_cap_list;
-	SimuDetInfoCtrlObj m_det_info;
-	SimuSyncCtrlObj    m_sync;
-	SimuBinCtrlObj     m_bin;
+	Camera& 	m_simu;
+	CapList 	m_cap_list;
+	DetInfoCtrlObj 	m_det_info;
+	SyncCtrlObj    	m_sync;
+	BinCtrlObj     	m_bin;
 };
 
+}
 }
 
 #endif // SIMUHWINTERFACE_H

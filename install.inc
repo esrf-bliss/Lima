@@ -121,6 +121,13 @@ MYTHEN_MAJ_VERSION = $(shell echo $(MYTHEN_FULL_VERSION) | cut -d. -f1)
 INSTALL_MYTHEN_VDIR = $(INSTALL_MYTHEN_DIR)/v$(MYTHEN_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_UEYE), 0)
+INSTALL_UEYE_DIR = $(INSTALL_PLAT_DIR)/Ueye
+UEYE_FULL_VERSION = $(shell cat camera/ueye/VERSION)
+UEYE_MAJ_VERSION = $(shell echo $(UEYE_FULL_VERSION) | cut -d. -f1)
+INSTALL_UEYE_VDIR = $(INSTALL_UEYE_DIR)/v$(UEYE_FULL_VERSION)
+endif
+
 .PHONY: install
 
 PROCESSOR_TYPE := $(shell uname -i)
@@ -237,4 +244,13 @@ ifneq ($(COMPILE_MYTHEN), 0)
 	cp build/liblimamythen.so.$(MYTHEN_FULL_VERSION) $(INSTALL_LIB_DIR)
 	cp -d build/liblimamythen.so.$(MYTHEN_MAJ_VERSION) $(INSTALL_LIB_DIR)
 	cp sip/mythen/limamythen.so $(INSTALL_MYTHEN_VDIR)
+endif
+
+ifneq ($(COMPILE_UEYE), 0)
+	mkdir -p $(INSTALL_UEYE_VDIR)
+	cp camera/ueye/python/__init__.py $(INSTALL_UEYE_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimaueye.so*
+	cp build/liblimaueye.so.$(UEYE_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimaueye.so.$(UEYE_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp sip/ueye/limaueye.so $(INSTALL_UEYE_VDIR)
 endif

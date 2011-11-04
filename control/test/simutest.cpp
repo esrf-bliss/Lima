@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SimuHwInterface.h"
+#include "SimulatorInterface.h"
 #include "CtControl.h"
 #include "CtAcquisition.h"
 #include "CtSaving.h"
@@ -28,11 +28,12 @@
 #include <iostream>
 
 using namespace lima;
+using namespace lima::Simulator;
 using namespace std;
 
 void simulator_test(double expo, long nframe)
 {
-	Simulator simu;
+	Camera simu;
 	HwInterface *hw;
 	CtControl *ct;
 	CtAcquisition *acq;
@@ -41,7 +42,7 @@ void simulator_test(double expo, long nframe)
 	CtControl::ImageStatus img_status;
 	long frame= -1;
 
-	hw= new SimuHwInterface(simu);
+	hw= new Interface(simu);
 	ct= new CtControl(hw);
 
 	save= ct->saving();

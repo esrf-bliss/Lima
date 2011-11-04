@@ -15,6 +15,7 @@ prosilica
 roperscientific
 adsc
 mythen
+ueye
 *.obj
 lima*.exp
 lima*.lib

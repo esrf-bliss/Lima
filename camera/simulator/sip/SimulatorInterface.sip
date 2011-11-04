@@ -20,15 +20,17 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-class SimuDetInfoCtrlObj : HwDetInfoCtrlObj
+namespace Simulator
+{
+class DetInfoCtrlObj : HwDetInfoCtrlObj
 {
 %TypeHeaderCode
-#include "SimuHwInterface.h"
+#include "SimulatorInterface.h"
 %End
 
  public:
-	SimuDetInfoCtrlObj(Simulator& simu);
-	virtual ~SimuDetInfoCtrlObj();
+	DetInfoCtrlObj(Simulator::Camera& simu);
+	virtual ~DetInfoCtrlObj();
 
 	virtual void getMaxImageSize(Size& max_image_size /Out/);
 	virtual void getDetectorImageSize(Size& det_image_size /Out/);
@@ -47,15 +49,15 @@ class SimuDetInfoCtrlObj : HwDetInfoCtrlObj
 					HwMaxImageSizeCallback& cb);
 };
 
-class SimuSyncCtrlObj : HwSyncCtrlObj
+class SyncCtrlObj : HwSyncCtrlObj
 {
 %TypeHeaderCode
-#include "SimuHwInterface.h"
+#include "SimulatorInterface.h"
 %End
 
  public:
-	SimuSyncCtrlObj(Simulator& simu);
-	virtual ~SimuSyncCtrlObj();
+	SyncCtrlObj(Simulator::Camera& simu);
+	virtual ~SyncCtrlObj();
 
 	virtual bool checkTrigMode(TrigMode trig_mode);
 	virtual void setTrigMode(TrigMode  trig_mode);
@@ -76,15 +78,15 @@ class SimuSyncCtrlObj : HwSyncCtrlObj
 };
 
 
-class SimuBinCtrlObj : HwBinCtrlObj
+class BinCtrlObj : HwBinCtrlObj
 {
 %TypeHeaderCode
-#include "SimuHwInterface.h"
+#include "SimulatorInterface.h"
 %End
 
  public:
-	SimuBinCtrlObj(Simulator& simu);
-	virtual ~SimuBinCtrlObj();
+	BinCtrlObj(Simulator::Camera& simu);
+	virtual ~BinCtrlObj();
 
 	virtual void setBin(const Bin& bin);
 	virtual void getBin(Bin& bin /Out/);
@@ -93,15 +95,15 @@ class SimuBinCtrlObj : HwBinCtrlObj
 };
 
 
-class SimuHwInterface : HwInterface
+class Interface : HwInterface
 {
 %TypeHeaderCode
-#include "SimuHwInterface.h"
+#include "SimulatorInterface.h"
 %End
 
  public:
-	SimuHwInterface(Simulator& simu);
-	virtual ~SimuHwInterface();
+	Interface(Simulator::Camera& simu);
+	virtual ~Interface();
 
 //	virtual const CapList& getCapList() const;
 	virtual void getCapList(std::vector<HwCap> &cap_list /Out/) const;
@@ -112,5 +114,7 @@ class SimuHwInterface : HwInterface
 	virtual void stopAcq();
 	virtual void getStatus(HwInterface::StatusType& status /Out/);
 	virtual int getNbHwAcquiredFrames();
+
+};
 
 };

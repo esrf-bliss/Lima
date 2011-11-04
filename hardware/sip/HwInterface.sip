@@ -78,6 +78,8 @@ using namespace lima;
 %End  
  public:
         struct StatusType {
+	  enum Basic {Ready,Exposure,Readout,Latency};
+	  void set(Basic);
 		AcqStatus acq;
 		DetStatus det;
 		DetStatus det_mask;

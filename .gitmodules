@@ -58,3 +58,6 @@
 [submodule "camera/mythen"]
 	path = camera/mythen
 	url = git://git.epn-campus.eu/repositories/LimaCameraMythen
+[submodule "camera/ueye"]
+	path = camera/ueye
+	url = git://git.epn-campus.eu/repositories/LimaCameraUeye

@@ -9,7 +9,7 @@
 
    <groupId>fr.soleil.lib</groupId>
    <artifactId>Lima</artifactId>
-   <version>1.0.7</version>
+   <version>1.1.1</version>
 
    <packaging>pom</packaging>
    <name>[Lima Project]</name>
@@ -18,25 +18,22 @@
      <dependencies>
       <dependency>
          <groupId>fr.soleil.lib</groupId>
-         <artifactId>YAT-${aol}-${library}-${mode}</artifactId>
-      </dependency>
+         <artifactId>YAT4Tango-${aol}-${library}-${mode}</artifactId>
+         <version>1.5.8</version>         
+      </dependency>     
       <dependency>
          <groupId>fr.soleil.lib</groupId>
-         <artifactId>YAT4Tango-${aol}-${library}-${mode}</artifactId>
+         <artifactId>YAT-${aol}-${library}-${mode}</artifactId>
+         <version>1.6.6</version>
       </dependency>
     </dependencies>
+	
+	<scm>
+       <connection>scm:git:git://git.epn-campus.eu/repositories/Lima</connection>
+       <developerConnection>scm:git:git://git@git.epn-campus.eu/repositories/Lima</developerConnection>
+       <url>https://forge.epn-campus.eu/projects/show/lima</url>
+   </scm>
 
-   <build>
-       <plugins>
-            <plugin>
-                 <groupId>fr.soleil.maven.plugins</groupId>
-                 <artifactId>maven-cvs-plugin</artifactId>
-                 <configuration>
-                 <enable>false</enable>
-                 </configuration>
-            </plugin>
-       </plugins>
-   </build>
    <developers>
        <developer>
            <id>langlois</id>

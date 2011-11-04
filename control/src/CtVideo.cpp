@@ -244,7 +244,7 @@ long long CtVideo::Image::frameNumber() const
 CtVideo::CtVideo(CtControl &ct) :
   m_pars_modify_mask(0),
   m_ready_flag(true),
-  m_image_counter(0),
+  m_image_counter(-1),
   m_read_image(new VideoImage()),
   m_write_image(new VideoImage()),
   m_image_callback(NULL),
