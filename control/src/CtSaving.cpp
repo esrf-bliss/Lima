@@ -317,7 +317,6 @@ void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
 /** @brief check if all file can be written
  */
 
-#ifndef COMPILEIT
 void CtSaving::Stream::checkWriteAccess()
 {
   DEB_MEMBER_FUNCT();
@@ -369,13 +368,15 @@ void CtSaving::Stream::checkWriteAccess()
 #ifdef WIN32
       HANDLE hFind;
       WIN32_FIND_DATA FindFileData;
-      char filesToSearch[FILENAME_MAX+1];
+      const int maxNameLen = FILENAME_MAX;
+      char filesToSearch[ maxNameLen];
 
       sprintf_s(filesToSearch,FILENAME_MAX, "%s/*.*", m_pars.directory.c_str());
       if((hFind = FindFirstFile(filesToSearch, &FindFileData)) == INVALID_HANDLE_VALUE)
 #else
       struct dirent buffer;
       struct dirent* result;
+      const int maxNameLen = 256;
 
       DIR *aDirPt = opendir(m_pars.directory.c_str());
       if(!aDirPt)
@@ -387,7 +388,6 @@ void CtSaving::Stream::checkWriteAccess()
 
       
       bool errorFlag = false;
-      const int maxNameLen = 256;
       char testString[maxNameLen];
       snprintf(testString,sizeof(testString),
 	       "%s%s%s",
@@ -443,7 +443,6 @@ void CtSaving::Stream::checkWriteAccess()
 	        THROW_CTL_ERROR(Error) << output;
     } // if(m_pars.overwritePolicy == Abort)
 }
-#endif
 
 SinkTaskBase *CtSaving::Stream::getTask(TaskType type, const HeaderMap& header)
 {
