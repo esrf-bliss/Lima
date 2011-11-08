@@ -22,9 +22,38 @@
 #include <cmath>
 #include <sstream>
 #include <sys/types.h>
-#include <dirent.h>
+//#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+
+#ifndef S_ISREG
+#define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
+#endif
+
+
+/* Values for the second argument to access.
+   These may be OR'd together.  */
+#ifndef R_OK
+#define R_OK    4               /* Test for read permission.  */
+#endif
+
+#ifndef W_OK
+#define W_OK    2               /* Test for write permission.  */
+#endif
+
+#ifndef X_OK
+#define X_OK    1               /* Test for execute permission.  */
+#endif
+
+#ifndef F_OK
+#define F_OK    0               /* Test for existence.  */
+#endif
+
 
 #ifdef __linux__ 
 #include <sys/statvfs.h>
@@ -122,12 +151,14 @@ void CtSaving::Parameters::checkValid() const
 	throw LIMA_CTL_EXC(InvalidValue, "CBF file format does not support "
 			                 "multi frame per file");
       break;
-#pragma message ( "--- WARNING / TODO - no cases???" )
 #endif
+
+#pragma message ( "--- WARNING / TODO - no cases???" )
     default:
       break;
     }
 }
+
 
 //@brief constructor
 CtSaving::Stream::Stream(CtSaving& aCtSaving, int idx)
@@ -285,6 +316,8 @@ void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
 
 /** @brief check if all file can be written
  */
+
+#ifndef COMPILEIT
 void CtSaving::Stream::checkWriteAccess()
 {
   DEB_MEMBER_FUNCT();
@@ -332,15 +365,26 @@ void CtSaving::Stream::checkWriteAccess()
       int nbFiles = (nbAcqFrames + framesPerFile - 1) / framesPerFile;
       int firstFileNumber = m_acquisition_pars.nextNumber;
       int lastFileNumber = m_acquisition_pars.nextNumber + nbFiles - 1;
+
+#ifdef WIN32
+      HANDLE hFind;
+      WIN32_FIND_DATA FindFileData;
+      char filesToSearch[FILENAME_MAX+1];
+
+      sprintf_s(filesToSearch,FILENAME_MAX, "%s/*.*", m_pars.directory.c_str());
+      if((hFind = FindFirstFile(filesToSearch, &FindFileData)) == INVALID_HANDLE_VALUE)
+#else
+      struct dirent buffer;
+      struct dirent* result;
+
       DIR *aDirPt = opendir(m_pars.directory.c_str());
       if(!aDirPt)
+#endif
 	{
 	  output = "Can't open directory : " + m_pars.directory;
 	  THROW_CTL_ERROR(Error) << output;
 	}
-      
-      struct dirent buffer;
-      struct dirent* result;
+
       
       bool errorFlag = false;
       const int maxNameLen = 256;
@@ -352,34 +396,54 @@ void CtSaving::Stream::checkWriteAccess()
 	       m_pars.suffix.c_str());
 
       char firstFileName[maxNameLen],lastFileName[maxNameLen];
-      snprintf(firstFileName,maxNameLen,testString,firstFileNumber);
-      snprintf(lastFileName,maxNameLen,testString,lastFileNumber);
+      snprintf(firstFileName, maxNameLen, testString, firstFileNumber);
+      snprintf(lastFileName, maxNameLen, testString, lastFileNumber);
       DEB_TRACE() << "Test if file between: " DEB_VAR2(firstFileName,lastFileName);
 
-      int returnFlag;
+      char *fname;
+
+#ifdef WIN32
+      BOOL doIt = true;
+      while(!errorFlag && doIt) {
+        fname = FindFileData.cFileName;
+        doIt = FindNextFile(hFind, &FindFileData);
+#else
+      int returnFlag;    // not used???
       while(!errorFlag && 
-	    !(returnFlag = readdir_r(aDirPt,&buffer,&result)) && result)
-	{
-	  int fileIndex;
-	  if(sscanf(result->d_name,testString,&fileIndex) == 1)
+          !(returnFlag = readdir_r(aDirPt,&buffer,&result)) && result){
+        fname = result->d_name;
+#endif
+
+    int fileIndex;
+
+    if(sscanf_s(fname,testString, &fileIndex) == 1)
 	    {
 	      char auxFileName[maxNameLen];
 	      snprintf(auxFileName,maxNameLen,testString,fileIndex);
-	      if((strncmp(result->d_name, auxFileName, maxNameLen) == 0) &&
-		 (fileIndex >= firstFileNumber) && (fileIndex <= lastFileNumber))
-		{
-		  output = "File : ";
-		  output += (char*)result->d_name;
-		  output += " already exist";
-		  errorFlag = true;
-		}
-	    }
-	}
+	      if((strncmp(fname, auxFileName, maxNameLen) == 0) &&
+		        (fileIndex >= firstFileNumber) && (fileIndex <= lastFileNumber))
+		      {
+		        output = "File : ";
+		        output += fname;
+		        output += " already exist";
+		        errorFlag = true;
+		      }
+	    } // if sscanf
+  } // while
+
+
+#ifdef WIN32
+      FindClose(hFind);
+#else
       closedir(aDirPt);
+#endif
+
+
       if(errorFlag)
-	THROW_CTL_ERROR(Error) << output;
-    }
+	        THROW_CTL_ERROR(Error) << output;
+    } // if(m_pars.overwritePolicy == Abort)
 }
+#endif
 
 SinkTaskBase *CtSaving::Stream::getTask(TaskType type, const HeaderMap& header)
 {
