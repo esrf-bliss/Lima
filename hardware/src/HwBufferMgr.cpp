@@ -672,3 +672,65 @@ BufferCtrlMgr::AcqFrameCallback::newFrameReady(const HwFrameInfoType& finfo)
 	DEB_MEMBER_FUNCT();
 	return m_buffer_mgr->acqFrameReady(finfo);
 }
+
+/*****************************************************************************
+			  SoftBufferCtrlMgr
+****************************************************************************/
+
+SoftBufferCtrlMgr::Sync* SoftBufferCtrlMgr::getBufferSync(Cond &cond)
+{
+  if(!m_buffer_callback)
+    m_buffer_callback = new Sync(*this,cond);
+  return (SoftBufferCtrlMgr::Sync*)m_buffer_callback;
+}
+
+SoftBufferCtrlMgr::Sync::Sync(SoftBufferCtrlMgr &mgr,
+			      Cond &cond) :
+  m_cond(cond),
+  m_buffer_mgr(mgr)
+{
+}
+
+SoftBufferCtrlMgr::Sync::Status 
+SoftBufferCtrlMgr::Sync::wait(int frame_number,double timeout)
+{
+  AutoMutex aLock(m_cond.mutex());
+  void *framePtr = m_buffer_mgr.getBuffer().getFrameBufferPtr(frame_number);
+  std::set<void*>::iterator i = m_buffer_in_use.find(framePtr);
+  bool okFlag = true;
+  if(i != m_buffer_in_use.end())
+    okFlag = m_cond.wait(timeout);
+
+  if(okFlag)
+    {
+      i = m_buffer_in_use.find(framePtr);
+      return i == m_buffer_in_use.end() ? AVAILABLE : INTERRUPTED;
+    }
+  else
+    return TIMEOUT;
+  
+}
+
+void SoftBufferCtrlMgr::Sync::map(void *address)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_buffer_in_use.insert(address);
+}
+
+void SoftBufferCtrlMgr::Sync::release(void *address)
+{
+  AutoMutex aLock(m_cond.mutex());
+  std::set<void*>::iterator i = m_buffer_in_use.find(address);
+  if(i != m_buffer_in_use.end())
+    {
+      m_buffer_in_use.erase(i);
+      m_cond.broadcast();
+    }
+}
+
+void SoftBufferCtrlMgr::Sync::releaseAll()
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_buffer_in_use.clear();
+  m_cond.broadcast();
+}

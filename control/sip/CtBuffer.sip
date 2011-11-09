@@ -62,6 +62,6 @@ using namespace lima;
 
 	bool isAccumulationActive() const;
 
-	static void getDataFromHwFrameInfo(Data& /Out/,const HwFrameInfoType&,
-					   int readBlockLen=1);
+	void getDataFromHwFrameInfo(Data& /Out/,const HwFrameInfoType&,
+				    int readBlockLen=1);
 };

@@ -87,14 +87,18 @@ namespace lima {
 
     bool isAccumulationActive() const {return !!m_ct_accumulation;}
 
-    static void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&,
-				       int readBlockLen=1);
+    void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&,
+				int readBlockLen=1);
   private:
+    class _DataDestroyCallback;
+    friend class _DataDestroyCallback;
 
-    HwBufferCtrlObj* 	m_hw_buffer;
-    CtBufferFrameCB* 	m_frame_cb;
-    Parameters		m_pars;
-    CtAccumulation* 	m_ct_accumulation;
+    HwBufferCtrlObj* 		m_hw_buffer;
+    CtBufferFrameCB* 		m_frame_cb;
+    Parameters			m_pars;
+    CtAccumulation* 		m_ct_accumulation;
+    HwBufferCtrlObj::Callback* 	m_hw_buffer_cb;
+    Buffer::Callback*		m_data_destroy_callback;
   };
 
   inline std::ostream& operator<<(std::ostream &os,

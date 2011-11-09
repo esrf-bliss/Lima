@@ -28,6 +28,7 @@
 #include "MemUtils.h"
 
 #include <vector>
+#include <set>
 
 namespace lima
 {
@@ -275,14 +276,15 @@ class LIMACORE_API BufferCtrlMgr : public HwFrameCallbackGen
 /** @brief this class is a basic software allocation class,
  *  It can be directly provide to the control layer as a HwBufferCtrlObj
  */
-class SoftBufferCtrlMgr : public HwBufferCtrlObj
+class LIMACORE_API SoftBufferCtrlMgr : public HwBufferCtrlObj
 {
  public:
   SoftBufferCtrlMgr() :
     HwBufferCtrlObj(),
     m_buffer_cb_mgr(m_buffer_alloc_mgr),
     m_mgr(m_buffer_cb_mgr),
-    m_acq_frame_nb(-1)
+    m_acq_frame_nb(-1),
+    m_buffer_callback(NULL)
       {}
 
     virtual void setFrameDim(const FrameDim& frame_dim) {m_mgr.setFrameDim(frame_dim);}
@@ -315,11 +317,33 @@ class SoftBufferCtrlMgr : public HwBufferCtrlObj
     StdBufferCbMgr&  getBuffer() {return m_buffer_cb_mgr;}
 
     int		     getNbAcquiredFrames() {return m_acq_frame_nb + 1;}
+
+    class LIMACORE_API Sync : public HwBufferCtrlObj::Callback
+    {
+      friend class SoftBufferCtrlMgr;
+    public:
+      enum Status {AVAILABLE,TIMEOUT,INTERRUPTED};
+      Status wait(int frame_number,double timeout = -1.);
+    protected:
+      virtual void map(void *address);
+      virtual void release(void *address);
+      virtual void releaseAll();
+    private:
+      Sync(SoftBufferCtrlMgr&,Cond&);
+
+      Cond&			m_cond;
+      SoftBufferCtrlMgr& 	m_buffer_mgr;
+      std::set<void*>		m_buffer_in_use;
+    };
+    Sync* getBufferSync(Cond&);
+    
+    virtual HwBufferCtrlObj::Callback* getBufferCallback() {return m_buffer_callback;}
  protected:
-    SoftBufferAllocMgr 	m_buffer_alloc_mgr;
-    StdBufferCbMgr 	m_buffer_cb_mgr;
-    BufferCtrlMgr	m_mgr;
-    int			m_acq_frame_nb;
+    SoftBufferAllocMgr 		m_buffer_alloc_mgr;
+    StdBufferCbMgr 		m_buffer_cb_mgr;
+    BufferCtrlMgr		m_mgr;
+    int				m_acq_frame_nb;
+    HwBufferCtrlObj::Callback* 	m_buffer_callback;
 };
 } // namespace lima
 

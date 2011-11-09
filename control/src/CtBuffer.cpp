@@ -24,13 +24,26 @@
 
 using namespace lima;
 
+class CtBuffer::_DataDestroyCallback : public Buffer::Callback
+{
+public:
+  _DataDestroyCallback(CtBuffer &buffer) : m_buffer(buffer) {}
+
+  virtual void destroy(void *dataPt)
+  {
+    m_buffer.m_hw_buffer_cb->release(dataPt);
+  }
+private:
+  CtBuffer& m_buffer;
+};
+
 bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frame_info);
 
   Data fdata;
-  CtBuffer::getDataFromHwFrameInfo(fdata,frame_info);
+  m_ct->buffer()->getDataFromHwFrameInfo(fdata,frame_info);
   if(m_ct_accumulation)
     return m_ct_accumulation->_newFrameReady(fdata);
   else
@@ -38,13 +51,18 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 }
 
 CtBuffer::CtBuffer(HwInterface *hw)
-  : m_frame_cb(NULL),m_ct_accumulation(NULL)
+  : m_frame_cb(NULL),m_ct_accumulation(NULL),
+    m_data_destroy_callback(NULL)
 
 {
   DEB_CONSTRUCTOR();
 
   if (!hw->getHwCtrlObj(m_hw_buffer))
     throw LIMA_CTL_EXC(Error, "Cannot get hardware buffer object");
+
+  m_hw_buffer_cb = m_hw_buffer->getBufferCallback();
+  if(m_hw_buffer_cb)
+    m_data_destroy_callback = new _DataDestroyCallback(*this);
 }
 
 CtBuffer::~CtBuffer()
@@ -52,6 +70,7 @@ CtBuffer::~CtBuffer()
   DEB_DESTRUCTOR();
 
   unregisterFrameCallback();
+  delete m_data_destroy_callback;
 }
 
 void CtBuffer::registerFrameCallback(CtControl *ct) 
@@ -231,6 +250,9 @@ void CtBuffer::setup(CtControl *ct)
   m_pars.nbBuffers = nbuffers;
   registerFrameCallback(ct);
   m_frame_cb->m_ct_accumulation = m_ct_accumulation;
+
+  if(m_hw_buffer_cb)
+    m_hw_buffer_cb->releaseAll();
 }
 
 void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
@@ -279,7 +301,13 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
 
   fdata.setBuffer(fbuf);
   fbuf->unref();
-  
+
+  // Manage Buffer callback
+  if(m_hw_buffer_cb)
+    {
+      m_hw_buffer_cb->map(frame_info.frame_ptr);
+      fbuf->callback = m_data_destroy_callback;
+    }
   DEB_RETURN() << DEB_VAR1(fdata);
 }
 // -----------------
