@@ -91,7 +91,8 @@ using namespace lima;
     void setParameters(const Parameters &pars);
     void getParameters(Parameters &pars /Out/) const;
 
-    void setLive(bool liveFlag);
+    void startLive();
+    void stopLive();
     void getLive(bool &liveFlag /Out/) const;
 
     void setExposure(double);

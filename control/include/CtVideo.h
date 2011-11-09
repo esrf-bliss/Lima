@@ -81,7 +81,8 @@ namespace lima
     void setParameters(const Parameters &pars);
     void getParameters(Parameters &pars) const;
 
-    void setLive(bool liveFlag);
+    void startLive() {_setLive(true);}
+    void stopLive() {_setLive(false);}
     void getLive(bool &liveFlag) const;
 
     void setExposure(double);
@@ -116,6 +117,7 @@ namespace lima
 
     void frameReady(Data&);	// callback from CtControl
 
+    void _setLive(bool);
     void _data_2_image(Data &aData,Bin &aBin,Roi &aRoi);
     void _data2image_finnished(Data&);
     void _apply_params(AutoMutex &,bool = false);

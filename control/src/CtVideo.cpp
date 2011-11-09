@@ -314,7 +314,7 @@ void CtVideo::getParameters(Parameters &pars) const
   pars = m_pars;
 }
 
-void CtVideo::setLive(bool liveFlag)
+void CtVideo::_setLive(bool liveFlag)
 {
   AutoMutex aLock(m_cond.mutex());
 
