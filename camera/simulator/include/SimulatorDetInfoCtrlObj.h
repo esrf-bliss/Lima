@@ -19,72 +19,52 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#ifndef SIMUHWINTERFACE_H
-#define SIMUHWINTERFACE_H
-
+#ifndef SIMULATORDETINFOCTRLOBJ_H
+#define SIMULATORDETINFOCTRLOBJ_H
 #include "SimulatorCompatibility.h"
-#include "HwInterface.h"
 #include "SimulatorCamera.h"
-#include "SimulatorSyncCtrlObj.h"
-#include "SimulatorDetInfoCtrlObj.h"
 
 namespace lima
 {
-
-class HwInterface;
-
 namespace Simulator
 {
-
 /*******************************************************************
- * \class BinCtrlObj
- * \brief Control object providing simulator binning interface
+ * \class DetInfoCtrlObj
+ * \brief Control object providing simulator detector info interface
  *******************************************************************/
 
-class LIBSIMULATOR_API BinCtrlObj : public HwBinCtrlObj
+class LIBSIMULATOR_API DetInfoCtrlObj : public HwDetInfoCtrlObj
 {
  public:
-	BinCtrlObj(Camera& simu);
-	virtual ~BinCtrlObj();
+	DetInfoCtrlObj(Camera& simu);
+	virtual ~DetInfoCtrlObj();
 
-	virtual void setBin(const Bin& bin);
-	virtual void getBin(Bin& bin);
-	virtual void checkBin(Bin& bin);
+	virtual void getMaxImageSize(Size& max_image_size);
+	virtual void getDetectorImageSize(Size& det_image_size);
 
- private:
-	Camera& m_simu;
-};
+	virtual void getDefImageType(ImageType& def_image_type);
+	virtual void getCurrImageType(ImageType& curr_image_type);
+	virtual void setCurrImageType(ImageType  curr_image_type);
 
+	virtual void getPixelSize(double& pixel_size);
+	virtual void getDetectorType(std::string& det_type);
+	virtual void getDetectorModel(std::string& det_model);
 
-/*******************************************************************
- * \class HwInterface
- * \brief Simulator hardware interface
- *******************************************************************/
-
-class LIBSIMULATOR_API Interface : public HwInterface
-{
- public:
-	Interface(Camera& simu);
-	virtual ~Interface();
-
-	virtual void getCapList(CapList&) const;
-
-	virtual void reset(ResetLevel reset_level);
-	virtual void prepareAcq();
-	virtual void startAcq();
-	virtual void stopAcq();
-	virtual void getStatus(StatusType& status);
-	virtual int getNbHwAcquiredFrames();
+	virtual void registerMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
+	virtual void unregisterMaxImageSizeCallback(
+					HwMaxImageSizeCallback& cb);
 
  private:
-	Camera& 	m_simu;
-	CapList 	m_cap_list;
-	DetInfoCtrlObj 	m_det_info;
-	SyncCtrlObj    	m_sync;
-	BinCtrlObj     	m_bin;
+	class MaxImageSizeCallbackGen: public HwMaxImageSizeCallbackGen
+	{
+	protected:
+		virtual void setMaxImageSizeCallbackActive(bool cb_active);
+	};
+
+	Camera& 		m_simu;
+	MaxImageSizeCallbackGen m_mis_cb_gen;
 };
-
 }
 }
-
-#endif // SIMUHWINTERFACE_H
+#endif
