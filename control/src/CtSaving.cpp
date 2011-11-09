@@ -22,37 +22,36 @@
 #include <cmath>
 #include <sstream>
 #include <sys/types.h>
-//#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifdef WIN32
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
 #endif
-
 #ifndef S_ISREG
 #define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
 #endif
 
-
-/* Values for the second argument to access.
-   These may be OR'd together.  */
+/* Values for the second argument to access. These may be OR'd together.  */
 #ifndef R_OK
 #define R_OK    4               /* Test for read permission.  */
 #endif
-
 #ifndef W_OK
 #define W_OK    2               /* Test for write permission.  */
 #endif
-
 #ifndef X_OK
 #define X_OK    1               /* Test for execute permission.  */
 #endif
-
 #ifndef F_OK
 #define F_OK    0               /* Test for existence.  */
 #endif
+
+#else
+#include <dirent.h>
+#endif
+
 
 
 #ifdef __linux__ 
