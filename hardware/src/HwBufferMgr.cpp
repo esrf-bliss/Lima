@@ -700,6 +700,8 @@ SoftBufferCtrlMgr::Sync::wait(int frame_number,double timeout)
   bool okFlag = true;
   if(i != m_buffer_in_use.end())
     okFlag = m_cond.wait(timeout);
+  else
+    return AVAILABLE;
 
   if(okFlag)
     {
