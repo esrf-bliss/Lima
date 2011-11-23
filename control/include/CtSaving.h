@@ -175,7 +175,7 @@ namespace lima {
 
     class Stream;
 
-    class SaveContainer
+    class LIMACORE_API SaveContainer
       {
       DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
     public:
@@ -229,7 +229,7 @@ namespace lima {
       Save, Compression,
     };
 
-    class Stream 
+    class LIMACORE_API Stream 
     {
       DEB_CLASS(DebModControl, "CtSaving::Stream");
 

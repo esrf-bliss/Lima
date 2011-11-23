@@ -334,9 +334,9 @@ void CtControl::getStatus(Status& status) const
     status.AcquisitionStatus = AcqFault;
   else if(status.AcquisitionStatus == AcqReady)
     {
-      HwInterface::Status aHwStatus;
-      m_hw->getStatus(aHwStatus);
-      DEB_TRACE() << DEB_VAR1(aHwStatus);
+      //HwInterface::Status aHwStatus;
+      //m_hw->getStatus(aHwStatus);
+      //DEB_TRACE() << DEB_VAR1(aHwStatus);
       status.AcquisitionStatus = aHwStatus.acq;
     }
 }
