@@ -23,6 +23,20 @@
 #include "CtAcquisition.h"
 #include "math.h"
 
+#define CHECK_EXPOTIME(val)					     \
+  if (val < m_valid_ranges.min_exp_time)			     \
+  {								     \
+  DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too short: "     \
+  << DEB_VAR1(m_valid_ranges.min_exp_time);			     \
+  throw LIMA_CTL_EXC(InvalidValue, "Exposure time too short");	     \
+  }								     \
+  else if (val > m_valid_ranges.max_exp_time)			     \
+  {								     \
+  DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too long: "	     \
+  << DEB_VAR1(m_valid_ranges.max_exp_time);			     \
+  throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");	     \
+  }
+
 using namespace lima;
 /*----------------------------------------------------------------------
 			 validRangesCallback
@@ -249,6 +263,12 @@ void CtAcquisition::setAcqMode(AcqMode mode)
     m_acc_nframes = -1;
     m_acc_live_time = -1.;
     m_acc_dead_time = -1.;
+    try{
+      CHECK_EXPOTIME(m_inpars.acqExpoTime);
+    }
+    catch(...) {
+      m_inpars.acqExpoTime = m_inpars.accMaxExpoTime;
+    }
     break;
   case Accumulation:
     if (m_inpars.accMaxExpoTime<=0) {
@@ -316,18 +336,8 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(acq_time);
 
-  if (acq_time < m_valid_ranges.min_exp_time) 
-    {
-      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too short: " 
-		  << DEB_VAR1(m_valid_ranges.min_exp_time);
-      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too short");
-    }
-  else if (acq_time > m_valid_ranges.max_exp_time)
-    {
-      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too long: " 
-		  << DEB_VAR1(m_valid_ranges.max_exp_time);
-      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");
-    }
+  if(m_inpars.acqMode != Accumulation)
+    CHECK_EXPOTIME(acq_time);
 
   m_inpars.acqExpoTime= acq_time;
 }
@@ -374,6 +384,7 @@ void CtAcquisition::setAccMaxExpoTime(double acc_time)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(acc_time);
+  CHECK_EXPOTIME(acc_time);
 
   m_inpars.accMaxExpoTime= acc_time;
 }
