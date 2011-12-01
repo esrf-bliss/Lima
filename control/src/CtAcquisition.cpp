@@ -72,8 +72,12 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
   if (!hw->getHwCtrlObj(m_hw_sync))
     throw LIMA_CTL_EXC(Error, "Cannot get hardware sync object");
 
+//rh
   m_valid_ranges_cb = new _ValidRangesCallback(*this);
+  //printf("------------------- CtAcquisition::CtAcquisition before\n");
   m_hw_sync->getValidRanges(m_valid_ranges);
+  //printf("------------------- CtAcquisition::CtAcquisition after\n");
+  //printf("------------------- CtAcquisition::CtAcquisition m_valid_ranges [%g][%g]\n", m_valid_ranges.min_exp_time, m_valid_ranges.max_exp_time);
   m_hw_sync->registerValidRangesCallback(m_valid_ranges_cb);
   DEB_TRACE() << DEB_VAR1(m_valid_ranges);
 
@@ -333,11 +337,22 @@ void CtAcquisition::getAcqNbFrames(int& nframes) const
 
 void CtAcquisition::setAcqExpoTime(double acq_time)
 {
-  DEB_MEMBER_FUNCT();
+  DEB_MEMBER_FUNCT(); 
   DEB_PARAM() << DEB_VAR1(acq_time);
 
   if(m_inpars.acqMode != Accumulation)
     CHECK_EXPOTIME(acq_time);
+	
+  if (acq_time < m_valid_ranges.min_exp_time) 
+    {
+      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too short: " << DEB_VAR1(m_valid_ranges.min_exp_time);
+      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too short");
+    }
+  else if (acq_time > m_valid_ranges.max_exp_time)
+    {
+      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too long: " << DEB_VAR1(m_valid_ranges.max_exp_time);
+      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");
+    }
 
   m_inpars.acqExpoTime= acq_time;
 }
@@ -345,6 +360,13 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
 void CtAcquisition::getAcqExpoTime(double& acq_time) const
 {
   DEB_MEMBER_FUNCT();
+
+  //rh
+#if 0
+	const CtAcquisition* th = this;
+	printf("=============== [%lx]\n", (long) th);
+	printf("=============== [%lx]\n", (long) th);
+#endif
 
   acq_time= m_inpars.acqExpoTime;
   
@@ -493,14 +515,14 @@ void CtAcquisition::getLatencyTime(double& time) const
 // ------------------
 CtAcquisition::Parameters::Parameters()
 {
-  DEB_CONSTRUCTOR();
+	DEB_CONSTRUCTOR();
 
   reset();
 }
 
 void CtAcquisition::Parameters::reset()
 {
-  DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
   acqMode= Single;
   accTimeMode = Live;
@@ -511,9 +533,7 @@ void CtAcquisition::Parameters::reset()
   latencyTime= 0.;
   triggerMode= IntTrig;
 
-  DEB_TRACE() << DEB_VAR7(acqMode,acqNbFrames,acqExpoTime,
-			  accMaxExpoTime,concatNbFrames,
-			  latencyTime,triggerMode);
+  DEB_TRACE() << DEB_VAR7(acqMode,acqNbFrames,acqExpoTime, accMaxExpoTime,concatNbFrames, latencyTime,triggerMode);
 }
 
 // ------------------

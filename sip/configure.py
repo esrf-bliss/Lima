@@ -247,7 +247,8 @@ def main():
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
             makefile.extra_cxxflags = ['/EHsc'] + extra_cxxflags
-            libpath = 'build\msvc\9.0\*\Debug'
+            #libpath = 'build\msvc\9.0\*\Debug'
+            libpath = 'build\msvc\9.0\*\Release'
             #makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
             
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))

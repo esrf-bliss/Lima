@@ -41,7 +41,7 @@ namespace lima
     enum AccTimeMode {Live,Real};
 
     struct LIMACORE_API Parameters {
-      DEB_CLASS_NAMESPC(DebModControl,"Acquisition::Parameters","Control");
+		DEB_CLASS_NAMESPC(DebModControl,"Acquisition::Parameters","Control");
     public:
       Parameters();
       void reset();
