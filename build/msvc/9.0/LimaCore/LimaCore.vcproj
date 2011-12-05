@@ -129,7 +129,7 @@
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				ExpandAttributedSource="false"
-				AssemblerOutput="4"
+				AssemblerOutput="0"
 				AssemblerListingLocation="$(IntDir)\"
 				WarningLevel="3"
 				DebugInformationFormat="3"
