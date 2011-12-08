@@ -159,7 +159,11 @@ void MemBuffer::release()
 	if (!m_size)
 		return;
 
+#ifdef __unix
 	free(m_ptr);
+#else
+	_aligned_free(m_ptr);
+#endif
 	m_ptr = NULL;
 	m_size = 0;
 }
