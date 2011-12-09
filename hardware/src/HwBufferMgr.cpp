@@ -222,8 +222,6 @@ void BufferCbMgr::getBufferFrameDim(const FrameDim& single_frame_dim,
 void BufferCbMgr::acqFrameNb2BufferNb(int acq_frame_nb, int& buffer_nb,
 				      int& concat_frame_nb)
 {
-	static char *fnId="BufferCbMgr::acqFrameNb2BufferNb";
-
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(acq_frame_nb);
 
@@ -232,8 +230,6 @@ void BufferCbMgr::acqFrameNb2BufferNb(int acq_frame_nb, int& buffer_nb,
 	getNbConcatFrames(nb_concat_frames);
 
 	if((nb_buffers<1) || (nb_concat_frames < 1)){
-		printf("=== %s [%d]> nb_buffers[%d] nb_concat_frames[%d]\n", fnId, __LINE__, nb_buffers, nb_concat_frames);
-
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
 					     << DEB_VAR2(nb_buffers, nb_concat_frames);
 	}
