@@ -61,3 +61,6 @@
 [submodule "camera/ueye"]
 	path = camera/ueye
 	url = git://git.epn-campus.eu/repositories/LimaCameraUeye
+[submodule "camera/perkinelmer"]
+	path = camera/perkinelmer
+	url = git://git.epn-campus.eu/repositories/LimaCameraPerkinElmer
