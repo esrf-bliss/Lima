@@ -341,7 +341,9 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
   DEB_PARAM() << DEB_VAR1(acq_time);
 
   if(m_inpars.acqMode != Accumulation)
-    CHECK_EXPOTIME(acq_time);
+    {
+      CHECK_EXPOTIME(acq_time);
+    }
 	
   if (acq_time < m_valid_ranges.min_exp_time) 
     {
