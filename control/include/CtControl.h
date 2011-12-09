@@ -127,22 +127,22 @@ namespace lima
 		  bool ctrl_mutex_locked=false);
 
 #ifdef WIN32
-	CtAcquisition* 	acquisition() ; //		{ return m_ct_acq; }
-    CtSaving* 		saving() 		; //{ return m_ct_saving; }
+    CtAcquisition* 	acquisition();
+    CtSaving* 		saving();
 #ifdef WITH_SPS_IMAGE
-    CtSpsImage* 	display() 		; //{ return m_ct_sps_image; }
+    CtSpsImage* 	display();
 #endif
-    CtImage* 		image() 		; //{ return m_ct_image; }
-    CtBuffer* 		buffer() 		; //{ return m_ct_buffer; }
-    CtAccumulation* 	accumulation() 		; //{ return m_ct_accumulation; }
-    CtVideo*		video()			; //{ return m_ct_video;}
-    CtShutter* 		shutter() 		; //{ return m_ct_shutter; }
+    CtImage* 		image();
+    CtBuffer* 		buffer();
+    CtAccumulation* 	accumulation();
+    CtVideo*		video();
+    CtShutter* 		shutter();
 
-    SoftOpExternalMgr* 	externalOperation() 	; //{return m_op_ext;}
+    SoftOpExternalMgr* 	externalOperation();
 
-    HwInterface* 	hwInterface() 		; //{return m_hw;}
-#else
-	CtAcquisition* 	acquisition() { return m_ct_acq; }
+    HwInterface* 	hwInterface();
+#else //unix
+    CtAcquisition* 	acquisition() 		{ return m_ct_acq; }
     CtSaving* 		saving() 		{ return m_ct_saving; }
 #ifdef WITH_SPS_IMAGE
     CtSpsImage* 	display() 		{ return m_ct_sps_image; }

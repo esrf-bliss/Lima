@@ -72,12 +72,8 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
   if (!hw->getHwCtrlObj(m_hw_sync))
     throw LIMA_CTL_EXC(Error, "Cannot get hardware sync object");
 
-//rh
   m_valid_ranges_cb = new _ValidRangesCallback(*this);
-  //printf("------------------- CtAcquisition::CtAcquisition before\n");
   m_hw_sync->getValidRanges(m_valid_ranges);
-  //printf("------------------- CtAcquisition::CtAcquisition after\n");
-  //printf("------------------- CtAcquisition::CtAcquisition m_valid_ranges [%g][%g]\n", m_valid_ranges.min_exp_time, m_valid_ranges.max_exp_time);
   m_hw_sync->registerValidRangesCallback(m_valid_ranges_cb);
   DEB_TRACE() << DEB_VAR1(m_valid_ranges);
 
@@ -362,13 +358,6 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
 void CtAcquisition::getAcqExpoTime(double& acq_time) const
 {
   DEB_MEMBER_FUNCT();
-
-  //rh
-#if 0
-	const CtAcquisition* th = this;
-	printf("=============== [%lx]\n", (long) th);
-	printf("=============== [%lx]\n", (long) th);
-#endif
 
   acq_time= m_inpars.acqExpoTime;
   

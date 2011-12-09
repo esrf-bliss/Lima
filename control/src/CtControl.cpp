@@ -857,27 +857,19 @@ CtControl::ImageStatusCallback::setImageStatusCallbackGen(CtControl *cb_gen)
   m_cb_gen = cb_gen;
 }
 
-
-
-
 #ifdef WIN32
-CtAcquisition* CtControl::acquisition() {
-	//rh
-	//printf("=================== [%lx]\n", (long) m_ct_acq);
-	return m_ct_acq;
-}
-
+CtAcquisition* CtControl::acquisition() 		{ return m_ct_acq; }
 CtSaving* 		CtControl::saving() 		{ return m_ct_saving; }
 #ifdef WITH_SPS_IMAGE
-    CtSpsImage* 	CtControl::display() 		{ return m_ct_sps_image; }
+CtSpsImage* 	CtControl::display() 			{ return m_ct_sps_image; }
 #endif
-    CtImage* 		CtControl::image() 		{ return m_ct_image; }
-    CtBuffer* 		CtControl::buffer() 		{ return m_ct_buffer; }
-    CtAccumulation* 	CtControl::accumulation() 		{ return m_ct_accumulation; }
-    CtVideo*		CtControl::video()			{ return m_ct_video;}
-    CtShutter* 		CtControl::shutter() 		{ return m_ct_shutter; }
+CtImage* 		CtControl::image() 		{ return m_ct_image; }
+CtBuffer* 		CtControl::buffer() 		{ return m_ct_buffer; }
+CtAccumulation* 	CtControl::accumulation() 	{ return m_ct_accumulation; }
+CtVideo*		CtControl::video()		{ return m_ct_video;}
+CtShutter* 		CtControl::shutter() 		{ return m_ct_shutter; }
 
-    SoftOpExternalMgr* 	CtControl::externalOperation() 	{return m_op_ext;}
+SoftOpExternalMgr* 	CtControl::externalOperation() 	{return m_op_ext;}
 
-    HwInterface* 	CtControl::hwInterface() 		{return m_hw;}
+HwInterface* 	CtControl::hwInterface() 		{return m_hw;}
 #endif
