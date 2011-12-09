@@ -373,21 +373,22 @@ void CtSaving::Stream::checkWriteAccess()
 
       char *fname;
 
+      int fileIndex;
+
 #ifdef WIN32
       BOOL doIt = true;
       while(!errorFlag && doIt) {
         fname = FindFileData.cFileName;
         doIt = FindNextFile(hFind, &FindFileData);
+
+	if(sscanf_s(fname,testString, &fileIndex) == 1)
 #else
       int returnFlag;    // not used???
       while(!errorFlag && 
           !(returnFlag = readdir_r(aDirPt,&buffer,&result)) && result){
         fname = result->d_name;
+	if(sscanf(result->d_name,testString,&fileIndex) == 1)
 #endif
-
-    int fileIndex;
-
-    if(sscanf_s(fname,testString, &fileIndex) == 1)
 	    {
 	      char auxFileName[maxNameLen];
 	      snprintf(auxFileName,maxNameLen,testString,fileIndex);
