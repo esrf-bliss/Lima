@@ -123,8 +123,9 @@ void CtSaving::Parameters::checkValid() const
 			                 "multi frame per file");
       break;
 #endif
-
+#ifndef __unix
 #pragma message ( "--- WARNING / TODO - no cases???" )
+#endif
     default:
       break;
     }
