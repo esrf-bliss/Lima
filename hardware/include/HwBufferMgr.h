@@ -324,6 +324,7 @@ class LIMACORE_API SoftBufferCtrlMgr : public HwBufferCtrlObj
     public:
       enum Status {AVAILABLE,TIMEOUT,INTERRUPTED};
       Status wait(int frame_number,double timeout = -1.);
+      virtual ~Sync() {};
     protected:
       virtual void map(void *address);
       virtual void release(void *address);
