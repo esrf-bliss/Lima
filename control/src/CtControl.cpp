@@ -199,7 +199,10 @@ void CtControl::prepareAcq()
   getStatus(aStatus);
 
   if(aStatus.AcquisitionStatus == AcqRunning)
-    throw LIMA_CTL_EXC(Error,"Acquisition not finnished");
+    throw LIMA_CTL_EXC(Error,"Acquisition not finished");
+
+  if(aStatus.AcquisitionStatus == AcqConfig)
+    throw LIMA_CTL_EXC(Error,"Configuration not finished");
 
   resetStatus(false);
 
@@ -395,7 +398,7 @@ void CtControl::_calcAcqStatus()
 	{
 	  if(m_autosave)
 	    {
-	      // Saving is finnished
+	      // Saving is finished
 	      if(anImageCnt.LastImageAcquired == anImageCnt.LastImageSaved)
 		m_status.AcquisitionStatus = AcqReady;
 	    }
