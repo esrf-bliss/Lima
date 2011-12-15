@@ -55,7 +55,6 @@ enum TrigMode {
 	IntTrig,IntTrigMult,
 	ExtTrigSingle, ExtTrigMult,
 	ExtGate, ExtStartStop,
-	Live,
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, TrigMode trig_mode);
