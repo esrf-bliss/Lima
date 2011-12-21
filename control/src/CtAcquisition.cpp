@@ -237,6 +237,8 @@ void CtAcquisition::setTriggerMode(TrigMode mode)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(mode);
+  if(!m_hw_sync->checkTrigMode(mode))
+    THROW_CTL_ERROR(Error) << "Trigger mode:" << DEB_VAR1(mode) << " not available";
 
   m_inpars.triggerMode= mode;
 }
