@@ -38,7 +38,9 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('ueye',             [os.path.join('camera','ueye')]),
            ('roperscientific',  [os.path.join('camera','roperscientific')]),
            ('adsc',  		[os.path.join('camera','adsc')]),
-           ('mythen',           [os.path.join('camera','mythen')])]
+           ('mythen',           [os.path.join('camera','mythen')]),
+           ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
+           ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
 
@@ -253,7 +255,7 @@ def main():
             
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
-            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera\pco'), libpath))
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
 
             print "-------- makefile extra_libs", makefile.extra_libs
             print "---- makefile extra_lib_dirs", makefile.extra_lib_dirs
