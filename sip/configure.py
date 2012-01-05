@@ -72,7 +72,6 @@ def main():
 
     fn = rootName('config.inc')
     confFile = open(rootName('config.inc'))
-    print "----------------- reading ", fn
     for line in confFile:
         if line.startswith('export') : break
         line = line.strip('\n ')
@@ -85,19 +84,12 @@ def main():
             if not value:
                 excludeMods.add(var.split('_')[-1].lower())
 
-    print "----------------- modules", modules
-    print "------------- excludeMods", excludeMods
-    
     for modName, modDirs in modules:
     
         extra_cxxflags = []
         if modName in excludeMods:
-            print "------ IGNORED ----- modName", modName
             continue
     
-        print "------ PROCESSING ----------- modName", modName
-        print "----------------- modDirs", modDirs
-
         if os.path.exists(modName):
             if not os.path.isdir(modName):
                 raise 'Error: %s exists and is not a directory' % modName
@@ -109,8 +101,6 @@ def main():
         global rootDir
         orig_rootDir = rootDir
         rootDir = os.path.join('..', rootDir)
-        print "---------------- rootDir", rootDir
-
     
         sipFileNameSrc = "lima%s.sip" % modName
         if modName != 'core':
@@ -124,9 +114,6 @@ def main():
             d.close()
 
         sipFileName = "lima%s_tmp.sip" % modName
-        print "-------------COPY sipFileNameSrc", sipFileNameSrc
-        print "-------------TO  sipFileName", sipFileName
-
         shutil.copyfile(sipFileNameSrc, sipFileName)
 
         initNumpy = 'lima_init_numpy.cpp'
@@ -138,10 +125,6 @@ def main():
         extraIncludes = ['.', os.path.join('..','core'),
                          sipProcesslib, numpy.get_include(),
                          config.sip_inc_dir]
-
-        print "---dirProcesslib ", dirProcesslib
-        print "---sipProcesslib ", sipProcesslib
-        print "---extraIncludes ", extraIncludes
 
         extraIncludes += findIncludes(dirProcesslib)
         if platform.system() == 'Windows':
@@ -163,7 +146,6 @@ def main():
 
         extraIncludes += findModuleIncludes(modName)
         
-        print "-------", sipFileName
         sipFile = open(sipFileName,"a")
         sipFile.write('\n')
 
@@ -178,7 +160,6 @@ def main():
             
         for sdir in modDirs:
             srcDir = rootName(sdir)
-            print "---------------- walking in", srcDir
             for root,dirs,files in os.walk(srcDir) :
                 dir2rmove = excludeMods.intersection(dirs)
                 for dname in dir2rmove:
@@ -190,7 +171,6 @@ def main():
                         continue
                     incl = os.path.join(root,filename)
                     incl = incl.replace(os.sep,'/') # sip don't manage windows path.
-                    print "------------ INCLUDE", incl
                     sipFile.write('%%Include %s\n' % incl)
 
         sipFile.close()
@@ -232,7 +212,6 @@ def main():
 
         installs.append(["limaconfig.py", config.default_mod_dir])
 
-        print "============ Create the Makefile"
         # Create the Makefile.  The QtModuleMakefile class provided by the
         # pyqtconfig module takes care of all the extra preprocessor, compiler
         # and linker flags needed by the Qt library.
@@ -242,7 +221,6 @@ def main():
                                             export_all = True)
         
         makefile.extra_include_dirs = extraIncludes
-        print "---makefile extraIncludes ", extraIncludes
 
         if platform.system() == 'Windows':
             makefile.extra_libs = ['liblima%s' % modName,'libprocesslib']
@@ -257,8 +235,6 @@ def main():
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
 
-            print "-------- makefile extra_libs", makefile.extra_libs
-            print "---- makefile extra_lib_dirs", makefile.extra_lib_dirs
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
             makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE'] + extra_cxxflags
