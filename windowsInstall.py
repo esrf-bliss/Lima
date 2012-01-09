@@ -22,10 +22,11 @@ module2Installfiles = {
     'simulator' : [('camera/simulator/python/Simulator.py','Lima'),
                    ('build/msvc/9.0/LibSimulator/Release/liblimasimulator.dll','Lima'),
                    ('sip/simulator/limasimulator.pyd','Lima')],
-    'tango-core' : [('applications/tango/LimaCCD.py',''),
+    'tango-core' : [('applications/tango/LimaCCDs.py',''),
                     ('applications/tango/camera/__init__.py','camera'),
                     ('applications/tango/plugins','')],
-    'tango-simulator' : [('applications/tango/camera/Simulator.py','camera')]
+    'tango-simulator' : [('applications/tango/camera/Simulator.py','camera')],
+    'tango-perkinelmer' : [('applications/tango/camera/PerkinElmer.py','camera')],
     }
 
 def copyModule(filesList,baseDestPath) :
