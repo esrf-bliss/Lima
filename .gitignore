@@ -12,3 +12,8 @@ install
 *target*
 *.pyc
 *.bck
+/.project
+/2srv2.sh
+/archive_all.sh
+/tag_all_to_epn.sh
+/test.sh
