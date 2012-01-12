@@ -199,7 +199,10 @@ void CtControl::prepareAcq()
   getStatus(aStatus);
 
   if(aStatus.AcquisitionStatus == AcqRunning)
-    throw LIMA_CTL_EXC(Error,"Acquisition not finnished");
+    throw LIMA_CTL_EXC(Error,"Acquisition not finished");
+
+  if(aStatus.AcquisitionStatus == AcqConfig)
+    throw LIMA_CTL_EXC(Error,"Configuration not finished");
 
   resetStatus(false);
 
@@ -395,7 +398,7 @@ void CtControl::_calcAcqStatus()
 	{
 	  if(m_autosave)
 	    {
-	      // Saving is finnished
+	      // Saving is finished
 	      if(anImageCnt.LastImageAcquired == anImageCnt.LastImageSaved)
 		m_status.AcquisitionStatus = AcqReady;
 	    }
@@ -856,3 +859,20 @@ CtControl::ImageStatusCallback::setImageStatusCallbackGen(CtControl *cb_gen)
   DEB_MEMBER_FUNCT();
   m_cb_gen = cb_gen;
 }
+
+#ifdef WIN32
+CtAcquisition* CtControl::acquisition() 		{ return m_ct_acq; }
+CtSaving* 		CtControl::saving() 		{ return m_ct_saving; }
+#ifdef WITH_SPS_IMAGE
+CtSpsImage* 	CtControl::display() 			{ return m_ct_sps_image; }
+#endif
+CtImage* 		CtControl::image() 		{ return m_ct_image; }
+CtBuffer* 		CtControl::buffer() 		{ return m_ct_buffer; }
+CtAccumulation* 	CtControl::accumulation() 	{ return m_ct_accumulation; }
+CtVideo*		CtControl::video()		{ return m_ct_video;}
+CtShutter* 		CtControl::shutter() 		{ return m_ct_shutter; }
+
+SoftOpExternalMgr* 	CtControl::externalOperation() 	{return m_op_ext;}
+
+HwInterface* 	CtControl::hwInterface() 		{return m_hw;}
+#endif

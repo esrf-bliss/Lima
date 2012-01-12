@@ -31,7 +31,9 @@
 
 #include <string>
 #include <map>
-
+#ifndef __unix
+#pragma warning(disable:4251)
+#endif
 namespace lima
 {
 

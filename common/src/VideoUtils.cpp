@@ -43,15 +43,15 @@ inline void _bgr_2_yuv(const unsigned char *data,unsigned char *luma,
     *luma = ((25 * data[0] + 129 * data[1] + 66 * data[2]) + 128) >> 8;
 }
 
-template<class IN>
-inline void _bayer_rg_2_yuv(const IN* bayer0,IN* luma,
+template<class xClass>
+inline void _bayer_rg_2_yuv(const xClass* bayer0,xClass* luma,
 			    int column,int row)
 {
   int blue = 1;
   int start_with_green = 0;
-  int luma_step = column * sizeof(IN);
+  int luma_step = column * sizeof(xClass);
   int bayer_step = column;
-  IN *luma0 = (IN*)luma;
+  xClass *luma0 = (xClass*)luma;
   memset( luma0, 0, luma_step);
   memset( luma0 + (row - 1)*bayer_step, 0, luma_step);
   luma0 += column + 1;
@@ -61,9 +61,9 @@ inline void _bayer_rg_2_yuv(const IN* bayer0,IN* luma,
   for( ; row > 0;--row,bayer0 += bayer_step, luma0 += bayer_step )
     {
       int t0, t1;
-      const IN* bayer = bayer0;
-      IN* dst = luma0;
-      const IN* bayer_end = bayer + column;
+      const xClass* bayer = bayer0;
+      xClass* dst = luma0;
+      const xClass* bayer_end = bayer + column;
 
       dst[-1] = 0;
 

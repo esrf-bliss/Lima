@@ -1,9 +1,24 @@
+# file .../Lima/README_WINDOW
+
+#===============================================================================
 # Compilation of python Lima Modules for Windows
-  - first copie config.inc_default to config.inc
+#
+# use the special command prompt console to compile!!!
+# start -> Programs -> MS visual c++ 2008 Express Edition 
+#       -> visual studio tools -> VS 2008 Cmd Prompt
+#===============================================================================
+  - first copy config.inc_default to config.inc
   - configure config.inc
+  - go to third-party\Processlib\sip
+  - then run python configure.py
+  - then go back to Lima
   - then run windowSipCompilation --config
   - then run windowSipCompilation
+
+
+#===============================================================================
 # For Linux platform, It's manage by the master Makefile
+#===============================================================================
   - got to the Lima root project
   - then run make config
   - then run make -C sip -j3

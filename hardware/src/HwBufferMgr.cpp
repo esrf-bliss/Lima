@@ -229,6 +229,11 @@ void BufferCbMgr::acqFrameNb2BufferNb(int acq_frame_nb, int& buffer_nb,
 	getNbBuffers(nb_buffers);
 	getNbConcatFrames(nb_concat_frames);
 
+	if((nb_buffers<1) || (nb_concat_frames < 1)){
+		THROW_HW_ERROR(InvalidValue) << "Invalid " 
+					     << DEB_VAR2(nb_buffers, nb_concat_frames);
+	}
+
 	buffer_nb = (acq_frame_nb / nb_concat_frames) % nb_buffers;
 	concat_frame_nb = acq_frame_nb % nb_concat_frames;
 
@@ -465,6 +470,7 @@ BufferCtrlMgr::BufferCtrlMgr(BufferCbMgr& acq_buffer_mgr)
 	  m_frame_cb_act(false)
 {
 	DEB_CONSTRUCTOR();
+
 	m_acq_buffer_mgr->registerFrameCallback(m_frame_cb);
 }
 

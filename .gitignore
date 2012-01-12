@@ -11,3 +11,4 @@ config.inc
 install
 *target*
 *.pyc
+*.bck

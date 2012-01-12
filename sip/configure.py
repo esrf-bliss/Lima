@@ -29,6 +29,7 @@ from checksipexc import checksipexc
 
 modules = [('core',		['common', 'hardware', 'control']),
 	   ('simulator',	[os.path.join('camera','simulator')]),
+	   ('pco',	        [os.path.join('camera','pco')]),
 	   ('espia',		[os.path.join('camera','common','espia')]),
 	   ('frelon',		[os.path.join('camera','frelon')]),
 	   ('maxipix',		[os.path.join('camera','maxipix')]),
@@ -37,7 +38,9 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('ueye',             [os.path.join('camera','ueye')]),
            ('roperscientific',  [os.path.join('camera','roperscientific')]),
            ('adsc',  		[os.path.join('camera','adsc')]),
-           ('mythen',           [os.path.join('camera','mythen')])]
+           ('mythen',           [os.path.join('camera','mythen')]),
+           ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
+           ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
 
@@ -67,9 +70,10 @@ def main():
 
     config = sipconfig.Configuration()
 
+    fn = rootName('config.inc')
     confFile = open(rootName('config.inc'))
     for line in confFile:
-	if line.startswith('export') : break
+        if line.startswith('export') : break
         line = line.strip('\n ')
         if line.startswith('COMPILE_'):
             var, value = line.split('=')
@@ -81,6 +85,7 @@ def main():
                 excludeMods.add(var.split('_')[-1].lower())
 
     for modName, modDirs in modules:
+    
         extra_cxxflags = []
         if modName in excludeMods:
             continue
@@ -127,12 +132,12 @@ def main():
             
         coreDirs = modules[0][1]
         extraIncludes += findModuleIncludes('core')
-    
+        
         if (modName in espiaModules) and ('espia' not in excludeMods):
             espia_base = '/segfs/bliss/source/driver/linux-2.6/espia'
             espia_incl = os.path.join(espia_base,'src')
             extraIncludes += [espia_incl]
-
+            
         if(modName == 'basler') :
             extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
             extra_cxxflags += ['-DUSE_GIGE']
@@ -140,7 +145,7 @@ def main():
             extra_cxxflags += ['-D__LINUX__']
 
         extraIncludes += findModuleIncludes(modName)
-
+        
         sipFile = open(sipFileName,"a")
         sipFile.write('\n')
 
@@ -152,7 +157,7 @@ def main():
         if (modName in espiaModules) and (modName != 'espia'):
             sipFile.write('%Import ../espia/limaespia_tmp.sip\n')
             extraIncludes += findModuleIncludes('espia')
-
+            
         for sdir in modDirs:
             srcDir = rootName(sdir)
             for root,dirs,files in os.walk(srcDir) :
@@ -214,13 +219,22 @@ def main():
                                             build_file=build_file,
                                             installs=installs,
                                             export_all = True)
+        
         makefile.extra_include_dirs = extraIncludes
+
         if platform.system() == 'Windows':
             makefile.extra_libs = ['liblima%s' % modName,'libprocesslib']
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
             makefile.extra_cxxflags = ['/EHsc'] + extra_cxxflags
-            makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
+            #libpath = 'build\msvc\9.0\*\Debug'
+            libpath = 'build\msvc\9.0\*\Release'
+            #makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
+            
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
+
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
             makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE'] + extra_cxxflags

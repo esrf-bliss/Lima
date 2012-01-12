@@ -421,16 +421,16 @@ inline std::ostream& operator <<(std::ostream& os, const Flip& flip)
 inline Flip operator-(const Flip &f,const Flip &s)
 {
   Flip returnFlip;
-  returnFlip.x = f.x ? (f.x - s.x) : f.x;
-  returnFlip.y = f.y ? (f.y - s.y) : f.y;
+  returnFlip.x = f.x ? (f.x - s.x) != 0 : f.x;
+  returnFlip.y = f.y ? (f.y - s.y) != 0  : f.y;
   return returnFlip;
 }
 
 inline Flip operator+(const Flip &f,const Flip &s)
 {
   Flip returnFlip;
-  returnFlip.x = f.x + s.x;
-  returnFlip.y = f.y + s.y;
+  returnFlip.x = (f.x + s.x)  != 0 ;
+  returnFlip.y = (f.y + s.y)  != 0 ;
   return returnFlip;
 }
 

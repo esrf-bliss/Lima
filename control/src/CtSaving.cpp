@@ -22,11 +22,11 @@
 #include <cmath>
 #include <sstream>
 #include <sys/types.h>
-#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #ifdef __linux__ 
+#include <dirent.h>
 #include <sys/statvfs.h>
 #endif
 
@@ -123,10 +123,14 @@ void CtSaving::Parameters::checkValid() const
 			                 "multi frame per file");
       break;
 #endif
+#ifndef __unix
+#pragma message ( "--- WARNING / TODO - no cases???" )
+#endif
     default:
       break;
     }
 }
+
 
 //@brief constructor
 CtSaving::Stream::Stream(CtSaving& aCtSaving, int idx)
@@ -284,6 +288,7 @@ void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
 
 /** @brief check if all file can be written
  */
+
 void CtSaving::Stream::checkWriteAccess()
 {
   DEB_MEMBER_FUNCT();
@@ -331,18 +336,30 @@ void CtSaving::Stream::checkWriteAccess()
       int nbFiles = (nbAcqFrames + framesPerFile - 1) / framesPerFile;
       int firstFileNumber = m_acquisition_pars.nextNumber;
       int lastFileNumber = m_acquisition_pars.nextNumber + nbFiles - 1;
+
+#ifdef WIN32
+      HANDLE hFind;
+      WIN32_FIND_DATA FindFileData;
+      const int maxNameLen = FILENAME_MAX;
+      char filesToSearch[ maxNameLen];
+
+      sprintf_s(filesToSearch,FILENAME_MAX, "%s/*.*", m_pars.directory.c_str());
+      if((hFind = FindFirstFile(filesToSearch, &FindFileData)) == INVALID_HANDLE_VALUE)
+#else
+      struct dirent buffer;
+      struct dirent* result;
+      const int maxNameLen = 256;
+
       DIR *aDirPt = opendir(m_pars.directory.c_str());
       if(!aDirPt)
+#endif
 	{
 	  output = "Can't open directory : " + m_pars.directory;
 	  THROW_CTL_ERROR(Error) << output;
 	}
-      
-      struct dirent buffer;
-      struct dirent* result;
+
       
       bool errorFlag = false;
-      const int maxNameLen = 256;
       char testString[maxNameLen];
       snprintf(testString,sizeof(testString),
 	       "%s%s%s",
@@ -351,33 +368,53 @@ void CtSaving::Stream::checkWriteAccess()
 	       m_pars.suffix.c_str());
 
       char firstFileName[maxNameLen],lastFileName[maxNameLen];
-      snprintf(firstFileName,maxNameLen,testString,firstFileNumber);
-      snprintf(lastFileName,maxNameLen,testString,lastFileNumber);
+      snprintf(firstFileName, maxNameLen, testString, firstFileNumber);
+      snprintf(lastFileName, maxNameLen, testString, lastFileNumber);
       DEB_TRACE() << "Test if file between: " DEB_VAR2(firstFileName,lastFileName);
 
-      int returnFlag;
+      char *fname;
+
+      int fileIndex;
+
+#ifdef WIN32
+      BOOL doIt = true;
+      while(!errorFlag && doIt) {
+        fname = FindFileData.cFileName;
+        doIt = FindNextFile(hFind, &FindFileData);
+
+	if(sscanf_s(fname,testString, &fileIndex) == 1)
+#else
+      int returnFlag;    // not used???
       while(!errorFlag && 
-	    !(returnFlag = readdir_r(aDirPt,&buffer,&result)) && result)
-	{
-	  int fileIndex;
-	  if(sscanf(result->d_name,testString,&fileIndex) == 1)
+          !(returnFlag = readdir_r(aDirPt,&buffer,&result)) && result){
+        fname = result->d_name;
+	if(sscanf(result->d_name,testString,&fileIndex) == 1)
+#endif
 	    {
 	      char auxFileName[maxNameLen];
 	      snprintf(auxFileName,maxNameLen,testString,fileIndex);
-	      if((strncmp(result->d_name, auxFileName, maxNameLen) == 0) &&
-		 (fileIndex >= firstFileNumber) && (fileIndex <= lastFileNumber))
-		{
-		  output = "File : ";
-		  output += (char*)result->d_name;
-		  output += " already exist";
-		  errorFlag = true;
-		}
-	    }
-	}
+	      if((strncmp(fname, auxFileName, maxNameLen) == 0) &&
+		        (fileIndex >= firstFileNumber) && (fileIndex <= lastFileNumber))
+		      {
+		        output = "File : ";
+		        output += fname;
+		        output += " already exist";
+		        errorFlag = true;
+		      }
+	    } // if sscanf
+  } // while
+
+
+#ifdef WIN32
+      FindClose(hFind);
+#else
       closedir(aDirPt);
+#endif
+
+
       if(errorFlag)
-	THROW_CTL_ERROR(Error) << output;
-    }
+	        THROW_CTL_ERROR(Error) << output;
+    } // if(m_pars.overwritePolicy == Abort)
 }
 
 SinkTaskBase *CtSaving::Stream::getTask(TaskType type, const HeaderMap& header)

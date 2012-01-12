@@ -126,6 +126,22 @@ namespace lima
     void abortAcq(AcqStatus acq_status, ErrorCode error_code, Data &data,
 		  bool ctrl_mutex_locked=false);
 
+#ifdef WIN32
+    CtAcquisition* 	acquisition();
+    CtSaving* 		saving();
+#ifdef WITH_SPS_IMAGE
+    CtSpsImage* 	display();
+#endif
+    CtImage* 		image();
+    CtBuffer* 		buffer();
+    CtAccumulation* 	accumulation();
+    CtVideo*		video();
+    CtShutter* 		shutter();
+
+    SoftOpExternalMgr* 	externalOperation();
+
+    HwInterface* 	hwInterface();
+#else //unix
     CtAcquisition* 	acquisition() 		{ return m_ct_acq; }
     CtSaving* 		saving() 		{ return m_ct_saving; }
 #ifdef WITH_SPS_IMAGE
@@ -140,7 +156,9 @@ namespace lima
     SoftOpExternalMgr* 	externalOperation() 	{return m_op_ext;}
 
     HwInterface* 	hwInterface() 		{return m_hw;}
-    
+
+#endif
+
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;
 

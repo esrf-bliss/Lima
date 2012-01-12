@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			CharacterSet="1"
+			CharacterSet="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -43,10 +43,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="3"
+				RuntimeLibrary="2"
 				DisableLanguageExtensions="false"
 				DefaultCharIsUnsigned="false"
 				TreatWChar_tAsBuiltInType="true"
@@ -65,7 +65,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libprocesslib.lib"
+				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug\libprocesslib.lib"
+				OutputFile="$(InputDir)$(IntDir)\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug&quot;"
 				GenerateDebugInformation="true"
@@ -99,7 +100,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			CharacterSet="1"
+			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -107,6 +108,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				AdditionalDependencies=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -126,6 +128,9 @@
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
+				ExpandAttributedSource="false"
+				AssemblerOutput="0"
+				AssemblerListingLocation="$(IntDir)\"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -140,8 +145,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				LinkIncremental="1"
+				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib"
+				OutputFile="$(InputDir)$(IntDir)\$(ProjectName).dll"
+				LinkIncremental="0"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug&quot;"
 				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				MapExports="true"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -216,6 +226,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\control\src\CtShutter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\control\src\CtVideo.cpp"
 				>
 			</File>
 			<File
@@ -298,6 +312,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\..\hardware\src\HwVideoCtrlObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\common\src\MemUtils.cpp"
 				>
 			</File>
@@ -323,6 +341,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\common\src\Timestamp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\src\VideoUtils.cpp"
 				>
 			</File>
 		</Filter>
@@ -381,6 +403,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\control\include\CtShutter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\control\include\CtVideo.h"
 				>
 			</File>
 			<File
@@ -448,7 +474,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\LimaCore.h"
+				RelativePath="..\..\..\..\hardware\include\HwVideoCtrlObj.h"
 				>
 			</File>
 			<File
@@ -457,6 +483,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\common\include\MiscUtils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\pco\include\PcoInterface.h"
 				>
 			</File>
 			<File
@@ -480,15 +510,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\targetver.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\common\include\ThreadUtils.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\common\include\Timestamp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\include\VideoUtils.h"
 				>
 			</File>
 		</Filter>
