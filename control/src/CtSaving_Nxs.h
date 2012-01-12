@@ -1,9 +1,8 @@
 #ifndef CTSAVING_NXS_H
 #define CTSAVING_NXS_H
 #include <iostream>
-#include <nexus4tango.h>
 #include "CtSaving.h"
-
+#include <nexus4tango.h>
 using namespace std;
 //--------------------------------------------------------------------------------------------------------------------
 namespace lima
@@ -21,7 +20,7 @@ namespace lima
 	  virtual void _writeFile(Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
 	private:
 	  n4t::BufferedData1D* 	m_writer;
-	  CtSaving::Parameters			m_pars;
+	  CtSaving::Parameters	m_pars;
   };
 
 }

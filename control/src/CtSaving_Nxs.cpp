@@ -114,6 +114,24 @@ void SaveContainerNxs::_writeFile(Data &aData,
 		    m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
 		    break;
 	    }
+
+//@@@@@@@@@@@@@@@@@
+
+		  n4t::BufferedData::Statistics nxsStats;
+		  nxsStats = m_writer->GetStatistics();
+
+		  cout<<"WrittenBytes = "			<<nxsStats.ui64WrittenBytes<<endl;
+		  cout<<"PendingBytes = "			<<nxsStats.ui64PendingBytes<<endl;
+		  cout<<"MaxPendingBytes = "		<<nxsStats.ui64MaxPendingBytes<<endl;
+		  cout<<"TotalBytes = "				<<nxsStats.ui64TotalBytes<<endl;
+		  cout<<"ActiveWriters = "			<<nxsStats.ui16ActiveWriters<<endl;
+		  cout<<"MaxSimultaneousWriters = "	<<nxsStats.ui16MaxSimultaneousWriters<<endl;
+		  cout<<"fInstantMbPerSec = "		<<nxsStats.fInstantMbPerSec<<endl;
+		  cout<<"fPeakMbPerSec = "			<<nxsStats.fPeakMbPerSec<<endl;
+		  cout<<"fAverageMbPerSec = "		<<nxsStats.fAverageMbPerSec<<endl;
+
+///////////////////
+
 		  //destroy Nexus object : to do once for each new sequence at the last image
 		  if( (aData.frameNumber+1) == (m_pars.nbframes))
 		  {
