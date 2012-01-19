@@ -67,3 +67,6 @@
 [submodule "camera/andor"]
 	path = camera/andor
 	url = git://git.epn-campus.eu/repositories/LimaCameraAndor
+[submodule "camera/photonicscience"]
+	path = camera/photonicscience
+	url = git://git.epn-campus.eu/repositories/LimaCameraPhotonicScience
