@@ -18,6 +18,7 @@ mythen
 ueye
 pco
 perkinelmer
+xpad
 *.obj
 lima*.exp
 lima*.lib

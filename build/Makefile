@@ -380,6 +380,36 @@ build_targets += $(mythen-full)
 
 endif
 
+############################
+# LIMA - XPAD
+############################
+
+ifneq ($(COMPILE_XPAD),0)
+
+XPAD_LDLIBS	:= 
+name		:= xpad
+xpad-objs	:= ../camera/xpad/src/Xpad.o
+version-file	:= ../camera/xpad/VERSION
+xpad-flags	:= $(LDFLAGS)
+xpad-deps	:= $(XPAD_LDLIBS)
+
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+
+xpad-base	:= liblima$(name).so
+xpad-full	:= $(xpad-base).$(full-version)
+xpad-maj	:= $(xpad-base).$(maj-version)
+xpad-flags	+= -fPIC -Wl,-soname,$(xpad-maj)
+
+$(xpad-full):		$(xpad-objs)
+	$(CXX) -shared -o $@ $(xpad-flags) $+ $(xpad-deps)
+	rm -f $(xpad-maj);  ln -s $(xpad-full) $(xpad-maj)
+	rm -f $(xpad-base); ln -s $(xpad-maj)  $(xpad-base)
+
+build_targets += $(xpad-full)
+
+endif
+
 src:		$(build_targets)
 
 test:

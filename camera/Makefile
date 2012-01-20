@@ -92,4 +92,8 @@ ifneq ($(COMPILE_UEYE),0)
 sub-dirs += ueye
 endif
 
+ifneq ($(COMPILE_XPAD),0)
+sub-dirs += xpad
+endif
+
 include ../global.inc
