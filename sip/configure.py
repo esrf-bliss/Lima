@@ -41,6 +41,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('mythen',           [os.path.join('camera','mythen')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
            ('xpad',             [os.path.join('camera','xpad')]),
+           ('photonicscience',  [os.path.join('camera','photonicscience')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
