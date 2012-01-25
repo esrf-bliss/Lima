@@ -40,7 +40,12 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('adsc',  		[os.path.join('camera','adsc')]),
            ('mythen',           [os.path.join('camera','mythen')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
+<<<<<<< HEAD
            ('andor',      	[os.path.join('camera','andor')]),
+=======
+           ('xpad',             [os.path.join('camera','xpad')]),
+           ('photonicscience',  [os.path.join('camera','photonicscience')]),
+>>>>>>> 5d24c9e02da1323cf314907e583f48dbbbabe838
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']

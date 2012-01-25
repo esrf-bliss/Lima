@@ -96,4 +96,8 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifneq ($(COMPILE_XPAD),0)
+sub-dirs += xpad
+endif
+
 include ../global.inc
