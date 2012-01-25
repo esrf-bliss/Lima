@@ -128,6 +128,13 @@ UEYE_MAJ_VERSION = $(shell echo $(UEYE_FULL_VERSION) | cut -d. -f1)
 INSTALL_UEYE_VDIR = $(INSTALL_UEYE_DIR)/v$(UEYE_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_ANDOR), 0)
+INSTALL_ANDOR_DIR = $(INSTALL_PLAT_DIR)/Andor
+ANDOR_FULL_VERSION = $(shell cat camera/andor/VERSION)
+ANDOR_MAJ_VERSION = $(shell echo $(ANDOR_FULL_VERSION) | cut -d. -f1)
+INSTALL_ANDOR_VDIR = $(INSTALL_ANDOR_DIR)/v$(ANDOR_FULL_VERSION)
+endif
+
 .PHONY: install
 
 PROCESSOR_TYPE := $(shell uname -i)
@@ -253,4 +260,12 @@ ifneq ($(COMPILE_UEYE), 0)
 	cp build/liblimaueye.so.$(UEYE_FULL_VERSION) $(INSTALL_LIB_DIR)
 	cp -d build/liblimaueye.so.$(UEYE_MAJ_VERSION) $(INSTALL_LIB_DIR)
 	cp sip/ueye/limaueye.so $(INSTALL_UEYE_VDIR)
+endif
+ifneq ($(COMPILE_ANDOR), 0)
+	mkdir -p $(INSTALL_ANDOR_VDIR)
+	cp camera/andor/python/__init__.py $(INSTALL_ANDOR_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimaandor.so*
+	cp build/liblimaandor.so.$(ANDOR_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimaandor.so.$(ANDOR_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp sip/andor/limaandor.so $(INSTALL_ANDOR_VDIR)
 endif

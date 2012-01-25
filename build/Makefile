@@ -380,6 +380,35 @@ build_targets += $(mythen-full)
 
 endif
 
+############################
+# LIMA - ANDOR
+############################
+
+ifneq ($(COMPILE_ANDOR),0)
+
+ANDOR_LDFLAGS	:= -L. -L/usr/local/lib
+ANDOR_LDLIBS	:= -landor
+
+name		:= andor
+andor-objs	:= ../camera/andor/src/Andor.o
+version-file	:= ../camera/andor/VERSION
+andor-flags	:= $(ANDOR_LDFLAGS)
+andor-deps	:= $(ANDOR_LDLIBS)
+andor-base	:= liblima$(name).so
+full-version	:= $(shell cat $(version-file))
+maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+andor-full	:= $(andor-base).$(full-version)
+andor-maj	:= $(andor-base).$(maj-version)
+andor-flags	+= -fPIC -Wl,-soname,$(andor-maj)
+
+$(andor-full):		$(andor-objs)
+	$(CXX) -shared -o $@ $(andor-flags) $+ $(andor-deps)
+	rm -f $(andor-maj);  ln -s $(andor-full) $(andor-maj)
+	rm -f $(andor-base); ln -s $(andor-maj)  $(andor-base)
+
+build_targets += $(andor-full)
+endif
+
 src:		$(build_targets)
 
 test:

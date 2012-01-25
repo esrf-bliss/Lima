@@ -67,6 +67,10 @@ ifneq ($(COMPILE_UEYE), 0)
 sip-modules += ueye
 endif
 
+ifneq ($(COMPILE_ANDOR), 0)
+sip-modules += andor
+endif
+
 all:	src
 
 src:

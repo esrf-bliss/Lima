@@ -40,6 +40,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('adsc',  		[os.path.join('camera','adsc')]),
            ('mythen',           [os.path.join('camera','mythen')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
+           ('andor',      	[os.path.join('camera','andor')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -143,6 +144,8 @@ def main():
             extra_cxxflags += ['-DUSE_GIGE']
         elif(modName == 'ueye') and platform.system() != 'Windows':
             extra_cxxflags += ['-D__LINUX__']
+        elif(modName == 'andor') :
+            extraIncludes += ['/usr/local/include']
 
         extraIncludes += findModuleIncludes(modName)
         
