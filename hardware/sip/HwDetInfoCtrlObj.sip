@@ -35,7 +35,7 @@ using namespace lima;
 	virtual void getCurrImageType(ImageType& curr_image_type /Out/) = 0;
 	virtual void setCurrImageType(ImageType  curr_image_type) = 0;
 
-	virtual void getPixelSize(double& pixel_size /Out/) = 0;
+	virtual void getPixelSize(double& x_size /Out/,double &y_size /Out/) = 0;
 	virtual void getDetectorType(std::string& det_type /Out/) = 0;
 	virtual void getDetectorModel(std::string& det_model /Out/) = 0;
 
