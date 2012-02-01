@@ -62,17 +62,17 @@ void SaveContainerNxs::_writeFile(Data &aData,
 
 	  try
 	  {
-		  cout<<"SaveContainerNxs::_writeFile() aData.frameNumber = "<<aData.frameNumber<<endl;
+		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() aData.frameNumber = "<<aData.frameNumber;
 		  //that's mean that snap was stopped previous by user command or device was hang
 		  //so me must clean the N4T object
 		  if(m_writer && aData.frameNumber==0)
 		  {
-			cout<<"SaveContainerNxs::_writeFile() - Abort() current Nexus writer"<<endl;
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Abort() current Nexus writer";
 			//Abort every current task && go away
 			m_writer->Abort();
 			
 			//destroy object
-			cout<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()"<<endl;
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()";
 			delete m_writer;
 			m_writer = 0;			
 		  }
@@ -84,7 +84,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			getParameters(m_pars);
 			
 			//create N4T main object needed to generate Nexus file
-			cout<<"SaveContainerNxs::_writeFile() - new BufferedData1D()"<<endl;
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - new BufferedData1D()";
 			m_writer = new n4t::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
 						
 			m_writer->Initialize(m_pars.directory, "");
@@ -98,7 +98,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 		  }
 		  
 		  //write data in Nexys file
-		  cout<<"SaveContainerNxs::_writeFile() - PushData()"<<endl;
+		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - PushData()";
 		  switch(m_pars.imageType)
 		  {
 		    case Bpp8:
@@ -115,51 +115,49 @@ void SaveContainerNxs::_writeFile(Data &aData,
 		    break;
 	    }
 
-//@@@@@@@@@@@@@@@@@
 
+          //- Display Nexus statistics
 		  n4t::BufferedData::Statistics nxsStats;
 		  nxsStats = m_writer->GetStatistics();
 
-		  cout<<"WrittenBytes = "			<<nxsStats.ui64WrittenBytes<<endl;
-		  cout<<"PendingBytes = "			<<nxsStats.ui64PendingBytes<<endl;
-		  cout<<"MaxPendingBytes = "		<<nxsStats.ui64MaxPendingBytes<<endl;
-		  cout<<"TotalBytes = "				<<nxsStats.ui64TotalBytes<<endl;
-		  cout<<"ActiveWriters = "			<<nxsStats.ui16ActiveWriters<<endl;
-		  cout<<"MaxSimultaneousWriters = "	<<nxsStats.ui16MaxSimultaneousWriters<<endl;
-		  cout<<"fInstantMbPerSec = "		<<nxsStats.fInstantMbPerSec<<endl;
-		  cout<<"fPeakMbPerSec = "			<<nxsStats.fPeakMbPerSec<<endl;
-		  cout<<"fAverageMbPerSec = "		<<nxsStats.fAverageMbPerSec<<endl;
-
-///////////////////
+		  DEB_TRACE()<<"WrittenBytes = "			<<nxsStats.ui64WrittenBytes;
+		  DEB_TRACE()<<"PendingBytes = "			<<nxsStats.ui64PendingBytes;
+		  DEB_TRACE()<<"MaxPendingBytes = "		<<nxsStats.ui64MaxPendingBytes;
+		  DEB_TRACE()<<"TotalBytes = "				<<nxsStats.ui64TotalBytes;
+		  DEB_TRACE()<<"ActiveWriters = "			<<nxsStats.ui16ActiveWriters;
+		  DEB_TRACE()<<"MaxSimultaneousWriters = "	<<nxsStats.ui16MaxSimultaneousWriters;
+		  DEB_TRACE()<<"fInstantMbPerSec = "		<<nxsStats.fInstantMbPerSec;
+		  DEB_TRACE()<<"fPeakMbPerSec = "			<<nxsStats.fPeakMbPerSec;
+		  DEB_TRACE()<<"fAverageMbPerSec = "		<<nxsStats.fAverageMbPerSec;
 
 		  //destroy Nexus object : to do once for each new sequence at the last image
 		  if( (aData.frameNumber+1) == (m_pars.nbframes))
 		  {
 			//Finalize
-			cout<<"SaveContainerNxs::_writeFile() - Finalize()"<<endl;
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Finalize()";
 			m_writer->Finalize();
 
 			//destroy object
-			cout<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()"<<endl;
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()";
 			delete m_writer;
 			m_writer = 0;
 		  }
 	  }
 	  catch(yat::Exception& ex)
 	  {
-		  cout<<"SaveContainerNxs::_writeFile() - catch NexusException"<<endl;
+		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - catch NexusException";
 		  std::stringstream my_error;
 		  my_error.str("");
 		  for(unsigned i = 0; i < ex.errors.size(); i++)
 		  {
-			  my_error<<ex.errors[i].desc<<endl;
+			  my_error<<ex.errors[i].desc;
 		  }
-		  std::cout<<my_error.str()<<std::endl;
+		  DEB_TRACE()<<my_error.str();
 		  throw LIMA_CTL_EXC(Error,my_error.str());
 	  }
 	  catch(...)
 	  {
-		  cout<<"SaveContainerNxs::_writeFile() - catch UNKNOWN Exception"<<endl;
+		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - catch UNKNOWN Exception";
 		  throw LIMA_CTL_EXC(Error,"SaveContainerNxs::_writeFile() - catch UNKNOWN Exception");
 	  }
 }
