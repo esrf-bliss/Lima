@@ -71,6 +71,10 @@ ifneq ($(COMPILE_ANDOR), 0)
 sip-modules += andor
 endif
 
+ifneq ($(COMPILE_XPAD), 0)
+sip-modules += xpad
+endif
+
 all:	src
 
 src:

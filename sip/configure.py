@@ -148,6 +148,8 @@ def main():
             extra_cxxflags += ['-D__LINUX__']
         elif(modName == 'andor') :
             extraIncludes += ['/usr/local/include']
+	elif(modName == 'xpad'):
+            extraIncludes += ['../../third-party/yat/include','/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib']
 
         extraIncludes += findModuleIncludes(modName)
         

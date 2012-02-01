@@ -415,7 +415,7 @@ endif
 
 ifneq ($(COMPILE_XPAD),0)
 
-XPAD_LDLIBS	:= 
+XPAD_LDLIBS	:= -L/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib -lxpci_lib -L../third-party/yat/lib/i386/static -lyat
 name		:= xpad
 xpad-objs	:= ../camera/xpad/src/Xpad.o
 version-file	:= ../camera/xpad/VERSION

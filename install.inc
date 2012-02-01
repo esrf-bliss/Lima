@@ -135,6 +135,14 @@ ANDOR_MAJ_VERSION = $(shell echo $(ANDOR_FULL_VERSION) | cut -d. -f1)
 INSTALL_ANDOR_VDIR = $(INSTALL_ANDOR_DIR)/v$(ANDOR_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_XPAD), 0)
+INSTALL_XPAD_DIR = $(INSTALL_PLAT_DIR)/Xpad
+XPAD_FULL_VERSION = $(shell cat camera/xpad/VERSION)
+XPAD_MAJ_VERSION = $(shell echo $(XPAD_FULL_VERSION) | cut -d. -f1)
+INSTALL_XPAD_VDIR = $(INSTALL_XPAD_DIR)/v$(XPAD_FULL_VERSION)
+endif
+
+
 .PHONY: install
 
 PROCESSOR_TYPE := $(shell uname -i)
@@ -268,4 +276,13 @@ ifneq ($(COMPILE_ANDOR), 0)
 	cp build/liblimaandor.so.$(ANDOR_FULL_VERSION) $(INSTALL_LIB_DIR)
 	cp -d build/liblimaandor.so.$(ANDOR_MAJ_VERSION) $(INSTALL_LIB_DIR)
 	cp sip/andor/limaandor.so $(INSTALL_ANDOR_VDIR)
+endif
+
+ifneq ($(COMPILE_XPAD), 0)
+	mkdir -p $(INSTALL_XPAD_VDIR)
+	cp camera/xpad/python/__init__.py $(INSTALL_XPAD_DIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimaxpad.so*
+	cp build/liblimaxpad.so.$(XPAD_FULL_VERSION) $(INSTALL_LIB_DIR)
+	cp -d build/liblimaxpad.so.$(XPAD_MAJ_VERSION) $(INSTALL_LIB_DIR)
+	cp sip/xpad/limaxpad.so $(INSTALL_XPAD_VDIR)
 endif
