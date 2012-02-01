@@ -72,9 +72,9 @@ void DetInfoCtrlObj::getCurrImageType(ImageType& curr_image_type)
 	curr_image_type = fdim.getImageType();
 }
 
-void DetInfoCtrlObj::getPixelSize(double& pixel_size)
+void DetInfoCtrlObj::getPixelSize(double& x_size,double& y_size)
 {
-	pixel_size = 1e-6;
+	x_size = y_size = 1e-6;
 }
 
 void DetInfoCtrlObj::getDetectorType(string& det_type)
