@@ -23,7 +23,7 @@ import os
 
 root_name = __path__[0]
 
-csadmin_dirs = ['/csadmin/local', '/csadmin/commmon']
+csadmin_dirs = ['/csadmin/local', '/csadmin/common']
 script_get_os = 'scripts/get_compat_os.share'
 get_os = None
 for d in csadmin_dirs:
