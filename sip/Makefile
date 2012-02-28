@@ -78,6 +78,7 @@ endif
 all:	src
 
 src:
+	$(MAKE) -C ../third-party sip
 	for d in $(sip-modules); do \
 		$(MAKE) -C $$d || break; \
 	done

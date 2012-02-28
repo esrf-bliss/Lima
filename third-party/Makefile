@@ -53,7 +53,11 @@ all:	src test
 
 src:	$(PROJECTS)
 
-processlib.src:	Processlib/sip/Makefile Processlib/sip/processlib.so
+sip: processlib.sip
+
+processlib.src:	Processlib_build_libprocesslib.so
+
+processlib.sip: Processlib/sip/Makefile Processlib/sip/processlib.so
 
 processlib.clean:
 	cd Processlib/sip/ && python clean.py
