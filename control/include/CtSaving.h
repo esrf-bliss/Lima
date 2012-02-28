@@ -37,7 +37,10 @@ class TaskEventCallback;
 class SinkTaskBase;
 
 namespace lima {
-
+  /** @brief Saving management
+   *
+   * With this class you manage the image saving in different format
+   */
   class LIMACORE_API CtSaving 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving","Control");
@@ -49,38 +52,38 @@ namespace lima {
   
     enum FileFormat 
       {
-	RAW,
-	EDF,
-	CBFFormat,
-	NXS,
+	RAW,			///< Raw format (no header)
+	EDF,			///< EDF format (Esrf Data Format)
+	CBFFormat,		///< CBF format
+	NXS,			///< Soleil Nexus format
       };
 
     enum SavingMode 
       {
-	Manual,
-	AutoFrame,
-	AutoHeader,
+	Manual,			///< No automatic saving, you should call CtSaving::writeFrame
+	AutoFrame,		///< Save a frame just after it acquisition
+	AutoHeader,		///< Save the frame if header and the data of the frame is available 
       };
 	
     enum OverwritePolicy 
       {
-	Abort,
-	Overwrite,
-	Append,
+	Abort,			///< Abort acquisition if file already exist
+	Overwrite,		///< Overwrite old files
+	Append,			///< Append new data at the end of already existing files
       };	
 
     struct LIMACORE_API Parameters 
     {
-      std::string directory;
-      std::string prefix;
-      std::string suffix;
+      std::string directory;	///< base path where the files will be saved
+      std::string prefix;	///< prefix of the filename
+      std::string suffix;	///< suffix of the filename
       ImageType   imageType;
-      long nextNumber;
-      FileFormat fileFormat;
-      SavingMode savingMode;
-      OverwritePolicy overwritePolicy;
-      std::string indexFormat;
-      long framesPerFile;
+      long nextNumber;		///< next file number
+      FileFormat fileFormat;	///< the saving format (EDF,CBF...)
+      SavingMode savingMode;	///< saving mode (automatic,manual...)
+      OverwritePolicy overwritePolicy; ///< how you the saving react it find existing filename
+      std::string indexFormat;	///< ie: %.4d if you want 4 digits
+      long framesPerFile;	///< the number of images save in one files
       long nbframes;
       
       Parameters();

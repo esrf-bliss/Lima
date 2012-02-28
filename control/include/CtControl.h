@@ -51,7 +51,16 @@ namespace lima
 
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
-
+  /** @brief Main client class.
+   *
+   * With this class you have access to all LImA advance feature:
+   * - Saving (CtSaving)
+   * - Image control (CtImage)
+   * - Acquisition control (CtAcquisition)
+   * - Accumulation (CtAccumulation)
+   * - Video (CtVideo)
+   * - Software operation (SoftOpExternalMgr)
+  */
   class LIMACORE_API CtControl {
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
 

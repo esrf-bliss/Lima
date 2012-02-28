@@ -311,8 +311,8 @@ void CtAccumulation::getSavePrefix(std::string &savePrefix) const
 }
 
 /** @brief read the saturated image of accumulated image which id is frameNumber
-    @parameters saturatedImage the saturated image conter (empty if not yet available)
-    @parameters frameNumber the frame acquisition id
+    @param saturatedImage the saturated image conter (empty if not yet available)
+    @param frameNumber the frame acquisition id
  */
 void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNumber)
 {
@@ -355,8 +355,8 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   DEB_RETURN() << DEB_VAR1(saturatedImage);
 }
 /** @brief read the saturated counters
-    @parameters from is the start frame acquisition id
-    @parameters result It's a list of list of saturated counters. 
+    @param from is the start frame acquisition id
+    @param result It's a list of list of saturated counters. 
     i.e: from == 5 result == [[2,3,2],[4,3,2],...] : so first list [2,3,2] is the saturated counters of image 5
 */
 void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterResult &result,int from)
@@ -400,7 +400,7 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
 }
 
 /** @brief set the mask for saturation calculation
- *  @params mask the mask data image, empty mask == unset
+ *  @param mask the mask data image, empty mask == unset
  */
 void CtAccumulation::setMask(Data &mask)
 {
@@ -595,7 +595,7 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   return m_last_continue_flag;
 }
 /** @brief retrived the image from the buffer
-    @parameters frameNumber == acquisition image id
+    @param frameNumber == acquisition image id
     @return aReturnData the associated data
  */
 void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
