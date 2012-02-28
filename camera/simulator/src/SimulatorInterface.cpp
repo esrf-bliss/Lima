@@ -66,7 +66,8 @@ Interface::Interface(Camera& simu)
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));
 
-	m_cap_list.push_back(HwCap(simu.getBufferMgr()));
+	HwBufferCtrlObj *buffer = simu.getBufferCtrlObj();
+	m_cap_list.push_back(HwCap(buffer));
 
 	HwSyncCtrlObj *sync = &m_sync;
 	m_cap_list.push_back(HwCap(sync));

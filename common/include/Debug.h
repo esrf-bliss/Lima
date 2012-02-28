@@ -240,7 +240,7 @@ class LIMACORE_API DebProxy
 	DebProxy();
 	DebProxy(DebObj *deb_obj, DebType type, ConstStr file_name, 
 		 int line_nr);
-	DebProxy(const DebProxy& p);  // should never be called
+	DebProxy(const DebProxy& p);
 	~DebProxy();
 
 	template <class T> 
@@ -249,7 +249,7 @@ class LIMACORE_API DebProxy
 	bool isActive() const;
 
  private:
-	AutoMutex *m_lock;
+	mutable AutoMutex *m_lock;
 };
 
 
@@ -403,6 +403,12 @@ inline DebProxy::DebProxy(DebObj *deb_obj, DebType type, ConstStr file_name,
 	deb_obj->heading(type, file_name, line_nr);
 
 	m_lock = new AutoMutex(lock);
+}
+
+inline DebProxy::DebProxy(const DebProxy& p)
+	: m_lock(p.m_lock)
+{
+	p.m_lock = NULL;
 }
 
 inline DebProxy::~DebProxy()

@@ -106,6 +106,7 @@ using namespace lima;
     CtShutter* shutter();
     CtAccumulation* accumulation();
     CtVideo* video();
+    CtEvent* event();
 
     SoftOpExternalMgr* externalOperation();
     

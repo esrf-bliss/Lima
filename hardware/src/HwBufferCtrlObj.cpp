@@ -33,3 +33,11 @@ HwBufferCtrlObj::~HwBufferCtrlObj()
 	DEB_DESTRUCTOR();
 }
 
+HwBufferCtrlObj::Callback *HwBufferCtrlObj::getBufferCallback()
+{
+	return NULL;
+}
+
+HwBufferCtrlObj::Callback::~Callback()
+{
+}

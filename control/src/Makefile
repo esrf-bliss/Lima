@@ -22,7 +22,8 @@
 include ../../config.inc
 
 ct-objs := CtSaving.o CtControl.o CtAcquisition.o CtBuffer.o \
-	   CtImage.o CtSaving_Edf.o CtShutter.o CtAccumulation.o CtVideo.o
+	   CtImage.o CtSaving_Edf.o CtShutter.o CtAccumulation.o CtVideo.o \
+	   CtEvent.o
 
 INCLUDES = -I. -I../include -I../../common/include -I../../hardware/include \
 		-I../software_operation/include \

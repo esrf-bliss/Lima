@@ -41,7 +41,7 @@ class LIBSIMULATOR_API Camera
 	Camera();
 	~Camera();
 
-	HwBufferCtrlObj* getBufferMgr();
+	HwBufferCtrlObj* getBufferCtrlObj();
 	
 	void startAcq();
 	void stopAcq();
@@ -100,7 +100,7 @@ class LIBSIMULATOR_API Camera
 
 	void init();
 
-	SoftBufferCtrlMgr m_buffer_ctrl_mgr;
+	SoftBufferCtrlObj m_buffer_ctrl_obj;
 	FrameBuilder m_frame_builder;
 	double m_exp_time;
 	double m_lat_time;

@@ -47,6 +47,7 @@ namespace lima
   class CtShutter;
   class CtAccumulation;
   class CtVideo;
+  class CtEvent;
 
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
@@ -99,7 +100,8 @@ namespace lima
 		    SaveUnknownError,SaveOpenError,SaveCloseError,
 		    SaveAccessError,SaveOverwriteError,SaveDiskFull,SaveOverun,
 		    ProcessingOverun,
-		    CameraError};
+		    CameraError,
+		    EventOther}; /* @todo convert to typedef Event::Code */
     
     enum CameraErrorCode {NoCameraError}; /* @todo fix this */
 
@@ -137,6 +139,7 @@ namespace lima
     CtAccumulation* 	accumulation();
     CtVideo*		video();
     CtShutter* 		shutter();
+    CtEvent*		event();
 
     SoftOpExternalMgr* 	externalOperation();
 
@@ -152,6 +155,7 @@ namespace lima
     CtAccumulation* 	accumulation() 		{ return m_ct_accumulation; }
     CtVideo*		video()			{ return m_ct_video;}
     CtShutter* 		shutter() 		{ return m_ct_shutter; }
+    CtEvent* 		event() 		{ return m_ct_event; }
 
     SoftOpExternalMgr* 	externalOperation() 	{return m_op_ext;}
 
@@ -218,6 +222,7 @@ namespace lima
     CtShutter		*m_ct_shutter;
     CtAccumulation	*m_ct_accumulation;
     CtVideo		*m_ct_video;
+    CtEvent		*m_ct_event;
 
     SoftOpInternalMgr   *m_op_int;
     SoftOpExternalMgr	*m_op_ext;
@@ -276,6 +281,7 @@ namespace lima
     case CtControl::ProcessingOverun:  desc = "Soft Processing overrun"; break;
       // should read CameraStatus instead @todo fix me
     case CtControl::CameraError:       desc = "Camera Error"; break;
+    case CtControl::EventOther:        desc = "Other enexpected event"; break;
     }
     return os << desc;
   }

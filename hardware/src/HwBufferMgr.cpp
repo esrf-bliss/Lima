@@ -680,65 +680,150 @@ BufferCtrlMgr::AcqFrameCallback::newFrameReady(const HwFrameInfoType& finfo)
 }
 
 /*****************************************************************************
-			  SoftBufferCtrlMgr
+			  SoftBufferCtrlObj
 ****************************************************************************/
 
-SoftBufferCtrlMgr::Sync* SoftBufferCtrlMgr::getBufferSync(Cond &cond)
-{
-  if(!m_buffer_callback)
-    m_buffer_callback = new Sync(*this,cond);
-  return (SoftBufferCtrlMgr::Sync*)m_buffer_callback;
-}
-
-SoftBufferCtrlMgr::Sync::Sync(SoftBufferCtrlMgr &mgr,
-			      Cond &cond) :
-  m_cond(cond),
-  m_buffer_mgr(mgr)
+SoftBufferCtrlObj::SoftBufferCtrlObj() 
+	: HwBufferCtrlObj(), 
+	  m_buffer_cb_mgr(m_buffer_alloc_mgr), m_mgr(m_buffer_cb_mgr), 
+	  m_acq_frame_nb(-1), m_buffer_callback(NULL)
 {
 }
 
-SoftBufferCtrlMgr::Sync::Status 
-SoftBufferCtrlMgr::Sync::wait(int frame_number,double timeout)
+void SoftBufferCtrlObj::setFrameDim(const FrameDim& frame_dim) 
 {
-  AutoMutex aLock(m_cond.mutex());
-  void *framePtr = m_buffer_mgr.getBuffer().getFrameBufferPtr(frame_number);
-  std::set<void*>::iterator i = m_buffer_in_use.find(framePtr);
-  bool okFlag = true;
-  if(i != m_buffer_in_use.end())
-    okFlag = m_cond.wait(timeout);
-  else
-    return AVAILABLE;
-
-  if(okFlag)
-    {
-      i = m_buffer_in_use.find(framePtr);
-      return i == m_buffer_in_use.end() ? AVAILABLE : INTERRUPTED;
-    }
-  else
-    return TIMEOUT;
-  
+	m_mgr.setFrameDim(frame_dim);
 }
 
-void SoftBufferCtrlMgr::Sync::map(void *address)
+void SoftBufferCtrlObj::getFrameDim(FrameDim& frame_dim) 
 {
-  AutoMutex aLock(m_cond.mutex());
-  m_buffer_in_use.insert(address);
+	m_mgr.getFrameDim(frame_dim);
 }
 
-void SoftBufferCtrlMgr::Sync::release(void *address)
+void SoftBufferCtrlObj::setNbBuffers(int  nb_buffers) 
 {
-  AutoMutex aLock(m_cond.mutex());
-  std::set<void*>::iterator i = m_buffer_in_use.find(address);
-  if(i != m_buffer_in_use.end())
-    {
-      m_buffer_in_use.erase(i);
-      m_cond.broadcast();
-    }
+	m_mgr.setNbBuffers(nb_buffers);
 }
 
-void SoftBufferCtrlMgr::Sync::releaseAll()
+void SoftBufferCtrlObj::getNbBuffers(int& nb_buffers)
 {
-  AutoMutex aLock(m_cond.mutex());
-  m_buffer_in_use.clear();
-  m_cond.broadcast();
+	m_mgr.getNbBuffers(nb_buffers);
+}
+
+void SoftBufferCtrlObj::setNbConcatFrames(int nb_concat_frames) 
+{
+	m_mgr.setNbConcatFrames(nb_concat_frames);
+}
+
+void SoftBufferCtrlObj::getNbConcatFrames(int& nb_concat_frames) 
+{
+	m_mgr.getNbConcatFrames(nb_concat_frames);
+}
+
+void SoftBufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers) 
+{
+	m_mgr.getMaxNbBuffers(max_nb_buffers);
+}
+
+void *SoftBufferCtrlObj::getBufferPtr(int buffer_nb, int concat_frame_nb)
+{
+	return m_mgr.getBufferPtr(buffer_nb,concat_frame_nb);
+}
+
+void *SoftBufferCtrlObj::getFramePtr(int acq_frame_nb)
+{
+	return m_mgr.getFramePtr(acq_frame_nb);
+}
+
+void SoftBufferCtrlObj::getStartTimestamp(Timestamp& start_ts) 
+{
+	m_mgr.getStartTimestamp(start_ts);
+}
+
+void SoftBufferCtrlObj::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
+{
+	m_mgr.getFrameInfo(acq_frame_nb,info);
+}
+
+void SoftBufferCtrlObj::registerFrameCallback(HwFrameCallback& frame_cb)
+{
+	m_mgr.registerFrameCallback(frame_cb);
+}
+
+void SoftBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb) 
+{
+	m_mgr.unregisterFrameCallback(frame_cb);
+}
+
+StdBufferCbMgr& SoftBufferCtrlObj::getBuffer() 
+{
+	return m_buffer_cb_mgr;
+}
+
+int SoftBufferCtrlObj::getNbAcquiredFrames() 
+{
+	return m_acq_frame_nb + 1;
+}
+
+SoftBufferCtrlObj::Sync* SoftBufferCtrlObj::getBufferSync(Cond& cond)
+{
+	if(!m_buffer_callback)
+		m_buffer_callback = new Sync(*this, cond);
+	return (SoftBufferCtrlObj::Sync*) m_buffer_callback;
+}
+
+HwBufferCtrlObj::Callback* SoftBufferCtrlObj::getBufferCallback() 
+{
+	return m_buffer_callback;
+}
+
+SoftBufferCtrlObj::Sync::Sync(SoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond) 
+	: m_cond(cond), m_buffer_ctrl_obj(buffer_ctrl_obj)
+{
+}
+
+SoftBufferCtrlObj::Sync::~Sync() 
+{
+}
+
+SoftBufferCtrlObj::Sync::Status 
+SoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
+{
+	AutoMutex aLock(m_cond.mutex());
+
+	StdBufferCbMgr& buffer_mgr = m_buffer_ctrl_obj.getBuffer();
+	void *framePtr = buffer_mgr.getFrameBufferPtr(frame_number);
+	BufferList::iterator it = m_buffer_in_use.find(framePtr);
+	if (it == m_buffer_in_use.end())
+		return AVAILABLE;
+
+	bool okFlag = m_cond.wait(timeout);
+	if (!okFlag)
+		return TIMEOUT;
+
+	it = m_buffer_in_use.find(framePtr);
+	return (it == m_buffer_in_use.end()) ? AVAILABLE : INTERRUPTED;
+}
+
+void SoftBufferCtrlObj::Sync::map(void *address)
+{
+	AutoMutex aLock(m_cond.mutex());
+	m_buffer_in_use.insert(address);
+}
+
+void SoftBufferCtrlObj::Sync::release(void *address)
+{
+	AutoMutex aLock(m_cond.mutex());
+	BufferList::iterator it = m_buffer_in_use.find(address);
+	if (it != m_buffer_in_use.end()) {
+		m_buffer_in_use.erase(it);
+		m_cond.broadcast();
+	}
+}
+
+void SoftBufferCtrlObj::Sync::releaseAll()
+{
+	AutoMutex aLock(m_cond.mutex());
+	m_buffer_in_use.clear();
+	m_cond.broadcast();
 }

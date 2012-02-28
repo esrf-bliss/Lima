@@ -26,43 +26,48 @@ namespace lima
       virtual bool newImage(char *,int width,int height,VideoMode) = 0;
     };
 
-    HwVideoCtrlObj() : m_image_cbk(NULL) {}
+    HwVideoCtrlObj();
       
-      virtual ~HwVideoCtrlObj() {}
+    virtual ~HwVideoCtrlObj();
  
-      virtual void getSupportedVideoMode(std::list<VideoMode> &aList) const = 0;
-      virtual void setVideoMode(VideoMode) = 0;
-      virtual void getVideoMode(VideoMode&) const = 0;
+    virtual void getSupportedVideoMode(std::list<VideoMode> &aList) const = 0;
+    virtual void setVideoMode(VideoMode) = 0;
+    virtual void getVideoMode(VideoMode&) const = 0;
+    
+    virtual void setLive(bool) = 0;
+    virtual void getLive(bool&) const = 0;
+    
+    virtual void getGain(double&) const = 0;
+    virtual void setGain(double) = 0;
+    
+    virtual void checkBin(Bin& bin) = 0;
+    virtual void checkRoi(const Roi& set_roi, Roi& hw_roi) = 0;
+    
+    virtual void setBin(const Bin&) = 0;
+    virtual void setRoi(const Roi&) = 0;
+    
+    void registerImageCallback(ImageCallback &cb);
+    void unregisterImageCallback(ImageCallback &cb);
+    
+    HwBufferCtrlObj& getHwBufferCtrlObj();
+    StdBufferCbMgr& getBuffer();
+    
+    bool callNewImage(char *data,int width,int height,VideoMode aVideoMode);
 
-      virtual void setLive(bool) = 0;
-      virtual void getLive(bool&) const = 0;
-
-      virtual void getGain(double&) const = 0;
-      virtual void setGain(double) = 0;
-
-      virtual void checkBin(Bin& bin) = 0;
-      virtual void checkRoi(const Roi& set_roi, Roi& hw_roi) = 0;
-
-      virtual void setBin(const Bin&) = 0;
-      virtual void setRoi(const Roi&) = 0;
-
-      void registerImageCallback(ImageCallback &cb);
-      void unregisterImageCallback(ImageCallback &cb);
-
-      HwBufferCtrlObj& getHwBufferCtrlObj() {return m_hw_buffer_ctrl_mgr;}
-      StdBufferCbMgr& getBuffer() {return m_hw_buffer_ctrl_mgr.getBuffer();}
-
-      bool callNewImage(char *data,int width,int height,VideoMode aVideoMode)
-      {
-	bool continueFlag = false;
-	if(m_image_cbk)
-	  continueFlag = m_image_cbk->newImage(data,width,height,aVideoMode);
-	return continueFlag;
-      }
   protected:
-      ImageCallback* m_image_cbk;
+    ImageCallback* m_image_cbk;
   private:
-      SoftBufferCtrlMgr		m_hw_buffer_ctrl_mgr;
+    SoftBufferCtrlObj		m_hw_buffer_ctrl_obj;
   };
+
+  inline bool HwVideoCtrlObj::callNewImage(char *data,int width,int height,
+					   VideoMode aVideoMode)
+  {
+    bool continueFlag = false;
+    if(m_image_cbk)
+      continueFlag = m_image_cbk->newImage(data,width,height,aVideoMode);
+    return continueFlag;
+  }
+
 }
 #endif

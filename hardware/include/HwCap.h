@@ -35,6 +35,7 @@ class HwRoiCtrlObj;
 class HwFlipCtrlObj;
 class HwShutterCtrlObj;
 class HwVideoCtrlObj;
+class HwEventCtrlObj;
 
 class LIMACORE_API HwCap
 {
@@ -48,6 +49,7 @@ public:
 		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
 		Video,			// Video capable usualy color camera 
+		Event,			// Asynch. event (error) generator
 	};
 	HwCap() : m_type(Undef),m_ctrl_obj(NULL) {}
 	
@@ -68,6 +70,7 @@ public:
 	static Type getTypeFromCtrlObj(HwFlipCtrlObj*);
 	static Type getTypeFromCtrlObj(HwShutterCtrlObj*);
 	static Type getTypeFromCtrlObj(HwVideoCtrlObj*);
+	static Type getTypeFromCtrlObj(HwEventCtrlObj*);
 
 	template <class CtrlObj>
 	bool getCtrlObj(CtrlObj *& ctrl_obj) const
@@ -91,5 +94,6 @@ public:
 #include "HwFlipCtrlObj.h"
 #include "HwShutterCtrlObj.h"
 #include "HwVideoCtrlObj.h"
+#include "HwEventCtrlObj.h"
 
 #endif // HWCAP_H

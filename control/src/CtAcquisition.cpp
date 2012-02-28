@@ -469,6 +469,9 @@ void CtAcquisition::setConcatNbFrames(int nframes)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(nframes);
 
+  if (nframes <= 0)
+    THROW_CTL_ERROR(InvalidValue) << "Invalid concat. " << DEB_VAR1(nframes);
+
   m_inpars.concatNbFrames= nframes;
 }
 

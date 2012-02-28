@@ -1,6 +1,15 @@
 #include "HwVideoCtrlObj.h"
 using namespace lima;
 
+HwVideoCtrlObj::HwVideoCtrlObj() 
+  : m_image_cbk(NULL) 
+{
+}
+      
+HwVideoCtrlObj::~HwVideoCtrlObj() 
+{
+}
+
 void HwVideoCtrlObj::registerImageCallback(HwVideoCtrlObj::ImageCallback &cb)
 {
   DEB_MEMBER_FUNCT();
@@ -22,3 +31,14 @@ void HwVideoCtrlObj::unregisterImageCallback(HwVideoCtrlObj::ImageCallback &cb)
   
   m_image_cbk = NULL;
 }
+
+HwBufferCtrlObj& HwVideoCtrlObj::getHwBufferCtrlObj() 
+{
+  return m_hw_buffer_ctrl_obj;
+}
+
+StdBufferCbMgr& HwVideoCtrlObj::getBuffer() 
+{
+  return m_hw_buffer_ctrl_obj.getBuffer();
+}
+

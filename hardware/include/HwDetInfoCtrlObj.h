@@ -44,7 +44,7 @@ class LIMACORE_API HwDetInfoCtrlObj
 	virtual void getCurrImageType(ImageType& curr_image_type) = 0;
 	virtual void setCurrImageType(ImageType  curr_image_type) = 0;
 
-	virtual void getPixelSize(double& x_size,double &y_size) = 0;
+	virtual void getPixelSize(double& x_size, double& y_size) = 0;
 	virtual void getDetectorType(std::string& det_type) = 0;
 	virtual void getDetectorModel(std::string& det_model) = 0;
 

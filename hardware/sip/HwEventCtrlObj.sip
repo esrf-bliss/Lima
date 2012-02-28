@@ -19,55 +19,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-namespace Simulator
-{
-class Camera
+class HwEventCtrlObj
 {
 %TypeHeaderCode
-#include "SimulatorCamera.h"
-#include <string>
-#include <time.h>
-#include <cmath>
+#include "HwEventCtrlObj.h"
+using namespace lima;
 %End
-
  public:
-	Camera();
-	~Camera();
+	HwEventCtrlObj();
+	virtual ~HwEventCtrlObj();
 
-	HwBufferCtrlObj* getBufferCtrlObj();
-	
-	void startAcq();
-	void stopAcq();
-
-	void setNbFrames(int  nb_frames);
-	void getNbFrames(int& nb_frames /Out/);
-
-	void setExpTime(double  exp_time);
-	void getExpTime(double& exp_time /Out/);
-
-	void setLatTime(double  lat_time);
-	void getLatTime(double& lat_time /Out/);
-
-	void setBin(const Bin& bin);
-	void getBin(Bin& bin /Out/);
-	void checkBin(Bin& bin /In,Out/);
-
-	void setFrameDim(const FrameDim& frame_dim);
-	void getFrameDim(FrameDim& frame_dim /Out/);
-	
-	HwInterface::StatusType::Basic getStatus();
-	int getNbAcquiredFrames();
-
-	void getMaxImageSize(Size& max_image_size /Out/);
-
-	void reset();
-
-	const char* __repr__();
-%MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	sipRes = str.str().c_str();
-%End
 };
-};
-

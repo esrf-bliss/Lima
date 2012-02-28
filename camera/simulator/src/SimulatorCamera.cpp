@@ -61,7 +61,7 @@ void Camera::SimuThread::execCmd(int cmd)
 
 void Camera::SimuThread::execStartAcq()
 {
-	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_ctrl_mgr.getBuffer();
+	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
 	buffer_mgr.setStartTimestamp(Timestamp::now());
 
 	FrameBuilder& frame_builder = m_simu->m_frame_builder;
@@ -125,9 +125,9 @@ Camera::~Camera()
 {
 }
 
-HwBufferCtrlObj* Camera::getBufferMgr()
+HwBufferCtrlObj* Camera::getBufferCtrlObj()
 {
-  return &m_buffer_ctrl_mgr;
+	return &m_buffer_ctrl_obj;
 }
 
 void Camera::getMaxImageSize(Size& max_image_size)
@@ -226,7 +226,7 @@ HwInterface::StatusType::Basic Camera::getStatus()
 void Camera::startAcq()
 {
 	m_thread.m_force_stop = false;//uggly but work	
-	m_buffer_ctrl_mgr.getBuffer().setStartTimestamp(Timestamp::now());
+	m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
 	m_thread.sendCmd(SimuThread::StartAcq);
 	m_thread.waitNotStatus(SimuThread::Ready);

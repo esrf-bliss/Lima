@@ -232,7 +232,8 @@ void CtBuffer::setup(CtControl *ct)
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
-    hwNbBuffer = (acq_nframes + concat_nframes - 1) / concat_nframes;
+    if (acq_nframes > 0)
+      hwNbBuffer = (acq_nframes + concat_nframes - 1) / concat_nframes;
     nbuffers = hwNbBuffer;
     break;
   }

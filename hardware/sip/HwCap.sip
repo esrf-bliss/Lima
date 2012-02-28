@@ -41,6 +41,8 @@ public:
 		Timing,			// Read only detector timmings
 		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
+		Video,			// Video capable usualy color camera 
+		Event,			// Asynch. event (error) generator
 	};
 	HwCap();
 	HwCap(const HwCap&);
@@ -51,6 +53,8 @@ public:
 	HwCap(HwRoiCtrlObj*);
 	HwCap(HwFlipCtrlObj*);
 	HwCap(HwShutterCtrlObj*);
+//	HwCap(HwVideoCtrlObj*);
+	HwCap(HwEventCtrlObj*);
 	Type getType() const;
 	SIP_PYOBJECT getCtrlObj();
 %MethodCode
