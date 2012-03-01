@@ -42,14 +42,14 @@ LDFLAGS = -L../../../third-party/Processlib/build -lprocesslib -pthread
 all: test testsimulator testsimuhwinterface
 
 test:	$(test-objs) $(test-ext-objs) $(std-objs)
-	$(CXX) $(LDFLAGS) -o $@ $+
+	$(CXX) -o $@ $+ $(LDFLAGS)
 
 testsimulator: $(testsimulator-objs) $(testsimulator-ext-objs) 
-	$(CXX) $(LDFLAGS) -o $@ $+
+	$(CXX) -o $@ $+ $(LDFLAGS)
 
 testsimuhwinterface: $(testsimuhwinterface-objs) \
 		     $(testsimuhwinterface-ext-objs) 
-	$(CXX) $(LDFLAGS) -o $@ $+
+	$(CXX) -o $@ $+ $(LDFLAGS)
 
 clean: 
 	rm -f $(test-objs) test *.edf
