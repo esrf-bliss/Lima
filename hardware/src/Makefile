@@ -23,7 +23,7 @@ hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 	   HwFrameCallback.o HwBufferCtrlObj.o HwBufferMgr.o \
 	   HwShutterCtrlObj.o HwMaxImageSizeCallback.o HwDetInfoCtrlObj.o \
 	   HwBinCtrlObj.o HwRoiCtrlObj.o HwFlipCtrlObj.o HwSerialLine.o \
-	   HwBufferSave.o HwVideoCtrlObj.o HwEventCtrlObj.o
+	   HwBufferSave.o HwVideoCtrlObj.o HwEventCtrlObj.o HwSavingCtrlObj.o
 
 SRCS = $(hw-objs:.o=.cpp)
 

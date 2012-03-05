@@ -109,6 +109,12 @@ using namespace lima;
 
     CtSaving(CtControl&);
     ~CtSaving();
+
+    enum ManagedMode
+      {
+	Software,
+	Hardware
+      };
   
     enum FileFormat {
       RAW,

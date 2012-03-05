@@ -36,6 +36,7 @@ class HwFlipCtrlObj;
 class HwShutterCtrlObj;
 class HwVideoCtrlObj;
 class HwEventCtrlObj;
+class HwSavingCtrlObj;
 
 class LIMACORE_API HwCap
 {
@@ -50,6 +51,7 @@ public:
 		SerialLine, 		// Generic detector serial line
 		Video,			// Video capable usualy color camera 
 		Event,			// Asynch. event (error) generator
+		Saving,			// Saving capable
 	};
 	HwCap() : m_type(Undef),m_ctrl_obj(NULL) {}
 	
@@ -71,6 +73,7 @@ public:
 	static Type getTypeFromCtrlObj(HwShutterCtrlObj*);
 	static Type getTypeFromCtrlObj(HwVideoCtrlObj*);
 	static Type getTypeFromCtrlObj(HwEventCtrlObj*);
+	static Type getTypeFromCtrlObj(HwSavingCtrlObj*);
 
 	template <class CtrlObj>
 	bool getCtrlObj(CtrlObj *& ctrl_obj) const
@@ -95,5 +98,6 @@ public:
 #include "HwShutterCtrlObj.h"
 #include "HwVideoCtrlObj.h"
 #include "HwEventCtrlObj.h"
+#include "HwSavingCtrlObj.h"
 
 #endif // HWCAP_H

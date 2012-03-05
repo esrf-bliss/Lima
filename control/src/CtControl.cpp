@@ -699,8 +699,16 @@ void CtControl::newCounterReady(Data&)
 void CtControl::newImageSaved(Data&)
 {
   DEB_MEMBER_FUNCT();
+  CtSaving::ManagedMode savingManagedMode;
+  m_ct_saving->getManagedMode(savingManagedMode);
   AutoMutex aLock(m_cond.mutex());
   ++m_status.ImageCounters.LastImageSaved;
+  if(savingManagedMode == CtSaving::Hardware)
+    {
+      m_status.ImageCounters.LastImageAcquired = m_status.ImageCounters.LastImageSaved;
+      m_status.ImageCounters.LastBaseImageReady = m_status.ImageCounters.LastImageSaved;
+      m_status.ImageCounters.LastImageReady = m_status.ImageCounters.LastImageSaved;
+    }
   aLock.unlock();
 
   if (m_img_status_cb)

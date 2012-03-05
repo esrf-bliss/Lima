@@ -108,7 +108,8 @@ private:
  */
 CtSaving::Parameters::Parameters()
   : nextNumber(0), fileFormat(RAW), savingMode(Manual), 
-    overwritePolicy(Abort),indexFormat("%04d"),framesPerFile(1)
+    overwritePolicy(Abort),managedMode(Software),
+    indexFormat("%04d"),framesPerFile(1)
 {
 }
 
@@ -322,6 +323,20 @@ void CtSaving::Stream::saveFinished(Data& data)
   m_saving._saveFinished(data, *this);
 }
 
+class CtSaving::_NewFrameSaveCBK : public HwSavingCtrlObj::Callback
+{
+public:
+  _NewFrameSaveCBK(CtSaving &ct_saving) :
+    m_saving(ct_saving)
+  {
+  }
+  bool newFrameWrite(int frame_id)
+  {
+    return m_saving._newFrameWrite(frame_id);
+  }
+private:
+  CtSaving&	m_saving;
+};
 
 //@brief constructor
 CtSaving::CtSaving(CtControl &aCtrl) :
@@ -342,6 +357,16 @@ CtSaving::CtSaving(CtControl &aCtrl) :
   m_stream[0]->setActive(true);
 
   resetLastFrameNb();
+
+  HwInterface *hw = aCtrl.hwInterface();
+  m_has_hwsaving = hw->getHwCtrlObj(m_hwsaving);
+  if(m_has_hwsaving)
+    {
+      m_new_frame_save_cbk = new _NewFrameSaveCBK(*this);
+      m_hwsaving->registerCallback(m_new_frame_save_cbk);
+    }
+  else
+    m_new_frame_save_cbk = NULL;
 }
 
 //@brief destructor
@@ -354,6 +379,11 @@ CtSaving::~CtSaving()
   delete [] m_stream;
 
   setEndCallback(NULL);
+  if(m_has_hwsaving)
+    {
+      m_hwsaving->unregisterCallback(m_new_frame_save_cbk);
+      delete m_new_frame_save_cbk;
+    }
 }
 
 CtSaving::Stream& CtSaving::getStreamExc(int stream_idx) const
@@ -612,6 +642,39 @@ void CtSaving::getFramePerFile(unsigned long& frames_per_file,
   DEB_RETURN() << DEB_VAR1(frames_per_file);
 }
 
+/** @brief set who will manage the saving.
+ *
+ *  with this methode you can choose who will do the saving
+ *   - if mode is set to Software, the saving will be managed by Lima core
+ *   - if mode is set to Hardware then it's the sdk or the hardware of the camera that will manage the saving.
+ *  @param mode can be either Software or Hardware
+*/
+void CtSaving::setManagedMode(CtSaving::ManagedMode mode)
+{
+  DEB_MEMBER_FUNCT();
+  if(mode == Hardware && !m_has_hwsaving)
+    THROW_CTL_ERROR(InvalidValue) << DEB_VAR1(mode) << "Not supported";
+
+  AutoMutex aLock(m_cond.mutex());
+  for (int s = 0; s < m_nb_stream; ++s)
+    {
+      Stream& stream = getStream(s);
+      Parameters pars = stream.getParameters(Auto);
+      pars.managedMode = mode;
+      stream.setParameters(pars);
+    }
+}
+
+void CtSaving::getManagedMode(CtSaving::ManagedMode &mode) const
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  const Stream& stream = getStream(0);
+  const Parameters& pars = stream.getParameters(Auto);
+  mode = pars.managedMode;
+}
+
 void CtSaving::_getTaskList(TaskType type, long frame_nr, 
 			    const HeaderMap& header, TaskList& task_list)
 {
@@ -641,7 +704,17 @@ void CtSaving::resetCommonHeader()
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
-  m_common_header.clear();
+  ManagedMode managed_mode = getManagedMode();
+  if(managed_mode == Software)
+    m_common_header.clear();
+  else
+    {
+      int hw_cap = m_hwsaving->getCapabilities();
+      if(hw_cap & HwSavingCtrlObj::COMMON_HEADER)
+	m_hwsaving->resetCommonHeader();
+      else
+	THROW_CTL_ERROR(NotSupported) << "Common header is not supported";
+    }
 }
 /** @brief set the common header.
     This is the header which will be write for all frame for this acquisition
@@ -652,7 +725,17 @@ void CtSaving::setCommonHeader(const HeaderMap &header)
   DEB_PARAM() << DEB_VAR1(header);
 
   AutoMutex aLock(m_cond.mutex());
-  m_common_header = header;
+  ManagedMode managed_mode = getManagedMode();
+  if(managed_mode == Software)
+    m_common_header = header;
+  else
+    {
+      int hw_cap = m_hwsaving->getCapabilities();
+      if(hw_cap & HwSavingCtrlObj::COMMON_HEADER)
+	m_hwsaving->setCommonHeader(header);
+      else
+	THROW_CTL_ERROR(NotSupported) << "Common header is not supported";
+    }
 }
 /** @brief replace/add field in the common header
  */
@@ -879,6 +962,17 @@ bool CtSaving::_controlIsFault()
   return fault;
 }
 
+bool CtSaving::_newFrameWrite(int frame_id)
+{
+  if(m_end_cbk)
+    {
+      Data aData;
+      aData.frameNumber = frame_id;
+      m_end_cbk->finished(aData);
+    }
+  return !!m_end_cbk;
+}
+
 void CtSaving::frameReady(Data &aData)
 {
   DEB_MEMBER_FUNCT();
@@ -1021,34 +1115,45 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames)
   SavingMode saving_mode = getAcqSavingMode();
   if (saving_mode != Manual)
     THROW_CTL_ERROR(Error) << "Manual saving is only permitted when "
-                              "saving mode == Manual";
-
+      "saving mode == Manual";
   wait_and_cleanup_ready_flag.toggleReadyFlag();
 
-  Data anImage2Save;
-  m_ctrl.ReadImage(anImage2Save,aFrameNumber,aNbFrames);
+  ManagedMode managed_mode = getManagedMode();
+  if(managed_mode == Software)
+    {
+      Data anImage2Save;
+      m_ctrl.ReadImage(anImage2Save,aFrameNumber,aNbFrames);
 
-  // Saving
-  HeaderMap header;
-  FrameHeaderMap::iterator aHeaderIter;
-  aHeaderIter = m_frame_headers.find(anImage2Save.frameNumber);
-  _takeHeader(aHeaderIter, header, false);
+      // Saving
+      HeaderMap header;
+      FrameHeaderMap::iterator aHeaderIter;
+      aHeaderIter = m_frame_headers.find(anImage2Save.frameNumber);
+      _takeHeader(aHeaderIter, header, false);
   
-  for (int s = 0; s < m_nb_stream; ++s) {
-    Stream& stream = getStream(s);
-    if (!stream.isActive())
-      continue;
+      for (int s = 0; s < m_nb_stream; ++s) {
+	Stream& stream = getStream(s);
+	if (!stream.isActive())
+	  continue;
 
-    if(stream.needCompression()) {
-      SinkTaskBase *aCompressionTaskPt;
-      aCompressionTaskPt = stream.getTask(Compression, header);
-      aCompressionTaskPt->setEventCallback(NULL);
-      aCompressionTaskPt->process(anImage2Save);
-      aCompressionTaskPt->unref();
+	if(stream.needCompression()) {
+	  SinkTaskBase *aCompressionTaskPt;
+	  aCompressionTaskPt = stream.getTask(Compression, header);
+	  aCompressionTaskPt->setEventCallback(NULL);
+	  aCompressionTaskPt->process(anImage2Save);
+	  aCompressionTaskPt->unref();
+	}
+
+	stream.writeFile(anImage2Save, header);
+      }
     }
-
-    stream.writeFile(anImage2Save, header);
-  }
+  else
+    {
+      int hw_cap = m_hwsaving->getCapabilities();
+      if(hw_cap & HwSavingCtrlObj::MANUAL_WRITE)
+	m_hwsaving->writeFrame(aFrameNumber,aNbFrames);
+      else
+	THROW_CTL_ERROR(NotSupported) << "Manual write is not available";
+    }
 }
 
 void CtSaving::_updateParameters()
