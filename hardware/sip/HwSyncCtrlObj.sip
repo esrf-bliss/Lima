@@ -44,7 +44,8 @@ public:
 %MethodCode
 std::ostringstream str;
 str << *sipCpp;
-sipRes = str.str().c_str();
+std::string& tmpString = str.str();
+sipRes = tmpString.c_str();
 %End
 	};
 	
