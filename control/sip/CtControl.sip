@@ -47,7 +47,7 @@ using namespace lima;
 %MethodCode
 	std::ostringstream str;
 	str << *sipCpp;	
-	std::string& tmpString = str.str();
+	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
 %End
     };
@@ -83,7 +83,7 @@ using namespace lima;
 %MethodCode
 	std::ostringstream str;
 	str << *sipCpp;	
-	std::string& tmpString = str.str();
+	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
 %End
     };
