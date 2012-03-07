@@ -43,6 +43,7 @@ endif
 
 INSTALL_LIB_DIR = $(INSTALL_PLAT_DIR)/Lib
 INSTALL_INCLUDE_DIR = $(INSTALL_PLAT_DIR)/include
+INSTALL_PKG_CONFIG_DIR = $(INSTALL_LIB_DIR)/pkgconfig
 
 ifneq ($(COMPILE_CORE), 0)
 INSTALL_CORE_DIR = $(INSTALL_PLAT_DIR)/Core
@@ -153,6 +154,8 @@ install:
 	cp python/__init__.py $(INSTALL_LIMA_DIR)
 	mkdir -p $(INSTALL_LIB_DIR)
 	mkdir -p $(INSTALL_INCLUDE_DIR)
+	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
+	sed -e 's,'@prefix@','${INSTALL_DIR}',g' -e 's,'@libdir@','${INSTALL_LIB_DIR}',g' -e 's,'@includedir@','${INSTALL_INCLUDE_DIR}',g' -e 's,'@VERSION@','`cat common/VERSION`',g' Lima.pc.in > $(INSTALL_PKG_CONFIG_DIR)/Lima.pc
 ifneq ($(COMPILE_CORE), 0)
 	mkdir -p $(INSTALL_CORE_VDIR)
 	cp common/python/__init__.py $(INSTALL_CORE_DIR)

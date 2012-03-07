@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Lima
+Description: LImA (L ibrary for Im age A cquisition) is a project for the unified control of 2D detectors.
+Requires:
+Version: @VERSION@
+Libs: -L${libdir} -llimacore
+Cflags: -I${includedir}
