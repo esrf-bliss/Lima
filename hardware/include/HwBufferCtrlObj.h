@@ -56,7 +56,7 @@ public:
 	virtual void   registerFrameCallback(HwFrameCallback& frame_cb) = 0;
 	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb) = 0;
 	
-	class Callback
+	class LIMACORE_API Callback
 	{
 	public:
 		virtual ~Callback();

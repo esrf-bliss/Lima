@@ -36,7 +36,8 @@ enum ErrorType {
 using namespace lima;
 %End
 %RaiseCode
-        const char *detail = sipExceptionRef.getErrMsg().c_str();
+	const std::string& tmpString = sipExceptionRef.getErrMsg();
+        const char *detail = tmpString.c_str();
 	PyErr_SetString(sipException_Exception, detail);
 %End
 };

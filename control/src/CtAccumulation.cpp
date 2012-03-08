@@ -23,7 +23,9 @@
 #include "CtAcquisition.h"
 #include "CtBuffer.h"
 #include "SinkTask.h"
-
+#ifndef __unix
+#include "SinkTaskMgr.i"
+#endif
 using namespace lima;
 /****************************************************************************
 CtAccumulation::_ImageReady4AccCallback

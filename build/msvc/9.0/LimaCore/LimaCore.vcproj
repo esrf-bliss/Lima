@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\control\src\CtEvent.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\control\src\CtImage.cpp"
 				>
 			</File>
@@ -234,6 +238,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\common\src\Debug.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\src\Event.cpp"
 				>
 			</File>
 			<File
@@ -265,6 +273,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\hardware\src\HwEventCtrlObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\hardware\src\HwFlipCtrlObj.cpp"
 				>
 			</File>
@@ -286,6 +298,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\hardware\src\HwRoiCtrlObj.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\hardware\src\HwSavingCtrlObj.cpp"
 				>
 			</File>
 			<File

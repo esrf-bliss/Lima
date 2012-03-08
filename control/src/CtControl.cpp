@@ -882,6 +882,7 @@ CtBuffer* 		CtControl::buffer() 		{ return m_ct_buffer; }
 CtAccumulation* 	CtControl::accumulation() 	{ return m_ct_accumulation; }
 CtVideo*		CtControl::video()		{ return m_ct_video;}
 CtShutter* 		CtControl::shutter() 		{ return m_ct_shutter; }
+CtEvent* 		CtControl::event()		{ return m_ct_event; }
 
 SoftOpExternalMgr* 	CtControl::externalOperation() 	{return m_op_ext;}
 
