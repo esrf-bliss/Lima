@@ -159,7 +159,7 @@ install:
 ifneq ($(COMPILE_CORE), 0)
 	mkdir -p $(INSTALL_CORE_VDIR)
 	cp common/python/__init__.py $(INSTALL_CORE_DIR)
-	cp third-party/Processlib/build/libprocesslib.so $(INSTALL_LIB_DIR)
+	cp -d third-party/Processlib/build/libprocesslib.so* $(INSTALL_LIB_DIR)
 	cp third-party/Processlib/sip/processlib.so $(INSTALL_CORE_VDIR)
 	rm -rf $(INSTALL_LIB_DIR)/liblimacore.so*
 	#cp build/liblimacore.so.$(CORE_FULL_VERSION) $(INSTALL_LIB_DIR)
