@@ -44,6 +44,7 @@ endif
 INSTALL_LIB_DIR = $(INSTALL_PLAT_DIR)/Lib
 INSTALL_INCLUDE_DIR = $(INSTALL_PLAT_DIR)/include
 INSTALL_PKG_CONFIG_DIR = $(INSTALL_LIB_DIR)/pkgconfig
+INSTALL_CONFIG_DEFINES =
 
 ifneq ($(COMPILE_CORE), 0)
 INSTALL_CORE_DIR = $(INSTALL_PLAT_DIR)/Core
@@ -144,6 +145,18 @@ XPAD_MAJ_VERSION = $(shell echo $(XPAD_FULL_VERSION) | cut -d. -f1)
 INSTALL_XPAD_VDIR = $(INSTALL_XPAD_DIR)/v$(XPAD_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_SPS_IMAGE),0)
+INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
+endif
+
+ifneq ($(COMPILE_CBF_SAVING),0)
+INSTALL_CONFIG_DEFINES += -DWITH_CBF_SAVING
+endif
+
+ifneq ($(COMPILE_NXS_SAVING),0)
+INSTALL_CONFIG_DEFINES += -DWITH_NXS_SAVING
+endif
+
 
 .PHONY: install
 
@@ -155,7 +168,14 @@ install:
 	mkdir -p $(INSTALL_LIB_DIR)
 	mkdir -p $(INSTALL_INCLUDE_DIR)
 	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
-	sed -e 's,'@prefix@','${INSTALL_DIR}',g' -e 's,'@libdir@','${INSTALL_LIB_DIR}',g' -e 's,'@includedir@','${INSTALL_INCLUDE_DIR}',g' -e 's,'@VERSION@','`cat common/VERSION`',g' Lima.pc.in > $(INSTALL_PKG_CONFIG_DIR)/Lima.pc
+
+	sed -e "s,@prefix@,${INSTALL_DIR},g" \
+		-e "s,@libdir@,${INSTALL_LIB_DIR},g" \
+		-e "s,@includedir@,${INSTALL_INCLUDE_DIR},g" \
+		-e "s,@config_defines@,${INSTALL_CONFIG_DEFINES},g" \
+		-e "s,@VERSION@,`cat common/VERSION`,g" \
+		Lima.pc.in > $(INSTALL_PKG_CONFIG_DIR)/Lima.pc
+
 ifneq ($(COMPILE_CORE), 0)
 	mkdir -p $(INSTALL_CORE_VDIR)
 	cp common/python/__init__.py $(INSTALL_CORE_DIR)
