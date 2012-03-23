@@ -108,6 +108,7 @@ mod_version_data = {
     'tango/camera/frelon': 'applications/tango/camera/Frelon_VERSION',
     'tango/camera/basler': 'applications/tango/camera/Basler_VERSION',
     'tango/camera/prosilica': 'applications/tango/camera/Prosilica_VERSION',
+    'tango/camera/andor': 'applications/tango/camera/Andor_VERSION',
 }
 
 if modules == [ALL]:
