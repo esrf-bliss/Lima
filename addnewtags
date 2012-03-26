@@ -101,6 +101,12 @@ mod_version_data = {
     'pilatus': 'camera/pilatus/VERSION',
     'basler': 'camera/basler/VERSION',
     'prosilica': 'camera/prosilica/VERSION',
+    'andor': 'camera/andor/VERSION',
+    'perkinelmer': 'camera/perkinelmer/VERSION',    
+    'xpad': 'camera/xpad/VERSION',
+    'pco': 'camera/pco/VERSION',
+    'ueye': 'camera/ueye/VERSION',
+    'simulator': 'camera/simulator/VERSION',
     'taco/camera/frelon': 'applications/taco/VERSION',
     'tango/common': 'applications/tango/VERSION',
     'tango/camera/maxipix': 'applications/tango/camera/Maxipix_VERSION',
@@ -109,6 +115,11 @@ mod_version_data = {
     'tango/camera/basler': 'applications/tango/camera/Basler_VERSION',
     'tango/camera/prosilica': 'applications/tango/camera/Prosilica_VERSION',
     'tango/camera/andor': 'applications/tango/camera/Andor_VERSION',
+    'tango/camera/perkinelmer': 'applications/tango/camera/PerkinElmer_VERSION',
+    'tango/camera/xpad': 'applications/tango/camera/Xpad_VERSION',
+    'tango/camera/pco': 'applications/tango/camera/Pco_VERSION',                
+    'tango/camera/ueye': 'applications/tango/camera/Ueye_VERSION',                
+    'tango/camera/simulator': 'applications/tango/camera/Simulator_VERSION',                
 }
 
 if modules == [ALL]:
