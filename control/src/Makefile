@@ -39,6 +39,10 @@ ifndef COMPILE_NXS_SAVING
 COMPILE_NXS_SAVING = 0
 endif
 
+ifndef COMPILE_FITS_SAVING
+COMPILE_FITS_SAVING = 0
+endif
+
 ifneq ($(COMPILE_CBF_SAVING),0)
 ct-objs += CtSaving_Cbf.o 
 INCLUDES += -I../../third-party/CBFLib/include
@@ -50,6 +54,12 @@ ct-objs += CtSaving_Nxs.o
 # nexus4tango lib is not yet available but soon !
 #INCLUDES += -I../../third-party/NXSLib/include
 CXXFLAGS += -DWITH_NXS_SAVING
+endif
+
+ifneq ($(COMPILE_FITS_SAVING),0)
+ct-objs += CtSaving_Fits.o
+CXXFLAGS += -DWITH_FITS_SAVING -I/usr/local/include
+
 endif
 
 ifndef COMPILE_SPS_IMAGE

@@ -45,6 +45,7 @@ INSTALL_LIB_DIR = $(INSTALL_PLAT_DIR)/Lib
 INSTALL_INCLUDE_DIR = $(INSTALL_PLAT_DIR)/include
 INSTALL_PKG_CONFIG_DIR = $(INSTALL_LIB_DIR)/pkgconfig
 INSTALL_CONFIG_DEFINES =
+INSTALL_LIBADD =
 
 ifneq ($(COMPILE_CORE), 0)
 INSTALL_CORE_DIR = $(INSTALL_PLAT_DIR)/Core
@@ -157,6 +158,12 @@ ifneq ($(COMPILE_NXS_SAVING),0)
 INSTALL_CONFIG_DEFINES += -DWITH_NXS_SAVING
 endif
 
+ifneq ($(COMPILE_FITS_SAVING),0)
+INSTALL_CONFIG_DEFINES += -DWITH_FITS_SAVING
+#INSTALL_LIBADD += -lCCfits
+endif
+
+
 
 .PHONY: install
 
@@ -171,6 +178,7 @@ install:
 
 	sed -e "s,@prefix@,${INSTALL_DIR},g" \
 		-e "s,@libdir@,${INSTALL_LIB_DIR},g" \
+		-e "s,@libadd@,${INSTALL_LIBADD},g" \
 		-e "s,@includedir@,${INSTALL_INCLUDE_DIR},g" \
 		-e "s,@config_defines@,${INSTALL_CONFIG_DEFINES},g" \
 		-e "s,@VERSION@,`cat common/VERSION`,g" \
