@@ -76,11 +76,18 @@ void SaveContainerFits::_writeFile(Data &aData,
 
 
     // init file
-    long naxis = aData.dimensions.size();
+    long naxis = aData.dimensions.size()+1; // +1 = frames per files
     long *naxes = new long[naxis];
 
     for(int i(0); i < naxis; ++i)
         naxes[i] = aData.dimensions[i];
+
+
+    lima::CtSaving::Parameters param;
+    getParameters(param);
+
+    naxes[naxis-1] = param.framesPerFile;
+
 
     std::auto_ptr<CCfits::FITS> pFits(NULL);
 
@@ -171,12 +178,13 @@ void SaveContainerFits::writeHeader(std::auto_ptr<CCfits::FITS> &fitsFile, CtSav
 void SaveContainerFits::writeData(std::auto_ptr<CCfits::FITS> &fitsFile, Data &data, short dataType)
 {
     DEB_MEMBER_FUNCT();
-    // number of pixels: x*y
-    unsigned long nPixels = data.dimensions[0] * data.dimensions[1];
-
 
     lima::CtSaving::Parameters param;
     getParameters(param);
+
+
+    // number of pixels: x*y
+    unsigned long nPixels = data.dimensions[0] * data.dimensions[1] * param.framesPerFile;
 
     switch(param.imageType)
     {
