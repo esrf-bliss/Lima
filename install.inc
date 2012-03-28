@@ -46,6 +46,7 @@ INSTALL_INCLUDE_DIR = $(INSTALL_PLAT_DIR)/include
 INSTALL_PKG_CONFIG_DIR = $(INSTALL_LIB_DIR)/pkgconfig
 INSTALL_CONFIG_DEFINES =
 INSTALL_LIBADD =
+INSTALL_DEPS = install.mkdir
 
 ifneq ($(COMPILE_CORE), 0)
 INSTALL_CORE_DIR = $(INSTALL_PLAT_DIR)/Core
@@ -161,21 +162,35 @@ endif
 ifneq ($(COMPILE_FITS_SAVING),0)
 INSTALL_CONFIG_DEFINES += -DWITH_FITS_SAVING
 #INSTALL_LIBADD += -lCCfits
+INSTALL_DEPS = cfitsio.install CCfits.install
 endif
 
+##################
+#  INSTALL DEPS  #
+##################
 
-
-.PHONY: install
-
-PROCESSOR_TYPE := $(shell uname -i)
-
-install:
+install.mkdir:
 	mkdir -p $(INSTALL_LIMA_DIR)
 	cp python/__init__.py $(INSTALL_LIMA_DIR)
 	mkdir -p $(INSTALL_LIB_DIR)
 	mkdir -p $(INSTALL_INCLUDE_DIR)
 	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
 
+cfitsio.install:
+	cd third-party/cfitsio && ./configure --prefix=$(abspath $(INSTALL_DIR)) && $(MAKE) && $(MAKE) install
+
+CCfits.install:
+	cd third-party/CCfits && ./configure --prefix=$(abspath $(INSTALL_DIR))  && $(MAKE) && $(MAKE) install
+
+##################
+# INSTALL TARGET #
+##################
+
+.PHONY: install
+
+PROCESSOR_TYPE := $(shell uname -i)
+
+install: $(INSTALL_DEPS)
 	sed -e "s,@prefix@,${INSTALL_DIR},g" \
 		-e "s,@libdir@,${INSTALL_LIB_DIR},g" \
 		-e "s,@libadd@,${INSTALL_LIBADD},g" \

@@ -49,6 +49,28 @@ PROJECTS += sps.src
 PROJECTS_CLEAN += sps.clean
 endif
 
+ifneq ($(COMPILE_FITS_SAVING),0)
+
+ifeq ($(wildcard cfitsio/zutil.o),)
+PROJECTS += cfitsio.confsrc
+endif
+PROJECTS += cfitsio.src
+
+ifeq ($(wildcard CCfits/.libs/libCCfits.lai),)
+PROJECTS += CCfits.confsrc
+endif
+PROJECTS += CCfits.src
+
+ifneq ($(wildcard cfitsio/Makefile),)
+PROJECTS_CLEAN += cfitsio.clean
+endif
+
+ifneq ($(wildcard CCfits/Makefile),)
+PROJECTS_CLEAN += CCfits.clean
+endif
+
+endif # COMPILE_FITS_SAVING
+
 all:	src test
 
 src:	$(PROJECTS)
@@ -85,6 +107,30 @@ cbflib.src:
 
 cbflib.clean:
 	$(MAKE) -C CBFLib/ -f $(CBFMAKEFILE) clean
+
+cfitsio.confsrc:
+	cd cfitsio && ./configure
+
+cfitsio.src:
+	cd cfitsio && $(MAKE) && $(MAKE) install
+
+cfitsio.install:
+	cd cfitsio && ./configure --prefix=$(INSTALL_DIR) && $(MAKE) && $(MAKE) install
+
+cfitsio.clean:
+	cd cfitsio && $(MAKE) clean
+
+CCfits.confsrc:
+	cd CCfits && ./configure --with-cfitsio=`pwd`/../cfitsio
+
+CCfits.src:
+	cd CCfits && $(MAKE)
+
+cfitsio.install:
+	cd CCfits && ./configure --prefix=$(INSTALL_DIR) && $(MAKE) && $(MAKE) install
+
+CCfits.clean:
+	cd CCfits && $(MAKE) clean
 
 test:
 	@echo

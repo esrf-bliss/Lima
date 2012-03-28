@@ -31,6 +31,10 @@ INCLUDES = -I. -I../include -I../../common/include -I../../hardware/include \
 		-I../../third-party/Processlib/tasks/include \
 		-I../../third-party/Sps/Include
 
+ifneq ($(LIBS),0)
+LIBS=
+endif
+
 ifndef COMPILE_CBF_SAVING
 COMPILE_CBF_SAVING = 0
 endif
@@ -58,8 +62,12 @@ endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
 ct-objs += CtSaving_Fits.o
-CXXFLAGS += -DWITH_FITS_SAVING -I/usr/local/include
-
+CXXFLAGS += -DWITH_FITS_SAVING -I../../third-party/cfitsio \
+		-I../../third-party
+#LIBS += -L../../third-party/CCfits/.libs \
+	-L../../third-party/cfitsio/libs \
+	-lcfitsio \
+	-lCCfits
 endif
 
 ifndef COMPILE_SPS_IMAGE
