@@ -89,10 +89,10 @@ Processlib/sip/Makefile:
 	cd Processlib/sip/ && python configure.py
 
 Processlib_build_libprocesslib.so:
-	make -C Processlib/build -j2
+	$(MAKE) -C Processlib/build -j2
 
 Processlib/sip/processlib.so: Processlib_build_libprocesslib.so
-	make -C Processlib/sip -j2
+	$(MAKE) -C Processlib/sip -j2
 
 sps.src:	Sps/Src/sps.o
 
@@ -100,7 +100,7 @@ sps.clean:
 	rm -f Sps/Src/sps.o
 
 Sps/Src/sps.o:	Sps/Src/sps.c Sps/Include/sps.h
-	make -C Sps/Src CPPFLAGS=-I../Include CFLAGS=-fPIC sps.o
+	$(MAKE) -C Sps/Src CPPFLAGS=-I../Include CFLAGS=-fPIC sps.o
 
 cbflib.src:
 	$(MAKE) CFLAGS=-fPIC -C CBFLib/ -f $(CBFMAKEFILE) all
@@ -115,22 +115,22 @@ cfitsio.src:
 	cd cfitsio && $(MAKE) && $(MAKE) install
 
 cfitsio.install:
-	cd cfitsio && ./configure --prefix=$(INSTALL_DIR) && $(MAKE) && $(MAKE) install
+	cd cfitsio && ./configure --prefix=$(INSTALL_PLAT_DIR) && $(MAKE) && $(MAKE) install
 
 cfitsio.clean:
 	cd cfitsio && $(MAKE) clean
 
 CCfits.confsrc:
-	cd CCfits && ./configure --with-cfitsio=`pwd`/../cfitsio
+	cd CCfits && ./configure --with-cfitsio=`pwd`/../cfitsio --prefix=$(INSTALL_PLAT_DIR)
 
 CCfits.src:
 	cd CCfits && $(MAKE)
 
-cfitsio.install:
-	cd CCfits && ./configure --prefix=$(INSTALL_DIR) && $(MAKE) && $(MAKE) install
+CCfits.install:
+	$(MAKE) -C CCfits all install
 
 CCfits.clean:
-	cd CCfits && $(MAKE) clean
+	$(MAKE) -C CCfits clean
 
 test:
 	@echo

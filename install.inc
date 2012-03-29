@@ -21,7 +21,7 @@
 ############################################################################
 
 ifndef INSTALL_DIR
-INSTALL_DIR = install
+export INSTALL_DIR = $(shell pwd)/install
 endif
 
 ifndef INSTALL_LIMA_DIR
@@ -38,10 +38,13 @@ endif
 endif
 
 ifndef INSTALL_PLAT_DIR
-INSTALL_PLAT_DIR = $(INSTALL_LIMA_DIR)/$(INSTALL_PLAT)
+export INSTALL_PLAT_DIR = $(INSTALL_LIMA_DIR)/$(INSTALL_PLAT)
 endif
 
-INSTALL_LIB_DIR = $(INSTALL_PLAT_DIR)/Lib
+ifndef INSTALL_LIB_DIR
+export INSTALL_LIB_DIR = $(INSTALL_PLAT_DIR)/lib
+endif
+
 INSTALL_INCLUDE_DIR = $(INSTALL_PLAT_DIR)/include
 INSTALL_PKG_CONFIG_DIR = $(INSTALL_LIB_DIR)/pkgconfig
 INSTALL_CONFIG_DEFINES =
@@ -162,7 +165,7 @@ endif
 ifneq ($(COMPILE_FITS_SAVING),0)
 INSTALL_CONFIG_DEFINES += -DWITH_FITS_SAVING
 #INSTALL_LIBADD += -lCCfits
-INSTALL_DEPS = cfitsio.install CCfits.install
+INSTALL_DEPS += cfitsio.install CCfits.install
 endif
 
 ##################
@@ -177,10 +180,10 @@ install.mkdir:
 	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
 
 cfitsio.install:
-	cd third-party/cfitsio && ./configure --prefix=$(abspath $(INSTALL_DIR)) && $(MAKE) && $(MAKE) install
+	$(MAKE) -C third-party cfitsio.install
 
 CCfits.install:
-	cd third-party/CCfits && ./configure --prefix=$(abspath $(INSTALL_DIR))  && $(MAKE) && $(MAKE) install
+	$(MAKE) -C third-party CCfits.install
 
 ##################
 # INSTALL TARGET #
