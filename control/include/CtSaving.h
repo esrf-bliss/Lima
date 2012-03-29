@@ -63,6 +63,7 @@ namespace lima {
 	EDF,			///< EDF format (Esrf Data Format)
 	CBFFormat,		///< CBF format
 	NXS,			///< Soleil Nexus format
+	FITS,			///< Flexible Image Transport Layer (NOST)
 	HARDWARE_SPECIFIC,	///< extended hardware format (ADSC,MarCCD...) @see setHardwareFormat
       };
 

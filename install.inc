@@ -21,7 +21,7 @@
 ############################################################################
 
 ifndef INSTALL_DIR
-INSTALL_DIR = install
+export INSTALL_DIR = $(shell pwd)/install
 endif
 
 ifndef INSTALL_LIMA_DIR
@@ -38,13 +38,18 @@ endif
 endif
 
 ifndef INSTALL_PLAT_DIR
-INSTALL_PLAT_DIR = $(INSTALL_LIMA_DIR)/$(INSTALL_PLAT)
+export INSTALL_PLAT_DIR = $(INSTALL_LIMA_DIR)/$(INSTALL_PLAT)
 endif
 
-INSTALL_LIB_DIR = $(INSTALL_PLAT_DIR)/Lib
+ifndef INSTALL_LIB_DIR
+export INSTALL_LIB_DIR = $(INSTALL_PLAT_DIR)/lib
+endif
+
 INSTALL_INCLUDE_DIR = $(INSTALL_PLAT_DIR)/include
 INSTALL_PKG_CONFIG_DIR = $(INSTALL_LIB_DIR)/pkgconfig
 INSTALL_CONFIG_DEFINES =
+INSTALL_LIBADD =
+INSTALL_DEPS = install.mkdir
 
 ifneq ($(COMPILE_CORE), 0)
 INSTALL_CORE_DIR = $(INSTALL_PLAT_DIR)/Core
@@ -157,20 +162,41 @@ ifneq ($(COMPILE_NXS_SAVING),0)
 INSTALL_CONFIG_DEFINES += -DWITH_NXS_SAVING
 endif
 
+ifneq ($(COMPILE_FITS_SAVING),0)
+INSTALL_CONFIG_DEFINES += -DWITH_FITS_SAVING
+#INSTALL_LIBADD += -lCCfits
+INSTALL_DEPS += cfitsio.install CCfits.install
+endif
 
-.PHONY: install
+##################
+#  INSTALL DEPS  #
+##################
 
-PROCESSOR_TYPE := $(shell uname -i)
-
-install:
+install.mkdir:
 	mkdir -p $(INSTALL_LIMA_DIR)
 	cp python/__init__.py $(INSTALL_LIMA_DIR)
 	mkdir -p $(INSTALL_LIB_DIR)
 	mkdir -p $(INSTALL_INCLUDE_DIR)
 	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
 
+cfitsio.install:
+	$(MAKE) -C third-party cfitsio.install
+
+CCfits.install:
+	$(MAKE) -C third-party CCfits.install
+
+##################
+# INSTALL TARGET #
+##################
+
+.PHONY: install
+
+PROCESSOR_TYPE := $(shell uname -i)
+
+install: $(INSTALL_DEPS)
 	sed -e "s,@prefix@,${INSTALL_DIR},g" \
 		-e "s,@libdir@,${INSTALL_LIB_DIR},g" \
+		-e "s,@libadd@,${INSTALL_LIBADD},g" \
 		-e "s,@includedir@,${INSTALL_INCLUDE_DIR},g" \
 		-e "s,@config_defines@,${INSTALL_CONFIG_DEFINES},g" \
 		-e "s,@VERSION@,`cat common/VERSION`,g" \

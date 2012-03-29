@@ -31,12 +31,20 @@ INCLUDES = -I. -I../include -I../../common/include -I../../hardware/include \
 		-I../../third-party/Processlib/tasks/include \
 		-I../../third-party/Sps/Include
 
+ifneq ($(LIBS),0)
+LIBS=
+endif
+
 ifndef COMPILE_CBF_SAVING
 COMPILE_CBF_SAVING = 0
 endif
 
 ifndef COMPILE_NXS_SAVING
 COMPILE_NXS_SAVING = 0
+endif
+
+ifndef COMPILE_FITS_SAVING
+COMPILE_FITS_SAVING = 0
 endif
 
 ifneq ($(COMPILE_CBF_SAVING),0)
@@ -50,6 +58,16 @@ ct-objs += CtSaving_Nxs.o
 # nexus4tango lib is not yet available but soon !
 #INCLUDES += -I../../third-party/NXSLib/include
 CXXFLAGS += -DWITH_NXS_SAVING
+endif
+
+ifneq ($(COMPILE_FITS_SAVING),0)
+ct-objs += CtSaving_Fits.o
+CXXFLAGS += -DWITH_FITS_SAVING -I../../third-party/cfitsio \
+		-I../../third-party
+#LIBS += -L../../third-party/CCfits/.libs \
+	-L../../third-party/cfitsio/libs \
+	-lcfitsio \
+	-lCCfits
 endif
 
 ifndef COMPILE_SPS_IMAGE
