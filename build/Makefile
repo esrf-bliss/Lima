@@ -34,6 +34,11 @@ CORE_LDFLAGS += -L../third-party/CBFLib/lib
 CORE_LDLIBS += -lcbf
 endif
 
+ifneq ($(COMPILE_FITS_SAVING),0)
+CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
+CORE_LDLIBS += -lCCfits -lcfitsio
+endif
+
 ifneq ($(COMPILE_CORE),0)
 
 name		:= core
