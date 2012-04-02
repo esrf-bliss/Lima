@@ -46,16 +46,23 @@ core-deps	:= $(CORE_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 core-base	:= liblima$(name).so
 core-full	:= $(core-base).$(full-version)
-core-maj	:= $(core-base).$(maj-version)
-core-flags	+= -fPIC -Wl,-soname,$(core-maj)
+core-link	:= $(core-base).$(link-version)
+core-flags	+= -fPIC -Wl,-soname,$(core-link)
 
 $(core-full):		$(core-objs)
 	$(CXX) -shared -o $@ $(core-flags) $+ $(core-deps)
-	rm -f $(core-maj);  ln -s $(core-full) $(core-maj)
-	rm -f $(core-base); ln -s $(core-maj)  $(core-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(core-link); ln -s $(core-full) $(core-link)
+endif
+	rm -f $(core-base); ln -s $(core-link) $(core-base)
 
 build_targets := $(core-full)
 
@@ -79,16 +86,23 @@ simu-deps	:= $(LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 simu-base	:= liblima$(name).so
 simu-full	:= $(simu-base).$(full-version)
-simu-maj	:= $(simu-base).$(maj-version)
-simu-flags	+= -fPIC -Wl,-soname,$(simu-maj)
+simu-link	:= $(simu-base).$(link-version)
+simu-flags	+= -fPIC -Wl,-soname,$(simu-link)
 
 $(simu-full):		$(simu-objs)
 	$(CXX) -shared -o $@ $(simu-flags) $+ $(simu-deps)
-	rm -f $(simu-maj);  ln -s $(simu-full) $(simu-maj)
-	rm -f $(simu-base); ln -s $(simu-maj)  $(simu-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(simu-link); ln -s $(simu-full) $(simu-link)
+endif
+	rm -f $(simu-base); ln -s $(simu-link) $(simu-base)
 
 build_targets += $(simu-full)
 
@@ -114,16 +128,23 @@ espia-deps	:= $(ESPIA_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 espia-base	:= liblima$(name).so
 espia-full	:= $(espia-base).$(full-version)
-espia-maj	:= $(espia-base).$(maj-version)
-espia-flags	+= -fPIC -Wl,-soname,$(espia-maj)
+espia-link	:= $(espia-base).$(link-version)
+espia-flags	+= -fPIC -Wl,-soname,$(espia-link)
 
 $(espia-full):		$(espia-objs)
 	$(CXX) -shared -o $@ $(espia-flags) $+ $(espia-deps)
-	rm -f $(espia-maj);  ln -s $(espia-full) $(espia-maj)
-	rm -f $(espia-base); ln -s $(espia-maj)  $(espia-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(espia-link); ln -s $(espia-full) $(espia-link)
+endif
+	rm -f $(espia-base); ln -s $(espia-link) $(espia-base)
 
 build_targets += $(espia-full)
 
@@ -147,16 +168,23 @@ frelon-deps	:= $(FRELON_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 frelon-base	:= liblima$(name).so
 frelon-full	:= $(frelon-base).$(full-version)
-frelon-maj	:= $(frelon-base).$(maj-version)
-frelon-flags	+= -fPIC -Wl,-soname,$(frelon-maj)
+frelon-link	:= $(frelon-base).$(link-version)
+frelon-flags	+= -fPIC -Wl,-soname,$(frelon-link)
 
 $(frelon-full):		$(frelon-objs)
 	$(CXX) -shared -o $@ $(frelon-flags) $+ $(frelon-deps)
-	rm -f $(frelon-maj);  ln -s $(frelon-full) $(frelon-maj)
-	rm -f $(frelon-base); ln -s $(frelon-maj)  $(frelon-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(frelon-link); ln -s $(frelon-full) $(frelon-link)
+endif
+	rm -f $(frelon-base); ln -s $(frelon-link) $(frelon-base)
 
 build_targets += $(frelon-full)
 
@@ -180,16 +208,23 @@ maxipix-deps	:= $(MAXIPIX_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 maxipix-base	:= liblima$(name).so
 maxipix-full	:= $(maxipix-base).$(full-version)
-maxipix-maj	:= $(maxipix-base).$(maj-version)
-maxipix-flags	+= -fPIC -Wl,-soname,$(maxipix-maj)
+maxipix-link	:= $(maxipix-base).$(link-version)
+maxipix-flags	+= -fPIC -Wl,-soname,$(maxipix-link)
 
 $(maxipix-full):		$(maxipix-objs)
 	$(CXX) -shared -o $@ $(maxipix-flags) $+ $(maxipix-deps)
-	rm -f $(maxipix-maj);  ln -s $(maxipix-full) $(maxipix-maj)
-	rm -f $(maxipix-base); ln -s $(maxipix-maj)  $(maxipix-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(maxipix-link); ln -s $(maxipix-full) $(maxipix-link)
+endif
+	rm -f $(maxipix-base); ln -s $(maxipix-link) $(maxipix-base)
 
 build_targets += $(maxipix-full)
 
@@ -212,14 +247,21 @@ basler-deps	:= $(BASLER_LDLIBS)
 basler-base	:= liblima$(name).so
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 basler-full	:= $(basler-base).$(full-version)
-basler-maj	:= $(basler-base).$(maj-version)
-basler-flags	+= -fPIC -Wl,-soname,$(basler-maj)
+basler-link	:= $(basler-base).$(link-version)
+basler-flags	+= -fPIC -Wl,-soname,$(basler-link)
 
 $(basler-full):		$(basler-objs)
 	$(CXX) -shared -o $@ $(basler-flags) $+ $(basler-deps)
-	rm -f $(basler-maj);  ln -s $(basler-full) $(basler-maj)
-	rm -f $(basler-base); ln -s $(basler-maj)  $(basler-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(basler-link); ln -s $(basler-full) $(basler-link)
+endif
+	rm -f $(basler-base); ln -s $(basler-link) $(basler-base)
 
 build_targets += $(basler-full)
 endif
@@ -241,14 +283,21 @@ ueye-deps	:= $(UEYE_LDLIBS)
 ueye-base	:= liblima$(name).so
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 ueye-full	:= $(ueye-base).$(full-version)
-ueye-maj	:= $(ueye-base).$(maj-version)
-ueye-flags	+= -fPIC -Wl,-soname,$(ueye-maj)
+ueye-link	:= $(ueye-base).$(link-version)
+ueye-flags	+= -fPIC -Wl,-soname,$(ueye-link)
 
 $(ueye-full):		$(ueye-objs)
 	$(CXX) -shared -o $@ $(ueye-flags) $+ $(ueye-deps)
-	rm -f $(ueye-maj);  ln -s $(ueye-full) $(ueye-maj)
-	rm -f $(ueye-base); ln -s $(ueye-maj)  $(ueye-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(ueye-link); ln -s $(ueye-full) $(ueye-link)
+endif
+	rm -f $(ueye-base); ln -s $(ueye-link) $(ueye-base)
 
 build_targets += $(ueye-full)
 endif
@@ -274,15 +323,22 @@ prosilica-flags	:= $(PROSILICA_LDFLAGS)
 prosilica-deps	:= $(PROSILICA_LDLIBS)
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 prosilica-base	:= liblima$(name).so
 prosilica-full	:= $(prosilica-base).$(full-version)
-prosilica-maj	:= $(prosilica-base).$(maj-version)
-prosilica-flags	+= -fPIC -Wl,-soname,$(prosilica-maj)
+prosilica-link	:= $(prosilica-base).$(link-version)
+prosilica-flags	+= -fPIC -Wl,-soname,$(prosilica-link)
 
 $(prosilica-full):		$(prosilica-objs)
 	$(CXX) -shared -o $@ $(prosilica-flags) $+ $(prosilica-deps)
-	rm -f $(prosilica-maj);  ln -s $(prosilica-full) $(prosilica-maj)
-	rm -f $(prosilica-base); ln -s $(prosilica-maj)  $(prosilica-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(prosilica-link); ln -s $(prosilica-full) $(prosilica-link)
+endif
+	rm -f $(prosilica-base); ln -s $(prosilica-link) $(prosilica-base)
 
 build_targets += $(prosilica-full)
 endif
@@ -303,16 +359,23 @@ roperscientific-deps	:= $(ROPERSCIENTIFIC_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 roperscientific-base	:= liblima$(name).so
 roperscientific-full	:= $(roperscientific-base).$(full-version)
-roperscientific-maj	:= $(roperscientific-base).$(maj-version)
-roperscientific-flags	+= -fPIC -Wl,-soname,$(roperscientific-maj)
+roperscientific-link	:= $(roperscientific-base).$(link-version)
+roperscientific-flags	+= -fPIC -Wl,-soname,$(roperscientific-link)
 
 $(roperscientific-full):		$(roperscientific-objs)
 	$(CXX) -shared -o $@ $(roperscientific-flags) $+ $(roperscientific-deps)
-	rm -f $(roperscientific-maj);  ln -s $(roperscientific-full) $(roperscientific-maj)
-	rm -f $(roperscientific-base); ln -s $(roperscientific-maj)  $(roperscientific-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(roperscientific-link); ln -s $(roperscientific-full) $(roperscientific-link)
+endif
+	rm -f $(roperscientific-base); ln -s $(roperscientific-link) $(roperscientific-base)
 
 build_targets += $(roperscientific-full)
 
@@ -334,16 +397,23 @@ adsc-deps	:= $(ADSC_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 adsc-base	:= liblima$(name).so
 adsc-full	:= $(adsc-base).$(full-version)
-adsc-maj	:= $(adsc-base).$(maj-version)
-adsc-flags	+= -fPIC -Wl,-soname,$(adsc-maj)
+adsc-link	:= $(adsc-base).$(link-version)
+adsc-flags	+= -fPIC -Wl,-soname,$(adsc-link)
 
 $(adsc-full):		$(adsc-objs)
 	$(CXX) -shared -o $@ $(adsc-flags) $+ $(adsc-deps)
-	rm -f $(adsc-maj);  ln -s $(adsc-full) $(adsc-maj)
-	rm -f $(adsc-base); ln -s $(adsc-maj)  $(adsc-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(adsc-link); ln -s $(adsc-full) $(adsc-link)
+endif
+	rm -f $(adsc-base); ln -s $(adsc-link) $(adsc-base)
 
 build_targets += $(adsc-full)
 
@@ -365,16 +435,23 @@ mythen-deps	:= $(MYTHEN_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 mythen-base	:= liblima$(name).so
 mythen-full	:= $(mythen-base).$(full-version)
-mythen-maj	:= $(mythen-base).$(maj-version)
-mythen-flags	+= -fPIC -Wl,-soname,$(mythen-maj)
+mythen-link	:= $(mythen-base).$(link-version)
+mythen-flags	+= -fPIC -Wl,-soname,$(mythen-link)
 
 $(mythen-full):		$(mythen-objs)
 	$(CXX) -shared -o $@ $(mythen-flags) $+ $(mythen-deps)
-	rm -f $(mythen-maj);  ln -s $(mythen-full) $(mythen-maj)
-	rm -f $(mythen-base); ln -s $(mythen-maj)  $(mythen-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(mythen-link); ln -s $(mythen-full) $(mythen-link)
+endif
+	rm -f $(mythen-base); ln -s $(mythen-link) $(mythen-base)
 
 build_targets += $(mythen-full)
 
@@ -397,14 +474,21 @@ andor-deps	:= $(ANDOR_LDLIBS)
 andor-base	:= liblima$(name).so
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 andor-full	:= $(andor-base).$(full-version)
-andor-maj	:= $(andor-base).$(maj-version)
-andor-flags	+= -fPIC -Wl,-soname,$(andor-maj)
+andor-link	:= $(andor-base).$(link-version)
+andor-flags	+= -fPIC -Wl,-soname,$(andor-link)
 
 $(andor-full):		$(andor-objs)
 	$(CXX) -shared -o $@ $(andor-flags) $+ $(andor-deps)
-	rm -f $(andor-maj);  ln -s $(andor-full) $(andor-maj)
-	rm -f $(andor-base); ln -s $(andor-maj)  $(andor-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(andor-link); ln -s $(andor-full) $(andor-link)
+endif
+	rm -f $(andor-base); ln -s $(andor-link) $(andor-base)
 
 build_targets += $(andor-full)
 endif
@@ -424,16 +508,23 @@ xpad-deps	:= $(XPAD_LDLIBS)
 
 full-version	:= $(shell cat $(version-file))
 maj-version	:= $(shell echo $(full-version) | cut -f1 -d.)
+ifneq ($(LINK_STRICT_VERSION),0)
+link-version	:= $(full-version)
+else
+link-version	:= $(maj-version)
+endif
 
 xpad-base	:= liblima$(name).so
 xpad-full	:= $(xpad-base).$(full-version)
-xpad-maj	:= $(xpad-base).$(maj-version)
-xpad-flags	+= -fPIC -Wl,-soname,$(xpad-maj)
+xpad-link	:= $(xpad-base).$(link-version)
+xpad-flags	+= -fPIC -Wl,-soname,$(xpad-link)
 
 $(xpad-full):		$(xpad-objs)
 	$(CXX) -shared -o $@ $(xpad-flags) $+ $(xpad-deps)
-	rm -f $(xpad-maj);  ln -s $(xpad-full) $(xpad-maj)
-	rm -f $(xpad-base); ln -s $(xpad-maj)  $(xpad-base)
+ifeq ($(LINK_STRICT_VERSION),0)
+	rm -f $(xpad-link); ln -s $(xpad-full) $(xpad-link)
+endif
+	rm -f $(xpad-base); ln -s $(xpad-link) $(xpad-base)
 
 build_targets += $(xpad-full)
 
