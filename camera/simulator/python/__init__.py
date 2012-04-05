@@ -42,6 +42,7 @@ if version.upper() == 'LAST':
         version_dirs = [x for x in os.listdir(root_name) if x.startswith('v')]
         version_dirs.sort(version_cmp)
         version = version_dirs[-1]
+	del version_dirs, x
 else:
         if version[0] != 'v':
                 version = 'v' + version
@@ -49,6 +50,13 @@ else:
 mod_path = os.path.join(root_name, version)
 if not (os.path.isdir(mod_path) or os.path.islink(mod_path)):
         raise ImportError('Invalid %s: %s' % (env_var_name, req_version))
+
+if os.environ['LIMA_LINK_STRICT_VERSION'] == 'FULL':
+	core_version_fname = os.path.join(mod_path, 'CORE_VERSION')
+	core_version_file = open(core_version_fname, 'rt')
+	core_version = core_version_file.readline().strip()
+	os.environ['LIMA_CORE_VERSION'] = core_version
+	del core_version_fname, core_version_file, core_version
 
 __path__.append(mod_path)
 
@@ -60,6 +68,6 @@ globals().update(_S.__dict__)
 
 sys.setdlopenflags(ld_open_flags)
 
-del root_name, mod_name, mod_path, x, env_var_name
-del version, req_version, version_dirs, version_code, version_cmp
+del root_name, mod_name, mod_path, env_var_name
+del version, req_version, version_code, version_cmp
 del os, sys, imp, glob, DLFCN

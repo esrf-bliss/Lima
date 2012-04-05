@@ -50,6 +50,15 @@ ifneq ($(COMPILE_CBF_SAVING),0)
 LDLIBS += -L../../third-party/CBFLib/lib -lcbf
 endif
 
+ifneq ($(COMPILE_FITS_SAVING),0)
+CXXFLAGS += -DWITH_FITS_SAVING -I../../third-party/cfitsio \
+		-I../../third-party
+LDLIBS += -L../../third-party/CCfits/.libs \
+	-L../../third-party/cfitsio/lib \
+	-lcfitsio \
+	-lCCfits
+endif
+
 ifndef COMPILE_SIMULATOR
 COMPILE_SIMULATOR = 0
 endif
