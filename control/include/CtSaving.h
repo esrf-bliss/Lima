@@ -59,12 +59,12 @@ namespace lima {
 
     enum FileFormat 
       {
+	HARDWARE_SPECIFIC = -1,	///< extended hardware format (ADSC,MarCCD...) @see setHardwareFormat
 	RAW,			///< Raw format (no header)
 	EDF,			///< EDF format (Esrf Data Format)
 	CBFFormat,		///< CBF format
 	NXS,			///< Soleil Nexus format
 	FITS,			///< Flexible Image Transport Layer (NOST)
-	HARDWARE_SPECIFIC,	///< extended hardware format (ADSC,MarCCD...) @see setHardwareFormat
       };
 
     enum SavingMode 
