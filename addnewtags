@@ -24,17 +24,55 @@
 
 
 import os, sys
+from subprocess import Popen, PIPE
+
+class os_proxy:
+
+    def __init__(self, os=os):
+        self.os = os
+
+    def system(self, cmd, *args, **kw):
+        cwd = get_rel_path(self.os.getcwd(), base_path)
+        print 'os.system: cmd="%s". cwd=%s' % (cmd, cwd)
+        return self.os.system(cmd, *args, **kw)
+        #return 0
+
+    def __getattr__(self, name):
+        return getattr(self.os, name)
+
+os = os_proxy()
 
 base_path = os.path.dirname(sys.argv[0])
 if base_path == '.':
     base_path = os.getcwd()
+else:
+    os.chdir(base_path)
+
+def get_rel_path(entry, base_dir):
+    if os.path.samefile(entry, base_dir):
+	return '.'
+    elif entry in ['/', '.']:
+        return None
+    entry_dir, entry_name = os.path.split(entry)
+    if not entry_dir:
+        entry_dir = '.'
+    rel_path = get_rel_path(entry_dir, base_dir)
+    if rel_path is None:
+        return None
+    elif not entry_name:
+        return rel_path
+    elif rel_path == '.':
+        return entry_name
+    else:
+        return os.path.join(rel_path, entry_name)
+
 
 def usage():
     prgname = os.path.basename(sys.argv[0])
-    print "Usage: %s <change_type | print> <all | module ...>" % prgname
-    print ""
-    print "   change_type: major | minor | release"
-    print ""
+    print 'Usage: %s <change_type | print> <all | module ...>' % prgname
+    print ''
+    print '   change_type: major | minor | release'
+    print ''
     sys.exit(1)
 
 CHG_MAJOR, CHG_MINOR, CHG_RELEASE = 'major', 'minor', 'release'
@@ -81,7 +119,6 @@ class Version:
         return (self.major << 16) + ((self.minor or 0) << 8) + (self.rel or 0)
     
 
-
 try:
     change_type = sys.argv[1]
     if change_type not in [CHG_MAJOR, CHG_MINOR, CHG_RELEASE, JUST_PRINT]:
@@ -117,13 +154,34 @@ mod_version_data = {
     'tango/camera/andor': 'applications/tango/camera/Andor_VERSION',
     'tango/camera/perkinelmer': 'applications/tango/camera/PerkinElmer_VERSION',
     'tango/camera/xpad': 'applications/tango/camera/Xpad_VERSION',
-    'tango/camera/pco': 'applications/tango/camera/Pco_VERSION',                
-    'tango/camera/ueye': 'applications/tango/camera/Ueye_VERSION',                
-    'tango/camera/simulator': 'applications/tango/camera/Simulator_VERSION',                
+    'tango/camera/pco': 'applications/tango/camera/Pco_VERSION',
+    'tango/camera/ueye': 'applications/tango/camera/Ueye_VERSION',
+    'tango/camera/simulator': 'applications/tango/camera/Simulator_VERSION',
 }
+
+base_mod_depend = {'espia': ['frelon', 'maxipix']}
+
+core_depend_mod_exclude_prefix = ['tango', 'taco']
+def core_depend_mod_included(x):
+    if x in base_mod_depend['espia']:
+        return False	
+    for m in core_depend_mod_exclude_prefix:
+        if x.startswith(m):
+            return False
+    return True
+core_depend_mod = filter(core_depend_mod_included, mod_version_data.keys())
+
+base_mod_depend.update({'core': core_depend_mod})
 
 if modules == [ALL]:
     modules = mod_version_data.keys()
+
+def depend_cmp(a, b):
+    table = {'core': -2, 'espia': -1}
+    a = table.get(a, 0)
+    b = table.get(b, 0)
+    return cmp(a, b)
+modules.sort(depend_cmp)
 
 max_name_len = 0
 for mod in modules:
@@ -131,19 +189,97 @@ for mod in modules:
 
 mod_version_objs = {}
 for mod in modules:
-    version_file_name = os.path.join(base_path, mod_version_data[mod])
-    version_file = open(version_file_name, "rt")
+    version_file_name = mod_version_data[mod]
+    version_file = open(version_file_name, 'rt')
     version_str = version_file.readlines()[0].strip()
     version_file.close()
     version = Version(fromstr=version_str)
     mod_version_objs[mod] = version
-    print "Found %-*s version: %s" % (max_name_len, mod, version)
+    print 'Found %-*s version: %s' % (max_name_len, mod, version)
 
 if change_type == JUST_PRINT:
     sys.exit(0)
 
-submodules = []
+all_submodules = []
+modified_submodules = []
 
+def get_all_submodules():
+    git_cmd = 'git submodule foreach bash -c pwd | grep -v "Entering"'
+    obj = Popen(git_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    for line in obj.stdout.readlines():
+        submod_dir = line.strip()
+        rel_path = get_rel_path(submod_dir, base_path)
+        if not rel_path:
+            raise RuntimeError, 'Cannot find submod rel_path: %s' % submod_dir
+        all_submodules.append(rel_path)
+
+get_all_submodules()
+
+def get_mod_depend_files(mod):
+    if mod not in base_mod_depend.keys():
+        return []
+    
+    depend_files = []
+    idx = modules.index(mod) + 1
+    depend_list = base_mod_depend[mod]
+    bver_file_name = os.path.join('python', '%s_VERSION' % mod.upper())
+    for omod in modules[idx:]:
+        if omod not in depend_list:
+            continue
+        over_file_name = mod_version_data[omod]
+        over_dir       = os.path.dirname(over_file_name)
+        bver_full_name = os.path.join(over_dir, bver_file_name)
+        if not os.path.exists(bver_full_name):
+            raise RuntimeError, ('Cannot find %s version file for %s: %s' %
+                                 (mod, omod, bver_full_name))
+        depend_files.append(bver_full_name)
+
+    return depend_files
+
+def git_add_entry_to_commit(entry, version=None):
+    old_dir = os.getcwd()
+    for mod_dir in all_submodules:
+        rel_path = get_rel_path(entry, mod_dir)
+        if not rel_path:
+            continue
+        # add in submodule
+        os.chdir(mod_dir)
+        if os.system('git add %s' % rel_path) != 0:
+           print 'Error adding %s [%s,%s]' % (entry, mod_dir, rel_path)
+           sys.exit(0)
+        os.chdir(old_dir)
+        # keep track to later commit
+        in_modified_list = False
+        for data in modified_submodules:
+            in_modified_list = (data[0] == mod_dir)
+            if in_modified_list:
+                if version is not None:
+                    data[1] = version
+                break
+        if not in_modified_list:
+            modified_submodules.append([mod_dir, version])
+        return
+
+    # file in core tree
+    rel_path = get_rel_path(entry, base_path)
+    if os.system('git add %s' % rel_path) != 0:
+        print 'Error adding %s' % rel_path
+        sys.exit(0)
+    
+
+def git_commit_submodules():
+    old_dir = os.getcwd()
+    for mod_dir, version in modified_submodules:
+        os.chdir(mod_dir)
+        if os.system('git commit -m "New tag : %s"' % version) != 0:
+            print 'Error in commit %s,%s' % (mod_dir, version)
+            sys.exit(0)
+        os.chdir(old_dir)
+	if os.system('git add %s' % mod_dir) != 0:
+            print 'Error adding submodule %s commit' % mod_dir
+            sys.exit(0)
+
+    
 for mod in modules:
     version = mod_version_objs[mod]
     if change_type == CHG_MAJOR:
@@ -155,26 +291,27 @@ for mod in modules:
         version.rel    = 0
     elif change_type == CHG_RELEASE:
         version.rel   += 1
-    print "New %-*s version: %s" % (max_name_len, mod, version)
-    version_file_name = os.path.join(base_path, mod_version_data[mod])
+    print 'New %-*s version: %s' % (max_name_len, mod, version)
+
+    depend_files = get_mod_depend_files(mod)
+    
+    version_file_name = mod_version_data[mod]
     version_file = open(version_file_name, 'wt')
-    version_str = version_file.write('%s\n' % version)
+    version_file.write('%s\n' % version)
     version_file.close()
+    git_add_entry_to_commit(version_file_name, version)
+    
+    for dep_file in depend_files:
+        bver_file = open(dep_file, 'wt')
+        bver_file.write('%s\n' % version)
+        bver_file.close()
+        git_add_entry_to_commit(dep_file, None)
 
 
-    if os.system('git add %s 2>/dev/null' % version_file_name): # probably a submodule
-        basepath,filename = os.path.split(version_file_name)
-        oldDir = os.getcwd()
-        os.chdir(basepath)
-        os.system('git add %s' % filename) # add in submodule
-        os.system('git commit -m "New tag : %s"' % version)
-        os.chdir(oldDir)
-        while basepath and os.system('git add %s 2>/dev/null' % basepath):
-		basepath,_ = os.path.split(basepath)
-
-        submodules.append(mod)
-
-if os.system('git commit') :
+git_commit_submodules()
+    
+if os.system('git commit'):
+    print 'Error in core tree commit'
     sys.exit(0)
 
 
@@ -182,12 +319,12 @@ for mod in modules:
     version = mod_version_objs[mod]
     git_tag = os.path.join(mod, '%s' % version)
     git_tag = git_tag.replace(os.sep,'-')
-    print "Creating git tag: %s" % git_tag
+    print 'Creating git tag: %s' % git_tag
     
     cmd = 'git tag %s' % (git_tag)
     os.system(cmd)
 
-if submodules:
+if modified_submodules:
     print 'Don\'t forget to push those submodules:'
-    for mod in submodules:
-        print '\t->',mod
+    for mod_dir, version in modified_submodules:
+        print '\t->', mod_dir
