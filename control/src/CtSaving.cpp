@@ -248,11 +248,15 @@ void CtSaving::Stream::createSaveContainer()
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the nxs "
                                      "saving option, not managed";  
 #endif        
+    goto common;
+
   case FITS:
 #ifndef WITH_FITS_SAVING
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the fits "
                                      "saving option, not managed";  
 #endif        
+    goto common;
+
   case RAW:
   case EDF:
 
