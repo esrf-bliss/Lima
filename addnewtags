@@ -28,19 +28,21 @@ from subprocess import Popen, PIPE
 
 class os_proxy:
 
-    def __init__(self, os=os):
+    def __init__(self, debug=False, os=os):
+        self.debug = debug
         self.os = os
 
     def system(self, cmd, *args, **kw):
-        cwd = get_rel_path(self.os.getcwd(), base_path)
-        print 'os.system: cmd="%s". cwd=%s' % (cmd, cwd)
+        if self.debug:
+            cwd = get_rel_path(self.os.getcwd(), base_path)
+            print 'os.system: cmd="%s". cwd=%s' % (cmd, cwd)
         return self.os.system(cmd, *args, **kw)
-        #return 0
 
     def __getattr__(self, name):
         return getattr(self.os, name)
 
-os = os_proxy()
+os_debug = False
+os = os_proxy(os_debug)
 
 base_path = None
 
@@ -181,6 +183,25 @@ def init_global_data(argv):
     base_mod_depend.update({'core': core_depend_mod})
 
 
+def get_mod_version(mod, version_file_name):
+    if version_file_name is None:
+        version_file_name = mod_version_data[mod]
+    version_file = open(version_file_name, 'rt')
+    version_str = version_file.readlines()[0].strip()
+    version_file.close()
+    return Version(fromstr=version_str)
+
+def set_mod_version(mod, version_file_name, version):
+    if version_file_name is None:
+        version_file_name = mod_version_data[mod]
+    version_file = open(version_file_name, 'wt')
+    version_file.write('%s\n' % version)
+    version_file.close()
+    file_is_dep_link = (version_file_name != mod_version_data[mod])
+    dep_mod = (file_is_dep_link and mod) or None
+    git_add_entry_to_commit(version_file_name, dep_mod, version)
+
+                  
 def depend_cmp(a, b):
     table = {'core': -2, 'espia': -1}
     a = table.get(a, 0)
@@ -192,23 +213,44 @@ def get_depend_sorted_modules(modules):
     modules.sort(depend_cmp)
     return modules
 
-def get_mod_depend_files(mod):
+def get_mod_dep_files(mod, modules):
+    mod_dep_files = {}
     if mod not in base_mod_depend.keys():
-        return []
+        return mod_dep_files
 
-    depend_files = []
     depend_list = base_mod_depend[mod]
     bmod_ver_file_name = os.path.join('python', '%s_VERSION' % mod.upper())
     for omod in depend_list:
+        if omod not in modules:
+            continue
         omod_ver_file_name = mod_version_data[omod]
         omod_dir           = os.path.dirname(omod_ver_file_name)
         bmod_ver_full_name = os.path.join(omod_dir, bmod_ver_file_name)
         if not os.path.exists(bmod_ver_full_name):
             raise RuntimeError, ('Cannot find %s version file for %s: %s' %
                                  (mod, omod, bmod_ver_full_name))
-        depend_files.append(bmod_ver_full_name)
+        mod_dep_files[omod] = bmod_ver_full_name
 
-    return depend_files
+    return mod_dep_files
+
+def check_unmodif_mod_dep_files(modules):
+    for mod in base_mod_depend.keys():
+        if mod in modules:
+            continue
+        version = get_mod_version(mod, None)
+        mod_dep_files = get_mod_dep_files(mod, modules)
+        for omod, dep_file in mod_dep_files.items():
+            oversion = get_mod_version(mod, dep_file)
+            if oversion != version:
+                print 'Error: outdated %s [%s] dependency link on ' \
+                      'submodule %s [%s]' % (mod, version, omod, oversion)
+                print 'To solve this you should:'
+                print '+ Compile your module (COMPILE_%s=1):' % omod.upper()
+                print '  "make config && make && make -C sip && make install"'
+                print '+ Validate it'
+                print '+ Update submodule dependency:'
+                print '  "git add %s"' % dep_file
+                sys.exit(1)
 
 def git_add_entry_to_commit(entry, depend_mod, version):
     old_dir = os.getcwd()
@@ -220,7 +262,7 @@ def git_add_entry_to_commit(entry, depend_mod, version):
         os.chdir(mod_dir)
         if os.system('git add %s' % rel_path) != 0:
            print 'Error adding %s [%s,%s]' % (entry, mod_dir, rel_path)
-           sys.exit(0)
+           sys.exit(1)
         os.chdir(old_dir)
         # keep track to later commit
         in_modified_list = False
@@ -238,7 +280,7 @@ def git_add_entry_to_commit(entry, depend_mod, version):
     rel_path = get_rel_path(entry, base_path)
     if os.system('git add %s' % rel_path) != 0:
         print 'Error adding %s' % rel_path
-        sys.exit(0)
+        sys.exit(1)
     
 
 def git_commit_submodules():
@@ -252,11 +294,11 @@ def git_commit_submodules():
             commit_msg = 'New tag : %s' % version
         if os.system('git commit -m "%s"' % commit_msg) != 0:
             print 'Error in commit %s: %s' % (mod_dir, commit_msg)
-            sys.exit(0)
+            sys.exit(1)
         os.chdir(old_dir)
 	if os.system('git add %s' % mod_dir) != 0:
             print 'Error adding submodule %s commit' % mod_dir
-            sys.exit(0)
+            sys.exit(1)
 
 def usage(argv):
     prgname = os.path.basename(argv[0])
@@ -292,17 +334,19 @@ def main(argv):
 
     mod_version_objs = {}
     for mod in modules:
-        version_file_name = mod_version_data[mod]
-        version_file = open(version_file_name, 'rt')
-        version_str = version_file.readlines()[0].strip()
-        version_file.close()
-        version = Version(fromstr=version_str)
+        version = get_mod_version(mod, None)
         mod_version_objs[mod] = version
         print 'Found %-*s version: %s' % (max_name_len, mod, version)
 
     if change_type == JUST_PRINT:
         sys.exit(0)
 
+    # Checks before performing git actions, just in case of error
+    check_unmodif_mod_dep_files(modules)
+    mod_dep_files = {}
+    for mod in modules:
+        mod_dep_files[mod] = get_mod_dep_files(mod, modules)
+    
     for mod in modules:
         version = mod_version_objs[mod]
         if change_type == CHG_MAJOR:
@@ -314,27 +358,17 @@ def main(argv):
             version.rel    = 0
         elif change_type == CHG_RELEASE:
             version.rel   += 1
-        print 'New %-*s version: %s' % (max_name_len, mod, version)
-
-        depend_files = get_mod_depend_files(mod)
+        print '+ New %-*s version: %s' % (max_name_len, mod, version)
+        set_mod_version(mod, None, version)
         
-        version_file_name = mod_version_data[mod]
-        version_file = open(version_file_name, 'wt')
-        version_file.write('%s\n' % version)
-        version_file.close()
-        git_add_entry_to_commit(version_file_name, None, version)
-        
-        for dep_file in depend_files:
-            bmod_ver_file = open(dep_file, 'wt')
-            bmod_ver_file.write('%s\n' % version)
-            bmod_ver_file.close()
-            git_add_entry_to_commit(dep_file, mod, version)
+        for omod, dep_file in mod_dep_files[mod].items():
+            set_mod_version(mod, dep_file, version)
 
     git_commit_submodules()
         
-    if os.system('git commit'):
+    if os.system('git commit') != 0:
         print 'Error in core tree commit'
-        sys.exit(0)
+        sys.exit(1)
     
     
     for mod in modules:
@@ -344,8 +378,10 @@ def main(argv):
         print 'Creating git tag: %s' % git_tag
         
         cmd = 'git tag %s' % (git_tag)
-        os.system(cmd)
-    
+        if os.system(cmd) != 0:
+            print 'Error in git-tag'
+            sys.exit(1)
+            
     if modified_submodules:
         print 'Don\'t forget to push these submodules:'
         for data in modified_submodules:
