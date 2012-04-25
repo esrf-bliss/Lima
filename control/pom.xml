@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
         <artifactId>Lima</artifactId>
-        <version>1.1.6</version>
+        <version>1.1.8</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -63,6 +63,7 @@
                         </includes>
                         <excludes>
                             <exclude>**/CtSaving_Cbf.cpp</exclude>
+                            <exclude>**/CtSaving_Fits.cpp</exclude>
                             <exclude>**/CtSpsImage.cpp</exclude>
                         </excludes>
                         <includePaths>
