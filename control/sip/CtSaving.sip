@@ -121,6 +121,8 @@ using namespace lima;
       EDF,
       CBFFormat,
       NXS,
+      FITS,
+      HARDWARE_SPECIFIC,
     };
 
     enum SavingMode {

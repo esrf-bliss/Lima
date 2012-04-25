@@ -31,9 +31,9 @@ def version_cmp(x, y):
         return cmp(version_code(x), version_code(y))
 
 env_var_name = 'LIMA_%s_VERSION' % mod_name.upper()
-try:
-        version = os.environ[env_var_name]
-except KeyError:
+if env_var_name in os.environ:
+	version = os.environ[env_var_name]
+else:
         version = 'LAST'
 
 req_version = version
@@ -42,6 +42,7 @@ if version.upper() == 'LAST':
         version_dirs = [x for x in os.listdir(root_name) if x.startswith('v')]
         version_dirs.sort(version_cmp)
         version = version_dirs[-1]
+	del version_dirs, x
 else:
         if version[0] != 'v':
                 version = 'v' + version
@@ -63,6 +64,6 @@ sys.setdlopenflags(ld_open_flags)
 
 sys.path.remove(mod_path)
 
-del root_name, mod_name, mod_path, x, env_var_name, ld_open_flags
-del version, req_version, version_dirs, version_code, version_cmp
+del root_name, mod_name, mod_path, env_var_name, ld_open_flags
+del version, req_version, version_code, version_cmp
 del os, sys, imp, glob, DLFCN

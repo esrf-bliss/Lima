@@ -42,6 +42,10 @@
 #include "CtSaving_Cbf.h"
 #endif
 
+#ifdef WITH_FITS_SAVING
+#include "CtSaving_Fits.h"
+#endif
+
 #include "TaskMgr.h"
 #include "SinkTask.h"
 
@@ -244,6 +248,15 @@ void CtSaving::Stream::createSaveContainer()
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the nxs "
                                      "saving option, not managed";  
 #endif        
+    goto common;
+
+  case FITS:
+#ifndef WITH_FITS_SAVING
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the fits "
+                                     "saving option, not managed";  
+#endif        
+    goto common;
+
   case RAW:
   case EDF:
 
@@ -273,6 +286,11 @@ void CtSaving::Stream::createSaveContainer()
 #ifdef WITH_NXS_SAVING
   case NXS:
     m_save_cnt = new SaveContainerNxs(*this);
+    break;
+#endif
+#ifdef WITH_FITS_SAVING
+  case FITS:
+    m_save_cnt = new SaveContainerFits(*this);
     break;
 #endif
   default:

@@ -40,12 +40,13 @@ if get_os is not None:
 
         lima_plat = os.path.join(root_name, plat)
         __path__.insert(0, lima_plat)
-
-import Core
+	
+# This mandatory variable is systematically overwritten by 'make install'
+os.environ['LIMA_LINK_STRICT_VERSION'] = 'FULL'
 
 if get_os is not None:
         all_dirs = os.listdir(lima_plat)
-        all_dirs.remove('Lib')
+        all_dirs.remove('lib')
 
         __all__ = all_dirs
         del plat, compat_plat, aux_plat, lima_plat, all_dirs
