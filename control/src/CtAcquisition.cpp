@@ -332,7 +332,7 @@ void CtAcquisition::getAcqNbFrames(int& nframes) const
 
   DEB_RETURN() << DEB_VAR1(nframes);
 }
-
+  
 void CtAcquisition::setAcqExpoTime(double acq_time)
 {
   DEB_MEMBER_FUNCT(); 
@@ -342,18 +342,6 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
     {
       CHECK_EXPOTIME(acq_time);
     }
-	
-  if (acq_time < m_valid_ranges.min_exp_time) 
-    {
-      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too short: " << DEB_VAR1(m_valid_ranges.min_exp_time);
-      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too short");
-    }
-  else if (acq_time > m_valid_ranges.max_exp_time)
-    {
-      DEB_ERROR() << "Specified " << DEB_VAR1(acq_time) << " too long: " << DEB_VAR1(m_valid_ranges.max_exp_time);
-      throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");
-    }
-
   m_inpars.acqExpoTime= acq_time;
 }
 
