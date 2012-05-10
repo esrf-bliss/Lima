@@ -52,7 +52,7 @@ INSTALL_LIBADD =
 INSTALL_DEPS = install.mkdir
 
 ifeq ($(LINK_STRICT_VERSION),0)
-ENV_LINK_STRICT_VER = 'MAJOR'
+ENV_LINK_STRICT_VER = 'MINOR'
 else
 ENV_LINK_STRICT_VER = 'FULL'
 endif
@@ -187,6 +187,8 @@ install.mkdir:
 	mkdir -p $(INSTALL_LIMA_DIR)
 	sed $(GLOB_PYTHON_INIT_SED) python/__init__.py > \
                                     $(INSTALL_LIMA_DIR)/__init__.py
+	mkdir -p $(INSTALL_PLAT_DIR)
+	cp python/module_helper.py $(INSTALL_PLAT_DIR)
 	mkdir -p $(INSTALL_LIB_DIR)
 	mkdir -p $(INSTALL_INCLUDE_DIR)
 	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
