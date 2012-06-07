@@ -65,7 +65,11 @@ class LIMACORE_API Event
 	DebProxy getDebug(DebObj& deb) const;
 };
 
+#ifndef NO_LIMA_DEBUG
 #define DEB_EVENT(event)	(event).getDebug(deb)
+#else
+#define DEB_EVENT(event) deb
+#endif
 
 std::ostream& operator <<(std::ostream& os, const Event& event);
 

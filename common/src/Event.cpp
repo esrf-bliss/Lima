@@ -102,6 +102,7 @@ string Event::getMsgStr()
 
 DebProxy Event::getDebug(DebObj& deb_obj) const
 {
+#ifndef NO_LIMA_DEBUG
 	DEB_FROM_PTR(&deb_obj);
 
 	switch (severity) {
@@ -114,6 +115,9 @@ DebProxy Event::getDebug(DebObj& deb_obj) const
 	default:
 		return DEB_TRACE();
 	}
+#else
+	return DebProxy();
+#endif
 }
 
 ostream& lima::operator <<(ostream& os, const Event& event)
