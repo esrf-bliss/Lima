@@ -128,7 +128,7 @@ void CtAcquisition::apply(CtControl::ApplyPolicy policy)
 
   use_policy= m_applied_once ? policy : CtControl::All;
 	
-  switch (policy) {
+  switch (use_policy) {
   case CtControl::All:
     // --- apply all parameters
     m_changes.set(1);
@@ -149,7 +149,7 @@ void CtAcquisition::apply(CtControl::ApplyPolicy policy)
     m_changes.set(1);
     _apply();
   }
-	
+  m_applied_once = true;
 }
 
 void CtAcquisition::sync()
