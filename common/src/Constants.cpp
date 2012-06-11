@@ -75,6 +75,7 @@ ostream& lima::operator <<(ostream& os, TrigMode trig_mode)
 	case ExtTrigMult:	name = "ExtTrigMult";	break;
 	case ExtGate:		name = "ExtGate";	break;
 	case ExtStartStop:	name = "ExtStartStop";	break;
+	case ExtTrigReadout:	name = "ExtTrigReadout";break;
 	}
 	return os << name;
 }

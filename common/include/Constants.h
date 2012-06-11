@@ -54,7 +54,7 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os, AcqMode acq_mode);
 enum TrigMode {
 	IntTrig,IntTrigMult,
 	ExtTrigSingle, ExtTrigMult,
-	ExtGate, ExtStartStop,
+	ExtGate, ExtStartStop, ExtTrigReadout,
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, TrigMode trig_mode);

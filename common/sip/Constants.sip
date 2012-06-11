@@ -34,7 +34,7 @@ enum AcqMode {
 enum TrigMode {
 	IntTrig, IntTrigMult,
 	ExtTrigSingle, ExtTrigMult,
-	ExtGate, ExtStartStop,
+	ExtGate, ExtStartStop, ExtTrigReadout,
 };
 
 enum BufferMode {
