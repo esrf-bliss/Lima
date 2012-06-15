@@ -233,7 +233,10 @@ def check_unmodif_mod_dep_files(modules):
     for mod in base_mod_depend.keys():
         if mod in modules:
             continue
-        version = get_mod_version(mod, None)
+	try:
+            version = get_mod_version(mod, None)
+	except IOError:
+	    continue
         mod_dep_files = get_mod_dep_files(mod, modules)
         for omod, dep_file in mod_dep_files.items():
             oversion = get_mod_version(mod, dep_file)
@@ -332,7 +335,10 @@ def main(argv):
 
     mod_version_objs = {}
     for mod in modules:
-        version = get_mod_version(mod, None)
+	try:
+            version = get_mod_version(mod, None)
+	except IOError:
+	    continue
         mod_version_objs[mod] = version
         print 'Found %-*s version: %s' % (max_name_len, mod, version)
 
