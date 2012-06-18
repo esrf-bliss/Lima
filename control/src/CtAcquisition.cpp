@@ -77,7 +77,6 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
   m_hw_sync->registerValidRangesCallback(m_valid_ranges_cb);
   DEB_TRACE() << DEB_VAR1(m_valid_ranges);
 
-  m_applied_once= false;
   reset();
 }
 
@@ -117,6 +116,7 @@ void CtAcquisition::reset()
   
   m_inpars.reset();
   m_inpars.latencyTime = m_valid_ranges.min_lat_time;
+  m_applied_once= false;
 }
 
 void CtAcquisition::apply(CtControl::ApplyPolicy policy)
@@ -128,7 +128,7 @@ void CtAcquisition::apply(CtControl::ApplyPolicy policy)
 
   use_policy= m_applied_once ? policy : CtControl::All;
 	
-  switch (policy) {
+  switch (use_policy) {
   case CtControl::All:
     // --- apply all parameters
     m_changes.set(1);
@@ -149,7 +149,7 @@ void CtAcquisition::apply(CtControl::ApplyPolicy policy)
     m_changes.set(1);
     _apply();
   }
-	
+  m_applied_once = true;
 }
 
 void CtAcquisition::sync()
