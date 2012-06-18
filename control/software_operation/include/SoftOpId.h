@@ -171,11 +171,13 @@ namespace lima
   class LIMACORE_API SoftOpMask : public SoftOpBaseClass
   {
   public:
+    enum Type {STANDARD,DUMMY};
     SoftOpMask();
     virtual ~SoftOpMask();
-    
+
     void setMaskImage(Data &aData);
-    
+    void getType(Type&) const;
+    void setType(Type);
   protected:
     virtual void addTo(TaskMgr&,int stage);
     virtual void prepare() {};

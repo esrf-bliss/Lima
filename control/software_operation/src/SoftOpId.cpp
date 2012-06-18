@@ -184,6 +184,20 @@ void SoftOpMask::setMaskImage(Data &mask)
   m_opt->setMaskImageData(mask);
 }
 
+void SoftOpMask::setType(SoftOpMask::Type aType)
+{
+  m_opt->setType(aType == SoftOpMask::STANDARD ? 
+		 Tasks::Mask::STANDARD : Tasks::Mask::DUMMY);
+}
+
+void SoftOpMask::getType(Type &aType) const
+{
+  Tasks::Mask::Type aMaskType;
+  m_opt->getType(aMaskType);
+  aType = aMaskType == Tasks::Mask::STANDARD ?
+    SoftOpMask::STANDARD : SoftOpMask::DUMMY;
+}
+
 void SoftOpMask::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);

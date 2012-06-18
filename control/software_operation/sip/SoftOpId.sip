@@ -345,10 +345,13 @@ class SoftOpMask
 using namespace lima;
 %End
 public:
+  enum Type {STANDARD,DUMMY};
   SoftOpMask();
   virtual ~SoftOpMask();
     
   void setMaskImage(Data &aData);
+  void getType(SoftOpMask::Type& /Out/) const;
+  void setType(SoftOpMask::Type);
 };
 
 class SoftOpRoiCounter
