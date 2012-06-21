@@ -23,7 +23,7 @@
 ############################################################################
 
 
-import os, sys
+import os, sys, getopt
 from subprocess import Popen, PIPE
 
 class os_proxy:
@@ -41,8 +41,6 @@ class os_proxy:
     def __getattr__(self, name):
         return getattr(self.os, name)
 
-os_debug = False
-os = os_proxy(os_debug)
 
 base_path = None
 
@@ -169,7 +167,17 @@ def get_all_submodules(base_dir=None):
         all_submodules.append(rel_path)
 
 def init_global_data(argv):
-    global base_path
+    global base_path, os
+
+    os_debug = False
+
+    opts, args = getopt.getopt(argv[1:], 'v')
+    for opt, val in opts:
+        if opt == '-v':
+            os_debug = True
+
+    if os_debug:
+        os = os_proxy(os_debug)
 
     base_path = os.path.dirname(argv[0])
     if base_path == '.':
@@ -181,6 +189,8 @@ def init_global_data(argv):
     base_mod_depend.update()
     core_depend_mod = filter(mod_is_core_dependent, mod_version_data.keys())
     base_mod_depend.update({'core': core_depend_mod})
+
+    return args
 
 
 def get_mod_version(mod, version_file_name):
@@ -303,22 +313,25 @@ def get_git_tag(mod, version):
     
 def usage(argv):
     prgname = os.path.basename(argv[0])
-    print 'Usage: %s <change_type | print> <all | module ...>' % prgname
+    print 'Usage: %s [opts] <change_type | print> <all | module ...>' % prgname
     print ''
     print '   change_type: major | minor | release'
+    print ''
+    print 'Opts:'
+    print '   -v     Verbose output'
     print ''
     sys.exit(1)
 
 
 def main(argv):
-    init_global_data(argv)
+    args = init_global_data(argv)
 
     try:
-        change_type = argv[1]
+        change_type = args[0]
         if change_type not in [CHG_MAJOR, CHG_MINOR, CHG_RELEASE, JUST_PRINT]:
             raise InvalidValue
 
-        modules = argv[2:]
+        modules = args[1:]
         if not modules:
             raise InvalidValue
     except:
