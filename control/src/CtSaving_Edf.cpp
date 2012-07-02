@@ -30,6 +30,84 @@
 
 using namespace lima;
 
+#ifdef WIN32
+/** @brief this is a small wrapper class for ofstream class.
+ *  All this is for overcome performance issue with window std::ofstream
+ */
+SaveContainerEdf::_OfStream::_OfStream() : 
+    m_fout(NULL),
+    m_exc_flag(0)
+  {
+  }
+SaveContainerEdf::_OfStream::~_OfStream()
+  {
+    if(is_open())
+      close();
+  }
+
+void SaveContainerEdf::_OfStream::clear() {}
+void SaveContainerEdf::_OfStream::exceptions(int exc) {m_exc_flag = exc;}
+void SaveContainerEdf::_OfStream::open(const char* filename,
+				       std::ios_base::openmode openFlags)
+{
+  const char *mode = openFlags & std::ios_base::app ? "ab" : "wb";
+  fopen_s(&m_fout,filename,mode);
+  if(!m_fout && (m_exc_flag & std::ios_base::failbit))
+    {
+      std::string err = "Failed to open : ";
+      err += filename;
+      throw std::ios_base::failure(err);
+    }
+}
+bool SaveContainerEdf::_OfStream::is_open() const {return !!m_fout;}
+void SaveContainerEdf::_OfStream::close()
+{
+  fclose(m_fout);
+}
+long SaveContainerEdf::_OfStream::tellp() const
+{
+  return ftell(m_fout);
+}
+
+SaveContainerEdf::_OfStream& 
+SaveContainerEdf::_OfStream::write(const char* data,int size)
+{
+  int nbItemsWritten = fwrite(data,size,1,m_fout);
+  if(nbItemsWritten <= 0 &&
+     (m_exc_flag & std::ios_base::badbit))
+    throw std::ios_base::failure("Failed to write");
+  return *this;
+}
+
+SaveContainerEdf::_OfStream& 
+SaveContainerEdf::_OfStream::operator<< (const char *data)
+{
+  return write(data,strlen(data));
+}
+
+SaveContainerEdf::_OfStream& 
+SaveContainerEdf::_OfStream::operator<< (const std::string& data)
+{
+  return write(data.data(),data.size());
+}
+
+SaveContainerEdf::_OfStream& 
+SaveContainerEdf::_OfStream::operator<< (const int data)
+{
+  char aBuffer[32];
+  snprintf(aBuffer,sizeof(aBuffer),"%d",data);
+  return write(aBuffer,strlen(aBuffer));
+}
+
+SaveContainerEdf::_OfStream& 
+SaveContainerEdf::_OfStream::operator<< (const long data)
+{
+  char aBuffer[32];
+  snprintf(aBuffer,sizeof(aBuffer),"%ld",data);
+  return write(aBuffer,strlen(aBuffer));
+}
+#endif
+
 /** @brief saving container
  *
  *  This class manage file saving

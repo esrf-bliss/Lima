@@ -41,8 +41,34 @@ namespace lima {
 			    CtSaving::FileFormat);
   private:
     void _writeEdfHeader(Data&,CtSaving::HeaderMap&);
+#ifdef WIN32
+    class _OfStream
+    {
+    public:
+      _OfStream();
+      ~_OfStream();
 
+      void clear();
+      void exceptions(int exc);
+      void open(const char* filename,
+		std::ios_base::openmode openFlags = 
+		std::ios_base::in | std::ios_base::out);
+      bool is_open() const;
+      void close();
+      long tellp() const;
+      inline _OfStream& write(const char* data,int size);
+      inline _OfStream& operator<< (const char *data);
+      inline _OfStream& operator<< (const std::string& data);
+      inline _OfStream& operator<< (const int data);
+      inline _OfStream& operator<< (const long data);
+    private:
+      FILE* m_fout;
+      int m_exc_flag;
+    };
+    _OfStream			 m_fout;
+#else
     std::ofstream                m_fout;
+#endif
   };
 
 }
