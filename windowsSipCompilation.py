@@ -36,16 +36,13 @@ def getModuleConfig() :
         config = {}
         for line in f:
             if line.startswith('COMPILE') :
-                print "----- line", line
                 modName,active = line.split('=')
                 modName = '_'.join(modName.split('_')[1:])
                 modName = modName.lower()
                 if modName in availableModule:
                     config[modName] = bool(int(active))
-                    print "-------- config", config
 
         os.chdir('..')
-        print "-------- config", config
         return config
 
 def compileModule(config) :
@@ -64,19 +61,12 @@ if __name__ == '__main__':
                       help = 'Configure sip modules')
     (options,args) = parser.parse_args()
     if options.config_flag:
-        print "----------- sys.path.insert"
         sys.path.insert(0,'sip')
-        print "----------- import sip\configure.py"
         import configure
         os.chdir('sip')
-        print "----------- sip\configure.py -> main"
         configure.main()
-        print "----------- sip\configure.py -> main - returned"
         os.chdir('..')
         sys.path.pop(0)
     else:
-        print "----------- getModuleConfig()"
         config = getModuleConfig()
-        print "----------- compileModule()"
         compileModule(config)
-        print "----------- end"

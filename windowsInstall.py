@@ -32,11 +32,6 @@ module2Installfiles = {
 def copyModule(filesList,baseDestPath) :
     for src,dest in filesList:
         dst = os.path.join(baseDestPath,dest)
-        print "---------- src", src
-        print "---------- dst", dst
-        print "--------- dest", dest
-        print "---------- base", baseDestPath
-        
             
         if not os.access(dst,os.F_OK) :
             print 'Makedir',dst
@@ -52,7 +47,6 @@ def copyModule(filesList,baseDestPath) :
         elif not os.access(src,os.F_OK) :
             base,srcDir = os.path.split(src)
             dstFile = os.path.join(dst,srcDir)
-            print "--------- dstFile", dstFile
             f = file(dstFile,'w')
             f.close()
             print 'Create empty file',dstFile
@@ -99,7 +93,6 @@ if __name__ == '__main__':
             module_list += option.module_list
             module_list += ["core"]
             
-        print  "--------- mod list", module_list
         for moduleName in set(module_list) :
             filesList = module2Installfiles.get(moduleName,None)
             if filesList:
