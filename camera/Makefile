@@ -120,4 +120,12 @@ ifneq ($(COMPILE_MARCCD),0)
 sub-dirs += marccd
 endif
 
+ifndef COMPILE_PILATUS
+COMPILE_PILATUS = 0
+endif
+
+ifneq ($(COMPILE_PILATUS),0)
+sub-dirs += pilatus
+endif
+
 include ../global.inc

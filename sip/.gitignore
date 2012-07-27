@@ -22,6 +22,7 @@ andor
 xpad
 photonicscience
 marccd
+pilatus
 *.obj
 lima*.exp
 lima*.lib

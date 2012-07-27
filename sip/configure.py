@@ -44,6 +44,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('xpad',             [os.path.join('camera','xpad')]),
            ('marccd',           [os.path.join('camera','marccd')]),
            ('photonicscience',  [os.path.join('camera','photonicscience')]),
+           ('pilatus',          [os.path.join('camera','pilatus')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']

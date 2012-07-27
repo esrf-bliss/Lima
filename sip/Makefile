@@ -79,6 +79,10 @@ ifneq ($(COMPILE_MARCCD), 0)
 sip-modules += marccd
 endif
 
+ifneq ($(COMPILE_PILATUS), 0)
+sip-modules += pilatus
+endif
+
 all:	src
 
 src:

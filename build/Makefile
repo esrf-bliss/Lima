@@ -418,6 +418,29 @@ build_targets	+= $(call lib-full,$(xpad-name),$(xpad-ver))
 
 endif
 
+############################
+# LIMA - PILATUS
+############################
+
+ifneq ($(COMPILE_PILATUS),0)
+
+PILATUS_LDLIBS	:= 
+
+pilatus-name	:= pilatus
+pilatus-objs	:= ../camera/pilatus/src/Pilatus.o
+pilatus-ver	:= ../camera/pilatus/VERSION
+pilatus-flags	:= $(LDFLAGS)
+pilatus-deps	:= $(PILATUS_LDLIBS)
+
+$(call lib-full,$(pilatus-name),$(pilatus-ver)): $(pilatus-objs)
+	$(call compile-lib,$(pilatus-name),$(pilatus-ver),\
+			   $(pilatus-flags),$(pilatus-deps),$@,$+)
+	$(call create-links,$(pilatus-name),$(pilatus-ver))
+
+build_targets	+= $(call lib-full,$(pilatus-name),$(pilatus-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:

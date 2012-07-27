@@ -270,7 +270,9 @@ ifneq ($(COMPILE_PILATUS), 0)
 	mkdir -p $(INSTALL_PILATUS_VDIR)
 	cp camera/pilatus/python/__init__.py $(INSTALL_PILATUS_DIR)
 	$(call install_core_dep,$(INSTALL_PILATUS_VDIR))
-	cp camera/pilatus/python/*.py $(INSTALL_PILATUS_VDIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimapilatus.so*
+	cp -d build/liblimapilatus.so* $(INSTALL_LIB_DIR)
+	cp sip/pilatus/limapilatus.so $(INSTALL_PILATUS_VDIR)
 	cp camera/pilatus/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_BASLER), 0)
