@@ -29,7 +29,7 @@ struct HwFrameInfoType
 #include <sstream>
 using namespace lima;
 %End
-        enum OwnerShip {Managed,Transfer};
+        enum OwnerShip {Managed,Transfer,Shared};
 
 	int acq_frame_nb;
 

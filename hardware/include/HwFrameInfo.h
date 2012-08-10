@@ -38,7 +38,7 @@ namespace lima
  *******************************************************************/
 
 typedef struct LIMACORE_API HwFrameInfo {
-        enum OwnerShip {Managed,Transfer};
+	enum OwnerShip {Managed,Transfer,Shared};
 
 	int acq_frame_nb;
 	void *frame_ptr;

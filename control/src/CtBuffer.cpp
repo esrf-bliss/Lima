@@ -295,10 +295,10 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
 
   Buffer *fbuf = new Buffer();
   fbuf->data = frame_info.frame_ptr;
-  if(frame_info.buffer_owner_ship == HwFrameInfoType::Transfer)
-    fbuf->owner = Buffer::SHARED;
+  if(frame_info.buffer_owner_ship == HwFrameInfoType::Managed)
+    fbuf->owner = Buffer::MAPPED;
   else
-    fbuf->owner = Buffer::MAPPED;	
+    fbuf->owner = Buffer::SHARED;
 
   fdata.setBuffer(fbuf);
   fbuf->unref();
