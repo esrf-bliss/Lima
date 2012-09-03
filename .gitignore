@@ -17,3 +17,4 @@ install
 /archive_all.sh
 /tag_all_to_epn.sh
 /test.sh
+*_test.py
