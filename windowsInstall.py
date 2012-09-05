@@ -28,6 +28,8 @@ module2Installfiles = {
                    ('build/msvc/9.0/LibSimulator/Release/liblimasimulator.dll','Lima'),
                    ('sip/simulator/limasimulator.pyd','Lima')],
     'tango-core' : [('applications/tango/LimaCCDs.py',''),
+                    ('applications/tango/AttrHelper.py',''),
+                    ('applications/tango/EnvHelper.py',''),
                     ('applications/tango/camera/__init__.py','camera'),
                     ('applications/tango/plugins','')],
     'tango-simulator' : [('applications/tango/camera/Simulator.py','camera')],
