@@ -219,11 +219,22 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
   aData.header.lock();
   Data::HeaderContainer::Header &aDataHeader = aData.header.header();
   for(Data::HeaderContainer::Header::iterator i = aDataHeader.begin();i != aDataHeader.end();++i)
-    m_fout << i->first << " = " << i->second << " ;\n";
+    {
+      if(!i->second.size())
+	m_fout << i->first << " = " << ";\n";
+      else
+	m_fout << i->first << " = " << i->second << " ;\n";
+    }
   aData.header.unlock();
 
   for(CtSaving::HeaderMap::iterator i = aHeader.begin(); i != aHeader.end();++i)
-    m_fout << i->first << " = " << i->second << " ;\n";
+    {
+      if(!i->second.size())
+	m_fout << i->first << " = " << ";\n";
+      else
+	m_fout << i->first << " = " << i->second << " ;\n";
+    }
+
   
   long aEndPosition = m_fout.tellp();
   
