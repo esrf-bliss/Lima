@@ -108,6 +108,33 @@ public:
 private:
   Stream &m_stream;
 };
+/** @brief manual background saving
+ */
+class CtSaving::_ManualBackgroundSaveTask : public SinkTaskBase
+{
+public:
+  _ManualBackgroundSaveTask(CtSaving& ct_saving,
+			    HeaderMap &aHeader) :
+    m_saving(ct_saving),
+    m_header(aHeader)
+  {
+  }
+
+  ~_ManualBackgroundSaveTask()
+  {
+    AutoMutex lock(m_saving.m_cond.mutex());
+    m_saving.m_ready_flag = true;
+    m_saving.m_cond.broadcast();
+  }
+
+  virtual void process(Data &aData)
+  {
+    m_saving._synchronousSaving(aData,m_header);
+  }
+private:
+  CtSaving &m_saving;
+  HeaderMap m_header;
+};
 /** @brief Parameters default constructor
  */
 CtSaving::Parameters::Parameters()
@@ -209,12 +236,12 @@ void CtSaving::Stream::prepare()
 {
   DEB_MEMBER_FUNCT();
 
-  m_save_cnt->close();
-
-  updateParameters();
-
   if (hasAutoSaveMode())
-    checkWriteAccess();
+    {
+      m_save_cnt->close();
+      updateParameters();
+      checkWriteAccess();
+    }
 }
 
 void CtSaving::Stream::updateParameters()
@@ -1104,7 +1131,7 @@ void CtSaving::clear()
     @param aFrameNumber the frame id you want to save
     @param aNbFrames the number of frames you want to concatenate
  */
-void CtSaving::writeFrame(int aFrameNumber, int aNbFrames)
+void CtSaving::writeFrame(int aFrameNumber, int aNbFrames,bool synchronous)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aFrameNumber);
@@ -1112,21 +1139,26 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames)
   class WaitAndCleanupReadyFlag
   {
   public:
-    WaitAndCleanupReadyFlag(bool &ready_flag,Cond& aCond) :
-      m_lock(aCond.mutex()),m_cond(aCond),m_ready_flag(ready_flag) {}
+    WaitAndCleanupReadyFlag(bool &ready_flag,Cond& aCond,bool cleanupReadyFlag) :
+      m_lock(aCond.mutex()),m_cond(aCond),m_ready_flag(ready_flag),
+      m_clean_ready_flag(cleanupReadyFlag){}
 
     ~WaitAndCleanupReadyFlag() 
     {
       m_lock.lock();
-      m_ready_flag = true;
-      m_cond.broadcast();
+      if(m_clean_ready_flag)
+	{
+	  m_ready_flag = true;
+	  m_cond.broadcast();
+	}
     }
     void toggleReadyFlag() { m_ready_flag = false;m_lock.unlock();}
   private:
     AutoMutex 	m_lock;
     Cond&      	m_cond;
     bool&	m_ready_flag;
-  } wait_and_cleanup_ready_flag(m_ready_flag,m_cond);
+    bool	m_clean_ready_flag;
+  } wait_and_cleanup_ready_flag(m_ready_flag,m_cond,synchronous);
 
   _updateParameters();
 
@@ -1148,22 +1180,20 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames)
       FrameHeaderMap::iterator aHeaderIter;
       aHeaderIter = m_frame_headers.find(anImage2Save.frameNumber);
       _takeHeader(aHeaderIter, header, false);
-  
-      for (int s = 0; s < m_nb_stream; ++s) {
-	Stream& stream = getStream(s);
-	if (!stream.isActive())
-	  continue;
-
-	if(stream.needCompression()) {
-	  SinkTaskBase *aCompressionTaskPt;
-	  aCompressionTaskPt = stream.getTask(Compression, header);
-	  aCompressionTaskPt->setEventCallback(NULL);
-	  aCompressionTaskPt->process(anImage2Save);
-	  aCompressionTaskPt->unref();
+      if(synchronous)
+	_synchronousSaving(anImage2Save,header);
+      else
+	{
+	  TaskMgr *aSavingManualMgrPt = new TaskMgr();
+	  Data copyImage = anImage2Save.copy();
+	  aSavingManualMgrPt->setInputData(copyImage);
+	  SinkTaskBase *aTaskPt = new CtSaving::_ManualBackgroundSaveTask(*this,
+									  header);
+	  aSavingManualMgrPt->addSinkTask(0,aTaskPt);
+	  aTaskPt->unref();
+	  
+	  PoolThreadMgr::get().addProcess(aSavingManualMgrPt);
 	}
-
-	stream.writeFile(anImage2Save, header);
-      }
     }
   else
     {
@@ -1188,6 +1218,24 @@ void CtSaving::_updateParameters()
   }
 }
 
+void CtSaving::_synchronousSaving(Data &anImage2Save,HeaderMap &header)
+{
+  for (int s = 0; s < m_nb_stream; ++s) {
+    Stream& stream = getStream(s);
+    if (!stream.isActive())
+      continue;
+
+    if(stream.needCompression()) {
+      SinkTaskBase *aCompressionTaskPt;
+      aCompressionTaskPt = stream.getTask(Compression, header);
+      aCompressionTaskPt->setEventCallback(NULL);
+      aCompressionTaskPt->process(anImage2Save);
+      aCompressionTaskPt->unref();
+    }
+
+    stream.writeFile(anImage2Save, header);
+  }
+}
 void CtSaving::_postTaskList(Data& aData, const TaskList& task_list)
 {
   DEB_MEMBER_FUNCT();
