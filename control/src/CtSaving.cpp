@@ -1131,12 +1131,13 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames)
   _updateParameters();
 
   SavingMode saving_mode = getAcqSavingMode();
+  ManagedMode managed_mode = getManagedMode();
+  wait_and_cleanup_ready_flag.toggleReadyFlag();
+
   if (saving_mode != Manual)
     THROW_CTL_ERROR(Error) << "Manual saving is only permitted when "
       "saving mode == Manual";
-  wait_and_cleanup_ready_flag.toggleReadyFlag();
 
-  ManagedMode managed_mode = getManagedMode();
   if(managed_mode == Software)
     {
       Data anImage2Save;
