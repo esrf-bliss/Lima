@@ -253,6 +253,7 @@ void CtHwBinRoiFlip::setBin(Bin& bin, bool round)
 			if (!m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getUnbinned(m_bin);
 
+			m_hw_bin->setBin(set_bin);
 			m_bin= set_bin;
 
 			if (!m_bin.isOne() && !m_set_roi.isEmpty())
@@ -284,6 +285,7 @@ void CtHwBinRoiFlip::setRoi(Roi& roi, bool round)
 		if ((!round)&&(real_roi!=roi))
 			throw LIMA_CTL_EXC(InvalidValue, "Given hardware roi not possible");
 		if (roi != m_set_roi) {
+			m_hw_roi->setRoi(roi);
 			m_set_roi= roi;
 			_updateSize();
 		}
@@ -312,8 +314,10 @@ void CtHwBinRoiFlip::setFlip(Flip& flip, bool mandatory)
       if (mandatory && set_flip != flip)
 	throw LIMA_CTL_EXC(InvalidValue, "Given hardware flip not possible");
       if (set_flip != m_flip)
+	{
+	  m_hw_flip->setFlip(set_flip);
 	  m_flip = set_flip;
-
+	}
       flip = set_flip;
     }
 }
