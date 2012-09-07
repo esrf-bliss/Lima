@@ -250,6 +250,10 @@ void CtHwBinRoiFlip::setBin(Bin& bin, bool round)
 		if ((!round)&&(set_bin!=bin))
 		  THROW_CTL_ERROR(InvalidValue) << "Given hardware binning not possible";
 		if (set_bin != m_bin) {
+			Bin old_bin = m_bin;
+			Roi old_roi = m_set_roi;
+			Roi old_max_roi = m_max_roi;
+
 			if (!m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getUnbinned(m_bin);
 
@@ -259,7 +263,18 @@ void CtHwBinRoiFlip::setBin(Bin& bin, bool round)
 			if (!m_bin.isOne() && !m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getBinned(m_bin);
 			m_max_roi.setSize(m_max_size / m_bin);
-			_updateSize();
+			try
+			  {
+			    _updateSize();
+			  }
+			catch(Exception &exc)
+			  {
+			    m_bin = old_bin;
+			    m_set_roi = old_roi;
+			    m_max_roi = old_max_roi;
+			    m_hw_bin->setBin(m_bin);
+			    throw exc;
+			  }
 		}
 		bin= set_bin;
 	}
