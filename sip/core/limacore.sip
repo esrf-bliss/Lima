@@ -213,6 +213,56 @@ return aReturnListPt;
 %End
 };
 
+%MappedType std::map<int,std::string>
+{
+%TypeHeaderCode
+#include <map>
+#include <string>
+%End
+
+%ConvertToTypeCode
+PyObject *key, *value;
+SIP_SSIZE_T pos;
+
+if(sipIsErr == NULL)
+{
+  bool aReturnFlag = PyDict_Check(sipPy);
+
+  pos = 0;
+  while(aReturnFlag && PyDict_Next(sipPy, &pos, &key, &value))
+     aReturnFlag = PyInt_Check(key) && PyString_Check(value);
+
+  return aReturnFlag;
+}
+
+*sipCppPtr = new std::map<int,std::string>();
+pos = 0;
+while(PyDict_Next(sipPy, &pos, &key, &value))
+{
+  int anIndex = PyInt_AS_LONG(key);
+  char *s = PyString_AsString(value);
+  std::pair<int,std::string> item(anIndex,s);
+  (*sipCppPtr)->insert(item);
+}
+return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+PyObject* aReturnDictPt = PyDict_New();
+
+std::map<int,std::string>::iterator mIter, mEnd = sipCpp->end();
+for(mIter = sipCpp->begin(); mIter != mEnd; ++mIter)
+   {
+    PyObject *aKeyPt = PyInt_FromLong(mIter->first);
+    std::string *sPt = &mIter->second;
+    PyObject *aValuePt = PyString_FromStringAndSize(sPt->data(),sPt->length());
+    PyDict_SetItem(aReturnDictPt,aKeyPt,aValuePt);
+    Py_DECREF(aKeyPt);Py_DECREF(aValuePt);
+   }
+return aReturnDictPt;
+%End
+};
+
 %MappedType std::map<int,std::list<std::string>>
 {
 %TypeHeaderCode
