@@ -61,12 +61,7 @@ GLOB_PYTHON_ENV = \(os.environ\['LIMA_LINK_STRICT_VERSION'\][ \t]*=[ \t]*\)
 GLOB_PYTHON_INIT_SED = "s/$(GLOB_PYTHON_ENV)'[A-Z]\+'/\1$(ENV_LINK_STRICT_VER)/"
 
 CORE_VERSION_NAME = common/VERSION
-install_core_dep = \
-    (diff $(CORE_VERSION_NAME) $(1)/python/CORE_VERSION > /dev/null 2>&1 || \
-        (echo "* Manually updating $(1)/python/CORE_VERSION from" \
-              "$(CORE_VERSION_NAME)" && \
-         cp $(CORE_VERSION_NAME) $(1)/python/CORE_VERSION)) && \
-    cp $(1)/python/CORE_VERSION $(2)
+install_core_dep = cp $(CORE_VERSION_NAME) $(1)/CORE_VERSION
 
 ifneq ($(COMPILE_CORE), 0)
 INSTALL_CORE_DIR = $(INSTALL_PLAT_DIR)/Core
@@ -81,12 +76,7 @@ INSTALL_SIMU_VDIR = $(INSTALL_SIMU_DIR)/v$(SIMU_FULL_VERSION)
 endif
 
 ESPIA_VERSION_NAME = camera/common/espia/VERSION
-install_espia_dep = \
-    (diff $(ESPIA_VERSION_NAME) $(1)/python/ESPIA_VERSION > /dev/null 2>&1 || \
-        (echo "* Manually updating $(1)/python/ESPIA_VERSION from" \
-              "$(ESPIA_VERSION_NAME)" && \
-         cp $(ESPIA_VERSION_NAME) $(1)/python/ESPIA_VERSION)) && \
-    cp $(1)/python/ESPIA_VERSION $(2)
+install_espia_dep = cp $(ESPIA_VERSION_NAME) $(1)/ESPIA_VERSION
 
 ifneq ($(COMPILE_ESPIA), 0)
 INSTALL_ESPIA_DIR = $(INSTALL_PLAT_DIR)/Espia
@@ -235,7 +225,7 @@ endif
 ifneq ($(COMPILE_SIMULATOR), 0)
 	mkdir -p $(INSTALL_SIMU_VDIR)
 	cp camera/simulator/python/__init__.py $(INSTALL_SIMU_DIR)
-	$(call install_core_dep,camera/simulator,$(INSTALL_SIMU_VDIR))
+	$(call install_core_dep,$(INSTALL_SIMU_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimasimulator.so*
 	cp -d build/liblimasimulator.so* $(INSTALL_LIB_DIR)
 	cp sip/simulator/limasimulator.so $(INSTALL_SIMU_VDIR)
@@ -244,7 +234,7 @@ endif
 ifneq ($(COMPILE_ESPIA), 0)
 	mkdir -p $(INSTALL_ESPIA_VDIR)
 	cp camera/common/espia/python/__init__.py $(INSTALL_ESPIA_DIR)
-	$(call install_core_dep,camera/common/espia,$(INSTALL_ESPIA_VDIR))
+	$(call install_core_dep,$(INSTALL_ESPIA_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimaespia.so*
 	cp -d build/liblimaespia.so* $(INSTALL_LIB_DIR)
 	cp sip/espia/limaespia.so $(INSTALL_ESPIA_VDIR)
@@ -253,7 +243,7 @@ endif
 ifneq ($(COMPILE_FRELON), 0)
 	mkdir -p $(INSTALL_FRELON_VDIR)
 	cp camera/frelon/python/__init__.py $(INSTALL_FRELON_DIR)
-	$(call install_espia_dep,camera/frelon,$(INSTALL_FRELON_VDIR))
+	$(call install_espia_dep,$(INSTALL_FRELON_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimafrelon.so*
 	cp -d build/liblimafrelon.so* $(INSTALL_LIB_DIR)
 	cp sip/frelon/limafrelon.so $(INSTALL_FRELON_VDIR)
@@ -263,7 +253,7 @@ endif
 ifneq ($(COMPILE_MAXIPIX), 0)
 	mkdir -p $(INSTALL_MAXIPIX_VDIR)
 	cp camera/maxipix/python/__init__.py $(INSTALL_MAXIPIX_DIR)
-	$(call install_espia_dep,camera/maxipix,$(INSTALL_MAXIPIX_VDIR))
+	$(call install_espia_dep,$(INSTALL_MAXIPIX_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimamaxipix.so*
 	cp -d build/liblimamaxipix.so* $(INSTALL_LIB_DIR)
 	cp sip/maxipix/limamaxipix.so $(INSTALL_MAXIPIX_VDIR)
@@ -273,14 +263,14 @@ endif
 ifneq ($(COMPILE_PILATUS), 0)
 	mkdir -p $(INSTALL_PILATUS_VDIR)
 	cp camera/pilatus/python/__init__.py $(INSTALL_PILATUS_DIR)
-	$(call install_core_dep,camera/pilatus,$(INSTALL_PILATUS_VDIR))
+	$(call install_core_dep,$(INSTALL_PILATUS_VDIR))
 	cp camera/pilatus/python/*.py $(INSTALL_PILATUS_VDIR)
 	cp camera/pilatus/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_BASLER), 0)
 	mkdir -p $(INSTALL_BASLER_VDIR)
 	cp camera/basler/python/__init__.py $(INSTALL_BASLER_DIR)
-	$(call install_core_dep,camera/basler,$(INSTALL_BASLER_VDIR))
+	$(call install_core_dep,$(INSTALL_BASLER_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimabasler.so*
 	cp -d build/liblimabasler.so* $(INSTALL_LIB_DIR)
 	cp sip/basler/limabasler.so $(INSTALL_BASLER_VDIR)
@@ -289,7 +279,7 @@ endif
 ifneq ($(COMPILE_PROSILICA), 0)
 	mkdir -p $(INSTALL_PROSILICA_VDIR)
 	cp camera/prosilica/python/__init__.py $(INSTALL_PROSILICA_DIR)
-	$(call install_core_dep,camera/prosilica,$(INSTALL_PROSILICA_VDIR))
+	$(call install_core_dep,$(INSTALL_PROSILICA_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimaprosilica.so*
 	rm -rf $(INSTALL_LIB_DIR)/libPvAPI.so
 	cp -d build/liblimaprosilica.so* $(INSTALL_LIB_DIR)
@@ -313,7 +303,7 @@ endif
 ifneq ($(COMPILE_ROPERSCIENTIFIC), 0)
 	mkdir -p $(INSTALL_ROPERSCIENTIFIC_VDIR)
 	cp camera/roperscientific/python/__init__.py $(INSTALL_ROPERSCIENTIFIC_DIR)
-	$(call install_core_dep,camera/roperscientific,$(INSTALL_ROPERSCIENTIFIC_VDIR))
+	$(call install_core_dep,$(INSTALL_ROPERSCIENTIFIC_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimaroperscientific.so*
 	cp -d build/liblimaroperscientific.so* $(INSTALL_LIB_DIR)
 	cp sip/roperscientific/limaroperscientific.so $(INSTALL_ROPERSCIENTIFIC_VDIR)
@@ -323,7 +313,7 @@ endif
 ifneq ($(COMPILE_ADSC), 0)
 	mkdir -p $(INSTALL_ADSC_VDIR)
 	cp camera/adsc/python/__init__.py $(INSTALL_ADSC_DIR)
-	$(call install_core_dep,camera/adsc,$(INSTALL_ADSC_VDIR))
+	$(call install_core_dep,$(INSTALL_ADSC_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimaadsc.so*
 	cp -d build/liblimaadsc.so* $(INSTALL_LIB_DIR)
 	cp sip/adsc/limaadsc.so $(INSTALL_ADSC_VDIR)
@@ -335,7 +325,7 @@ endif
 ifneq ($(COMPILE_MYTHEN), 0)
 	mkdir -p $(INSTALL_MYTHEN_VDIR)
 	cp camera/mythen/python/__init__.py $(INSTALL_MYTHEN_DIR)
-	$(call install_core_dep,camera/mythen,$(INSTALL_MYTHEN_VDIR))
+	$(call install_core_dep,$(INSTALL_MYTHEN_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimamythen.so*
 	cp -d build/liblimamythen.so* $(INSTALL_LIB_DIR)
 	cp sip/mythen/limamythen.so $(INSTALL_MYTHEN_VDIR)
@@ -345,7 +335,7 @@ endif
 ifneq ($(COMPILE_UEYE), 0)
 	mkdir -p $(INSTALL_UEYE_VDIR)
 	cp camera/ueye/python/__init__.py $(INSTALL_UEYE_DIR)
-	$(call install_core_dep,camera/ueye,$(INSTALL_UEYE_VDIR))
+	$(call install_core_dep,$(INSTALL_UEYE_VDIR))
 	cp camera/ueye/python/CORE_VERSION
 	rm -rf $(INSTALL_LIB_DIR)/liblimaueye.so*
 	cp -d build/liblimaueye.so* $(INSTALL_LIB_DIR)
@@ -355,7 +345,7 @@ endif
 ifneq ($(COMPILE_ANDOR), 0)
 	mkdir -p $(INSTALL_ANDOR_VDIR)
 	cp camera/andor/python/__init__.py $(INSTALL_ANDOR_DIR)
-	$(call install_core_dep,camera/andor,$(INSTALL_ANDOR_VDIR))
+	$(call install_core_dep,$(INSTALL_ANDOR_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimaandor.so*
 	cp -d build/liblimaandor.so* $(INSTALL_LIB_DIR)
 	cp sip/andor/limaandor.so $(INSTALL_ANDOR_VDIR)
@@ -365,7 +355,7 @@ endif
 ifneq ($(COMPILE_XPAD), 0)
 	mkdir -p $(INSTALL_XPAD_VDIR)
 	cp camera/xpad/python/__init__.py $(INSTALL_XPAD_DIR)
-	$(call install_core_dep,camera/xpad,$(INSTALL_XPAD_VDIR))
+	$(call install_core_dep,$(INSTALL_XPAD_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimaxpad.so*
 	cp -d build/liblimaxpad.so* $(INSTALL_LIB_DIR)
 	cp sip/xpad/limaxpad.so $(INSTALL_XPAD_VDIR)
