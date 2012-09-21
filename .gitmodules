@@ -6,70 +6,70 @@
 	url = git://git.epn-campus.eu/repositories/Sps.git
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
-	url = git://git.epn-campus.eu/repositories/Processlib.git
+	url = git://github.com/esrf-bliss/Processlib.git
 [submodule "camera/basler"]
 	path = camera/basler
-	url = git://git.epn-campus.eu/repositories/LimaCameraBasler
+	url = git://github.com/esrf-bliss/Lima-camera-basler
 [submodule "applications/spec"]
 	path = applications/spec
-	url = git://git.epn-campus.eu/repositories/LimaSpec
+	url = git://github.com/esrf-bliss/Lima-spec
 [submodule "camera/pco"]
 	path = camera/pco
-	url = git://git.epn-campus.eu/repositories/LimaCameraPco
+	url = git://github.com/esrf-bliss/Lima-camera-pco
 [submodule "camera/pilatus"]
 	path = camera/pilatus
-	url = git://git.epn-campus.eu/repositories/LimaCameraPilatus
+	url = git://github.com/esrf-bliss/Lima-camera-pilatus
 [submodule "applications/tango"]
 	path = applications/tango
-	url = git://git.epn-campus.eu/repositories/LimaTango
+	url = git://github.com/esrf-bliss/Lima-tango
 [submodule "camera/maxipix"]
 	path = camera/maxipix
-	url = git://git.epn-campus.eu/repositories/LimaCameraMaxipix
+	url = git://github.com/esrf-bliss/Lima-camera-maxipix
 [submodule "documentation"]
 	path = documentation
-	url = git://git.epn-campus.eu/repositories/LimaDocumentation
+	url = git://github.com/esrf-bliss/Lima-documentation
 [submodule "camera/frelon"]
 	path = camera/frelon
-	url = git://git.epn-campus.eu/repositories/LimaCameraFrelon
+	url = git://github.com/esrf-bliss/Lima-camera-frelon
 [submodule "camera/common/espia"]
 	path = camera/common/espia
-	url = git://git.epn-campus.eu/repositories/LimaCameraEspia
+	url = git://github.com/esrf-bliss/Lima-camera-common-espia
 [submodule "applications/taco"]
 	path = applications/taco
-	url = git://git.epn-campus.eu/repositories/LimaTaco
+	url = git://github.com/esrf-bliss/Lima-taco
 [submodule "third-party/yat"]
 	path = third-party/yat
 	url = git://git.epn-campus.eu/repositories/yat
 [submodule "camera/prosilica"]
 	path = camera/prosilica
-	url = git://git.epn-campus.eu/repositories/LimaCameraProsilica
+	url = git://github.com/esrf-bliss/Lima-camera-prosilica
 [submodule "camera/xpad"]
 	path = camera/xpad
-	url = git://git.epn-campus.eu/repositories/LimaCameraXpad
+	url = git://github.com/esrf-bliss/Lima-camera-xpad
 [submodule "camera/marccd"]
 	path = camera/marccd
-	url = git://git.epn-campus.eu/repositories/LimaCameraMarCCD
+	url = git://github.com/esrf-bliss/Lima-camera-marccd
 [submodule "camera/adsc"]
 	path = camera/adsc
-	url = git://git.epn-campus.eu/repositories/LimaCameraADSC
+	url = git://github.com/esrf-bliss/Lima-camera-adsc
 [submodule "camera/roperscientific"]
 	path = camera/roperscientific
-	url = git://git.epn-campus.eu/repositories/LimaCameraRoperScientific
+	url = git://github.com/esrf-bliss/Lima-camera-roperscientific
 [submodule "camera/mythen"]
 	path = camera/mythen
-	url = git://git.epn-campus.eu/repositories/LimaCameraMythen
+	url = git://github.com/esrf-bliss/Lima-camera-mythen
 [submodule "camera/ueye"]
 	path = camera/ueye
-	url = git://git.epn-campus.eu/repositories/LimaCameraUeye
+	url = git://github.com/esrf-bliss/Lima-camera-ueye
 [submodule "camera/perkinelmer"]
 	path = camera/perkinelmer
-	url = git://git.epn-campus.eu/repositories/LimaCameraPerkinElmer
+	url = git://github.com/esrf-bliss/Lima-camera-perkinelmer
 [submodule "camera/andor"]
 	path = camera/andor
-	url = git://git.epn-campus.eu/repositories/LimaCameraAndor
+	url = git://github.com/esrf-bliss/Lima-camera-andor
 [submodule "camera/photonicscience"]
 	path = camera/photonicscience
-	url = git://git.epn-campus.eu/repositories/LimaCameraPhotonicScience
+	url = git://github.com/esrf-bliss/Lima-camera-photonicscience
 [submodule "third-party/CCfits"]
 	path = third-party/CCfits
 	url = git://git.epn-campus.eu/repositories/CCfits
