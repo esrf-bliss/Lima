@@ -22,7 +22,7 @@
 SRCS = testregex.cpp
 
 CXXFLAGS = -Wall -I ../include -pthread -g
-LDFLAGS = -pthread
+LDFLAGS = -pthread -lrt
 
 all: testregex
 
