@@ -1,0 +1,33 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT display (#PCDATA)>
+<!ELEMENT mask (#PCDATA)>
+<!ELEMENT step (#PCDATA)>
+<!ELEMENT unit_type (#PCDATA)>
+<!ELEMENT units (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT bit_field (mask, display)>
+<!ELEMENT max (#PCDATA)>
+<!ELEMENT min (#PCDATA)>
+<!ELEMENT read_only (#PCDATA)>
+<!ELEMENT post_name (#PCDATA)>
+<!ELEMENT pull_down (value, display)>
+<!ELEMENT parameter (post_name, display, value, min, max, unit_type, (units | step | bit_field | pull_down+)?)>
+<!ELEMENT list (display, read_only?, parameter+)>
+<!ELEMENT si_data (list+)>
+]><si_data><list><display>Setup</display>
+<parameter><post_name>SETUP 0</post_name><display>Exposure Time</display><value>100</value><min>0</min><max>16777215</max><unit_type>7</unit_type></parameter>
+<parameter><post_name>SETUP 1</post_name><display>TDI Delay</display><value>10</value><min>1</min><max>65535</max><unit_type>16</unit_type><step>1000</step></parameter>
+<parameter><post_name>SETUP 2</post_name><display>Trigger Mode</display><value>1</value><min>0</min><max>6</max><unit_type>8</unit_type><pull_down><value>0</value><display>None</display></pull_down><pull_down><value>1</value><display>Shutter-Integrate-Trig</display></pull_down><pull_down><value>2</value><display>Clear-Trig-Shutter</display></pull_down><pull_down><value>3</value><display>Bulb Mode</display></pull_down><pull_down><value>4</value><display>Shutter-Clear-Trig</display></pull_down><pull_down><value>5</value><display>Fast Bulb Mode</display></pull_down></parameter>
+<parameter><post_name>SETUP 3</post_name><display>Continuous Clear</display><value>0</value><min>0</min><max>3</max><unit_type>8</unit_type><pull_down><value>0</value><display>Enable</display></pull_down><pull_down><value>1</value><display>Disable 1 cycle</display></pull_down><pull_down><value>2</value><display>Disable</display></pull_down></parameter>
+<parameter><post_name>SETUP 4</post_name><display>CCD Temperature Setpoint</display><value>1932</value><min>1532</min><max>3032</max><unit_type>3</unit_type></parameter>
+<parameter><post_name>SETUP 5</post_name><display>CCD 0 Cold-plate Setpoint</display><value>1932</value><min>1532</min><max>3032</max><unit_type>3</unit_type></parameter>
+<parameter><post_name>SETUP 6</post_name><display>Trigger 1 Out Selector</display><value>0</value><min>0</min><max>6</max><unit_type>8</unit_type><pull_down><value>0</value><display>Shutter</display></pull_down><pull_down><value>1</value><display>Integrate</display></pull_down><pull_down><value>2</value><display>Frame</display></pull_down><pull_down><value>3</value><display>Line</display></pull_down><pull_down><value>4</value><display>Trig. Wait</display></pull_down><pull_down><value>5</value><display>Trig. ACK</display></pull_down></parameter>
+<parameter><post_name>SETUP 7</post_name><display>Trigger 2 Out Selector</display><value>4</value><min>0</min><max>6</max><unit_type>8</unit_type><pull_down><value>0</value><display>Shutter</display></pull_down><pull_down><value>1</value><display>Integrate</display></pull_down><pull_down><value>2</value><display>Frame</display></pull_down><pull_down><value>3</value><display>Line</display></pull_down><pull_down><value>4</value><display>Trig. Wait</display></pull_down><pull_down><value>5</value><display>Trig. ACK</display></pull_down></parameter>
+<parameter><post_name>SETUP 8</post_name><display>Shutter Open Delay</display><value>0</value><min>0</min><max>127</max><unit_type>7</unit_type></parameter>
+<parameter><post_name>SETUP 9</post_name><display>Shutter Close Delay</display><value>0</value><min>0</min><max>127</max><unit_type>7</unit_type></parameter>
+<parameter><post_name>SETUP 10</post_name><display>Parallel Shift Delay</display><value>14</value><min>14</min><max>4095</max><unit_type>16</unit_type><step>10</step></parameter>
+<parameter><post_name>SETUP 11</post_name><display>Parallel Clear Count</display><value>1</value><min>1</min><max>255</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>SETUP 12</post_name><display>Serial Clear Count</display><value>244</value><min>1</min><max>8191</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>SETUP 13</post_name><display>Test Image Type</display><value>3</value><min>0</min><max>17</max><unit_type>8</unit_type><pull_down><value>0</value><display>Video</display></pull_down><pull_down><value>1</value><display>Simulated BIAS</display></pull_down><pull_down><value>2</value><display>Port ID</display></pull_down><pull_down><value>3</value><display>Continuous Ramp</display></pull_down><pull_down><value>4</value><display>Serial Ramp</display></pull_down><pull_down><value>5</value><display>Parallel Ramp</display></pull_down><pull_down><value>6</value><display>Walking 1</display></pull_down><pull_down><value>7</value><display>Walking 0</display></pull_down><pull_down><value>8</value><display>Dark Sample</display></pull_down><pull_down><value>9</value><display>Light Sample</display></pull_down><pull_down><value>10</value><display>Continuous Ramp C</display></pull_down><pull_down><value>11</value><display>Serial Ramp C</display></pull_down><pull_down><value>12</value><display>Parallel Ramp C</display></pull_down><pull_down><value>13</value><display>Simulated BIAS C</display></pull_down><pull_down><value>14</value><display>Port ID C</display></pull_down><pull_down><value>15</value><display>Walking 1 C</display></pull_down><pull_down><value>16</value><display>Walking 0 C</display></pull_down></parameter>
+</list></si_data>
