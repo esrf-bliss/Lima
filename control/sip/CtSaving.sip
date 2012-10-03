@@ -229,7 +229,8 @@ using namespace lima;
     // --- misc
 
     void clear();
-    void writeFrame(int frame_nr = -1, int nb_frames = 1);
+    void writeFrame(int frame_nr = -1, int nb_frames = 1,
+		    bool synchronous = true);
 
     void setStreamActive(int stream_idx, bool  active);
     void getStreamActive(int stream_idx, bool& active /Out/) const;

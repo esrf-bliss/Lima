@@ -177,7 +177,7 @@ namespace lima {
 
     void clear();
     //                  frame_nr == -1 => last frame
-    void writeFrame(int frame_nr = -1, int nb_frames = 1); 
+    void writeFrame(int frame_nr = -1, int nb_frames = 1,bool synchronous = true); 
 
 
     void setStreamActive(int stream_idx, bool  active);
@@ -310,6 +310,8 @@ namespace lima {
     friend class Stream;
 
   private:
+    class	_ManualBackgroundSaveTask;
+    friend class _ManualBackgroundSaveTask;
     class	_NewFrameSaveCBK;
     friend class _NewFrameSaveCBK;
     typedef std::vector<SinkTaskBase *> TaskList;
@@ -377,6 +379,7 @@ namespace lima {
     void _saveFinished(Data&, Stream&);
     void _setSavingError(CtControl::ErrorCode);
     void _updateParameters();
+    void _synchronousSaving(Data&,HeaderMap&);
     bool _controlIsFault();
     bool _newFrameWrite(int);
   };

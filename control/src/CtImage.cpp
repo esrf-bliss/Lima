@@ -92,9 +92,9 @@ void CtSwBinRoiFlip::setRoi(const Roi& roi)
 	DEB_PARAM() << DEB_VAR1(roi);
 
 	if (roi.isEmpty())
-		throw LIMA_CTL_EXC(InvalidValue, "Software roi is empty");
+		THROW_CTL_ERROR(InvalidValue) << "Software roi is empty";
 	if (!m_max_roi.containsRoi(roi))
-		throw LIMA_CTL_EXC(InvalidValue, "Roi out of limts");
+		THROW_CTL_ERROR(InvalidValue) << "Roi out of limts";
 	m_roi= roi;
 }
 
@@ -241,24 +241,40 @@ void CtHwBinRoiFlip::setBin(Bin& bin, bool round)
 
 	if (!m_has_bin) {
 		if (!round)
-			throw LIMA_CTL_EXC(NotSupported, "No hardware binning available");
+		  THROW_CTL_ERROR(NotSupported) << "No hardware binning available";
 	}
 	else {
 		Bin set_bin= bin;
 		if (!set_bin.isOne())
 			m_hw_bin->checkBin(set_bin);
 		if ((!round)&&(set_bin!=bin))
-			throw LIMA_CTL_EXC(InvalidValue, "Given hardware binning not possible");
+		  THROW_CTL_ERROR(InvalidValue) << "Given hardware binning not possible";
 		if (set_bin != m_bin) {
+			Bin old_bin = m_bin;
+			Roi old_roi = m_set_roi;
+			Roi old_max_roi = m_max_roi;
+
 			if (!m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getUnbinned(m_bin);
 
+			m_hw_bin->setBin(set_bin);
 			m_bin= set_bin;
 
 			if (!m_bin.isOne() && !m_set_roi.isEmpty())
 				m_set_roi= m_set_roi.getBinned(m_bin);
 			m_max_roi.setSize(m_max_size / m_bin);
-			_updateSize();
+			try
+			  {
+			    _updateSize();
+			  }
+			catch(Exception &exc)
+			  {
+			    m_bin = old_bin;
+			    m_set_roi = old_roi;
+			    m_max_roi = old_max_roi;
+			    m_hw_bin->setBin(m_bin);
+			    throw exc;
+			  }
 		}
 		bin= set_bin;
 	}
@@ -270,20 +286,21 @@ void CtHwBinRoiFlip::setRoi(Roi& roi, bool round)
 	DEB_PARAM() << DEB_VAR2(roi,round);
 
 	if (roi.isEmpty())
-		throw LIMA_CTL_EXC(InvalidValue, "Hardware roi is empty");
+		THROW_CTL_ERROR(InvalidValue) << "Hardware roi is empty";
 	if (!m_max_roi.containsRoi(roi))
-		throw LIMA_CTL_EXC(InvalidValue, "Roi out of limts");
+		THROW_CTL_ERROR(InvalidValue) << "Roi out of limts";
 
 	if (!m_has_roi) {
 		if (!round)
-			throw LIMA_CTL_EXC(NotSupported, "No hardware roi available");
+			THROW_CTL_ERROR(NotSupported) << "No hardware roi available";
 	}
 	else {
 		Roi real_roi;
 		m_hw_roi->checkRoi(roi, real_roi);
 		if ((!round)&&(real_roi!=roi))
-			throw LIMA_CTL_EXC(InvalidValue, "Given hardware roi not possible");
+			THROW_CTL_ERROR(InvalidValue) << "Given hardware roi not possible";
 		if (roi != m_set_roi) {
+			m_hw_roi->setRoi(roi);
 			m_set_roi= roi;
 			_updateSize();
 		}
@@ -302,7 +319,7 @@ void CtHwBinRoiFlip::setFlip(Flip& flip, bool mandatory)
   if (!m_has_flip) 
     {
       if (mandatory)
-	throw LIMA_CTL_EXC(NotSupported, "No hardware flip available");
+	THROW_CTL_ERROR(NotSupported) << "No hardware flip available";
     }
   else 
     {
@@ -310,10 +327,12 @@ void CtHwBinRoiFlip::setFlip(Flip& flip, bool mandatory)
       if (set_flip.x || set_flip.y)
 	m_hw_flip->checkFlip(set_flip);
       if (mandatory && set_flip != flip)
-	throw LIMA_CTL_EXC(InvalidValue, "Given hardware flip not possible");
+	THROW_CTL_ERROR(InvalidValue) << "Given hardware flip not possible";
       if (set_flip != m_flip)
+	{
+	  m_hw_flip->setFlip(set_flip);
 	  m_flip = set_flip;
-
+	}
       flip = set_flip;
     }
 }
@@ -404,7 +423,7 @@ CtImage::CtImage(HwInterface *hw,CtControl &ct)
 	DEB_CONSTRUCTOR();
 
 	if (!hw->getHwCtrlObj(m_hw_det))
-		throw LIMA_CTL_EXC(Error, "Cannot get detector info object");
+		THROW_CTL_ERROR(Error) << "Cannot get detector info object";
 
 	m_hw_det->getMaxImageSize(m_max_size);
 	m_hw_det->getCurrImageType(m_img_type);
