@@ -351,7 +351,6 @@ ifneq ($(COMPILE_UEYE), 0)
 	mkdir -p $(INSTALL_UEYE_VDIR)
 	cp camera/ueye/python/__init__.py $(INSTALL_UEYE_DIR)
 	$(call install_core_dep,$(INSTALL_UEYE_VDIR))
-	cp camera/ueye/python/CORE_VERSION
 	rm -rf $(INSTALL_LIB_DIR)/liblimaueye.so*
 	cp -d build/liblimaueye.so* $(INSTALL_LIB_DIR)
 	cp sip/ueye/limaueye.so $(INSTALL_UEYE_VDIR)
