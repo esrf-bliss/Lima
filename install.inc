@@ -151,6 +151,12 @@ XPAD_FULL_VERSION = $(shell cat camera/xpad/VERSION)
 INSTALL_XPAD_VDIR = $(INSTALL_XPAD_DIR)/v$(XPAD_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_MARCCD), 0)
+INSTALL_MARCCD_DIR = $(INSTALL_PLAT_DIR)/Marccd
+MARCCD_FULL_VERSION = $(shell cat camera/marccd/VERSION)
+INSTALL_MARCCD_VDIR = $(INSTALL_MARCCD_DIR)/v$(MARCCD_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -361,3 +367,15 @@ ifneq ($(COMPILE_XPAD), 0)
 	cp sip/xpad/limaxpad.so $(INSTALL_XPAD_VDIR)
 	cp camera/xpad/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
+
+ifneq ($(COMPILE_MARCCD), 0)
+	mkdir -p $(INSTALL_MARCCD_VDIR)
+	cp camera/marccd/python/__init__.py $(INSTALL_MARCCD_DIR)
+	$(call install_core_dep,$(INSTALL_MARCCD_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimamarccd.so*
+	cp -d build/liblimamarccd.so.* $(INSTALL_LIB_DIR)
+	cp -d third-party/yat/src/.libs/libyat.so* $(INSTALL_LIB_DIR)
+	cp sip/marccd/limamarccd.so $(INSTALL_MARCCD_VDIR)
+	cp camera/marccd/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+

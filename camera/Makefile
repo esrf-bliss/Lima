@@ -88,16 +88,36 @@ ifneq ($(COMPILE_MYTHEN),0)
 sub-dirs += mythen
 endif
 
+ifndef COMPILE_UEYE
+COMPILE_UEYE = 0
+endif
+
 ifneq ($(COMPILE_UEYE),0)
 sub-dirs += ueye
+endif
+
+ifndef COMPILE_ANDOR
+COMPILE_ANDOR = 0
 endif
 
 ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifndef COMPILE_XPAD
+COMPILE_XPAD = 0
+endif
+
 ifneq ($(COMPILE_XPAD),0)
 sub-dirs += xpad
+endif
+
+ifndef COMPILE_MARCCD
+COMPILE_MARCCD = 0
+endif
+
+ifneq ($(COMPILE_MARCCD),0)
+sub-dirs += marccd
 endif
 
 include ../global.inc

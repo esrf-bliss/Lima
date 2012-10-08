@@ -75,6 +75,10 @@ ifneq ($(COMPILE_XPAD), 0)
 sip-modules += xpad
 endif
 
+ifneq ($(COMPILE_MARCCD), 0)
+sip-modules += marccd
+endif
+
 all:	src
 
 src:

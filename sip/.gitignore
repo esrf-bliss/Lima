@@ -21,8 +21,10 @@ perkinelmer
 andor
 xpad
 photonicscience
+marccd
 *.obj
 lima*.exp
 lima*.lib
 *.pyd.manifest
 *.pyd
+.svn
