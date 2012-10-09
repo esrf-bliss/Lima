@@ -285,7 +285,12 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed";  
 #endif        
     goto common;
-
+  case EDFGZ:
+#ifndef WITH_EDFGZ_SAVING
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf gzip "
+                                     "saving option, not managed"; 
+#endif
+    goto common;
   case RAW:
   case EDF:
 
@@ -304,7 +309,8 @@ void CtSaving::Stream::createSaveContainer()
   {
   case RAW:
   case EDF:
-    m_save_cnt = new SaveContainerEdf(*this);
+  case EDFGZ:
+    m_save_cnt = new SaveContainerEdf(*this,m_pars.fileFormat);
     break;
 #ifdef WITH_CBF_SAVING
   case CBFFormat:

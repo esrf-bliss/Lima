@@ -69,6 +69,10 @@ CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
 CORE_LDLIBS += -lCCfits -lcfitsio
 endif
 
+ifneq ($(COMPILE_EDFGZ_SAVING),0)
+CORE_LDLIBS += -lz
+endif
+
 ifneq ($(COMPILE_CORE),0)
 
 core-name	:= core

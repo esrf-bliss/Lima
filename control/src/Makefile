@@ -47,6 +47,10 @@ ifndef COMPILE_FITS_SAVING
 COMPILE_FITS_SAVING = 0
 endif
 
+ifndef COMPILE_EDFGZ_SAVING
+COMPILE_EDFGZ_SAVING = 0
+endif
+
 ifneq ($(COMPILE_CBF_SAVING),0)
 ct-objs += CtSaving_Cbf.o 
 INCLUDES += -I../../third-party/CBFLib/include
@@ -68,6 +72,10 @@ CXXFLAGS += -DWITH_FITS_SAVING -I../../third-party/cfitsio \
 	-L../../third-party/cfitsio/libs \
 	-lcfitsio \
 	-lCCfits
+endif
+
+ifneq ($(COMPILE_EDFGZ_SAVING),0)
+CXXFLAGS += -DWITH_EDFGZ_SAVING
 endif
 
 ifndef COMPILE_SPS_IMAGE

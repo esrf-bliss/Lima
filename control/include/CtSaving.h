@@ -65,6 +65,7 @@ namespace lima {
 	CBFFormat,		///< CBF format
 	NXS,			///< Soleil Nexus format
 	FITS,			///< Flexible Image Transport Layer (NOST)
+	EDFGZ,			///< EDF format with gzip compression
       };
 
     enum SavingMode 
@@ -222,8 +223,8 @@ namespace lima {
       virtual void _clear() {};
 
       int			m_written_frames;
-    private:
       Stream			&m_stream;
+    private:
       std::list<double>		m_statistic_list;
       int			m_statistic_size;
       mutable Cond		m_cond;
@@ -395,6 +396,10 @@ namespace lima {
 	aFileFormatHumanPt = "CBF";break;
       case CtSaving::NXS:
 	aFileFormatHumanPt = "NXS";break;
+      case CtSaving::FITS:
+	aFileFormatHumanPt = "FITS";break;
+      case CtSaving::EDFGZ:
+	aFileFormatHumanPt = "EDF gzip";break;
       default:
 	aFileFormatHumanPt = "RAW";break;
       }

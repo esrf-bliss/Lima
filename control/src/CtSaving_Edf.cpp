@@ -30,6 +30,119 @@
 
 using namespace lima;
 
+#ifdef WITH_EDFGZ_SAVING
+#include <zlib.h>
+#include "SinkTask.h"
+
+#define TEST_AVAIL_OUT	if(!m_compression_struct.avail_out) \
+    {							    \
+      _BufferHelper *newBuffer = new _BufferHelper();			\
+      m_compression_struct.next_out = (Bytef*)newBuffer->buffer;	\
+      m_compression_struct.avail_out = newBuffer->BUFFER_HELPER_SIZE;	\
+      return_buffers->push_back(newBuffer);				\
+    }
+
+class SaveContainerEdf::Compression : public SinkTaskBase
+{
+  DEB_CLASS_NAMESPC(DebModControl,"Compression Task","Control");
+
+  SaveContainerEdf& 	m_container;
+  int 			m_frame_per_file;
+  CtSaving::HeaderMap 	m_header;
+
+  z_stream_s		m_compression_struct;
+public:
+  Compression(SaveContainerEdf &save_cnt,
+	      int framesPerFile,const CtSaving::HeaderMap &header) :
+    m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header)
+  {
+    DEB_CONSTRUCTOR();
+
+    m_compression_struct.next_in = NULL;
+    m_compression_struct.avail_in = 0;
+    m_compression_struct.total_in = 0;
+
+    m_compression_struct.next_out = NULL;
+    m_compression_struct.avail_out = 0;
+    m_compression_struct.total_out = 0;
+
+    m_compression_struct.zalloc = NULL;
+    m_compression_struct.zfree = NULL;
+
+    if(deflateInit2(&m_compression_struct,Z_DEFAULT_COMPRESSION,
+		    Z_DEFLATED,
+		    31,
+		    8,
+		    Z_DEFAULT_STRATEGY) != Z_OK)
+      THROW_CTL_ERROR(Error) << "Can't init compression struct";
+  };
+  ~Compression()
+  {
+    deflateEnd(&m_compression_struct);
+  }
+
+  virtual void process(Data &aData)
+  {
+    std::ostringstream buffer;
+    SaveContainerEdf::_writeEdfHeader(aData,m_header,
+ 				      m_frame_per_file,
+ 				      buffer);
+    ZBufferType *aBufferListPt = new ZBufferType();
+    const std::string& tmpBuffer = buffer.str();
+    try
+      {
+	_compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
+	_compression((char*)aData.data(),aData.size(),aBufferListPt);
+	_end_compression(aBufferListPt);
+      }
+    catch(Exception&)
+      {
+	for(ZBufferType::iterator i = aBufferListPt->begin();
+	    i != aBufferListPt->end();++i)
+	  delete *i;
+	delete aBufferListPt;
+	throw;
+      }
+    m_container._setBuffer(aData.frameNumber,aBufferListPt);
+  }
+
+  void _compression(const char *buffer,int size,ZBufferType* return_buffers)
+  {
+    DEB_MEMBER_FUNCT();
+
+    m_compression_struct.next_in = (Bytef*)buffer;
+    m_compression_struct.avail_in = size;
+    
+    while(m_compression_struct.avail_in)
+      {
+	TEST_AVAIL_OUT;
+	if(deflate(&m_compression_struct,Z_NO_FLUSH) != Z_OK)
+	  THROW_CTL_ERROR(Error) << "deflate error";
+
+	return_buffers->back()->used_size = _BufferHelper::BUFFER_HELPER_SIZE -
+	  m_compression_struct.avail_out;
+      }
+  }
+  void _end_compression(ZBufferType* return_buffers)
+  {
+    DEB_MEMBER_FUNCT();
+
+    int deflate_res = Z_OK;
+    while(deflate_res == Z_OK)
+      {
+	TEST_AVAIL_OUT;
+	deflate_res = deflate(&m_compression_struct,Z_FINISH);
+	return_buffers->back()->used_size = _BufferHelper::BUFFER_HELPER_SIZE - 
+	  m_compression_struct.avail_out;
+      }
+    if(deflate_res != Z_STREAM_END)
+      THROW_CTL_ERROR(Error) << "deflate error";
+  }
+};
+#endif
+
+
+
 #ifdef WIN32
 /** @brief this is a small wrapper class for ofstream class.
  *  All this is for overcome performance issue with window std::ofstream
@@ -112,8 +225,10 @@ SaveContainerEdf::_OfStream::operator<< (const long data)
  *
  *  This class manage file saving
  */
-SaveContainerEdf::SaveContainerEdf(CtSaving::Stream& stream) :
-  CtSaving::SaveContainer(stream)
+SaveContainerEdf::SaveContainerEdf(CtSaving::Stream& stream,
+				   CtSaving::FileFormat format) :
+  CtSaving::SaveContainer(stream),
+  m_format(format)
 {
   DEB_CONSTRUCTOR();
 }
@@ -151,16 +266,42 @@ void SaveContainerEdf::_writeFile(Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
+#ifdef WITH_EDFGZ_SAVING
+  if(aFormat == CtSaving::EDFGZ)
+    {
+      ZBufferType* buffers = _takeBuffer(aData.frameNumber);
+      for(ZBufferType::iterator i = buffers->begin();
+	  i != buffers->end();++i)
+	{
+	  m_fout.write((*i)->buffer,(*i)->used_size);
+	  delete *i;
+	}
+      delete buffers;
+    }
+  else
+    {
+#endif
+
   if(aFormat == CtSaving::EDF)
-    _writeEdfHeader(aData,aHeader);
+    {
+      const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
+      _writeEdfHeader(aData,aHeader,
+		      pars.framesPerFile,m_fout);
+    }
   
   m_fout.write((char*)aData.data(),aData.size());
+
+
+#ifdef WITH_EDFGZ_SAVING
+    } // else
+#endif
 }
 
-void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
+template<class Stream>
+void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader,
+				       int framesPerFile,
+				       Stream &sout)
 {
-  DEB_MEMBER_FUNCT();
-
   time_t ctime_now;
   time(&ctime_now);
 
@@ -171,16 +312,16 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
   ctime_r(&ctime_now, time_str);
   time_str[strlen(time_str) - 1] = '\0';
 	
-  int image_nb = m_written_frames + 1;
+  int image_nb = aData.frameNumber % framesPerFile;
 
   char aBuffer[2048];
-  long aStartPosition = m_fout.tellp();
-  m_fout << "{\n";
+  long aStartPosition = sout.tellp();
+  sout << "{\n";
 
-  snprintf(aBuffer,sizeof(aBuffer),"HeaderID = EH:%06u:000000:000000 ;\n", image_nb);
-  m_fout << aBuffer;
+  snprintf(aBuffer,sizeof(aBuffer),"HeaderID = EH:%06u:000000:000000 ;\n", image_nb + 1);
+  sout << aBuffer;
 
-  m_fout << "ByteOrder = LowByteFirst ;\n";
+  sout << "ByteOrder = LowByteFirst ;\n";
   const char *aStringType = NULL;
   switch(aData.type)
     {
@@ -197,23 +338,23 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
     default:
       break;		// @todo ERROR has to be manage
     }
-  m_fout << "DataType = " << aStringType << " ;\n";
+  sout << "DataType = " << aStringType << " ;\n";
 
-  m_fout << "Size = " << aData.size() << " ;\n";
-  m_fout << "Dim_1 = " << aData.dimensions[0] << " ;\n";
-  m_fout << "Dim_2 = " << aData.dimensions[1] << " ;\n";
-  m_fout << "Image = " << m_written_frames << " ;\n";
+  sout << "Size = " << aData.size() << " ;\n";
+  sout << "Dim_1 = " << aData.dimensions[0] << " ;\n";
+  sout << "Dim_2 = " << aData.dimensions[1] << " ;\n";
+  sout << "Image = " << image_nb << " ;\n";
 
-  m_fout << "acq_frame_nb = " << aData.frameNumber << " ;\n";
-  m_fout << "time = " << time_str << " ;\n";
+  sout << "acq_frame_nb = " << aData.frameNumber << " ;\n";
+  sout << "time = " << time_str << " ;\n";
 
   snprintf(aBuffer,sizeof(aBuffer),"time_of_day = %ld.%06ld ;\n",tod_now.tv_sec, tod_now.tv_usec);
-  m_fout << aBuffer;
+  sout << aBuffer;
 
   snprintf(aBuffer,sizeof(aBuffer),"time_of_frame = %.6f ;\n",aData.timestamp);
-  m_fout << aBuffer;
+  sout << aBuffer;
 
-  //@todo m_fout << "valid_pixels = " << aData.validPixels << " ;\n";
+  //@todo sout << "valid_pixels = " << aData.validPixels << " ;\n";
   
   
   aData.header.lock();
@@ -221,25 +362,74 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader)
   for(Data::HeaderContainer::Header::iterator i = aDataHeader.begin();i != aDataHeader.end();++i)
     {
       if(!i->second.size())
-	m_fout << i->first << " = " << ";\n";
+	sout << i->first << " = " << ";\n";
       else
-	m_fout << i->first << " = " << i->second << " ;\n";
+	sout << i->first << " = " << i->second << " ;\n";
     }
   aData.header.unlock();
 
   for(CtSaving::HeaderMap::iterator i = aHeader.begin(); i != aHeader.end();++i)
     {
       if(!i->second.size())
-	m_fout << i->first << " = " << ";\n";
+	sout << i->first << " = " << ";\n";
       else
-	m_fout << i->first << " = " << i->second << " ;\n";
+	sout << i->first << " = " << i->second << " ;\n";
     }
 
   
-  long aEndPosition = m_fout.tellp();
+  long aEndPosition = sout.tellp();
   
   long lenght = aEndPosition - aStartPosition + 2;
   long finalHeaderLenght = (lenght + 1023) & ~1023; // 1024 alignment
   snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght),"");
-  m_fout << aBuffer;
+  sout << aBuffer;
+}
+
+SinkTaskBase* SaveContainerEdf::getCompressionTask(const CtSaving::HeaderMap& header)
+{
+#ifdef WITH_EDFGZ_SAVING
+  const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
+  return new Compression(*this,pars.framesPerFile,header);
+#else
+  return NULL;
+#endif
+}
+
+void SaveContainerEdf::_setBuffer(int frameNumber,
+				  ZBufferType* buffers)
+{
+  AutoMutex aLock(m_lock);
+  std::pair<dataId2ZBufferType::iterator,bool> result = 
+    m_buffers.insert(std::pair<int,ZBufferType*>(frameNumber,buffers));
+  if(!result.second)
+    {
+      for(ZBufferType::iterator i = result.first->second->begin();
+	  i != result.first->second->end();++i)
+	delete *i;
+      delete result.first->second;
+      result.first->second = buffers;
+    }
+}
+
+SaveContainerEdf::ZBufferType* SaveContainerEdf::_takeBuffer(int dataId)
+{
+  AutoMutex aLock(m_lock);
+  dataId2ZBufferType::iterator i = m_buffers.find(dataId);
+  ZBufferType* aReturnBufferPt = i->second;
+  m_buffers.erase(i);
+  return aReturnBufferPt;
+}
+
+void SaveContainerEdf::_clear()
+{
+  AutoMutex aLock(m_lock);
+  for(dataId2ZBufferType::iterator i = m_buffers.begin();
+      i != m_buffers.end();++i)
+    {
+      for(ZBufferType::iterator k = i->second->begin();
+	  k != i->second->end();++k)
+	delete *k;
+      delete i->second;
+    }
+  m_buffers.clear();
 }
