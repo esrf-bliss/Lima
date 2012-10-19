@@ -139,8 +139,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="LibLimaCore.lib"
 				OutputFile="$(OutDir)\liblimasimulator.dll"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\build\msvc\9.0\LimaCore\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -179,6 +181,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorCamera.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorDetInfoCtrlObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\camera\simulator\src\SimulatorFrameBuilder.cpp"
 				>
 			</File>
@@ -187,7 +197,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimulatorCamera.cpp"
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorSyncCtrlObj.cpp"
 				>
 			</File>
 		</Filter>
@@ -197,6 +207,18 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCamera.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCompatibility.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorDetInfoCtrlObj.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\camera\simulator\include\SimulatorFrameBuilder.h"
 				>
 			</File>
@@ -205,7 +227,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCamera.h"
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorSyncCtrlObj.h"
 				>
 			</File>
 		</Filter>

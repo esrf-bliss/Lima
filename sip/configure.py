@@ -143,8 +143,13 @@ def main():
             extraIncludes += [espia_incl]
             
         if(modName == 'basler') :
-            extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
-            extra_cxxflags += ['-DUSE_GIGE']
+            if platform.system() != 'Windows':
+                extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
+                extra_cxxflags += ['-DUSE_GIGE']
+            else:
+                extraIncludes += ['C:\Program Files\Basler\Pylon 2.3\genicam\library\cpp\include']
+                extraIncludes += ['C:\Program Files\Basler\Pylon 2.3\pylon\include']
+                extra_cxxflags += ['-DUSE_GIGE']
         elif(modName == 'ueye') and platform.system() != 'Windows':
             extra_cxxflags += ['-D__LINUX__']
         elif(modName == 'andor') :
@@ -247,12 +252,22 @@ def main():
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
+            if(modName == 'basler') :
+                makefile.extra_lib_dirs += glob.glob('C:\Program Files\Basler\Pylon 2.3\genicam\library\cpp\lib\win32_i86')
+                makefile.extra_lib_dirs += glob.glob('C:\Program Files\Basler\Pylon 2.3\pylon\lib\Win32')
 
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
             makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE'] + extra_cxxflags
             makefile.extra_lib_dirs = [rootName('build')]
-        makefile.extra_cxxflags.extend(['-I' + x for x in extraIncludes])
+        #makefile.extra_cxxflags.extend(['-I' + x for x in extraIncludes])
+        llist = []
+        for x in extraIncludes:
+            if x.find(" ") != -1:
+                llist.append('-I' + "\"" + x + "\"")
+            else:
+                llist.append('-I' + x)
+        makefile.extra_cxxflags.extend(llist)
         
         # Add the library we are wrapping.  The name doesn't include any 
         # platform specific prefixes or extensions (e.g. the "lib" prefix on 
