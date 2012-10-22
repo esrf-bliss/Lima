@@ -21,7 +21,7 @@
 ############################################################################
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
                MemUtils.o RegExUtils.o AcqState.o Debug.o VideoUtils.o Event.o \
-	       Timer.o
+	       Timer.o DirectoryEventUtils.o
 
 SRCS = $(common-objs:.o=.cpp)
 
