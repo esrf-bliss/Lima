@@ -524,7 +524,14 @@ void _GenericDirectoryEvent::_run()
   if(dir) closedir(dir);
 }
 
-//DirectoryEvent class
+/** @brief this class manage file event on a directory.
+ *  
+ *  This class is dedicated to follow a detector acquisition on disk,
+ *  it's call DirectoryEvent::Callback class when a
+ *  new file just arrived in the directory.
+ *  @param local if true use a local event technique, this can't work on an NFS client.
+ *  @param cbk the callback class
+ */
 DirectoryEvent::DirectoryEvent(bool local,Callback &cbk)
 {
   if(local)
@@ -537,27 +544,36 @@ DirectoryEvent::~DirectoryEvent()
 {
   delete m_event;
 }
-
+/** @brief prepare method register new parameters. This methode should be called 
+ *  before start
+ */
 void DirectoryEvent::prepare(const DirectoryEvent::Parameters& parameters)
 {
   m_event->prepare(parameters);
 }
-
+/** @brief start the event watcher
+ */
 void DirectoryEvent::start()
 {
   m_event->start();
 }
-
+/** @brief stop the event watcher
+ */
 void DirectoryEvent::stop()
 {
   m_event->stop();
 }
-
+/** @brief return the event watcher state
+ */ 
 bool DirectoryEvent::isStopped() const
 {
   return m_event->isStopped();
 }
-
+/** @brief return the next expected file number.
+ *
+ *  i.e: if the file_pattern == "test_%.3d.edf" and filenumber == 42
+ *  then the next filename expected is test_042.edf
+ */
 int DirectoryEvent::getNextFileNumberExpected() const
 {
   return m_event->getNextFileNumberExpected();
