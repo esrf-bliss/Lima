@@ -33,12 +33,14 @@ namespace lima
   class HwFileEventCallbackHelper : public DirectoryEvent::Callback
   {
   public:
+    enum CallFrom {Acquisition,OnDemand};
     class Callback
     {
     public:
+
       virtual void prepare(const DirectoryEvent::Parameters&) {}
       virtual bool getFrameInfo(int image_number,const char* full_path,
-				HwFrameInfoType&) = 0;
+				CallFrom,HwFrameInfoType&) = 0;
       virtual bool newFrameReady(const HwFrameInfoType&) = 0;
     };
 
@@ -49,6 +51,7 @@ namespace lima
 				  int &next_file_number_expected) throw();
     virtual bool newFile(int file_number,const char *full_path) throw();
     
+    int getNbOfFramePending() const {return m_pending_frame_infos.size();}
   private:
     typedef std::map<int,HwFrameInfoType> DatasPendingType;
 
@@ -63,7 +66,10 @@ namespace lima
     class Callback
     {
     public:
+      virtual void prepare(const DirectoryEvent::Parameters&) {}
+
       virtual bool getFrameInfo(int image_number,const char* full_path,
+				HwFileEventCallbackHelper::CallFrom,
 				HwFrameInfoType&) = 0;
       virtual void getFrameDim(FrameDim& frame_dim) = 0;
     };
@@ -79,6 +85,8 @@ namespace lima
     void stop();
     bool isStopped() const;
     int getLastAcquiredFrame() const;
+
+    int getNbOfFramePending() const {return m_directory_cbk.getNbOfFramePending();}
 
     //methodes used by Lima core
     virtual void setFrameDim(const FrameDim& frame_dim);
@@ -105,6 +113,7 @@ namespace lima
     friend class _CBK;
     int _calcNbMaxImages();
     bool _getFrameInfo(int image_number,const char* full_path,
+		       HwFileEventCallbackHelper::CallFrom,
 		       HwFrameInfoType &frame_info);
 
     std::string 		m_tmpfs_path;

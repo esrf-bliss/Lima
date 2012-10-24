@@ -47,8 +47,9 @@ bool HwFileEventCallbackHelper::nextFileExpected(int file_number,
   bool continueFlag = true;
   try
     {
-      continueFlag = m_cbk.getFrameInfo(file_number,full_path,aNewFrameInfo);
-      bool continueAcq = !m_cbk.newFrameReady(aNewFrameInfo);
+      continueFlag = m_cbk.getFrameInfo(file_number,full_path,
+					Acquisition,aNewFrameInfo);
+      bool continueAcq = m_cbk.newFrameReady(aNewFrameInfo);
       if(continueFlag) continueFlag = continueAcq;
       DatasPendingType::iterator i = m_pending_frame_infos.begin();
       while(i != m_pending_frame_infos.end() && continueFlag)
@@ -82,7 +83,9 @@ bool HwFileEventCallbackHelper::newFile(int file_number,const char *full_path) t
       try
 	{
 	  HwFrameInfoType aNewFrameInfo;
-	  continueFlag = m_cbk.getFrameInfo(file_number,full_path,aNewFrameInfo);
+	  continueFlag = m_cbk.getFrameInfo(file_number,full_path,
+					    Acquisition,
+					    aNewFrameInfo);
 	  m_pending_frame_infos[file_number] = aNewFrameInfo;
 	}
       catch(...)
@@ -119,12 +122,14 @@ public:
 	    unlink(fullPath);
 	  }
 	closedir(aWatchDir);
-      }    
+      }
+    m_cnt.m_cbk.prepare(params);
   }
   virtual bool getFrameInfo(int image_number,const char* full_path,
+			    HwFileEventCallbackHelper::CallFrom mode,
 			    HwFrameInfoType &frame_info)
   {
-    return m_cnt._getFrameInfo(image_number,full_path,frame_info);
+    return m_cnt._getFrameInfo(image_number,full_path,mode,frame_info);
   }
   virtual bool newFrameReady(const HwFrameInfoType &frame_info)
   {
@@ -271,14 +276,16 @@ void HwTmpfsBufferMgr::getStartTimestamp(Timestamp& start_ts)
 
 void HwTmpfsBufferMgr::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 {
-   DEB_MEMBER_FUNCT();
+  DEB_MEMBER_FUNCT();
 
-    char filename[1024];
-    snprintf(filename,sizeof(filename),
-	     m_file_pattern.c_str(),acq_frame_nb);
-    std::string fullPath = m_tmpfs_path + "/";
-    fullPath += filename;
-    m_cbk.getFrameInfo(acq_frame_nb,fullPath.c_str(),info);
+  char filename[1024];
+  snprintf(filename,sizeof(filename),
+	   m_file_pattern.c_str(),acq_frame_nb);
+  std::string fullPath = m_tmpfs_path + "/";
+  fullPath += filename;
+  m_cbk.getFrameInfo(acq_frame_nb,fullPath.c_str(),
+		     HwFileEventCallbackHelper::OnDemand,
+		     info);
 }
 
 void HwTmpfsBufferMgr::registerFrameCallback(HwFrameCallback& frame_cb)
@@ -309,7 +316,8 @@ int HwTmpfsBufferMgr::_calcNbMaxImages()
 }
 
 bool HwTmpfsBufferMgr::_getFrameInfo(int image_number,const char* full_path,
+				     HwFileEventCallbackHelper::CallFrom mode,
 				     HwFrameInfoType &frame_info)
 {
-  return m_cbk.getFrameInfo(image_number,full_path,frame_info);
+  return m_cbk.getFrameInfo(image_number,full_path,mode,frame_info);
 }
