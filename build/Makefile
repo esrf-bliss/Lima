@@ -69,6 +69,10 @@ CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
 CORE_LDLIBS += -lCCfits -lcfitsio
 endif
 
+ifneq ($(COMPILE_EDFGZ_SAVING),0)
+CORE_LDLIBS += -lz
+endif
+
 ifneq ($(COMPILE_CORE),0)
 
 core-name	:= core
@@ -196,8 +200,8 @@ endif
 
 ifneq ($(COMPILE_BASLER),0)
 
-BASLER_LDFLAGS	:= -L. -L/opt/pylon/lib -L/opt/pylon/lib64
-BASLER_LDLIBS	:= -lpylongigesupp
+BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/pylon/lib -L/opt/pylon/lib64
+BASLER_LDLIBS	:= $(LDLIBS) -lpylongigesupp
 
 basler-name	:= basler
 basler-objs	:= ../camera/basler/src/Basler.o
@@ -220,8 +224,8 @@ endif
 
 ifneq ($(COMPILE_UEYE),0)
 
-UEYE_LDFLAGS	:=
-UEYE_LDLIBS	:= -lueye_api
+UEYE_LDFLAGS	:= $(LDFLAGS)
+UEYE_LDLIBS	:= $(LDLIBS) -lueye_api
 
 ueye-name	:= ueye
 ueye-objs	:= ../camera/ueye/src/Ueye.o
@@ -256,8 +260,8 @@ PROSILICA_LDLIBS	:= -lPvAPI
 prosilica-name	:= prosilica
 prosilica-objs	:= ../camera/prosilica/src/Prosilica.o
 prosilica-ver	:= ../camera/prosilica/VERSION
-prosilica-flags	:= $(PROSILICA_LDFLAGS)
-prosilica-deps	:= $(PROSILICA_LDLIBS)
+prosilica-flags	:= $(LDFLAGS) $(PROSILICA_LDFLAGS)
+prosilica-deps	:= $(LDLIBS) $(PROSILICA_LDLIBS)
 
 $(call lib-full,$(prosilica-name),$(prosilica-ver)): $(prosilica-objs)
 	$(call compile-lib,$(prosilica-name),$(prosilica-ver),\
@@ -275,7 +279,7 @@ endif
 
 ifneq ($(COMPILE_ROPERSCIENTIFIC),0)
 
-ROPERSCIENTIFIC_LDLIBS	:= -lpvcam -lraw1394
+ROPERSCIENTIFIC_LDLIBS	:= $(LDLIBS) -lpvcam -lraw1394
 
 ropersci-name	:= roperscientific
 ropersci-objs	:= ../camera/roperscientific/src/RoperScientific.o
@@ -299,8 +303,8 @@ endif
 
 ifneq ($(COMPILE_ADSC),0)
 
-ADSC_LDFLAGS	:= -L. -L../camera/adsc/sdk/adsc_sources/lib/linux
-ADSC_LDLIBS	:= -lauxlib -ldetcon_th
+ADSC_LDFLAGS	:= $(LDFLAGS) -L. -L../camera/adsc/sdk/adsc_sources/lib/linux
+ADSC_LDLIBS	:= $(LDLIBS) -lauxlib -ldetcon_th
 
 adsc-name	:= adsc
 adsc-objs	:= ../camera/adsc/src/Adsc.o
@@ -324,7 +328,7 @@ endif
 
 ifneq ($(COMPILE_MYTHEN),0)
 
-MYTHEN_LDLIBS	:= -lSlsDetector
+MYTHEN_LDLIBS	:= $(LDLIBS) -lSlsDetector
 
 mythen-name	:= mythen
 mythen-objs	:= ../camera/mythen/src/Mythen.o
@@ -348,8 +352,8 @@ endif
 
 ifneq ($(COMPILE_ANDOR),0)
 
-ANDOR_LDFLAGS	:= -L. -L/usr/local/lib
-ANDOR_LDLIBS	:= -landor
+ANDOR_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
+ANDOR_LDLIBS	:= $(LDLIBS) -landor
 
 andor-name	:= andor
 andor-objs	:= ../camera/andor/src/Andor.o
@@ -366,6 +370,29 @@ build_targets	+= $(call lib-full,$(andor-name),$(andor-ver))
 
 endif
 
+############################
+# LIMA - MARCCD
+############################
+
+ifneq ($(COMPILE_MARCCD),0)
+
+MARCCD_LDFLAGS	:= $(LDFLAGS) -L. -L../third-party/yat/src/.libs
+MARCCD_LDLIBS	:= $(LDLIBS) -lyat -lrt
+
+marccd-name	:= marccd
+marccd-objs	:= ../camera/marccd/src/Marccd.o
+marccd-ver	:= ../camera/marccd/VERSION
+marccd-flags	:= $(MARCCD_LDFLAGS)
+marccd-deps	:= $(MARCCD_LDLIBS)
+
+$(call lib-full,$(marccd-name),$(marccd-ver)): $(marccd-objs)
+	$(call compile-lib,$(marccd-name),$(marccd-ver),\
+			   $(marccd-flags),$(marccd-deps),$@,$+)
+	$(call create-links,$(marccd-name),$(marccd-ver))
+
+build_targets	+= $(call lib-full,$(marccd-name),$(marccd-ver))
+
+endif
 
 ############################
 # LIMA - XPAD
@@ -373,7 +400,7 @@ endif
 
 ifneq ($(COMPILE_XPAD),0)
 
-XPAD_LDLIBS	:= -L/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib \
+XPAD_LDLIBS	:= $(LDLIBS) -L/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib \
 		   -lxpci_lib -L../third-party/yat/lib/i386/static -lyat
 
 xpad-name	:= xpad

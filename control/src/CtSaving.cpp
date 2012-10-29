@@ -28,6 +28,8 @@
 #ifdef __linux__ 
 #include <dirent.h>
 #include <sys/statvfs.h>
+#else
+#include <direct.h>
 #endif
 
 #include "CtSaving.h"
@@ -283,7 +285,12 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed";  
 #endif        
     goto common;
-
+  case EDFGZ:
+#ifndef WITH_EDFGZ_SAVING
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf gzip "
+                                     "saving option, not managed"; 
+#endif
+    goto common;
   case RAW:
   case EDF:
 
@@ -302,7 +309,8 @@ void CtSaving::Stream::createSaveContainer()
   {
   case RAW:
   case EDF:
-    m_save_cnt = new SaveContainerEdf(*this);
+  case EDFGZ:
+    m_save_cnt = new SaveContainerEdf(*this,m_pars.fileFormat);
     break;
 #ifdef WITH_CBF_SAVING
   case CBFFormat:
@@ -1615,7 +1623,11 @@ void CtSaving::SaveContainer::close()
 
 /** @brief check if all file can be written
  */
-
+#ifdef WIN32
+#define CTSAVING_MKDIR(a,b) _mkdir(a)
+#else
+#define CTSAVING_MKDIR(a,b) mkdir(a,b)
+#endif
 void CtSaving::Stream::checkWriteAccess()
 {
   DEB_MEMBER_FUNCT();
@@ -1646,11 +1658,13 @@ void CtSaving::Stream::checkWriteAccess()
 	  THROW_CTL_ERROR(Error) << output;
 	}
     }
-  else
+  else if(CTSAVING_MKDIR(m_pars.directory.c_str(),0777))
     {
-      output = "Directory : " + m_pars.directory + " doesn't exist";
+      output = "Directory : " + m_pars.directory + " can't be created";
       THROW_CTL_ERROR(Error) << output;
     }
+  else				// Creation was successful don't need to test other thing
+    return;
 
   // test all file is mode == Abort
   if(m_pars.overwritePolicy == Abort)

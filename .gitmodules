@@ -76,3 +76,6 @@
 [submodule "third-party/cfitsio"]
 	path = third-party/cfitsio
 	url = git://git.epn-campus.eu/repositories/cfitsio
+[submodule "camera/rayonixhs"]
+	path = camera/rayonixhs
+	url = git://github.com/esrf-bliss/Lima-camera-rayonixhs

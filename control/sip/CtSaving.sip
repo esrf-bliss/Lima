@@ -117,12 +117,13 @@ using namespace lima;
       };
   
     enum FileFormat {
-      RAW,
-      EDF,
-      CBFFormat,
-      NXS,
-      FITS,
-      HARDWARE_SPECIFIC,
+	HARDWARE_SPECIFIC = -1,
+	RAW,
+	EDF,
+	CBFFormat,
+	NXS,
+	FITS,
+	EDFGZ,
     };
 
     enum SavingMode {
