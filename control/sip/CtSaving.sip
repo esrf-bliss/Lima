@@ -197,6 +197,8 @@ using namespace lima;
     void getFramePerFile(unsigned long& frames_per_file /Out/, 
                          int stream_idx=0) const;
 
+    void setManagedMode(ManagedMode mode);
+    void getManagedMode(ManagedMode &mode /Out/) const;
     // --- common headers
 
     void resetCommonHeader();

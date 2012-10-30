@@ -244,6 +244,11 @@ void CtControl::prepareAcq()
   DEB_TRACE() << "Prepare Accumulation if needed";
   m_ct_accumulation->prepare();
 
+  DEB_TRACE() << "Prepare Saving if needed";
+  m_ct_saving->_prepare();
+  m_autosave= m_ct_saving->hasAutoSaveMode();
+  m_ready= true;
+
   DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();
 
@@ -283,10 +288,6 @@ void CtControl::prepareAcq()
   else
     m_op_ext->setEndSinkTaskCallback(NULL);
 
-  m_ct_saving->_prepare();
-  m_autosave= m_ct_saving->hasAutoSaveMode();
-  m_ready= true;
-
 #ifdef WITH_SPS_IMAGE
   m_display_active_flag = m_ct_sps_image->isActive();
   if(m_display_active_flag)
@@ -302,6 +303,19 @@ void CtControl::prepareAcq()
   m_images_buffer.clear();
   m_ct_video->_prepareAcq();
   m_ct_event->_prepareAcq();
+
+  //Check that no software operation is done if Hardware saving is activated
+  CtSaving::ManagedMode savingManagedMode;
+  m_ct_saving->getManagedMode(savingManagedMode);
+  if(savingManagedMode == CtSaving::Hardware &&
+     (m_op_int_active || 
+      m_op_ext_link_task_active ||
+      m_op_ext_sink_task_active ||
+#ifdef WITH_SPS_IMAGE
+      m_display_active_flag ||
+#endif
+      m_ct_video->isActive()))
+    THROW_CTL_ERROR(Error) << "Can't have any software operation if Hardware saving is active";
 }
 
 void CtControl::startAcq()
@@ -472,7 +486,18 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber,
   else
     {
       aLock.unlock();
-      ReadBaseImage(aReturnData,frameNumber,readBlockLen); // todo change when external op activated
+      CtSaving::ManagedMode savingManagedMode;
+      m_ct_saving->getManagedMode(savingManagedMode);
+      if(savingManagedMode == CtSaving::Hardware)
+	{
+	  if (readBlockLen != 1)
+	    THROW_CTL_ERROR(NotSupported) << "Cannot read more than one frame " 
+					  << "at a time with Hardware Saving";
+
+	  m_ct_saving->_ReadImage(aReturnData,frameNumber);
+	}
+      else
+	ReadBaseImage(aReturnData,frameNumber,readBlockLen);
     }
 
   DEB_RETURN() << DEB_VAR1(aReturnData);

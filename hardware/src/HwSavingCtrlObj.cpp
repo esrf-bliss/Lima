@@ -21,22 +21,127 @@
 //###########################################################################
 #include "HwSavingCtrlObj.h"
 #include "Exceptions.h"
+#include <deque>
+#include <algorithm>
 
 using namespace lima;
+const char* HwSavingCtrlObj::RAW_FORMAT_STR = "RAW"; ///< Raw format (no header)
+const char* HwSavingCtrlObj::EDF_FORMAT_STR = "EDF"; ///< EDF format (Esrf Data Format)
+const char* HwSavingCtrlObj::CBF_FORMAT_STR = "CBF"; ///< CBF format
+
+class HwSavingCtrlObj::DirectoryCallback : public DirectoryEvent::Callback
+{
+public:
+  DirectoryCallback(HwSavingCtrlObj& saving) : 
+    m_saving(saving),
+    m_start_file_number(0)
+  {
+  }
+  void prepare(const DirectoryEvent::Parameters& params)
+  {
+    m_start_file_number = params.next_file_number_expected;
+  }
+
+  void clear()
+  {
+    m_image_ids.clear();
+  }
+  virtual bool nextFileExpected(int file_number,
+				const char*,
+				int &next_file_number_expected) throw()
+  {
+    int image_id = file_number - m_start_file_number;
+
+    bool continueFlag = m_saving.m_callback ? 
+      m_saving.m_callback->newFrameWritten(image_id) : false;
+
+    int next_file_number = file_number + 1;
+
+    std::sort(m_image_ids.begin(),m_image_ids.end());
+    while(continueFlag &&
+	  !m_image_ids.empty() && m_image_ids.front() == next_file_number)
+      {
+	image_id = next_file_number - m_start_file_number;
+	continueFlag = m_saving.m_callback->newFrameWritten(image_id);
+	++next_file_number;
+	m_image_ids.pop_front();
+      }
+    next_file_number_expected = next_file_number_expected;
+    return continueFlag;
+  }
+
+  virtual bool newFile(int file_number,const char*) throw()
+  {
+    m_image_ids.push_back(file_number);
+    return true;
+  }
+private:
+  HwSavingCtrlObj& 	m_saving;
+  int 			m_start_file_number;
+  std::deque<int> 	m_image_ids;
+};
 
 HwSavingCtrlObj::HwSavingCtrlObj(int capabilities) :
   m_caps(capabilities),
-  m_callback(NULL)
+  m_active(false),
+  m_callback(NULL),
+  m_dir_cbk(new HwSavingCtrlObj::DirectoryCallback(*this)),
+  m_dir_event(true,*m_dir_cbk)
 {
 }
 
 HwSavingCtrlObj::~HwSavingCtrlObj()
 {
+  delete m_dir_cbk;
 }
+
+void HwSavingCtrlObj::setActive(bool flag)
+{
+  _setActive(flag);
+  m_active = flag;
+}
+
+bool HwSavingCtrlObj::isActive() const
+{
+  return m_active;
+}
+void HwSavingCtrlObj::setDirectory(const std::string& directory)
+{
+  m_directory = directory;
+}
+
+void HwSavingCtrlObj::setPrefix(const std::string& prefix)
+{
+  m_prefix = prefix;
+}
+void HwSavingCtrlObj::setSuffix(const std::string& suffix)
+{
+  m_suffix = suffix;
+}
+void HwSavingCtrlObj::setNextNumber(long number)
+{
+  m_next_number = number;
+}
+void HwSavingCtrlObj::setIndexFormat(const std::string& indexFormat)
+{
+  m_index_format = indexFormat;
+}
+void HwSavingCtrlObj::setSaveFormat(const std::string &format)
+{
+  m_file_format = format;
+}
+
 
 /** @brief write manualy a frame
  */
 void HwSavingCtrlObj::writeFrame(int,int)
+{
+  DEB_MEMBER_FUNCT();
+  THROW_HW_ERROR(NotSupported) << "No available for this Hardware";
+}
+/** @brief write manualy a frame
+ */
+void HwSavingCtrlObj::readFrame(HwFrameInfoType&,int)
 {
   DEB_MEMBER_FUNCT();
   THROW_HW_ERROR(NotSupported) << "No available for this Hardware";
@@ -56,6 +161,43 @@ void HwSavingCtrlObj::resetCommonHeader()
 {
   DEB_MEMBER_FUNCT();
   THROW_HW_ERROR(NotSupported) << "No available for this Hardware";
+}
+
+void HwSavingCtrlObj::prepare()
+{
+  DEB_MEMBER_FUNCT();
+
+  if(m_active)
+    {
+      _prepare();
+
+      DirectoryEvent::Parameters params;
+      params.watch_path = m_directory;
+      params.file_pattern = m_prefix;
+      params.file_pattern += m_index_format;
+      params.file_pattern += m_suffix;
+      params.next_file_number_expected = m_next_number;
+      m_dir_event.prepare(params);
+
+      if(m_callback)
+	m_callback->prepare(params);
+    }
+}
+
+void HwSavingCtrlObj::start()
+{
+  DEB_MEMBER_FUNCT();
+
+  if(m_active)
+    {
+      _start();
+      
+      m_dir_event.start();
+    }
+}
+void HwSavingCtrlObj::stop()
+{
+  m_dir_event.stop();
 }
 
 int HwSavingCtrlObj::getCapabilities() const
@@ -81,10 +223,20 @@ void HwSavingCtrlObj::unregisterCallback(HwSavingCtrlObj::Callback *cbk)
   m_callback = NULL;
 }
 
-bool HwSavingCtrlObj::newFrameWrite(int frame_id)
+std::string HwSavingCtrlObj::_getFullPath(int image_number) const
 {
-  bool continueFalg = false;
-  if(m_callback)
-    continueFalg = m_callback->newFrameWrite(frame_id);
-  return continueFalg;
+  char nbBuffer[32];
+  snprintf(nbBuffer,sizeof(nbBuffer),
+	   m_index_format.c_str(),image_number);
+#ifdef __unix
+  const char SEPARATOR = '/';
+#else	 // WINDOW
+  const char SEPARATOR = '\\';
+#endif
+  std::string fullpath;
+  fullpath = m_directory + SEPARATOR;
+  fullpath += m_prefix;
+  fullpath += nbBuffer;
+  fullpath += m_suffix;
+  return fullpath;
 }

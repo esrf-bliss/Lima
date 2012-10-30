@@ -35,6 +35,7 @@
 #include "CtSaving.h"
 #include "CtSaving_Edf.h"
 #include "CtAcquisition.h"
+#include "CtBuffer.h"
 
 #ifdef WITH_NXS_SAVING
 #include "CtSaving_Nxs.h"
@@ -141,7 +142,7 @@ private:
  */
 CtSaving::Parameters::Parameters()
   : nextNumber(0), fileFormat(RAW), savingMode(Manual), 
-    overwritePolicy(Abort),managedMode(Software),
+    overwritePolicy(Abort),
     indexFormat("%04d"),framesPerFile(1)
 {
 }
@@ -383,7 +384,7 @@ public:
     m_saving(ct_saving)
   {
   }
-  bool newFrameWrite(int frame_id)
+  bool newFrameWritten(int frame_id)
   {
     return m_saving._newFrameWrite(frame_id);
   }
@@ -398,7 +399,8 @@ CtSaving::CtSaving(CtControl &aCtrl) :
   m_ready_flag(true),
   m_need_compression(false),
   m_nb_save_cbk(0),
-  m_end_cbk(NULL)
+  m_end_cbk(NULL),
+  m_managed_mode(Software)
 {
   DEB_CONSTRUCTOR();
 
@@ -610,6 +612,70 @@ void CtSaving::getFormat(FileFormat& format, int stream_idx) const
 
   DEB_RETURN() << DEB_VAR1(format);
 }
+/** @brief return a list of hardware possible saving format
+ */
+void CtSaving::getHardwareFormatList(std::list<std::string> &format_list) const
+{
+  DEB_MEMBER_FUNCT();
+
+  if(!m_has_hwsaving)
+    THROW_CTL_ERROR(NotSupported) << "No hardware saving for this camera";
+  
+  m_hwsaving->getPossibleSaveFormat(format_list);
+}
+
+void CtSaving::setHardwareFormat(const std::string &format)
+{
+  DEB_MEMBER_FUNCT();
+
+  if(!m_has_hwsaving)
+    THROW_CTL_ERROR(NotSupported) << "No hardware saving for this camera";
+
+  bool found = _checkHwFileFormat(format);
+  
+  if(!found)
+    {
+      THROW_CTL_ERROR(NotSupported) << 
+	"Hardware does not support" << DEB_VAR1(format);
+    }
+
+  m_specific_hardware_format = format;
+}
+
+bool CtSaving::_checkHwFileFormat(const std::string &format) const
+{
+  std::list<std::string> format_list;
+  m_hwsaving->getPossibleSaveFormat(format_list);
+  bool found = false;
+  for(std::list<std::string>::const_iterator i = format_list.begin();
+      !found && i != format_list.end();++i)
+    found = *i == format;
+  return found;
+}
+
+void CtSaving::_ReadImage(Data &image,int frameNumber)
+{
+  DEB_MEMBER_FUNCT();
+
+  if(m_hwsaving->getCapabilities() & HwSavingCtrlObj::MANUAL_READ)
+    {
+      HwFrameInfoType frame;
+      m_hwsaving->readFrame(frame,frameNumber);
+      CtBuffer::transformHwFrameInfoToData(image,frame);
+    }
+  else
+    THROW_CTL_ERROR(NotSupported) << "Image read is not supported for this hardware";
+}
+void CtSaving::getHardwareFormat(std::string &format) const
+{
+  DEB_MEMBER_FUNCT();
+
+  if(!m_has_hwsaving)
+    THROW_CTL_ERROR(NotSupported) << "No hardware saving for this camera";
+  
+  format = m_specific_hardware_format;
+}
+
 /** @brief set the saving mode for a saving stream
  */
 void CtSaving::setSavingMode(SavingMode mode)
@@ -709,13 +775,21 @@ void CtSaving::setManagedMode(CtSaving::ManagedMode mode)
     THROW_CTL_ERROR(InvalidValue) << DEB_VAR1(mode) << "Not supported";
 
   AutoMutex aLock(m_cond.mutex());
-  for (int s = 0; s < m_nb_stream; ++s)
+  if(mode == Hardware)
     {
-      Stream& stream = getStream(s);
-      Parameters pars = stream.getParameters(Auto);
-      pars.managedMode = mode;
-      stream.setParameters(pars);
+      if(!m_has_hwsaving)
+	THROW_CTL_ERROR(NotSupported) << "Hardware saving is not supported";
+
+      int hw_cap = m_hwsaving->getCapabilities();
+      if(hw_cap & HwSavingCtrlObj::COMMON_HEADER)
+	m_hwsaving->setCommonHeader(m_common_header);
+      else if(!m_common_header.empty())
+	{
+	  THROW_CTL_ERROR(Error) << "Hardware saving do not manage common header"
+				 << ", clear it first";
+	}
     }
+  m_managed_mode = mode;
 }
 
 void CtSaving::getManagedMode(CtSaving::ManagedMode &mode) const
@@ -723,9 +797,7 @@ void CtSaving::getManagedMode(CtSaving::ManagedMode &mode) const
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
-  const Stream& stream = getStream(0);
-  const Parameters& pars = stream.getParameters(Auto);
-  mode = pars.managedMode;
+  mode = m_managed_mode;
 }
 
 void CtSaving::_getTaskList(TaskType type, long frame_nr, 
@@ -758,9 +830,7 @@ void CtSaving::resetCommonHeader()
 
   AutoMutex aLock(m_cond.mutex());
   ManagedMode managed_mode = getManagedMode();
-  if(managed_mode == Software)
-    m_common_header.clear();
-  else
+  if(managed_mode == Hardware)
     {
       int hw_cap = m_hwsaving->getCapabilities();
       if(hw_cap & HwSavingCtrlObj::COMMON_HEADER)
@@ -768,6 +838,7 @@ void CtSaving::resetCommonHeader()
       else
 	THROW_CTL_ERROR(NotSupported) << "Common header is not supported";
     }
+  m_common_header.clear();
 }
 /** @brief set the common header.
     This is the header which will be write for all frame for this acquisition
@@ -779,9 +850,7 @@ void CtSaving::setCommonHeader(const HeaderMap &header)
 
   AutoMutex aLock(m_cond.mutex());
   ManagedMode managed_mode = getManagedMode();
-  if(managed_mode == Software)
-    m_common_header = header;
-  else
+  if(managed_mode == Hardware)
     {
       int hw_cap = m_hwsaving->getCapabilities();
       if(hw_cap & HwSavingCtrlObj::COMMON_HEADER)
@@ -789,6 +858,7 @@ void CtSaving::setCommonHeader(const HeaderMap &header)
       else
 	THROW_CTL_ERROR(NotSupported) << "Common header is not supported";
     }
+  m_common_header = header;
 }
 /** @brief replace/add field in the common header
  */
@@ -1394,21 +1464,58 @@ void CtSaving::_prepare()
     DEB_TRACE() << "No auto save activated";
 
   AutoMutex aLock(m_cond.mutex());
+  if(m_managed_mode == Software)
+    {
+      m_need_compression = false;
 
-  m_need_compression = false;
+      //prepare all the active streams
+      for (int s = 0; s < m_nb_stream; ++s) {
+	Stream& stream = getStream(s);
+	if (stream.isActive()) {
+	  stream.prepare();
+	  if (stream.needCompression())
+	    m_need_compression = true;
+	}
+      }
 
-  //prepare all the active streams
-  for (int s = 0; s < m_nb_stream; ++s) {
-    Stream& stream = getStream(s);
-    if (stream.isActive()) {
-      stream.prepare();
-      if (stream.needCompression())
-	m_need_compression = true;
+      m_nb_save_cbk = 0;
+      m_nb_compression_cbk.clear();
+
+      if(m_has_hwsaving)
+	{
+	  m_hwsaving->stop();
+	  m_hwsaving->setActive(false);
+	}
     }
-  }
+  else
+    {
+      const Stream& stream = getStream(0);
+      Parameters params = stream.getParameters(Auto);
 
-  m_nb_save_cbk = 0;
-  m_nb_compression_cbk.clear();
+      m_hwsaving->setDirectory(params.directory);
+      m_hwsaving->setPrefix(params.prefix);
+      m_hwsaving->setSuffix(params.suffix);
+      m_hwsaving->setNextNumber(params.nextNumber);
+      m_hwsaving->setIndexFormat(params.indexFormat);
+      std::string fileFormat;
+      switch(params.fileFormat)
+	{
+	case RAW: fileFormat = HwSavingCtrlObj::RAW_FORMAT_STR;break;
+	case EDF: fileFormat = HwSavingCtrlObj::EDF_FORMAT_STR;break;
+	case CBFFormat: fileFormat = HwSavingCtrlObj::CBF_FORMAT_STR;break;
+	case HARDWARE_SPECIFIC: fileFormat = m_specific_hardware_format;break;
+	default:
+	  THROW_CTL_ERROR(NotSupported) << "Not supported yet";break;
+	}
+
+      if(!_checkHwFileFormat(fileFormat))
+	THROW_CTL_ERROR(NotSupported) << "Hardware doesn't support " << DEB_VAR1(fileFormat);
+
+      m_hwsaving->setSaveFormat(fileFormat);
+      m_hwsaving->setActive(true);
+      m_hwsaving->prepare();
+      m_hwsaving->start();
+    }
 }
 
 CtSaving::SaveContainer::SaveContainer(Stream& stream) 
