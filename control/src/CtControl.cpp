@@ -225,6 +225,9 @@ void CtControl::prepareAcq()
     throw LIMA_CTL_EXC(Error,"Configuration not finished");
 
   resetStatus(false);
+  
+  //Clear common header
+  m_ct_saving->resetInternalCommonHeader();
 
   DEB_TRACE() << "Apply hardware bin/roi";
   m_ct_image->applyHard();
