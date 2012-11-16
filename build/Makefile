@@ -57,7 +57,7 @@ create-links	= \
 ############################
 
 CORE_LDFLAGS	:= -L../third-party/Processlib/build
-CORE_LDLIBS	:= -lprocesslib
+CORE_LDLIBS	:= -lprocesslib -lrt
 
 ifneq ($(COMPILE_CBF_SAVING),0)
 CORE_LDFLAGS += -L../third-party/CBFLib/lib

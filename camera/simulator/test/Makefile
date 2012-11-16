@@ -37,7 +37,7 @@ SRCS = $(test-objs:.o=.cpp) $(testsimulator-objs:.o=.cpp) \
 
 INC = -I../include -I../../../common/include -I../../../hardware/include -I../../../third-party/Processlib/core/include
 CXXFLAGS += $(INC) -Wall -pthread -g
-LDFLAGS = -L../../../third-party/Processlib/build -lprocesslib -pthread
+LDFLAGS = -L../../../third-party/Processlib/build -lprocesslib -pthread -lrt
 
 all: test testsimulator testsimuhwinterface
 
