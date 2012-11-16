@@ -112,7 +112,21 @@ private:
   CtControl &_ctrl;
 };
 
+class CtControl::SoftOpErrorHandler : public TaskMgr::EventCallback
+{
+public:
+  SoftOpErrorHandler(CtControl &ctr) : m_ct(ctr) {}
 
+  virtual void error(Data&,const char *errmsg)
+  {
+    Event *anEvent = new Event(Control,Event::Error,Event::Processing,
+			       Event::Default,errmsg);
+    CtEvent *eventMgr = m_ct.event();
+    eventMgr->reportEvent(anEvent);
+  }
+private:
+  CtControl&	m_ct;
+};
 
 CtControl::CtControl(HwInterface *hw) :
   m_hw(hw),
@@ -148,6 +162,8 @@ CtControl::CtControl(HwInterface *hw) :
 #endif
   m_op_int = new SoftOpInternalMgr();
   m_op_ext = new SoftOpExternalMgr();
+
+  m_soft_op_error_handler = new SoftOpErrorHandler(*this);
 }
 
 CtControl::~CtControl()
@@ -174,6 +190,8 @@ CtControl::~CtControl()
 
   delete m_op_int;
   delete m_op_ext;
+
+  delete m_soft_op_error_handler;
 }
 
 void CtControl::setApplyPolicy(ApplyPolicy policy)
@@ -568,6 +586,7 @@ bool CtControl::newFrameReady(Data& fdata)
       aLock.unlock();
   
       TaskMgr *mgr = new TaskMgr();
+      mgr->setEventCallback(m_soft_op_error_handler);
       mgr->setInputData(fdata);
 
       int internal_stage = 0;
