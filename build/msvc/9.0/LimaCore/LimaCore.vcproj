@@ -430,6 +430,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\common\include\Event.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\common\include\Exceptions.h"
 				>
 			</File>
