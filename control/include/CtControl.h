@@ -205,6 +205,8 @@ namespace lima
 	return d1.frameNumber < d2.frameNumber;
       }
     };
+    class SoftOpErrorHandler;
+
     class _LastBaseImageReadyCallback;
     friend class _LastBaseImageReadyCallback;
     class _LastImageReadyCallback;
@@ -254,6 +256,7 @@ namespace lima
     bool		m_display_active_flag;
 #endif
     ImageStatusCallback *m_img_status_cb;
+    SoftOpErrorHandler* m_soft_op_error_handler;
 
     inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();

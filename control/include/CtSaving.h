@@ -169,6 +169,12 @@ namespace lima {
 
     void setEndCallback(TaskEventCallback *);
 
+    // --- internal common header
+    void resetInternalCommonHeader();
+    void addToInternalCommonHeader(const HeaderValue& value);
+    template<class T>
+    void addToInternalCommonHeader(const std::string &key,
+				   const T&);
     // --- statistic
 
     void getWriteTimeStatistic(std::list<double>&, int stream_idx=0) const;
@@ -325,6 +331,7 @@ namespace lima {
     Stream		      **m_stream;
 
     HeaderMap			m_common_header;
+    HeaderMap			m_internal_common_header;
     FrameHeaderMap		m_frame_headers;
     FrameMap			m_frame_datas;
 
@@ -470,6 +477,19 @@ namespace lima {
     os << "< (" << value.first << "," << value.second << ") >";
     return os;
   }
+
+  template<class T>
+  void CtSaving::addToInternalCommonHeader(const std::string &key,
+					   const T& obj)
+  {
+    AutoMutex aLock(m_cond.mutex());
+    std::ostringstream str;
+    str << obj;	
+    const std::string& value = str.str();
+    HeaderValue anEntry(key,value);
+    m_internal_common_header.insert(anEntry);
+  }
+
 } // namespace lima
 
 #endif // CTSAVING_H

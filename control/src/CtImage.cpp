@@ -22,6 +22,7 @@
 
 #include "CtImage.h"
 #include "CtAcquisition.h"
+#include "CtSaving.h"
 
 using namespace lima;
 
@@ -881,6 +882,24 @@ void CtImage::applyHard()
 	  }
 
 	m_hw->apply();
+	//Add operation into internal header
+	CtSaving* saving = m_ct.saving();
+
+	Bin bin;getBin(bin);
+	if(!bin.isOne())
+	  saving->addToInternalCommonHeader("binning",bin);
+
+	Roi roi;getRoi(roi);
+	if(!roi.isEmpty())
+	  saving->addToInternalCommonHeader("roi",roi);
+
+	Flip flip;getFlip(flip);
+	if(flip.x || flip.y)
+	  saving->addToInternalCommonHeader("flip",flip);
+
+	RotationMode rMode;getRotation(rMode);
+	if(rMode != Rotation_0)
+	  saving->addToInternalCommonHeader("rotation",rMode);
 }
 
 bool CtImage::applySoft(SoftOpInternalMgr *op)

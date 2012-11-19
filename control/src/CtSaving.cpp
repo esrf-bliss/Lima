@@ -957,6 +957,8 @@ void CtSaving::removeAllFrameHeaders()
 
 void CtSaving::_getCommonHeader(HeaderMap &header)
 {
+  header.insert(m_internal_common_header.begin(),
+		m_internal_common_header.end());
   header.insert(m_common_header.begin(),m_common_header.end());
 }
 void CtSaving::_takeHeader(FrameHeaderMap::iterator& headerIter, 
@@ -1003,6 +1005,18 @@ void CtSaving::setEndCallback(TaskEventCallback *aCbkPt)
   m_end_cbk = aCbkPt;
   if(m_end_cbk)
     m_end_cbk->ref();
+}
+
+void CtSaving::resetInternalCommonHeader()
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_internal_common_header.clear();
+}
+
+void CtSaving::addToInternalCommonHeader(const HeaderValue& value)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_internal_common_header.insert(value);
 }
 
 bool CtSaving::_controlIsFault()

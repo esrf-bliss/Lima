@@ -81,4 +81,4 @@
 	url = git://github.com/esrf-bliss/Lima-camera-rayonixhs
 [submodule "camera/andor3"]
 	path = camera/andor3
-	url = git://github.com:esrf-bliss/Lima-camera-andor3.git
+	url = git://github.com/esrf-bliss/Lima-camera-andor3.git
