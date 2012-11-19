@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-
+%If (POSIX_PLATFORM)
 class Timer
 {
 %TypeHeaderCode
@@ -46,3 +46,4 @@ public:
   void start(double uptime,int nb_iter = 1,double latency = 0.);
   void stop();
 };
+%End
