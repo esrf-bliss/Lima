@@ -20,6 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
+%If (POSIX_PLATFORM)
 class DirectoryEvent
 {
 %TypeHeaderCode
@@ -53,3 +54,4 @@ public:
   bool isStopped() const;
   int  getNextFileNumberExpected() const;
 };
+%End
