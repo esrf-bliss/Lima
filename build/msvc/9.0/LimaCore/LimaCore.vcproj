@@ -482,6 +482,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\hardware\include\HwSavingCtrlObj.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\hardware\include\HwSerialLine.h"
 				>
 			</File>
