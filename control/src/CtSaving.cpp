@@ -414,6 +414,7 @@ CtSaving::CtSaving(CtControl &aCtrl) :
   resetLastFrameNb();
 
   HwInterface *hw = aCtrl.hwInterface();
+#ifdef __linux__
   m_has_hwsaving = hw->getHwCtrlObj(m_hwsaving);
   if(m_has_hwsaving)
     {
@@ -422,6 +423,10 @@ CtSaving::CtSaving(CtControl &aCtrl) :
     }
   else
     m_new_frame_save_cbk = NULL;
+#else
+  m_has_hwsaving = false;
+  m_new_frame_save_cbk = NULL;
+#endif
 }
 
 //@brief destructor

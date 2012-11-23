@@ -28,7 +28,7 @@ using namespace lima;
 const char* HwSavingCtrlObj::RAW_FORMAT_STR = "RAW"; ///< Raw format (no header)
 const char* HwSavingCtrlObj::EDF_FORMAT_STR = "EDF"; ///< EDF format (Esrf Data Format)
 const char* HwSavingCtrlObj::CBF_FORMAT_STR = "CBF"; ///< CBF format
-
+#ifdef __linux__
 class HwSavingCtrlObj::DirectoryCallback : public DirectoryEvent::Callback
 {
 public:
@@ -80,19 +80,24 @@ private:
   int 			m_start_file_number;
   std::deque<int> 	m_image_ids;
 };
+#endif
 
 HwSavingCtrlObj::HwSavingCtrlObj(int capabilities) :
   m_caps(capabilities),
   m_active(false),
-  m_callback(NULL),
-  m_dir_cbk(new HwSavingCtrlObj::DirectoryCallback(*this)),
+  m_callback(NULL)
+#ifdef __linux__
+  ,m_dir_cbk(new HwSavingCtrlObj::DirectoryCallback(*this)),
   m_dir_event(true,*m_dir_cbk)
+#endif
 {
 }
 
 HwSavingCtrlObj::~HwSavingCtrlObj()
 {
+#ifdef __linux__
   delete m_dir_cbk;
+#endif
 }
 
 void HwSavingCtrlObj::setActive(bool flag)
@@ -170,7 +175,7 @@ void HwSavingCtrlObj::prepare()
   if(m_active)
     {
       _prepare();
-
+#ifdef __linux__
       DirectoryEvent::Parameters params;
       params.watch_path = m_directory;
       params.file_pattern = m_prefix;
@@ -181,6 +186,7 @@ void HwSavingCtrlObj::prepare()
 
       if(m_callback)
 	m_callback->prepare(params);
+#endif
     }
 }
 
@@ -191,13 +197,16 @@ void HwSavingCtrlObj::start()
   if(m_active)
     {
       _start();
-      
+#ifdef __linux__
       m_dir_event.start();
+#endif
     }
 }
 void HwSavingCtrlObj::stop()
 {
+#ifdef __linux__
   m_dir_event.stop();
+#endif
 }
 
 int HwSavingCtrlObj::getCapabilities() const

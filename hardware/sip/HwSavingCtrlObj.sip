@@ -62,8 +62,10 @@ public:
   {
   public:
     virtual ~Callback();
+%If (POSIX_PLATFORM)
     virtual void prepare(const DirectoryEvent::Parameters &);
     virtual bool newFrameWritten(int frame_id) = 0;
+%End
   };
     
   void registerCallback(Callback *cbk);

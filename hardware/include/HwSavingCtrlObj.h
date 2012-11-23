@@ -29,7 +29,6 @@
 #include "HwFrameInfo.h"
 #include "DirectoryEventUtils.h"
 
-#ifdef __linux__
 namespace lima
 {
   class LIMACORE_API HwSavingCtrlObj
@@ -78,8 +77,10 @@ namespace lima
     {
     public:
       virtual ~Callback() {}
+#ifdef __linux__
       virtual void prepare(const DirectoryEvent::Parameters &) {};
       virtual bool newFrameWritten(int frame_id) = 0;
+#endif
     };
     
     void registerCallback(Callback *cbk);
@@ -107,9 +108,10 @@ namespace lima
     class DirectoryCallback;
 
     Callback*		m_callback;
+#ifdef __linux__
     DirectoryCallback*  m_dir_cbk;
     DirectoryEvent 	m_dir_event;
+#endif
   };
 }
-#endif
 #endif
