@@ -23,7 +23,11 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <poll.h>
+
+#ifdef HAS_INOTIFY
 #include <sys/inotify.h>
+#endif
+
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
@@ -43,7 +47,7 @@ public:
     m_quit(false),
     m_wait(true),
     m_thread_running(true),
-    m_thread_id(-1),
+    m_thread_id(pthread_t(-1)),
     m_cbk(cbk)
   {}
   virtual ~_Event() {}
@@ -189,6 +193,7 @@ void DirectoryEvent::_Event::_check_parameters(const DirectoryEvent::Parameters 
     THROW_HW_ERROR(Error) << "file_pattern should only have one int conversion like '%d'";
 }
 
+#ifdef HAS_INOTIFY
 /** @brief this local file event use inotify so it can only be use an local pc or NFS server
  */
 class _LocalDirectoryEvent : public DirectoryEvent::_Event
@@ -255,7 +260,7 @@ void _LocalDirectoryEvent::_clean()
 
   close(m_pipes[1]);
   void *tReturn;
-  if(m_thread_id >= 0)
+  if(m_thread_id != pthread_t(-1))
     pthread_join(m_thread_id,&tReturn);
   close(m_pipes[0]);
   _stopWatch();
@@ -369,7 +374,7 @@ void _LocalDirectoryEvent::_run()
 	}
     }
 }
-
+#endif
 /** @brief this local file event use inotify so it can only be use an local pc or NFS server
  */
 class _GenericDirectoryEvent : public DirectoryEvent::_Event
@@ -534,9 +539,11 @@ void _GenericDirectoryEvent::_run()
  */
 DirectoryEvent::DirectoryEvent(bool local,Callback &cbk)
 {
+#ifdef HAS_INOTIFY
   if(local)
     m_event = new _LocalDirectoryEvent(cbk);
   else
+#endif
     m_event = new _GenericDirectoryEvent(cbk);
 }
 

@@ -23,9 +23,15 @@ common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
                MemUtils.o RegExUtils.o AcqState.o Debug.o VideoUtils.o Event.o \
 	       Timer.o DirectoryEventUtils.o
 
+has_not_inotify = $(shell grep INOTIFY_USER /boot/config-$(shell uname -r) >/dev/null 2>&1; echo $$?)
+
 SRCS = $(common-objs:.o=.cpp)
 
 CXXFLAGS += -I../include -I../../hardware/include -I../../third-party/Processlib/core/include -Wall -pthread -fPIC -g
+
+ifeq ($(has_not_inotify),0)
+CXXFLAGS += -DHAS_INOTIFY
+endif
 
 all:	Common.o
 
