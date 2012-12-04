@@ -32,6 +32,40 @@ using namespace lima;
   else\
     throw LIMA_CTL_EXC(Error, "No shutter capability");
 
+// --- config management
+class CtShutter::_ConfigHandler : public CtConfig::ModuleTypeCallback
+{
+public:
+  _ConfigHandler(CtShutter& shutter) :
+    CtConfig::ModuleTypeCallback("Shutter"),
+    m_shutter(shutter) {}
+  virtual void store(Setting& shutter_setting)
+  {
+    CtShutter::Parameters pars;
+    m_shutter.getParameters(pars);
+    
+    shutter_setting.set("mode",convert_2_string(pars.mode));
+    shutter_setting.set("close_time",pars.close_time);
+    shutter_setting.set("open_time",pars.open_time);
+  }
+  virtual void restore(const Setting& shutter_setting)
+  {
+    CtShutter::Parameters pars;
+    m_shutter.getParameters(pars);
+
+    std::string strmode;
+    if(shutter_setting.get("mode",strmode))
+      convert_from_string(strmode,pars.mode);
+
+    shutter_setting.get("close_time",pars.close_time);
+    shutter_setting.get("open_time",pars.open_time);
+  
+    m_shutter.setParameters(pars);
+  }
+private:
+  CtShutter& m_shutter;
+};
+
 CtShutter::CtShutter(HwInterface *hw)
 {
   DEB_CONSTRUCTOR();
@@ -127,6 +161,17 @@ void CtShutter::reset()
       m_pars = m_hw_pars;
     }
 }
+void CtShutter::getParameters(CtShutter::Parameters& pars) const
+{
+  DEB_MEMBER_FUNCT();
+  CHECK_AVAILABILITY(pars = m_pars);
+}
+
+void CtShutter::setParameters(const CtShutter::Parameters& pars)
+{
+  DEB_MEMBER_FUNCT();
+  CHECK_AVAILABILITY(m_pars = pars);
+}
 /** @brief apply cache parameters to hardware
  */
 void CtShutter::apply()
@@ -150,4 +195,12 @@ void CtShutter::apply()
 	  throw exp;
 	}
     }
+}
+
+CtConfig::ModuleTypeCallback* CtShutter::_getConfigHandler()
+{
+  if(m_has_shutter)
+    return new _ConfigHandler(*this);
+  else
+    return NULL;
 }

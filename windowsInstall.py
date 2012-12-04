@@ -8,6 +8,7 @@ module2Installfiles = {
               ('common/python/Core.py','Lima'),
               ('common/python/Debug.py','Lima'),
               ('build/msvc/9.0/LimaCore/Release/LibLimaCore.dll','Lima'),
+              ('third-party\libconfig\lib\libconfig++.Release\libconfig++.dll','Lima'),
               ('sip/core/limacore.pyd','Lima'),
               ('third-party/Processlib/sip/processlib.pyd','Lima'),
               ('third-party/Processlib/build/msvc/9.0/libprocesslib/Release/libprocesslib.dll','Lima')],

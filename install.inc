@@ -175,6 +175,10 @@ INSTALL_CONFIG_DEFINES += -DWITH_FITS_SAVING
 INSTALL_DEPS += cfitsio.install CCfits.install
 endif
 
+ifneq ($(COMPILE_CONFIG_CONTEXT),0)
+INSTALL_CONFIG_DEFINES += -DWITH_CONFIG_CONTEXT
+INSTALL_DEPS += libconfig.install
+endif
 ##################
 #  INSTALL DEPS  #
 ##################
@@ -194,6 +198,9 @@ cfitsio.install:
 
 CCfits.install:
 	$(MAKE) -C third-party CCfits.install
+
+libconfig.install:
+	$(MAKE) -C third-party libconfig.install
 
 ##################
 # INSTALL TARGET #

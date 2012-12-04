@@ -179,6 +179,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorCamera.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorDetInfoCtrlObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\camera\simulator\src\SimulatorFrameBuilder.cpp"
 				>
 			</File>
@@ -187,7 +195,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimulatorCamera.cpp"
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorSyncCtrlObj.cpp"
 				>
 			</File>
 		</Filter>
@@ -197,15 +205,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCamera.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\camera\simulator\include\SimulatorFrameBuilder.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\camera\simulator\include\SimulatorInterface.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCamera.h"
 				>
 			</File>
 		</Filter>

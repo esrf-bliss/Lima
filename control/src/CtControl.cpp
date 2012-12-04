@@ -34,7 +34,9 @@
 #include "CtAccumulation.h"
 #include "CtVideo.h"
 #include "CtEvent.h"
-
+#ifdef WITH_CONFIG
+#include "CtConfig.h"
+#endif
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
 
@@ -127,6 +129,8 @@ public:
 private:
   CtControl&	m_ct;
 };
+// --- helper
+
 
 CtControl::CtControl(HwInterface *hw) :
   m_hw(hw),
@@ -160,6 +164,29 @@ CtControl::CtControl(HwInterface *hw) :
   //Sps image
   m_ct_sps_image = new CtSpsImage();
 #endif
+
+#ifdef WITH_CONFIG
+  m_ct_config = new CtConfig(*this);
+
+#define REGISTER_CONFIG_MODULE(control)					\
+    modulePt = control->_getConfigHandler(); \
+    if(modulePt)							\
+      {									\
+	m_ct_config->registerModule(modulePt);				\
+	modulePt->unref();						\
+      }
+
+
+  //Add all core callback config
+  CtConfig::ModuleTypeCallback* modulePt;
+  REGISTER_CONFIG_MODULE(m_ct_acq);
+  REGISTER_CONFIG_MODULE(m_ct_saving);
+  REGISTER_CONFIG_MODULE(m_ct_image);
+  REGISTER_CONFIG_MODULE(m_ct_shutter);
+  REGISTER_CONFIG_MODULE(m_ct_accumulation);
+  REGISTER_CONFIG_MODULE(m_ct_video);
+#endif
+
   m_op_int = new SoftOpInternalMgr();
   m_op_ext = new SoftOpExternalMgr();
 
@@ -180,6 +207,9 @@ CtControl::~CtControl()
   delete m_ct_saving;
 #ifdef WITH_SPS_IMAGE
   delete m_ct_sps_image;
+#endif
+#ifdef WITH_CONFIG
+  delete m_ct_config;
 #endif
   delete m_ct_acq;
   delete m_ct_image;
@@ -932,6 +962,7 @@ CtAccumulation* 	CtControl::accumulation() 	{ return m_ct_accumulation; }
 CtVideo*		CtControl::video()		{ return m_ct_video;}
 CtShutter* 		CtControl::shutter() 		{ return m_ct_shutter; }
 CtEvent* 		CtControl::event()		{ return m_ct_event; }
+CtConfig*		CtControl::config()		{ return m_ct_config; }
 
 SoftOpExternalMgr* 	CtControl::externalOperation() 	{return m_op_ext;}
 

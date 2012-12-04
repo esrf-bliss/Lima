@@ -27,6 +27,7 @@
 #include <deque>
 
 #include "CtControl.h"
+#include "CtConfig.h"
 #include "SinkTaskMgr.h"
 
 namespace lima
@@ -161,6 +162,21 @@ namespace lima
     void _calcSaturatedImageNCounters(Data &src,Data &dst);
 
     inline void _callIfNeedThresholdCallback(Data &aData,long long value);
+    
+    class _ConfigHandler;
+    CtConfig::ModuleTypeCallback* _getConfigHandler();
   };
+
+  inline std::ostream& operator<<(std::ostream &os,
+				  const CtAccumulation::Parameters& params)
+    {
+      os << "<"
+	 << "active=" << (params.active ? "Yes" : "No") << ", "
+	 << "pixelThresholdValue=" << params.pixelThresholdValue << ", "
+	 << "savingFlag=" << (params.savingFlag ? "Yes" : "No") << ", "
+	 << "savingPrefix=" << params.savePrefix
+	 << ">";
+      return os;
+    }
 }
 #endif

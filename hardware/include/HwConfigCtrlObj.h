@@ -19,73 +19,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "HwCap.h"
+
+#ifndef HWCONFIGCTRLOBJ_H
+#define HWCONFIGCTRLOBJ_H
+#include "Debug.h"
+#include "LimaCompatibility.h"
+#include "ConfigUtils.h"
 
 namespace lima
 {
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwDetInfoCtrlObj *p)
-{
-	return DetInfo;
+  class CtConfig;
+  class LIMACORE_API HwConfigCtrlObj
+  {
+    DEB_CLASS(DebModHardware,"HwConfigCtrlObj");
+  public:
+    HwConfigCtrlObj() {}
+    virtual ~HwConfigCtrlObj() {}
+    
+    virtual void store(Setting&) = 0;
+    virtual void restore(const Setting &) = 0;
+  };
 }
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwBufferCtrlObj *p)
-{
-	return Buffer;
-}
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwSyncCtrlObj *p)
-{
-	return Sync;
-}
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwBinCtrlObj *p)
-{
-	return Bin;
-}
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwRoiCtrlObj *p)
-{
-	return Roi;
-}
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwFlipCtrlObj *p)
-{
-	return Flip;
-}
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwShutterCtrlObj *p)
-{
-	return Shutter;
-}
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwVideoCtrlObj *p)
-{
-	return Video;
-}
-
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwEventCtrlObj *p)
-{
-	return Event;
-}
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwSavingCtrlObj*)
-{
-	return Saving;
-}
-
-HwCap::Type HwCap::getTypeFromCtrlObj(HwConfigCtrlObj*)
-{
-	return Config;
-}
-
-} // namespace lima
+#endif

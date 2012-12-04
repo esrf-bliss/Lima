@@ -141,9 +141,10 @@ private:
 /** @brief Parameters default constructor
  */
 CtSaving::Parameters::Parameters()
-  : nextNumber(0), fileFormat(RAW), savingMode(Manual), 
+  : imageType(Bpp8),nextNumber(0), fileFormat(RAW), savingMode(Manual), 
     overwritePolicy(Abort),
-    indexFormat("%04d"),framesPerFile(1)
+    indexFormat("%04d"),framesPerFile(1),
+    nbframes(0)
 {
 }
 
@@ -390,6 +391,87 @@ public:
   }
 private:
   CtSaving&	m_saving;
+};
+
+// --- Config
+class CtSaving::_ConfigHandler : public CtConfig::ModuleTypeCallback
+{
+public:
+  _ConfigHandler(CtSaving& saving) :
+    CtConfig::ModuleTypeCallback("Saving"),
+    m_saving(saving) {}
+  virtual void store(Setting& saving_setting)
+  {
+    CtSaving::Parameters pars;
+    m_saving.getParameters(pars);
+
+    saving_setting.set("directory",pars.directory);
+    saving_setting.set("prefix",pars.prefix);
+    saving_setting.set("suffix",pars.suffix);
+    saving_setting.set("imageType",convert_2_string(pars.imageType));
+    saving_setting.set("nextNumber",pars.nextNumber);
+    saving_setting.set("fileFormat",convert_2_string(pars.fileFormat));
+    saving_setting.set("savingMode",convert_2_string(pars.savingMode));
+    saving_setting.set("overwritePolicy",convert_2_string(pars.overwritePolicy));
+    saving_setting.set("indexFormat",pars.indexFormat);
+    saving_setting.set("framesPerFile",pars.framesPerFile);
+    saving_setting.set("nbframes",pars.nbframes);
+
+    CtSaving::ManagedMode managedmode;
+    m_saving.getManagedMode(managedmode);
+    saving_setting.set("managedmode",convert_2_string(managedmode));
+  }
+  virtual void restore(const Setting& saving_setting)
+  {
+    CtSaving::Parameters pars;
+    m_saving.getParameters(pars);
+
+    saving_setting.get("directory",pars.directory);
+    saving_setting.get("prefix",pars.prefix);
+    saving_setting.get("suffix",pars.suffix);
+
+    std::string strimageType;
+    if(saving_setting.get("imageType",strimageType))
+      convert_from_string(strimageType,pars.imageType);
+
+    int nextNumber;
+    if(saving_setting.get("nextNumber",nextNumber))
+      pars.nextNumber = nextNumber;
+
+    std::string strfileFormat;
+    if(saving_setting.get("fileFormat",strfileFormat))
+      convert_from_string(strfileFormat,pars.fileFormat);
+
+    std::string strsavingMode;
+    if(saving_setting.get("savingMode",strsavingMode))
+      convert_from_string(strsavingMode,pars.savingMode);
+
+    std::string stroverwritePolicy;
+    if(saving_setting.get("overwritePolicy",stroverwritePolicy))
+      convert_from_string(stroverwritePolicy,pars.overwritePolicy);
+
+    saving_setting.get("indexFormat",pars.indexFormat);
+
+    int framesPerFile;
+    if(saving_setting.get("framesPerFile",framesPerFile))
+      pars.framesPerFile = framesPerFile;
+
+    int nbframes;
+    if(saving_setting.get("nbframes",nbframes))
+      pars.nbframes = nbframes;
+
+    std::string strmanagedmode;
+    if(saving_setting.get("managedmode",strmanagedmode))
+      {
+	CtSaving::ManagedMode managedmode;
+	convert_from_string(strmanagedmode,managedmode);
+	m_saving.getManagedMode(managedmode);
+      }
+
+    m_saving.setParameters(pars);
+  }
+private:
+  CtSaving& m_saving;
 };
 
 //@brief constructor
@@ -1521,6 +1603,11 @@ void CtSaving::_prepare()
       m_hwsaving->prepare();
       m_hwsaving->start();
     }
+}
+
+CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
+{
+  return new _ConfigHandler(*this);
 }
 
 CtSaving::SaveContainer::SaveContainer(Stream& stream) 
