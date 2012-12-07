@@ -39,6 +39,12 @@
                         <includePaths>
                             <includePath>${basedir}/include</includePath>
                         </includePaths>
+
+                        <excludes>
+                            <exclude>**/DirectoryEventUtils.cpp</exclude>
+                            <!--<exclude>**/Timer.cpp</exclude>-->
+                        </excludes>
+
                     </cpp>
                 </configuration>
             </plugin>

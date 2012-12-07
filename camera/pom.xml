@@ -69,12 +69,12 @@
     <!-- ENABLE/DISABLE a specific plugin-->
     <modules>        
         <module>basler</module>
-				<module>simulator</module>
+	    <module>simulator</module>
         <module>adsc</module>
         <module>marccd</module>      
-        <module>pilatus</module>
+        <!--<module>pilatus</module>-->
         <module>prosilica</module>
-				<module>roperscientific</module> 
+		<!--<module>roperscientific</module>-->
         <module>xpad</module>
     </modules>
 
