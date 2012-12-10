@@ -29,6 +29,7 @@ const char* HwSavingCtrlObj::RAW_FORMAT_STR = "RAW"; ///< Raw format (no header)
 const char* HwSavingCtrlObj::EDF_FORMAT_STR = "EDF"; ///< EDF format (Esrf Data Format)
 const char* HwSavingCtrlObj::CBF_FORMAT_STR = "CBF"; ///< CBF format
 #ifdef __linux__
+#ifdef __soleil_linux__
 class HwSavingCtrlObj::DirectoryCallback : public DirectoryEvent::Callback
 {
 public:
@@ -81,14 +82,17 @@ private:
   std::deque<int> 	m_image_ids;
 };
 #endif
+#endif
 
 HwSavingCtrlObj::HwSavingCtrlObj(int capabilities) :
   m_caps(capabilities),
   m_active(false),
   m_callback(NULL)
 #ifdef __linux__
+#ifdef __soleil_linux__
   ,m_dir_cbk(new HwSavingCtrlObj::DirectoryCallback(*this)),
   m_dir_event(true,*m_dir_cbk)
+#endif
 #endif
 {
 }
@@ -96,7 +100,9 @@ HwSavingCtrlObj::HwSavingCtrlObj(int capabilities) :
 HwSavingCtrlObj::~HwSavingCtrlObj()
 {
 #ifdef __linux__
+#ifdef __soleil_linux__    
   delete m_dir_cbk;
+#endif  
 #endif
 }
 
@@ -176,6 +182,7 @@ void HwSavingCtrlObj::prepare()
     {
       _prepare();
 #ifdef __linux__
+#ifdef __soleil_linux__      
       DirectoryEvent::Parameters params;
       params.watch_path = m_directory;
       params.file_pattern = m_prefix;
@@ -186,6 +193,7 @@ void HwSavingCtrlObj::prepare()
 
       if(m_callback)
 	m_callback->prepare(params);
+#endif      
 #endif
     }
 }
@@ -198,14 +206,18 @@ void HwSavingCtrlObj::start()
     {
       _start();
 #ifdef __linux__
+#ifdef __soleil_linux__      
       m_dir_event.start();
+#endif      
 #endif
     }
 }
 void HwSavingCtrlObj::stop()
 {
 #ifdef __linux__
+#ifdef __soleil_linux__    
   m_dir_event.stop();
+#endif  
 #endif
 }
 

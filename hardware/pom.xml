@@ -38,6 +38,10 @@
                         <includePaths>
                             <includePath>${basedir}/include</includePath>
                         </includePaths>
+
+                        <excludes>
+                            <exclude>**/HwFileEventMgr.cpp</exclude>
+                        </excludes>
                     </cpp>
                 </configuration>
             </plugin>
