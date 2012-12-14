@@ -41,6 +41,7 @@ namespace lima
     class Callback
     {
     public:
+      virtual ~Callback() {};	// Compilation warning
       /** @brief this methode is called before starting to watch the directory set in
 	  parameters.watch_path
 	  this method should throw an exception if something wrong happens
