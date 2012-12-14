@@ -683,7 +683,7 @@ void CtControl::newBaseImageReady(Data &aData)
 
   m_ct_video->frameReady(aData);
 
-  if(m_img_status_cb && img_status_changed)
+  if(m_op_ext_link_task_active && m_img_status_cb && img_status_changed)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 
   _calcAcqStatus();
@@ -737,6 +737,8 @@ void CtControl::newCounterReady(Data&)
 {
   DEB_MEMBER_FUNCT();
   //@todo
+  AutoMutex aLock(m_cond.mutex());
+  ++m_status.ImageCounters.LastCounterReady;
 }
 
 /** @brief inc the save counter.
