@@ -205,9 +205,9 @@ void lima::image2YUV(const unsigned char *srcPt,int width,int height,VideoMode m
     case BGR32:
       _bgr_2_yuv(srcPt,dst,width,height,4);
       break;
-    case RGB24:
+    /*case RGB24:
       _rgb_2_yuv(srcPt,dst,width,height,3);
-      break;
+      break;*/
     case BGR24:
       _bgr_2_yuv(srcPt,dst,width,height,3);
       break;
