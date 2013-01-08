@@ -96,9 +96,11 @@ LIMACORE_API DetStatus& operator |=(DetStatus& s1, DetStatus  s2);
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, DetStatus det_status);
 
+//- Temporary workaround for the conflict with Tango (could impact Tango device ?)
+#undef RGB24
 enum VideoMode {Y8,Y16,Y32,Y64,
 		RGB555,RGB565,
-		/*RGB24,*/RGB32,
+		RGB24,RGB32,
 		BGR24,BGR32,
 		BAYER_RG8,BAYER_RG16,
 		I420,YUV411,YUV422,YUV444};
