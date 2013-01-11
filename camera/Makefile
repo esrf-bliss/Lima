@@ -128,4 +128,12 @@ ifneq ($(COMPILE_PILATUS),0)
 sub-dirs += pilatus
 endif
 
+ifndef COMPILE_POINTGREY
+COMPILE_POINTGREY = 0
+endif
+
+ifneq ($(COMPILE_POINTGREY),0)
+sub-dirs += pointgrey
+endif
+
 include ../global.inc

@@ -445,6 +445,29 @@ build_targets	+= $(call lib-full,$(pilatus-name),$(pilatus-ver))
 
 endif
 
+############################
+# LIMA - POINTGREY
+############################
+ifneq ($(COMPILE_POINTGREY),0)
+
+POINTGREY_LDFLAGS	:= $(LDFLAGS)
+POINTGREY_LDLIBS	:= $(LDLIBS) -lflycapture
+
+pointgrey-name	:= pointgrey
+pointgrey-objs	:= ../camera/pointgrey/src/PointGrey.o
+pointgrey-ver	:= ../camera/pointgrey/VERSION
+pointgrey-flags	:= $(POINTGREY_LDFLAGS)
+pointgrey-deps	:= $(POINTGREY_LDLIBS)
+
+$(call lib-full,$(pointgrey-name),$(pointgrey-ver)): $(pointgrey-objs)
+	$(call compile-lib,$(pointgrey-name),$(pointgrey-ver),\
+			   $(pointgrey-flags),$(pointgrey-deps),$@,$+)
+	$(call create-links,$(pointgrey-name),$(pointgrey-ver))
+
+build_targets	+= $(call lib-full,$(pointgrey-name),$(pointgrey-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:

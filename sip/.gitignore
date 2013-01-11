@@ -23,6 +23,7 @@ xpad
 photonicscience
 marccd
 pilatus
+pointgrey
 *.obj
 lima*.exp
 lima*.lib

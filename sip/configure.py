@@ -45,6 +45,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('marccd',           [os.path.join('camera','marccd')]),
            ('photonicscience',  [os.path.join('camera','photonicscience')]),
            ('pilatus',          [os.path.join('camera','pilatus')]),
+           ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -162,6 +163,8 @@ def main():
         elif(modName == 'marccd'):
 	    extraIncludes += ['../../../include/DiffractionImage']
 	    extraIncludes += ['../../third-party/yat/include'] 
+        elif(modName == 'pointgrey'):
+	    extraIncludes += ['/usr/include/flycapture']
 
         extraIncludes += findModuleIncludes(modName)
         

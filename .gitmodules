@@ -85,3 +85,6 @@
 [submodule "third-party/libconfig"]
 	path = third-party/libconfig
 	url = git://github.com/esrf-bliss/libconfig.git
+[submodule "camera/pointgrey"]
+	path = camera/pointgrey
+	url = git://github.com/esrf-bliss/Lima-camera-pointgrey.git

@@ -157,6 +157,12 @@ MARCCD_FULL_VERSION = $(shell cat camera/marccd/VERSION)
 INSTALL_MARCCD_VDIR = $(INSTALL_MARCCD_DIR)/v$(MARCCD_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_POINTGREY), 0)
+INSTALL_POINTGREY_DIR = $(INSTALL_PLAT_DIR)/PointGrey
+POINTGREY_FULL_VERSION = $(shell cat camera/pointgrey/VERSION)
+INSTALL_POINTGREY_VDIR = $(INSTALL_POINTGREY_DIR)/v$(POINTGREY_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -385,5 +391,15 @@ ifneq ($(COMPILE_MARCCD), 0)
 	cp -d third-party/yat/src/.libs/libyat.so* $(INSTALL_LIB_DIR)
 	cp sip/marccd/limamarccd.so $(INSTALL_MARCCD_VDIR)
 	cp camera/marccd/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_POINTGREY), 0)
+	mkdir -p $(INSTALL_POINTGREY_VDIR)
+	cp camera/pointgrey/python/__init__.py $(INSTALL_POINTGREY_DIR)
+	$(call install_core_dep,$(INSTALL_POINTGREY_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimapointgrey.so*
+	cp -d build/liblimapointgrey.so* $(INSTALL_LIB_DIR)
+	cp sip/pointgrey/limapointgrey.so $(INSTALL_POINTGREY_VDIR)
+	cp camera/pointgrey/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
