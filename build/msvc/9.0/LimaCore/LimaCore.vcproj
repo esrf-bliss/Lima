@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="LibLimaCore"
 	ProjectGUID="{A4B703A6-C50F-442F-8952-54FB8EA51FF3}"
 	RootNamespace="LimaCore"
