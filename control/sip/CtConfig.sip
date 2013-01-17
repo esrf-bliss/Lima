@@ -54,19 +54,7 @@ inline int _fill_setting_with_dict(Setting &setting,
 			PyFloat_AS_DOUBLE(value));
 	  else if(PyLong_Check(value))
 	    {
-#if PY_VERSION_HEX >= 0x02070000
-	      int overflow;
-	      long cValue = PyLong_AsLongAndOverflow(value,overflow);
-	      if(overflow == 1 || overflow == -1)
-		{
-		  PyErr_SetString(PyExc_ValueError,
-				  "don't manage big int (overflow)");
-		  return_value = 1;
-		  break;
-		}
-#else
 	      long cValue = PyLong_AsLong(value);
-#endif
 	      setting.set(PyString_AS_STRING(key),
 			  cValue);
 	    }
