@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="LibSimulator"
 	ProjectGUID="{3E1490E7-66C0-4E77-9746-0632466FF270}"
 	RootNamespace="LibSimulator"
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\hardware\include&quot;;&quot;..\..\..\..\common\include&quot;;&quot;..\..\..\..\camera\simulator\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;..\..\..\..\..\..\hardware\include;..\..\..\..\..\..\common\include;..\..\..\..\..\..\camera\simulator\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSIMULATOR_EXPORTS;_WIN32_WINNT=0x0502"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\hardware\include&quot;;&quot;..\..\..\..\common\include&quot;;&quot;..\..\..\..\camera\simulator\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;..\..\..\..\..\..\hardware\include;..\..\..\..\..\..\common\include;..\..\..\..\..\..\camera\simulator\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSIMULATOR_EXPORTS;_WIN32_WINNT=0x0502"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -179,23 +179,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimulatorCamera.cpp"
+				RelativePath="..\..\..\..\src\SimulatorCamera.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimulatorDetInfoCtrlObj.cpp"
+				RelativePath="..\..\..\..\src\SimulatorDetInfoCtrlObj.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimulatorFrameBuilder.cpp"
+				RelativePath="..\..\..\..\src\SimulatorFrameBuilder.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimulatorInterface.cpp"
+				RelativePath="..\..\..\..\src\SimulatorInterface.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\src\SimulatorSyncCtrlObj.cpp"
+				RelativePath="..\..\..\..\src\SimulatorSyncCtrlObj.cpp"
 				>
 			</File>
 		</Filter>
@@ -205,15 +205,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCamera.h"
+				RelativePath="..\..\..\..\include\SimulatorCamera.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\include\SimulatorFrameBuilder.h"
+				RelativePath="..\..\..\..\include\SimulatorCompatibility.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\include\SimulatorInterface.h"
+				RelativePath="..\..\..\..\include\SimulatorDetInfoCtrlObj.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\SimulatorFrameBuilder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\SimulatorInterface.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\SimulatorSyncCtrlObj.h"
 				>
 			</File>
 		</Filter>
