@@ -158,7 +158,7 @@ libconfig.confsrc:
 	cd libconfig && ./configure --prefix=$(INSTALL_PLAT_DIR)
 
 libconfig.install:
-	$(MAKE) -C libconfig install
+	cd libconfig && ./configure --prefix=$(INSTALL_PLAT_DIR) && $(MAKE) install
 
 test:
 	@echo
