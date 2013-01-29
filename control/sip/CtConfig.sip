@@ -56,7 +56,7 @@ inline int _fill_setting_with_dict(Setting &setting,
 	    {
 #if PY_VERSION_HEX >= 0x02070000
 	      int overflow;
-	      long cValue = PyLong_AsLongAndOverflow(value,overflow);
+	      long cValue = PyLong_AsLongAndOverflow(value,&overflow);
 	      if(overflow == 1 || overflow == -1)
 		{
 		  PyErr_SetString(PyExc_ValueError,
