@@ -38,6 +38,7 @@ class HwVideoCtrlObj;
 class HwEventCtrlObj;
 class HwSavingCtrlObj;
 class HwConfigCtrlObj;
+class HwReconstructionCtrlObj;
 
 class LIMACORE_API HwCap
 {
@@ -54,6 +55,7 @@ public:
 		Event,			// Asynch. event (error) generator
 		Saving,			// Saving capable
 		Config,			// Config management capable
+		Reconstruction,		// Image reconstruction capable
 	};
 	HwCap() : m_type(Undef),m_ctrl_obj(NULL) {}
 	
@@ -77,6 +79,7 @@ public:
 	static Type getTypeFromCtrlObj(HwEventCtrlObj*);
 	static Type getTypeFromCtrlObj(HwSavingCtrlObj*);
 	static Type getTypeFromCtrlObj(HwConfigCtrlObj*);
+	static Type getTypeFromCtrlObj(HwReconstructionCtrlObj*);
 
 	template <class CtrlObj>
 	bool getCtrlObj(CtrlObj *& ctrl_obj) const
