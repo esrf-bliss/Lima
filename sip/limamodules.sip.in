@@ -1,4 +1,4 @@
-%Module lima%NAME 0
+%Module(name=lima%NAME,version=0)
 
 %ModuleHeaderCode
 extern "C" { void lima_import_array();}

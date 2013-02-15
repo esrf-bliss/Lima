@@ -205,7 +205,10 @@ def main():
         # Run SIP to generate the code.
         # module's specification files using the -I flag.
         if platform.system() == 'Windows':
-            plat = 'WIN32_PLATFORM'
+	    if platform.machine() == 'AMD64':
+		plat = 'WIN64_PLATFORM'
+	    else:
+		plat = 'WIN32_PLATFORM'
         else:
             plat = 'POSIX_PLATFORM'
         cmd = " ".join([config.sip_bin,"-g", "-e","-c", '.','-t',plat,
@@ -250,14 +253,17 @@ def main():
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
             makefile.extra_cxxflags = ['/EHsc','/DWITH_CONFIG'] + extra_cxxflags
-            #libpath = 'build\msvc\9.0\*\Debug'
-            libpath = 'build\msvc\9.0\*\Release'
-            #makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
+	    if platform.machine() == 'AMD64':
+		libpath = 'build\msvc\9.0\*\\x64\Release'
+		makefile.extra_cxxflags.append('/DWITHOUT_GSL')
+	    else:
+		libpath = 'build\msvc\9.0\*\Release'
             
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
-            makefile.extra_lib_dirs += [os.path.join(rootName('third-party\libconfig'),'lib','libconfig++.Release')]
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\libconfig'),'lib','libconfig++.Release'))
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\libconfig'),'lib','x64','Release'))
 
             if(modName == 'basler') :
                 makefile.extra_lib_dirs += ['%s\library\cpp\lib\win32_i86' % os.environ['PYLON_GENICAM_ROOT']]

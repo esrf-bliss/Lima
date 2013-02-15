@@ -307,9 +307,10 @@ using namespace lima;
 public:
   SoftOpBpm();
   virtual ~SoftOpBpm();
-    
+%If(!WIN64_PLATFORM)
   Tasks::BpmTask* 	getTask();
   Tasks::BpmManager* 	getManager();
+%End
 };
 
 class SoftOpFlatfieldCorrection

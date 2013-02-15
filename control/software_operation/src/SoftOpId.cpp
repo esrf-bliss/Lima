@@ -82,25 +82,37 @@ void SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
 SoftOpBpm::SoftOpBpm() : 
   SoftOpBaseClass()
 {
+#ifndef WITHOUT_GSL
   m_manager = new Tasks::BpmManager(DEFAULT_HISTORY_SIZE);
   m_task = new Tasks::BpmTask(*m_manager);
+#else
+  throw Exception(Control,Error, "Bpm not available because it wasn't compiled with gsl support ",
+		  __FILE__, __FUNCTION__, __LINE__,NULL);
+#endif
+ 
 }
 
 SoftOpBpm::~SoftOpBpm()
 {
+#ifndef WITHOUT_GSL
   m_task->unref();
   m_manager->unref();
+#endif
 }
 
 
 void SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
 {
+#ifndef WITHOUT_GSL
   aMgr.addSinkTask(stage,m_task);
+#endif
 }
 
 void SoftOpBpm::prepare()
 {
+#ifndef WITHOUT_GSL
   m_manager->resetHistory();
+#endif
 }
 
 //-------------------- FLATFIELDCORRECTION --------------------

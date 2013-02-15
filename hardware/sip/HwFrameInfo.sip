@@ -33,7 +33,8 @@ using namespace lima;
 
 	int acq_frame_nb;
 
-	void *frame_data;
+	void *frame_data
+{
 %GetCode
 	if(!sipCpp->frame_ptr || !sipCpp->frame_dim.isValid())
    		Py_RETURN_NONE;
@@ -95,7 +96,7 @@ if(!sipErr)
 }
 Py_DECREF(tmpObject);
 %End
-
+};
 	Timestamp frame_timestamp;
 	int valid_pixels;
         HwFrameInfoType::OwnerShip buffer_owner_ship;
