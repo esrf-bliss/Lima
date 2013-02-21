@@ -27,6 +27,7 @@
 #include "SimulatorCamera.h"
 #include "SimulatorSyncCtrlObj.h"
 #include "SimulatorDetInfoCtrlObj.h"
+#include "SimulatorShutterCtrlObj.h"
 
 namespace lima
 {
@@ -82,6 +83,7 @@ class LIBSIMULATOR_API Interface : public HwInterface
 	DetInfoCtrlObj 	m_det_info;
 	SyncCtrlObj    	m_sync;
 	BinCtrlObj     	m_bin;
+    ShutterCtrlObj     	m_shutter;
 };
 
 }

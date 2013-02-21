@@ -69,6 +69,11 @@ class LIBSIMULATOR_API Camera
 
 	void reset();
 
+    enum SimuShutterMode {
+		    FRAME,
+		    MANUAL
+	};
+
  private:
 	class SimuThread : public CmdThread
 	{
@@ -80,7 +85,7 @@ class LIBSIMULATOR_API Camera
 		enum { // Cmd 
 			StartAcq = MaxThreadCmd, StopAcq,
 		};
-		
+
 		SimuThread(Camera& simu);
 
 		virtual void start();
