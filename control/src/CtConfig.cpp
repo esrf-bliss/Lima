@@ -83,7 +83,7 @@ CtConfig::~CtConfig()
 {
   try
     {
-      save();
+      m_config->writeFile(m_file_name.c_str());
     }
   catch(...)
     {
