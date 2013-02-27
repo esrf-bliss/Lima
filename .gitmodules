@@ -121,3 +121,6 @@
 [submodule "camera/hamamatsu"]
 	path = camera/hamamatsu
 	url = git://github.com/esrf-bliss/Lima-camera-hamamatsu.git
+[submodule "camera/v4l2"]
+	path = camera/v4l2
+	url = git://github.com/esrf-bliss/Lima-camera-v4l2.git
