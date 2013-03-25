@@ -3,9 +3,9 @@ import platform
 from windowsSipCompilation import getModuleConfig
 from optparse import OptionParser
 
+global module2Installfiles
 module2Installfiles = {}
 if platform.machine() == 'AMD64':
-    global module2Installfiles
     module2Installfiles = {
 	'core' : [('__init__.py','Lima'),
 		  ('common/python/Core.py','Lima'),
@@ -15,9 +15,12 @@ if platform.machine() == 'AMD64':
 		  ('sip/core/limacore.pyd','Lima'),
 		  ('third-party/Processlib/sip/processlib.pyd','Lima'),
 		  ('third-party/Processlib/build/msvc/9.0/libprocesslib/x64/Release/libprocesslib.dll','Lima')],
+	'dexela' : [('camera/dexela/python/Dexela.py','Lima'),
+		    ('camera/dexela/src/DexelaConfig.cfg','Lima'),
+		    ('camera/dexela/build/msvc/9.0/LibDexela/x64/Release/liblimadexela.dll','Lima'),
+		    ('sip/dexela/limadexela.pyd','Lima')],
 	}
 else:
-    global module2Installfiles
     module2Installfiles = {
         'core' : [('__init__.py','Lima'),
                   ('common/python/Core.py','Lima'),
