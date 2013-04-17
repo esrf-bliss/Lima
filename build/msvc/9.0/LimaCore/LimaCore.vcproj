@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="LibLimaCore"
 	ProjectGUID="{A4B703A6-C50F-442F-8952-54FB8EA51FF3}"
 	RootNamespace="LimaCore"
@@ -123,8 +123,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502"
+				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include;&quot;$(YAT_INC)&quot;;&quot;$(NEXUSCPP_INC)&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502;WITH_NXS_SAVING"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -145,10 +145,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib"
+				AdditionalDependencies="libYAT.lib libNexusCPP.lib $(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib"
 				OutputFile="$(InputDir)$(IntDir)\$(ProjectName).dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(YAT_LIB)&quot;;&quot;$(NEXUSCPP_LIB)&quot;;&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release&quot;"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
 				MapExports="true"
@@ -226,6 +226,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\control\src\CtSaving_Edf.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\control\src\CtSaving_Nxs.cpp"
 				>
 			</File>
 			<File
@@ -418,6 +422,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\control\src\CtSaving_Nxs.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\control\include\CtShutter.h"
 				>
 			</File>
@@ -455,6 +463,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\hardware\include\HwDetInfoCtrlObj.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\hardware\include\HwEventCtrlObj.h"
 				>
 			</File>
 			<File

@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="liblimacore.lib"
+				AdditionalDependencies="$(InputDir)..\..\..\..\build\msvc\9.0\LimaCore\Release\liblimacore.lib $(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib"
 				OutputFile="$(InputDir)$(IntDir)\liblimasimulator.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\build\msvc\9.0\LimaCore\Release"
