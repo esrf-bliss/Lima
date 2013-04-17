@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
         <artifactId>Lima</artifactId>
-        <version>1.2.1</version>
+        <version>1.2.2</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -34,11 +34,13 @@
       <dependency>
          <groupId>fr.soleil.lib</groupId>
          <artifactId>Nexus4Tango-${aol}-${library}-${mode}</artifactId>
+         <version>2.12.0</version>
       </dependency>   
       
       <dependency>
          <groupId>fr.soleil.lib</groupId>
          <artifactId>NexusCPP-${aol}-${library}-${mode}</artifactId>
+         <version>1.14.0</version>
       </dependency>
     
     </dependencies>
