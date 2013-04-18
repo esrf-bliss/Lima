@@ -257,6 +257,11 @@ def main():
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
             makefile.extra_lib_dirs += [os.path.join(rootName('third-party\libconfig'),'lib','libconfig++.Release')]
+			
+            libpathCam = 'camera\*\build\msvc\9.0\*\Release'
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpathCam))
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpathCam))
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpathCam))
 
             if(modName == 'basler') :
                 makefile.extra_lib_dirs += ['%s\library\cpp\lib\win32_i86' % os.environ['PYLON_GENICAM_ROOT']]
