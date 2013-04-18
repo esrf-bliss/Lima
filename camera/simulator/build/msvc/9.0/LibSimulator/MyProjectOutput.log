@@ -1,0 +1,125 @@
+Using solution cache file "LibSIMULATOR.sln.cache" for configuration "Release|Win32" and tools version "3.5".
+Build started 19/03/2013 14:15:52.
+Project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln" on node 0 (build target(s)).
+Building with tools version "3.5".
+Target "ValidateSolutionConfiguration" in file "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln.cache" from project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln":
+Task "Error" skipped, due to false condition; (('$(CurrentSolutionConfigurationContents)' == '') and ('$(SkipInvalidConfigurations)' != 'true')) was evaluated as (('<SolutionConfiguration xmlns=""><ProjectConfiguration Project="{3E1490E7-66C0-4E77-9746-0632466FF270}">Release|Win32</ProjectConfiguration><ProjectConfiguration Project="{A4B703A6-C50F-442F-8952-54FB8EA51FF3}">Release|Win32</ProjectConfiguration><ProjectConfiguration Project="{F6556656-D091-43AF-B46F-355F4ABA5DB6}">Release|Win32</ProjectConfiguration></SolutionConfiguration>' == '') and ('' != 'true')).
+Task "Warning" skipped, due to false condition; (('$(CurrentSolutionConfigurationContents)' == '') and ('$(SkipInvalidConfigurations)' == 'true')) was evaluated as (('<SolutionConfiguration xmlns=""><ProjectConfiguration Project="{3E1490E7-66C0-4E77-9746-0632466FF270}">Release|Win32</ProjectConfiguration><ProjectConfiguration Project="{A4B703A6-C50F-442F-8952-54FB8EA51FF3}">Release|Win32</ProjectConfiguration><ProjectConfiguration Project="{F6556656-D091-43AF-B46F-355F4ABA5DB6}">Release|Win32</ProjectConfiguration></SolutionConfiguration>' == '') and ('' == 'true')).
+Using "Message" task from assembly "Microsoft.Build.Tasks.v3.5, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "Message"
+  Building solution configuration "Release|Win32".
+Done executing task "Message".
+Done building target "ValidateSolutionConfiguration" in project "LibSIMULATOR.sln".
+Target "ValidateToolsVersions" in file "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln.cache" from project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln":
+Task "Error" skipped, due to false condition; ('$(MSBuildToolsVersion)' == '2.0' and ('$(ProjectToolsVersion)' != '2.0' and '$(ProjectToolsVersion)' != '')) was evaluated as ('3.5' == '2.0' and ('' != '2.0' and '' != '')).
+Done building target "ValidateToolsVersions" in project "LibSIMULATOR.sln".
+Target "Build" in file "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln.cache" from project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln":
+Task "MSBuild" skipped, due to false condition; (@(BuildLevel0) != '') was evaluated as ( != '').
+Task "Message" skipped, due to false condition; (@(SkipLevel0) != '') was evaluated as ( != '').
+Task "Warning" skipped, due to false condition; (@(MissingConfigLevel0) != '') was evaluated as ( != '').
+Using "CallTarget" task from assembly "Microsoft.Build.Tasks.v3.5, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "CallTarget"
+Target "ValidateSolutionConfiguration" skipped. Previously built successfully.
+Target "ValidateToolsVersions" skipped. Previously built successfully.
+Target "libprocesslib" in file "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln.cache" from project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln":
+Task "VCBuild" skipped, due to false condition; ( ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ) was evaluated as ( ('Release' == 'Debug') and ('Win32' == 'Win32') ).
+Using "VCBuild" task from assembly "Microsoft.Build.Tasks.v3.5, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "VCBuild"
+
+  Localisation de vcbuild.exe : trouvé dans "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe".
+  Command:
+  C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\..\..\..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\libprocesslib.vcproj "Release|Win32" 
+  The "VCBuild" task is using "VCBuild.exe" from "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe".
+  Générateur de projet Microsoft (R) Visual C++ - Version de ligne de commande 9.00.30729
+  Copyright (C) Microsoft Corporation. All rights reserved.
+  
+  Générer démarrée : Projet : libprocesslib, Configuration : Release|Win32
+  libprocesslib - à jour
+
+Done executing task "VCBuild".
+Done building target "libprocesslib" in project "LibSIMULATOR.sln".
+Target "ValidateSolutionConfiguration" skipped. Previously built successfully.
+Target "ValidateToolsVersions" skipped. Previously built successfully.
+Target "LibLimaCore" in file "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln.cache" from project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln":
+Task "VCBuild" skipped, due to false condition; ( ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ) was evaluated as ( ('Release' == 'Debug') and ('Win32' == 'Win32') ).
+Task "VCBuild"
+
+  Localisation de vcbuild.exe : trouvé dans "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe".
+  Command:
+  C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\..\..\..\..\..\..\build\msvc\9.0\LimaCore\LimaCore.vcproj "Release|Win32" 
+  The "VCBuild" task is using "VCBuild.exe" from "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe".
+  Générateur de projet Microsoft (R) Visual C++ - Version de ligne de commande 9.00.30729
+  Copyright (C) Microsoft Corporation. All rights reserved.
+  
+  Générer démarrée : Projet : LibLimaCore, Configuration : Release|Win32
+  LibLimaCore - à jour
+
+Done executing task "VCBuild".
+Done building target "LibLimaCore" in project "LibSIMULATOR.sln".
+Done executing task "CallTarget".
+Task "MSBuild" skipped, due to false condition; (@(BuildLevel1) != '') was evaluated as ( != '').
+Task "Message" skipped, due to false condition; (@(SkipLevel1) != '') was evaluated as ( != '').
+Task "Warning" skipped, due to false condition; (@(MissingConfigLevel1) != '') was evaluated as ( != '').
+Task "CallTarget"
+Target "ValidateSolutionConfiguration" skipped. Previously built successfully.
+Target "ValidateToolsVersions" skipped. Previously built successfully.
+Target "libprocesslib" skipped. Previously built successfully.
+Target "LibLimaCore" skipped. Previously built successfully.
+Target "LibSimulator" in file "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln.cache" from project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln":
+Task "ResolveVCProjectOutput" skipped, due to false condition; ( ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ) was evaluated as ( ('Release' == 'Debug') and ('Win32' == 'Win32') ).
+Using "CreateItem" task from assembly "Microsoft.Build.Tasks.v3.5, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "CreateItem"
+Done executing task "CreateItem".
+Task "ResolveVCProjectOutput" skipped, due to false condition; ( ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ) was evaluated as ( ('Release' == 'Debug') and ('Win32' == 'Win32') ).
+Task "CreateItem"
+Done executing task "CreateItem".
+Task "CreateTemporaryVCProject" skipped, due to false condition; ( ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ) was evaluated as ( ('Release' == 'Debug') and ('Win32' == 'Win32') ).
+Task "VCBuild" skipped, due to false condition; ( ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ) was evaluated as ( ('Release' == 'Debug') and ('Win32' == 'Win32') ).
+Task "Delete" skipped, due to false condition; ( ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ) was evaluated as ( ('Release' == 'Debug') and ('Win32' == 'Win32') ).
+Using "ResolveVCProjectOutput" task from assembly "Microsoft.Build.Tasks.v3.5, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "ResolveVCProjectOutput"
+  Résolution de la référence du projet VC "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\..\..\..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\libprocesslib.vcproj".
+  La référence du projet VC "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\..\..\..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\libprocesslib.vcproj" a été interprétée comme "d:\Lima\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib".
+Done executing task "ResolveVCProjectOutput".
+Task "CreateItem"
+Done executing task "CreateItem".
+Task "ResolveVCProjectOutput"
+  Résolution de la référence du projet VC "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\..\..\..\..\..\..\build\msvc\9.0\LimaCore\LimaCore.vcproj".
+  La référence du projet VC "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\..\..\..\..\..\..\build\msvc\9.0\LimaCore\LimaCore.vcproj" a été interprétée comme "d:\Lima\build\msvc\9.0\LimaCore\Release\LibLimaCore.lib".
+Done executing task "ResolveVCProjectOutput".
+Task "CreateItem"
+Done executing task "CreateItem".
+Using "CreateTemporaryVCProject" task from assembly "Microsoft.Build.Tasks.v3.5, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "CreateTemporaryVCProject"
+  MSBuild crée un fichier projet VC temporaire "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSimulator.tmp_Release_Win32.vcproj" pour le projet "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSimulator.vcproj" en remplaçant les références de projet par des références d'assembly. Cette étape est nécessaire pour résoudre les références de projet contenues dans ce projet. Pour éviter cette étape à l'avenir, utilisez des références de fichier et non des références de projet dans ce projet.
+Done executing task "CreateTemporaryVCProject".
+Task "VCBuild"
+
+  Localisation de vcbuild.exe : trouvé dans "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe".
+  Command:
+  C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSimulator.tmp_Release_Win32.vcproj "Release|Win32" 
+  The "VCBuild" task is using "VCBuild.exe" from "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\..\..\vc\vcpackages\vcbuild.exe".
+  Générateur de projet Microsoft (R) Visual C++ - Version de ligne de commande 9.00.30729
+  Copyright (C) Microsoft Corporation. All rights reserved.
+  
+  Générer démarrée : Projet : LibSimulator, Configuration : Release|Win32
+  LibSimulator - à jour
+
+Done executing task "VCBuild".
+Using "Delete" task from assembly "Microsoft.Build.Tasks.v3.5, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
+Task "Delete"
+  Suppression du fichier "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSimulator.tmp_Release_Win32.vcproj".
+  Commande :
+  del "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSimulator.tmp_Release_Win32.vcproj"
+Done executing task "Delete".
+Done building target "LibSimulator" in project "LibSIMULATOR.sln".
+Done executing task "CallTarget".
+Done building target "Build" in project "LibSIMULATOR.sln".
+Done Building Project "D:\Lima\camera\simulator\build\msvc\9.0\LibSimulator\LibSIMULATOR.sln" (build target(s)).
+
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.75
