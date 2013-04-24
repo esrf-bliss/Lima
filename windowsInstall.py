@@ -103,7 +103,8 @@ if __name__ == '__main__':
                     module_list.append(key)
             module_list += option.module_list
             module_list += ["core"]
-            
+            module_list += ["tango-core"]
+
         for moduleName in set(module_list) :
             filesList = module2Installfiles.get(moduleName,None)
             if filesList:
