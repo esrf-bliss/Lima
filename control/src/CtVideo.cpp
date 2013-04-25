@@ -155,6 +155,80 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
     }
   return true;
 }
+// --- _ConfigHandler
+class CtVideo::_ConfigHandler : public CtConfig::ModuleTypeCallback
+{
+public:
+  _ConfigHandler(CtVideo& video):
+    CtConfig::ModuleTypeCallback("Video"),
+    m_video(video) {}
+  virtual void store(Setting& video_setting)
+  {
+    CtVideo::Parameters pars;
+    m_video.getParameters(pars);
+
+    video_setting.set("live",pars.live);
+    video_setting.set("exposure",pars.exposure);
+    video_setting.set("gain",pars.gain);
+    video_setting.set("mode",convert_2_string(pars.mode));
+
+    // --- Roi
+    Setting roi_setting = video_setting.addChild("roi");
+
+    const Point& topleft = pars.roi.getTopLeft();
+    roi_setting.set("x",topleft.x);
+    roi_setting.set("y",topleft.y);
+
+    const Size& roiSize = pars.roi.getSize();
+    roi_setting.set("width",roiSize.getWidth());
+    roi_setting.set("height",roiSize.getHeight());
+
+    // --- Bin
+    Setting bin_setting = video_setting.addChild("bin");
+    
+    bin_setting.set("x",pars.bin.getX());
+    bin_setting.set("y",pars.bin.getY());
+  }
+  virtual void restore(const Setting& video_setting)
+  {
+    CtVideo::Parameters pars;
+    m_video.getParameters(pars);
+
+    video_setting.get("live",pars.live);
+    video_setting.get("exposure",pars.exposure);
+    video_setting.get("gain",pars.gain);
+
+    std::string strmode;
+    if(video_setting.get("mode",strmode))
+      convert_from_string(strmode,pars.mode);
+
+    // --- Bin
+    Setting bin_setting;
+    if(video_setting.getChild("bin",bin_setting))
+      {
+	int x,y;
+	if(bin_setting.get("x",x) &&
+	   bin_setting.get("y",y))
+	  pars.bin = Bin(x,y);
+      }
+    // --- Roi
+    Setting roi_setting;
+    if(video_setting.getChild("roi",roi_setting))
+      {
+	Point topleft;
+	int width,height;
+	if(roi_setting.get("x",topleft.x) &&
+	   roi_setting.get("y",topleft.y) &&
+	   roi_setting.get("width",width) &&
+	   roi_setting.get("height",height))
+	  pars.roi = Roi(topleft.x,topleft.y,
+			 width,height);
+      }
+    m_video.setParameters(pars);
+  }
+private:
+  CtVideo& m_video;
+};
 // --- CtVideo::Image
 CtVideo::Image::Image() : m_video(NULL),m_image(NULL) {}
 
@@ -305,8 +379,13 @@ void CtVideo::setParameters(const Parameters &pars)
   if(m_pars.roi != pars.roi) 			m_pars_modify_mask |= PARMODIFYMASK_ROI;
   if(m_pars.bin != pars.bin) 			m_pars_modify_mask |= PARMODIFYMASK_BIN;
 
+  bool previousLive = m_pars.live;
   m_pars = pars;
+  m_pars.live = previousLive;
   _apply_params(aLock);
+  aLock.unlock();
+
+  _setLive(pars.live);
 }
 void CtVideo::getParameters(Parameters &pars) const
 {
@@ -666,6 +745,8 @@ void CtVideo::_read_hw_params()
 
 void CtVideo::_check_video_mode(VideoMode aMode)
 {
+  DEB_MEMBER_FUNCT();
+
   std::list<VideoMode> aModeList;
   getSupportedVideoMode(aModeList);
   bool findMode = false;
@@ -674,7 +755,10 @@ void CtVideo::_check_video_mode(VideoMode aMode)
     findMode = aMode == *i;
 
   if(!findMode)
-    throw LIMA_CTL_EXC(Error,"Video mode is not available for this camera");
+    {
+      THROW_CTL_ERROR(InvalidValue) << "Video mode: " <<
+	DEB_VAR1(aMode) << " is not available for this camera";
+    }
 }
 
 /** @brief an Acquisition will start so,
@@ -706,6 +790,12 @@ void CtVideo::_prepareAcq()
   m_read_image->frameNumber = -1;
   m_write_image->frameNumber = -1;
 }
+
+CtConfig::ModuleTypeCallback* CtVideo::_getConfigHandler()
+{
+  return new _ConfigHandler(*this);
+}
+
 //============================================================================
 //			 CtVideo::Parameters
 //============================================================================

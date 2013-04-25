@@ -56,7 +56,7 @@ create-links	= \
 # LIMA - CORE
 ############################
 
-CORE_LDFLAGS	:= -L../third-party/Processlib/build
+CORE_LDFLAGS	:= -L../third-party/Processlib/build -Wl,-rpath=$(shell pwd)/../third-party/Processlib/build
 CORE_LDLIBS	:= -lprocesslib -lrt
 
 ifneq ($(COMPILE_CBF_SAVING),0)
@@ -71,6 +71,10 @@ endif
 
 ifneq ($(COMPILE_EDFGZ_SAVING),0)
 CORE_LDLIBS += -lz
+endif
+
+ifneq ($(COMPILE_CONFIG),0)
+CORE_LDLIBS += -L../third-party/libconfig/lib/.libs -Wl,-rpath=$(shell pwd)/../third-party/libconfig/lib/.libs  -lconfig++
 endif
 
 ifneq ($(COMPILE_CORE),0)
@@ -438,6 +442,29 @@ $(call lib-full,$(pilatus-name),$(pilatus-ver)): $(pilatus-objs)
 	$(call create-links,$(pilatus-name),$(pilatus-ver))
 
 build_targets	+= $(call lib-full,$(pilatus-name),$(pilatus-ver))
+
+endif
+
+############################
+# LIMA - POINTGREY
+############################
+ifneq ($(COMPILE_POINTGREY),0)
+
+POINTGREY_LDFLAGS	:= $(LDFLAGS)
+POINTGREY_LDLIBS	:= $(LDLIBS) -lflycapture
+
+pointgrey-name	:= pointgrey
+pointgrey-objs	:= ../camera/pointgrey/src/PointGrey.o
+pointgrey-ver	:= ../camera/pointgrey/VERSION
+pointgrey-flags	:= $(POINTGREY_LDFLAGS)
+pointgrey-deps	:= $(POINTGREY_LDLIBS)
+
+$(call lib-full,$(pointgrey-name),$(pointgrey-ver)): $(pointgrey-objs)
+	$(call compile-lib,$(pointgrey-name),$(pointgrey-ver),\
+			   $(pointgrey-flags),$(pointgrey-deps),$@,$+)
+	$(call create-links,$(pointgrey-name),$(pointgrey-ver))
+
+build_targets	+= $(call lib-full,$(pointgrey-name),$(pointgrey-ver))
 
 endif
 

@@ -19,6 +19,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+#include <algorithm>
+
+#include "Debug.h"
+#include "Exceptions.h"
 #include "Constants.h"
 
 using namespace lima;
@@ -34,7 +38,7 @@ ostream& lima::operator <<(ostream& os, AlignDir align_dir)
 	return os << name;
 }
 
-ostream& lima::operator <<(ostream& os, ImageType image_type)
+const char* lima::convert_2_string(ImageType image_type)
 {
 	const char *name = "Unknown";
 	switch (image_type) {
@@ -51,21 +55,74 @@ ostream& lima::operator <<(ostream& os, ImageType image_type)
 	case Bpp32:		name = "Bpp32";		break;
 	case Bpp32S:		name = "Bpp32S";	break;
 	}
-	return os << name;
+	return name;
+}
+void lima::convert_from_string(const std::string& val,
+			       ImageType& image_type)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
+  
+  if(buffer == "bpp8") 		image_type = Bpp8;
+  else if(buffer == "bpp8s") 	image_type = Bpp8S;
+  else if(buffer == "bpp10") 	image_type = Bpp10;
+  else if(buffer == "bpp10s") 	image_type = Bpp10S;
+  else if(buffer == "bpp12") 	image_type = Bpp12;
+  else if(buffer == "bpp12s") 	image_type = Bpp12S;
+  else if(buffer == "bpp14") 	image_type = Bpp14;
+  else if(buffer == "bpp14s") 	image_type = Bpp14S;
+  else if(buffer == "bpp16") 	image_type = Bpp16;
+  else if(buffer == "bpp16s") 	image_type = Bpp16S;
+  else if(buffer == "bpp32") 	image_type = Bpp32;
+  else if(buffer == "bpp32s") 	image_type = Bpp32S;
+  else
+    {
+      std::ostringstream msg;
+      msg << "ImageType can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Common,InvalidValue,msg.str());
+    }
 }
 
-ostream& lima::operator <<(ostream& os, AcqMode acq_mode)
+ostream& lima::operator <<(ostream& os, ImageType image_type)
 {
-	const char *name = "Unknown";
+	return os << convert_2_string(image_type);
+}
+
+const char* lima::convert_2_string(AcqMode acq_mode)
+{
+  	const char *name = "Unknown";
 	switch (acq_mode) {
 	case Single:		name = "Single";	break;
 	case Accumulation:	name = "Accumulation";	break;
 	case Concatenation:	name = "Concatenation";	break;
 	}
-	return os << name;
+	return name;
+}
+void lima::convert_from_string(const std::string& val,
+			       AcqMode& mode)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
+
+  if(buffer == "single") 		mode = Single;
+  else if(buffer == "accumulation") 	mode = Accumulation;
+  else if(buffer == "concatenation") 	mode = Concatenation;
+  else
+    {
+      std::ostringstream msg;
+      msg << "AcqMode can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Common,InvalidValue,msg.str());
+    }
+
+}
+ostream& lima::operator <<(ostream& os, AcqMode acq_mode)
+{
+	return os << convert_2_string(acq_mode);
 }
 
-ostream& lima::operator <<(ostream& os, TrigMode trig_mode)
+const char* lima::convert_2_string(TrigMode trig_mode)
 {
 	const char *name = "Unknown";
 	switch (trig_mode) {
@@ -77,7 +134,33 @@ ostream& lima::operator <<(ostream& os, TrigMode trig_mode)
 	case ExtStartStop:	name = "ExtStartStop";	break;
 	case ExtTrigReadout:	name = "ExtTrigReadout";break;
 	}
-	return os << name;
+	return name;
+}
+void lima::convert_from_string(const std::string& val,
+			       TrigMode& trig_mode)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
+
+  if(buffer == "inttrig") 		trig_mode = IntTrig;
+  else if(buffer == "inttrigmult") 	trig_mode = IntTrigMult;
+  else if(buffer == "exttrigsingle") 	trig_mode = ExtTrigSingle;
+  else if(buffer == "exttrigmult") 	trig_mode = ExtTrigMult;
+  else if(buffer == "extgate") 		trig_mode = ExtGate;
+  else if(buffer == "extstartstop") 	trig_mode = ExtStartStop;
+  else if(buffer == "exttrigreadout") 	trig_mode = ExtTrigReadout;
+  else
+    {
+      std::ostringstream msg;
+      msg << "TrigMode can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Common,InvalidValue,msg.str());
+    }
+
+}
+ostream& lima::operator <<(ostream& os, TrigMode trig_mode)
+{
+	return os << convert_2_string(trig_mode);
 }
 
 ostream& lima::operator <<(ostream& os, BufferMode buffer_mode)
@@ -90,7 +173,7 @@ ostream& lima::operator <<(ostream& os, BufferMode buffer_mode)
 	return os << name;
 }
 
-ostream& lima::operator <<(ostream& os,ShutterMode shutter_mode)
+const char* lima::convert_2_string(ShutterMode shutter_mode)
 {
   const char *name;
   switch(shutter_mode)
@@ -100,7 +183,27 @@ ostream& lima::operator <<(ostream& os,ShutterMode shutter_mode)
     case ShutterAutoSequence: 	name = "Auto sequence";	break;
     default: 			name = "Unknown";	break;
     }
-  return os << name;
+  return name;
+}
+void lima::convert_from_string(const std::string& val,
+			       ShutterMode& shutter_mode)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
+  if(buffer == "manual") 		shutter_mode = ShutterManual;
+  else if(buffer == "auto frame") 	shutter_mode = ShutterAutoFrame;
+  else if(buffer == "auto sequence") 	shutter_mode = ShutterAutoSequence;
+  else
+    {
+      std::ostringstream msg;
+      msg << "TrigMode can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Common,InvalidValue,msg.str());
+    }
+}
+ostream& lima::operator <<(ostream& os,ShutterMode shutter_mode)
+{
+  return os << convert_2_string(shutter_mode);
 }
 
 ostream& lima::operator <<(ostream& os, AcqStatus acq_status)
@@ -161,7 +264,7 @@ DetStatus& lima::operator |=(DetStatus& s1, DetStatus  s2)
 	return s1 = s1 | s2;
 }
 
-ostream& lima::operator <<(ostream& os, VideoMode aVideoMode)
+const char* lima::convert_2_string(VideoMode aVideoMode)
 {
   const char *aHumanReadablePt;
   switch(aVideoMode)
@@ -184,10 +287,43 @@ ostream& lima::operator <<(ostream& os, VideoMode aVideoMode)
     case YUV444: 	aHumanReadablePt = "YUV444";		break;
     default: 		aHumanReadablePt = "Unknown";		break;
     }
-  return os << aHumanReadablePt;
+  return aHumanReadablePt;
 }
+void lima::convert_from_string(const std::string& val,
+			       VideoMode& video_mode)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
 
-ostream& lima::operator <<(ostream& os,RotationMode rotationMode)
+  if(buffer == "y8") 			video_mode = Y8;
+  else if(buffer == "y16") 		video_mode = Y16;
+  else if(buffer == "y32") 		video_mode = Y32;
+  else if(buffer == "y64") 		video_mode = Y64;
+  else if(buffer == "rgb555") 		video_mode = RGB555;
+  else if(buffer == "rgb565") 		video_mode = RGB565;
+  else if(buffer == "rgb24") 		video_mode = RGB24;
+  else if(buffer == "rgb32") 		video_mode = RGB32;
+  else if(buffer == "bgr24") 		video_mode = BGR24;
+  else if(buffer == "bgr32") 		video_mode = BGR32;
+  else if(buffer == "bayer_rg8") 	video_mode = BAYER_RG8;
+  else if(buffer == "bayer_rg16") 	video_mode = BAYER_RG16;
+  else if(buffer == "i420") 		video_mode = I420;
+  else if(buffer == "yuv411") 		video_mode = YUV411;
+  else if(buffer == "yuv422") 		video_mode = YUV422;
+  else if(buffer == "yuv444") 		video_mode = YUV444;
+  else
+    {
+      std::ostringstream msg;
+      msg << "VideoMode can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Common,InvalidValue,msg.str());
+    }
+}
+ostream& lima::operator <<(ostream& os, VideoMode aVideoMode)
+{
+  return os << convert_2_string(aVideoMode);
+}
+const char* lima::convert_2_string(RotationMode rotationMode)
 {
   const char *aHumanReadablePt;
   switch(rotationMode)
@@ -198,5 +334,28 @@ ostream& lima::operator <<(ostream& os,RotationMode rotationMode)
     case Rotation_270: 	aHumanReadablePt = "Rotation_270";	break;
     default: 		aHumanReadablePt = "Unknown";		break;
     }
-  return os << aHumanReadablePt;
+  return aHumanReadablePt;
+}
+void lima::convert_from_string(const std::string& val,
+			       RotationMode& rotationMode)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
+
+  if(buffer == "rotation_0") 		rotationMode = Rotation_0;
+  else if(buffer == "rotation_90") 	rotationMode = Rotation_90;
+  else if(buffer == "rotation_180") 	rotationMode = Rotation_180;
+  else if(buffer == "rotation_270") 	rotationMode = Rotation_270;
+  else
+    {
+      std::ostringstream msg;
+      msg << "RotationMode can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Common,InvalidValue,msg.str());
+    }
+
+}
+ostream& lima::operator <<(ostream& os,RotationMode rotationMode)
+{
+  return os << convert_2_string(rotationMode);
 }

@@ -45,6 +45,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('marccd',           [os.path.join('camera','marccd')]),
            ('photonicscience',  [os.path.join('camera','photonicscience')]),
            ('pilatus',          [os.path.join('camera','pilatus')]),
+           ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -144,8 +145,13 @@ def main():
             extraIncludes += [espia_incl]
             
         if(modName == 'basler') :
-            extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
-            extra_cxxflags += ['-DUSE_GIGE']
+            if platform.system() != 'Windows':
+                extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
+                extra_cxxflags += ['-DUSE_GIGE']
+            else:
+                extraIncludes += ['%s\library\cpp\include' % os.environ['PYLON_GENICAM_ROOT']]
+                extraIncludes += ['%s\include' % os.environ['PYLON_ROOT']]
+                extra_cxxflags += ['-DUSE_GIGE']
         elif(modName == 'ueye') and platform.system() != 'Windows':
             extra_cxxflags += ['-D__LINUX__']
         elif(modName == 'andor') :
@@ -157,6 +163,8 @@ def main():
         elif(modName == 'marccd'):
 	    extraIncludes += ['../../../include/DiffractionImage']
 	    extraIncludes += ['../../third-party/yat/include'] 
+        elif(modName == 'pointgrey'):
+	    extraIncludes += ['/usr/include/flycapture']
 
         extraIncludes += findModuleIncludes(modName)
         
@@ -237,10 +245,10 @@ def main():
         makefile.extra_include_dirs = extraIncludes
 
         if platform.system() == 'Windows':
-            makefile.extra_libs = ['liblima%s' % modName,'libprocesslib']
+            makefile.extra_libs = ['liblima%s' % modName,'libprocesslib','libconfig++']
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
-            makefile.extra_cxxflags = ['/EHsc'] + extra_cxxflags
+            makefile.extra_cxxflags = ['/EHsc','/DWITH_CONFIG'] + extra_cxxflags
             #libpath = 'build\msvc\9.0\*\Debug'
             libpath = 'build\msvc\9.0\*\Release'
             #makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
@@ -248,12 +256,16 @@ def main():
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
+            makefile.extra_lib_dirs += [os.path.join(rootName('third-party\libconfig'),'lib','libconfig++.Release')]
 
+            if(modName == 'basler') :
+                makefile.extra_lib_dirs += ['%s\library\cpp\lib\win32_i86' % os.environ['PYLON_GENICAM_ROOT']]
+                makefile.extra_lib_dirs += ['%s\lib\Win32' % os.environ['PYLON_ROOT']]
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
-            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE'] + extra_cxxflags
+            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE','-DWITH_CONFIG'] + extra_cxxflags
             makefile.extra_lib_dirs = [rootName('build')]
-        makefile.extra_cxxflags.extend(['-I' + x for x in extraIncludes])
+        makefile.extra_cxxflags.extend(['-I"%s"' % x for x in extraIncludes])
         
         # Add the library we are wrapping.  The name doesn't include any 
         # platform specific prefixes or extensions (e.g. the "lib" prefix on 

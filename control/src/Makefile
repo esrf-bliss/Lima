@@ -87,6 +87,15 @@ ct-objs += CtSpsImage.o  ../../third-party/Sps/Src/sps.o
 CXXFLAGS += -DWITH_SPS_IMAGE
 endif
 
+ifndef COMPILE_CONFIG
+COMPILE_CONFIG = 0
+endif
+
+ifneq ($(COMPILE_CONFIG),0)
+ct-objs += CtConfig.o
+CXXFLAGS += -DWITH_CONFIG -I../../third-party/libconfig/lib
+endif
+
 SRCS = $(ct-objs:.o=.cpp)
 
 CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread -g

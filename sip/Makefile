@@ -83,6 +83,10 @@ ifneq ($(COMPILE_PILATUS), 0)
 sip-modules += pilatus
 endif
 
+ifneq ($(COMPILE_POINTGREY), 0)
+sip-modules += pointgrey
+endif
+
 all:	src
 
 src:

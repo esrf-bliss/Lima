@@ -109,6 +109,7 @@ using namespace lima;
     CtAccumulation* accumulation();
     CtVideo* video();
     CtEvent* event();
+    CtConfig* config();
 
     SoftOpExternalMgr* externalOperation();
     

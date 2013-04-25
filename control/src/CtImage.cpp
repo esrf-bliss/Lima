@@ -414,7 +414,113 @@ void CtMaxImageSizeCB::maxImageSizeChanged(const Size& size, ImageType
 {
 	m_ct->_setMaxImage(size, image_type);
 }
+// ----------------------------------------------------------------------------
+// CLASS _ConfigHandler
+// ----------------------------------------------------------------------------
+class CtImage::_ConfigHandler : public CtConfig::ModuleTypeCallback
+{
+public:
+  _ConfigHandler(CtImage& image) :
+    CtConfig::ModuleTypeCallback("Image"),
+    m_image(image)
+  {}
+  virtual void store(Setting& image_setting)
+  {
+    CtImage::ImageOpMode imageOpMode;
+    m_image.getMode(imageOpMode);
+    image_setting.set("imageOpMode",convert_2_string(imageOpMode));
 
+    // --- Roi
+    Roi roi;
+    m_image.getRoi(roi);
+    Setting roi_setting = image_setting.addChild("roi");
+
+    const Point& topleft = roi.getTopLeft();
+    roi_setting.set("x",topleft.x);
+    roi_setting.set("y",topleft.y);
+
+    const Size& roiSize = roi.getSize();
+    roi_setting.set("width",roiSize.getWidth());
+    roi_setting.set("height",roiSize.getHeight());
+  
+    // --- Bin
+    Bin bin;
+    m_image.getBin(bin);
+    Setting bin_setting = image_setting.addChild("bin");
+
+    bin_setting.set("x",bin.getX());
+    bin_setting.set("y",bin.getY());
+
+    // --- Flip
+    Flip flip;
+    m_image.getFlip(flip);
+    Setting flip_setting = image_setting.addChild("flip");
+
+    flip_setting.set("x",flip.x);
+    flip_setting.set("y",flip.y);
+
+    // --- Rotation
+    RotationMode rMode;
+    m_image.getRotation(rMode);
+    image_setting.set("rotation",convert_2_string(rMode));
+  }
+  virtual void restore(const Setting& image_setting)
+  {
+    std::string strimageOpMode;
+    if(image_setting.get("imageOpMode",strimageOpMode))
+      {
+	CtImage::ImageOpMode imageOpMode;
+	convert_from_string(strimageOpMode,imageOpMode);
+	m_image.setMode(imageOpMode);
+      }
+    // --- Flip
+    Setting flip_setting;
+    if(image_setting.getChild("flip",flip_setting))
+      {
+	Flip flip;
+	if(flip_setting.get("x",flip.x) &&
+	   flip_setting.get("y",flip.y))
+	  m_image.setFlip(flip);
+      }
+    // --- Bin
+    Setting bin_setting;
+    if(image_setting.getChild("bin",bin_setting))
+      {
+	int x,y;
+	if(bin_setting.get("x",x) &&
+	   bin_setting.get("y",y))
+	  {
+	    Bin aBin(x,y);
+	    m_image.setBin(aBin);
+	  }
+      }
+    // --- Roi
+    Setting roi_setting;
+    if(image_setting.getChild("roi",roi_setting))
+      {
+	Point topleft;
+	int width,height;
+	if(roi_setting.get("x",topleft.x) &&
+	   roi_setting.get("y",topleft.y) &&
+	   roi_setting.get("width",width) &&
+	   roi_setting.get("height",height))
+	  {
+	    Roi aRoi(topleft.x,topleft.y,width,height);
+	    m_image.setRoi(aRoi);
+	  }
+      }
+    // --- Rotation
+    std::string strrMode;
+    if(image_setting.get("rotation",strrMode))
+      {
+	RotationMode rMode;
+	convert_from_string(strrMode,rMode);
+	m_image.setRotation(rMode);
+      }
+  }
+private:
+  CtImage& m_image;
+};
 // ----------------------------------------------------------------------------
 // CLASS CtImage
 // ----------------------------------------------------------------------------
@@ -911,4 +1017,9 @@ bool CtImage::applySoft(SoftOpInternalMgr *op)
 	DEB_RETURN() << sw_is_active;
 
 	return sw_is_active;
+}
+
+CtConfig::ModuleTypeCallback* CtImage::_getConfigHandler()
+{
+  return new _ConfigHandler(*this);
 }

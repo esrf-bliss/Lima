@@ -27,10 +27,12 @@
 #include <string>
 #include <fstream>
 #include <ios>
+#include <algorithm>
 
 #include "LimaCompatibility.h"
 #include "ThreadUtils.h"
 #include "CtControl.h"
+#include "CtConfig.h"
 #include "HwSavingCtrlObj.h"
 
 struct Data;
@@ -172,8 +174,8 @@ namespace lima {
     void resetInternalCommonHeader();
     void addToInternalCommonHeader(const HeaderValue& value);
     template<class T>
-    void addToInternalCommonHeader(const std::string &key,
-				   const T&);
+      void addToInternalCommonHeader(const std::string &key,
+				     const T&);
     // --- statistic
 
     void getWriteTimeStatistic(std::list<double>&, int stream_idx=0) const;
@@ -345,7 +347,7 @@ namespace lima {
     HwSavingCtrlObj*		m_hwsaving;
     _NewFrameSaveCBK*		m_new_frame_save_cbk;
     ManagedMode			m_managed_mode;	///< two option either harware (manage by SDK,hardware) or software (Lima core)
-    std::string			m_specific_hardware_format;
+      std::string			m_specific_hardware_format;
 
       Stream& getStream(int stream_idx)
 	{ bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
@@ -393,12 +395,15 @@ namespace lima {
       bool _newFrameWrite(int);
       bool _checkHwFileFormat(const std::string&) const;
       void _ReadImage(Data&,int framenb);
+
+      class _ConfigHandler;
+      CtConfig::ModuleTypeCallback* _getConfigHandler();
   };
 
-  inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
+  inline const char* convert_2_string(CtSaving::FileFormat fileFormat)
     {
       const char *aFileFormatHumanPt;
-      switch(params.fileFormat)
+      switch(fileFormat)
 	{
 	case CtSaving::EDF:
 	  aFileFormatHumanPt = "EDF";break;
@@ -413,9 +418,33 @@ namespace lima {
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
+      return aFileFormatHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::FileFormat& fileFormat)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
 
+      if(buffer == "edf") 		fileFormat = CtSaving::EDF;
+      else if(buffer == "cbf") 		fileFormat = CtSaving::CBFFormat;
+      else if(buffer == "nxs") 		fileFormat = CtSaving::NXS;
+      else if(buffer == "fits")		fileFormat = CtSaving::FITS;
+      else if(buffer == "edf gzip") 	fileFormat = CtSaving::EDFGZ;
+      else if(buffer == "raw")		fileFormat = CtSaving::RAW;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "FileFormat can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+
+    }
+  inline const char* convert_2_string(CtSaving::SavingMode savingMode)
+    {
       const char *aSavingModeHumanPt;
-      switch(params.savingMode)
+      switch(savingMode)
 	{
 	case CtSaving::AutoFrame:
 	  aSavingModeHumanPt = "Auto frame";break;
@@ -424,9 +453,30 @@ namespace lima {
 	default: //	Manual
 	  aSavingModeHumanPt = "Manual";break;
 	}
+      return aSavingModeHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::SavingMode& savingMode)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
 
+      if(buffer == "auto frame") 	savingMode = CtSaving::AutoFrame;
+      else if(buffer == "auto header") 	savingMode = CtSaving::AutoHeader;
+      else if(buffer == "manual") 	savingMode = CtSaving::Manual;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "SavingMode can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+
+    }
+  inline const char* convert_2_string(CtSaving::OverwritePolicy overwritePolicy)
+    {
       const char *anOverwritePolicyHumanPt;
-      switch(params.overwritePolicy)
+      switch(overwritePolicy)
 	{
 	case CtSaving::Overwrite:
 	  anOverwritePolicyHumanPt = "Overwrite";break;
@@ -435,6 +485,59 @@ namespace lima {
 	default:		// Abort
 	  anOverwritePolicyHumanPt = "Abort";break;
 	}
+      return anOverwritePolicyHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::OverwritePolicy& overwritePolicy)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
+
+      if(buffer == "overwrite") 		overwritePolicy = CtSaving::Overwrite;
+      else if(buffer == "append") 	overwritePolicy = CtSaving::Append;
+      else if(buffer == "abort") 	overwritePolicy = CtSaving::Abort;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "OverwritePolicy can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+    }
+  inline const char* convert_2_string(CtSaving::ManagedMode manageMode)
+    {
+      const char* aManagedModeHumanPt;
+      switch(manageMode)
+	{
+	case CtSaving::Hardware:
+	  aManagedModeHumanPt = "Hardware";break;
+	default:
+	  aManagedModeHumanPt = "Software";break;
+	}
+      return aManagedModeHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::ManagedMode& manageMode)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
+
+      if(buffer == "hardware") 		manageMode = CtSaving::Hardware;
+      else if(buffer == "software") 	manageMode = CtSaving::Software;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "ManagedMode can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+
+    }
+   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
+    {
+      const char *aFileFormatHumanPt = convert_2_string(params.fileFormat);
+      const char *aSavingModeHumanPt = convert_2_string(params.savingMode);
+      const char *anOverwritePolicyHumanPt = convert_2_string(params.overwritePolicy);
 
       os << "<"
 	 << "directory=" << params.directory << ", "
@@ -476,22 +579,22 @@ namespace lima {
       return os;
     }
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::HeaderValue &value)
-  {
-    os << "< (" << value.first << "," << value.second << ") >";
-    return os;
-  }
+    {
+      os << "< (" << value.first << "," << value.second << ") >";
+      return os;
+    }
 
   template<class T>
-  void CtSaving::addToInternalCommonHeader(const std::string &key,
-					   const T& obj)
-  {
-    AutoMutex aLock(m_cond.mutex());
-    std::ostringstream str;
-    str << obj;	
-    const std::string& value = str.str();
-    HeaderValue anEntry(key,value);
-    m_internal_common_header.insert(anEntry);
-  }
+    void CtSaving::addToInternalCommonHeader(const std::string &key,
+					     const T& obj)
+    {
+      AutoMutex aLock(m_cond.mutex());
+      std::ostringstream str;
+      str << obj;	
+      const std::string& value = str.str();
+      HeaderValue anEntry(key,value);
+      m_internal_common_header.insert(anEntry);
+    }
 
 } // namespace lima
 

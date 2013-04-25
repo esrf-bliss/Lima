@@ -37,6 +37,7 @@ class HwShutterCtrlObj;
 class HwVideoCtrlObj;
 class HwEventCtrlObj;
 class HwSavingCtrlObj;
+class HwConfigCtrlObj;
 
 class LIMACORE_API HwCap
 {
@@ -52,6 +53,7 @@ public:
 		Video,			// Video capable usualy color camera 
 		Event,			// Asynch. event (error) generator
 		Saving,			// Saving capable
+		Config,			// Config management capable
 	};
 	HwCap() : m_type(Undef),m_ctrl_obj(NULL) {}
 	
@@ -74,6 +76,7 @@ public:
 	static Type getTypeFromCtrlObj(HwVideoCtrlObj*);
 	static Type getTypeFromCtrlObj(HwEventCtrlObj*);
 	static Type getTypeFromCtrlObj(HwSavingCtrlObj*);
+	static Type getTypeFromCtrlObj(HwConfigCtrlObj*);
 
 	template <class CtrlObj>
 	bool getCtrlObj(CtrlObj *& ctrl_obj) const

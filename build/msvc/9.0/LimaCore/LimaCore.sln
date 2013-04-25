@@ -4,9 +4,12 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibLimaCore", "LimaCore.vcproj", "{A4B703A6-C50F-442F-8952-54FB8EA51FF3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{F6556656-D091-43AF-B46F-355F4ABA5DB6} = {F6556656-D091-43AF-B46F-355F4ABA5DB6}
+		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE} = {A0C36CE7-D908-4573-8B69-249EEEB7D2BE}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libprocesslib", "..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\libprocesslib.vcproj", "{F6556656-D091-43AF-B46F-355F4ABA5DB6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libconfig++", "..\..\..\..\third-party\libconfig\lib\libconfig++.vcproj", "{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +25,10 @@ Global
 		{F6556656-D091-43AF-B46F-355F4ABA5DB6}.Debug|Win32.Build.0 = Debug|Win32
 		{F6556656-D091-43AF-B46F-355F4ABA5DB6}.Release|Win32.ActiveCfg = Release|Win32
 		{F6556656-D091-43AF-B46F-355F4ABA5DB6}.Release|Win32.Build.0 = Release|Win32
+		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Debug|Win32.Build.0 = Debug|Win32
+		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Release|Win32.ActiveCfg = Release|Win32
+		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
