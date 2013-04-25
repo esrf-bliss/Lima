@@ -61,7 +61,7 @@ void BinCtrlObj::checkBin(Bin& bin)
 
 Interface::Interface(Camera& simu)
 	: m_simu(simu), m_det_info(simu),
-	  m_sync(simu), m_bin(simu)
+	  m_sync(simu), m_bin(simu),m_shutter(simu)
 {
 	HwDetInfoCtrlObj *det_info = &m_det_info;
 	m_cap_list.push_back(HwCap(det_info));
@@ -74,6 +74,9 @@ Interface::Interface(Camera& simu)
 
 	HwBinCtrlObj *bin = &m_bin;
 	m_cap_list.push_back(HwCap(bin));
+
+    HwShutterCtrlObj *shutter = &m_shutter;
+	m_cap_list.push_back(HwCap(shutter));
 }
 
 Interface::~Interface()

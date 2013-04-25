@@ -26,7 +26,8 @@
 #ifdef __unix
     #include <nexus4tango.h>
 #else
-    #include "nexuscpp.h"
+    #include "nexuscpp\nexuscpp.h"
+	namespace nx = nxcpp;
 #endif
 
 //--------------------------------------------------------------------------------------------------------------------
