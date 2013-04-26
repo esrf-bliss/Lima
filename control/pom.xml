@@ -42,6 +42,12 @@
          <artifactId>NexusCPP-${aol}-${library}-${mode}</artifactId>
          <version>1.14.0</version>
       </dependency>
+	  
+	  <dependency>
+			<groupId>com.hyperrealm</groupId>
+			<artifactId>configcpp-${aol}-shared-release</artifactId>
+			<version>1.4.9</version>
+		</dependency>
     
     </dependencies>
     <build>

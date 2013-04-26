@@ -275,7 +275,7 @@ const char* lima::convert_2_string(VideoMode aVideoMode)
     case Y64: 		aHumanReadablePt = "Y64";		break;
     case RGB555: 	aHumanReadablePt = "RGB555";		break;
     case RGB565: 	aHumanReadablePt = "RGB565";		break;
-    //case RGB24: 	aHumanReadablePt = "RGB24";		break;
+    case RGB24: 	aHumanReadablePt = "RGB24";		break;
     case RGB32: 	aHumanReadablePt = "RGB32";		break;
     case BGR24: 	aHumanReadablePt = "BGR24";		break;
     case BGR32: 	aHumanReadablePt = "BGR32";		break;
