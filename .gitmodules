@@ -88,3 +88,6 @@
 [submodule "camera/pointgrey"]
 	path = camera/pointgrey
 	url = git://github.com/esrf-bliss/Lima-camera-pointgrey.git
+[submodule "camera/xh"]
+	path = camera/xh
+	url = git://github.com/esrf-bliss/Lima-camera-xh.git
