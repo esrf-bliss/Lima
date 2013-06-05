@@ -308,6 +308,8 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 
 	class LIMACORE_API Sync : public HwBufferCtrlObj::Callback
 	{
+		DEB_CLASS(DebModHardware, "SoftBufferCtrlObj::Sync");
+
 		friend class SoftBufferCtrlObj;
 	public:
 		enum Status {
@@ -315,6 +317,8 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 		};
 
 		virtual ~Sync();
+
+		// Important: must be called with the cond.mutex locked!
 		Status wait(int frame_number, double timeout = -1.);
 
 	protected:
@@ -323,7 +327,7 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 		virtual void releaseAll();
 
 	private:
-		typedef std::set<void *> BufferList;
+		typedef std::multiset<void *> BufferList;
 
 		Sync(SoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond);
 
