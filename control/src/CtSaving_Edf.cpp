@@ -177,9 +177,9 @@ void SaveContainerEdf::_OfStream::close()
 {
   fclose(m_fout);
 }
-long SaveContainerEdf::_OfStream::tellp() const
+__int64 SaveContainerEdf::_OfStream::tellp() const
 {
-  return ftell(m_fout);
+  return _ftelli64(m_fout);
 }
 
 SaveContainerEdf::_OfStream& 
@@ -315,7 +315,7 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader,
   int image_nb = aData.frameNumber % framesPerFile;
 
   char aBuffer[2048];
-  long aStartPosition = sout.tellp();
+  long long aStartPosition = sout.tellp();
   sout << "{\n";
 
   snprintf(aBuffer,sizeof(aBuffer),"HeaderID = EH:%06u:000000:000000 ;\n", image_nb + 1);
@@ -377,10 +377,10 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader,
     }
 
   
-  long aEndPosition = sout.tellp();
+  long long aEndPosition = sout.tellp();
   
-  long lenght = aEndPosition - aStartPosition + 2;
-  long finalHeaderLenght = (lenght + 1023) & ~1023; // 1024 alignment
+  long long lenght = aEndPosition - aStartPosition + 2;
+  long long finalHeaderLenght = (lenght + 1023) & ~1023; // 1024 alignment
   snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght),"");
   sout << aBuffer;
 }
