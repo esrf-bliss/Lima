@@ -780,16 +780,19 @@ HwBufferCtrlObj::Callback* SoftBufferCtrlObj::getBufferCallback()
 SoftBufferCtrlObj::Sync::Sync(SoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond) 
 	: m_cond(cond), m_buffer_ctrl_obj(buffer_ctrl_obj)
 {
+	DEB_CONSTRUCTOR();
 }
 
 SoftBufferCtrlObj::Sync::~Sync() 
 {
+	DEB_DESTRUCTOR();
 }
 
+// Important: must be called with the cond.mutex locked!
 SoftBufferCtrlObj::Sync::Status 
 SoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
 {
-	AutoMutex aLock(m_cond.mutex());
+	DEB_MEMBER_FUNCT();
 
 	StdBufferCbMgr& buffer_mgr = m_buffer_ctrl_obj.getBuffer();
 	void *framePtr = buffer_mgr.getFrameBufferPtr(frame_number);
@@ -798,31 +801,42 @@ SoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
 		return AVAILABLE;
 
 	bool okFlag = m_cond.wait(timeout);
-	if (!okFlag)
-		return TIMEOUT;
+	DEB_TRACE() << DEB_VAR1(okFlag);
 
-	it = m_buffer_in_use.find(framePtr);
-	return (it == m_buffer_in_use.end()) ? AVAILABLE : INTERRUPTED;
+    it = m_buffer_in_use.find(framePtr);
+	if (it == m_buffer_in_use.end())
+		return AVAILABLE;
+ 	else
+		return okFlag ? INTERRUPTED : TIMEOUT;
 }
 
 void SoftBufferCtrlObj::Sync::map(void *address)
 {
+	DEB_MEMBER_FUNCT();
+
 	AutoMutex aLock(m_cond.mutex());
 	m_buffer_in_use.insert(address);
 }
 
 void SoftBufferCtrlObj::Sync::release(void *address)
 {
+	DEB_MEMBER_FUNCT();
+
 	AutoMutex aLock(m_cond.mutex());
 	BufferList::iterator it = m_buffer_in_use.find(address);
-	if (it != m_buffer_in_use.end()) {
-		m_buffer_in_use.erase(it);
+	if (it == m_buffer_in_use.end())
+		THROW_HW_ERROR(Error) << "Internal error: releasing buffer not in used list";
+
+	m_buffer_in_use.erase(it);
+	it = m_buffer_in_use.find(address);
+	if (it == m_buffer_in_use.end())
 		m_cond.broadcast();
-	}
 }
 
 void SoftBufferCtrlObj::Sync::releaseAll()
 {
+	DEB_MEMBER_FUNCT();
+
 	AutoMutex aLock(m_cond.mutex());
 	m_buffer_in_use.clear();
 	m_cond.broadcast();

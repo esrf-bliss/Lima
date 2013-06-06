@@ -145,6 +145,12 @@ ANDOR_FULL_VERSION = $(shell cat camera/andor/VERSION)
 INSTALL_ANDOR_VDIR = $(INSTALL_ANDOR_DIR)/v$(ANDOR_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_XH), 0)
+INSTALL_XH_DIR = $(INSTALL_PLAT_DIR)/Xh
+XH_FULL_VERSION = $(shell cat camera/xh/VERSION)
+INSTALL_XH_VDIR = $(INSTALL_XH_DIR)/v$(XH_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 INSTALL_XPAD_DIR = $(INSTALL_PLAT_DIR)/Xpad
 XPAD_FULL_VERSION = $(shell cat camera/xpad/VERSION)
@@ -370,6 +376,16 @@ ifneq ($(COMPILE_ANDOR), 0)
 	cp -d build/liblimaandor.so* $(INSTALL_LIB_DIR)
 	cp sip/andor/limaandor.so $(INSTALL_ANDOR_VDIR)
 	cp camera/andor/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_XH), 0)
+	mkdir -p $(INSTALL_XH_VDIR)
+	cp camera/xh/python/__init__.py $(INSTALL_XH_DIR)
+	$(call install_core_dep,$(INSTALL_XH_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaxh.so*
+	cp -d build/liblimaxh.so* $(INSTALL_LIB_DIR)
+	cp sip/xh/limaxh.so $(INSTALL_XH_VDIR)
+	cp camera/xh/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_XPAD), 0)

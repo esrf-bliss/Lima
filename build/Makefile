@@ -398,6 +398,30 @@ build_targets	+= $(call lib-full,$(marccd-name),$(marccd-ver))
 
 endif
 
+
+############################
+# LIMA - XH
+############################
+
+ifneq ($(COMPILE_XH),0)
+
+XH_LDLIBS	:= 
+
+xh-name	:= xh
+xh-objs	:= ../camera/xh/src/Xh.o
+xh-ver	:= ../camera/xh/VERSION
+xh-flags	:= $(LDFLAGS)
+xh-deps	:= $(XH_LDLIBS)
+
+$(call lib-full,$(xh-name),$(xh-ver)): $(xh-objs)
+	$(call compile-lib,$(xh-name),$(xh-ver),\
+			   $(xh-flags),$(xh-deps),$@,$+)
+	$(call create-links,$(xh-name),$(xh-ver))
+
+build_targets	+= $(call lib-full,$(xh-name),$(xh-ver))
+
+endif
+
 ############################
 # LIMA - XPAD
 ############################

@@ -104,6 +104,10 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifneq ($(COMPILE_XH),0)
+sub-dirs += xh
+endif
+
 ifndef COMPILE_XPAD
 COMPILE_XPAD = 0
 endif
