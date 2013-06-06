@@ -26,6 +26,7 @@
 #include "CtImage.h"
 
 #include <iostream>
+#include <unistd.h>
 
 using namespace lima;
 using namespace lima::Simulator;
