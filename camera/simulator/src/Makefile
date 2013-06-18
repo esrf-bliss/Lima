@@ -20,7 +20,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 simu-objs = SimulatorFrameBuilder.o SimulatorCamera.o SimulatorInterface.o \
-	SimulatorSyncCtrlObj.o SimulatorDetInfoCtrlObj.o
+	SimulatorSyncCtrlObj.o SimulatorDetInfoCtrlObj.o SimulatorShutterCtrlObj.o
 
 SRCS = $(simu-objs:.o=.cpp)
 
