@@ -75,7 +75,7 @@ inline int _fill_setting_with_dict(Setting &setting,
 			int(PyInt_AsLong(value)));
 	  else if(PyBool_Check(value))
 	    setting.set(PyString_AS_STRING(key),
-			value == Py_True);
+			PyObject_IsTrue(value));
 	  else if(PyDict_Check(value))
 	    {
 	      Setting child = setting.addChild(PyString_AS_STRING(key));
@@ -139,8 +139,7 @@ inline bool _build_dict_from_setting(const libconfig::Setting &setting,
 	    case libconfig::Setting::TypeBoolean:
 	      {
 		bool value = sub_setting;
-		py_value = (value ? Py_True : Py_False);
-		Py_INCREF(py_value);
+		py_value = PyBool_FromLong(value);
 		break;
 	      }
 	    case libconfig::Setting::TypeGroup:

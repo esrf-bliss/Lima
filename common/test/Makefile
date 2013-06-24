@@ -22,7 +22,7 @@
 SRCS = testregex.cpp
 
 CXXFLAGS = -Wall -I ../include -pthread -g
-LDFLAGS = -L../../build/ -Wl,-rpath=$(shell pwd)/../../build -llimacore
+LDFLAGS = -L../../build/ -Wl,-rpath=$(shell pwd)/../../build -llimacore -lpthread
 
 all: testregex
 
