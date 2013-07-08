@@ -37,6 +37,49 @@ enum TrigMode {
 	ExtGate, ExtStartStop, ExtTrigReadout,
 };
 
+%MappedType TrigModeList
+{
+%TypeHeaderCode
+#include <vector>
+%End
+
+%ConvertToTypeCode
+  if(sipIsErr == NULL)
+    {
+      bool aReturnFlag = PySequence_Check(sipPy);
+      for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
+	aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_TrigMode);
+      return aReturnFlag;
+    }
+  std::vector<TrigMode> *modeListPt = new std::vector<TrigMode>();
+  for(int i = 0;i < PySequence_Size(sipPy);++i)
+    modeListPt->push_back(static_cast<TrigMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+  *sipCppPtr = modeListPt;
+  return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+  PyObject *l;
+  if(!(l = PyList_New(sipCpp->size())))
+    return NULL;
+
+  int listPos = 0;
+  for(std::vector<TrigMode>::iterator i = sipCpp->begin();
+      i != sipCpp->end();++i,++listPos)
+    {
+      PyObject *tobj = sipConvertFromEnum(*i, sipType_TrigMode);
+      if(!tobj)
+        {
+	  Py_DECREF(l);
+	  return NULL;
+        }
+      PyList_SET_ITEM(l, listPos, tobj);
+    }
+  return l;
+%End
+};
+
 enum BufferMode {
 	Linear, Circular,
 };
