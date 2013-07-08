@@ -303,6 +303,17 @@ void CtAcquisition::getTriggerMode(TrigMode& mode) const
   DEB_RETURN() << DEB_VAR1(mode);
 }
 
+void CtAcquisition::getTriggerModeList(TrigModeList& modes) const
+{
+  DEB_MEMBER_FUNCT();
+
+  for(int i = 0;TrigMode(i) <= ExtTrigReadout;++i)
+    {
+      TrigMode tmpTrig = (TrigMode)i;
+      if(m_hw_sync->checkTrigMode(tmpTrig))
+	modes.push_back(tmpTrig);
+    }
+}
 
 void CtAcquisition::setAcqMode(AcqMode mode)
 {
