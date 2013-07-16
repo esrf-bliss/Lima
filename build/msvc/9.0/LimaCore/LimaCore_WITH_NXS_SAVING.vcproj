@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="LibLimaCore"
-	ProjectGUID="{A4B703A6-C50F-442F-8952-54FB8EA51FF3}"
+	ProjectGUID="{4E635F51-6D2C-4F67-94A0-5A4658C76F06}"
 	RootNamespace="LimaCore"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"

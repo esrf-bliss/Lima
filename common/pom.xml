@@ -20,12 +20,7 @@
 			<groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
 			<artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
 		</dependency>
-		
-		<dependency>
-			<groupId>com.hyperrealm</groupId>
-			<artifactId>configcpp-${aol}-shared-release</artifactId>
-			<version>1.4.9</version>
-		</dependency>
+
     </dependencies>
 
     <build>

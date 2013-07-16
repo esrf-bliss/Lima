@@ -32,6 +32,7 @@ using namespace lima;
   else\
     throw LIMA_CTL_EXC(Error, "No shutter capability");
 
+#ifdef WITH_CONFIG
 // --- config management
 class CtShutter::_ConfigHandler : public CtConfig::ModuleTypeCallback
 {
@@ -65,6 +66,7 @@ public:
 private:
   CtShutter& m_shutter;
 };
+#endif //WITH_CONFIG
 
 CtShutter::CtShutter(HwInterface *hw)
 {
@@ -197,6 +199,7 @@ void CtShutter::apply()
     }
 }
 
+#ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtShutter::_getConfigHandler()
 {
   if(m_has_shutter)
@@ -204,3 +207,4 @@ CtConfig::ModuleTypeCallback* CtShutter::_getConfigHandler()
   else
     return NULL;
 }
+#endif //WITH_CONFIG

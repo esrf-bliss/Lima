@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+#ifdef WITH_CONFIG
 #ifndef CONFIGUTILS_H
 #define CONFIGUTILS_H
 #include "Debug.h"
@@ -62,3 +63,4 @@ namespace lima
   };
 }
 #endif
+#endif //WITH_CONFIG
