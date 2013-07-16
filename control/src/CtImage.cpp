@@ -417,6 +417,7 @@ void CtMaxImageSizeCB::maxImageSizeChanged(const Size& size, ImageType
 // ----------------------------------------------------------------------------
 // CLASS _ConfigHandler
 // ----------------------------------------------------------------------------
+#ifdef WITH_CONFIG
 class CtImage::_ConfigHandler : public CtConfig::ModuleTypeCallback
 {
 public:
@@ -521,6 +522,7 @@ public:
 private:
   CtImage& m_image;
 };
+#endif //WITH_CONFIG
 // ----------------------------------------------------------------------------
 // CLASS CtImage
 // ----------------------------------------------------------------------------
@@ -1019,7 +1021,9 @@ bool CtImage::applySoft(SoftOpInternalMgr *op)
 	return sw_is_active;
 }
 
+#ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtImage::_getConfigHandler()
 {
   return new _ConfigHandler(*this);
 }
+#endif //WITH_CONFIG

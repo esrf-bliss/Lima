@@ -196,6 +196,8 @@ void CtAccumulation::Parameters::reset()
 {
   active = false;
 }
+
+#ifdef WITH_CONFIG
 //		   ******** _ConfigHandler ********
 class CtAccumulation::_ConfigHandler : public CtConfig::ModuleTypeCallback
 {
@@ -230,6 +232,8 @@ public:
 private:
   CtAccumulation& m_acc;
 };
+#endif //WITH_CONFIG
+
 //		   ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) : 
   m_buffers_size(16),
@@ -686,8 +690,9 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
     }
 }
 
-
+#ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtAccumulation::_getConfigHandler()
 {
   return new _ConfigHandler(*this);
 }
+#endif //WITH_CONFIG
