@@ -25,6 +25,7 @@
 #include "LimaCompatibility.h"
 #include <ostream>
 #include <vector>
+#include <list>
 
 namespace lima
 {
@@ -116,6 +117,8 @@ enum RotationMode {
   Rotation_180,
   Rotation_270
 };
+
+typedef std::list<RotationMode> RotationModeList;
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os,RotationMode rotationMode);
 LIMACORE_API const char* convert_2_string(RotationMode rotationMode);
