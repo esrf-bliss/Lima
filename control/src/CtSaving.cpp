@@ -393,6 +393,7 @@ private:
   CtSaving&	m_saving;
 };
 
+#ifdef WITH_CONFIG
 // --- Config
 class CtSaving::_ConfigHandler : public CtConfig::ModuleTypeCallback
 {
@@ -473,6 +474,7 @@ public:
 private:
   CtSaving& m_saving;
 };
+#endif //WITH_CONFIG
 
 //@brief constructor
 CtSaving::CtSaving(CtControl &aCtrl) :
@@ -1605,10 +1607,12 @@ void CtSaving::_prepare()
     }
 }
 
+#ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 {
   return new _ConfigHandler(*this);
 }
+#endif //WITH_CONFIG
 
 CtSaving::SaveContainer::SaveContainer(Stream& stream) 
   : m_written_frames(0), m_stream(stream), m_statistic_size(16),

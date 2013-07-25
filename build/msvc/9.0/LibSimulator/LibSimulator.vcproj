@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="Simulator"
-	ProjectGUID="{AF18B006-7B23-4550-A9B6-530E9813A58E}"
-	RootNamespace="Simulator"
+	Name="LibSimulator"
+	ProjectGUID="{3E1490E7-66C0-4E77-9746-0632466FF270}"
+	RootNamespace="LibSimulator"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,8 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\common\include&quot;;&quot;..\..\..\..\hardware\include&quot;;&quot;..\..\..\..\camera\simulator\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0502"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\hardware\include&quot;;&quot;..\..\..\..\common\include&quot;;&quot;..\..\..\..\camera\simulator\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSIMULATOR_EXPORTS;_WIN32_WINNT=0x0502"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -63,9 +63,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="liblimacore.lib"
+				OutputFile="$(InputDir)$(IntDir)\liblimasimulator.dll"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\build\msvc\9.0\LimaCore\Debug&quot;"
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -94,7 +97,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -117,8 +120,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\common\include&quot;;&quot;..\..\..\..\hardware\include&quot;;&quot;..\..\..\..\camera\simulator\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\third-party\Processlib\core\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\hardware\include&quot;;&quot;..\..\..\..\common\include&quot;;&quot;..\..\..\..\camera\simulator\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSIMULATOR_EXPORTS;_WIN32_WINNT=0x0502"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -136,9 +139,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="$(InputDir)..\..\..\..\build\msvc\9.0\LimaCore\Release\liblimacore.lib $(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib"
+				OutputFile="$(InputDir)$(IntDir)\liblimasimulator.dll"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\..\..\..\build\msvc\9.0\LimaCore\Release"
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -175,7 +181,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\camera\simulator\test\testsimuhwinterface.cpp"
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorCamera.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorDetInfoCtrlObj.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorFrameBuilder.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorInterface.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorShutterCtrlObj.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\src\SimulatorSyncCtrlObj.cpp"
 				>
 			</File>
 		</Filter>
@@ -184,6 +210,34 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCamera.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorCompatibility.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorDetInfoCtrlObj.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorFrameBuilder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorInterface.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorShutterCtrlObj.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\camera\simulator\include\SimulatorSyncCtrlObj.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

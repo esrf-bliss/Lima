@@ -71,8 +71,10 @@ namespace lima {
     void apply();		/* internal/CtControl call only */
     void reset();		/* internal/CtControl call only */
     
+#ifdef WITH_CONFIG
     class _ConfigHandler;
     CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
 
     bool 		m_has_shutter;
     HwShutterCtrlObj* 	m_hw_shutter;

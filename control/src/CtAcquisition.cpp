@@ -62,6 +62,7 @@ private:
 /*----------------------------------------------------------------------
 			  ModuleTypeCallback
 ----------------------------------------------------------------------*/
+#ifdef WITH_CONFIG
 class CtAcquisition::_ConfigHandler : public CtConfig::ModuleTypeCallback
 {
 public:
@@ -110,6 +111,7 @@ public:
 private:
   CtAcquisition& m_acq;
 };
+#endif //WITH_CONFIG
 
 CtAcquisition::CtAcquisition(HwInterface *hw) :
   m_acc_nframes(-1),
@@ -303,6 +305,17 @@ void CtAcquisition::getTriggerMode(TrigMode& mode) const
   DEB_RETURN() << DEB_VAR1(mode);
 }
 
+void CtAcquisition::getTriggerModeList(TrigModeList& modes) const
+{
+  DEB_MEMBER_FUNCT();
+
+  for(int i = 0;TrigMode(i) <= ExtTrigReadout;++i)
+    {
+      TrigMode tmpTrig = (TrigMode)i;
+      if(m_hw_sync->checkTrigMode(tmpTrig))
+	modes.push_back(tmpTrig);
+    }
+}
 
 void CtAcquisition::setAcqMode(AcqMode mode)
 {
@@ -544,10 +557,12 @@ void CtAcquisition::getLatencyTime(double& time) const
   DEB_RETURN() << DEB_VAR1(time);
 }
 
+#ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtAcquisition::_getConfigHandler()
 {
   return new _ConfigHandler(*this);
 }
+#endif //WITH_CONFIG
 
 // ------------------
 // struct Parameters

@@ -106,6 +106,7 @@ namespace lima
     void setTriggerMode(TrigMode mode);
     void getTriggerMode(TrigMode& mode) const;
 
+    void getTriggerModeList(TrigModeList& modes) const;
   private:
     class _ValidRangesCallback;
     friend class _ValidRangesCallback;
@@ -130,8 +131,10 @@ namespace lima
     void _apply();
     void _hwRead();
 
+#ifdef WITH_CONFIG
     class _ConfigHandler;
     CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
 
     HwSyncCtrlObj	*m_hw_sync;
     HwSyncCtrlObj::ValidRangesType	m_valid_ranges;
