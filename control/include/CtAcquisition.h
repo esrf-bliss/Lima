@@ -106,6 +106,7 @@ namespace lima
     void setTriggerMode(TrigMode mode);
     void getTriggerMode(TrigMode& mode) const;
 
+    void getTriggerModeList(TrigModeList& modes) const;
   private:
     class _ValidRangesCallback;
     friend class _ValidRangesCallback;

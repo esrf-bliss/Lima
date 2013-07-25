@@ -59,6 +59,8 @@ enum TrigMode {
 	ExtGate, ExtStartStop, ExtTrigReadout,
 };
 
+typedef std::vector<TrigMode> TrigModeList;
+
 LIMACORE_API std::ostream& operator <<(std::ostream& os, TrigMode trig_mode);
 LIMACORE_API const char* convert_2_string(TrigMode trigMode);
 LIMACORE_API void convert_from_string(const std::string&,TrigMode&);
