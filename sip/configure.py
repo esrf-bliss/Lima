@@ -27,6 +27,11 @@ import numpy
 import platform
 from checksipexc import checksipexc
 
+# get sip version
+str_version = sipconfig.version_to_string(sipconfig.Configuration().sip_version)
+versions = [int(x) for x in str_version.split('.')]
+major,minor = versions[0],versions[1]
+
 modules = [('core',		['common', 'hardware', 'control']),
 	   ('simulator',	[os.path.join('camera','simulator')]),
 	   ('pco',	        [os.path.join('camera','pco')]),
@@ -112,7 +117,10 @@ def main():
     
         sipFileNameSrc = "lima%s.sip" % modName
         if modName != 'core':
-            sipFileNameIn = os.path.join("..","limamodules.sip.in")
+            if major == 4 and minor < 12:
+                sipFileNameIn = os.path.join("..","limamodules_before_4_12.sip.in")
+            else:
+                sipFileNameIn = os.path.join("..","limamodules.sip.in")
             f = file(sipFileNameIn)
             lines = f.read()
             f.close()
@@ -120,6 +128,8 @@ def main():
             d = file(sipFileNameSrc,'w')
             d.write(newlines)
             d.close()
+        elif major == 4 and minor < 12:
+            sipFileNameSrc = "limacore_before_4_12.sip"
 
         sipFileName = "lima%s_tmp.sip" % modName
         shutil.copyfile(sipFileNameSrc, sipFileName)
@@ -193,6 +203,10 @@ def main():
                     base,ext = os.path.splitext(filename)
                     if ext != '.sip':
                         continue
+                    if major == 4 and minor < 12:
+                        if os.access(os.path.join(root,filename + "_4_12"), os.R_OK):
+                            filename += "_4_12"
+
                     incl = os.path.join(root,filename)
                     incl = incl.replace(os.sep,'/') # sip don't manage windows path.
                     sipFile.write('%%Include %s\n' % incl)
