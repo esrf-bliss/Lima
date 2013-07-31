@@ -155,6 +155,7 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
     }
   return true;
 }
+#ifdef WITH_CONFIG
 // --- _ConfigHandler
 class CtVideo::_ConfigHandler : public CtConfig::ModuleTypeCallback
 {
@@ -229,6 +230,8 @@ public:
 private:
   CtVideo& m_video;
 };
+#endif //WITH_CONFIG
+
 // --- CtVideo::Image
 CtVideo::Image::Image() : m_video(NULL),m_image(NULL) {}
 
@@ -791,10 +794,12 @@ void CtVideo::_prepareAcq()
   m_write_image->frameNumber = -1;
 }
 
+#ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtVideo::_getConfigHandler()
 {
   return new _ConfigHandler(*this);
 }
+#endif //WITH_CONFIG
 
 //============================================================================
 //			 CtVideo::Parameters
