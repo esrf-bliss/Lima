@@ -44,13 +44,15 @@ enum ImageType {
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, ImageType image_type);
-
+LIMACORE_API const char* convert_2_string(ImageType image_type);
+LIMACORE_API void convert_from_string(const std::string&,ImageType&);
 enum AcqMode {
 	Single, Concatenation, Accumulation,
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, AcqMode acq_mode);
-
+LIMACORE_API const char* convert_2_string(AcqMode mode);
+LIMACORE_API void convert_from_string(const std::string&,AcqMode&);
 enum TrigMode {
 	IntTrig,IntTrigMult,
 	ExtTrigSingle, ExtTrigMult,
@@ -58,7 +60,8 @@ enum TrigMode {
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, TrigMode trig_mode);
-
+LIMACORE_API const char* convert_2_string(TrigMode trigMode);
+LIMACORE_API void convert_from_string(const std::string&,TrigMode&);
 enum BufferMode {
 	Linear, Circular,
 };
@@ -72,7 +75,8 @@ enum ShutterMode {
 typedef std::vector<ShutterMode> ShutterModeList;
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, ShutterMode shutter_mode);
-
+LIMACORE_API const char* convert_2_string(ShutterMode);
+LIMACORE_API void convert_from_string(const std::string&,ShutterMode&);
 enum AcqStatus {
 	AcqReady, AcqRunning, AcqFault, AcqConfig
 };
@@ -104,7 +108,8 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 		I420,YUV411,YUV422,YUV444};
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os,VideoMode videoMode);
-
+LIMACORE_API const char* convert_2_string(VideoMode);
+LIMACORE_API void convert_from_string(const std::string&,VideoMode&);
 enum RotationMode {
   Rotation_0,
   Rotation_90,
@@ -113,6 +118,8 @@ enum RotationMode {
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os,RotationMode rotationMode);
+LIMACORE_API const char* convert_2_string(RotationMode rotationMode);
+LIMACORE_API void convert_from_string(const std::string&,RotationMode&);
 } // namespace lima
 
 #endif // CONSTANTS_H

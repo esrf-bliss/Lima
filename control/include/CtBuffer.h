@@ -89,6 +89,8 @@ namespace lima {
 
     void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&,
 				int readBlockLen=1);
+    static void transformHwFrameInfoToData(Data&,const HwFrameInfoType&,
+					   int readBlockLen=1);
   private:
     class _DataDestroyCallback;
     friend class _DataDestroyCallback;

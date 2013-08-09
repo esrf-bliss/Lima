@@ -32,23 +32,31 @@ using namespace std;
 Camera::SimuThread::SimuThread(Camera& simu)
 	: m_simu(&simu)
 {
+    DEB_CONSTRUCTOR();
+
 	m_acq_frame_nb = 0;
 	m_force_stop = false;
 }
 
 void Camera::SimuThread::start()
 {
+    DEB_MEMBER_FUNCT();
+
 	CmdThread::start();
 	waitStatus(Ready);
 }
 
 void Camera::SimuThread::init()
 {
+    DEB_MEMBER_FUNCT();
+
 	setStatus(Ready);
 }
 
 void Camera::SimuThread::execCmd(int cmd)
 {
+    DEB_MEMBER_FUNCT();
+
 	int status = getStatus();
 	switch (cmd) {
 	case StartAcq:
@@ -61,6 +69,8 @@ void Camera::SimuThread::execCmd(int cmd)
 
 void Camera::SimuThread::execStartAcq()
 {
+    DEB_MEMBER_FUNCT();
+
 	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
 	buffer_mgr.setStartTimestamp(Timestamp::now());
 
@@ -103,12 +113,16 @@ void Camera::SimuThread::execStartAcq()
 
 int Camera::SimuThread::getNbAcquiredFrames()
 {
+    DEB_MEMBER_FUNCT();
+
 	return m_acq_frame_nb;
 }
 
 Camera::Camera() : 
   m_thread(*this)
 {
+    DEB_CONSTRUCTOR();
+
 	init();
 
 	m_thread.start();
@@ -116,6 +130,8 @@ Camera::Camera() :
 
 void Camera::init()
 {
+    DEB_MEMBER_FUNCT();
+
 	m_exp_time = 1.0;
 	m_lat_time = 0.0;
 	m_nb_frames = 1;
@@ -123,6 +139,7 @@ void Camera::init()
 
 Camera::~Camera()
 {
+    DEB_DESTRUCTOR();
 }
 
 HwBufferCtrlObj* Camera::getBufferCtrlObj()
@@ -225,6 +242,8 @@ HwInterface::StatusType::Basic Camera::getStatus()
 
 void Camera::startAcq()
 {
+    DEB_MEMBER_FUNCT();
+
 	m_thread.m_force_stop = false;//uggly but work	
 	m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
@@ -234,6 +253,8 @@ void Camera::startAcq()
 
 void Camera::stopAcq()
 {
+    DEB_MEMBER_FUNCT();
+
 	m_thread.m_force_stop = true;//uggly but work
 	m_thread.sendCmd(SimuThread::StopAcq);
 	m_thread.waitStatus(SimuThread::Ready);

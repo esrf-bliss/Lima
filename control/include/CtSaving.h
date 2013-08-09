@@ -27,10 +27,12 @@
 #include <string>
 #include <fstream>
 #include <ios>
+#include <algorithm>
 
 #include "LimaCompatibility.h"
 #include "ThreadUtils.h"
 #include "CtControl.h"
+#include "CtConfig.h"
 #include "HwSavingCtrlObj.h"
 
 struct Data;
@@ -92,7 +94,6 @@ namespace lima {
       FileFormat fileFormat;	///< the saving format (EDF,CBF...)
       SavingMode savingMode;	///< saving mode (automatic,manual...)
       OverwritePolicy overwritePolicy; ///< how you the saving react it find existing filename
-      ManagedMode managedMode;	///< two option either harware (manage by SDK,hardware) or software (Lima core)
       std::string indexFormat;	///< ie: %.4d if you want 4 digits
       long framesPerFile;	///< the number of images save in one files
       long nbframes;
@@ -169,6 +170,12 @@ namespace lima {
 
     void setEndCallback(TaskEventCallback *);
 
+    // --- internal common header
+    void resetInternalCommonHeader();
+    void addToInternalCommonHeader(const HeaderValue& value);
+    template<class T>
+      void addToInternalCommonHeader(const std::string &key,
+				     const T&);
     // --- statistic
 
     void getWriteTimeStatistic(std::list<double>&, int stream_idx=0) const;
@@ -187,7 +194,7 @@ namespace lima {
     class Stream;
 
     class LIMACORE_API SaveContainer
-      {
+    {
       DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
     public:
       SaveContainer(Stream& stream);
@@ -215,7 +222,7 @@ namespace lima {
 
     protected:
       virtual bool _open(const std::string &filename,
-		  std::ios_base::openmode flags) = 0;
+			 std::ios_base::openmode flags) = 0;
       virtual void _close() = 0;
       virtual void _writeFile(Data &data,
 			      CtSaving::HeaderMap &aHeader,
@@ -325,6 +332,7 @@ namespace lima {
     Stream		      **m_stream;
 
     HeaderMap			m_common_header;
+    HeaderMap			m_internal_common_header;
     FrameHeaderMap		m_frame_headers;
     FrameMap			m_frame_datas;
 
@@ -338,138 +346,258 @@ namespace lima {
     bool			m_has_hwsaving;
     HwSavingCtrlObj*		m_hwsaving;
     _NewFrameSaveCBK*		m_new_frame_save_cbk;
+    ManagedMode			m_managed_mode;	///< two option either harware (manage by SDK,hardware) or software (Lima core)
+      std::string			m_specific_hardware_format;
 
-    Stream& getStream(int stream_idx)
-    { bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
-      return stream_ok ? *m_stream[stream_idx] : getStreamExc(stream_idx); }
+      Stream& getStream(int stream_idx)
+	{ bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
+	  return stream_ok ? *m_stream[stream_idx] : getStreamExc(stream_idx); }
 
-    const Stream& getStream(int stream_idx) const
-    { bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
-      return stream_ok ? *m_stream[stream_idx] : getStreamExc(stream_idx); }
+      const Stream& getStream(int stream_idx) const
+	{ bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
+	  return stream_ok ? *m_stream[stream_idx] : getStreamExc(stream_idx); }
 
-    Stream& getStreamExc(int stream_idx) const;
+      Stream& getStreamExc(int stream_idx) const;
 
-    SavingMode getAcqSavingMode() const
-    { return getStream(0).getParameters(Acq).savingMode; }
+      SavingMode getAcqSavingMode() const
+      { return getStream(0).getParameters(Acq).savingMode; }
 
-    ManagedMode getManagedMode() const
-    { return getStream(0).getParameters(Acq).managedMode; }
+      ManagedMode getManagedMode() const
+      { return m_managed_mode; }
 
-    // --- from control
-    void getSaveCounters(int& first_to_save, int& last_to_save)
-    { AutoMutex lock(m_cond.mutex());
-      first_to_save = last_to_save = -1;
-      FrameMap::const_iterator it, end = m_frame_datas.end();
-      for (it = m_frame_datas.begin(); it != end; ++it) {
-	if (it->first > last_to_save)
-	  last_to_save = it->first;
-	if ((first_to_save == -1) || (it->first < first_to_save))
-	  first_to_save = it->first;
+      // --- from control
+      void getSaveCounters(int& first_to_save, int& last_to_save)
+      { AutoMutex lock(m_cond.mutex());
+	first_to_save = last_to_save = -1;
+	FrameMap::const_iterator it, end = m_frame_datas.end();
+	for (it = m_frame_datas.begin(); it != end; ++it) {
+	  if (it->first > last_to_save)
+	    last_to_save = it->first;
+	  if ((first_to_save == -1) || (it->first < first_to_save))
+	    first_to_save = it->first;
+	}
       }
-    }
 
-    // --- internal call
-    void _prepare();
-    void _getCommonHeader(HeaderMap&);
-    void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
-		     bool keep_in_map);
-    void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header, 
-		      TaskList& task_list);
-    void _postTaskList(Data&, const TaskList&);
-    void _compressionFinished(Data&, Stream&);
-    void _saveFinished(Data&, Stream&);
-    void _setSavingError(CtControl::ErrorCode);
-    void _updateParameters();
-    void _synchronousSaving(Data&,HeaderMap&);
-    bool _controlIsFault();
-    bool _newFrameWrite(int);
+      // --- internal call
+      void _prepare();
+      void _getCommonHeader(HeaderMap&);
+      void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
+		       bool keep_in_map);
+      void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header, 
+			TaskList& task_list);
+      void _postTaskList(Data&, const TaskList&);
+      void _compressionFinished(Data&, Stream&);
+      void _saveFinished(Data&, Stream&);
+      void _setSavingError(CtControl::ErrorCode);
+      void _updateParameters();
+      void _synchronousSaving(Data&,HeaderMap&);
+      bool _controlIsFault();
+      bool _newFrameWrite(int);
+      bool _checkHwFileFormat(const std::string&) const;
+      void _ReadImage(Data&,int framenb);
+
+#ifdef WITH_CONFIG
+      class _ConfigHandler;
+      CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
   };
 
-  inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
-  {
-    const char *aFileFormatHumanPt;
-    switch(params.fileFormat)
-      {
-      case CtSaving::EDF:
-	aFileFormatHumanPt = "EDF";break;
-      case CtSaving::CBFFormat:
-	aFileFormatHumanPt = "CBF";break;
-      case CtSaving::NXS:
-	aFileFormatHumanPt = "NXS";break;
-      case CtSaving::FITS:
-	aFileFormatHumanPt = "FITS";break;
-      case CtSaving::EDFGZ:
-	aFileFormatHumanPt = "EDF gzip";break;
-      default:
-	aFileFormatHumanPt = "RAW";break;
-      }
+  inline const char* convert_2_string(CtSaving::FileFormat fileFormat)
+    {
+      const char *aFileFormatHumanPt;
+      switch(fileFormat)
+	{
+	case CtSaving::EDF:
+	  aFileFormatHumanPt = "EDF";break;
+	case CtSaving::CBFFormat:
+	  aFileFormatHumanPt = "CBF";break;
+	case CtSaving::NXS:
+	  aFileFormatHumanPt = "NXS";break;
+	case CtSaving::FITS:
+	  aFileFormatHumanPt = "FITS";break;
+	case CtSaving::EDFGZ:
+	  aFileFormatHumanPt = "EDF gzip";break;
+	default:
+	  aFileFormatHumanPt = "RAW";break;
+	}
+      return aFileFormatHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::FileFormat& fileFormat)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
 
-    const char *aSavingModeHumanPt;
-    switch(params.savingMode)
-      {
-      case CtSaving::AutoFrame:
-	aSavingModeHumanPt = "Auto frame";break;
-      case CtSaving::AutoHeader:
-	aSavingModeHumanPt = "Auto header";break;
-      default: //	Manual
-	aSavingModeHumanPt = "Manual";break;
-      }
+      if(buffer == "edf") 		fileFormat = CtSaving::EDF;
+      else if(buffer == "cbf") 		fileFormat = CtSaving::CBFFormat;
+      else if(buffer == "nxs") 		fileFormat = CtSaving::NXS;
+      else if(buffer == "fits")		fileFormat = CtSaving::FITS;
+      else if(buffer == "edf gzip") 	fileFormat = CtSaving::EDFGZ;
+      else if(buffer == "raw")		fileFormat = CtSaving::RAW;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "FileFormat can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
 
-    const char *anOverwritePolicyHumanPt;
-    switch(params.overwritePolicy)
-      {
-      case CtSaving::Overwrite:
-	anOverwritePolicyHumanPt = "Overwrite";break;
-      case CtSaving::Append:
-	anOverwritePolicyHumanPt = "Append";break;
-      default:		// Abort
+    }
+  inline const char* convert_2_string(CtSaving::SavingMode savingMode)
+    {
+      const char *aSavingModeHumanPt;
+      switch(savingMode)
+	{
+	case CtSaving::AutoFrame:
+	  aSavingModeHumanPt = "Auto frame";break;
+	case CtSaving::AutoHeader:
+	  aSavingModeHumanPt = "Auto header";break;
+	default: //	Manual
+	  aSavingModeHumanPt = "Manual";break;
+	}
+      return aSavingModeHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::SavingMode& savingMode)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
+
+      if(buffer == "auto frame") 	savingMode = CtSaving::AutoFrame;
+      else if(buffer == "auto header") 	savingMode = CtSaving::AutoHeader;
+      else if(buffer == "manual") 	savingMode = CtSaving::Manual;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "SavingMode can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+
+    }
+  inline const char* convert_2_string(CtSaving::OverwritePolicy overwritePolicy)
+    {
+      const char *anOverwritePolicyHumanPt;
+      switch(overwritePolicy)
+	{
+	case CtSaving::Overwrite:
+	  anOverwritePolicyHumanPt = "Overwrite";break;
+	case CtSaving::Append:
+	  anOverwritePolicyHumanPt = "Append";break;
+	default:		// Abort
 	  anOverwritePolicyHumanPt = "Abort";break;
-      }
+	}
+      return anOverwritePolicyHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::OverwritePolicy& overwritePolicy)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
 
-    os << "<"
-       << "directory=" << params.directory << ", "
-       << "prefix=" << params.prefix << ", "
-       << "suffix=" << params.suffix << ", "
-       << "nextNumber=" << params.nextNumber << ", "
-       << "fileFormat=" << params.fileFormat << "," << aFileFormatHumanPt << ", "
-       << "savingMode=" << params.savingMode << "," << aSavingModeHumanPt << ", "
-       << "overwritePolicy=" << params.overwritePolicy << "," << anOverwritePolicyHumanPt << ", "
-       << "framesPerFile=" << params.framesPerFile << ", "
-       << "nbframes=" << params.nbframes
-       << ">";
-    return os;
-  }
+      if(buffer == "overwrite") 		overwritePolicy = CtSaving::Overwrite;
+      else if(buffer == "append") 	overwritePolicy = CtSaving::Append;
+      else if(buffer == "abort") 	overwritePolicy = CtSaving::Abort;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "OverwritePolicy can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+    }
+  inline const char* convert_2_string(CtSaving::ManagedMode manageMode)
+    {
+      const char* aManagedModeHumanPt;
+      switch(manageMode)
+	{
+	case CtSaving::Hardware:
+	  aManagedModeHumanPt = "Hardware";break;
+	default:
+	  aManagedModeHumanPt = "Software";break;
+	}
+      return aManagedModeHumanPt;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtSaving::ManagedMode& manageMode)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
+
+      if(buffer == "hardware") 		manageMode = CtSaving::Hardware;
+      else if(buffer == "software") 	manageMode = CtSaving::Software;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "ManagedMode can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+
+    }
+   inline std::ostream& operator<<(std::ostream &os,const CtSaving::Parameters &params)
+    {
+      const char *aFileFormatHumanPt = convert_2_string(params.fileFormat);
+      const char *aSavingModeHumanPt = convert_2_string(params.savingMode);
+      const char *anOverwritePolicyHumanPt = convert_2_string(params.overwritePolicy);
+
+      os << "<"
+	 << "directory=" << params.directory << ", "
+	 << "prefix=" << params.prefix << ", "
+	 << "suffix=" << params.suffix << ", "
+	 << "nextNumber=" << params.nextNumber << ", "
+	 << "fileFormat=" << params.fileFormat << "," << aFileFormatHumanPt << ", "
+	 << "savingMode=" << params.savingMode << "," << aSavingModeHumanPt << ", "
+	 << "overwritePolicy=" << params.overwritePolicy << "," << anOverwritePolicyHumanPt << ", "
+	 << "framesPerFile=" << params.framesPerFile << ", "
+	 << "nbframes=" << params.nbframes
+	 << ">";
+      return os;
+    }
 
   inline bool operator ==(const CtSaving::Parameters& a,
 			  const CtSaving::Parameters& b)
-  {
-    return ((a.directory       == b.directory)       &&
-	    (a.prefix          == b.prefix)          &&
-	    (a.suffix          == b.suffix)          &&
-	    (a.imageType       == b.imageType)       &&
-	    (a.nextNumber      == b.nextNumber)      &&
-	    (a.fileFormat      == b.fileFormat)      &&
-	    (a.savingMode      == b.savingMode)      &&
-	    (a.overwritePolicy == b.overwritePolicy) &&
-	    (a.indexFormat     == b.indexFormat)     &&
-	    (a.framesPerFile   == b.framesPerFile)   &&
-	    (a.nbframes        == b.nbframes));
-  }
+    {
+      return ((a.directory       == b.directory)       &&
+	      (a.prefix          == b.prefix)          &&
+	      (a.suffix          == b.suffix)          &&
+	      (a.imageType       == b.imageType)       &&
+	      (a.nextNumber      == b.nextNumber)      &&
+	      (a.fileFormat      == b.fileFormat)      &&
+	      (a.savingMode      == b.savingMode)      &&
+	      (a.overwritePolicy == b.overwritePolicy) &&
+	      (a.indexFormat     == b.indexFormat)     &&
+	      (a.framesPerFile   == b.framesPerFile)   &&
+	      (a.nbframes        == b.nbframes));
+    }
 
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::HeaderMap &header)
-  {
-    os << "< ";
-    for(CtSaving::HeaderMap::const_iterator i = header.begin();
-	i != header.end();++i)
-      os << "(" << i->first << "," << i->second << ") ";
-    os << ">";
-    return os;
-  }
+    {
+      os << "< ";
+      for(CtSaving::HeaderMap::const_iterator i = header.begin();
+	  i != header.end();++i)
+	os << "(" << i->first << "," << i->second << ") ";
+      os << ">";
+      return os;
+    }
   inline std::ostream& operator<<(std::ostream &os,const CtSaving::HeaderValue &value)
-  {
-    os << "< (" << value.first << "," << value.second << ") >";
-    return os;
-  }
+    {
+      os << "< (" << value.first << "," << value.second << ") >";
+      return os;
+    }
+
+  template<class T>
+    void CtSaving::addToInternalCommonHeader(const std::string &key,
+					     const T& obj)
+    {
+      AutoMutex aLock(m_cond.mutex());
+      std::ostringstream str;
+      str << obj;	
+      const std::string& value = str.str();
+      HeaderValue anEntry(key,value);
+      m_internal_common_header.insert(anEntry);
+    }
+
 } // namespace lima
 
 #endif // CTSAVING_H

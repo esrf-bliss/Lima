@@ -20,28 +20,27 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-std-objs = ../../../common/src/Common.o ../../../hardware/src/Hw.o
 simu-objs = ../src/Simu.o
 
 test-objs = test.o
 test-ext-objs = $(simu-objs)
 
 testsimulator-objs = testsimulator.o
-testsimulator-ext-objs = $(simu-objs) $(std-objs)
+testsimulator-ext-objs = $(simu-objs)
 
 testsimuhwinterface-objs = testsimuhwinterface.o
-testsimuhwinterface-ext-objs = $(simu-objs) $(std-objs)
+testsimuhwinterface-ext-objs = $(simu-objs)
 
 SRCS = $(test-objs:.o=.cpp) $(testsimulator-objs:.o=.cpp) \
        $(testsimuhwinterface-objs:.o=.cpp)
 
 INC = -I../include -I../../../common/include -I../../../hardware/include -I../../../third-party/Processlib/core/include
 CXXFLAGS += $(INC) -Wall -pthread -g
-LDFLAGS = -L../../../third-party/Processlib/build -lprocesslib -pthread
+LDFLAGS = -L../../../third-party/Processlib/build -lprocesslib -L../../../build -llimacore -pthread -lrt
 
 all: test testsimulator testsimuhwinterface
 
-test:	$(test-objs) $(test-ext-objs) $(std-objs)
+test:	$(test-objs) $(test-ext-objs)
 	$(CXX) -o $@ $+ $(LDFLAGS)
 
 testsimulator: $(testsimulator-objs) $(testsimulator-ext-objs) 

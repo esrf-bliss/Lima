@@ -196,6 +196,44 @@ void CtAccumulation::Parameters::reset()
 {
   active = false;
 }
+
+#ifdef WITH_CONFIG
+//		   ******** _ConfigHandler ********
+class CtAccumulation::_ConfigHandler : public CtConfig::ModuleTypeCallback
+{
+public:
+  _ConfigHandler(CtAccumulation& acc) :
+    CtConfig::ModuleTypeCallback("Accumulation"),
+    m_acc(acc) {}
+
+  virtual void store(Setting& accumulation_setting)
+  {
+    CtAccumulation::Parameters pars;
+    m_acc.getParameters(pars);
+  
+    accumulation_setting.set("active",pars.active);
+    accumulation_setting.set("pixelThresholdValue",pars.pixelThresholdValue);
+    accumulation_setting.set("savingFlag",pars.savingFlag);
+    accumulation_setting.set("savePrefix",pars.savePrefix);
+  }
+  virtual void restore(const Setting& accumulation_setting)
+  {
+    CtAccumulation::Parameters pars;
+    m_acc.getParameters(pars);
+  
+    accumulation_setting.get("active",pars.active);
+    accumulation_setting.get("pixelThresholdValue",
+			     pars.pixelThresholdValue);
+    accumulation_setting.get("savingFlag",pars.savingFlag);
+    accumulation_setting.get("savePrefix",pars.savePrefix);
+
+    m_acc.setParameters(pars);
+  }
+private:
+  CtAccumulation& m_acc;
+};
+#endif //WITH_CONFIG
+
 //		   ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) : 
   m_buffers_size(16),
@@ -652,3 +690,9 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
     }
 }
 
+#ifdef WITH_CONFIG
+CtConfig::ModuleTypeCallback* CtAccumulation::_getConfigHandler()
+{
+  return new _ConfigHandler(*this);
+}
+#endif //WITH_CONFIG

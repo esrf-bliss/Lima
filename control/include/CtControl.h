@@ -48,7 +48,9 @@ namespace lima
   class CtAccumulation;
   class CtVideo;
   class CtEvent;
-
+#ifdef WITH_CONFIG
+  class CtConfig;
+#endif
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
   /** @brief Main client class.
@@ -149,7 +151,9 @@ namespace lima
     CtVideo*		video();
     CtShutter* 		shutter();
     CtEvent*		event();
-
+#ifdef WITH_CONFIG
+    CtConfig*		config();
+#endif
     SoftOpExternalMgr* 	externalOperation();
 
     HwInterface* 	hwInterface();
@@ -165,6 +169,9 @@ namespace lima
     CtVideo*		video()			{ return m_ct_video;}
     CtShutter* 		shutter() 		{ return m_ct_shutter; }
     CtEvent* 		event() 		{ return m_ct_event; }
+#ifdef WITH_CONFIG
+    CtConfig*		config()		{ return m_ct_config; }
+#endif
 
     SoftOpExternalMgr* 	externalOperation() 	{return m_op_ext;}
 
@@ -205,6 +212,8 @@ namespace lima
 	return d1.frameNumber < d2.frameNumber;
       }
     };
+    class SoftOpErrorHandler;
+
     class _LastBaseImageReadyCallback;
     friend class _LastBaseImageReadyCallback;
     class _LastImageReadyCallback;
@@ -232,6 +241,9 @@ namespace lima
     CtAccumulation	*m_ct_accumulation;
     CtVideo		*m_ct_video;
     CtEvent		*m_ct_event;
+#ifdef WITH_CONFIG
+    CtConfig		*m_ct_config;
+#endif
 
     SoftOpInternalMgr   *m_op_int;
     SoftOpExternalMgr	*m_op_ext;
@@ -254,6 +266,7 @@ namespace lima
     bool		m_display_active_flag;
 #endif
     ImageStatusCallback *m_img_status_cb;
+    SoftOpErrorHandler* m_soft_op_error_handler;
 
     inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();

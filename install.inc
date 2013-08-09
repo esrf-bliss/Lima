@@ -145,6 +145,12 @@ ANDOR_FULL_VERSION = $(shell cat camera/andor/VERSION)
 INSTALL_ANDOR_VDIR = $(INSTALL_ANDOR_DIR)/v$(ANDOR_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_XH), 0)
+INSTALL_XH_DIR = $(INSTALL_PLAT_DIR)/Xh
+XH_FULL_VERSION = $(shell cat camera/xh/VERSION)
+INSTALL_XH_VDIR = $(INSTALL_XH_DIR)/v$(XH_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 INSTALL_XPAD_DIR = $(INSTALL_PLAT_DIR)/Xpad
 XPAD_FULL_VERSION = $(shell cat camera/xpad/VERSION)
@@ -155,6 +161,12 @@ ifneq ($(COMPILE_MARCCD), 0)
 INSTALL_MARCCD_DIR = $(INSTALL_PLAT_DIR)/Marccd
 MARCCD_FULL_VERSION = $(shell cat camera/marccd/VERSION)
 INSTALL_MARCCD_VDIR = $(INSTALL_MARCCD_DIR)/v$(MARCCD_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_POINTGREY), 0)
+INSTALL_POINTGREY_DIR = $(INSTALL_PLAT_DIR)/PointGrey
+POINTGREY_FULL_VERSION = $(shell cat camera/pointgrey/VERSION)
+INSTALL_POINTGREY_VDIR = $(INSTALL_POINTGREY_DIR)/v$(POINTGREY_FULL_VERSION)
 endif
 
 ifneq ($(COMPILE_SPS_IMAGE),0)
@@ -175,6 +187,10 @@ INSTALL_CONFIG_DEFINES += -DWITH_FITS_SAVING
 INSTALL_DEPS += cfitsio.install CCfits.install
 endif
 
+ifneq ($(COMPILE_CONFIG_CONTEXT),0)
+INSTALL_CONFIG_DEFINES += -DWITH_CONFIG_CONTEXT
+INSTALL_DEPS += libconfig.install
+endif
 ##################
 #  INSTALL DEPS  #
 ##################
@@ -194,6 +210,9 @@ cfitsio.install:
 
 CCfits.install:
 	$(MAKE) -C third-party CCfits.install
+
+libconfig.install:
+	$(MAKE) -C third-party libconfig.install
 
 ##################
 # INSTALL TARGET #
@@ -270,7 +289,9 @@ ifneq ($(COMPILE_PILATUS), 0)
 	mkdir -p $(INSTALL_PILATUS_VDIR)
 	cp camera/pilatus/python/__init__.py $(INSTALL_PILATUS_DIR)
 	$(call install_core_dep,$(INSTALL_PILATUS_VDIR))
-	cp camera/pilatus/python/*.py $(INSTALL_PILATUS_VDIR)
+	rm -rf $(INSTALL_LIB_DIR)/liblimapilatus.so*
+	cp -d build/liblimapilatus.so* $(INSTALL_LIB_DIR)
+	cp sip/pilatus/limapilatus.so $(INSTALL_PILATUS_VDIR)
 	cp camera/pilatus/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_BASLER), 0)
@@ -342,7 +363,6 @@ ifneq ($(COMPILE_UEYE), 0)
 	mkdir -p $(INSTALL_UEYE_VDIR)
 	cp camera/ueye/python/__init__.py $(INSTALL_UEYE_DIR)
 	$(call install_core_dep,$(INSTALL_UEYE_VDIR))
-	cp camera/ueye/python/CORE_VERSION
 	rm -rf $(INSTALL_LIB_DIR)/liblimaueye.so*
 	cp -d build/liblimaueye.so* $(INSTALL_LIB_DIR)
 	cp sip/ueye/limaueye.so $(INSTALL_UEYE_VDIR)
@@ -356,6 +376,16 @@ ifneq ($(COMPILE_ANDOR), 0)
 	cp -d build/liblimaandor.so* $(INSTALL_LIB_DIR)
 	cp sip/andor/limaandor.so $(INSTALL_ANDOR_VDIR)
 	cp camera/andor/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_XH), 0)
+	mkdir -p $(INSTALL_XH_VDIR)
+	cp camera/xh/python/__init__.py $(INSTALL_XH_DIR)
+	$(call install_core_dep,$(INSTALL_XH_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaxh.so*
+	cp -d build/liblimaxh.so* $(INSTALL_LIB_DIR)
+	cp sip/xh/limaxh.so $(INSTALL_XH_VDIR)
+	cp camera/xh/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_XPAD), 0)
@@ -377,5 +407,15 @@ ifneq ($(COMPILE_MARCCD), 0)
 	cp -d third-party/yat/src/.libs/libyat.so* $(INSTALL_LIB_DIR)
 	cp sip/marccd/limamarccd.so $(INSTALL_MARCCD_VDIR)
 	cp camera/marccd/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_POINTGREY), 0)
+	mkdir -p $(INSTALL_POINTGREY_VDIR)
+	cp camera/pointgrey/python/__init__.py $(INSTALL_POINTGREY_DIR)
+	$(call install_core_dep,$(INSTALL_POINTGREY_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimapointgrey.so*
+	cp -d build/liblimapointgrey.so* $(INSTALL_LIB_DIR)
+	cp sip/pointgrey/limapointgrey.so $(INSTALL_POINTGREY_VDIR)
+	cp camera/pointgrey/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 

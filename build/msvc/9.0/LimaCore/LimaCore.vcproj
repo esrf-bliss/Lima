@@ -42,8 +42,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502"
+				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include;&quot;..\..\..\..\third-party\libconfig\lib&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502;WITH_CONFIG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="2"
@@ -65,7 +65,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug\libprocesslib.lib"
+				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug\libprocesslib.lib $(InputDir)..\..\..\..\third-party\libconfig\lib\libconfig++.Debug\libconfig++_d.lib"
 				OutputFile="$(InputDir)$(IntDir)\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Debug&quot;"
@@ -123,8 +123,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502"
+				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include;&quot;..\..\..\..\third-party\libconfig\lib&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0502;WITH_CONFIG"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -145,10 +145,94 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib"
+				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib $(InputDir)..\..\..\..\third-party\libconfig\lib\libconfig++.Release\libconfig++.lib"
 				OutputFile="$(InputDir)$(IntDir)\$(ProjectName).dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release&quot;;&quot;..\..\..\..\third-party\libconfig\lib\libconfig++.Release&quot;"
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				MapExports="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release_Win7_Sync|Win32"
+			OutputDirectory="$(SolutionDir)Release"
+			IntermediateDirectory="Release"
+			ConfigurationType="2"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+				AdditionalDependencies=""
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\..\..\..\control\src;&quot;..\..\..\..\third-party\Processlib\tasks\include&quot;;&quot;..\..\..\..\third-party\Processlib\core\include\WindowSpecific&quot;;&quot;..\..\..\..\third-party\Processlib\core\include&quot;;..\..\..\..\control\software_operation\include;..\..\..\..\control\include;..\..\..\..\hardware\include;..\..\..\..\common\include;&quot;..\..\..\..\third-party\libconfig\lib&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIMACORE_EXPORTS;_WIN32_WINNT=0x0600;WITH_CONFIG"
+				RuntimeLibrary="2"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
+				ExpandAttributedSource="false"
+				AssemblerOutput="0"
+				AssemblerListingLocation="$(IntDir)\"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="$(InputDir)..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release\libprocesslib.lib $(InputDir)..\..\..\..\third-party\libconfig\lib\libconfig++.Release\libconfig++.lib"
+				OutputFile="$(InputDir)$(IntDir)\$(ProjectName).dll"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\third-party\Processlib\build\msvc\9.0\libprocesslib\Release&quot;;&quot;..\..\..\..\third-party\libconfig\lib\libconfig++.Release&quot;"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
 				MapExports="true"
@@ -193,6 +277,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\common\src\ConfigUtils.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\common\src\Constants.cpp"
 				>
 			</File>
@@ -206,6 +294,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\control\src\CtBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\control\src\CtConfig.cpp"
 				>
 			</File>
 			<File
@@ -398,6 +490,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\control\include\CtConfig.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\control\include\CtControl.h"
 				>
 			</File>
@@ -430,6 +526,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\common\include\Event.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\common\include\Exceptions.h"
 				>
 			</File>
@@ -447,6 +547,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\hardware\include\HwCap.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\hardware\include\HwConfigCtrlObj.h"
 				>
 			</File>
 			<File
@@ -475,6 +579,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\hardware\include\HwRoiCtrlObj.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\hardware\include\HwSavingCtrlObj.h"
 				>
 			</File>
 			<File

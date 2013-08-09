@@ -33,20 +33,22 @@ for d in csadmin_dirs:
 		break
 if get_os is not None:
         compat_plat = os.popen(get_os).readline().strip()
-	plat = None
-	compat_plat_list = compat_plat.split()
-        for aux_plat in compat_plat_list:
-        	if aux_plat.strip() in os.listdir(root_name):
-        		plat = aux_plat
-        		break
-	if plat is None:
-		raise ImportError, ('Could not find Lima directory for %s '
-				    '(nor compat. %s) platform(s) at %s' %
-				    (compat_plat_list[0],
-				     compat_plat_list[1:], root_name))
-        lima_plat = os.path.join(root_name, plat)
-        __path__.insert(0, lima_plat)
-	
+	if compat_plat:
+		plat = None
+		compat_plat_list = compat_plat.split()
+		for aux_plat in compat_plat_list:
+			if aux_plat.strip() in os.listdir(root_name):
+				plat = aux_plat
+				break
+		if plat is None:
+			raise ImportError, ('Could not find Lima directory for %s '
+					    '(nor compat. %s) platform(s) at %s' %
+					    (compat_plat_list[0],
+					     compat_plat_list[1:], root_name))
+		lima_plat = os.path.join(root_name, plat)
+		__path__.insert(0, lima_plat)
+	else:
+		get_os = None
 # This mandatory variable is systematically overwritten by 'make install'
 os.environ['LIMA_LINK_STRICT_VERSION'] = 'MINOR'
 

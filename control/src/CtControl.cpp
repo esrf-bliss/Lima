@@ -34,7 +34,9 @@
 #include "CtAccumulation.h"
 #include "CtVideo.h"
 #include "CtEvent.h"
-
+#ifdef WITH_CONFIG
+#include "CtConfig.h"
+#endif
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
 
@@ -112,6 +114,22 @@ private:
   CtControl &_ctrl;
 };
 
+class CtControl::SoftOpErrorHandler : public TaskMgr::EventCallback
+{
+public:
+  SoftOpErrorHandler(CtControl &ctr) : m_ct(ctr) {}
+
+  virtual void error(Data&,const char *errmsg)
+  {
+    Event *anEvent = new Event(Control,Event::Error,Event::Processing,
+			       Event::Default,errmsg);
+    CtEvent *eventMgr = m_ct.event();
+    eventMgr->reportEvent(anEvent);
+  }
+private:
+  CtControl&	m_ct;
+};
+// --- helper
 
 
 CtControl::CtControl(HwInterface *hw) :
@@ -146,8 +164,33 @@ CtControl::CtControl(HwInterface *hw) :
   //Sps image
   m_ct_sps_image = new CtSpsImage();
 #endif
+
+#ifdef WITH_CONFIG
+  m_ct_config = new CtConfig(*this);
+
+#define REGISTER_CONFIG_MODULE(control)					\
+    modulePt = control->_getConfigHandler(); \
+    if(modulePt)							\
+      {									\
+	m_ct_config->registerModule(modulePt);				\
+	modulePt->unref();						\
+      }
+
+
+  //Add all core callback config
+  CtConfig::ModuleTypeCallback* modulePt;
+  REGISTER_CONFIG_MODULE(m_ct_acq);
+  REGISTER_CONFIG_MODULE(m_ct_saving);
+  REGISTER_CONFIG_MODULE(m_ct_image);
+  REGISTER_CONFIG_MODULE(m_ct_shutter);
+  REGISTER_CONFIG_MODULE(m_ct_accumulation);
+  REGISTER_CONFIG_MODULE(m_ct_video);
+#endif
+
   m_op_int = new SoftOpInternalMgr();
   m_op_ext = new SoftOpExternalMgr();
+
+  m_soft_op_error_handler = new SoftOpErrorHandler(*this);
 }
 
 CtControl::~CtControl()
@@ -165,6 +208,9 @@ CtControl::~CtControl()
 #ifdef WITH_SPS_IMAGE
   delete m_ct_sps_image;
 #endif
+#ifdef WITH_CONFIG
+  delete m_ct_config;
+#endif
   delete m_ct_acq;
   delete m_ct_image;
   delete m_ct_buffer;
@@ -174,6 +220,8 @@ CtControl::~CtControl()
 
   delete m_op_int;
   delete m_op_ext;
+
+  delete m_soft_op_error_handler;
 }
 
 void CtControl::setApplyPolicy(ApplyPolicy policy)
@@ -207,6 +255,9 @@ void CtControl::prepareAcq()
     throw LIMA_CTL_EXC(Error,"Configuration not finished");
 
   resetStatus(false);
+  
+  //Clear common header
+  m_ct_saving->resetInternalCommonHeader();
 
   DEB_TRACE() << "Apply hardware bin/roi";
   m_ct_image->applyHard();
@@ -222,6 +273,11 @@ void CtControl::prepareAcq()
 
   DEB_TRACE() << "Prepare Accumulation if needed";
   m_ct_accumulation->prepare();
+
+  DEB_TRACE() << "Prepare Saving if needed";
+  m_ct_saving->_prepare();
+  m_autosave= m_ct_saving->hasAutoSaveMode();
+  m_ready= true;
 
   DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();
@@ -262,10 +318,6 @@ void CtControl::prepareAcq()
   else
     m_op_ext->setEndSinkTaskCallback(NULL);
 
-  m_ct_saving->_prepare();
-  m_autosave= m_ct_saving->hasAutoSaveMode();
-  m_ready= true;
-
 #ifdef WITH_SPS_IMAGE
   m_display_active_flag = m_ct_sps_image->isActive();
   if(m_display_active_flag)
@@ -281,6 +333,19 @@ void CtControl::prepareAcq()
   m_images_buffer.clear();
   m_ct_video->_prepareAcq();
   m_ct_event->_prepareAcq();
+
+  //Check that no software operation is done if Hardware saving is activated
+  CtSaving::ManagedMode savingManagedMode;
+  m_ct_saving->getManagedMode(savingManagedMode);
+  if(savingManagedMode == CtSaving::Hardware &&
+     (m_op_int_active || 
+      m_op_ext_link_task_active ||
+      m_op_ext_sink_task_active ||
+#ifdef WITH_SPS_IMAGE
+      m_display_active_flag ||
+#endif
+      m_ct_video->isActive()))
+    THROW_CTL_ERROR(Error) << "Can't have any software operation if Hardware saving is active";
 }
 
 void CtControl::startAcq()
@@ -339,12 +404,7 @@ void CtControl::getStatus(Status& status) const
   if(aHwStatus.acq == AcqFault)
     status.AcquisitionStatus = AcqFault;
   else if(status.AcquisitionStatus == AcqReady)
-    {
-      HwInterface::Status aHwStatus;
-      m_hw->getStatus(aHwStatus);
-      DEB_TRACE() << DEB_VAR1(aHwStatus);
-      status.AcquisitionStatus = aHwStatus.acq;
-    }
+    status.AcquisitionStatus = aHwStatus.acq;
 }
 
 /** @brief aborts an acquisiton from a callback thread: it's safe to call 
@@ -451,7 +511,18 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber,
   else
     {
       aLock.unlock();
-      ReadBaseImage(aReturnData,frameNumber,readBlockLen); // todo change when external op activated
+      CtSaving::ManagedMode savingManagedMode;
+      m_ct_saving->getManagedMode(savingManagedMode);
+      if(savingManagedMode == CtSaving::Hardware)
+	{
+	  if (readBlockLen != 1)
+	    THROW_CTL_ERROR(NotSupported) << "Cannot read more than one frame " 
+					  << "at a time with Hardware Saving";
+
+	  m_ct_saving->_ReadImage(aReturnData,frameNumber);
+	}
+      else
+	ReadBaseImage(aReturnData,frameNumber,readBlockLen);
     }
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
@@ -568,6 +639,7 @@ bool CtControl::newFrameReady(Data& fdata)
       aLock.unlock();
   
       TaskMgr *mgr = new TaskMgr();
+      mgr->setEventCallback(m_soft_op_error_handler);
       mgr->setInputData(fdata);
 
       int internal_stage = 0;
@@ -636,7 +708,7 @@ void CtControl::newBaseImageReady(Data &aData)
 
   m_ct_video->frameReady(aData);
 
-  if(m_img_status_cb && img_status_changed)
+  if(m_op_ext_link_task_active && m_img_status_cb && img_status_changed)
     m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
 
   _calcAcqStatus();
@@ -690,6 +762,8 @@ void CtControl::newCounterReady(Data&)
 {
   DEB_MEMBER_FUNCT();
   //@todo
+  AutoMutex aLock(m_cond.mutex());
+  ++m_status.ImageCounters.LastCounterReady;
 }
 
 /** @brief inc the save counter.
@@ -883,6 +957,9 @@ CtAccumulation* 	CtControl::accumulation() 	{ return m_ct_accumulation; }
 CtVideo*		CtControl::video()		{ return m_ct_video;}
 CtShutter* 		CtControl::shutter() 		{ return m_ct_shutter; }
 CtEvent* 		CtControl::event()		{ return m_ct_event; }
+#ifdef WITH_CONFIG
+CtConfig*		CtControl::config()		{ return m_ct_config; }
+#endif
 
 SoftOpExternalMgr* 	CtControl::externalOperation() 	{return m_op_ext;}
 

@@ -83,5 +83,9 @@ HwCap::Type HwCap::getTypeFromCtrlObj(HwSavingCtrlObj*)
 	return Saving;
 }
 
+HwCap::Type HwCap::getTypeFromCtrlObj(HwConfigCtrlObj*)
+{
+	return Config;
+}
 
 } // namespace lima

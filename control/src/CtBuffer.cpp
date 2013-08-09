@@ -256,9 +256,9 @@ void CtBuffer::setup(CtControl *ct)
     m_hw_buffer_cb->releaseAll();
 }
 
-void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
-				      const HwFrameInfoType& frame_info,
-				      int readBlockLen)
+void CtBuffer::transformHwFrameInfoToData(Data &fdata,
+					  const HwFrameInfoType& frame_info,
+					  int readBlockLen)
 {
   DEB_STATIC_FUNCT();
   DEB_PARAM() << DEB_VAR2(frame_info, readBlockLen);
@@ -295,19 +295,27 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
 
   Buffer *fbuf = new Buffer();
   fbuf->data = frame_info.frame_ptr;
-  if(frame_info.buffer_owner_ship == HwFrameInfoType::Transfer)
-    fbuf->owner = Buffer::SHARED;
+  if(frame_info.buffer_owner_ship == HwFrameInfoType::Managed)
+    fbuf->owner = Buffer::MAPPED;
   else
-    fbuf->owner = Buffer::MAPPED;	
+    fbuf->owner = Buffer::SHARED;
 
   fdata.setBuffer(fbuf);
   fbuf->unref();
+}
 
+void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
+				      const HwFrameInfoType& frame_info,
+				      int readBlockLen)
+{
+  DEB_MEMBER_FUNCT();
+
+  transformHwFrameInfoToData(fdata,frame_info,readBlockLen);
   // Manage Buffer callback
   if(m_hw_buffer_cb)
     {
       m_hw_buffer_cb->map(frame_info.frame_ptr);
-      fbuf->callback = m_data_destroy_callback;
+      fdata.buffer->callback = m_data_destroy_callback;
     }
   DEB_RETURN() << DEB_VAR1(fdata);
 }

@@ -71,12 +71,24 @@ ifneq ($(COMPILE_ANDOR), 0)
 sip-modules += andor
 endif
 
+ifneq ($(COMPILE_XH), 0)
+sip-modules += xh
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 sip-modules += xpad
 endif
 
 ifneq ($(COMPILE_MARCCD), 0)
 sip-modules += marccd
+endif
+
+ifneq ($(COMPILE_PILATUS), 0)
+sip-modules += pilatus
+endif
+
+ifneq ($(COMPILE_POINTGREY), 0)
+sip-modules += pointgrey
 endif
 
 all:	src

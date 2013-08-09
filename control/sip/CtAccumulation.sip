@@ -39,6 +39,13 @@ public:
 
     bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
     std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
+      const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	const std::string& tmpString = str.str();
+	sipRes = tmpString.c_str();
+%End
   };
   
   class ThresholdCallback

@@ -104,6 +104,10 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifneq ($(COMPILE_XH),0)
+sub-dirs += xh
+endif
+
 ifndef COMPILE_XPAD
 COMPILE_XPAD = 0
 endif
@@ -118,6 +122,22 @@ endif
 
 ifneq ($(COMPILE_MARCCD),0)
 sub-dirs += marccd
+endif
+
+ifndef COMPILE_PILATUS
+COMPILE_PILATUS = 0
+endif
+
+ifneq ($(COMPILE_PILATUS),0)
+sub-dirs += pilatus
+endif
+
+ifndef COMPILE_POINTGREY
+COMPILE_POINTGREY = 0
+endif
+
+ifneq ($(COMPILE_POINTGREY),0)
+sub-dirs += pointgrey
 endif
 
 include ../global.inc

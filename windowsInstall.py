@@ -8,13 +8,14 @@ module2Installfiles = {
               ('common/python/Core.py','Lima'),
               ('common/python/Debug.py','Lima'),
               ('build/msvc/9.0/LimaCore/Release/LibLimaCore.dll','Lima'),
+              ('third-party\libconfig\lib\libconfig++.Release\libconfig++.dll','Lima'),
               ('sip/core/limacore.pyd','Lima'),
               ('third-party/Processlib/sip/processlib.pyd','Lima'),
               ('third-party/Processlib/build/msvc/9.0/libprocesslib/Release/libprocesslib.dll','Lima')],
     'pco' : [('camera/pco/python/Pco.py','Lima'),
                    ('camera/pco/build/msvc/9.0/liblimapco/Release/liblimapco.dll','Lima'),
-                   ('../sdkPco/bin/SC2_Cam.dll','Lima'),
-                   ('../sdkPco/bin/sc2_cl_me4.dll','Lima'),
+                   ('camera/pco/sdkPco/bin/SC2_Cam.dll','Lima'),
+                   ('camera/pco/sdkPco/bin/sc2_cl_me4.dll','Lima'),
                    ('applications/tango/camera/Pco.py','camera'),
                    ('sip/pco/limapco.pyd','Lima')],
     'perkinelmer' : [('camera/perkinelmer/python/PerkinElmer.py','Lima'),
@@ -25,8 +26,11 @@ module2Installfiles = {
 			 ('camera/photonicscience/sdk/ImageStar4022_v1.7',''),
 			 ('sip/photonicscience/limaphotonicscience.pyd','Lima')],
     'simulator' : [('camera/simulator/python/Simulator.py','Lima'),
-                   ('build/msvc/9.0/LibSimulator/Release/liblimasimulator.dll','Lima'),
+                   ('camera/simulator/build/msvc/9.0/LibSimulator/Release/liblimasimulator.dll','Lima'),
                    ('sip/simulator/limasimulator.pyd','Lima')],
+    'basler' : [('camera/basler/python/Basler.py','Lima'),
+                   ('camera/basler/build/msvc/9.0/LibBasler/Release/liblimabasler.dll','Lima'),
+                   ('sip/basler/limabasler.pyd','Lima')],
     'tango-core' : [('applications/tango/LimaCCDs.py',''),
                     ('applications/tango/AttrHelper.py',''),
                     ('applications/tango/EnvHelper.py',''),
@@ -99,7 +103,8 @@ if __name__ == '__main__':
                     module_list.append(key)
             module_list += option.module_list
             module_list += ["core"]
-            
+            module_list += ["tango-core"]
+
         for moduleName in set(module_list) :
             filesList = module2Installfiles.get(moduleName,None)
             if filesList:

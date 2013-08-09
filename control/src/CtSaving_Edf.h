@@ -79,7 +79,7 @@ namespace lima {
 		std::ios_base::in | std::ios_base::out);
       bool is_open() const;
       void close();
-      long tellp() const;
+      _int64 tellp() const;
       inline _OfStream& write(const char* data,int size);
       inline _OfStream& operator<< (const char *data);
       inline _OfStream& operator<< (const std::string& data);

@@ -71,6 +71,22 @@ endif
 
 endif # COMPILE_FITS_SAVING
 
+ifndef COMPILE_CONFIG
+COMPILE_CONFIG = 0
+endif
+
+ifneq ($(COMPILE_CONFIG),0)
+
+ifneq ($(wildcard libconfig/Makefile),)
+PROJECTS_CLEAN += libconfig.clean
+else
+PROJECTS += libconfig.confsrc
+endif
+
+PROJECTS += libconfig.src
+
+endif
+
 all:	src test
 
 src:	$(PROJECTS)
@@ -131,6 +147,18 @@ CCfits.install:
 
 CCfits.clean:
 	$(MAKE) -C CCfits clean
+
+libconfig.src:
+	$(MAKE) -C libconfig all
+
+libconfig.clean:
+	$(MAKE) -C libconfig clean
+
+libconfig.confsrc:
+	cd libconfig && ./configure --prefix=$(INSTALL_PLAT_DIR)
+
+libconfig.install:
+	cd libconfig && ./configure --prefix=$(INSTALL_PLAT_DIR) && $(MAKE) install
 
 test:
 	@echo

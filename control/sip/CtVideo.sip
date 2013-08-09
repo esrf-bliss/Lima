@@ -41,7 +41,14 @@ using namespace lima;
       VideoMode mode;
       Roi 	roi;
       Bin 	bin;
-    };
+      const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	const std::string& tmpString = str.str();
+	sipRes = tmpString.c_str();
+%End
+	};
 
     class Image
     {

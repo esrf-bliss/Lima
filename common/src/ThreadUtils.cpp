@@ -177,7 +177,6 @@ bool Cond::wait(double timeout)
     {
       struct timeval now;
       struct timespec waitTimeout;
-      int retcode = 0;
       gettimeofday(&now,NULL);
       waitTimeout.tv_sec = now.tv_sec + long(timeout);
       waitTimeout.tv_nsec = (now.tv_usec * 1000) + 

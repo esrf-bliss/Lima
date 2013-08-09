@@ -22,8 +22,11 @@
 #ifndef CTIMAGE_H
 #define CTIMAGE_H
 
+#include <algorithm>
+
 #include "LimaCompatibility.h"
 #include "CtControl.h"
+#include "CtConfig.h"
 #include "Constants.h"
 #include "HwInterface.h"
 #include "HwDetInfoCtrlObj.h"
@@ -127,6 +130,7 @@ class LIMACORE_API CtMaxImageSizeCB : public HwMaxImageSizeCallback
 
 	
 class LIMACORE_API CtImage {
+	friend class CtControl;
 	DEB_CLASS_NAMESPC(DebModControl,"Image","Control");
     public:
 	friend class CtMaxImageSizeCB;
@@ -184,6 +188,11 @@ class LIMACORE_API CtImage {
 	void _setHSFlip(const Flip &flip);
 	void _resetFlip();
 
+#ifdef WITH_CONFIG
+	class _ConfigHandler;
+	CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
+
 	HwDetInfoCtrlObj* 	m_hw_det;
 	CtMaxImageSizeCB* 	m_cb_size;
 	CtSwBinRoiFlip* 	m_sw;
@@ -208,8 +217,7 @@ inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoiFlip &binroi)
 	   << ">";
 	return os;
 }
-
-inline std::ostream& operator <<(std::ostream& os, CtImage::ImageOpMode mode)
+inline const char* convert_2_string(CtImage::ImageOpMode mode)
 {
 	const char *name = "Unknown";
 	switch (mode) {
@@ -217,10 +225,30 @@ inline std::ostream& operator <<(std::ostream& os, CtImage::ImageOpMode mode)
 	case CtImage::SoftOnly:    name = "SoftOnly";    break;
 	case CtImage::HardAndSoft: name = "HardAndSoft"; break;
 	}
-	return os << name;
+	return name;
 
 }
-
+inline void convert_from_string(const std::string& val,
+				CtImage::ImageOpMode& mode)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
+  
+  if(buffer == "hardonly") 		mode = CtImage::HardOnly;
+  else if(buffer == "softonly") 	mode = CtImage::SoftOnly;
+  else if(buffer == "hardandsoft") 	mode = CtImage::HardAndSoft;
+  else
+    {
+      std::ostringstream msg;
+      msg << "ImageOpMode can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Control,InvalidValue,msg.str());
+    }
+}
+inline std::ostream& operator <<(std::ostream& os, CtImage::ImageOpMode mode)
+{
+  return os << convert_2_string(mode);
+}
 
 } // namespace lima
 

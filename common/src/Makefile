@@ -19,12 +19,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+include ../../config.inc
+
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
-               MemUtils.o RegExUtils.o AcqState.o Debug.o VideoUtils.o Event.o
+               MemUtils.o RegExUtils.o AcqState.o Debug.o VideoUtils.o Event.o \
+	       Timer.o DirectoryEventUtils.o
+
+has_not_inotify = $(shell grep INOTIFY_USER /boot/config-$(shell uname -r) >/dev/null 2>&1; echo $$?)
 
 SRCS = $(common-objs:.o=.cpp)
 
 CXXFLAGS += -I../include -I../../hardware/include -I../../third-party/Processlib/core/include -Wall -pthread -fPIC -g
+
+ifeq ($(has_not_inotify),0)
+CXXFLAGS += -DHAS_INOTIFY
+endif
+
+ifndef COMPILE_CONFIG
+COMPILE_CONFIG = 0
+endif
+
+ifneq ($(COMPILE_CONFIG),0)
+common-objs += ConfigUtils.o
+CXXFLAGS += -I../../third-party/libconfig/lib
+endif
 
 all:	Common.o
 

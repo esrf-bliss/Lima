@@ -22,11 +22,11 @@
 SRCS = testregex.cpp
 
 CXXFLAGS = -Wall -I ../include -pthread -g
-LDFLAGS = -pthread
+LDFLAGS = -L../../build/ -Wl,-rpath=$(shell pwd)/../../build -llimacore -lpthread
 
 all: testregex
 
-testregex:	testregex.o ../src/Common.o
+testregex:	testregex.o 
 	$(CXX) $(LDFLAGS) -o $@ $+
 clean:
 	rm -f *.o testregex

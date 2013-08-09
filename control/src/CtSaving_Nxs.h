@@ -23,7 +23,9 @@
 #include <cstdio>
 #include <iostream>
 #include "CtSaving.h"
-#include <nexus4tango.h>
+
+#include <nexuscpp/nexuscpp.h>
+
 
 //--------------------------------------------------------------------------------------------------------------------
 namespace lima
@@ -40,7 +42,7 @@ namespace lima
 	  virtual void _close();
 	  virtual void _writeFile(Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
 	private:
-	  n4t::BufferedData1D* 	m_writer;
+      nxcpp::DataStreamer* 	m_writer;
 	  CtSaving::Parameters	m_pars;
   };
 

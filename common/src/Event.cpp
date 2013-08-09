@@ -34,7 +34,7 @@ Event::Event()
 	abs_timestamp = Timestamp::now();
 }
 
-Event::Event(Layer l, Severity s, Domain d, Code c, string e)
+Event::Event(Layer l, Severity s, Domain d, Code c, const string &e)
 	: layer(l), severity(s), domain(d), code(c), desc(e)
 {
 	abs_timestamp = Timestamp::now();

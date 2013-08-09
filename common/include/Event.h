@@ -57,7 +57,7 @@ class LIMACORE_API Event
 	Timestamp rel_timestamp;
 
 	Event();
-	Event(Layer l, Severity s, Domain d, Code c, std::string e);
+	Event(Layer l, Severity s, Domain d, Code c,const std::string &e);
 	virtual ~Event();
 
 	virtual std::string getMsgStr();

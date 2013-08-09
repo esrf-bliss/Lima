@@ -22,11 +22,15 @@
 #ifndef CTACQUISITION_H
 #define CTACQUISITION_H
 
+#include <algorithm>
+#include <sstream>
+
 #include "LimaCompatibility.h"
 #include "Constants.h"
 #include "HwInterface.h"
 #include "HwCap.h"
 #include "CtControl.h"
+#include "CtConfig.h"
 #include "Debug.h"
 
 namespace lima 
@@ -126,6 +130,11 @@ namespace lima
     void _apply();
     void _hwRead();
 
+#ifdef WITH_CONFIG
+    class _ConfigHandler;
+    CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
+
     HwSyncCtrlObj	*m_hw_sync;
     HwSyncCtrlObj::ValidRangesType	m_valid_ranges;
     Parameters	m_inpars, m_hwpars;
@@ -140,6 +149,33 @@ namespace lima
     _ValidRangesCallback *m_valid_ranges_cb;
   };
 
+  inline const char* convert_2_string(CtAcquisition::AccTimeMode accTimeMode)
+    {
+      const char *name = "Unknown";
+      switch(accTimeMode)
+	{
+	case CtAcquisition::Live: name = "Live";
+	case CtAcquisition::Real: name = "Real";
+	}
+      return name;
+    }
+  inline void convert_from_string(const std::string& val,
+				  CtAcquisition::AccTimeMode& accTimeMode)
+    {
+      std::string buffer = val;
+      std::transform(buffer.begin(),buffer.end(),
+		     buffer.begin(),::tolower);
+      if(buffer == "live")
+	accTimeMode = CtAcquisition::Live;
+      else if(buffer == "real")
+	accTimeMode = CtAcquisition::Real;
+      else
+	{
+	  std::ostringstream msg;
+	  msg << "AccTimeMode can't be:" << DEB_VAR1(val);
+	  throw LIMA_EXC(Control,InvalidValue,msg.str());
+	}
+    }
   inline std::ostream& operator<<(std::ostream &os,const CtAcquisition::Parameters &params)
   {
     os << "<"

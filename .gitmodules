@@ -81,5 +81,14 @@
 	url = git://github.com/esrf-bliss/Lima-camera-rayonixhs
 [submodule "camera/andor3"]
 	path = camera/andor3
-##	url = git@github.com:esrf-bliss/Lima-camera-andor3.git
+##	url = git://github.com/esrf-bliss/Lima-camera-andor3.git
 	url = https://github.com/serge-cohen/Lima-camera-andor3.git
+[submodule "third-party/libconfig"]
+	path = third-party/libconfig
+	url = git://github.com/esrf-bliss/libconfig.git
+[submodule "camera/pointgrey"]
+	path = camera/pointgrey
+	url = git://github.com/esrf-bliss/Lima-camera-pointgrey.git
+[submodule "camera/xh"]
+	path = camera/xh
+	url = git://github.com/esrf-bliss/Lima-camera-xh

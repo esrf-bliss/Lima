@@ -59,6 +59,59 @@ public:
 private:
   CtAcquisition& m_acq;
 };
+/*----------------------------------------------------------------------
+			  ModuleTypeCallback
+----------------------------------------------------------------------*/
+#ifdef WITH_CONFIG
+class CtAcquisition::_ConfigHandler : public CtConfig::ModuleTypeCallback
+{
+public:
+  _ConfigHandler(CtAcquisition& acq) :
+    CtConfig::ModuleTypeCallback("Acquisition"),
+    m_acq(acq) {}
+  virtual void store(Setting& acq_setting)
+  {
+    CtAcquisition::Parameters pars;
+    m_acq.getPars(pars);
+
+    acq_setting.set("acqMode",convert_2_string(pars.acqMode));
+    acq_setting.set("accTimeMode",convert_2_string(pars.accTimeMode));
+    acq_setting.set("acqNbFrames",pars.acqNbFrames);
+    acq_setting.set("acqExpoTime",pars.acqExpoTime);
+    acq_setting.set("accMaxExpoTime",pars.accMaxExpoTime);
+    acq_setting.set("concatNbFrames",pars.concatNbFrames);
+    acq_setting.set("latencyTime",pars.latencyTime);
+    acq_setting.set("triggerMode",convert_2_string(pars.triggerMode));
+  }
+  virtual void restore(const Setting& acq_setting)
+  {
+    CtAcquisition::Parameters pars;
+    m_acq.getPars(pars);
+
+    std::string strAcqMode;
+    if(acq_setting.get("acqMode",strAcqMode))
+      convert_from_string(strAcqMode,pars.acqMode);
+
+    std::string straccTimeMode;
+    if(acq_setting.get("accTimeMode",straccTimeMode))
+      convert_from_string(straccTimeMode,pars.accTimeMode);
+
+    acq_setting.get("acqNbFrames",pars.acqNbFrames);
+    acq_setting.get("acqExpoTime",pars.acqExpoTime);
+    acq_setting.get("accMaxExpoTime",pars.accMaxExpoTime);
+    acq_setting.get("concatNbFrames",pars.concatNbFrames);
+    acq_setting.get("latencyTime",pars.latencyTime);
+
+    std::string strtriggerMode;
+    if(acq_setting.get("triggerMode",strtriggerMode))
+      convert_from_string(strtriggerMode,pars.triggerMode);
+
+    m_acq.setPars(pars);
+  }
+private:
+  CtAcquisition& m_acq;
+};
+#endif //WITH_CONFIG
 
 CtAcquisition::CtAcquisition(HwInterface *hw) :
   m_acc_nframes(-1),
@@ -457,7 +510,7 @@ void CtAcquisition::setConcatNbFrames(int nframes)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(nframes);
 
-  if (nframes <= 0)
+  if (nframes < 0)
     THROW_CTL_ERROR(InvalidValue) << "Invalid concat. " << DEB_VAR1(nframes);
 
   m_inpars.concatNbFrames= nframes;
@@ -493,6 +546,12 @@ void CtAcquisition::getLatencyTime(double& time) const
   DEB_RETURN() << DEB_VAR1(time);
 }
 
+#ifdef WITH_CONFIG
+CtConfig::ModuleTypeCallback* CtAcquisition::_getConfigHandler()
+{
+  return new _ConfigHandler(*this);
+}
+#endif //WITH_CONFIG
 
 // ------------------
 // struct Parameters

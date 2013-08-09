@@ -37,6 +37,7 @@ namespace Simulator
 
 class LIBSIMULATOR_API Camera
 {
+    DEB_CLASS_NAMESPC(DebModCamera, "Camera", "Simulator");
  public:
 	Camera();
 	~Camera();
@@ -69,9 +70,15 @@ class LIBSIMULATOR_API Camera
 
 	void reset();
 
+    enum SimuShutterMode {
+		    FRAME,
+		    MANUAL
+	};
+
  private:
 	class SimuThread : public CmdThread
 	{
+        DEB_CLASS_NAMESPC(DebModCamera, "Camera", "SimuThread");
 	public:
 		enum { // Status
 			Ready = MaxThreadStatus, Exposure, Readout, Latency,
@@ -80,7 +87,7 @@ class LIBSIMULATOR_API Camera
 		enum { // Cmd 
 			StartAcq = MaxThreadCmd, StopAcq,
 		};
-		
+
 		SimuThread(Camera& simu);
 
 		virtual void start();

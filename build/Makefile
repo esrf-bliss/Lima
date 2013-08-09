@@ -56,8 +56,8 @@ create-links	= \
 # LIMA - CORE
 ############################
 
-CORE_LDFLAGS	:= -L../third-party/Processlib/build
-CORE_LDLIBS	:= -lprocesslib
+CORE_LDFLAGS	:= -L../third-party/Processlib/build -Wl,-rpath=$(shell pwd)/../third-party/Processlib/build
+CORE_LDLIBS	:= -lprocesslib -lrt
 
 ifneq ($(COMPILE_CBF_SAVING),0)
 CORE_LDFLAGS += -L../third-party/CBFLib/lib
@@ -71,6 +71,10 @@ endif
 
 ifneq ($(COMPILE_EDFGZ_SAVING),0)
 CORE_LDLIBS += -lz
+endif
+
+ifneq ($(COMPILE_CONFIG),0)
+CORE_LDLIBS += -L../third-party/libconfig/lib/.libs -Wl,-rpath=$(shell pwd)/../third-party/libconfig/lib/.libs  -lconfig++
 endif
 
 ifneq ($(COMPILE_CORE),0)
@@ -394,6 +398,30 @@ build_targets	+= $(call lib-full,$(marccd-name),$(marccd-ver))
 
 endif
 
+
+############################
+# LIMA - XH
+############################
+
+ifneq ($(COMPILE_XH),0)
+
+XH_LDLIBS	:= 
+
+xh-name	:= xh
+xh-objs	:= ../camera/xh/src/Xh.o
+xh-ver	:= ../camera/xh/VERSION
+xh-flags	:= $(LDFLAGS)
+xh-deps	:= $(XH_LDLIBS)
+
+$(call lib-full,$(xh-name),$(xh-ver)): $(xh-objs)
+	$(call compile-lib,$(xh-name),$(xh-ver),\
+			   $(xh-flags),$(xh-deps),$@,$+)
+	$(call create-links,$(xh-name),$(xh-ver))
+
+build_targets	+= $(call lib-full,$(xh-name),$(xh-ver))
+
+endif
+
 ############################
 # LIMA - XPAD
 ############################
@@ -415,6 +443,52 @@ $(call lib-full,$(xpad-name),$(xpad-ver)): $(xpad-objs)
 	$(call create-links,$(xpad-name),$(xpad-ver))
 
 build_targets	+= $(call lib-full,$(xpad-name),$(xpad-ver))
+
+endif
+
+############################
+# LIMA - PILATUS
+############################
+
+ifneq ($(COMPILE_PILATUS),0)
+
+PILATUS_LDLIBS	:= 
+
+pilatus-name	:= pilatus
+pilatus-objs	:= ../camera/pilatus/src/Pilatus.o
+pilatus-ver	:= ../camera/pilatus/VERSION
+pilatus-flags	:= $(LDFLAGS)
+pilatus-deps	:= $(PILATUS_LDLIBS)
+
+$(call lib-full,$(pilatus-name),$(pilatus-ver)): $(pilatus-objs)
+	$(call compile-lib,$(pilatus-name),$(pilatus-ver),\
+			   $(pilatus-flags),$(pilatus-deps),$@,$+)
+	$(call create-links,$(pilatus-name),$(pilatus-ver))
+
+build_targets	+= $(call lib-full,$(pilatus-name),$(pilatus-ver))
+
+endif
+
+############################
+# LIMA - POINTGREY
+############################
+ifneq ($(COMPILE_POINTGREY),0)
+
+POINTGREY_LDFLAGS	:= $(LDFLAGS)
+POINTGREY_LDLIBS	:= $(LDLIBS) -lflycapture
+
+pointgrey-name	:= pointgrey
+pointgrey-objs	:= ../camera/pointgrey/src/PointGrey.o
+pointgrey-ver	:= ../camera/pointgrey/VERSION
+pointgrey-flags	:= $(POINTGREY_LDFLAGS)
+pointgrey-deps	:= $(POINTGREY_LDLIBS)
+
+$(call lib-full,$(pointgrey-name),$(pointgrey-ver)): $(pointgrey-objs)
+	$(call compile-lib,$(pointgrey-name),$(pointgrey-ver),\
+			   $(pointgrey-flags),$(pointgrey-deps),$@,$+)
+	$(call create-links,$(pointgrey-name),$(pointgrey-ver))
+
+build_targets	+= $(call lib-full,$(pointgrey-name),$(pointgrey-ver))
 
 endif
 

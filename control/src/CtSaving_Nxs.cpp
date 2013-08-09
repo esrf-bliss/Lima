@@ -99,7 +99,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			m_writer->Abort();
 			
 			//destroy object
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()";
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete the writer()";
 			delete m_writer;
 			m_writer = 0;			
 		  }
@@ -111,8 +111,8 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			getParameters(m_pars);
 			
 			//create N4T main object needed to generate Nexus file
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - new BufferedData1D()";
-			m_writer = new n4t::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - create the writer";
+            m_writer = new nxcpp::DataStreamer(m_pars.prefix, (std::size_t)m_pars.nbframes, (std::size_t)m_pars.framesPerFile);     
 						
 			m_writer->Initialize(m_pars.directory, "");
 
@@ -144,12 +144,13 @@ void SaveContainerNxs::_writeFile(Data &aData,
 
 
           //- Display Nexus statistics
-		  n4t::BufferedData::Statistics nxsStats;
+		  nxcpp::DataStreamer::Statistics nxsStats;
+
 		  nxsStats = m_writer->GetStatistics();
 
 		  DEB_TRACE()<<"WrittenBytes = "			<<nxsStats.ui64WrittenBytes;
 		  DEB_TRACE()<<"PendingBytes = "			<<nxsStats.ui64PendingBytes;
-		  DEB_TRACE()<<"MaxPendingBytes = "		<<nxsStats.ui64MaxPendingBytes;
+		  DEB_TRACE()<<"MaxPendingBytes = "         <<nxsStats.ui64MaxPendingBytes;
 		  DEB_TRACE()<<"TotalBytes = "				<<nxsStats.ui64TotalBytes;
 		  DEB_TRACE()<<"ActiveWriters = "			<<nxsStats.ui16ActiveWriters;
 		  DEB_TRACE()<<"MaxSimultaneousWriters = "	<<nxsStats.ui16MaxSimultaneousWriters;
@@ -165,7 +166,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			m_writer->Finalize();
 
 			//destroy object
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete BufferedData1D()";
+			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete the writer";
 			delete m_writer;
 			m_writer = 0;
 		  }
