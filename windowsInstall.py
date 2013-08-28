@@ -59,6 +59,7 @@ module2Installfiles.update({
 		    ('applications/tango/plugins','')],
     'tango-simulator' : [('applications/tango/camera/Simulator.py','camera')],
     'tango-perkinelmer' : [('applications/tango/camera/PerkinElmer.py','camera')],
+    'tango-dexela' : [('applications/tango/camera/Dexela.py','camera')],
     }
 			   )
 
