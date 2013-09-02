@@ -41,7 +41,7 @@ endif
 
 ifneq ($(COMPILE_CONFIG),0)
 common-objs += ConfigUtils.o
-CXXFLAGS += -I../../third-party/libconfig/lib
+CXXFLAGS += -DWITH_CONFIG -I../../third-party/libconfig/lib
 endif
 
 all:	Common.o
