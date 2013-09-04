@@ -127,8 +127,10 @@ namespace lima
     void _check_video_mode(VideoMode);
     void _prepareAcq();
     
+#ifdef WITH_CONFIG
     class _ConfigHandler;
     CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
 
     Parameters		m_pars;
     int			m_pars_modify_mask;

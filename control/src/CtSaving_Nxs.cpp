@@ -112,11 +112,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			
 			//create N4T main object needed to generate Nexus file
 			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - create the writer";
-#ifdef __unix            
-			m_writer = new n4t::BufferedData1D(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);	  
-#else
-            m_writer = new nx::DataStreamer(m_pars.prefix, m_pars.nbframes,m_pars.framesPerFile);
-#endif            
+            m_writer = new nxcpp::DataStreamer(m_pars.prefix, (std::size_t)m_pars.nbframes, (std::size_t)m_pars.framesPerFile);     
 						
 			m_writer->Initialize(m_pars.directory, "");
 
@@ -148,11 +144,8 @@ void SaveContainerNxs::_writeFile(Data &aData,
 
 
           //- Display Nexus statistics
-#ifdef __unix  
-		  n4t::BufferedData::Statistics nxsStats;
-#else
-		  nx::DataStreamer::Statistics nxsStats;
-#endif
+		  nxcpp::DataStreamer::Statistics nxsStats;
+
 		  nxsStats = m_writer->GetStatistics();
 
 		  DEB_TRACE()<<"WrittenBytes = "			<<nxsStats.ui64WrittenBytes;

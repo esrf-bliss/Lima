@@ -396,8 +396,10 @@ namespace lima {
       bool _checkHwFileFormat(const std::string&) const;
       void _ReadImage(Data&,int framenb);
 
+#ifdef WITH_CONFIG
       class _ConfigHandler;
       CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
   };
 
   inline const char* convert_2_string(CtSaving::FileFormat fileFormat)

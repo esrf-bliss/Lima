@@ -188,8 +188,10 @@ class LIMACORE_API CtImage {
 	void _setHSFlip(const Flip &flip);
 	void _resetFlip();
 
+#ifdef WITH_CONFIG
 	class _ConfigHandler;
 	CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
 
 	HwDetInfoCtrlObj* 	m_hw_det;
 	CtMaxImageSizeCB* 	m_cb_size;

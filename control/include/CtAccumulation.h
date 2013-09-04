@@ -163,8 +163,11 @@ namespace lima
 
     inline void _callIfNeedThresholdCallback(Data &aData,long long value);
     
+#ifdef WITH_CONFIG
     class _ConfigHandler;
     CtConfig::ModuleTypeCallback* _getConfigHandler();
+#endif //WITH_CONFIG
+
   };
 
   inline std::ostream& operator<<(std::ostream &os,
