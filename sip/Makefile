@@ -91,6 +91,10 @@ ifneq ($(COMPILE_POINTGREY), 0)
 sip-modules += pointgrey
 endif
 
+ifneq ($(COMPILE_IMXPAD), 0)
+sip-modules += imxpad
+endif
+
 all:	src
 
 src:

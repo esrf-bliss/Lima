@@ -169,6 +169,12 @@ POINTGREY_FULL_VERSION = $(shell cat camera/pointgrey/VERSION)
 INSTALL_POINTGREY_VDIR = $(INSTALL_POINTGREY_DIR)/v$(POINTGREY_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_IMXPAD), 0)
+INSTALL_IMXPAD_DIR = $(INSTALL_PLAT_DIR)/imXpad
+IMXPAD_FULL_VERSION = $(shell cat camera/imxpad/VERSION)
+INSTALL_IMXPAD_VDIR = $(INSTALL_IMXPAD_DIR)/v$(IMXPAD_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -419,3 +425,12 @@ ifneq ($(COMPILE_POINTGREY), 0)
 	cp camera/pointgrey/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
+ifneq ($(COMPILE_IMXPAD), 0)
+	mkdir -p $(INSTALL_IMXPAD_VDIR)
+	cp camera/imxpad/python/__init__.py $(INSTALL_IMXPAD_DIR)
+	$(call install_core_dep,$(INSTALL_IMXPAD_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaimxpad.so*
+	cp -d build/liblimaimxpad.so* $(INSTALL_LIB_DIR)
+	cp sip/imxpad/limaimxpad.so $(INSTALL_IMXPAD_VDIR)
+	cp camera/imxpad/include/*.h $(INSTALL_INCLUDE_DIR)
+endif

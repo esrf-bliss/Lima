@@ -31,3 +31,4 @@ lima*.lib
 *.pyd.manifest
 *.pyd
 .svn
+imxpad

@@ -91,3 +91,6 @@
 [submodule "camera/xh"]
 	path = camera/xh
 	url = git://github.com/esrf-bliss/Lima-camera-xh
+[submodule "camera/imxpad"]
+	path = camera/imxpad
+	url = git://github.com/esrf-bliss/Lima-camera-imxpad

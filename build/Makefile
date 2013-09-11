@@ -492,6 +492,29 @@ build_targets	+= $(call lib-full,$(pointgrey-name),$(pointgrey-ver))
 
 endif
 
+############################
+# LIMA - IMXPAD
+############################
+ifneq ($(COMPILE_IMXPAD),0)
+
+IMXPAD_LDFLAGS	:= $(LDFLAGS)
+IMXPAD_LDLIBS	:= $(LDLIBS)
+
+imxpad-name	:= imxpad
+imxpad-objs	:= ../camera/imxpad/src/imXpad.o
+imxpad-ver	:= ../camera/imxpad/VERSION
+imxpad-flags	:= $(IMXPAD_LDFLAGS)
+imxpad-deps	:= $(IMXPAD_LDLIBS)
+
+$(call lib-full,$(imxpad-name),$(imxpad-ver)): $(imxpad-objs)
+	$(call compile-lib,$(imxpad-name),$(imxpad-ver),\
+			   $(imxpad-flags),$(imxpad-deps),$@,$+)
+	$(call create-links,$(imxpad-name),$(imxpad-ver))
+
+build_targets	+= $(call lib-full,$(imxpad-name),$(imxpad-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:
