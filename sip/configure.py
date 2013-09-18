@@ -148,7 +148,8 @@ def main():
             
         if(modName == 'basler') :
             if platform.system() != 'Windows':
-                extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
+                extraIncludes += ['%s/include' % os.environ['PYLON_ROOT']]
+                extraIncludes += ['%s/library/CPP/include' % os.environ['GENICAM_ROOT_V2_1']]
                 extra_cxxflags += ['-DUSE_GIGE']
             else:
                 extraIncludes += ['%s\library\cpp\include' % os.environ['PYLON_GENICAM_ROOT']]
