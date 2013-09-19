@@ -386,3 +386,36 @@ using namespace lima;
 %End
 };
 
+class ArcRoi
+{
+%TypeHeaderCode
+#include <SizeUtils.h>
+using namespace lima;
+%End
+public:
+  ArcRoi();
+  ArcRoi(double centerX,double centerY,
+	 double rayon1,double rayon2,
+	 double angle_start,double angle_end);
+
+  bool isEmpty() const;
+  void reset();
+
+  void setCenter(const Point& center);
+  void getCenter(Point& center /Out/) const;
+
+  void setRayons(double rayon1,double rayon2);
+  void getRayons(double& rayon1 /Out/,double& rayon2 /Out/) const;
+
+  void setAngles(double start,double end);
+  void getAngles(double& start /Out/,double& end /Out/) const;
+
+  const char* __repr__();
+%MethodCode
+	std::ostringstream str;
+	str << *sipCpp;	
+	const std::string& tmpString = str.str();
+	sipRes = tmpString.c_str();
+%End
+
+};

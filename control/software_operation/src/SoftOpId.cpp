@@ -226,70 +226,92 @@ SoftOpRoiCounter::SoftOpRoiCounter() :
 
 SoftOpRoiCounter::~SoftOpRoiCounter()
 {
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+  for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
     {
-      i->second->unref();
-      i->first->unref();
+      i->second.second->unref();
+      i->second.first->unref();
     }
 }
 
-void SoftOpRoiCounter::add(const std::list<Roi> &rois)
+void SoftOpRoiCounter::update(const std::list<RoiNameAndRoi> &named_rois)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<Roi>::const_iterator i = rois.begin();
-      i != rois.end();++i)
+  for(std::list<RoiNameAndRoi>::const_iterator i = named_rois.begin();
+      i != named_rois.end();++i)
     {
-      Tasks::RoiCounterManager *aCounterMgrPt = new Tasks::RoiCounterManager(m_history_size);
-      Tasks::RoiCounterTask *aCounterTaskPt = new Tasks::RoiCounterTask(*aCounterMgrPt);
-
-      const Point &aOri = i->getTopLeft();
-      const Size &aSize = i->getSize();
+      Tasks::RoiCounterManager *aCounterMgrPt;
+      Tasks::RoiCounterTask *aCounterTaskPt;
+      _get_or_create(i->first,aCounterMgrPt,aCounterTaskPt);
+      //update
+      const Point &aOri = i->second.getTopLeft();
+      const Size &aSize = i->second.getSize();
       aCounterTaskPt->setRoi(aOri.x,aOri.y,aSize.getWidth(),aSize.getHeight());
       aCounterTaskPt->setMask(m_mask);
-
-      m_manager_tasks.push_back(ManagerNCounter(aCounterMgrPt,aCounterTaskPt));
     }
 }
-void SoftOpRoiCounter::set(const std::list<Roi> &rois)
-{
-  clearAllRoi();
-  add(rois);
-}
-/** @brief return the list of roi set
- */
-void SoftOpRoiCounter::get(std::list<Roi> &aReturnList) const
+void SoftOpRoiCounter::update(const std::list<RoiNameAndArcRoi>& named_arc)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
+  for(std::list<RoiNameAndArcRoi>::const_iterator i = named_arc.begin();
+      i != named_arc.end();++i)
+    {
+      if(i->second.isEmpty()) continue;
+      Tasks::RoiCounterManager* aCounterMgrPt;
+      Tasks::RoiCounterTask* aCounterTaskPt;
+      _get_or_create(i->first,aCounterMgrPt,aCounterTaskPt);
+      //update
+      Point center;
+      i->second.getCenter(center);
+      double rayon1,rayon2;
+      i->second.getRayons(rayon1,rayon2);
+      double start,end;
+      i->second.getAngles(start,end);
+      aCounterTaskPt->setArcMask(center.x,center.y,
+				 rayon1,rayon2,
+				 start,end);
+      aCounterTaskPt->setMask(m_mask);
+    }
+}
+void SoftOpRoiCounter::setLut(const std::string& name,
+			      const Point& origin,Data& lut)
+{
+  AutoMutex aLock(m_cond.mutex());
+  Tasks::RoiCounterManager* aCounterMgrPt;
+  Tasks::RoiCounterTask* aCounterTaskPt;
+  _get_or_create(name,aCounterMgrPt,aCounterTaskPt);
+  aCounterTaskPt->setLut(origin.x,origin.y,lut);
+  aCounterTaskPt->setMask(m_mask);
+}
+void SoftOpRoiCounter::setLutMask(const std::string& name,
+				  const Point& origin,Data& mask)
+{
+  AutoMutex aLock(m_cond.mutex());
+  Tasks::RoiCounterManager* aCounterMgrPt;
+  Tasks::RoiCounterTask* aCounterTaskPt;
+  _get_or_create(name,aCounterMgrPt,aCounterTaskPt);
+  aCounterTaskPt->setLutMask(origin.x,origin.y,mask);
+  aCounterTaskPt->setMask(m_mask);
+}
+void SoftOpRoiCounter::names(std::list<std::string>& roi_names) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(Name2ManagerNCounter::const_iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
-    {
-      int x,y,width,height;
-      i->second->getRoi(x,y,width,height);
-      aReturnList.push_back(Roi(x,y,width,height));
-    }
+    roi_names.push_back(i->first);
 }
-/** @brief remove roi with roi index.
-    roi index start at 1
-*/
-void SoftOpRoiCounter::del(const std::list<int> &roiIds)
+void SoftOpRoiCounter::remove(const std::list<std::string>& names)
 {
-  std::list<int> aTmpList = roiIds;
-  aTmpList.sort();
-  
   AutoMutex aLock(m_cond.mutex());
-  std::list<int>::iterator i = aTmpList.begin();
-  std::list<ManagerNCounter>::iterator k = m_manager_tasks.begin();
-  for(int index = 1;i != aTmpList.end() && k != m_manager_tasks.end();++i)
+  for(std::list<std::string>::const_iterator i = names.begin();
+      i != names.end();++i)
     {
-      while(index != *i && k != m_manager_tasks.end())
-	++k,++index;
-
-      if(index == *i)
+      Name2ManagerNCounter::iterator named_roi = m_manager_tasks.find(*i);
+      if(named_roi != m_manager_tasks.end())
 	{
-	  k->second->unref();
-	  k->first->unref();
-	  k = m_manager_tasks.erase(k),++index;
+	  named_roi->second.second->unref();
+	  named_roi->second.first->unref();
+	  m_manager_tasks.erase(named_roi);
 	}
     }
 }
@@ -299,12 +321,13 @@ void SoftOpRoiCounter::del(const std::list<int> &roiIds)
 void SoftOpRoiCounter::clearAllRoi()
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
+  for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
     {
-      i->second->unref();
-      i->first->unref();
+      i->second.second->unref();
+      i->second.first->unref();
     }
+  m_manager_tasks.clear();
 }
 
 void SoftOpRoiCounter::clearCounterStatus()
@@ -327,18 +350,18 @@ int SoftOpRoiCounter::getCounterStatus() const
 void SoftOpRoiCounter::setMask(Data &aMask)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
-      i->second->setMask(aMask);
+  for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+      i->second.second->setMask(aMask);
   m_mask = aMask;
 }
 
 void SoftOpRoiCounter::setBufferSize(int size)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+  for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
-    i->first->resizeHistory(size);
+    i->second.first->resizeHistory(size);
   m_history_size = size;
 }
 
@@ -348,37 +371,53 @@ void SoftOpRoiCounter::getBufferSize(int &size) const
   size = m_history_size;
 }
 
-void SoftOpRoiCounter::readCounters(int from,std::list<RoiIdAndResults> &result) const
+void SoftOpRoiCounter::readCounters(int from,std::list<RoiNameAndResults> &result) const
 {
   AutoMutex aLock(m_cond.mutex());
-  int roiIndex = 1;
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i,++roiIndex)
+  for(Name2ManagerNCounter::const_iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
     {
-      result.push_back(RoiIdAndResults(roiIndex,std::list<Tasks::RoiCounterResult>()));
-      RoiIdAndResults &roiAndResults = result.back();
-      i->first->getHistory(roiAndResults.second,from);
+      result.push_back(RoiNameAndResults(i->first,std::list<Tasks::RoiCounterResult>()));
+      RoiNameAndResults &roiAndResults = result.back();
+      i->second.first->getHistory(roiAndResults.second,from);
     }
 }
 
 void SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+  for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
-    aMgr.addSinkTask(stage,i->second);
+    aMgr.addSinkTask(stage,i->second.second);
   ++m_counter_status;
 }
 
 void SoftOpRoiCounter::prepare()
 {
   AutoMutex aLock(m_cond.mutex());
-   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
+   for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
-     i->first->resetHistory();
+     i->second.first->resetHistory();
    m_counter_status = -1;
 }
 
+void SoftOpRoiCounter::_get_or_create(const std::string& roi_name,
+				      Tasks::RoiCounterManager*& aCounterMgrPt,
+				      Tasks::RoiCounterTask*& aCounterTaskPt)
+{
+  Name2ManagerNCounter::iterator named_roi = m_manager_tasks.find(roi_name);
+  if(named_roi == m_manager_tasks.end())
+    {
+      aCounterMgrPt = new Tasks::RoiCounterManager(m_history_size);
+      aCounterTaskPt = new Tasks::RoiCounterTask(*aCounterMgrPt);
+      m_manager_tasks[roi_name] = ManagerNCounter(aCounterMgrPt,aCounterTaskPt);
+    }
+  else
+    {
+      aCounterMgrPt = named_roi->second.first;
+      aCounterTaskPt = named_roi->second.second;
+    }
+}
 //-------------------- ROI TO SPECTRUM --------------------
 
 SoftOpRoi2Spectrum::SoftOpRoi2Spectrum() : 

@@ -861,6 +861,69 @@ inline FrameDim operator /(const FrameDim& fdim, const Point& point)
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const FrameDim& fdim);
 
+/*******************************************************************
+ * \class ArcRoi
+ * \brief Class specifying an arc region-of-interest
+ *
+ *******************************************************************/
+class LIMACORE_API ArcRoi
+{
+ public:
+  ArcRoi();
+  ArcRoi(double centerX,double centerY,
+	 double rayon1,double rayon2,
+	 double angle_start,double angle_end);
+
+  bool isEmpty() const;
+  void reset();
+
+  void setCenter(const Point& center);
+  void getCenter(Point& center) const;
+
+  void setRayons(double rayon1,double rayon2);
+  void getRayons(double& rayon1,double& rayon2) const;
+
+  void setAngles(double start,double end);
+  void getAngles(double& start,double& end) const;
+
+ private:
+  Point m_center;
+  double m_rayon1,m_rayon2;
+  double m_start_angle,m_end_angle;
+};
+
+inline ArcRoi::ArcRoi() {reset();}
+inline ArcRoi::ArcRoi(double centerX,double centerY,
+		      double rayon1,double rayon2,
+		      double angle_start,double angle_end) :
+  m_center(centerX,centerY),
+  m_rayon1(rayon1),m_rayon2(rayon2),
+  m_start_angle(angle_start),m_end_angle(angle_end)
+{
+}
+
+inline bool ArcRoi::isEmpty() const {return m_rayon1 < 0. || m_rayon2 < 0.;}
+inline void ArcRoi::reset()
+{
+  m_rayon1 = m_rayon2 = -1.;
+  m_start_angle = m_end_angle = 0.;
+  m_center = Point(0, 0);
+}
+
+inline void ArcRoi::setCenter(const Point& center) {m_center = center;}
+inline void ArcRoi::getCenter(Point& center) const {center = m_center;}
+
+inline void ArcRoi::setRayons(double rayon1,double rayon2)
+{m_rayon1 = rayon1,m_rayon2 = rayon2;}
+inline void ArcRoi::getRayons(double& rayon1,double& rayon2) const
+{rayon1 = m_rayon1,rayon2 = m_rayon2;}
+
+inline void ArcRoi::setAngles(double start,double end)
+{m_start_angle = start,m_end_angle = end;}
+inline void ArcRoi::getAngles(double& start,double& end) const
+{start = m_start_angle,end = m_end_angle;}
+
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const ArcRoi& arc);
 
 } // namespace lima
 
