@@ -201,15 +201,15 @@ ostream& lima::operator <<(ostream& os, const FrameDim& fdim)
 
 ostream& lima::operator <<(ostream& os,const ArcRoi& arc)
 {
-  Point center;
+  double x,y;
   double start,end;
   double rayon1,rayon2;
 
-  arc.getCenter(center);
+  arc.getCenter(x,y);
   arc.getAngles(start,end);
   arc.getRayons(rayon1,rayon2);
 
-  return os << "<center: " << center 
+  return os << "<center: (" << x << "," << y << ")"
 	    << " angles: (" << start << "," << end << ")"
 	    << " rayons: (" << rayon1 << "," << rayon2 << ")"
 	    << ">";

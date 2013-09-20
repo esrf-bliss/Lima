@@ -401,8 +401,8 @@ public:
   bool isEmpty() const;
   void reset();
 
-  void setCenter(const Point& center);
-  void getCenter(Point& center /Out/) const;
+  void setCenter(double x,double y);
+  void getCenter(double& x /Out/,double& y /Out/) const;
 
   void setRayons(double rayon1,double rayon2);
   void getRayons(double& rayon1 /Out/,double& rayon2 /Out/) const;

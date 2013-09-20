@@ -268,13 +268,13 @@ void SoftOpRoiCounter::update(const std::list<RoiNameAndArcRoi>& named_arc)
       Tasks::RoiCounterTask* aCounterTaskPt;
       _get_or_create(i->first,aCounterMgrPt,aCounterTaskPt);
       //update
-      Point center;
-      i->second.getCenter(center);
+      double x,y;
+      i->second.getCenter(x,y);
       double rayon1,rayon2;
       i->second.getRayons(rayon1,rayon2);
       double start,end;
       i->second.getAngles(start,end);
-      aCounterTaskPt->setArcMask(center.x,center.y,
+      aCounterTaskPt->setArcMask(x,y,
 				 rayon1,rayon2,
 				 start,end);
       aCounterTaskPt->setMask(m_mask);
