@@ -233,11 +233,13 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
       for(std::list<SoftOpInstance>::const_iterator k = i->second.begin();
 	  k != i->second.end();++k)
 	{
+	  if(!k->m_opt->addTo(aTaskMgr,nextStage)) continue;
+
 	  if(k->m_linkable)
 	    last_link_task = nextStage;
 	  else
 	    last_sink_task = nextStage;
-	  k->m_opt->addTo(aTaskMgr,nextStage);
+
 	}
     }
   std::pair<int,LinkTask*> aLastLink(0,NULL);

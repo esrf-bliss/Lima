@@ -47,7 +47,7 @@ namespace lima
 
     virtual ~SoftOpBaseClass() {};
 
-    virtual void addTo(TaskMgr&,int stage) = 0;
+    virtual bool addTo(TaskMgr&,int stage) = 0;
     virtual void prepare() = 0;
   };
 
@@ -100,7 +100,7 @@ namespace lima
     void setBackgroundImage(Data &aData);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::BackgroundSubstraction *m_opt;
@@ -115,7 +115,7 @@ namespace lima
     void setBinning(int x,int y);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::Binning *m_opt;
@@ -131,7 +131,7 @@ namespace lima
     Tasks::BpmManager* 	getManager() 	{return m_manager;}
 
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare();
   private:
     Tasks::BpmManager	*m_manager;
@@ -147,7 +147,7 @@ namespace lima
     void setFlatFieldImage(Data &aData);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::FlatfieldCorrection *m_opt;
@@ -162,7 +162,7 @@ namespace lima
     void setFlip(bool x,bool y);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::Flip *m_opt;
@@ -179,7 +179,7 @@ namespace lima
     void getType(Type&) const;
     void setType(Type);
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::Mask *m_opt;
@@ -231,7 +231,7 @@ namespace lima
     
     void readCounters(int from,std::list<RoiNameAndResults> &result) const;
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare();
   private:
     typedef std::pair<Tasks::RoiCounterManager*,Tasks::RoiCounterTask*> ManagerNCounter;
@@ -352,7 +352,7 @@ namespace lima
     void readCounters(int from,std::list<RoiIdAndResults> &result) const;
     void createImage(int roiId,int &from,Data &aData) const;
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare();
   private:
     typedef std::pair<Tasks::Roi2SpectrumManager*,Tasks::Roi2SpectrumTask*> ManagerNCounter;
@@ -373,7 +373,7 @@ namespace lima
     void setRoi(int x,int y,int width,int height);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::SoftRoi *m_opt;
@@ -416,7 +416,7 @@ namespace lima
 
     void setLinkTask(LinkTask*);
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {prepare_cb();}
   private:
     LinkTask*	m_link_task;
@@ -432,7 +432,7 @@ namespace lima
     void setSinkTask(SinkTaskBase*);
 
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {prepare_cb();}
   private:
     SinkTaskBase* m_sink_task;

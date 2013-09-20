@@ -44,9 +44,10 @@ void SoftOpBackgroundSubstraction::setBackgroundImage(Data &anImage)
   m_opt->setBackgroundImageData(anImage);
 }
 
-void SoftOpBackgroundSubstraction::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpBackgroundSubstraction::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 //-------------------- BINNING --------------------
 				   
@@ -70,9 +71,10 @@ void SoftOpBinning::setBinning(int x,int y)
   m_opt->mYFactor = y;
 }
 
-void SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- BPM --------------------
@@ -101,11 +103,13 @@ SoftOpBpm::~SoftOpBpm()
 }
 
 
-void SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
 {
 #ifndef WITHOUT_GSL
   aMgr.addSinkTask(stage,m_task);
+  return true;
 #endif
+  return false;
 }
 
 void SoftOpBpm::prepare()
@@ -136,9 +140,10 @@ void SoftOpFlatfieldCorrection::setFlatFieldImage(Data &aData)
   m_opt->setFlatFieldImageData(aData);
 }
 
-void SoftOpFlatfieldCorrection::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpFlatfieldCorrection::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- FLIP --------------------
@@ -170,9 +175,10 @@ void SoftOpFlip::setFlip(bool x,bool y)
   m_opt->setFlip(flip_mode);
 }
 
-void SoftOpFlip::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpFlip::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- MASK --------------------
@@ -210,9 +216,10 @@ void SoftOpMask::getType(Type &aType) const
     SoftOpMask::STANDARD : SoftOpMask::DUMMY;
 }
 
-void SoftOpMask::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpMask::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- ROI COUNTERS --------------------
@@ -383,13 +390,14 @@ void SoftOpRoiCounter::readCounters(int from,std::list<RoiNameAndResults> &resul
     }
 }
 
-void SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
 {
   AutoMutex aLock(m_cond.mutex());
   for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
     aMgr.addSinkTask(stage,i->second.second);
   ++m_counter_status;
+  return !m_manager_tasks.empty();
 }
 
 void SoftOpRoiCounter::prepare()
@@ -623,13 +631,14 @@ void SoftOpRoi2Spectrum::createImage(int roiId,int &from,Data &aData) const
 	}
     }
 }
-void SoftOpRoi2Spectrum::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpRoi2Spectrum::addTo(TaskMgr &aMgr,int stage)
 {
   AutoMutex aLock(m_cond.mutex());
   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i)
     aMgr.addSinkTask(stage,i->second);
   ++m_counter_status;
+  return !m_manager_tasks.empty();
 }
 
 void SoftOpRoi2Spectrum::prepare()
@@ -662,9 +671,10 @@ void SoftOpSoftRoi::setRoi(int x,int y,int width,int height)
   m_opt->setRoi(x,x+width,y,y+height);
 }
 
-void SoftOpSoftRoi::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpSoftRoi::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------------- SOFTCALLBACK --------------------------
@@ -744,10 +754,11 @@ void SoftUserLinkTask::setLinkTask(LinkTask *aTaskPt)
   m_link_task = aTaskPt;
 }
 
-void SoftUserLinkTask::addTo(TaskMgr &aMgr,int stage)
+bool SoftUserLinkTask::addTo(TaskMgr &aMgr,int stage)
 {
   if(m_link_task)
     aMgr.setLinkTask(stage,m_link_task);
+  return !!m_link_task;
 }
 
 //------------------------ SoftUserSinkTask ------------------------
@@ -775,8 +786,9 @@ void SoftUserSinkTask::setSinkTask(SinkTaskBase *aTaskPt)
   m_sink_task = aTaskPt;
 }
 
-void SoftUserSinkTask::addTo(TaskMgr &aMgr,int stage)
+bool SoftUserSinkTask::addTo(TaskMgr &aMgr,int stage)
 {
   if(m_sink_task)
     aMgr.addSinkTask(stage,m_sink_task);
+  return !!m_sink_task;
 }
