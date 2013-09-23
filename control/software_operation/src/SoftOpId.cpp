@@ -418,7 +418,7 @@ void SoftOpRoi2Spectrum::del(const std::list<int> &roiIds)
   AutoMutex aLock(m_cond.mutex());
   std::list<int>::iterator i = aTmpList.begin();
   std::list<ManagerNCounter>::iterator k = m_manager_tasks.begin();
-  for(int index = 1;i != aTmpList.end() && k != m_manager_tasks.end();++i)
+  for(int index = 0;i != aTmpList.end() && k != m_manager_tasks.end();++i)
     {
       while(index != *i && k != m_manager_tasks.end())
 	++k,++index;
@@ -456,7 +456,7 @@ void SoftOpRoi2Spectrum::getRoiMode(std::list<int> &aReturnList) const
 void SoftOpRoi2Spectrum::setRoiMode(int roiId,int mode)
 {
   AutoMutex aLock(m_cond.mutex());
-  int rId = 1;
+  int rId = 0;
   for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i,++rId)
     {
@@ -514,7 +514,7 @@ void SoftOpRoi2Spectrum::getBufferSize(int &size) const
 void SoftOpRoi2Spectrum::readCounters(int from,std::list<RoiIdAndResults> &result) const
 {
   AutoMutex aLock(m_cond.mutex());
-  int roiIndex = 1;
+  int roiIndex = 0;
   for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i,++roiIndex)
     {
@@ -527,7 +527,7 @@ void SoftOpRoi2Spectrum::readCounters(int from,std::list<RoiIdAndResults> &resul
 void SoftOpRoi2Spectrum::createImage(int roiId,int &from,Data &aData) const
 {
   AutoMutex aLock(m_cond.mutex());
-  int roiIndex = 1;
+  int roiIndex = 0;
   for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
       i != m_manager_tasks.end();++i,++roiIndex)
     {
