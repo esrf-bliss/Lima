@@ -117,13 +117,13 @@ public:
     if(_fillHeader(aData,m_header,cbf))
       {
 	cbf_free_handle(cbf);
-	throw LIMA_CTL_EXC(Error,"Something went wrong during CBF header filling");
+	THROW_CTL_ERROR(Error) << "Something went wrong during CBF header filling";
       }
 
     if(_fillData(aData,cbf))
       {
 	cbf_free_handle(cbf);
-	throw LIMA_CTL_EXC(Error,"Something went wrong during CBF data filling");
+	THROW_CTL_ERROR(Error) << "Something went wrong during CBF data filling";
       }
     m_container._setHandle(aData.frameNumber,cbf);
   }
@@ -250,7 +250,7 @@ void SaveContainerCbf::_writeFile(Data &aData,
 				  CtSaving::FileFormat)
 {
   if(_writeCbfData(aData))
-    throw LIMA_CTL_EXC(Error,"Something went wrong during CBF data writing");
+    THROW_CTL_ERROR(Error) << "Something went wrong during CBF data writing";
 }
 
 void SaveContainerCbf::_clear()

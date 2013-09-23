@@ -28,13 +28,13 @@
   {								     \
   DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too short: "     \
   << DEB_VAR1(m_valid_ranges.min_exp_time);			     \
-  throw LIMA_CTL_EXC(InvalidValue, "Exposure time too short");	     \
+  THROW_CTL_ERROR(InvalidValue) <<  "Exposure time too short";	     \
   }								     \
   else if (val > m_valid_ranges.max_exp_time)			     \
   {								     \
   DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too long: "	     \
   << DEB_VAR1(m_valid_ranges.max_exp_time);			     \
-  throw LIMA_CTL_EXC(InvalidValue, "Exposure time too long");	     \
+  THROW_CTL_ERROR(InvalidValue) <<  "Exposure time too long";	     \
   }
 
 using namespace lima;
@@ -70,7 +70,7 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
   DEB_CONSTRUCTOR();
 
   if (!hw->getHwCtrlObj(m_hw_sync))
-    throw LIMA_CTL_EXC(Error, "Cannot get hardware sync object");
+    THROW_CTL_ERROR(Error) <<  "Cannot get hardware sync object";
 
   m_valid_ranges_cb = new _ValidRangesCallback(*this);
   m_hw_sync->getValidRanges(m_valid_ranges);
@@ -480,7 +480,7 @@ void CtAcquisition::setLatencyTime(double lat_time)
   if (lat_time < m_valid_ranges.min_lat_time)
     lat_time = m_valid_ranges.min_lat_time;
   if (lat_time > m_valid_ranges.max_lat_time)
-    throw LIMA_CTL_EXC(InvalidValue, "Latency time too long");
+    THROW_CTL_ERROR(InvalidValue) <<  "Latency time too long";
   m_inpars.latencyTime= lat_time;
 }
 

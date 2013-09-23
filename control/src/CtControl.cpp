@@ -201,10 +201,10 @@ void CtControl::prepareAcq()
   getStatus(aStatus);
 
   if(aStatus.AcquisitionStatus == AcqRunning)
-    throw LIMA_CTL_EXC(Error,"Acquisition not finished");
+    THROW_CTL_ERROR(Error) << "Acquisition not finished";
 
   if(aStatus.AcquisitionStatus == AcqConfig)
-    throw LIMA_CTL_EXC(Error,"Configuration not finished");
+    THROW_CTL_ERROR(Error) << "Configuration not finished";
 
   resetStatus(false);
 
@@ -288,7 +288,7 @@ void CtControl::startAcq()
   DEB_MEMBER_FUNCT();
 
   if (!m_ready)
-	throw LIMA_CTL_EXC(Error, "Run prepareAcq before starting acquisition");
+	THROW_CTL_ERROR(Error) <<  "Run prepareAcq before starting acquisition";
   m_running = true;
   TrigMode trigMode;
   m_ct_acq->getTriggerMode(trigMode);
@@ -301,7 +301,7 @@ void CtControl::startAcq()
       HwInterface::Status hwStatus;
       m_hw->getStatus(hwStatus);
       if(hwStatus.det != DetIdle)
-	throw LIMA_CTL_EXC(Error, "Try to restart before detector is ready");
+	THROW_CTL_ERROR(Error) <<  "Try to restart before detector is ready";
 
       //m_ready = false after the last image is triggerred
       int nbFrames4Acq;
@@ -443,9 +443,9 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber,
       else
 	{
 	  if(frameNumber < m_status.ImageCounters.LastImageReady - m_images_buffer_size)
-	    throw LIMA_CTL_EXC(Error,"Frame no more available");
+	    THROW_CTL_ERROR(Error) << "Frame no more available";
 	  else
-	    throw LIMA_CTL_EXC(Error,"Frame not available yet");
+	    THROW_CTL_ERROR(Error) << "Frame not available yet";
 	}
     }
   else
@@ -479,9 +479,9 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
   if (frameNumber < 0) {
     frameNumber = lastFrame - (readBlockLen - 1);
     if (frameNumber < 0)
-      throw LIMA_CTL_EXC(Error, "Frame(s) not available yet");
+      THROW_CTL_ERROR(Error) <<  "Frame(s) not available yet";
   } else if (frameNumber + readBlockLen - 1 > lastFrame)
-    throw LIMA_CTL_EXC(Error, "Frame(s) not available yet");
+    THROW_CTL_ERROR(Error) <<  "Frame(s) not available yet";
   aLock.unlock();
   m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
   
@@ -491,7 +491,7 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
   int roiHeight = img_dim.getSize().getHeight() * readBlockLen;
   if((roiWidth * roiHeight) >
      (aReturnData.dimensions[0] * aReturnData.dimensions[1]))
-    throw LIMA_CTL_EXC(Error, "Roi dim > HwBuffer dim");
+    THROW_CTL_ERROR(Error) <<  "Roi dim > HwBuffer dim";
 
   aReturnData.dimensions[0] = roiWidth;
   aReturnData.dimensions[1] = roiHeight;
@@ -733,7 +733,7 @@ void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
 
   if (m_img_status_cb) {
     DEB_ERROR() << "ImageStatusCallback already registered";
-    throw LIMA_CTL_EXC(InvalidValue, "ImageStatusCallback already registered");
+    THROW_CTL_ERROR(InvalidValue) <<  "ImageStatusCallback already registered";
   }
 
   cb.setImageStatusCallbackGen(this);
@@ -747,7 +747,7 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
 
   if (m_img_status_cb != &cb) {
     DEB_ERROR() << "ImageStatusCallback not registered";
-    throw LIMA_CTL_EXC(InvalidValue, "ImageStatusCallback not registered");
+    THROW_CTL_ERROR(InvalidValue) <<  "ImageStatusCallback not registered";
   }
   
   m_img_status_cb = NULL;

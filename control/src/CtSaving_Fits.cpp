@@ -136,7 +136,7 @@ void SaveContainerFits::_writeFile(Data &aData,
             bitpixName = "DOUBLE_IMG";
             break;
         default:
-          throw LIMA_CTL_EXC(Error, "Can't determine bitpix");
+          THROW_CTL_ERROR(Error) <<  "Can't determine bitpix";
         }
 
         DEB_TRACE() << "SaveContainerFits::_writeFile(): used bitpix: " << bitpixName << "(" << bitpix << ")";
@@ -154,7 +154,7 @@ void SaveContainerFits::_writeFile(Data &aData,
 
     }catch(CCfits::FITS::CantCreate)
     {
-        throw LIMA_CTL_EXC(Error, "Can't create FITS file");
+        THROW_CTL_ERROR(Error) <<  "Can't create FITS file";
     }
 
     delete naxes;

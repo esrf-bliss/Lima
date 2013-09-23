@@ -124,8 +124,8 @@ void CtSaving::Parameters::checkValid() const
 #ifdef WITH_CBF_SAVING
     case CBFFormat :
       if(framesPerFile > 1)
-	throw LIMA_CTL_EXC(InvalidValue, "CBF file format does not support "
-			                 "multi frame per file");
+	THROW_CTL_ERROR(InvalidValue) << "CBF file format does not support "
+			                 "multi frame per file";
       break;
 #endif
 #ifndef __unix
