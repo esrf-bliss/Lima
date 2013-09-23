@@ -398,6 +398,7 @@ void CtVideo::getParameters(Parameters &pars) const
 
 void CtVideo::_setLive(bool liveFlag)
 {
+  DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
 
   while(m_stopping_live) m_cond.wait();
@@ -408,7 +409,7 @@ void CtVideo::_setLive(bool liveFlag)
   CtControl::Status status;
   m_ct.getStatus(status);
   if(liveFlag && status.AcquisitionStatus != AcqReady)
-    throw LIMA_CTL_EXC(Error, "Can't set live mode if an acquisition is running");
+    THROW_CTL_ERROR(Error) <<  "Can't set live mode if an acquisition is running";
 
   _apply_params(aLock,liveFlag);
   
@@ -467,10 +468,11 @@ void CtVideo::getExposure(double &anExposure) const
 
 void CtVideo::setGain(double aGain)
 {
+  DEB_MEMBER_FUNCT();
   if(!m_has_video)
-    throw LIMA_CTL_EXC(Error,"Can't change the gain on Scientific camera");
+    THROW_CTL_ERROR(Error) << "Can't change the gain on Scientific camera";
   if(aGain < 0. || aGain > 1.)
-    throw LIMA_CTL_EXC(InvalidValue,"Gain should be between 0. and 1.");
+    THROW_CTL_ERROR(InvalidValue) << "Gain should be between 0. and 1.";
 
   AutoMutex aLock(m_cond.mutex());
   m_pars.gain = aGain,m_pars_modify_mask |= PARMODIFYMASK_GAIN;
@@ -553,7 +555,7 @@ void CtVideo::registerImageCallback(ImageCallback &cb)
   if(m_image_callback)
     {
       DEB_ERROR() << "ImageCallback already registered";
-      throw LIMA_CTL_EXC(InvalidValue, "ImageCallback already registered");
+      THROW_CTL_ERROR(InvalidValue) <<  "ImageCallback already registered";
     }
 
   m_image_callback = &cb;
@@ -568,7 +570,7 @@ void CtVideo::unregisterImageCallback(ImageCallback &cb)
   if(m_image_callback != &cb)
     {
       DEB_ERROR() << "ImageCallback not registered";
-      throw LIMA_CTL_EXC(InvalidValue, "ImageCallback not registered"); 
+      THROW_CTL_ERROR(InvalidValue) <<  "ImageCallback not registered"; 
     }
 
   m_image_callback = NULL;
@@ -604,8 +606,7 @@ void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList)
 	case Bpp32S:
 	  modeList.push_back(Y32); break;
 	default:
-	  DEB_ERROR() << "Image type not yet managed";
-	  throw LIMA_CTL_EXC(Error, "Image type not yet managed");
+	  THROW_CTL_ERROR(Error) <<  "Image type not yet managed";
 	}
     }
 }

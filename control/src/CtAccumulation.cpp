@@ -464,10 +464,8 @@ void CtAccumulation::registerThresholdCallback(ThresholdCallback &cb)
     m_cond.wait();
 
   if(m_threshold_cb)
-    {
-      DEB_ERROR() << "ThresholdCallback already registered";
-      throw LIMA_CTL_EXC(InvalidValue, "ThresholdCallback already registered");
-    }
+    THROW_CTL_ERROR(InvalidValue) <<  "ThresholdCallback already registered";
+
   m_threshold_cb = &cb;
 }
 
@@ -481,10 +479,8 @@ void CtAccumulation::unregisterThresholdCallback(ThresholdCallback &cb)
     m_cond.wait();
   
   if(m_threshold_cb != &cb)
-    {
-      DEB_ERROR() << "ThresholdCallback not registered";
-      throw LIMA_CTL_EXC(InvalidValue, "ThresholdCallback not registered");
-    }
+    THROW_CTL_ERROR(InvalidValue) <<  "ThresholdCallback not registered";
+
   m_threshold_cb = NULL;
 }
 
