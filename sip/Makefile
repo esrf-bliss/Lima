@@ -42,6 +42,12 @@ sip-modules += maxipix
 endif
 
 ifneq ($(COMPILE_BASLER), 0)
+ifndef PYLON_ROOT
+export PYLON_ROOT = /opt/pylon
+endif
+ifndef GENICAM_ROOT_V2_1
+export GENICAM_ROOT_V2_1 = $(PYLON_ROOT)/genicam
+endif
 sip-modules += basler
 endif
 

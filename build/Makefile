@@ -204,7 +204,11 @@ endif
 
 ifneq ($(COMPILE_BASLER),0)
 
-BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/pylon/lib -L/opt/pylon/lib64
+ifndef PYLON_ROOT
+PYLON_ROOT	:= /opt/pylon
+endif
+
+BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L$(PYLON_ROOT)/lib -L$(PYLON_ROOT)/lib64
 BASLER_LDLIBS	:= $(LDLIBS) -lpylongigesupp
 
 basler-name	:= basler
