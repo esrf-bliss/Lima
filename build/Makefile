@@ -73,6 +73,10 @@ ifneq ($(COMPILE_EDFGZ_SAVING),0)
 CORE_LDLIBS += -lz
 endif
 
+ifneq ($(COMPILE_TIFF_SAVING),0)
+CORE_LDLIBS += -ltiff
+endif
+
 ifneq ($(COMPILE_CONFIG),0)
 CORE_LDLIBS += -L../third-party/libconfig/lib/.libs -Wl,-rpath=$(shell pwd)/../third-party/libconfig/lib/.libs  -lconfig++
 endif
