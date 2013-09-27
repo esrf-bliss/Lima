@@ -69,6 +69,7 @@
                             <exclude>**/CtSaving_Cbf.cpp</exclude>
                             <exclude>**/CtSaving_Fits.cpp</exclude>
                             <exclude>**/CtSpsImage.cpp</exclude>
+                            <exclude>**/CtSaving_Tiff.cpp</exclude>
                         </excludes>
                         <includePaths>
                             <includePath>${project.basedir}/include</includePath>
