@@ -1,0 +1,51 @@
+//###########################################################################
+//
+// Copyright (C) 2012 Alexander Lenz <alexander.lenz@frm2.tum.de>
+//
+// This is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This software is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, see <http://www.gnu.org/licenses/>.
+//###########################################################################
+#ifndef CTSAVING_TIFF_H
+#define CTSAVING_TIFF_H
+
+#include <tiffio.h>
+
+#include "CtSaving.h"
+
+namespace lima {
+
+  class SaveContainerTiff : public CtSaving::SaveContainer
+  {
+    DEB_CLASS_NAMESPC(DebModControl,"Saving TIFF Container","Control");
+  public:
+    SaveContainerTiff(CtSaving::Stream& stream);
+    virtual ~SaveContainerTiff();
+  protected:
+    virtual bool _open(const std::string &filename,
+		std::ios_base::openmode flags);
+    virtual void _close();
+    virtual void _writeFile(Data &data,
+    			    CtSaving::HeaderMap &aHeader,
+    			    CtSaving::FileFormat);
+  private:
+
+    CtSaving::FileFormat	 m_format;
+    Mutex			 m_lock;
+
+    std::string     _filename;
+    int _writeTIFF(TIFF * tif, void *data, size_t w, size_t h,
+		   size_t c, Data::TYPE datatype);
+  };
+
+}
+#endif // CTSAVING_TIFF_H
