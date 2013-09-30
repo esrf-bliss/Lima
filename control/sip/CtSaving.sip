@@ -124,6 +124,7 @@ using namespace lima;
 	NXS,
 	FITS,
 	EDFGZ,
+	TIFFFormat,
     };
 
     enum SavingMode {

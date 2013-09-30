@@ -68,6 +68,7 @@ namespace lima {
 	NXS,			///< Soleil Nexus format
 	FITS,			///< Flexible Image Transport Layer (NOST)
 	EDFGZ,			///< EDF format with gzip compression
+	TIFFFormat,		///< TIFF format
       };
 
     enum SavingMode 
@@ -417,6 +418,8 @@ namespace lima {
 	  aFileFormatHumanPt = "FITS";break;
 	case CtSaving::EDFGZ:
 	  aFileFormatHumanPt = "EDF gzip";break;
+	case CtSaving::TIFFFormat:
+	  aFileFormatHumanPt = "TIFF";break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -435,6 +438,7 @@ namespace lima {
       else if(buffer == "fits")		fileFormat = CtSaving::FITS;
       else if(buffer == "edf gzip") 	fileFormat = CtSaving::EDFGZ;
       else if(buffer == "raw")		fileFormat = CtSaving::RAW;
+      else if(buffer == "tiff")		fileFormat = CtSaving::TIFFFormat;
       else
 	{
 	  std::ostringstream msg;
