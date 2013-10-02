@@ -59,11 +59,13 @@ namespace lima
 	case YUV411:
 	  return 1.5;
 	case BAYER_RG8:
+	case BAYER_BG8:
 	case Y8:
 	  return 1.;
 	case RGB555:
 	case RGB565:
 	case BAYER_RG16:
+	case BAYER_BG16:
 	case I420:
 	case Y16:
 	case YUV422:
@@ -111,6 +113,8 @@ namespace lima
       case BGR32: stringMode = "BGR32";break;
       case BAYER_RG8: stringMode = "BAYER_RG8";break;
       case BAYER_RG16: stringMode = "BAYER_RG16";break;
+      case BAYER_BG8: stringMode = "BAYER_BG8";break;
+      case BAYER_BG16: stringMode = "BAYER_BG16";break;
       case I420: stringMode = "I420";break;
       case YUV411: stringMode = "YUV411";break;
       case YUV422: stringMode = "YUV422";break;
