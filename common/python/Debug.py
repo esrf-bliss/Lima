@@ -21,7 +21,7 @@
 ############################################################################
 from limacore import DebParams, DebObj
 import os, sys, new
-
+import functools
 
 def DEB_GLOBAL_FUNCT(fn):
     return DEB_FUNCT(fn, True, 2)
@@ -39,6 +39,7 @@ def DEB_FUNCT(fn, in_global=True, frame=1, deb_container=None):
     code = frame.f_code
     filename =  os.path.basename(code.co_filename)
     lineno = frame.f_lineno
+    @functools.wraps(fn)
     def real_fn(*arg, **kw):
         sys.exc_clear()
         fn_globals = dict(fn.func_globals)
