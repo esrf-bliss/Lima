@@ -66,6 +66,22 @@ private:
   CtVideo &m_cnt;
 };
 
+class CtVideo::_videoBackgroundCallback : public TaskEventCallback
+{
+public:
+  _videoBackgroundCallback(CtVideo::ImageCallback *cbk,CtVideo::Image& image) :
+    TaskEventCallback(),m_cbk(cbk),m_image(image)
+  {
+  }
+  virtual void finished(Data&)
+  {
+    m_cbk->newImage(m_image);
+  }
+private:
+  CtVideo::ImageCallback*	m_cbk;
+  CtVideo::Image		m_image;
+};
+
 // --- CtVideo::_Data2ImageCBK 
 class CtVideo::_Data2ImageCBK : public TaskEventCallback
 {
@@ -151,7 +167,22 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
    
       if(m_video.m_image_callback)
 	{
-	  //TODO should be done in background
+	  CtVideo::Image anImageWrapper(&m_video,anImage);
+	  aLock.unlock();
+
+	  SinkTaskBase* cbk_task = new SinkTaskBase();
+	  _videoBackgroundCallback *video_cbk = new _videoBackgroundCallback(m_video.m_image_callback,
+									     anImageWrapper);
+
+
+	  cbk_task->setEventCallback(video_cbk);
+	  video_cbk->unref();
+
+	  TaskMgr *mgr = new TaskMgr();
+	  mgr->addSinkTask(0,cbk_task);
+	  cbk_task->unref();
+
+	  PoolThreadMgr::get().addProcess(mgr);
 	}
     }
   return true;

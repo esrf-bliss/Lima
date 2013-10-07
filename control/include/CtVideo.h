@@ -128,6 +128,7 @@ namespace lima
     friend class _Data2ImageCBK;
     class _InternalImageCBK;
     friend class _InternalImageCBK;
+    class _videoBackgroundCallback;
 
     void frameReady(Data&);	// callback from CtControl
 
