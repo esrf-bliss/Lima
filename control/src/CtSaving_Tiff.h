@@ -43,8 +43,6 @@ namespace lima {
     Mutex			 m_lock;
 
     std::string     _filename;
-    int _writeTIFF(TIFF * tif, void *data, size_t w, size_t h,
-		   size_t c, Data::TYPE datatype);
   };
 
 }
