@@ -194,6 +194,9 @@ namespace lima
     typedef std::pair<std::string,std::list<Tasks::RoiCounterResult> > RoiNameAndResults;
     typedef std::pair<std::string,Roi> RoiNameAndRoi;
     typedef std::pair<std::string,ArcRoi> RoiNameAndArcRoi;
+    typedef std::pair<std::string,Tasks::RoiCounterTask*> RoiNameAndTask;
+    typedef std::list<RoiNameAndTask> RoiNameAndTaskList;
+
     SoftOpRoiCounter();
     virtual ~SoftOpRoiCounter();
 
@@ -215,6 +218,7 @@ namespace lima
 		const Point& origin,Data &lut);
     void setLutMask(const std::string& name,
 		    const Point& origin,Data &lut);
+    void getTasks(RoiNameAndTaskList&);
     // end of new set
 
     void names(std::list<std::string>& roi_names) const;

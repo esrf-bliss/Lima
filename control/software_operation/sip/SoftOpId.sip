@@ -280,6 +280,79 @@ if(sipIsErr == NULL)
 %End
 };
 
+%MappedType std::list<SoftOpRoiCounter::RoiNameAndTask>
+{
+%TypeHeaderCode
+#include <list>
+#include <RoiCounter.h>
+%End
+
+%ConvertToTypeCode
+if(sipIsErr == NULL)
+  {
+    bool aReturnFlag = PyList_Check(sipPy);
+    for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
+      {
+	PyObject *p = PyList_GET_ITEM(sipPy,i);
+	aReturnFlag = PySequence_Check(p) &&
+                      PySequence_Size(p) == 2 &&
+                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
+					  sipType_Tasks_RoiCounterTask,SIP_NOT_NONE);
+      }
+    return aReturnFlag;
+  }
+  SoftOpRoiCounter::RoiNameAndTaskList *named_roisPt = new SoftOpRoiCounter::RoiNameAndTaskList();
+
+  for(int i = 0;i < PyList_Size(sipPy);++i)
+    {
+      PyObject *p = PyList_GET_ITEM(sipPy,i);
+      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      int state;
+      Tasks::RoiCounterTask *task = 
+	reinterpret_cast<Tasks::RoiCounterTask*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
+								  sipType_Tasks_RoiCounterTask,0,
+								  SIP_NOT_NONE,
+								  &state,sipIsErr));
+      if(*sipIsErr)
+	{
+	  sipReleaseType(task,sipType_Tasks_RoiCounterTask,state);
+	  delete named_roisPt;
+	  return 0;
+	}
+      named_roisPt->push_back(SoftOpRoiCounter::RoiNameAndTask(name,task));
+      sipReleaseType(task,sipType_ArcRoi,state);
+    }
+  *sipCppPtr = named_roisPt;
+  return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+   PyObject *l;
+  if(!(l = PyList_New(sipCpp->size())))
+    return NULL;
+
+  sipTransferObj = NULL;
+  int i = 0;
+  for(SoftOpRoiCounter::RoiNameAndTaskList::iterator j = sipCpp->begin();
+      j != sipCpp->end();++j,++i)
+    {
+      PyObject *wobj;
+      Tasks::RoiCounterTask *task = new Tasks::RoiCounterTask(*(j->second));
+      if(!(wobj = sipConvertFromNewType(task,sipType_Tasks_RoiCounterTask,sipTransferObj)))
+	{
+	  delete task;
+	  Py_DECREF(l);
+	  return NULL;
+	}
+      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+      PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,wobj));
+      Py_DECREF(aNamePy);Py_DECREF(wobj);
+    }
+  return l;
+%End
+};
+
 %MappedType std::list<SoftOpRoi2Spectrum::RoiIdAndResults>
 {
 %TypeHeaderCode
@@ -513,6 +586,7 @@ using namespace lima;
   typedef std::pair<std::string,std::list<Tasks::RoiCounterResult> > RoiNameAndResults;
   typedef std::pair<std::string,lima::Roi> RoiNameAndRoi;
   typedef std::pair<std::string,lima::ArcRoi> RoiNameAndArcRoi;
+  typedef std::pair<std::string,Tasks::RoiCounterTask*> RoiNameAndTask;
 
   SoftOpRoiCounter();
   ~SoftOpRoiCounter();
@@ -524,6 +598,7 @@ using namespace lima;
 	      const Point& origin,Data &lut);
   void setLutMask(const std::string& name,
 		  const Point& origin,Data &lut);
+  void getTasks(std::list<SoftOpRoiCounter::RoiNameAndTask>& /Out/);
 
   void names(std::list<std::string>& roi_names /Out/) const;
   void remove(const std::list<std::string>& names);

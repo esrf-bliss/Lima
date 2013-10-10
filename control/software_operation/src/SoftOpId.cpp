@@ -300,6 +300,16 @@ void SoftOpRoiCounter::setLutMask(const std::string& name,
   aCounterTaskPt->setLutMask(origin.x,origin.y,mask);
   aCounterTaskPt->setMask(m_mask);
 }
+void SoftOpRoiCounter::getTasks(RoiNameAndTaskList& l)
+{
+  for(Name2ManagerNCounter::iterator i = m_manager_tasks.begin();
+      i != m_manager_tasks.end();++i)
+    {
+      const std::string& name = i->first;
+      Tasks::RoiCounterTask* task = i->second.second;
+      l.push_back(RoiNameAndTask(name,task));
+    }
+}
 void SoftOpRoiCounter::names(std::list<std::string>& roi_names) const
 {
   AutoMutex aLock(m_cond.mutex());
