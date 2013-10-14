@@ -82,6 +82,7 @@ public:
     acq_setting.set("concatNbFrames",pars.concatNbFrames);
     acq_setting.set("latencyTime",pars.latencyTime);
     acq_setting.set("triggerMode",convert_2_string(pars.triggerMode));
+    acq_setting.set("autoExpoMode",convert_2_string(pars.autoExpoMode));
   }
   virtual void restore(const Setting& acq_setting)
   {
@@ -105,6 +106,10 @@ public:
     std::string strtriggerMode;
     if(acq_setting.get("triggerMode",strtriggerMode))
       convert_from_string(strtriggerMode,pars.triggerMode);
+
+    std::string strautoExpoMode;
+    if(acq_setting.get("autoExpoMode",strautoExpoMode))
+      convert_from_string(strautoExpoMode,pars.autoExpoMode);
 
     m_acq.setPars(pars);
   }
@@ -152,6 +157,7 @@ void CtAcquisition::setPars(const Parameters &pars)
   setConcatNbFrames(pars.concatNbFrames);
   setLatencyTime(pars.latencyTime);
   setTriggerMode(pars.triggerMode);
+  setAutoExposureMode(pars.autoExpoMode);
 }
 
 void CtAcquisition::getPars(Parameters& pars) const
@@ -170,6 +176,10 @@ void CtAcquisition::reset()
   m_inpars.reset();
   m_inpars.latencyTime = m_valid_ranges.min_lat_time;
   m_applied_once= false;
+
+  //Check auto exposure capability
+  m_inpars.autoExpoMode = 
+    m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::OFF) ? OFF : ON;
 }
 
 void CtAcquisition::apply(CtControl::ApplyPolicy policy)
@@ -264,21 +274,35 @@ void CtAcquisition::_apply()
       else
 	m_hw_sync->setNbFrames(m_inpars.acqNbFrames);
     }
-  
-  switch (m_inpars.acqMode) {
-  case Single:
-    if (m_changes.acqExpoTime) m_hw_sync->setExpTime(m_inpars.acqExpoTime);
-    break;
-  case Concatenation:
-    if (m_changes.acqExpoTime) m_hw_sync->setExpTime(m_inpars.acqExpoTime);
-    break;
-  case Accumulation:
-    if (m_changes.acqExpoTime || m_changes.accMaxExpoTime) {
-      _updateAccPars();
-      m_hw_sync->setExpTime(m_acc_exptime);
+
+  bool autoExpoModeFlag = (m_changes.autoExpoMode || 
+		       (m_inpars.acqNbFrames && m_inpars.autoExpoMode == ON_LIVE));
+
+  if(m_inpars.autoExpoMode == OFF ||
+     (m_inpars.autoExpoMode == ON_LIVE && m_inpars.acqNbFrames))
+    {
+      if(autoExpoModeFlag) m_hw_sync->setAutoExposureMode(HwSyncCtrlObj::OFF);
+
+      bool acqExpoTimeFlag = m_changes.acqExpoTime || m_changes.autoExpoMode;
+      switch (m_inpars.acqMode)
+	{
+	case Single:
+	  if (acqExpoTimeFlag) m_hw_sync->setExpTime(m_inpars.acqExpoTime);
+	  break;
+	case Concatenation:
+	  if (acqExpoTimeFlag) m_hw_sync->setExpTime(m_inpars.acqExpoTime);
+	  break;
+	case Accumulation:
+	  if (acqExpoTimeFlag || m_changes.accMaxExpoTime) {
+	    _updateAccPars();
+	    m_hw_sync->setExpTime(m_acc_exptime);
+	  }
+	  break;
+	}
     }
-    break;
-  }
+  else if(autoExpoModeFlag)
+    m_hw_sync->setAutoExposureMode(HwSyncCtrlObj::ON);
+
   m_hwpars = m_inpars;
 
   DEB_TRACE() << DEB_VAR1(m_hwpars);
@@ -305,6 +329,17 @@ void CtAcquisition::getTriggerMode(TrigMode& mode) const
   DEB_RETURN() << DEB_VAR1(mode);
 }
 
+void CtAcquisition::getTriggerModeList(TrigModeList& modes) const
+{
+  DEB_MEMBER_FUNCT();
+
+  for(int i = 0;TrigMode(i) <= ExtTrigReadout;++i)
+    {
+      TrigMode tmpTrig = (TrigMode)i;
+      if(m_hw_sync->checkTrigMode(tmpTrig))
+	modes.push_back(tmpTrig);
+    }
+}
 
 void CtAcquisition::setAcqMode(AcqMode mode)
 {
@@ -391,6 +426,9 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
   DEB_MEMBER_FUNCT(); 
   DEB_PARAM() << DEB_VAR1(acq_time);
 
+  if(m_inpars.autoExpoMode == ON)
+    THROW_CTL_ERROR(Error) << "Should disable auto exposure to set exposure time";
+
   if(m_inpars.acqMode != Accumulation)
     {
       CHECK_EXPOTIME(acq_time);
@@ -402,11 +440,64 @@ void CtAcquisition::getAcqExpoTime(double& acq_time) const
 {
   DEB_MEMBER_FUNCT();
 
-  acq_time= m_inpars.acqExpoTime;
+  HwSyncCtrlObj::AutoExposureMode mode;
+  m_hw_sync->getAutoExposureMode(mode);
+  if(mode == HwSyncCtrlObj::ON)
+    m_hw_sync->getExpTime(acq_time);
+  else
+    acq_time= m_inpars.acqExpoTime;
   
   DEB_RETURN() << DEB_VAR1(acq_time);
 }
 
+bool CtAcquisition::checkAutoExposureMode(AutoExposureMode mode) const
+{
+  bool check_flag = false;
+  switch(mode)
+    {
+    case ON:
+      check_flag = m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::ON);
+      break;
+    case OFF:
+      check_flag = m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::OFF);
+      break;
+    case ON_LIVE:
+      check_flag = m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::ON) &&
+	m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::OFF);
+      break;
+    default: 
+      break;
+    }
+  return check_flag;
+}
+
+void CtAcquisition::getAutoExposureModeList(AutoExposureModeList& modes) const
+{
+  DEB_MEMBER_FUNCT();
+  int nb_modes = 0;
+  if(m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::OFF))
+    modes.push_back(OFF),++nb_modes;
+  if(m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::ON))
+    modes.push_back(ON),++nb_modes;
+
+  if(nb_modes == 2)		// All modes
+    modes.push_back(ON_LIVE);
+}
+
+void CtAcquisition::setAutoExposureMode(AutoExposureMode mode)
+{
+  DEB_MEMBER_FUNCT();
+  if(!checkAutoExposureMode(mode))
+    THROW_CTL_ERROR(NotSupported) << DEB_VAR1(mode);
+  m_inpars.autoExpoMode = mode;
+}
+
+void CtAcquisition::getAutoExposureMode(AutoExposureMode& mode) const
+{
+  DEB_MEMBER_FUNCT();
+  DEB_RETURN() << m_inpars.autoExpoMode;
+  mode = m_inpars.autoExpoMode;
+}
 void CtAcquisition::getAccNbFrames(int& nframes) const
 {
   DEB_MEMBER_FUNCT();
@@ -600,9 +691,10 @@ void CtAcquisition::ChangedPars::set(bool val)
   triggerMode= val;
   accMaxExpoTime= val;
   acqMode = val;
-  DEB_TRACE() << DEB_VAR5(acqExpoTime,acqNbFrames,
+  autoExpoMode = val;
+  DEB_TRACE() << DEB_VAR6(acqExpoTime,acqNbFrames,
 			  latencyTime,triggerMode,
-			  accMaxExpoTime);
+			  accMaxExpoTime,autoExpoMode);
 }
 
 void CtAcquisition::ChangedPars::check(Parameters p1, 
@@ -617,6 +709,7 @@ void CtAcquisition::ChangedPars::check(Parameters p1,
   triggerMode= (p1.triggerMode != p2.triggerMode);
   accMaxExpoTime= (p1.accMaxExpoTime != p2.accMaxExpoTime);
   acqMode = (p1.acqMode != p2.acqMode);
+  autoExpoMode = (p1.autoExpoMode != p2.autoExpoMode);
 
   DEB_TRACE() << DEB_VAR6(acqExpoTime,acqNbFrames,latencyTime,
 			  triggerMode,accMaxExpoTime,acqMode);

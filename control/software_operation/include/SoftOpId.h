@@ -47,7 +47,7 @@ namespace lima
 
     virtual ~SoftOpBaseClass() {};
 
-    virtual void addTo(TaskMgr&,int stage) = 0;
+    virtual bool addTo(TaskMgr&,int stage) = 0;
     virtual void prepare() = 0;
   };
 
@@ -100,7 +100,7 @@ namespace lima
     void setBackgroundImage(Data &aData);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::BackgroundSubstraction *m_opt;
@@ -115,7 +115,7 @@ namespace lima
     void setBinning(int x,int y);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::Binning *m_opt;
@@ -131,7 +131,7 @@ namespace lima
     Tasks::BpmManager* 	getManager() 	{return m_manager;}
 
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare();
   private:
     Tasks::BpmManager	*m_manager;
@@ -147,7 +147,7 @@ namespace lima
     void setFlatFieldImage(Data &aData);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::FlatfieldCorrection *m_opt;
@@ -162,7 +162,7 @@ namespace lima
     void setFlip(bool x,bool y);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::Flip *m_opt;
@@ -179,7 +179,7 @@ namespace lima
     void getType(Type&) const;
     void setType(Type);
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::Mask *m_opt;
@@ -187,16 +187,42 @@ namespace lima
 
   class LIMACORE_API SoftOpRoiCounter : public SoftOpBaseClass
   {
+    DEB_CLASS_NAMESPC(DebModControl,"SoftwareOperation","SoftOpRoiCounter");
   public:
     typedef std::pair<int,std::list<Tasks::RoiCounterResult> > RoiIdAndResults;
     typedef std::pair<int,Roi> RoiIdAndRoi;
+    typedef std::pair<std::string,std::list<Tasks::RoiCounterResult> > RoiNameAndResults;
+    typedef std::pair<std::string,Roi> RoiNameAndRoi;
+    typedef std::pair<std::string,ArcRoi> RoiNameAndArcRoi;
+    typedef std::pair<std::string,Tasks::RoiCounterTask*> RoiNameAndTask;
+    typedef std::list<RoiNameAndTask> RoiNameAndTaskList;
+
     SoftOpRoiCounter();
     virtual ~SoftOpRoiCounter();
 
+    /** Old way to manage roi's counters
+     * they are now deprecated, 
+     * please use the new set of methods.
+     * will be removed in version 2.
+     */
     void add(const std::list<Roi> &rois); 
     void set(const std::list<Roi> &rois); 
     void get(std::list<Roi>&) const;
     void del(const std::list<int> &roiIds);
+    void readCounters(int from,std::list<RoiIdAndResults> &result) const;
+    /** New methods set */
+    void update(const std::list<RoiNameAndRoi>&);
+    void update(const std::list<RoiNameAndArcRoi>&);
+
+    void setLut(const std::string& name,
+		const Point& origin,Data &lut);
+    void setLutMask(const std::string& name,
+		    const Point& origin,Data &lut);
+    void getTasks(RoiNameAndTaskList&);
+    // end of new set
+
+    void names(std::list<std::string>& roi_names) const;
+    void remove(const std::list<std::string>& names);
     void clearAllRoi();		/* clear all roi */
 
     void clearCounterStatus();
@@ -207,19 +233,99 @@ namespace lima
     void setBufferSize(int size);
     void getBufferSize(int &size) const;
     
-    void readCounters(int from,std::list<RoiIdAndResults> &result) const;
+    void readCounters(int from,std::list<RoiNameAndResults> &result) const;
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare();
   private:
     typedef std::pair<Tasks::RoiCounterManager*,Tasks::RoiCounterTask*> ManagerNCounter;
+    typedef std::map<std::string,ManagerNCounter> Name2ManagerNCounter;
 
-    std::list<ManagerNCounter>  m_manager_tasks;
+    inline void _get_or_create(const std::string& roi_name,
+			       Tasks::RoiCounterManager*&,Tasks::RoiCounterTask*&);
+
+    Name2ManagerNCounter	m_manager_tasks;
     int				m_history_size;
     int				m_counter_status;
     Data			m_mask;
     mutable Cond		m_cond;
   };
+#define ROI_WARNING
+#ifdef WIN32
+#pragma message ("deprecated use new methods set")
+#else
+#warning deprecated use new methods set
+#endif
+  inline void SoftOpRoiCounter::add(const std::list<Roi> &rois)
+  {
+    ROI_WARNING;
+    int nb_rois = m_manager_tasks.size();
+    std::list<RoiNameAndRoi> local_rois;
+    for(std::list<Roi>::const_iterator i = rois.begin();
+	i != rois.end();++i,++nb_rois)
+      {
+	char buffer[256];
+	snprintf(buffer,sizeof(buffer),"roi_%d",nb_rois);
+	RoiNameAndRoi roiname_roi(buffer,*i);
+	local_rois.push_back(roiname_roi);
+      }
+    update(local_rois);
+  }
+  inline void SoftOpRoiCounter::set(const std::list<Roi> &rois)
+  {
+    clearAllRoi();
+    add(rois);
+  }
+  inline void SoftOpRoiCounter::get(std::list<Roi> &rois) const
+  {
+    ROI_WARNING;
+    DEB_MEMBER_FUNCT();
+    std::vector<Roi> v_rois;
+    v_rois.resize(m_manager_tasks.size());
+    for(Name2ManagerNCounter::const_iterator i = m_manager_tasks.begin();
+	i != m_manager_tasks.end();++i)
+      {
+	int roi_id;
+	if(sscanf(i->first.c_str(),"roi_%d",&roi_id) != 1)
+	  THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
+	int x,y,width,height;
+	i->second.second->getRoi(x,y,width,height);
+	v_rois[roi_id] = Roi(x,y,width,height);
+      }
+    for(std::vector<Roi>::iterator i = v_rois.begin();
+	i != v_rois.end();++i)
+      rois.push_back(*i);
+  }
+  inline void SoftOpRoiCounter::del(const std::list<int> &roiIds)
+  {
+    ROI_WARNING;
+    std::list<std::string> rois_names;
+    for(std::list<int>::const_iterator i = roiIds.begin();
+	i != roiIds.end();++i)
+      {
+	char buffer[256];
+	snprintf(buffer,sizeof(buffer),"roi_%d",*i);
+	rois_names.push_back(buffer);
+      }
+    remove(rois_names);
+  }
+  inline void SoftOpRoiCounter::readCounters(int from,
+					     std::list<RoiIdAndResults> &result) const
+  {
+    ROI_WARNING;
+    DEB_MEMBER_FUNCT();
+    std::list<RoiNameAndResults> tmp_result;
+    readCounters(from,tmp_result);
+    for(std::list<RoiNameAndResults>::iterator i = tmp_result.begin();
+	i != tmp_result.end();++i)
+      {
+	int roi_id;
+	if(sscanf(i->first.c_str(),"roi_%d",&roi_id) != 1)
+	  THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
+	result.push_back(RoiIdAndResults(roi_id,i->second));
+      }
+  }
+
 
   class LIMACORE_API SoftOpRoi2Spectrum : public SoftOpBaseClass
   {
@@ -250,7 +356,7 @@ namespace lima
     void readCounters(int from,std::list<RoiIdAndResults> &result) const;
     void createImage(int roiId,int &from,Data &aData) const;
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare();
   private:
     typedef std::pair<Tasks::Roi2SpectrumManager*,Tasks::Roi2SpectrumTask*> ManagerNCounter;
@@ -271,7 +377,7 @@ namespace lima
     void setRoi(int x,int y,int width,int height);
     
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
   private:
     Tasks::SoftRoi *m_opt;
@@ -314,7 +420,7 @@ namespace lima
 
     void setLinkTask(LinkTask*);
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {prepare_cb();}
   private:
     LinkTask*	m_link_task;
@@ -330,7 +436,7 @@ namespace lima
     void setSinkTask(SinkTaskBase*);
 
   protected:
-    virtual void addTo(TaskMgr&,int stage);
+    virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {prepare_cb();}
   private:
     SinkTaskBase* m_sink_task;

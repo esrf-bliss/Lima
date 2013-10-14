@@ -281,6 +281,8 @@ const char* lima::convert_2_string(VideoMode aVideoMode)
     case BGR32: 	aHumanReadablePt = "BGR32";		break;
     case BAYER_RG8: 	aHumanReadablePt = "BAYER_RG8";		break;
     case BAYER_RG16: 	aHumanReadablePt = "BAYER_RG16";	break;
+    case BAYER_BG8: 	aHumanReadablePt = "BAYER_BG8";		break;
+    case BAYER_BG16: 	aHumanReadablePt = "BAYER_BG16";	break;
     case I420: 		aHumanReadablePt = "I420";		break;
     case YUV411: 	aHumanReadablePt = "YUV411";		break;
     case YUV422: 	aHumanReadablePt = "YUV422";		break;

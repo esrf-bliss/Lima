@@ -40,6 +40,8 @@
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
 
+#include "HwReconstructionCtrlObj.h"
+
 #include "PoolThreadMgr.h"
 
 using namespace lima;
@@ -129,6 +131,19 @@ public:
 private:
   CtControl&	m_ct;
 };
+
+class CtControl::_ReconstructionChangeCallback : public HwReconstructionCtrlObj::Callback
+{
+public:
+  _ReconstructionChangeCallback(CtControl& ctrl) : m_ct(ctrl) {}
+
+  virtual void change(LinkTask* aNewLinkTaskPt)
+  {
+    m_ct.setReconstructionTask(aNewLinkTaskPt);
+  }
+private:
+  CtControl& m_ct;
+};
 // --- helper
 
 
@@ -142,7 +157,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
-  m_img_status_cb(NULL)
+  m_img_status_cb(NULL),
+  m_reconstruction_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
 
@@ -191,6 +207,15 @@ CtControl::CtControl(HwInterface *hw) :
   m_op_ext = new SoftOpExternalMgr();
 
   m_soft_op_error_handler = new SoftOpErrorHandler(*this);
+
+  HwReconstructionCtrlObj* reconstruction_obj;
+  if(hw->getHwCtrlObj(reconstruction_obj))
+    {
+      m_reconstruction_cbk = new _ReconstructionChangeCallback(*this);
+      reconstruction_obj->registerReconstructionChangeCallback(*m_reconstruction_cbk);
+      LinkTask* rec_task = reconstruction_obj->getReconstructionTask();
+      setReconstructionTask(rec_task);
+    }
 }
 
 CtControl::~CtControl()
@@ -203,6 +228,14 @@ CtControl::~CtControl()
 
   if (m_img_status_cb)
     unregisterImageStatusCallback(*m_img_status_cb);
+  
+  if(m_reconstruction_cbk)
+    {
+      HwReconstructionCtrlObj* reconstruction_obj;
+      m_hw->getHwCtrlObj(reconstruction_obj);
+      reconstruction_obj->unregisterReconstructionChangeCallback(*m_reconstruction_cbk);
+      delete m_reconstruction_cbk;
+    }
 
   delete m_ct_saving;
 #ifdef WITH_SPS_IMAGE
@@ -457,7 +490,9 @@ void CtControl::_calcAcqStatus()
       m_ct_acq->getAcqNbFrames(acq_nb_frames);
       if((!m_running ||
 	  anImageCnt.LastImageAcquired == (acq_nb_frames - 1)) && // we reach the nb frames asked
-	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finished
+	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady && // processing has finished
+	 (!m_op_ext_sink_task_active || 
+	  anImageCnt.LastCounterReady == anImageCnt.LastImageAcquired)) // ext counters
 	{
 	  if(m_autosave)
 	    {
@@ -761,9 +796,10 @@ void CtControl::newImageReady(Data &aData)
 void CtControl::newCounterReady(Data&)
 {
   DEB_MEMBER_FUNCT();
-  //@todo
   AutoMutex aLock(m_cond.mutex());
   ++m_status.ImageCounters.LastCounterReady;
+  aLock.unlock();
+  _calcAcqStatus();
 }
 
 /** @brief inc the save counter.
