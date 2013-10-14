@@ -490,7 +490,9 @@ void CtControl::_calcAcqStatus()
       m_ct_acq->getAcqNbFrames(acq_nb_frames);
       if((!m_running ||
 	  anImageCnt.LastImageAcquired == (acq_nb_frames - 1)) && // we reach the nb frames asked
-	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finished
+	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady && // processing has finished
+	 (!m_op_ext_sink_task_active || 
+	  anImageCnt.LastCounterReady == anImageCnt.LastImageAcquired)) // ext counters
 	{
 	  if(m_autosave)
 	    {
@@ -794,9 +796,10 @@ void CtControl::newImageReady(Data &aData)
 void CtControl::newCounterReady(Data&)
 {
   DEB_MEMBER_FUNCT();
-  //@todo
   AutoMutex aLock(m_cond.mutex());
   ++m_status.ImageCounters.LastCounterReady;
+  aLock.unlock();
+  _calcAcqStatus();
 }
 
 /** @brief inc the save counter.
