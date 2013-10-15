@@ -37,6 +37,49 @@ enum TrigMode {
 	ExtGate, ExtStartStop, ExtTrigReadout,
 };
 
+%MappedType TrigModeList
+{
+%TypeHeaderCode
+#include <vector>
+%End
+
+%ConvertToTypeCode
+  if(sipIsErr == NULL)
+    {
+      bool aReturnFlag = PySequence_Check(sipPy);
+      for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
+	aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_TrigMode);
+      return aReturnFlag;
+    }
+  std::vector<TrigMode> *modeListPt = new std::vector<TrigMode>();
+  for(int i = 0;i < PySequence_Size(sipPy);++i)
+    modeListPt->push_back(static_cast<TrigMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+  *sipCppPtr = modeListPt;
+  return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+  PyObject *l;
+  if(!(l = PyList_New(sipCpp->size())))
+    return NULL;
+
+  int listPos = 0;
+  for(std::vector<TrigMode>::iterator i = sipCpp->begin();
+      i != sipCpp->end();++i,++listPos)
+    {
+      PyObject *tobj = sipConvertFromEnum(*i, sipType_TrigMode);
+      if(!tobj)
+        {
+	  Py_DECREF(l);
+	  return NULL;
+        }
+      PyList_SET_ITEM(l, listPos, tobj);
+    }
+  return l;
+%End
+};
+
 enum BufferMode {
 	Linear, Circular,
 };
@@ -109,6 +152,7 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 		RGB24,RGB32,
 		BGR24,BGR32,
 		BAYER_RG8,BAYER_RG16,
+		BAYER_BG8,BAYER_BG16,
 		I420,YUV411,YUV422,YUV444};
 
 %MappedType std::list<VideoMode>
@@ -159,4 +203,47 @@ enum RotationMode {
   Rotation_90,
   Rotation_180,
   Rotation_270
+};
+
+%MappedType RotationModeList
+{
+%TypeHeaderCode
+#include <list>
+%End
+
+%ConvertToTypeCode
+  if(sipIsErr == NULL)
+    {
+      bool aReturnFlag = PySequence_Check(sipPy);
+      for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
+        aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+                                          sipType_RotationMode);
+      return aReturnFlag;
+    }
+  std::list<RotationMode> *modeListPt = new std::list<RotationMode>();
+  for(int i = 0;i < PySequence_Size(sipPy);++i)
+    modeListPt->push_back(static_cast<RotationMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+  *sipCppPtr = modeListPt;
+  return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+  PyObject *l;
+  if(!(l = PyList_New(sipCpp->size())))
+    return NULL;
+
+  int listPos = 0;
+  for(std::list<RotationMode>::iterator i = sipCpp->begin();
+      i != sipCpp->end();++i,++listPos)
+    {
+      PyObject *tobj = sipConvertFromEnum(*i, sipType_RotationMode);
+      if(!tobj)
+        {
+          Py_DECREF(l);
+          return NULL;
+        }
+      PyList_SET_ITEM(l, listPos, tobj);
+    }
+  return l;
+%End
 };

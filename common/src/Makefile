@@ -41,7 +41,7 @@ endif
 
 ifneq ($(COMPILE_CONFIG),0)
 common-objs += ConfigUtils.o
-CXXFLAGS += -I../../third-party/libconfig/lib
+CXXFLAGS += -DWITH_CONFIG -I../../third-party/libconfig/lib
 endif
 
 all:	Common.o
@@ -61,3 +61,7 @@ clean:
 	rm -f $*.d
 
 -include $(SRCS:.cpp=.P)
+
+.PHONY: check-syntax
+check-syntax:
+	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)

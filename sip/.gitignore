@@ -1,3 +1,4 @@
+*~
 sip*.cpp
 *.pyc
 core/Makefile
@@ -25,9 +26,11 @@ photonicscience
 marccd
 pilatus
 pointgrey
+dexela
 *.obj
 lima*.exp
 lima*.lib
 *.pyd.manifest
 *.pyd
 .svn
+imxpad

@@ -73,6 +73,10 @@ ifneq ($(COMPILE_EDFGZ_SAVING),0)
 CORE_LDLIBS += -lz
 endif
 
+ifneq ($(COMPILE_TIFF_SAVING),0)
+CORE_LDLIBS += -ltiff
+endif
+
 ifneq ($(COMPILE_CONFIG),0)
 CORE_LDLIBS += -L../third-party/libconfig/lib/.libs -Wl,-rpath=$(shell pwd)/../third-party/libconfig/lib/.libs  -lconfig++
 endif
@@ -204,7 +208,11 @@ endif
 
 ifneq ($(COMPILE_BASLER),0)
 
-BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/pylon/lib -L/opt/pylon/lib64
+ifndef PYLON_ROOT
+PYLON_ROOT	:= /opt/pylon
+endif
+
+BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L$(PYLON_ROOT)/lib -L$(PYLON_ROOT)/lib64
 BASLER_LDLIBS	:= $(LDLIBS) -lpylongigesupp
 
 basler-name	:= basler
@@ -489,6 +497,29 @@ $(call lib-full,$(pointgrey-name),$(pointgrey-ver)): $(pointgrey-objs)
 	$(call create-links,$(pointgrey-name),$(pointgrey-ver))
 
 build_targets	+= $(call lib-full,$(pointgrey-name),$(pointgrey-ver))
+
+endif
+
+############################
+# LIMA - IMXPAD
+############################
+ifneq ($(COMPILE_IMXPAD),0)
+
+IMXPAD_LDFLAGS	:= $(LDFLAGS)
+IMXPAD_LDLIBS	:= $(LDLIBS)
+
+imxpad-name	:= imxpad
+imxpad-objs	:= ../camera/imxpad/src/imXpad.o
+imxpad-ver	:= ../camera/imxpad/VERSION
+imxpad-flags	:= $(IMXPAD_LDFLAGS)
+imxpad-deps	:= $(IMXPAD_LDLIBS)
+
+$(call lib-full,$(imxpad-name),$(imxpad-ver)): $(imxpad-objs)
+	$(call compile-lib,$(imxpad-name),$(imxpad-ver),\
+			   $(imxpad-flags),$(imxpad-deps),$@,$+)
+	$(call create-links,$(imxpad-name),$(imxpad-ver))
+
+build_targets	+= $(call lib-full,$(imxpad-name),$(imxpad-ver))
 
 endif
 

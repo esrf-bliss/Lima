@@ -20,6 +20,13 @@ namespace lima
     friend class _Data2ImageTask;
 
   public:
+    enum AutoGainMode {
+      OFF,	  ///< Always off
+      ON,	  ///< Always on
+      ON_LIVE	  ///< ON during live and OFF for standard Acquisition
+    };
+    typedef std::vector<AutoGainMode> AutoGainModeList;
+
     CtVideo(CtControl&);
     ~CtVideo();
     
@@ -30,12 +37,13 @@ namespace lima
       Parameters();
       void reset();
       
-      bool 	live;
-      double 	exposure;	///< exposure time in second
-      double 	gain;		///< % of gain (0. <= gain <= 1.)
-      VideoMode mode;
-      Roi 	roi;
-      Bin 	bin;
+      bool		live;
+      double		exposure;	///< exposure time in second
+      double		gain;		///< % of gain (0. <= gain <= 1.)
+      AutoGainMode	auto_gain_mode;
+      VideoMode		mode;
+      Roi		roi;
+      Bin		bin;
     };
 
     class LIMACORE_API Image
@@ -92,6 +100,10 @@ namespace lima
 
     void setGain(double aGain);
     void getGain(double &aGain) const;
+    bool checkAutoGainMode(AutoGainMode mode) const;
+    void getAutoGainModeList(AutoGainModeList& modes) const;
+    void setAutoGainMode(AutoGainMode mode);
+    void getAutoGainMode(AutoGainMode& mode) const;
 
     void setMode(VideoMode aMode);
     void getMode(VideoMode &aMode) const;
@@ -116,6 +128,7 @@ namespace lima
     friend class _Data2ImageCBK;
     class _InternalImageCBK;
     friend class _InternalImageCBK;
+    class _videoBackgroundCallback;
 
     void frameReady(Data&);	// callback from CtControl
 
@@ -153,6 +166,43 @@ namespace lima
     bool		m_stopping_live; ///< variable to avoid deadlock when stopping live
     bool		m_active_flag; ///< flag if video is active
   };
+  
+  inline const char* convert_2_string(CtVideo::AutoGainMode mode)
+  {
+    const char *name;
+    switch(mode)
+      {
+      case CtVideo::ON: name = "ON";break;
+      case CtVideo::OFF: name = "OFF";break;
+      case CtVideo::ON_LIVE: name = "ON LIVE";break;
+      default:
+	name = "UNKNOWN";
+	break;
+      }
+    return name;
+  }
+  inline void convert_from_string(const std::string& val,
+				  CtVideo::AutoGainMode& mode)
+  {
+    std::string buffer = val;
+    std::transform(buffer.begin(),buffer.end(),
+		   buffer.begin(),::tolower);
+    
+    if(buffer == "off") mode = CtVideo::OFF;
+    else if(buffer == "on") mode = CtVideo::ON;
+    else if(buffer == "on live") mode = CtVideo::ON_LIVE;
+    else
+      {
+	std::ostringstream msg;
+	msg << "AutoExposureMode can't be:" << DEB_VAR1(val);
+	throw LIMA_EXC(Common,InvalidValue,msg.str());
+      }
+  }
+  inline std::ostream& operator<<(std::ostream &os,
+				  CtVideo::AutoGainMode mode)
+  {
+    return os << convert_2_string(mode);
+  }
   inline std::ostream& operator<<(std::ostream &os,
 				  const CtVideo::Parameters& params)
     {
@@ -160,6 +210,7 @@ namespace lima
 	 << "live=" << (params.live ? "Yes" : "No") << ", "
 	 << "exposure=" << params.exposure << ", "
 	 << "gain=" << params.gain << ", "
+	 << "auto_gain_mode=" << convert_2_string(params.auto_gain_mode) << ", "
 	 << "mode=" << convert_2_string(params.mode) << ", "
 	 << "roi=" << params.roi << ", "
 	 << "bin=" << params.bin

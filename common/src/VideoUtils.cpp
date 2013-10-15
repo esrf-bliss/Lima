@@ -44,11 +44,9 @@ inline void _bgr_2_yuv(const unsigned char *data,unsigned char *luma,
 }
 
 template<class xClass>
-inline void _bayer_rg_2_yuv(const xClass* bayer0,xClass* luma,
-			    int column,int row)
+inline void _bayer_2_yuv(const xClass* bayer0,xClass* luma,
+			 int column,int row,int blue,int start_with_green)
 {
-  int blue = 1;
-  int start_with_green = 0;
   int luma_step = column * sizeof(xClass);
   int bayer_step = column;
   xClass *luma0 = (xClass*)luma;
@@ -135,6 +133,22 @@ inline void _bayer_rg_2_yuv(const xClass* bayer0,xClass* luma,
       start_with_green = !start_with_green;
     }
 }
+
+template<class xClass>
+inline void _bayer_rg_2_yuv(const xClass* bayer0,xClass* luma,
+			    int column,int row)
+{
+  _bayer_2_yuv<xClass>(bayer0,luma,column,row,1,0);
+}
+
+template<class xClass>
+inline void _bayer_bg_2_yuv(const xClass* bayer0,xClass* luma,
+			    int column,int row)
+{
+  _bayer_2_yuv<xClass>(bayer0,luma,column,row,-1,0);
+}
+
+
 void lima::data2Image(Data &aData,VideoImage &anImage)
 {
   if(!aData.empty())
@@ -198,6 +212,12 @@ void lima::image2YUV(const unsigned char *srcPt,int width,int height,VideoMode m
       break;
     case BAYER_RG16:
       _bayer_rg_2_yuv((unsigned short*)srcPt,(unsigned short*)dst,width,height);
+      break;
+    case BAYER_BG8:
+      _bayer_bg_2_yuv(srcPt,dst,width,height);
+      break;
+    case BAYER_BG16:
+      _bayer_bg_2_yuv((unsigned short*)srcPt,(unsigned short*)dst,width,height);
       break;
     case RGB32:
       _rgb_2_yuv(srcPt,dst,width,height,4);

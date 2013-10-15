@@ -42,6 +42,12 @@ sip-modules += maxipix
 endif
 
 ifneq ($(COMPILE_BASLER), 0)
+ifndef PYLON_ROOT
+export PYLON_ROOT = /opt/pylon
+endif
+ifndef GENICAM_ROOT_V2_1
+export GENICAM_ROOT_V2_1 = $(PYLON_ROOT)/genicam
+endif
 sip-modules += basler
 endif
 
@@ -89,6 +95,10 @@ endif
 
 ifneq ($(COMPILE_POINTGREY), 0)
 sip-modules += pointgrey
+endif
+
+ifneq ($(COMPILE_IMXPAD), 0)
+sip-modules += imxpad
 endif
 
 all:	src

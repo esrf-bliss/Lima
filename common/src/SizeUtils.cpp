@@ -198,3 +198,19 @@ ostream& lima::operator <<(ostream& os, const FrameDim& fdim)
 	return os << "<" << size.getWidth() << "x" << size.getHeight() << "x"
 		  << fdim.getDepth() << "-" << fdim.getImageType() << ">";
 }
+
+ostream& lima::operator <<(ostream& os,const ArcRoi& arc)
+{
+  double x,y;
+  double start,end;
+  double rayon1,rayon2;
+
+  arc.getCenter(x,y);
+  arc.getAngles(start,end);
+  arc.getRayons(rayon1,rayon2);
+
+  return os << "<center: (" << x << "," << y << ")"
+	    << " angles: (" << start << "," << end << ")"
+	    << " rayons: (" << rayon1 << "," << rayon2 << ")"
+	    << ">";
+}

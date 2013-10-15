@@ -152,7 +152,7 @@ using namespace lima;
 	void getFrameDim(      FrameDim& frame_dim /Out/);
 
 	void setNbConcatFrames(int  nb_concat_frames);
-	void getNbConcatFrames(int& nb_concat_frames /out/);
+	void getNbConcatFrames(int& nb_concat_frames /Out/);
 
 	void setNbBuffers(int  nb_buffers);
 	void getNbBuffers(int& nb_buffers /Out/);
