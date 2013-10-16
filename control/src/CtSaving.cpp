@@ -154,6 +154,7 @@ CtSaving::Parameters::Parameters()
 
 void CtSaving::Parameters::checkValid() const
 {
+  DEB_MEMBER_FUNCT();
   switch(fileFormat)
     {
 #ifdef WITH_CBF_SAVING

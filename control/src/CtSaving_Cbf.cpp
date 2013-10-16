@@ -112,6 +112,7 @@ public:
 
   virtual void process(Data &aData)
   {
+    DEB_MEMBER_FUNCT();
     cbf_handle cbf;
     cbf_make_handle(&cbf);
     if(_fillHeader(aData,m_header,cbf))
@@ -249,6 +250,7 @@ void SaveContainerCbf::_writeFile(Data &aData,
 				  CtSaving::HeaderMap&,
 				  CtSaving::FileFormat)
 {
+  DEB_MEMBER_FUNCT();
   if(_writeCbfData(aData))
     THROW_CTL_ERROR(Error) << "Something went wrong during CBF data writing";
 }
