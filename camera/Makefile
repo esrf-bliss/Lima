@@ -104,6 +104,14 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifndef COMPILE_ANDOR3
+COMPILE_ANDOR3 = 0
+endif
+
+ifneq ($(COMPILE_ANDOR3),0)
+sub-dirs += andor3
+endif
+
 ifneq ($(COMPILE_XH),0)
 sub-dirs += xh
 endif

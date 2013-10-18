@@ -145,6 +145,12 @@ ANDOR_FULL_VERSION = $(shell cat camera/andor/VERSION)
 INSTALL_ANDOR_VDIR = $(INSTALL_ANDOR_DIR)/v$(ANDOR_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_ANDOR3), 0)
+INSTALL_ANDOR3_DIR = $(INSTALL_PLAT_DIR)/Andor3
+ANDOR3_FULL_VERSION = $(shell cat camera/andor3/VERSION)
+INSTALL_ANDOR3_VDIR = $(INSTALL_ANDOR3_DIR)/v$(ANDOR3_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_XH), 0)
 INSTALL_XH_DIR = $(INSTALL_PLAT_DIR)/Xh
 XH_FULL_VERSION = $(shell cat camera/xh/VERSION)
@@ -378,6 +384,7 @@ ifneq ($(COMPILE_UEYE), 0)
 	cp sip/ueye/limaueye.so $(INSTALL_UEYE_VDIR)
 	cp camera/ueye/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
+
 ifneq ($(COMPILE_ANDOR), 0)
 	mkdir -p $(INSTALL_ANDOR_VDIR)
 	cp camera/andor/python/__init__.py $(INSTALL_ANDOR_DIR)
@@ -386,6 +393,16 @@ ifneq ($(COMPILE_ANDOR), 0)
 	cp -d build/liblimaandor.so* $(INSTALL_LIB_DIR)
 	cp sip/andor/limaandor.so $(INSTALL_ANDOR_VDIR)
 	cp camera/andor/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_ANDOR3), 0)
+	mkdir -p $(INSTALL_ANDOR3_VDIR)
+	cp camera/andor3/python/__init__.py $(INSTALL_ANDOR3_DIR)
+	$(call install_core_dep,$(INSTALL_ANDOR3_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaandor3.so*
+	cp -d build/liblimaandor3.so* $(INSTALL_LIB_DIR)
+	cp sip/andor3/limaandor3.so $(INSTALL_ANDOR3_VDIR)
+	cp camera/andor3/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_XH), 0)

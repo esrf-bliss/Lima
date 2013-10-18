@@ -77,6 +77,10 @@ ifneq ($(COMPILE_ANDOR), 0)
 sip-modules += andor
 endif
 
+ifneq ($(COMPILE_ANDOR3), 0)
+sip-modules += andor3
+endif
+
 ifneq ($(COMPILE_XH), 0)
 sip-modules += xh
 endif
