@@ -383,6 +383,30 @@ build_targets	+= $(call lib-full,$(andor-name),$(andor-ver))
 endif
 
 ############################
+# LIMA - ANDOR3
+############################
+
+ifneq ($(COMPILE_ANDOR3),0)
+
+ANDOR3_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
+ANDOR3_LDLIBS	:= $(LDLIBS) -latcore
+
+andor3-name	:= andor3
+andor3-objs	:= ../camera/andor3/src/Andor3.o
+andor3-ver	:= ../camera/andor3/VERSION
+andor3-flags	:= $(ANDOR3_LDFLAGS)
+andor3-deps	:= $(ANDOR3_LDLIBS)
+
+$(call lib-full,$(andor3-name),$(andor3-ver)): $(andor3-objs)
+	$(call compile-lib,$(andor3-name),$(andor3-ver),\
+			   $(andor3-flags),$(andor3-deps),$@,$+)
+	$(call create-links,$(andor3-name),$(andor3-ver))
+
+build_targets	+= $(call lib-full,$(andor3-name),$(andor3-ver))
+
+endif
+
+############################
 # LIMA - MARCCD
 ############################
 
