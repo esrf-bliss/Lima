@@ -9,7 +9,7 @@
 
    <groupId>fr.soleil.lib</groupId>
    <artifactId>Lima</artifactId>
-   <version>1.2.3</version>
+   <version>1.2.4-SNAPSHOT</version>
 
    <packaging>pom</packaging>
    <name>[Lima Project]</name>
