@@ -4,7 +4,7 @@
     <parent>
         <groupId>fr.soleil.lib</groupId>
         <artifactId>Lima</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.4-SNAPSHOT</version>
     </parent>
 
     <groupId>fr.soleil.lib.Lima</groupId>
@@ -68,6 +68,7 @@
 
     <!-- ENABLE/DISABLE a specific plugin-->
     <modules>        
+	<module>andor3</module>
         <module>basler</module>
 	    <module>simulator</module>
         <module>adsc</module>
