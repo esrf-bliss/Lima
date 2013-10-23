@@ -22,7 +22,12 @@
 SRCS = testregex.cpp
 
 CXXFLAGS = -Wall -I ../include -pthread -g
-LDFLAGS = -L../../build/ -Wl,--no-as-needed,-rpath=$(shell pwd)/../../build -llimacore -lpthread -lyat -lnexuscpp
+LDFLAGS = -L../../build/ -Wl,--no-as-needed,-rpath=$(shell pwd)/../../build -llimacore -lpthread
+
+## Making sure that we link with nexus libraries if set to do so :
+ifneq ($(COMPILE_NXS_SAVING), 0)
+LDFLAGS += -lnexuscpp -lyat
+endif
 
 all: testregex
 

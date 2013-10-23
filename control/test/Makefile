@@ -60,6 +60,11 @@ LDLIBS += -L../../third-party/CCfits/.libs \
 	-lCCfits
 endif
 
+## Making sure that we link with nexus libraries if set to do so :
+ifneq ($(COMPILE_NXS_SAVING), 0)
+LDLIBS += -lnexuscpp -lyat
+endif
+
 ifndef COMPILE_SIMULATOR
 COMPILE_SIMULATOR = 0
 endif
