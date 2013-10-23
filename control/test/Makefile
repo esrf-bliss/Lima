@@ -38,7 +38,8 @@ CPPFLAGS += $(INC)
 CXXFLAGS += -g -Wall -pthread
 LDFLAGS = -pthread
 LDLIBS = -L../../build -llimacore \
-         -L../../third-party/Processlib/build -lprocesslib
+         -L../../third-party/Processlib/build -lprocesslib \
+         -lnexuscpp -lyat
 
 build_targets = roicountertest
 
