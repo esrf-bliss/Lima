@@ -33,6 +33,7 @@ class Setting;
 #include <ConfigUtils.h>
 #ifdef WIN32
 #pragma warning( disable : 4290 )
+#pragma warning( disable : 4800 )
 #endif
 
 inline int _fill_setting_with_dict(Setting &setting,
