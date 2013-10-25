@@ -64,6 +64,10 @@ CORE_LDFLAGS += -L../third-party/CBFLib/lib
 CORE_LDLIBS += -lcbf
 endif
 
+ifneq ($(COMPILE_NXS_SAVING),0)
+CORE_LDLIBS += -lnexuscpp -lyat -lNeXus -lmxml -lhdf5 -lmfhdf
+endif
+
 ifneq ($(COMPILE_FITS_SAVING),0)
 CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
 CORE_LDLIBS += -lCCfits -lcfitsio
