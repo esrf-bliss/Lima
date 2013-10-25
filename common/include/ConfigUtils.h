@@ -25,7 +25,7 @@
 #include "Debug.h"
 #include "LimaCompatibility.h"
 
-class Data;
+struct Data;
 
 namespace libconfig
 {
@@ -131,7 +131,7 @@ namespace lima
     libconfig::Setting* m_setting;
   };
 
-  class Setting::const_iterator
+  class LIMACORE_API Setting::const_iterator
     {
       friend bool operator!=(const Setting::const_iterator& a,
 			     const Setting::const_iterator& b);

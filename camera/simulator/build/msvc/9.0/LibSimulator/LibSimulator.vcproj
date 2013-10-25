@@ -194,6 +194,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\src\SimulatorShutterCtrlObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\src\SimulatorSyncCtrlObj.cpp"
 				>
 			</File>
