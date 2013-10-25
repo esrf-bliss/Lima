@@ -99,3 +99,9 @@
 [submodule "camera/dexela"]
 	path = camera/dexela
 	url = git://github.com/esrf-bliss/Lima-camera-dexela.git
+[submodule "camera/common/siso-me4"]
+	path = camera/common/siso-me4
+	url = https://serge-cohen@github.com/serge-cohen/Lima-camera-common-siso-me4.git
+[submodule "camera/vieworks-vp"]
+	path = camera/vieworks-vp
+	url = https://serge-cohen@github.com/serge-cohen/Lima-camera-vieworks-vp
