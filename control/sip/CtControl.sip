@@ -109,8 +109,9 @@ using namespace lima;
     CtAccumulation* accumulation();
     CtVideo* video();
     CtEvent* event();
+%If (WITH_CONFIG)
     CtConfig* config();
-
+%End
     SoftOpExternalMgr* externalOperation();
     
     HwInterface* hwInterface();
