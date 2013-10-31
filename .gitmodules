@@ -22,7 +22,8 @@
 [submodule "applications/tango"]
 	path = applications/tango
 #	url = git://github.com/esrf-bliss/Lima-tango
-	url = git://github.com/soleil-ica/Lima-tango
+#	url = git://github.com/soleil-ica/Lima-tango
+	url = https://serge-cohen@github.com/serge-cohen/Lima-tango
 [submodule "camera/maxipix"]
 	path = camera/maxipix
 	url = git://github.com/esrf-bliss/Lima-camera-maxipix
