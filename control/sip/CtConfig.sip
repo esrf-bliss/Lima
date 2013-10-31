@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+%If (WITH_CONFIG)
 class Setting;
 
 %ExportedHeaderCode
@@ -33,6 +34,7 @@ class Setting;
 #include <ConfigUtils.h>
 #ifdef WIN32
 #pragma warning( disable : 4290 )
+#pragma warning( disable : 4800 )
 #endif
 
 inline int _fill_setting_with_dict(Setting &setting,
@@ -324,3 +326,4 @@ sipIsErr = 1;			// should never happen
 private:
   CtConfig(const CtConfig &);
 };
+%End

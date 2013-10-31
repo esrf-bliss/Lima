@@ -19,3 +19,5 @@ install
 /test.sh
 *_test.py
 ~*vcproj
+*.tmp
+

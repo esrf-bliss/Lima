@@ -23,6 +23,8 @@
 
 %Platforms {WIN32_PLATFORM WIN64_PLATFORM POSIX_PLATFORM}
 
+%Feature WITH_CONFIG
+
 %ModuleHeaderCode
   #include <SoftOpId.h>
 %End

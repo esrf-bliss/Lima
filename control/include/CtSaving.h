@@ -87,6 +87,8 @@ namespace lima {
 
     struct LIMACORE_API Parameters 
     {
+      DEB_CLASS_NAMESPC(DebModControl,"Saving::Parameters","Control");
+    public:
       std::string directory;	///< base path where the files will be saved
       std::string prefix;	///< prefix of the filename
       std::string suffix;	///< suffix of the filename

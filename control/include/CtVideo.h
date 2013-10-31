@@ -45,10 +45,11 @@ namespace lima
       Roi		roi;
       Bin		bin;
     };
-
+    class _InternalImageCBK;
     class LIMACORE_API Image
     {
       friend class CtVideo;
+      friend class CtVideo::_InternalImageCBK;
       friend class _Data2ImageTask;
       friend std::ostream& operator<<(std::ostream &os,CtVideo::Image& im);
     public:
@@ -126,7 +127,6 @@ namespace lima
   private:
     class _Data2ImageCBK;
     friend class _Data2ImageCBK;
-    class _InternalImageCBK;
     friend class _InternalImageCBK;
     class _videoBackgroundCallback;
 
