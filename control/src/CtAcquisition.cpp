@@ -23,18 +23,18 @@
 #include "CtAcquisition.h"
 #include "math.h"
 
-#define CHECK_EXPOTIME(val)					     \
-  if (val < m_valid_ranges.min_exp_time)			     \
-  {								     \
-  DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too short: "     \
-  << DEB_VAR1(m_valid_ranges.min_exp_time);			     \
-  THROW_CTL_ERROR(InvalidValue) <<  "Exposure time too short";	     \
-  }								     \
-  else if (val > m_valid_ranges.max_exp_time)			     \
-  {								     \
-  DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too long: "	     \
-  << DEB_VAR1(m_valid_ranges.max_exp_time);			     \
-  THROW_CTL_ERROR(InvalidValue) <<  "Exposure time too long";	     \
+#define CHECK_EXPOTIME(val)						\
+  if (val < m_valid_ranges.min_exp_time)				\
+  {									\
+    THROW_CTL_ERROR(InvalidValue)					\
+      << "Specified exposure time " << DEB_VAR1(val) << " too short: "	\
+      << DEB_VAR1(m_valid_ranges.min_exp_time);				\
+  }									\
+  else if (val > m_valid_ranges.max_exp_time)				\
+  {									\
+    THROW_CTL_ERROR(InvalidValue)					\
+      << "Specified exposure time " << DEB_VAR1(val) << " too long: "	\
+      << DEB_VAR1(m_valid_ranges.max_exp_time);				\
   }
 
 using namespace lima;
@@ -624,7 +624,9 @@ void CtAcquisition::setLatencyTime(double lat_time)
   if (lat_time < m_valid_ranges.min_lat_time)
     lat_time = m_valid_ranges.min_lat_time;
   if (lat_time > m_valid_ranges.max_lat_time)
-    THROW_CTL_ERROR(InvalidValue) <<  "Latency time too long";
+    THROW_CTL_ERROR(InvalidValue) 
+      << "Specified latency time " << DEB_VAR1(lat_time) << " too long: "
+      << DEB_VAR1(m_valid_ranges.max_lat_time);	
   m_inpars.latencyTime= lat_time;
 }
 

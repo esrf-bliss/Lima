@@ -655,10 +655,7 @@ void CtVideo::registerImageCallback(ImageCallback &cb)
   DEB_PARAM() << DEB_VAR2(&cb, m_image_callback);
   
   if(m_image_callback)
-    {
-      DEB_ERROR() << "ImageCallback already registered";
-      THROW_CTL_ERROR(InvalidValue) <<  "ImageCallback already registered";
-    }
+    THROW_CTL_ERROR(InvalidValue) << "ImageCallback already registered";
 
   m_image_callback = &cb;
 }
@@ -670,10 +667,7 @@ void CtVideo::unregisterImageCallback(ImageCallback &cb)
   AutoMutex aLock(m_cond.mutex());
   DEB_PARAM() << DEB_VAR2(&cb, m_image_callback);
   if(m_image_callback != &cb)
-    {
-      DEB_ERROR() << "ImageCallback not registered";
-      THROW_CTL_ERROR(InvalidValue) <<  "ImageCallback not registered"; 
-    }
+    THROW_CTL_ERROR(InvalidValue) << "ImageCallback not registered"; 
 
   m_image_callback = NULL;
 }
