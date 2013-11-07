@@ -50,18 +50,37 @@ using namespace std;
  *******************************************************************/
 FrameBuilder::FrameBuilder()
 {
-	m_frame_dim = FrameDim(1024, 1024, Bpp32);
-	m_bin = Bin(1,1);
-	m_roi = Roi(0, Size(0,0));  // Or the whole frame?
-	GaussPeak p={512, 512, 100, 100}; // in unbinned units!
-	m_peaks.push_back(p);
-	m_grow_factor = 1.00;
-	m_frame_nr = 0;
+	FrameDim frame_dim = FrameDim(1024, 1024, Bpp32);
+	Bin bin = Bin(1,1);
+	Roi roi = Roi(0, Size(0,0));  // Or the whole frame?
+	GaussPeak p(512, 512, 100, 100); // in unbinned units!
+	vector<struct GaussPeak> peaks(&p, &p + 1);
+	double grow_factor = 1.00;
+
+	init(frame_dim, bin, roi, peaks, grow_factor);
 }
 
 
 /***************************************************************//**
  * @brief FrameBuilder class constructor setting member variables
+ *
+ * Calls initialisation routine
+ *
+ * @param[in] frame_dim    The frame dimensions
+ * @param[in] roi          RoI in BINNED units
+ * @param[in] peaks        A vector of GaussPeak structures
+ * @param[in] grow_factor  Peaks grow % with each frame
+ *******************************************************************/
+FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
+                            const PeakList &peaks,
+                            double grow_factor )
+{
+	init(frame_dim, bin, roi, peaks, grow_factor);
+}
+
+
+/***************************************************************//**
+ * @brief FrameBuilder class initialiser setting member variables
  *
  * Before setting we check the values for consistency
  *
@@ -70,20 +89,29 @@ FrameBuilder::FrameBuilder()
  * @param[in] peaks        A vector of GaussPeak structures
  * @param[in] grow_factor  Peaks grow % with each frame
  *******************************************************************/
-FrameBuilder::FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
-                            vector<struct GaussPeak> &peaks,
-                            double grow_factor ):
-	m_grow_factor(grow_factor)
+void FrameBuilder::init( FrameDim &frame_dim, Bin &bin, Roi &roi,
+			 const PeakList &peaks,
+			 double grow_factor )
 {
 	checkValid(frame_dim, bin, roi);
-	checkPeaks(peaks);
+	setPeaks(peaks);
 
 	m_frame_dim = frame_dim;
 	m_bin = bin; 
 	m_roi = roi;
-	m_peaks = peaks;
+	
+	m_fill_type = Gauss;
+	m_rot_axis = RotationY;
 
+	m_grow_factor = grow_factor;
 	m_frame_nr = 0;
+	m_rot_angle = 0;
+	m_rot_speed = 0;
+	m_diffract_x = frame_dim.getSize().getWidth() / 2;
+	m_diffract_y = frame_dim.getSize().getHeight() / 2;
+
+	m_diffract_sx = 0;
+	m_diffract_sy = 0;
 }
 
 
@@ -130,7 +158,7 @@ void FrameBuilder::checkValid( const FrameDim &frame_dim, const Bin &bin,
  * @brief Checks if Gauss peak centers are inside the MaxImageSize
  *
  *******************************************************************/
-void FrameBuilder::checkPeaks( std::vector<struct GaussPeak> const &peaks )
+void FrameBuilder::checkPeaks( PeakList const &peaks )
 {
 	Size max_size;
 	getMaxImageSize(max_size);
@@ -138,7 +166,7 @@ void FrameBuilder::checkPeaks( std::vector<struct GaussPeak> const &peaks )
 	
 	vector<GaussPeak>::const_iterator p;
 	for( p = peaks.begin( ); p != peaks.end( ); ++p ) {
-		if( ! roi.containsPoint(Point(p->x0, p->y0)) )
+		if( ! roi.containsPoint(Point(int(p->x0), int(p->y0))) )
 			throw LIMA_HW_EXC(InvalidValue, "Peak too far");
 	}
 	
@@ -249,7 +277,7 @@ void FrameBuilder::checkRoi( Roi &roi ) const
  *
  * @param[out] peaks  GaussPeak vector
  *******************************************************************/
-void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
+void FrameBuilder::getPeaks( PeakList &peaks ) const
 {
 	peaks = m_peaks;
 }
@@ -260,14 +288,115 @@ void FrameBuilder::getPeaks( std::vector<struct GaussPeak> &peaks ) const
  *
  * @param[in] peaks  GaussPeak vector
  *******************************************************************/
-void FrameBuilder::setPeaks( const std::vector<struct GaussPeak> &peaks )
+void FrameBuilder::setPeaks( const PeakList &peaks )
 {
 	checkPeaks(peaks);
 
 	m_peaks = peaks;
+	while (m_peak_angles.size() < m_peaks.size())
+		m_peak_angles.push_back(0);
 }
 
+/***************************************************************//**
+ * @brief Gets peak angles
+ *
+ * @param[in] angles  double vector
+ *******************************************************************/
+void FrameBuilder::getPeakAngles( std::vector<double> &angles ) const
+{
+	angles = m_peak_angles;
+}
 
+/***************************************************************//**
+ * @brief Sets peak angles
+ *
+ * @param[in] angles  double vector
+ *******************************************************************/
+void FrameBuilder::setPeakAngles( const std::vector<double> &angles )
+{
+	m_peak_angles = angles;
+}
+
+/***************************************************************//**
+ * @brief Gets the image filling type
+ *
+ * @param[in] fill_type  FillType
+ *******************************************************************/
+void FrameBuilder::getFillType( FillType &fill_type ) const
+{
+	fill_type = m_fill_type;
+}
+
+/***************************************************************//**
+ * @brief Gets the image filling type
+ *
+ * @param[in] fill_type  FillType
+ *******************************************************************/
+void FrameBuilder::setFillType( FillType fill_type )
+{
+	m_fill_type = fill_type;
+}
+
+/***************************************************************//**
+ * @brief Gets the rotation axis policy
+ *
+ * @param[in] rot_axis  RotationAxis
+ *******************************************************************/
+void FrameBuilder::getRotationAxis( RotationAxis &rot_axis ) const
+{
+	rot_axis = m_rot_axis;
+}
+
+/***************************************************************//**
+ * @brief Gets the rotation axis policy
+ *
+ * @param[in] rot_axis  RotationAxis
+ *******************************************************************/
+void FrameBuilder::setRotationAxis( RotationAxis rot_axis )
+{
+	m_rot_axis = rot_axis;
+}
+
+/***************************************************************//**
+ * @brief Gets the peak rotation angle
+ *
+ * @param[in] a  Rotation angle (deg)
+ *******************************************************************/
+void FrameBuilder::getRotationAngle( double &a ) const
+{
+	a = m_rot_angle;
+}
+
+/***************************************************************//**
+ * @brief Sets the peak rotation angle
+ *
+ * @param[in] a  Rotation angle (deg)
+ *******************************************************************/
+void FrameBuilder::setRotationAngle( const double &a )
+{
+	m_rot_angle = a;
+}
+
+/***************************************************************//**
+ * @brief Gets the peak rotation speed
+ *
+ * @param[in] s  Rotation speed (deg / frame)
+ *******************************************************************/
+void FrameBuilder::getRotationSpeed( double &s ) const
+{
+	s = m_rot_speed;
+}
+
+/***************************************************************//**
+ * @brief Sets the peak rotation speed
+ *
+ * @param[in] s  Rotation speed (deg / frame)
+ *******************************************************************/
+void FrameBuilder::setRotationSpeed( const double &s )
+{
+	m_rot_speed = s;
+}
+	
 /***************************************************************//**
  * @brief Gets the configured peaks grow factor
  *
@@ -290,6 +419,50 @@ void FrameBuilder::setGrowFactor( const double &grow_factor )
 	m_grow_factor = grow_factor;
 }
 
+/***************************************************************//**
+ * @brief Gets the source displacement for diffraction
+ *
+ * @param[out] x, y  positions (double)
+ *******************************************************************/
+void FrameBuilder::getDiffractionPos( double &x, double &y ) const
+{
+	x = m_diffract_x;
+	y = m_diffract_y;
+}
+
+/***************************************************************//**
+ * @brief Gets the source displacement for diffraction
+ *
+ * @param[out] x, y  positions (double)
+ *******************************************************************/
+void FrameBuilder::setDiffractionPos( const double &x, const double &y )
+{
+	m_diffract_x = x;
+	m_diffract_y = y;
+}
+
+/***************************************************************//**
+ * @brief Gets the source displacement speed for diffraction
+ *
+ * @param[out] sx, sy  x and y speeds (double)
+ *******************************************************************/
+void FrameBuilder::getDiffractionSpeed( double &sx, double &sy ) const
+{
+	sx = m_diffract_sx;
+	sy = m_diffract_sy;
+}
+
+/***************************************************************//**
+ * @brief Gets the source displacement speed for diffraction
+ *
+ * @param[out] sx, sy  x and y speeds (double)
+ *******************************************************************/
+void FrameBuilder::setDiffractionSpeed( const double &sx, const double &sy )
+{
+	m_diffract_sx = sx;
+	m_diffract_sy = sy;
+}
+
 
 #define SGM_FWHM 0.42466090014400952136075141705144  // 1/(2*sqrt(2*ln(2)))
 
@@ -304,12 +477,41 @@ void FrameBuilder::setGrowFactor( const double &grow_factor )
  * @param[in] max   double the central maximum value
  * @return Gauss(x,y) double 
  *******************************************************************/
-double gauss2D( double x, double y, double x0, double y0, double fwhm, double max )
+double FrameBuilder::gauss2D( double x, double y, double x0, double y0, 
+			      double fwhm, double max )
 {
-	double sigma = SGM_FWHM * fwhm;
+	double sigma = SGM_FWHM * fabs(fwhm);
 	return max * exp(-((x-x0)*(x-x0) + (y-y0)*(y-y0))/(2*sigma*sigma));
 }
 
+
+
+FrameBuilder::PeakList FrameBuilder::getGaussPeaksFrom3d(double angle)
+{
+        PeakList gauss_peaks;
+        PeakList::iterator pit, pend = m_peaks.end();
+        std::vector<double>::iterator ait, aend = m_peak_angles.end();
+        
+	int rot_y = (m_rot_axis == RotationY);
+	Size size = m_frame_dim.getSize();
+	int dim = rot_y ? size.getWidth() : size.getHeight();
+	int center = dim / 2;
+        for (pit = m_peaks.begin(), ait = m_peak_angles.begin(); 
+	     (pit != pend) && (ait != aend); ++pit, ++ait) {
+                double rad = (angle + *ait) * M_PI / 180;
+                double x = pit->x0;
+                double y = pit->y0;
+		double *coord = rot_y ? &x : &y;
+		double r = abs(center - *coord);
+		if (center > *coord)
+			rad += M_PI;
+		*coord = center + int(r * cos(rad));
+                GaussPeak peak(x, y, pit->fwhm, pit->max);
+                gauss_peaks.push_back(peak);
+        }
+
+        return gauss_peaks;
+}
 
 /***************************************************************//**
  * @brief Calculates the summary intensity at certain point
@@ -318,15 +520,47 @@ double gauss2D( double x, double y, double x0, double y0, double fwhm, double ma
  * @param[in] y  int Y-coord
  * @return    intensity  double 
  *******************************************************************/
-double FrameBuilder::dataXY( int x, int y )
+double FrameBuilder::dataDiffract( double x, double y )
+{
+	x -= m_frame_dim.getSize().getWidth() / 2;
+	y -= m_frame_dim.getSize().getHeight() / 2;
+	double r = sqrt(pow(x, 2.0) + pow(y, 2.0));
+	double w = (2 * M_PI / 100 * (0.5 + r / 500));
+	double ar = (r >= 300) ? (r - 300) : 0;
+	double a = exp(-pow(ar / 500, 4.0)) / (r / 5000 + 0.1);
+	return a * pow(cos(r * w), 20.0);
+}
+
+/***************************************************************//**
+ * @brief Calculates the summary intensity at certain point
+ *
+ * @param[in] x  int X-coord
+ * @param[in] y  int Y-coord
+ * @return    intensity  double 
+ *******************************************************************/
+double FrameBuilder::dataXY( const PeakList &peaks, int x, int y )
 {
 	double val=0.0;
-	vector<GaussPeak>::iterator p;
+	PeakList::const_iterator p;
 
-	for( p = m_peaks.begin( ); p != m_peaks.end( ); ++p) {
-		val += gauss2D(x, y, p->x0, p->y0, p->fwhm, p->max);
+	double gx, gy;
+
+	if (m_fill_type == Gauss) {
+		gx = x;
+		gy = y;
+	} else {
+		gx = m_diffract_x + m_frame_nr * m_diffract_sx;
+		gy = m_diffract_y + m_frame_nr * m_diffract_sy;
 	}
-	val = val + val*(m_grow_factor*m_frame_nr);
+
+	for( p = peaks.begin( ); p != peaks.end( ); ++p ) {
+		val += gauss2D(gx, gy, p->x0, p->y0, p->fwhm, p->max);
+	}
+	val *= (1 + m_grow_factor * m_frame_nr);
+
+	if (m_fill_type == Diffraction) 
+		val *= dataDiffract(x, y);
+
 	return val;
 }
 
@@ -360,6 +594,9 @@ void FrameBuilder::fillData( unsigned char *ptr )
 		bxM = width/binX;
 		byM = height/binY;
 	}
+        
+        double rot_angle = m_rot_angle + m_rot_speed * m_frame_nr;
+        PeakList peaks = getGaussPeaksFrom3d(rot_angle);
 
 	max = (double) ((depth) -1);
 	for( by=by0; by<byM; by++ ) {
@@ -367,7 +604,7 @@ void FrameBuilder::fillData( unsigned char *ptr )
 			data = 0.0;
 			for( y=by*binY; y<by*binY+binY; y++ ) {
 				for( x=bx*binX; x<bx*binX+binX; x++ ) {
-					data += dataXY(x, y);
+					data += dataXY(peaks, x, y);
 				}
 			}
 			if( data > max ) data = max;  // ???

@@ -40,9 +40,18 @@ namespace lima {
 namespace Simulator {
 
 struct LIBSIMULATOR_API GaussPeak {
-	int x0, y0;     /// The center of the peak
-	unsigned fwhm;  /// Full Width at Half Maximum
-	double max;     /// The maximum value
+	double x0, y0;     /// The center of the peak
+	double fwhm;       /// Full Width at Half Maximum
+	double max;        /// The maximum value
+	GaussPeak() 
+		: x0(0), y0(0), fwhm(0), max(0)
+	{}
+	GaussPeak(const GaussPeak& o) 
+		: x0(o.x0), y0(o.y0), fwhm(o.fwhm), max(o.max)
+	{}
+	GaussPeak(double x, double y, double w, double m) 
+		: x0(x), y0(y), fwhm(w), max(m)
+	{}
 };
 
 
@@ -55,9 +64,18 @@ struct LIBSIMULATOR_API GaussPeak {
 class LIBSIMULATOR_API FrameBuilder {
 
   public:
+	enum FillType { 
+		Gauss, Diffraction,
+	};
+	enum RotationAxis {
+		Static, RotationX, RotationY,
+	};
+
+	typedef std::vector<struct GaussPeak> PeakList;
+
 	FrameBuilder();
 	FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
-	              std::vector<struct GaussPeak> &peaks, double grow_factor );
+	              const PeakList &peaks, double grow_factor );
 	~FrameBuilder();
 
 	void getFrameDim( FrameDim &dim ) const;
@@ -71,32 +89,72 @@ class LIBSIMULATOR_API FrameBuilder {
 	void setRoi( const Roi &roi );
 	void checkRoi( Roi &roi ) const;
 
-	void getPeaks( std::vector<struct GaussPeak> &peaks ) const;
-	void setPeaks( const std::vector<struct GaussPeak> &peaks );
+	void getPeaks( PeakList &peaks ) const;
+	void setPeaks( const PeakList &peaks );
 
+	void getPeakAngles( std::vector<double> &angles ) const;
+	void setPeakAngles( const std::vector<double> &angles );
+	
+	void getFillType( FillType &fill_type ) const;
+	void setFillType( FillType fill_type );
+
+	void getRotationAxis( RotationAxis &rot_axis ) const;
+	void setRotationAxis( RotationAxis rot_axis );
+
+	void getRotationAngle( double &a ) const;
+	void setRotationAngle( const double &a );
+	
+	void getRotationSpeed( double &s ) const;
+	void setRotationSpeed( const double &s );
+	
 	void getGrowFactor( double &grow_factor ) const;
 	void setGrowFactor( const double &grow_factor );
+
+	void getDiffractionPos( double &x, double &y ) const;
+	void setDiffractionPos( const double &x, const double &y );
+
+	void getDiffractionSpeed( double &sx, double &sy ) const;
+	void setDiffractionSpeed( const double &sx, const double &sy );
 
 	void getNextFrame( unsigned char *ptr ) throw (Exception);
 	unsigned long getFrameNr();
 	void resetFrameNr( int frame_nr=0 );
 
 	void getMaxImageSize(Size& max_size);
-
+	
   private:
 	FrameDim m_frame_dim;                   /// Generated frame dimensions
 	Bin m_bin;                              /// "Hardware" Bin
 	Roi m_roi;                              /// "Hardware" RoI
-	std::vector<struct GaussPeak> m_peaks;  /// Peaks to put in each frame
+	PeakList m_peaks;  /// Peaks to put in each frame
 	double m_grow_factor;                   /// Peaks grow % with each frame
+	FillType m_fill_type;
+	RotationAxis m_rot_axis;
+	double m_rot_angle;
+	double m_rot_speed;
+	std::vector<double> m_peak_angles;
+
+	double m_diffract_x;
+	double m_diffract_y;
+	double m_diffract_sx;
+	double m_diffract_sy;
 
 	unsigned long m_frame_nr;
 
+	void init(FrameDim &frame_dim, Bin &bin, Roi &roi,
+		  const PeakList &peaks, double grow_factor );
+
 	void checkValid( const FrameDim &frame_dim, const Bin &bin, 
 	                 const Roi &roi ) throw(Exception);
-	void checkPeaks( std::vector<struct GaussPeak> const &peaks );
-	double dataXY( int x, int y );
+	void checkPeaks( PeakList const &peaks );
+	double dataXY( const PeakList &peaks, int x, int y );
+	double dataDiffract( double x, double y );
 	template <class depth> void fillData( unsigned char *ptr );
+
+	PeakList getGaussPeaksFrom3d(double angle);
+	static double gauss2D( double x, double y, double x0, double y0, 
+			       double fwhm, double max );
+	
 };
 
 
