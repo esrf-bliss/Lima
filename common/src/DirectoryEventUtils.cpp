@@ -202,6 +202,9 @@ class _LocalDirectoryEvent : public DirectoryEvent::_Event
 public:
   _LocalDirectoryEvent(DirectoryEvent::Callback &cbk);
   virtual ~_LocalDirectoryEvent();
+
+  void watch_moved_to() {m_watch_mask = IN_MOVED_TO;}
+  void watch_close_write() {m_watch_mask = IN_CLOSE_WRITE;}
 private:
   static void* _runFunc(void *arg)
   {
@@ -217,6 +220,7 @@ private:
   int m_inotify_fd;
   int m_inotify_wd;
   int m_pipes[2];
+  int m_watch_mask;
 
   static const size_t EVENT_SIZE = sizeof(struct inotify_event);
   static const size_t EVENT_BUF_LEN = (1024 * (EVENT_SIZE + 16));
@@ -225,7 +229,8 @@ private:
 _LocalDirectoryEvent::_LocalDirectoryEvent(DirectoryEvent::Callback &cbk) :
   DirectoryEvent::_Event(cbk),
   m_inotify_fd(-1),
-  m_inotify_wd(-1)
+  m_inotify_wd(-1),
+  m_watch_mask(IN_CLOSE_WRITE)
 {
   DEB_CONSTRUCTOR();
   
@@ -272,7 +277,7 @@ void _LocalDirectoryEvent::_startWatch()
 {
   m_inotify_wd = inotify_add_watch(m_inotify_fd,
 				   m_current_parameters.watch_path.c_str(),
-				   IN_CLOSE_WRITE);
+				   m_watch_mask);
 }
 
 void _LocalDirectoryEvent::_stopWatch()
@@ -541,10 +546,10 @@ DirectoryEvent::DirectoryEvent(bool local,Callback &cbk)
 {
 #ifdef HAS_INOTIFY
   if(local)
-    m_event = new _LocalDirectoryEvent(cbk);
+    m_event = new _LocalDirectoryEvent(cbk),m_local = true;
   else
 #endif
-    m_event = new _GenericDirectoryEvent(cbk);
+    m_event = new _GenericDirectoryEvent(cbk),m_local = false;
 }
 
 DirectoryEvent::~DirectoryEvent()
@@ -584,5 +589,19 @@ bool DirectoryEvent::isStopped() const
 int DirectoryEvent::getNextFileNumberExpected() const
 {
   return m_event->getNextFileNumberExpected();
+}
+void DirectoryEvent::watch_moved_to()
+{
+#ifdef HAS_INOTIFY
+  if(m_local)
+    ((_LocalDirectoryEvent*)m_event)->watch_moved_to();
+#endif  
+}
+void DirectoryEvent::watch_close_write()
+{
+#ifdef HAS_INOTIFY
+  if(m_local)
+    ((_LocalDirectoryEvent*)m_event)->watch_close_write();
+#endif  
 }
 #endif

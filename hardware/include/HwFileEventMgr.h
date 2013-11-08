@@ -88,6 +88,8 @@ namespace lima
 
     int getNbOfFramePending() const {return m_directory_cbk.getNbOfFramePending();}
 
+    //Raw access functions
+    DirectoryEvent& getDirectoryEvent() {return m_directory_event;}
     //methodes used by Lima core
     virtual void setFrameDim(const FrameDim& frame_dim);
     virtual void getFrameDim(FrameDim& frame_dim);

@@ -53,5 +53,8 @@ public:
   void stop();
   bool isStopped() const;
   int  getNextFileNumberExpected() const;
+
+  void watch_moved_to();
+  void watch_close_write();
 };
 %End

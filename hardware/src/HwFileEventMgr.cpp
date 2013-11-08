@@ -58,7 +58,7 @@ bool HwFileEventCallbackHelper::nextFileExpected(int file_number,
 	  ++file_number;
 	  if(i->first == file_number)
 	    {
-	      next_file_number_expected = file_number;
+	      next_file_number_expected = file_number + 1;
 	      continueFlag = m_cbk.newFrameReady(i->second);
 	      m_pending_frame_infos.erase(i);
 	    }
