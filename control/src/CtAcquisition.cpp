@@ -23,8 +23,9 @@
 #include "CtAcquisition.h"
 #include "math.h"
 
-#define CHECK_EXPOTIME(val)					     \
-  if (val < m_valid_ranges.min_exp_time)			     \
+#define CHECK_EXPOTIME(val)					     
+
+/*  if (val < m_valid_ranges.min_exp_time)			     \
   {								     \
   DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too short: "     \
   << DEB_VAR1(m_valid_ranges.min_exp_time);			     \
@@ -36,6 +37,7 @@
   << DEB_VAR1(m_valid_ranges.max_exp_time);			     \
   THROW_CTL_ERROR(InvalidValue) <<  "Exposure time too long";	     \
   }
+*/
 
 using namespace lima;
 /*----------------------------------------------------------------------
