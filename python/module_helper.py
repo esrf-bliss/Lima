@@ -87,7 +87,14 @@ def load_prepare(mod_path, depends_on, has_dependent):
 				  link_strict_version)
 	
 	env_var_name = 'LIMA_%s_VERSION' % cap_dep
-	os.environ[env_var_name] = dep_version
+	if env_var_name in os.environ:
+		prev_version = os.environ[env_var_name]
+		if prev_version != dep_version:
+			msg = 'Forcing %s to %s, which was previously set to '\
+		              '%s' % (env_var_name, dep_version, prev_version)
+			raise ImportError('%s: %s' % (mod_name, msg))
+	else:
+		os.environ[env_var_name] = dep_version
 
 	return cleanup_data
 
