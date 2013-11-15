@@ -97,3 +97,6 @@
 [submodule "camera/dexela"]
 	path = camera/dexela
 	url = git://github.com/esrf-bliss/Lima-camera-dexela.git
+[submodule "third-party/gldisplay"]
+	path = third-party/gldisplay
+	url = git@www.blissgarden.org:limagroup/gldisplay.git
