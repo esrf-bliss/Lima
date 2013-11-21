@@ -81,6 +81,10 @@ ifneq ($(COMPILE_XH), 0)
 sip-modules += xh
 endif
 
+ifneq ($(COMPILE_XSPRESS3), 0)
+sip-modules += xspress3
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 sip-modules += xpad
 endif

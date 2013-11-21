@@ -431,6 +431,35 @@ build_targets	+= $(call lib-full,$(xh-name),$(xh-ver))
 endif
 
 ############################
+# LIMA - XSPRESS3
+############################
+
+ifneq ($(COMPILE_XSPRESS3),0)
+
+PROCESSOR_TYPE := $(shell uname -m)
+ifeq ($(PROCESSOR_TYPE),x86_64)
+XSPRESS3_LDFLAGS	:= -L../camera/xspress3/sdk/libs/linux.x86_64
+else
+XSPRESS3_LDFLAGS	:= -L../camera/xspress3/sdk/libs/linux.x86
+endif
+XSPRESS3_LDLIBS	:= -lxspress3 -limg_mod
+
+xspress3-name	:= xspress3
+xspress3-objs	:= ../camera/xspress3/src/Xspress3.o
+xspress3-ver	:= ../camera/xspress3/VERSION
+xspress3-flags	:= $(XSPRESS3_LDFLAGS) $(LDFLAGS)
+xspress3-deps	:= $(XSPRESS3_LDLIBS) $(LDLIBS) 
+
+$(call lib-full,$(xspress3-name),$(xspress3-ver)): $(xspress3-objs)
+	$(call compile-lib,$(xspress3-name),$(xspress3-ver),\
+			   $(xspress3-flags),$(xspress3-deps),$@,$+)
+	$(call create-links,$(xspress3-name),$(xspress3-ver))
+
+build_targets	+= $(call lib-full,$(xspress3-name),$(xspress3-ver))
+
+endif
+
+############################
 # LIMA - XPAD
 ############################
 
