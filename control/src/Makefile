@@ -59,8 +59,10 @@ endif
 
 ifneq ($(COMPILE_NXS_SAVING),0)
 ct-objs += CtSaving_Nxs.o 
-# nexus4tango lib is not yet available but soon !
+# nexuscpp lib is not yet available but soon !
 #INCLUDES += -I../../third-party/NXSLib/include
+INCLUDES += -I/home/informatique/ica/langlois/DEV/flosvn/nexuscpp/trunk/include
+INCLUDES += -I../../third-party/yat/include
 CXXFLAGS += -DWITH_NXS_SAVING
 endif
 
