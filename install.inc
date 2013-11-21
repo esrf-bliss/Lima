@@ -151,6 +151,12 @@ XH_FULL_VERSION = $(shell cat camera/xh/VERSION)
 INSTALL_XH_VDIR = $(INSTALL_XH_DIR)/v$(XH_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_XSPRESS3), 0)
+INSTALL_XSPRESS3_DIR = $(INSTALL_PLAT_DIR)/Xspress3
+XSPRESS3_FULL_VERSION = $(shell cat camera/xspress3/VERSION)
+INSTALL_XSPRESS3_VDIR = $(INSTALL_XSPRESS3_DIR)/v$(XSPRESS3_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 INSTALL_XPAD_DIR = $(INSTALL_PLAT_DIR)/Xpad
 XPAD_FULL_VERSION = $(shell cat camera/xpad/VERSION)
@@ -396,6 +402,16 @@ ifneq ($(COMPILE_XH), 0)
 	cp -d build/liblimaxh.so* $(INSTALL_LIB_DIR)
 	cp sip/xh/limaxh.so $(INSTALL_XH_VDIR)
 	cp camera/xh/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_XSPRESS3), 0)
+	mkdir -p $(INSTALL_XSPRESS3_VDIR)
+	cp camera/xspress3/python/__init__.py $(INSTALL_XSPRESS3_DIR)
+	$(call install_core_dep,$(INSTALL_XSPRESS3_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaxspress3.so*
+	cp -d build/liblimaxspress3.so* $(INSTALL_LIB_DIR)
+	cp sip/xspress3/limaxspress3.so $(INSTALL_XSPRESS3_VDIR)
+	cp camera/xspress3/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_XPAD), 0)

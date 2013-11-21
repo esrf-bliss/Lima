@@ -104,8 +104,20 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifndef COMPILE_XH
+COMPILE_XH = 0
+endif
+
 ifneq ($(COMPILE_XH),0)
 sub-dirs += xh
+endif
+
+ifndef COMPILE_XSPRESS3
+COMPILE_XSPRESS3 = 0
+endif
+
+ifneq ($(COMPILE_XSPRESS3),0)
+sub-dirs += xspress3
 endif
 
 ifndef COMPILE_XPAD
