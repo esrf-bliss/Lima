@@ -96,6 +96,13 @@ COMPILE_GLDISPLAY = 0
 endif
 
 ifneq ($(COMPILE_GLDISPLAY),0)
+ifndef COMPILE_SPS_IMAGE
+COMPILE_SPS_IMAGE = 0
+endif
+ifeq ($(COMPILE_SPS_IMAGE),0)
+$(error "GLDisplay requires SPS. Please set COMPILE_SPS_IMAGE=1 in config.inc)
+endif
+
 PROJECTS += gldisplay.src
 PROJECTS_TEST += gldisplay.test
 PROJECTS_POSTLIMA_CONFIG += gldisplay.config
