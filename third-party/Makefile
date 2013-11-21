@@ -22,7 +22,11 @@
 include ../config.inc
 
 PROJECTS = processlib.src
-
+PROJECTS_TEST =
+PROJECTS_PRELIMA_CONFIG = processlib.config
+PROJECTS_PRELIMA_SIP = processlib.sip
+PROJECTS_POSTLIMA_CONFIG =
+PROJECTS_POSTLIMA_SIP =
 PROJECTS_CLEAN = processlib.clean
 
 ifndef COMPILE_CBF_SAVING
@@ -87,27 +91,59 @@ PROJECTS += libconfig.src
 
 endif
 
+ifndef COMPILE_GLDISPLAY
+COMPILE_GLDISPLAY = 0
+endif
+
+ifneq ($(COMPILE_GLDISPLAY),0)
+PROJECTS += gldisplay.src
+PROJECTS_TEST += gldisplay.test
+PROJECTS_POSTLIMA_CONFIG += gldisplay.config
+PROJECTS_POSTLIMA_SIP += gldisplay.sip
+PROJECTS_CLEAN += gldisplay.clean
+endif
+
+# meta targets
 all:	src test
 
 src:	$(PROJECTS)
 
-sip: processlib.sip
+test:	$(PROJECTS_TEST)
+	@echo
 
-processlib.src:	Processlib_build_libprocesslib.so
+prelima.config:		$(PROJECTS_PRELIMA_CONFIG)
 
-processlib.sip: Processlib/sip/Makefile Processlib/sip/processlib.so
+prelima.sip: 		$(PROJECTS_PRELIMA_SIP)
 
-processlib.clean:
-	cd Processlib/sip/ && python clean.py
+postlima.config:	$(PROJECTS_POSTLIMA_CONFIG)
+	@echo
+
+postlima.sip:		$(PROJECTS_POSTLIMA_SIP)
+	@echo
+
+clean: $(PROJECTS_CLEAN)
+
+# specific targets
+processlib.src:			Processlib_build_libprocesslib.so
+
+processlib.config:		processlib.clean.sip Processlib/sip/Makefile
+
+processlib.clean.sip:
+	cd Processlib/sip && python clean.py
+
+processlib.sip:			Processlib/sip/processlib.so
+
+processlib.clean:		processlib.clean.sip
 	$(MAKE) -C Processlib/build clean
 
 Processlib/sip/Makefile:
-	cd Processlib/sip/ && python configure.py
+	cd Processlib/sip && python configure.py
 
 Processlib_build_libprocesslib.so:
 	$(MAKE) -C Processlib/build -j2
 
-Processlib/sip/processlib.so: Processlib_build_libprocesslib.so
+Processlib/sip/processlib.so:	Processlib_build_libprocesslib.so \
+				Processlib/sip/Makefile
 	$(MAKE) -C Processlib/sip -j2
 
 sps.src:	Sps/Src/sps.o
@@ -160,7 +196,28 @@ libconfig.confsrc:
 libconfig.install:
 	cd libconfig && ./configure --prefix=$(INSTALL_PLAT_DIR) && $(MAKE) install
 
-test:
-	@echo
+gldisplay.src:			gldisplay_build_libgldisplay.so
 
-clean: $(PROJECTS_CLEAN)
+gldisplay.test:
+	$(MAKE) -C gldisplay test
+
+gldisplay.config:		gldisplay.clean.sip gldisplay/sip/Makefile
+
+gldisplay.clean.sip:
+	cd gldisplay/sip && python clean.py
+
+gldisplay.clean:		gldisplay.clean.sip
+	$(MAKE) -C gldisplay clean
+
+gldisplay.sip:			gldisplay/sip/gldisplay.so
+
+gldisplay_build_libgldisplay.so:
+	$(MAKE) -C gldisplay src
+
+gldisplay/sip/Makefile:
+	cd gldisplay/sip && python configure.py
+
+gldisplay/sip/gldisplay.so:	gldisplay_build_libgldisplay.so \
+				gldisplay/sip/Makefile
+	$(MAKE) -C gldisplay sip
+

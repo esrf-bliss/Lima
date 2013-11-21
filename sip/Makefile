@@ -104,10 +104,11 @@ endif
 all:	src
 
 src:
-	$(MAKE) -C ../third-party sip
+	$(MAKE) -C ../third-party prelima.sip
 	for d in $(sip-modules); do \
 		$(MAKE) -C $$d || break; \
 	done
+	$(MAKE) -C ../third-party postlima.sip
 
 config:	clean mrproper
 	python configure.py
