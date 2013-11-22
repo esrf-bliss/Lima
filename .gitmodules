@@ -97,3 +97,6 @@
 [submodule "camera/dexela"]
 	path = camera/dexela
 	url = git://github.com/esrf-bliss/Lima-camera-dexela.git
+[submodule "camera/xspress3"]
+	path = camera/xspress3
+	url = git://github.com/esrf-bliss/Lima-camera-xspress3
