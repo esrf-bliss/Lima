@@ -27,6 +27,13 @@ using namespace lima;
 %End
 
   public:
+    enum AutoGainMode {
+      OFF,	  ///< Always off
+      ON,	  ///< Always on
+      ON_LIVE	  ///< ON during live and OFF for standard Acquisition
+    };
+    typedef std::vector<AutoGainMode> AutoGainModeList;
+
     CtVideo(CtControl&);
     ~CtVideo();
     
@@ -35,12 +42,13 @@ using namespace lima;
       Parameters();
       void reset();
       
-      bool 	live;
-      double 	exposure;
-      double 	gain;
-      VideoMode mode;
-      Roi 	roi;
-      Bin 	bin;
+      bool		live;
+      double		exposure;	///< exposure time in second
+      double		gain;		///< % of gain (0. <= gain <= 1.)
+      CtVideo::AutoGainMode	auto_gain_mode;
+      VideoMode		mode;
+      Roi		roi;
+      Bin		bin;
       const char* __repr__();
 %MethodCode
 	std::ostringstream str;
@@ -108,6 +116,10 @@ using namespace lima;
 
     void setGain(double aGain);
     void getGain(double &aGain /Out/) const;
+    bool checkAutoGainMode(AutoGainMode mode) const;
+    void getAutoGainModeList(AutoGainModeList& modes /Out/) const;
+    void setAutoGainMode(AutoGainMode mode);
+    void getAutoGainMode(AutoGainMode& mode /Out/) const;
 
     void setMode(VideoMode aMode);
     void getMode(VideoMode &aMode /Out/) const;
@@ -128,3 +140,48 @@ using namespace lima;
     // --- video mode
     void getSupportedVideoMode(std::list<VideoMode> &modeList /Out/);
   };
+
+%MappedType CtVideo::AutoGainModeList
+{
+%TypeHeaderCode
+#include <vector>
+#include <CtVideo.h>
+using namespace lima;
+%End
+
+%ConvertToTypeCode
+  if(sipIsErr == NULL)
+    {
+      bool aReturnFlag = PySequence_Check(sipPy);
+      for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
+	aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_CtVideo_AutoGainMode);
+      return aReturnFlag;
+    }
+  std::vector<CtVideo::AutoGainMode> *modeListPt = new std::vector<CtVideo::AutoGainMode>();
+  for(int i = 0;i < PySequence_Size(sipPy);++i)
+    modeListPt->push_back(static_cast<CtVideo::AutoGainMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+  *sipCppPtr = modeListPt;
+  return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+  PyObject *l;
+  if(!(l = PyList_New(sipCpp->size())))
+    return NULL;
+
+  int listPos = 0;
+  for(std::vector<CtVideo::AutoGainMode>::iterator i = sipCpp->begin();
+      i != sipCpp->end();++i,++listPos)
+    {
+      PyObject *tobj = sipConvertFromEnum(*i, sipType_CtVideo_AutoGainMode);
+      if(!tobj)
+        {
+	  Py_DECREF(l);
+	  return NULL;
+        }
+      PyList_SET_ITEM(l, listPos, tobj);
+    }
+  return l;
+%End
+};

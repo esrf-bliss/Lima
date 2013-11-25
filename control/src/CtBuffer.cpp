@@ -58,7 +58,7 @@ CtBuffer::CtBuffer(HwInterface *hw)
   DEB_CONSTRUCTOR();
 
   if (!hw->getHwCtrlObj(m_hw_buffer))
-    throw LIMA_CTL_EXC(Error, "Cannot get hardware buffer object");
+    THROW_CTL_ERROR(Error) <<  "Cannot get hardware buffer object";
 
   m_hw_buffer_cb = m_hw_buffer->getBufferCallback();
   if(m_hw_buffer_cb)
@@ -151,7 +151,7 @@ void CtBuffer:: setMaxMemory(short max_memory)
   DEB_PARAM() << DEB_VAR1(max_memory);
 
   if ((max_memory<1)||(max_memory>100))
-    throw LIMA_CTL_EXC(InvalidValue, "Max memory usage between 1 and 100");
+    THROW_CTL_ERROR(InvalidValue) <<  "Max memory usage between 1 and 100";
 
   m_pars.maxMemory= max_memory;
 }

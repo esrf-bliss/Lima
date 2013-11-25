@@ -43,9 +43,15 @@ namespace lima
 
   public:
     enum AccTimeMode {Live,Real};
+    enum AutoExposureMode {
+      OFF,	  ///< Always off
+      ON,	  ///< Always on
+      ON_LIVE	  ///< ON during live and OFF for standard Acquisition
+    };
+    typedef std::vector<AutoExposureMode> AutoExposureModeList;
 
     struct LIMACORE_API Parameters {
-		DEB_CLASS_NAMESPC(DebModControl,"Acquisition::Parameters","Control");
+      DEB_CLASS_NAMESPC(DebModControl,"Acquisition::Parameters","Control");
     public:
       Parameters();
       void reset();
@@ -58,7 +64,7 @@ namespace lima
       int		concatNbFrames;
       double		latencyTime;
       TrigMode 		triggerMode;
-      
+      AutoExposureMode  autoExpoMode;
     };
 
     CtAcquisition(HwInterface *hw);
@@ -86,6 +92,11 @@ namespace lima
 
     void setAcqExpoTime(double acq_time);
     void getAcqExpoTime(double& acq_time) const;
+    bool checkAutoExposureMode(AutoExposureMode mode) const;
+    void getAutoExposureModeList(AutoExposureModeList& modes) const;
+    void setAutoExposureMode(AutoExposureMode mode);
+    void getAutoExposureMode(AutoExposureMode& mode) const;
+
 
     void setAccMaxExpoTime(double max_time);
     void getAccMaxExpoTime(double& max_time) const;
@@ -124,6 +135,7 @@ namespace lima
       bool	triggerMode;
       bool	accMaxExpoTime;
       bool	acqMode;
+      bool      autoExpoMode;
     };
 
     void _updateAccPars() const;
@@ -186,10 +198,50 @@ namespace lima
        << "accMaxExpoTime=" << params.accMaxExpoTime << ", "
        << "concatNbFrames=" << params.concatNbFrames << ", "
        << "latencyTime=" << params.latencyTime << ", "
-       << "triggerMode=" << params.triggerMode
+       << "triggerMode=" << params.triggerMode << ", "
+       << "autoExpoMode=" << params.autoExpoMode
        << ">";
     return os; 
   }
+
+  inline const char* convert_2_string(CtAcquisition::AutoExposureMode mode)
+  {
+    const char* aHumanReadablePt;
+    switch(mode)
+      {
+      case CtAcquisition::OFF:		aHumanReadablePt = "OFF";	break;
+      case CtAcquisition::ON:		aHumanReadablePt = "ON";	break;
+      case CtAcquisition::ON_LIVE:	aHumanReadablePt = "ON LIVE";	break;
+      default:
+	aHumanReadablePt = "UNKNOWN";
+	break;
+      }
+    return aHumanReadablePt;
+  }
+
+  inline void convert_from_string(const std::string& val,
+				  CtAcquisition::AutoExposureMode& mode)
+  {
+    std::string buffer = val;
+    std::transform(buffer.begin(),buffer.end(),
+		   buffer.begin(),::tolower);
+    
+    if(buffer == "off") mode = CtAcquisition::OFF;
+    else if(buffer == "on") mode = CtAcquisition::ON;
+    else if(buffer == "on live") mode = CtAcquisition::ON_LIVE;
+    else
+      {
+	std::ostringstream msg;
+	msg << "AutoExposureMode can't be:" << DEB_VAR1(val);
+	throw LIMA_EXC(Common,InvalidValue,msg.str());
+      }
+  }
+  inline std::ostream& operator<<(std::ostream& os,
+				  const CtAcquisition::AutoExposureMode& mode)
+  {
+    return os << convert_2_string(mode);
+  }
+
   
 } // namespace lima
 

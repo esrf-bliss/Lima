@@ -140,4 +140,12 @@ ifneq ($(COMPILE_POINTGREY),0)
 sub-dirs += pointgrey
 endif
 
+ifndef COMPILE_IMXPAD
+COMPILE_IMXPAD = 0
+endif
+
+ifneq ($(COMPILE_IMXPAD),0)
+sub-dirs += imxpad
+endif
+
 include ../global.inc

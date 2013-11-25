@@ -44,9 +44,10 @@ void SoftOpBackgroundSubstraction::setBackgroundImage(Data &anImage)
   m_opt->setBackgroundImageData(anImage);
 }
 
-void SoftOpBackgroundSubstraction::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpBackgroundSubstraction::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 //-------------------- BINNING --------------------
 				   
@@ -70,9 +71,10 @@ void SoftOpBinning::setBinning(int x,int y)
   m_opt->mYFactor = y;
 }
 
-void SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- BPM --------------------
@@ -82,25 +84,39 @@ void SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
 SoftOpBpm::SoftOpBpm() : 
   SoftOpBaseClass()
 {
+#ifndef WITHOUT_GSL
   m_manager = new Tasks::BpmManager(DEFAULT_HISTORY_SIZE);
   m_task = new Tasks::BpmTask(*m_manager);
+#else
+  throw Exception(Control,Error, "Bpm not available because it wasn't compiled with gsl support ",
+		  __FILE__, __FUNCTION__, __LINE__,NULL);
+#endif
+ 
 }
 
 SoftOpBpm::~SoftOpBpm()
 {
+#ifndef WITHOUT_GSL
   m_task->unref();
   m_manager->unref();
+#endif
 }
 
 
-void SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
 {
+#ifndef WITHOUT_GSL
   aMgr.addSinkTask(stage,m_task);
+  return true;
+#endif
+  return false;
 }
 
 void SoftOpBpm::prepare()
 {
+#ifndef WITHOUT_GSL
   m_manager->resetHistory();
+#endif
 }
 
 //-------------------- FLATFIELDCORRECTION --------------------
@@ -124,9 +140,10 @@ void SoftOpFlatfieldCorrection::setFlatFieldImage(Data &aData)
   m_opt->setFlatFieldImageData(aData);
 }
 
-void SoftOpFlatfieldCorrection::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpFlatfieldCorrection::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- FLIP --------------------
@@ -158,9 +175,10 @@ void SoftOpFlip::setFlip(bool x,bool y)
   m_opt->setFlip(flip_mode);
 }
 
-void SoftOpFlip::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpFlip::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- MASK --------------------
@@ -198,107 +216,133 @@ void SoftOpMask::getType(Type &aType) const
     SoftOpMask::STANDARD : SoftOpMask::DUMMY;
 }
 
-void SoftOpMask::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpMask::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------- ROI COUNTERS --------------------
 
 SoftOpRoiCounter::SoftOpRoiCounter() : 
   SoftOpBaseClass(),
-  m_history_size(DEFAULT_HISTORY_SIZE),
-  m_counter_status(-2)
+  m_history_size(DEFAULT_HISTORY_SIZE)
 {
+  m_task_manager.setCompatFormat("roi_%d");
 }
 
 SoftOpRoiCounter::~SoftOpRoiCounter()
 {
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-    {
-      i->second->unref();
-      i->first->unref();
-    }
 }
 
-void SoftOpRoiCounter::add(const std::list<Roi> &rois)
+void SoftOpRoiCounter::updateRois(const std::list<RoiNameAndRoi> &named_rois)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<Roi>::const_iterator i = rois.begin();
-      i != rois.end();++i)
+  for(std::list<RoiNameAndRoi>::const_iterator i = named_rois.begin();
+      i != named_rois.end();++i)
     {
-      Tasks::RoiCounterManager *aCounterMgrPt = new Tasks::RoiCounterManager(m_history_size);
-      Tasks::RoiCounterTask *aCounterTaskPt = new Tasks::RoiCounterTask(*aCounterMgrPt);
-
-      const Point &aOri = i->getTopLeft();
-      const Size &aSize = i->getSize();
+      SoftManager *aCounterMgrPt;
+      SoftTask *aCounterTaskPt;
+      _get_or_create(i->first,aCounterMgrPt,aCounterTaskPt);
+      //update
+      const Point &aOri = i->second.getTopLeft();
+      const Size &aSize = i->second.getSize();
       aCounterTaskPt->setRoi(aOri.x,aOri.y,aSize.getWidth(),aSize.getHeight());
       aCounterTaskPt->setMask(m_mask);
-
-      m_manager_tasks.push_back(ManagerNCounter(aCounterMgrPt,aCounterTaskPt));
     }
 }
-void SoftOpRoiCounter::set(const std::list<Roi> &rois)
-{
-  clearAllRoi();
-  add(rois);
-}
-/** @brief return the list of roi set
- */
-void SoftOpRoiCounter::get(std::list<Roi> &aReturnList) const
+void SoftOpRoiCounter::updateArcRois(const std::list<RoiNameAndArcRoi>& named_arc)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
+  for(std::list<RoiNameAndArcRoi>::const_iterator i = named_arc.begin();
+      i != named_arc.end();++i)
     {
-      int x,y,width,height;
-      i->second->getRoi(x,y,width,height);
-      aReturnList.push_back(Roi(x,y,width,height));
+      if(i->second.isEmpty()) continue;
+      SoftManager *aCounterMgrPt;
+      SoftTask *aCounterTaskPt;
+      _get_or_create(i->first,aCounterMgrPt,aCounterTaskPt);
+      //update
+      double x,y;
+      i->second.getCenter(x,y);
+      double rayon1,rayon2;
+      i->second.getRayons(rayon1,rayon2);
+      double start,end;
+      i->second.getAngles(start,end);
+      aCounterTaskPt->setArcMask(x,y,
+				 rayon1,rayon2,
+				 start,end);
+      aCounterTaskPt->setMask(m_mask);
     }
 }
-/** @brief remove roi with roi index.
-    roi index start at 1
-*/
-void SoftOpRoiCounter::del(const std::list<int> &roiIds)
+void SoftOpRoiCounter::setLut(const std::string& name,
+			      const Point& origin,Data& lut)
 {
-  std::list<int> aTmpList = roiIds;
-  aTmpList.sort();
-  
   AutoMutex aLock(m_cond.mutex());
-  std::list<int>::iterator i = aTmpList.begin();
-  std::list<ManagerNCounter>::iterator k = m_manager_tasks.begin();
-  for(int index = 1;i != aTmpList.end() && k != m_manager_tasks.end();++i)
-    {
-      while(index != *i && k != m_manager_tasks.end())
-	++k,++index;
-
-      if(index == *i)
-	{
-	  k->second->unref();
-	  k->first->unref();
-	  k = m_manager_tasks.erase(k),++index;
-	}
-    }
+  SoftManager *aCounterMgrPt;
+  SoftTask *aCounterTaskPt;
+  _get_or_create(name,aCounterMgrPt,aCounterTaskPt);
+  aCounterTaskPt->setLut(origin.x,origin.y,lut);
+  aCounterTaskPt->setMask(m_mask);
+}
+void SoftOpRoiCounter::setLutMask(const std::string& name,
+				  const Point& origin,Data& mask)
+{
+  AutoMutex aLock(m_cond.mutex());
+  SoftManager *aCounterMgrPt;
+  SoftTask *aCounterTaskPt;
+  _get_or_create(name,aCounterMgrPt,aCounterTaskPt);
+  aCounterTaskPt->setLutMask(origin.x,origin.y,mask);
+  aCounterTaskPt->setMask(m_mask);
+}
+void SoftOpRoiCounter::getRois(std::list<RoiNameAndRoi>& names_rois) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  _get_rois_of_type<SoftTask::SQUARE, Roi>(names_rois);
+}
+void SoftOpRoiCounter::getArcRois(std::list<RoiNameAndArcRoi>& names_rois) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  _get_rois_of_type<SoftTask::ARC, ArcRoi>(names_rois);
+}
+void SoftOpRoiCounter::getTypes(std::list<RoiNameAndType>& names_types) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(NameMapConstIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i) {
+    SoftTask *task = i->second.second;
+    SoftTask::type roi_type;
+    task->getType(roi_type);
+    names_types.push_back(RoiNameAndType(i->first, roi_type));
+  }
+}
+void SoftOpRoiCounter::getTasks(RoiNameAndTaskList& l)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_task_manager.getTasks(l);
+}
+void SoftOpRoiCounter::getNames(std::list<std::string>& roi_names) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_task_manager.getNames(roi_names);
+}
+void SoftOpRoiCounter::removeRois(const std::list<std::string>& names)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_task_manager.remove(names);
 }
 
 /** @brief remove all roi
  */
-void SoftOpRoiCounter::clearAllRoi()
+void SoftOpRoiCounter::clearAllRois()
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
-    {
-      i->second->unref();
-      i->first->unref();
-    }
+  m_task_manager.clearAll();
 }
 
 void SoftOpRoiCounter::clearCounterStatus()
 {
   AutoMutex aLock(m_cond.mutex());
-  m_counter_status = -2;
+  m_task_manager.clearCounterStatus();
 }
 /** @brief get the counter status
  *  counter status indicate the status of roi counters
@@ -310,183 +354,168 @@ void SoftOpRoiCounter::clearCounterStatus()
 int SoftOpRoiCounter::getCounterStatus() const
 {
   AutoMutex aLock(m_cond.mutex());
-  return m_counter_status;
+  return m_task_manager.getCounterStatus();
 }
-void SoftOpRoiCounter::setMask(Data &aMask)
+void SoftOpRoiCounter::setMask(Data& aMask)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
-      i->second->setMask(aMask);
+  for(NameMapIterator i = m_task_manager.begin();
+       i != m_task_manager.end();++i)
+      i->second.second->setMask(aMask);
   m_mask = aMask;
 }
 
 void SoftOpRoiCounter::setBufferSize(int size)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-    i->first->resizeHistory(size);
+  for(NameMapIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
+    i->second.first->resizeHistory(size);
   m_history_size = size;
 }
 
-void SoftOpRoiCounter::getBufferSize(int &size) const
+void SoftOpRoiCounter::getBufferSize(int& size) const
 {
   AutoMutex aLock(m_cond.mutex());
   size = m_history_size;
 }
 
-void SoftOpRoiCounter::readCounters(int from,std::list<RoiIdAndResults> &result) const
+void SoftOpRoiCounter::readCounters(int from,
+				    std::list<RoiNameAndResults>& result) const
 {
   AutoMutex aLock(m_cond.mutex());
-  int roiIndex = 1;
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i,++roiIndex)
-    {
-      result.push_back(RoiIdAndResults(roiIndex,std::list<Tasks::RoiCounterResult>()));
-      RoiIdAndResults &roiAndResults = result.back();
-      i->first->getHistory(roiAndResults.second,from);
-    }
+  for(NameMapConstIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i) {
+    typedef std::list<Tasks::RoiCounterResult> RoiCounterResults;
+    result.push_back(RoiNameAndResults(i->first, RoiCounterResults()));
+    RoiNameAndResults& roiAndResults = result.back();
+    i->second.first->getHistory(roiAndResults.second, from);
+  }
 }
 
-void SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpRoiCounter::addTo(TaskMgr &aMgr,int stage)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-    aMgr.addSinkTask(stage,i->second);
-  ++m_counter_status;
+  return m_task_manager.addTo(aMgr, stage);
 }
 
 void SoftOpRoiCounter::prepare()
 {
   AutoMutex aLock(m_cond.mutex());
-   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-     i->first->resetHistory();
-   m_counter_status = -1;
+  for(NameMapIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
+     i->second.first->resetHistory();
+  m_task_manager.prepareCounterStatus();
 }
 
+void SoftOpRoiCounter::_get_or_create(const std::string& roi_name,
+				      SoftManager *& aCounterMgrPt,
+				      SoftTask *& aCounterTaskPt)
+{
+  NameMapIterator i = m_task_manager.find(roi_name);
+  if (i == m_task_manager.end()) {
+    aCounterMgrPt = new SoftManager(m_history_size);
+    aCounterTaskPt = new SoftTask(*aCounterMgrPt);
+    TaskMap::ManagerAndTask man_task(aCounterMgrPt, aCounterTaskPt);
+    m_task_manager.insert(roi_name, man_task);
+  } else {
+    aCounterMgrPt = i->second.first;
+    aCounterTaskPt = i->second.second;
+  }
+}
 //-------------------- ROI TO SPECTRUM --------------------
 
 SoftOpRoi2Spectrum::SoftOpRoi2Spectrum() : 
   SoftOpBaseClass(),
-  m_history_size(DEFAULT_HISTORY_SIZE),
-  m_counter_status(-2)
+  m_history_size(DEFAULT_HISTORY_SIZE)
 {
+  m_task_manager.setCompatFormat("roi_%d");
 }
 
 SoftOpRoi2Spectrum::~SoftOpRoi2Spectrum()
 {
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-    {
-      i->second->unref();
-      i->first->unref();
-    }
 }
 
-void SoftOpRoi2Spectrum::add(const std::list<Roi> &rois)
+void SoftOpRoi2Spectrum::updateRois(const std::list<RoiNameAndRoi> &named_rois)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<Roi>::const_iterator i = rois.begin();
-      i != rois.end();++i)
+  for(std::list<RoiNameAndRoi>::const_iterator i = named_rois.begin();
+      i != named_rois.end();++i)
     {
-      Tasks::Roi2SpectrumManager *aCounterMgrPt = new Tasks::Roi2SpectrumManager(m_history_size);
-      Tasks::Roi2SpectrumTask *aCounterTaskPt = new Tasks::Roi2SpectrumTask(*aCounterMgrPt);
-
-      const Point &aOri = i->getTopLeft();
-      const Size &aSize = i->getSize();
-      aCounterTaskPt->setRoi(aOri.x,aOri.y,aSize.getWidth(),aSize.getHeight());
-      //aCounterTaskPt->setMask(m_mask);
-
-      m_manager_tasks.push_back(ManagerNCounter(aCounterMgrPt,aCounterTaskPt));
+      SoftManager *aRoi2SpectrumMgrPt;
+      SoftTask *aRoi2SpectrumTaskPt;
+      _get_or_create(i->first,aRoi2SpectrumMgrPt,aRoi2SpectrumTaskPt);
+      //update
+      const Point &aOri = i->second.getTopLeft();
+      const Size &aSize = i->second.getSize();
+      aRoi2SpectrumTaskPt->setRoi(aOri.x,aOri.y,aSize.getWidth(),aSize.getHeight());
+      //aRoi2SpectrumTaskPt->setMask(m_mask);
     }
 }
-void SoftOpRoi2Spectrum::set(const std::list<Roi> &rois)
-{
-  clearAllRoi();
-  add(rois);
-}
-/** @brief return the list of roi set
- */
-void SoftOpRoi2Spectrum::get(std::list<Roi> &aReturnList) const
+void SoftOpRoi2Spectrum::getRois(std::list<RoiNameAndRoi>& named_rois) const
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
+  for(NameMapConstIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
     {
       int x,y,width,height;
-      i->second->getRoi(x,y,width,height);
-      aReturnList.push_back(Roi(x,y,width,height));
+      i->second.second->getRoi(x,y,width,height);
+      RoiNameAndRoi name_roi(i->first,  Roi(x,y,width,height));
+      named_rois.push_back(name_roi);
     }
 }
-/** @brief remove roi with roi index.
-    roi index start at 1
-*/
-void SoftOpRoi2Spectrum::del(const std::list<int> &roiIds)
+void SoftOpRoi2Spectrum::getTasks(RoiNameAndTaskList& l)
 {
-  std::list<int> aTmpList = roiIds;
-  aTmpList.sort();
-  
   AutoMutex aLock(m_cond.mutex());
-  std::list<int>::iterator i = aTmpList.begin();
-  std::list<ManagerNCounter>::iterator k = m_manager_tasks.begin();
-  for(int index = 1;i != aTmpList.end() && k != m_manager_tasks.end();++i)
-    {
-      while(index != *i && k != m_manager_tasks.end())
-	++k,++index;
-
-      if(index == *i)
-	{
-	  k->second->unref();
-	  k->first->unref();
-	  k = m_manager_tasks.erase(k),++index;
-	}
-    }
+  m_task_manager.getTasks(l);
+}
+void SoftOpRoi2Spectrum::getNames(std::list<std::string>& roi_names) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_task_manager.getNames(roi_names);
+}
+void SoftOpRoi2Spectrum::removeRois(const std::list<std::string>& names)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_task_manager.remove(names);
 }
 
 /** @brief remove all roi
  */
-void SoftOpRoi2Spectrum::clearAllRoi()
+void SoftOpRoi2Spectrum::clearAllRois()
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
+  m_task_manager.clearAll();
+}
+
+void SoftOpRoi2Spectrum::getRoiModes(std::list<RoiNameAndMode>& roi_modes) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(NameMapConstIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
     {
-      i->second->unref();
-      i->first->unref();
+      RoiNameAndMode name_mode(i->first, i->second.second->getMode());
+      roi_modes.push_back(name_mode);
     }
 }
 
-void SoftOpRoi2Spectrum::getRoiMode(std::list<int> &aReturnList) const
+void SoftOpRoi2Spectrum::setRoiModes(const std::list<RoiNameAndMode>& roi_modes)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-      aReturnList.push_back(i->second->getMode());
-}
-
-void SoftOpRoi2Spectrum::setRoiMode(int roiId,int mode)
-{
-  AutoMutex aLock(m_cond.mutex());
-  int rId = 1;
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i,++rId)
+  for(std::list<RoiNameAndMode>::const_iterator i = roi_modes.begin();
+      i != roi_modes.end();++i)
     {
-      if(rId == roiId)
-	{
-	  i->second->setMode(mode == Tasks::Roi2SpectrumTask::COLUMN_SUM ?
-			     Tasks::Roi2SpectrumTask::COLUMN_SUM :
-			     Tasks::Roi2SpectrumTask::LINES_SUM);
-	  break;
-	}
+      SoftManager *aRoi2SpectrumMgrPt;
+      SoftTask *aRoi2SpectrumTaskPt;
+      _get_or_create(i->first,aRoi2SpectrumMgrPt,aRoi2SpectrumTaskPt);
+      aRoi2SpectrumTaskPt->setMode((i->second == SoftTask::COLUMN_SUM) ?
+			      SoftTask::COLUMN_SUM : SoftTask::LINES_SUM);
     }
 }
 void SoftOpRoi2Spectrum::clearCounterStatus()
 {
   AutoMutex aLock(m_cond.mutex());
-  m_counter_status = -2;
+  m_task_manager.clearCounterStatus();
 }
 /** @brief get the counter status
  *  counter status indicate the status of roi counters
@@ -498,24 +527,24 @@ void SoftOpRoi2Spectrum::clearCounterStatus()
 int SoftOpRoi2Spectrum::getCounterStatus() const
 {
   AutoMutex aLock(m_cond.mutex());
-  return m_counter_status;
+  return m_task_manager.getCounterStatus();
 }
 
 // void SoftOpRoi2Spectrum::setMask(Data &aMask)
 // {
 //   AutoMutex aLock(m_cond.mutex());
-//   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-//       i != m_manager_tasks.end();i = m_manager_tasks.erase(i))
-//       i->second->setMask(aMask);
+//   for(NameMapIterator i = m_task_manager.begin();
+//       i != m_task_manager.end();++i)
+//       i->second.second->setMask(aMask);
 //   m_mask = aMask;
 // }
 
 void SoftOpRoi2Spectrum::setBufferSize(int size)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-    i->first->resizeHistory(size);
+  for(NameMapIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
+    i->second.first->resizeHistory(size);
   m_history_size = size;
 }
 
@@ -525,70 +554,81 @@ void SoftOpRoi2Spectrum::getBufferSize(int &size) const
   size = m_history_size;
 }
 
-void SoftOpRoi2Spectrum::readCounters(int from,std::list<RoiIdAndResults> &result) const
+void SoftOpRoi2Spectrum::readCounters(int from,
+				      std::list<RoiNameAndResults> &result) const
 {
   AutoMutex aLock(m_cond.mutex());
-  int roiIndex = 1;
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i,++roiIndex)
+  for(NameMapConstIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
     {
-      result.push_back(RoiIdAndResults(roiIndex,std::list<Tasks::Roi2SpectrumResult>()));
-      RoiIdAndResults &roiAndResults = result.back();
-      i->first->getHistory(roiAndResults.second,from);
+      typedef std::list<Tasks::Roi2SpectrumResult> ResultList;
+      result.push_back(RoiNameAndResults(i->first, ResultList()));
+      RoiNameAndResults &name_res = result.back();
+      i->second.first->getHistory(name_res.second, from);
     }
 }
 
-void SoftOpRoi2Spectrum::createImage(int roiId,int &from,Data &aData) const
+void SoftOpRoi2Spectrum::createImage(std::string roi_name, int& from,
+				     Data& aData) const
 {
   AutoMutex aLock(m_cond.mutex());
-  int roiIndex = 1;
-  for(std::list<ManagerNCounter>::const_iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i,++roiIndex)
-    {
-      if(roiIndex == roiId)
-	{
-	  std::list<Tasks::Roi2SpectrumResult> aResult;
-	  i->first->getHistory(aResult,from);
-	  if(!aResult.empty())
-	    {
-	      Tasks::Roi2SpectrumResult &firstResult = aResult.front();
-	      int aSize = firstResult.spectrum.size();
-	      from = firstResult.frameNumber;
-	      if(aSize)
-		{
-		  Buffer *aBuffer = new Buffer(aSize * aResult.size());
-		  char *dataPt = (char*)aBuffer->data;
-		  for(std::list<Tasks::Roi2SpectrumResult>::iterator k = aResult.begin();
-		      k != aResult.end();++k,dataPt += aSize)
-		    memcpy(dataPt,k->spectrum.data(),aSize);
-		  aData.type = firstResult.spectrum.type;
-		  aData.dimensions = firstResult.spectrum.dimensions;
-		  aData.dimensions.push_back(aResult.size());
-		  aData.setBuffer(aBuffer);
-		  aBuffer->unref();
-		}
-	    }
-	  break;
-	}
-    }
+  NameMapConstIterator i = m_task_manager.find(roi_name);
+  if(i == m_task_manager.end())
+    return;
+
+  std::list<Tasks::Roi2SpectrumResult> aResult;
+  i->second.first->getHistory(aResult,from);
+  if(aResult.empty())
+    return;
+
+  Tasks::Roi2SpectrumResult &firstResult = aResult.front();
+  int aSize = firstResult.spectrum.size();
+  if(!aSize)
+    return;
+
+  from = firstResult.frameNumber;
+  Buffer *aBuffer = new Buffer(aSize * aResult.size());
+  char *dataPt = (char*)aBuffer->data;
+  for(std::list<Tasks::Roi2SpectrumResult>::iterator k = aResult.begin();
+      k != aResult.end();++k,dataPt += aSize)
+    memcpy(dataPt,k->spectrum.data(),aSize);
+  aData.type = firstResult.spectrum.type;
+  aData.dimensions = firstResult.spectrum.dimensions;
+  aData.dimensions.push_back(aResult.size());
+  aData.setBuffer(aBuffer);
+  aBuffer->unref();
 }
-void SoftOpRoi2Spectrum::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpRoi2Spectrum::addTo(TaskMgr &aMgr,int stage)
 {
   AutoMutex aLock(m_cond.mutex());
-  for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-    aMgr.addSinkTask(stage,i->second);
-  ++m_counter_status;
+  return m_task_manager.addTo(aMgr, stage);
 }
 
 void SoftOpRoi2Spectrum::prepare()
 {
   AutoMutex aLock(m_cond.mutex());
-   for(std::list<ManagerNCounter>::iterator i = m_manager_tasks.begin();
-      i != m_manager_tasks.end();++i)
-     i->first->resetHistory();
-   m_counter_status = -1;
+  for(NameMapIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
+    i->second.first->resetHistory();
+  m_task_manager.prepareCounterStatus();
 }
+
+void SoftOpRoi2Spectrum::_get_or_create(const std::string& roi_name,
+					SoftManager *& aRoi2SpectrumMgrPt,
+					SoftTask *& aRoi2SpectrumTaskPt)
+{
+  NameMapIterator i = m_task_manager.find(roi_name);
+  if (i == m_task_manager.end()) {
+    aRoi2SpectrumMgrPt = new SoftManager(m_history_size);
+    aRoi2SpectrumTaskPt = new SoftTask(*aRoi2SpectrumMgrPt);
+    TaskMap::ManagerAndTask man_task(aRoi2SpectrumMgrPt, aRoi2SpectrumTaskPt);
+    m_task_manager.insert(roi_name, man_task);
+  } else {
+    aRoi2SpectrumMgrPt = i->second.first;
+    aRoi2SpectrumTaskPt = i->second.second;
+  }
+}
+
 
 //-------------------- SOFTROI --------------------
 				   
@@ -611,9 +651,10 @@ void SoftOpSoftRoi::setRoi(int x,int y,int width,int height)
   m_opt->setRoi(x,x+width,y,y+height);
 }
 
-void SoftOpSoftRoi::addTo(TaskMgr &aMgr,int stage)
+bool SoftOpSoftRoi::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
+  return true;
 }
 
 //-------------------------- SOFTCALLBACK --------------------------
@@ -693,10 +734,11 @@ void SoftUserLinkTask::setLinkTask(LinkTask *aTaskPt)
   m_link_task = aTaskPt;
 }
 
-void SoftUserLinkTask::addTo(TaskMgr &aMgr,int stage)
+bool SoftUserLinkTask::addTo(TaskMgr &aMgr,int stage)
 {
   if(m_link_task)
     aMgr.setLinkTask(stage,m_link_task);
+  return !!m_link_task;
 }
 
 //------------------------ SoftUserSinkTask ------------------------
@@ -724,8 +766,9 @@ void SoftUserSinkTask::setSinkTask(SinkTaskBase *aTaskPt)
   m_sink_task = aTaskPt;
 }
 
-void SoftUserSinkTask::addTo(TaskMgr &aMgr,int stage)
+bool SoftUserSinkTask::addTo(TaskMgr &aMgr,int stage)
 {
   if(m_sink_task)
     aMgr.addSinkTask(stage,m_sink_task);
+  return !!m_sink_task;
 }

@@ -22,7 +22,7 @@
 SRCS = testregex.cpp
 
 CXXFLAGS = -Wall -I ../include -pthread -g
-LDFLAGS = -L../../build/ -Wl,-rpath=$(shell pwd)/../../build -llimacore -lpthread
+LDFLAGS = -L../../build/ -Wl,--no-as-needed,-rpath=$(shell pwd)/../../build -llimacore -lpthread
 
 all: testregex
 
@@ -39,3 +39,7 @@ clean:
 	rm -f $*.d
 
 -include $(SRCS:.cpp=.P)
+
+.PHONY: check-syntax
+check-syntax:
+	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)

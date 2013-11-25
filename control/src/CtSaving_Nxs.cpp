@@ -181,12 +181,12 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			  my_error<<ex.errors[i].desc;
 		  }
 		  DEB_TRACE()<<my_error.str();
-		  throw LIMA_CTL_EXC(Error,my_error.str());
+		  THROW_CTL_ERROR(Error) << my_error.str();
 	  }
 	  catch(...)
 	  {
 		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - catch UNKNOWN Exception";
-		  throw LIMA_CTL_EXC(Error,"SaveContainerNxs::_writeFile() - catch UNKNOWN Exception");
+		  THROW_CTL_ERROR(Error) << "SaveContainerNxs::_writeFile() - catch UNKNOWN Exception";
 	  }
 }
 

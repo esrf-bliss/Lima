@@ -68,6 +68,7 @@ namespace lima {
 	NXS,			///< Soleil Nexus format
 	FITS,			///< Flexible Image Transport Layer (NOST)
 	EDFGZ,			///< EDF format with gzip compression
+	TIFFFormat,		///< TIFF format
       };
 
     enum SavingMode 
@@ -86,6 +87,8 @@ namespace lima {
 
     struct LIMACORE_API Parameters 
     {
+      DEB_CLASS_NAMESPC(DebModControl,"Saving::Parameters","Control");
+    public:
       std::string directory;	///< base path where the files will be saved
       std::string prefix;	///< prefix of the filename
       std::string suffix;	///< suffix of the filename
@@ -417,6 +420,8 @@ namespace lima {
 	  aFileFormatHumanPt = "FITS";break;
 	case CtSaving::EDFGZ:
 	  aFileFormatHumanPt = "EDF gzip";break;
+	case CtSaving::TIFFFormat:
+	  aFileFormatHumanPt = "TIFF";break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -435,6 +440,7 @@ namespace lima {
       else if(buffer == "fits")		fileFormat = CtSaving::FITS;
       else if(buffer == "edf gzip") 	fileFormat = CtSaving::EDFGZ;
       else if(buffer == "raw")		fileFormat = CtSaving::RAW;
+      else if(buffer == "tiff")		fileFormat = CtSaving::TIFFFormat;
       else
 	{
 	  std::ostringstream msg;

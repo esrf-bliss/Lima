@@ -30,7 +30,7 @@ using namespace lima;
   if(m_has_shutter)\
     func;	   \
   else\
-    throw LIMA_CTL_EXC(Error, "No shutter capability");
+    THROW_CTL_ERROR(Error) <<  "No shutter capability";
 
 #ifdef WITH_CONFIG
 // --- config management

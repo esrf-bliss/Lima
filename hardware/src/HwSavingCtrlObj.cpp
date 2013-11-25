@@ -28,6 +28,7 @@ using namespace lima;
 const char* HwSavingCtrlObj::RAW_FORMAT_STR = "RAW"; ///< Raw format (no header)
 const char* HwSavingCtrlObj::EDF_FORMAT_STR = "EDF"; ///< EDF format (Esrf Data Format)
 const char* HwSavingCtrlObj::CBF_FORMAT_STR = "CBF"; ///< CBF format
+const char* HwSavingCtrlObj::TIFF_FORMAT_STR = "TIFF"; ///< TIFF format
 #ifdef __linux__
 #ifdef __soleil_linux__
 class HwSavingCtrlObj::DirectoryCallback : public DirectoryEvent::Callback

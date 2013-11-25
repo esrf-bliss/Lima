@@ -24,11 +24,12 @@ hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 	   HwShutterCtrlObj.o HwMaxImageSizeCallback.o HwDetInfoCtrlObj.o \
 	   HwBinCtrlObj.o HwRoiCtrlObj.o HwFlipCtrlObj.o HwSerialLine.o \
 	   HwBufferSave.o HwVideoCtrlObj.o HwEventCtrlObj.o HwSavingCtrlObj.o \
-           HwFileEventMgr.o
+           HwFileEventMgr.o HwReconstructionCtrlObj.o
 
 SRCS = $(hw-objs:.o=.cpp)
 
-CXXFLAGS += -I../include -I../../common/include -Wall -pthread -fPIC -g
+CXXFLAGS += -I../include -I../../common/include -I../../third-party/Processlib/core/include \
+	    -Wall -pthread -fPIC -g
 
 all:	Hw.o
 
@@ -46,3 +47,7 @@ clean:
 	rm -f $*.d
 
 -include $(SRCS:.cpp=.P)
+
+.PHONY: check-syntax
+check-syntax:
+	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)

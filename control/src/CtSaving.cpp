@@ -49,6 +49,10 @@
 #include "CtSaving_Fits.h"
 #endif
 
+#ifdef WITH_TIFF_SAVING
+#include "CtSaving_Tiff.h"
+#endif
+
 #include "TaskMgr.h"
 #include "SinkTask.h"
 
@@ -150,13 +154,19 @@ CtSaving::Parameters::Parameters()
 
 void CtSaving::Parameters::checkValid() const
 {
+  DEB_MEMBER_FUNCT();
   switch(fileFormat)
     {
 #ifdef WITH_CBF_SAVING
     case CBFFormat :
       if(framesPerFile > 1)
-	throw LIMA_CTL_EXC(InvalidValue, "CBF file format does not support "
-			                 "multi frame per file");
+	THROW_CTL_ERROR(InvalidValue) << "CBF file format does not support "
+			                 "multi frame per file";
+      break;
+    case TIFFFormat :
+      if(framesPerFile > 1)
+	THROW_CTL_ERROR(InvalidValue) << "TIFF file format does not support "
+			                 "multi frame per file";
       break;
 #endif
 #ifndef __unix
@@ -293,6 +303,12 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed"; 
 #endif
     goto common;
+  case TIFFFormat:
+#ifndef WITH_TIFF_SAVING
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the tiff "
+                                     "saving option, not managed";  
+#endif
+    goto common;
   case RAW:
   case EDF:
 
@@ -328,6 +344,12 @@ void CtSaving::Stream::createSaveContainer()
 #ifdef WITH_FITS_SAVING
   case FITS:
     m_save_cnt = new SaveContainerFits(*this);
+    break;
+#endif
+#ifdef WITH_TIFF_SAVING
+  case TIFFFormat:
+    m_save_cnt = new SaveContainerTiff(*this);
+    m_pars.framesPerFile = 1;
     break;
 #endif
   default:
@@ -1593,6 +1615,7 @@ void CtSaving::_prepare()
 	case EDF: fileFormat = HwSavingCtrlObj::EDF_FORMAT_STR;break;
 	case CBFFormat: fileFormat = HwSavingCtrlObj::CBF_FORMAT_STR;break;
 	case HARDWARE_SPECIFIC: fileFormat = m_specific_hardware_format;break;
+	case TIFFFormat: fileFormat = HwSavingCtrlObj::TIFF_FORMAT_STR;break;
 	default:
 	  THROW_CTL_ERROR(NotSupported) << "Not supported yet";break;
 	}

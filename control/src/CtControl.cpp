@@ -40,6 +40,8 @@
 #include "SoftOpInternalMgr.h"
 #include "SoftOpExternalMgr.h"
 
+#include "HwReconstructionCtrlObj.h"
+
 #include "PoolThreadMgr.h"
 
 using namespace lima;
@@ -129,6 +131,19 @@ public:
 private:
   CtControl&	m_ct;
 };
+
+class CtControl::_ReconstructionChangeCallback : public HwReconstructionCtrlObj::Callback
+{
+public:
+  _ReconstructionChangeCallback(CtControl& ctrl) : m_ct(ctrl) {}
+
+  virtual void change(LinkTask* aNewLinkTaskPt)
+  {
+    m_ct.setReconstructionTask(aNewLinkTaskPt);
+  }
+private:
+  CtControl& m_ct;
+};
 // --- helper
 
 
@@ -142,7 +157,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
-  m_img_status_cb(NULL)
+  m_img_status_cb(NULL),
+  m_reconstruction_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
 
@@ -191,6 +207,15 @@ CtControl::CtControl(HwInterface *hw) :
   m_op_ext = new SoftOpExternalMgr();
 
   m_soft_op_error_handler = new SoftOpErrorHandler(*this);
+
+  HwReconstructionCtrlObj* reconstruction_obj;
+  if(hw->getHwCtrlObj(reconstruction_obj))
+    {
+      m_reconstruction_cbk = new _ReconstructionChangeCallback(*this);
+      reconstruction_obj->registerReconstructionChangeCallback(*m_reconstruction_cbk);
+      LinkTask* rec_task = reconstruction_obj->getReconstructionTask();
+      setReconstructionTask(rec_task);
+    }
 }
 
 CtControl::~CtControl()
@@ -203,6 +228,14 @@ CtControl::~CtControl()
 
   if (m_img_status_cb)
     unregisterImageStatusCallback(*m_img_status_cb);
+  
+  if(m_reconstruction_cbk)
+    {
+      HwReconstructionCtrlObj* reconstruction_obj;
+      m_hw->getHwCtrlObj(reconstruction_obj);
+      reconstruction_obj->unregisterReconstructionChangeCallback(*m_reconstruction_cbk);
+      delete m_reconstruction_cbk;
+    }
 
   delete m_ct_saving;
 #ifdef WITH_SPS_IMAGE
@@ -249,10 +282,10 @@ void CtControl::prepareAcq()
   getStatus(aStatus);
 
   if(aStatus.AcquisitionStatus == AcqRunning)
-    throw LIMA_CTL_EXC(Error,"Acquisition not finished");
+    THROW_CTL_ERROR(Error) << "Acquisition not finished";
 
   if(aStatus.AcquisitionStatus == AcqConfig)
-    throw LIMA_CTL_EXC(Error,"Configuration not finished");
+    THROW_CTL_ERROR(Error) << "Configuration not finished";
 
   resetStatus(false);
   
@@ -353,7 +386,7 @@ void CtControl::startAcq()
   DEB_MEMBER_FUNCT();
 
   if (!m_ready)
-	throw LIMA_CTL_EXC(Error, "Run prepareAcq before starting acquisition");
+	THROW_CTL_ERROR(Error) << "Run prepareAcq before starting acquisition";
   m_running = true;
   TrigMode trigMode;
   m_ct_acq->getTriggerMode(trigMode);
@@ -366,7 +399,7 @@ void CtControl::startAcq()
       HwInterface::Status hwStatus;
       m_hw->getStatus(hwStatus);
       if(hwStatus.det != DetIdle)
-	throw LIMA_CTL_EXC(Error, "Try to restart before detector is ready");
+	THROW_CTL_ERROR(Error) << "Try to restart before detector is ready";
 
       //m_ready = false after the last image is triggerred
       int nbFrames4Acq;
@@ -457,7 +490,9 @@ void CtControl::_calcAcqStatus()
       m_ct_acq->getAcqNbFrames(acq_nb_frames);
       if((!m_running ||
 	  anImageCnt.LastImageAcquired == (acq_nb_frames - 1)) && // we reach the nb frames asked
-	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady) // processing has finished
+	 anImageCnt.LastImageAcquired == anImageCnt.LastImageReady && // processing has finished
+	 (!m_op_ext_sink_task_active || 
+	  anImageCnt.LastCounterReady == anImageCnt.LastImageAcquired)) // ext counters
 	{
 	  if(m_autosave)
 	    {
@@ -503,9 +538,9 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber,
       else
 	{
 	  if(frameNumber < m_status.ImageCounters.LastImageReady - m_images_buffer_size)
-	    throw LIMA_CTL_EXC(Error,"Frame no more available");
+	    THROW_CTL_ERROR(Error) << "Frame no more available";
 	  else
-	    throw LIMA_CTL_EXC(Error,"Frame not available yet");
+	    THROW_CTL_ERROR(Error) << "Frame not available yet";
 	}
     }
   else
@@ -550,9 +585,9 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
   if (frameNumber < 0) {
     frameNumber = lastFrame - (readBlockLen - 1);
     if (frameNumber < 0)
-      throw LIMA_CTL_EXC(Error, "Frame(s) not available yet");
+      THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
   } else if (frameNumber + readBlockLen - 1 > lastFrame)
-    throw LIMA_CTL_EXC(Error, "Frame(s) not available yet");
+    THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
   aLock.unlock();
   m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
   
@@ -562,7 +597,7 @@ void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
   int roiHeight = img_dim.getSize().getHeight() * readBlockLen;
   if((roiWidth * roiHeight) >
      (aReturnData.dimensions[0] * aReturnData.dimensions[1]))
-    throw LIMA_CTL_EXC(Error, "Roi dim > HwBuffer dim");
+    THROW_CTL_ERROR(Error) << "Roi dim > HwBuffer dim";
 
   aReturnData.dimensions[0] = roiWidth;
   aReturnData.dimensions[1] = roiHeight;
@@ -761,9 +796,10 @@ void CtControl::newImageReady(Data &aData)
 void CtControl::newCounterReady(Data&)
 {
   DEB_MEMBER_FUNCT();
-  //@todo
   AutoMutex aLock(m_cond.mutex());
   ++m_status.ImageCounters.LastCounterReady;
+  aLock.unlock();
+  _calcAcqStatus();
 }
 
 /** @brief inc the save counter.
@@ -805,10 +841,8 @@ void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(&cb, m_img_status_cb);
 
-  if (m_img_status_cb) {
-    DEB_ERROR() << "ImageStatusCallback already registered";
-    throw LIMA_CTL_EXC(InvalidValue, "ImageStatusCallback already registered");
-  }
+  if (m_img_status_cb)
+    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
 
   cb.setImageStatusCallbackGen(this);
   m_img_status_cb = &cb;
@@ -819,10 +853,8 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(&cb, m_img_status_cb);
 
-  if (m_img_status_cb != &cb) {
-    DEB_ERROR() << "ImageStatusCallback not registered";
-    throw LIMA_CTL_EXC(InvalidValue, "ImageStatusCallback not registered");
-  }
+  if (m_img_status_cb != &cb)
+    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
   
   m_img_status_cb = NULL;
   cb.setImageStatusCallbackGen(NULL);

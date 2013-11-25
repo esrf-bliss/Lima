@@ -51,6 +51,10 @@ ifndef COMPILE_EDFGZ_SAVING
 COMPILE_EDFGZ_SAVING = 0
 endif
 
+ifndef COMPILE_TIFF_SAVING
+COMPILE_TIFF_SAVING = 0
+endif
+
 ifneq ($(COMPILE_CBF_SAVING),0)
 ct-objs += CtSaving_Cbf.o 
 INCLUDES += -I../../third-party/CBFLib/include
@@ -78,6 +82,11 @@ endif
 
 ifneq ($(COMPILE_EDFGZ_SAVING),0)
 CXXFLAGS += -DWITH_EDFGZ_SAVING
+endif
+
+ifneq ($(COMPILE_TIFF_SAVING),0)
+ct-objs += CtSaving_Tiff.o 
+CXXFLAGS += -DWITH_TIFF_SAVING
 endif
 
 ifndef COMPILE_SPS_IMAGE
@@ -120,3 +129,7 @@ clean:
 	rm -f $*.d
 
 -include $(SRCS:.cpp=.P)
+
+.PHONY: check-syntax
+check-syntax:
+	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)

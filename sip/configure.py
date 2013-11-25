@@ -27,6 +27,11 @@ import numpy
 import platform
 from checksipexc import checksipexc
 
+# get sip version
+str_version = sipconfig.version_to_string(sipconfig.Configuration().sip_version)
+versions = [int(x) for x in str_version.split('.')]
+major,minor = versions[0],versions[1]
+
 modules = [('core',		['common', 'hardware', 'control']),
 	   ('simulator',	[os.path.join('camera','simulator')]),
 	   ('pco',	        [os.path.join('camera','pco')]),
@@ -47,6 +52,8 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('photonicscience',  [os.path.join('camera','photonicscience')]),
            ('pilatus',          [os.path.join('camera','pilatus')]),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
+           ('imxpad',           [os.path.join('camera','imxpad')]),
+           ('dexela',          [os.path.join('camera','dexela')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -89,7 +96,8 @@ def main():
             except ValueError:
                 continue
             if not value:
-                excludeMods.add(var.split('_')[-1].lower())
+                modname = '_'.join([x.lower() for x in var.split('_')[1:]])
+                excludeMods.add(modname)
 
     for modName, modDirs in modules:
     
@@ -111,7 +119,10 @@ def main():
     
         sipFileNameSrc = "lima%s.sip" % modName
         if modName != 'core':
-            sipFileNameIn = os.path.join("..","limamodules.sip.in")
+            if major == 4 and minor < 12:
+                sipFileNameIn = os.path.join("..","limamodules_before_4_12.sip.in")
+            else:
+                sipFileNameIn = os.path.join("..","limamodules.sip.in")
             f = file(sipFileNameIn)
             lines = f.read()
             f.close()
@@ -119,6 +130,8 @@ def main():
             d = file(sipFileNameSrc,'w')
             d.write(newlines)
             d.close()
+        elif major == 4 and minor < 12:
+            sipFileNameSrc = "limacore_before_4_12.sip"
 
         sipFileName = "lima%s_tmp.sip" % modName
         shutil.copyfile(sipFileNameSrc, sipFileName)
@@ -147,7 +160,8 @@ def main():
             
         if(modName == 'basler') :
             if platform.system() != 'Windows':
-                extraIncludes += ['/opt/pylon/include','/opt/pylon/include/genicam','/opt/pylon/genicam/library/CPP/include']
+                extraIncludes += ['%s/include' % os.environ['PYLON_ROOT']]
+                extraIncludes += ['%s/library/CPP/include' % os.environ['GENICAM_ROOT_V2_1']]
                 extra_cxxflags += ['-DUSE_GIGE']
             else:
                 extraIncludes += ['%s\library\cpp\include' % os.environ['PYLON_GENICAM_ROOT']]
@@ -192,6 +206,10 @@ def main():
                     base,ext = os.path.splitext(filename)
                     if ext != '.sip':
                         continue
+                    if major == 4 and minor < 12:
+                        if os.access(os.path.join(root,filename + "_4_12"), os.R_OK):
+                            filename += "_4_12"
+
                     incl = os.path.join(root,filename)
                     incl = incl.replace(os.sep,'/') # sip don't manage windows path.
                     sipFile.write('%%Include %s\n' % incl)
@@ -205,11 +223,17 @@ def main():
         # Run SIP to generate the code.
         # module's specification files using the -I flag.
         if platform.system() == 'Windows':
-            plat = 'WIN32_PLATFORM'
+	    if platform.machine() == 'AMD64':
+		plat = 'WIN64_PLATFORM'
+	    else:
+		plat = 'WIN32_PLATFORM'
         else:
             plat = 'POSIX_PLATFORM'
-        cmd = " ".join([config.sip_bin,"-g", "-e","-c", '.','-t',plat,
-                        "-b", build_file,sipFileName])
+        cmdargs = [config.sip_bin,"-g", "-e","-c", '.','-t',plat]
+        if 'config' in excludeMods:
+            cmdargs.extend(['-x','WITH_CONFIG'])
+        cmdargs.extend(["-b", build_file,sipFileName])
+        cmd = " ".join(cmdargs)
         print cmd
         os.system(cmd)
 
@@ -250,21 +274,26 @@ def main():
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
             makefile.extra_cxxflags = ['/EHsc','/DWITH_CONFIG'] + extra_cxxflags
-            #libpath = 'build\msvc\9.0\*\Debug'
-            libpath = 'build\msvc\9.0\*\Release'
-            #makefile.extra_lib_dirs = glob.glob(os.path.join(rootName('build'),'msvc','9.0','*','Release'))
+	    if platform.machine() == 'AMD64':
+		libpath = 'build\msvc\9.0\*\\x64\Release'
+		makefile.extra_cxxflags.append('/DWITHOUT_GSL')
+	    else:
+		libpath = 'build\msvc\9.0\*\Release'
             
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('camera'),modName, libpath))
-            makefile.extra_lib_dirs += [os.path.join(rootName('third-party\libconfig'),'lib','libconfig++.Release')]
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\libconfig'),'lib','libconfig++.Release'))
+            makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\libconfig'),'lib','x64','Release'))
 
             if(modName == 'basler') :
                 makefile.extra_lib_dirs += ['%s\library\cpp\lib\win32_i86' % os.environ['PYLON_GENICAM_ROOT']]
                 makefile.extra_lib_dirs += ['%s\lib\Win32' % os.environ['PYLON_ROOT']]
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
-            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE','-DWITH_CONFIG'] + extra_cxxflags
+            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE'] + extra_cxxflags
+            if 'config' not in excludeMods:
+                makefile.extra_cxxflags.append('-DWITH_CONFIG')
             makefile.extra_lib_dirs = [rootName('build')]
         makefile.extra_cxxflags.extend(['-I"%s"' % x for x in extraIncludes])
         

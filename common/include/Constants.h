@@ -25,6 +25,7 @@
 #include "LimaCompatibility.h"
 #include <ostream>
 #include <vector>
+#include <list>
 
 namespace lima
 {
@@ -109,6 +110,7 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 		RGB24,RGB32,
 		BGR24,BGR32,
 		BAYER_RG8,BAYER_RG16,
+		BAYER_BG8,BAYER_BG16,
 		I420,YUV411,YUV422,YUV444};
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os,VideoMode videoMode);
@@ -120,6 +122,8 @@ enum RotationMode {
   Rotation_180,
   Rotation_270
 };
+
+typedef std::list<RotationMode> RotationModeList;
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os,RotationMode rotationMode);
 LIMACORE_API const char* convert_2_string(RotationMode rotationMode);
