@@ -301,6 +301,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\hardware\src\HwReconstructionCtrlObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\hardware\src\HwRoiCtrlObj.cpp"
 				>
 			</File>
@@ -486,6 +490,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\hardware\include\HwReconstructionCtrlObj.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\hardware\include\HwRoiCtrlObj.h"
 				>
 			</File>
@@ -507,6 +515,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\hardware\include\HwVideoCtrlObj.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\include\LimaCompatibility.h"
 				>
 			</File>
 			<File
