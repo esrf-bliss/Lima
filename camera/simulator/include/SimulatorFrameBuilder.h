@@ -44,14 +44,14 @@ struct LIBSIMULATOR_API GaussPeak {
 	double fwhm;       /// Full Width at Half Maximum
 	double max;        /// The maximum value
 	GaussPeak() 
-		: x0(0), y0(0), fwhm(0), max(0)
-	{}
+		: x0(0), y0(0), fwhm(0)
+	{max = 0;}
 	GaussPeak(const GaussPeak& o) 
-		: x0(o.x0), y0(o.y0), fwhm(o.fwhm), max(o.max)
-	{}
+		: x0(o.x0), y0(o.y0), fwhm(o.fwhm)
+	{max = o.max;}
 	GaussPeak(double x, double y, double w, double m) 
-		: x0(x), y0(y), fwhm(w), max(m)
-	{}
+		: x0(x), y0(y), fwhm(w)
+	{max = m;}
 };
 
 
