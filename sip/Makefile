@@ -105,6 +105,10 @@ ifneq ($(COMPILE_IMXPAD), 0)
 sip-modules += imxpad
 endif
 
+ifneq ($(COMPILE_RAYONIXHS), 0)
+sip-modules += rayonixhs
+endif
+
 all:	src
 
 src:

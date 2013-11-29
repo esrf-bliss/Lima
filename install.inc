@@ -181,6 +181,12 @@ IMXPAD_FULL_VERSION = $(shell cat camera/imxpad/VERSION)
 INSTALL_IMXPAD_VDIR = $(INSTALL_IMXPAD_DIR)/v$(IMXPAD_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_RAYONIXHS), 0)
+INSTALL_RAYONIXHS_DIR = $(INSTALL_PLAT_DIR)/RayonixHs
+RAYONIXHS_FULL_VERSION = $(shell cat camera/rayonixhs/VERSION)
+INSTALL_RAYONIXHS_VDIR = $(INSTALL_RAYONIXHS_DIR)/v$(RAYONIXHS_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -453,4 +459,18 @@ ifneq ($(COMPILE_IMXPAD), 0)
 	cp -d build/liblimaimxpad.so* $(INSTALL_LIB_DIR)
 	cp sip/imxpad/limaimxpad.so $(INSTALL_IMXPAD_VDIR)
 	cp camera/imxpad/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_RAYONIXHS), 0)
+	mkdir -p $(INSTALL_RAYONIXHS_VDIR)
+	cp camera/rayonixhs/python/__init__.py $(INSTALL_RAYONIXHS_DIR)
+	$(call install_core_dep,$(INSTALL_RAYONIXHS_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimarayonixhs.so*
+	cp -d build/liblimarayonixhs.so* $(INSTALL_LIB_DIR)
+	cp -d camera/rayonixhs/sdk/lib64/libcraydl.so* $(INSTALL_LIB_DIR)
+	cp -d camera/rayonixhs/sdk/lib64/libcraydl_gpu.so* $(INSTALL_LIB_DIR)
+	cp -d camera/rayonixhs/sdk/lib64/libcbf.so* $(INSTALL_LIB_DIR)
+	cp -dr camera/rayonixhs/sdk/lib64/libcraydl_nocuda $(INSTALL_LIB_DIR)
+	cp sip/rayonixhs/limarayonixhs.so $(INSTALL_RAYONIXHS_VDIR)
+	cp camera/rayonixhs/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

@@ -160,4 +160,12 @@ ifneq ($(COMPILE_IMXPAD),0)
 sub-dirs += imxpad
 endif
 
+ifndef COMPILE_RAYONIXHS
+COMPILE_RAYONIXHS = 0
+endif
+
+ifneq ($(COMPILE_RAYONIXHS),0)
+sub-dirs += rayonixhs
+endif
+
 include ../global.inc

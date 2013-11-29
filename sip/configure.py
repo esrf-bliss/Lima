@@ -55,6 +55,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('imxpad',           [os.path.join('camera','imxpad')]),
            ('dexela',          [os.path.join('camera','dexela')]),
            ('xspress3',        [os.path.join('camera','xspress3')]),
+           ('rayonixhs',        [os.path.join('camera','rayonixhs')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -181,7 +182,8 @@ def main():
 	    extraIncludes += ['../../third-party/yat/include'] 
         elif(modName == 'pointgrey'):
 	    extraIncludes += ['/usr/include/flycapture']
-
+        elif(modName == 'rayonixhs'):
+            extraIncludes += ['../../camera/rayonixhs/sdk/include/craydl']
         extraIncludes += findModuleIncludes(modName)
         
         sipFile = open(sipFileName,"a")

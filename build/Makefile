@@ -552,6 +552,29 @@ build_targets	+= $(call lib-full,$(imxpad-name),$(imxpad-ver))
 
 endif
 
+############################
+# LIMA - RAYONIXHS
+############################
+ifneq ($(COMPILE_RAYONIXHS),0)
+
+RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
+RAYONIXHS_LDLIBS	:= $(LDLIBS) -lcraydl
+
+rayonixhs-name	:= rayonixhs
+rayonixhs-objs	:= ../camera/rayonixhs/src/RayonixHs.o
+rayonixhs-ver	:= ../camera/rayonixhs/VERSION
+rayonixhs-flags	:= $(RAYONIXHS_LDFLAGS)
+rayonixhs-deps	:= $(RAYONIXHS_LDLIBS)
+
+$(call lib-full,$(rayonixhs-name),$(rayonixhs-ver)): $(rayonixhs-objs)
+	$(call compile-lib,$(rayonixhs-name),$(rayonixhs-ver),\
+			   $(rayonixhs-flags),$(rayonixhs-deps),$@,$+)
+	$(call create-links,$(rayonixhs-name),$(rayonixhs-ver))
+
+build_targets	+= $(call lib-full,$(rayonixhs-name),$(rayonixhs-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:
