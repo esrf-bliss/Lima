@@ -212,7 +212,6 @@ void
 SaveContainerNxs::_clear() {
   DEB_MEMBER_FUNCT();
   DEB_TRACE() << "In SaveContainerNxs::_clear, resetting the buffer index CLEAR .";
-  std::cout << "In SaveContainerNxs::_clear()" << std::endl;
   nxcpp::DataStreamer::ResetBufferIndex();
 }
 //--------------------------------------------------------------------------------------------------------------------
