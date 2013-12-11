@@ -246,8 +246,8 @@ void SoftOpExternalMgr::addTo(TaskMgr &aTaskMgr,
 
 	}
     }
-  std::pair<int,LinkTask*> aLastLink(0,NULL);
-  std::pair<int,SinkTaskBase*> aLastSink(0,NULL);
+  std::pair<int,LinkTask*> aLastLink(0,(LinkTask*)NULL);
+  std::pair<int,SinkTaskBase*> aLastSink(0,(SinkTaskBase*)NULL);
 
   aTaskMgr.getLastTask(aLastLink,aLastSink);
 

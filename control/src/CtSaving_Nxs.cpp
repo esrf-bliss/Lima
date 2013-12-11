@@ -70,6 +70,18 @@ void SaveContainerNxs::_close()
   DEB_MEMBER_FUNCT();
 }
 
+
+//--------------------------------------------------------------------------------------------------------------------
+//- Event rising by CtSaving when frame is saved
+//--------------------------------------------------------------------------------------------------------------------
+void SaveContainerNxs::_clear()
+{
+  DEB_MEMBER_FUNCT();
+
+	nxcpp::DataStreamer::ResetBufferIndex();
+}
+
+
 //--------------------------------------------------------------------------------------------------------------------
 //- create nexus object
 //- Initialize nexus object

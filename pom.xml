@@ -1,53 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-   <modelVersion>4.0.0</modelVersion>
-   <parent>
-       <groupId>fr.soleil</groupId>
-       <artifactId>super-pom-C-CPP</artifactId>
-       <version>RELEASE</version>
-   </parent>
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+	   <groupId>fr.soleil</groupId>
+	   <artifactId>super-pom-C-CPP</artifactId>
+	   <version>RELEASE</version>
+	</parent>
 
-   <groupId>fr.soleil.lib</groupId>
-   <artifactId>Lima</artifactId>
-   <version>1.2.4-SNAPSHOT</version>
+	<groupId>fr.soleil.lib</groupId>
+	<artifactId>LimaCore-${aol}-shared-${mode}</artifactId>
+	<version>1.3.0-SNAPSHOT</version>
 
-   <packaging>pom</packaging>
-   <name>[Lima Project]</name>
-   <description>Lima Project</description>
+	<packaging>nar</packaging>
+	<name>LimaCore</name>
+	<description>Library for IMage Acquisition</description>
 
-	<dependencyManagement>
-	     <dependencies>
-	<dependency>
-        <groupId>fr.soleil.lib.Lima</groupId>
-        <artifactId>LimaCommon-${aol}-shared-${mode}</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-        <groupId>fr.soleil.lib.Lima</groupId>
-        <artifactId>LimaHardware-${aol}-shared-${mode}</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-        <groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
-        <artifactId>LimaProcesslibTasks-${aol}-shared-${mode}</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-	     
-<dependency>
-    <groupId>fr.soleil.lib.Lima.Third-party.Processlib</groupId>
-    <artifactId>LimaProcesslibCore-${aol}-shared-${mode}</artifactId>
-    <version>${project.version}</version>
-</dependency>
+	<dependencies>
+
+		<!-- LimaProcesslib -->
+		<dependency>
+			<groupId>fr.soleil.lib</groupId>
+			<artifactId>LimaProcesslib-${aol}-shared-${mode}</artifactId>
+			<version>1.3.0-SNAPSHOT</version>
+		</dependency>
+		
+		<!-- For Nexus Saving -->
+		<dependency>
+			<groupId>fr.soleil.lib</groupId>
+			<artifactId>YAT-${aol}-${library}-${mode}</artifactId>
+			<version>1.7.17-SNAPSHOT</version>
+		</dependency>  
+		<dependency>
+			<groupId>fr.soleil.lib</groupId>
+			<artifactId>NexusCPP-${aol}-${library}-${mode}</artifactId>
+			<version>2.1.0-SNAPSHOT</version>
+		</dependency>
 	      
-	    </dependencies>
-	</dependencyManagement>
+	</dependencies>
+
 	<scm>
-       <connection>scm:git:git://git.epn-campus.eu/repositories/Lima</connection>
-       <developerConnection>scm:git:git://git@git.epn-campus.eu/repositories/Lima</developerConnection>
-       <url>https://forge.epn-campus.eu/projects/show/lima</url>
-   </scm>
+       <connection>scm:git:git://github.com/soleil-ica/Lima.git</connection>
+       <developerConnection>scm:git:git://github.com/soleil-ica/Lima.git</developerConnection>
+       <url>https://github.com/soleil-ica/Lima</url>
+    </scm>
+   
+   <build>
+    <plugins>
+		<plugin>
+			<groupId>org.freehep</groupId>
+			<artifactId>freehep-nar-plugin</artifactId>
+			<configuration>
+				<cpp>
+					<sourceDirectory>${project.basedir}</sourceDirectory>
+					<includes>
+						<include>common/src/*.cpp</include>
+						<include>control/src/*.cpp</include>
+						<include>control/software_operation/src/*.cpp</include>
+						<include>hardware/src/*.cpp</include>
+					</includes>
+					<includePaths>
+						<includePath>common/include</includePath>
+						<includePath>control/include</includePath>
+						<includePath>control/src</includePath>
+						<includePath>control/software_operation/include</includePath>
+						<includePath>hardware/include</includePath>
+					</includePaths>
+					<excludes>
+						<exclude>control/src/CtSaving_Cbf.cpp</exclude>
+						<exclude>control/src/CtSaving_Fits.cpp</exclude>
+						<exclude>control/src/CtSaving_Tiff.cpp</exclude>
+						<exclude>control/src/CtSpsImage.cpp</exclude>
+					</excludes>
+					<defines>
+						<define>WITH_NXS_SAVING</define>
+					</defines>
+				</cpp>
+				<libraries>
+					<library>
+						<type>shared</type>
+					</library>
+				</libraries>
+				<specificConfigurations>
+					<specificConfiguration>
+						<id>win32 platform</id>
+						<activation>
+							<os>Windows</os>
+						</activation>
+						<cpp>
+							<excludes>
+								<exclude>common/src/RegExUtils.cpp</exclude>
+								<exclude>hardware/src/HwFileEventMgr.cpp</exclude>
+							</excludes>
+							<defines>
+								<define>LIMACORE_EXPORTS</define>
+								<define>WIN32</define>
+								<define>NDEBUG</define>
+								<define>_WINDOWS</define>
+								<define>_USRDLL</define>
+								<define>_WIN32_WINNT=0x0502</define> <!-- Windows XP -->
+							</defines>
+						</cpp>
+					</specificConfiguration>
+				</specificConfigurations>
+			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>fr.soleil.maven.plugins</groupId>
+			<artifactId>maven-check-plugin</artifactId>
+			<configuration>
+				<enable>false</enable>
+			</configuration>
+		</plugin>
+    </plugins>
+	</build>
 
    <developers>
        <developer>
@@ -73,11 +138,5 @@
            <timezone>1</timezone>
        </developer>
    </developers>
-   <modules>
-        <module>control</module>
-        <module>common</module>
-        <module>hardware</module>
-        <module>third-party</module>
-        <module>camera</module>
-   </modules>
+   
 </project>
