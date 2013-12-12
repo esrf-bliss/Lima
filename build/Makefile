@@ -551,6 +551,54 @@ build_targets	+= $(call lib-full,$(imxpad-name),$(imxpad-ver))
 
 endif
 
+############################
+# LIMA - SISOME4
+############################
+
+ifneq ($(COMPILE_SISOME4),0)
+
+SISOME4_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/siso/lib
+SISOME4_LDLIBS	:= $(LDLIBS) -lfglib5 -lclserme4
+
+siso-me4-name	:= siso-me4
+siso-me4-objs	:= ../camera/common/siso-me4/src/SiSoME4.o
+siso-me4-ver	:= ../camera/common/siso-me4/VERSION
+siso-me4-flags	:= $(SISOME4_LDFLAGS)
+siso-me4-deps	:= $(SISOME4_LDLIBS)
+
+$(call lib-full,$(siso-me4-name),$(siso-me4-ver)): $(siso-me4-objs)
+	$(call compile-lib,$(siso-me4-name),$(siso-me4-ver),\
+			   $(siso-me4-flags),$(siso-me4-deps),$@,$+)
+	$(call create-links,$(siso-me4-name),$(siso-me4-ver))
+
+build_targets	+= $(call lib-full,$(siso-me4-name),$(siso-me4-ver))
+
+endif
+
+############################
+# LIMA - VIEWORKSVP
+############################
+
+ifneq ($(COMPILE_VIEWORKSVP),0)
+
+VIEWORKSVP_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/siso/lib
+VIEWORKSVP_LDLIBS	:= $(LDLIBS) -lsiso-me4 -lfglib5 -lclserme4
+
+vieworks-vp-name	:= vieworks-vp
+vieworks-vp-objs	:= ../camera/vieworks-vp/src/VieworksVP.o
+vieworks-vp-ver		:= ../camera/vieworks-vp/VERSION
+vieworks-vp-flags	:= $(VIEWORKSVP_LDFLAGS)
+vieworks-vp-deps	:= $(VIEWORKSVP_LDLIBS)
+
+$(call lib-full,$(vieworks-vp-name),$(vieworks-vp-ver)): $(vieworks-vp-objs)
+	$(call compile-lib,$(vieworks-vp-name),$(vieworks-vp-ver),\
+			   $(vieworks-vp-flags),$(vieworks-vp-deps),$@,$+)
+	$(call create-links,$(vieworks-vp-name),$(vieworks-vp-ver))
+
+build_targets	+= $(call lib-full,$(vieworks-vp-name),$(vieworks-vp-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:
