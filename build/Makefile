@@ -582,7 +582,7 @@ endif
 ifneq ($(COMPILE_VIEWORKSVP),0)
 
 VIEWORKSVP_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/siso/lib
-VIEWORKSVP_LDLIBS	:= $(LDLIBS) -lsiso-me4 -lfglib5 -lclserme4
+VIEWORKSVP_LDLIBS	:= $(LDLIBS) -llimasiso-me4 ## -lfglib5 -lclserme4
 
 vieworks-vp-name	:= vieworks-vp
 vieworks-vp-objs	:= ../camera/vieworks-vp/src/VieworksVP.o
