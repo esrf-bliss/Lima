@@ -53,7 +53,7 @@ void lima::GetSystemMem(int& mem_unit, int& system_mem)
 	statex.dwLength = sizeof(statex);
 	
 	GlobalMemoryStatusEx(&statex);
-	long long tot_mem = (long long) statex.ullTotalPhys;
+	long long tot_mem = (long long) statex.ullAvailPhys;
 	if (mem_unit == 0) 
 	  mem_unit = 1;
 #endif

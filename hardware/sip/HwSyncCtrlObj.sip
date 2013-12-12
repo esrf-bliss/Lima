@@ -26,6 +26,8 @@ class HwSyncCtrlObj
 using namespace lima;
 %End
 public:
+	enum AutoExposureMode {OFF,ON};
+
 	class ValidRangesType 
 	{
 	  public:
@@ -67,6 +69,9 @@ sipRes = tmpString.c_str();
 
 	virtual void setExpTime(double  exp_time) = 0;
 	virtual void getExpTime(double& exp_time /Out/) = 0;
+	virtual bool checkAutoExposureMode(AutoExposureMode mode) const;
+	void setAutoExposureMode(AutoExposureMode mode);
+	void getAutoExposureMode(AutoExposureMode& mode /Out/) const;
 
 	virtual void setLatTime(double  lat_time) = 0;
 	virtual void getLatTime(double& lat_time /Out/) = 0;

@@ -27,6 +27,12 @@ using namespace lima;
 %End
     public:
      enum AccTimeMode {Live,Real};
+     enum AutoExposureMode {
+      OFF,	  ///< Always off
+      ON,	  ///< Always on
+      ON_LIVE	  ///< ON during live and OFF for standard Acquisition
+     };
+     typedef std::vector<AutoExposureMode> AutoExposureModeList;
 
 	struct Parameters {
 		Parameters();
@@ -77,6 +83,10 @@ using namespace lima;
 
 	void setAcqExpoTime(double acq_time);
 	void getAcqExpoTime(double& acq_time /Out/) const;
+	bool checkAutoExposureMode(AutoExposureMode mode) const;
+    	void getAutoExposureModeList(AutoExposureModeList& modes /Out/) const;
+    	void setAutoExposureMode(AutoExposureMode mode);
+    	void getAutoExposureMode(AutoExposureMode& mode /Out/) const;
 
 	void setAccMaxExpoTime(double max_time);
 	void getAccMaxExpoTime(double& acc_time /Out/) const;
@@ -94,5 +104,50 @@ using namespace lima;
 
 	void setTriggerMode(TrigMode mode);
 	void getTriggerMode(TrigMode& mode /Out/) const;
+	void getTriggerModeList(TrigModeList& modes /Out/) const;
 };
 
+%MappedType CtAcquisition::AutoExposureModeList
+{
+%TypeHeaderCode
+#include <vector>
+#include <CtAcquisition.h>
+using namespace lima;
+%End
+
+%ConvertToTypeCode
+  if(sipIsErr == NULL)
+    {
+      bool aReturnFlag = PySequence_Check(sipPy);
+      for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
+	aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_CtAcquisition_AutoExposureMode);
+      return aReturnFlag;
+    }
+  std::vector<CtAcquisition::AutoExposureMode> *modeListPt = new std::vector<CtAcquisition::AutoExposureMode>();
+  for(int i = 0;i < PySequence_Size(sipPy);++i)
+    modeListPt->push_back(static_cast<CtAcquisition::AutoExposureMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+  *sipCppPtr = modeListPt;
+  return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+  PyObject *l;
+  if(!(l = PyList_New(sipCpp->size())))
+    return NULL;
+
+  int listPos = 0;
+  for(std::vector<CtAcquisition::AutoExposureMode>::iterator i = sipCpp->begin();
+      i != sipCpp->end();++i,++listPos)
+    {
+      PyObject *tobj = sipConvertFromEnum(*i, sipType_CtAcquisition_AutoExposureMode);
+      if(!tobj)
+        {
+	  Py_DECREF(l);
+	  return NULL;
+        }
+      PyList_SET_ITEM(l, listPos, tobj);
+    }
+  return l;
+%End
+};

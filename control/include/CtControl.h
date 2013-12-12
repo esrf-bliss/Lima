@@ -69,6 +69,7 @@ namespace lima
     friend class CtBufferFrameCB;
     friend class CtAccumulation;
     friend class CtSaving;	// just to set saving error in stat
+    class _ReconstructionChangeCallback;
   public:
 
     enum ApplyPolicy {
@@ -267,6 +268,7 @@ namespace lima
 #endif
     ImageStatusCallback *m_img_status_cb;
     SoftOpErrorHandler* m_soft_op_error_handler;
+    _ReconstructionChangeCallback* m_reconstruction_cbk;
 
     inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();
