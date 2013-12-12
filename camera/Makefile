@@ -156,4 +156,12 @@ ifneq ($(COMPILE_IMXPAD),0)
 sub-dirs += imxpad
 endif
 
+ifndef COMPILE_VIEWORKSVP
+COMPILE_VIEWORKSVP = 0
+endif
+
+ifneq ($(COMPILE_VIEWORKSVP),0)
+sub-dirs += vieworks-vp
+endif
+
 include ../global.inc

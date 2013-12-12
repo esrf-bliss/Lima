@@ -31,4 +31,12 @@ ifneq ($(COMPILE_ESPIA),0)
 sub-dirs += espia
 endif
 
+ifndef COMPILE_SISOME4
+COMPILE_SISOME4 = 0
+endif
+
+ifneq ($(COMPILE_SISOME4),0)
+sub-dirs += siso-me4
+endif
+
 include ../../global.inc
