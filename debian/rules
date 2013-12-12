@@ -14,6 +14,8 @@ override_dh_auto_configure:
 ##   COMPILE_CONFIG is MANDATORY : otherwise the python module is not working.
 ##	sed -i -e 's,COMPILE_CONFIG=1,COMPILE_CONFIG=0,g' config.inc  # do not compile the config library
 	sed -i -e 's,COMPILE_ANDOR3=0,COMPILE_ANDOR3=1,g' config.inc
+	sed -i -e 's,COMPILE_VIEWORKSVP=0,COMPILE_VIEWORKSVP=1,g' config.inc
+	sed -i -e 's,COMPILE_SISOME4=0,COMPILE_SISOME4=1,g' config.inc
 	sed -i -e 's,COMPILE_NXS_SAVING=0,COMPILE_NXS_SAVING=1,g' config.inc
 	sed -i -e 's,COMPILE_TIFF_SAVING=0,COMPILE_TIFF_SAVING=1,g' config.inc
 	$(MAKE) config  # configure the sip part
