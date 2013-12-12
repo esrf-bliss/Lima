@@ -29,7 +29,8 @@ INCLUDES = -I. -I../include -I../../common/include -I../../hardware/include \
 		-I../software_operation/include \
 		-I../../third-party/Processlib/core/include \
 		-I../../third-party/Processlib/tasks/include \
-		-I../../third-party/Sps/Include
+		-I../../third-party/Sps/Include \
+		-I/usr/include/nexuscpp/include
 
 ifneq ($(LIBS),0)
 LIBS=
