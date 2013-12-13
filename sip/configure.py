@@ -54,6 +54,8 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('pilatus',          [os.path.join('camera','pilatus')]),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ('imxpad',           [os.path.join('camera','imxpad')]),
+           ('sisome4',          [os.path.join('camera','common','siso-me4')]),
+           ('vieworksvp',       [os.path.join('camera','vieworks-vp')]),
            ('dexela',          [os.path.join('camera','dexela')]),
            ]
 

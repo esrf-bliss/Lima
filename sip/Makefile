@@ -105,7 +105,7 @@ ifneq ($(COMPILE_IMXPAD), 0)
 sip-modules += imxpad
 endif
 
-ifneq($(COMPILE_SISOME4), 0)
+ifneq ($(COMPILE_SISOME4), 0)
 sip-modules += sisome4
 endif
 
