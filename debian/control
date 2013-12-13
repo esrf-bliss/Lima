@@ -14,12 +14,25 @@ X-Python-Version: 2.6
 Package: lima
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: lima package
+Description: lima package -- runtime
  LimA detector package.
+ .
+ this package provide the runtime for the lima library.
 
 Package: python-lima
 Architecture: any
 Section: python
 Depends: ${misc:Depends}, ${shlibs:Depends}, ${python:Depends}
-Description: Lima python package
+Description: Lima python package -- python binding
  LimA python package
+ .
+ this package provide the python binding of the lima library
+
+Package: lima-dbg
+Architecture: any
+Depends: ${misc:Depends},
+         lima (= ${binary:Version})
+Description: lima package -- debug
+ LimA detector package.
+ .
+ this package provide debugging symbols for the lima library.

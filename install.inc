@@ -181,14 +181,14 @@ IMXPAD_FULL_VERSION = $(shell cat camera/imxpad/VERSION)
 INSTALL_IMXPAD_VDIR = $(INSTALL_IMXPAD_DIR)/v$(IMXPAD_FULL_VERSION)
 endif
 
-ifneq ($(COMPILE_VIEWORKSP), 0)
-INSTALL_VIEWORKSVP_DIR = $(INSTALL_PLAT_DIR)/Vieworks-VP
+ifneq ($(COMPILE_VIEWORKSVP), 0)
+INSTALL_VIEWORKSVP_DIR = $(INSTALL_PLAT_DIR)/VieworksVP
 VIEWORKSVP_FULL_VERSION = $(shell cat camera/vieworks-vp/VERSION)
 INSTALL_VIEWORKSVP_VDIR = $(INSTALL_VIEWORKSVP_DIR)/v$(VIEWORKSVP_FULL_VERSION)
 endif
 
 ifneq ($(COMPILE_SISOME4), 0)
-INSTALL_SISOME4_DIR = $(INSTALL_PLAT_DIR)/SiSo_ME4
+INSTALL_SISOME4_DIR = $(INSTALL_PLAT_DIR)/SiSoME4
 SISOME4_FULL_VERSION = $(shell cat camera/common/siso-me4/VERSION)
 INSTALL_SISOME4_VDIR = $(INSTALL_SISOME4_DIR)/v$(SISOME4_FULL_VERSION)
 endif
@@ -484,7 +484,7 @@ ifneq ($(COMPILE_SISOME4), 0)
 	$(call install_core_dep,$(INSTALL_SISOME4_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimasiso-me4.so*
 	cp -d build/liblimasiso-me4.so* $(INSTALL_LIB_DIR)
-#	cp sip/common/siso-me4/limasiso-me4.so $(INSTALL_SISOME4_VDIR)
+#	cp sip/common/siso-me4/limasisome4.so $(INSTALL_SISOME4_VDIR)
 	cp camera/common/siso-me4/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 

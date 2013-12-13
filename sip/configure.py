@@ -54,7 +54,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('pilatus',          [os.path.join('camera','pilatus')]),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ('imxpad',           [os.path.join('camera','imxpad')]),
-           ('sisome4',          [os.path.join('camera','common','siso-me4')]),
+#           ('sisome4',          [os.path.join('camera','common','siso-me4')]),
            ('vieworksvp',       [os.path.join('camera','vieworks-vp')]),
            ('dexela',          [os.path.join('camera','dexela')]),
            ]
@@ -183,6 +183,9 @@ def main():
 	    extraIncludes += ['../../third-party/yat/include'] 
         elif(modName == 'pointgrey'):
 	    extraIncludes += ['/usr/include/flycapture']
+        elif(modName == 'vieworksvp'):
+            extraIncludes += ['../../camera/common/siso-me4/include',
+                              '/opt/siso/include'] # howto not hardode this
 
         extraIncludes += findModuleIncludes(modName)
         
