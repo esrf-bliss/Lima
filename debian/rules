@@ -7,7 +7,7 @@ LIMAPC=debian/lima/usr/lib/pkgconfig/Lima.pc
 PY2VER = $(shell pyversions -d -v)
 
 %:
-	dh $@ --with python2
+	dh $@ --with python2 --dbg-package=lima-dbg
 
 override_dh_auto_configure:
 	dh_auto_configure
@@ -21,6 +21,7 @@ override_dh_auto_configure:
 	$(MAKE) config  # configure the sip part
 
 override_dh_auto_clean:
+	rm -rf install # The make clean is forgetting this directory behind full
 	rm -f config.inc
 	-$(MAKE) config.inc # used to generate the config.inc file
 	dh_auto_clean
