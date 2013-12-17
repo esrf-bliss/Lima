@@ -431,6 +431,35 @@ build_targets	+= $(call lib-full,$(xh-name),$(xh-ver))
 endif
 
 ############################
+# LIMA - XSPRESS3
+############################
+
+ifneq ($(COMPILE_XSPRESS3),0)
+
+PROCESSOR_TYPE := $(shell uname -m)
+ifeq ($(PROCESSOR_TYPE),x86_64)
+XSPRESS3_LDFLAGS	:= -L../camera/xspress3/sdk/libs/linux.x86_64
+else
+XSPRESS3_LDFLAGS	:= -L../camera/xspress3/sdk/libs/linux.x86
+endif
+XSPRESS3_LDLIBS	:= -lxspress3 -limg_mod
+
+xspress3-name	:= xspress3
+xspress3-objs	:= ../camera/xspress3/src/Xspress3.o
+xspress3-ver	:= ../camera/xspress3/VERSION
+xspress3-flags	:= $(XSPRESS3_LDFLAGS) $(LDFLAGS)
+xspress3-deps	:= $(XSPRESS3_LDLIBS) $(LDLIBS) 
+
+$(call lib-full,$(xspress3-name),$(xspress3-ver)): $(xspress3-objs)
+	$(call compile-lib,$(xspress3-name),$(xspress3-ver),\
+			   $(xspress3-flags),$(xspress3-deps),$@,$+)
+	$(call create-links,$(xspress3-name),$(xspress3-ver))
+
+build_targets	+= $(call lib-full,$(xspress3-name),$(xspress3-ver))
+
+endif
+
+############################
 # LIMA - XPAD
 ############################
 
@@ -520,6 +549,29 @@ $(call lib-full,$(imxpad-name),$(imxpad-ver)): $(imxpad-objs)
 	$(call create-links,$(imxpad-name),$(imxpad-ver))
 
 build_targets	+= $(call lib-full,$(imxpad-name),$(imxpad-ver))
+
+endif
+
+############################
+# LIMA - RAYONIXHS
+############################
+ifneq ($(COMPILE_RAYONIXHS),0)
+
+RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
+RAYONIXHS_LDLIBS	:= $(LDLIBS) -lcraydl
+
+rayonixhs-name	:= rayonixhs
+rayonixhs-objs	:= ../camera/rayonixhs/src/RayonixHs.o
+rayonixhs-ver	:= ../camera/rayonixhs/VERSION
+rayonixhs-flags	:= $(RAYONIXHS_LDFLAGS)
+rayonixhs-deps	:= $(RAYONIXHS_LDLIBS)
+
+$(call lib-full,$(rayonixhs-name),$(rayonixhs-ver)): $(rayonixhs-objs)
+	$(call compile-lib,$(rayonixhs-name),$(rayonixhs-ver),\
+			   $(rayonixhs-flags),$(rayonixhs-deps),$@,$+)
+	$(call create-links,$(rayonixhs-name),$(rayonixhs-ver))
+
+build_targets	+= $(call lib-full,$(rayonixhs-name),$(rayonixhs-ver))
 
 endif
 

@@ -147,6 +147,11 @@ HwBufferCtrlObj* Camera::getBufferCtrlObj()
 	return &m_buffer_ctrl_obj;
 }
 
+FrameBuilder* Camera::getFrameBuilder()
+{
+	return &m_frame_builder;
+}
+
 void Camera::getMaxImageSize(Size& max_image_size)
 {
 	m_frame_builder.getMaxImageSize(max_image_size);
