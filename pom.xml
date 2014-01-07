@@ -14,36 +14,67 @@
 	<packaging>nar</packaging>
 	<name>LimaCore</name>
 	<description>Library for IMage Acquisition</description>
+	
+	<scm>
+       <connection>scm:git:git://github.com/soleil-ica/Lima.git</connection>
+       <developerConnection>scm:git:git://github.com/soleil-ica/Lima.git</developerConnection>
+       <url>https://github.com/soleil-ica/Lima</url>
+    </scm>
 
 	<dependencies>
-
 		<!-- LimaProcesslib -->
 		<dependency>
 			<groupId>fr.soleil.lib</groupId>
 			<artifactId>LimaProcesslib-${aol}-shared-${mode}</artifactId>
 			<version>1.3.0-SNAPSHOT</version>
 		</dependency>
-		
-		<!-- For Nexus Saving -->
-		<dependency>
-			<groupId>fr.soleil.lib</groupId>
-			<artifactId>YAT-${aol}-${library}-${mode}</artifactId>
-			<version>1.7.17-SNAPSHOT</version>
-		</dependency>  
-		<dependency>
-			<groupId>fr.soleil.lib</groupId>
-			<artifactId>NexusCPP-${aol}-${library}-${mode}</artifactId>
-			<version>2.1.0-SNAPSHOT</version>
-		</dependency>
-	      
 	</dependencies>
+	
+	<profiles>
+		<profile>
+		  <id>Lima_linux</id>
+		  <activation>
+			<os>
+			  <family>Linux</family>
+			</os>
+		  </activation>
+		  <dependencies>
+			<!-- For Nexus Saving -->
+			<dependency>
+				<groupId>fr.soleil.lib</groupId>
+				<artifactId>YAT-${aol}-static-${mode}</artifactId>
+				<version>1.7.18</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.soleil.lib</groupId>
+				<artifactId>NexusCPP-${aol}-static-${mode}</artifactId>
+				<version>2.1.0</version>
+			</dependency>
+		  </dependencies>
+		</profile>
+		<profile>
+		  <id>Lima_windows</id>
+		  <activation>
+			<os>
+			  <family>Windows</family>
+			</os>
+		  </activation>
+		  <dependencies>
+			<!-- For Nexus Saving -->
+			<dependency>
+				<groupId>fr.soleil.lib</groupId>
+				<artifactId>YAT-${aol}-static-${mode}</artifactId>
+				<version>1.7.18</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.soleil.lib</groupId>
+				<artifactId>NexusCPP-${aol}-static-${mode}</artifactId>
+				<version>2.1.0</version>
+			</dependency>
+		  </dependencies>
+		</profile>
+	</profiles>
 
-	<scm>
-       <connection>scm:git:git://github.com/soleil-ica/Lima.git</connection>
-       <developerConnection>scm:git:git://github.com/soleil-ica/Lima.git</developerConnection>
-       <url>https://github.com/soleil-ica/Lima</url>
-    </scm>
-   
    <build>
     <plugins>
 		<plugin>
@@ -97,7 +128,7 @@
 								<define>NDEBUG</define>
 								<define>_WINDOWS</define>
 								<define>_USRDLL</define>
-								<define>_WIN32_WINNT=0x0502</define> <!-- Windows XP -->
+								<define>_WIN32_WINNT=0x0502</define> <!-- For Windows XP Support -->
 							</defines>
 						</cpp>
 					</specificConfiguration>
