@@ -168,7 +168,7 @@ def build_all(target_path):
 #------------------------------------------------------------------------------
 def usage():
   print "Usage: [python] mvn_build.py <target> [<installation_folder>]"
-  print "target: all|device|cameras|lima"
+  print "target: all|proclib|lima|cameras|device"
   sys.exit(1)
 
 #------------------------------------------------------------------------------
@@ -189,6 +189,8 @@ if __name__ == "__main__":
   try:
     if target == 'all':  
       build_all(target_path)
+    elif target == 'proclib':
+		build_Processlib(target_path)	  
     elif target == 'device':
       build_device(target_path)
     elif target == 'cameras':
