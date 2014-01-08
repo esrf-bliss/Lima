@@ -64,12 +64,12 @@
 			<dependency>
 				<groupId>fr.soleil.lib</groupId>
 				<artifactId>YAT-${aol}-static-${mode}</artifactId>
-				<version>1.7.18</version>
+				<version>1.7.18</version> <!--version>1.7.18-vc9</version-->
 			</dependency>
 			<dependency>
 				<groupId>fr.soleil.lib</groupId>
 				<artifactId>NexusCPP-${aol}-static-${mode}</artifactId>
-				<version>2.1.0</version>
+				<version>2.1.0</version> <!--version>2.1.0-vc9</version-->
 			</dependency>
 		  </dependencies>
 		</profile>
