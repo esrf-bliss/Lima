@@ -134,6 +134,7 @@ def build_Processlib(target_path):
 #------------------------------------------------------------------------------
 def build_linux_plugins(target_path):
   build_plugins('camera/adsc', target_path)
+  build_plugins('camera/aviex', target_path)
   build_plugins('camera/basler', target_path)
   build_plugins('camera/marccd', target_path)
   build_plugins('camera/pilatus', target_path)
