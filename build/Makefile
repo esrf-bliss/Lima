@@ -460,6 +460,38 @@ build_targets	+= $(call lib-full,$(xspress3-name),$(xspress3-ver))
 endif
 
 ############################
+# LIMA - ULTRA
+############################
+
+ifneq ($(COMPILE_ULTRA),0)
+
+PROCESSOR_TYPE := $(shell uname -m)
+#ifeq ($(PROCESSOR_TYPE),x86_64)
+#ULTRA_LDFLAGS	:= -L../camera/ultra/sdk/libs/linux.x86_64
+#ULTRA_LDFLAGS	:= 
+#else
+#ULTRA_LDFLAGS	:= -L../camera/ultra/sdk/libs/linux.x86_64
+ULTRA_LDFLAGS	:= 
+#endif
+#ULTRA_LDLIBS	:= -lultra -limg_mod
+ULTRA_LDLIBS	:= 
+
+ultra-name	:= ultra
+ultra-objs	:= ../camera/ultra/src/Ultra.o
+ultra-ver	:= ../camera/ultra/VERSION
+ultra-flags	:= $(ULTRA_LDFLAGS) $(LDFLAGS)
+ultra-deps	:= $(ULTRA_LDLIBS) $(LDLIBS) 
+
+$(call lib-full,$(ultra-name),$(ultra-ver)): $(ultra-objs)
+	$(call compile-lib,$(ultra-name),$(ultra-ver),\
+			   $(ultra-flags),$(ultra-deps),$@,$+)
+	$(call create-links,$(ultra-name),$(ultra-ver))
+
+build_targets	+= $(call lib-full,$(ultra-name),$(ultra-ver))
+
+endif
+
+############################
 # LIMA - XPAD
 ############################
 

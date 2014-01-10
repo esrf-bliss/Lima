@@ -157,6 +157,12 @@ XSPRESS3_FULL_VERSION = $(shell cat camera/xspress3/VERSION)
 INSTALL_XSPRESS3_VDIR = $(INSTALL_XSPRESS3_DIR)/v$(XSPRESS3_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_ULTRA), 0)
+INSTALL_ULTRA_DIR = $(INSTALL_PLAT_DIR)/Ultra
+ULTRA_FULL_VERSION = $(shell cat camera/ultra/VERSION)
+INSTALL_ULTRA_VDIR = $(INSTALL_ULTRA_DIR)/v$(ULTRA_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 INSTALL_XPAD_DIR = $(INSTALL_PLAT_DIR)/Xpad
 XPAD_FULL_VERSION = $(shell cat camera/xpad/VERSION)
@@ -412,6 +418,16 @@ ifneq ($(COMPILE_XSPRESS3), 0)
 	cp -d build/liblimaxspress3.so* $(INSTALL_LIB_DIR)
 	cp sip/xspress3/limaxspress3.so $(INSTALL_XSPRESS3_VDIR)
 	cp camera/xspress3/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_ULTRA), 0)
+	mkdir -p $(INSTALL_ULTRA_VDIR)
+	cp camera/ultra/python/__init__.py $(INSTALL_ULTRA_DIR)
+	$(call install_core_dep,$(INSTALL_ULTRA_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaultra.so*
+	cp -d build/liblimaultra.so* $(INSTALL_LIB_DIR)
+	cp sip/ultra/limaultra.so $(INSTALL_ULTRA_VDIR)
+	cp camera/ultra/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_XPAD), 0)
