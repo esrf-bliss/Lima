@@ -120,6 +120,14 @@ ifneq ($(COMPILE_XSPRESS3),0)
 sub-dirs += xspress3
 endif
 
+ifndef COMPILE_ULTRA
+COMPILE_ULTRA = 0
+endif
+
+ifneq ($(COMPILE_ULTRA),0)
+sub-dirs += ultra
+endif
+
 ifndef COMPILE_XPAD
 COMPILE_XPAD = 0
 endif
