@@ -329,6 +329,9 @@ namespace lima {
     typedef std::map<long, long>	FrameCbkCountMap;
     typedef std::map<long, HeaderMap>	FrameHeaderMap;
 
+    void _validateFrameHeader(long frame_nr,
+			      AutoMutex&);
+
     CtControl& 			m_ctrl;
 
     int				m_nb_stream;

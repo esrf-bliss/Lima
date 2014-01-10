@@ -1039,6 +1039,7 @@ void CtSaving::updateFrameHeader(long frame_nr,const HeaderMap &header)
       if(!result.second)
 	result.first->second = i->second;
     }
+  _validateFrameHeader(frame_nr,aLock);
 }
 /** @brief validate a header for a frame.
     this mean that the header is ready and can now be save.
@@ -1050,6 +1051,12 @@ void CtSaving::validateFrameHeader(long frame_nr)
   DEB_PARAM() << DEB_VAR1(frame_nr);
 
   AutoMutex aLock(m_cond.mutex());
+  _validateFrameHeader(frame_nr,aLock);
+}
+
+void CtSaving::_validateFrameHeader(long frame_nr,
+				    AutoMutex& aLock)
+{
   SavingMode saving_mode = getAcqSavingMode();
   if (saving_mode != CtSaving::AutoHeader)
     return;
