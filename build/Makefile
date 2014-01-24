@@ -661,6 +661,29 @@ build_targets	+= $(call lib-full,$(aviex-name),$(aviex-ver))
 
 endif
 
+############################
+# LIMA - META
+############################
+ifneq ($(COMPILE_META),0)
+
+META_LDFLAGS	:= $(LDFLAGS)
+META_LDLIBS	:= $(LDLIBS)
+
+meta-name	:= meta
+meta-objs	:= ../camera/common/meta/src/Meta.o
+meta-ver	:= ../camera/common/meta/VERSION
+meta-flags	:= $(META_LDFLAGS)
+meta-deps	:= $(META_LDLIBS)
+
+$(call lib-full,$(meta-name),$(meta-ver)): $(meta-objs)
+	$(call compile-lib,$(meta-name),$(meta-ver),\
+			   $(meta-flags),$(meta-deps),$@,$+)
+	$(call create-links,$(meta-name),$(meta-ver))
+
+build_targets	+= $(call lib-full,$(meta-name),$(meta-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:

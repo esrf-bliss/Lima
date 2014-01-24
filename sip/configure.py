@@ -59,6 +59,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('rayonixhs',        [os.path.join('camera','rayonixhs')]),
            ('aviex',           [os.path.join('camera','aviex')]),
            ('ultra',           [os.path.join('camera','ultra')]),
+           ('meta',           [os.path.join('camera','common','meta')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']

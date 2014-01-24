@@ -28,6 +28,7 @@ using namespace lima;
 HwReconstructionCtrlObj::HwReconstructionCtrlObj() : m_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
+  DEB_TRACE() << DEB_VAR1(m_cbk);
 }
 
 HwReconstructionCtrlObj::~HwReconstructionCtrlObj()

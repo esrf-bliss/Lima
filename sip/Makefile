@@ -121,6 +121,10 @@ ifneq ($(COMPILE_AVIEX), 0)
 sip-modules += aviex
 endif
 
+ifneq ($(COMPILE_META), 0)
+sip-modules += meta
+endif
+
 all:	src
 
 src:

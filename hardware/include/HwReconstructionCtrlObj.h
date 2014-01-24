@@ -36,6 +36,7 @@ namespace lima
     class Callback
     {
     public:
+      virtual ~Callback(){}
       virtual void change(LinkTask*) = 0;
     };
     HwReconstructionCtrlObj();

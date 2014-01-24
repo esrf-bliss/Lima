@@ -19,24 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-sub-dirs = 
+from Lima import module_helper
 
-include ../../config.inc
+mod_path = __path__
+depends_on = 'Core'
+has_dependent = False
 
-ifndef COMPILE_ESPIA
-COMPILE_ESPIA = 0
-endif
+cleanup_data = module_helper.load_prepare(mod_path, depends_on, has_dependent)
 
-ifneq ($(COMPILE_ESPIA),0)
-sub-dirs += espia
-endif
+from Lima import Core
 
-ifndef COMPILE_META
-COMPILE_META = 0
-endif
+cleanup_data = module_helper.load_dep_cleanup(cleanup_data)
 
-ifneq ($(COMPILE_META),0)
-sub-dirs += meta
-endif
+from Lima.Meta.limameta import Meta as _B
+globals().update(_B.__dict__)
 
-include ../../global.inc
+module_helper.load_cleanup(cleanup_data)
+
+del mod_path, depends_on, has_dependent, cleanup_data
+del module_helper
