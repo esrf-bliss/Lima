@@ -67,7 +67,7 @@ public:
 	++next_file_number;
 	m_image_ids.pop_front();
       }
-    next_file_number_expected = next_file_number_expected;
+    next_file_number_expected = next_file_number;
     return continueFlag;
   }
 
