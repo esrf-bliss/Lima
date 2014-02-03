@@ -144,7 +144,7 @@ namespace lima
     SoftOpFlatfieldCorrection();
     virtual ~SoftOpFlatfieldCorrection();
     
-    void setFlatFieldImage(Data &aData);
+    void setFlatFieldImage(Data &aData,bool normalize = true);
     
   protected:
     virtual bool addTo(TaskMgr&,int stage);
