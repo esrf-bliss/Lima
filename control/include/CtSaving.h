@@ -269,7 +269,8 @@ namespace lima {
       void prepare();
       void createSaveContainer();
       void checkWriteAccess();
-      
+      void checkDirectoryAccess(const std::string&);
+
       bool needCompression()
       { return m_save_cnt->needParallelCompression(); }
 
