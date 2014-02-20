@@ -1777,6 +1777,7 @@ void CtSaving::SaveContainer::getParameters(CtSaving::Parameters& pars) const
 
 void CtSaving::SaveContainer::clear()
 {
+  DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
   m_statistic_list.clear();
   this->close();

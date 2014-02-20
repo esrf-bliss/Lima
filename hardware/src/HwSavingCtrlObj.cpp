@@ -98,7 +98,7 @@ HwSavingCtrlObj::~HwSavingCtrlObj()
 {
 #ifdef __linux__
   delete m_dir_cbk;
-#endif
+#endif  
 }
 
 void HwSavingCtrlObj::setActive(bool flag)
@@ -176,7 +176,7 @@ void HwSavingCtrlObj::prepare()
   if(m_active)
     {
       _prepare();
-#ifdef __linux__
+#ifdef __linux__ 
       DirectoryEvent::Parameters params;
       params.watch_path = m_directory;
       params.file_pattern = m_prefix;
@@ -186,7 +186,7 @@ void HwSavingCtrlObj::prepare()
       m_dir_event.prepare(params);
 
       if(m_callback)
-	m_callback->prepare(params);
+	m_callback->prepare(params);  
 #endif
     }
 }
@@ -199,7 +199,7 @@ void HwSavingCtrlObj::start()
     {
       _start();
 #ifdef __linux__
-      m_dir_event.start();
+      m_dir_event.start();   
 #endif
     }
 }
@@ -207,7 +207,7 @@ void HwSavingCtrlObj::stop()
 {
 #ifdef __linux__
   m_dir_event.stop();
-#endif
+#endif  
 }
 
 int HwSavingCtrlObj::getCapabilities() const

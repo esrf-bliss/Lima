@@ -40,6 +40,11 @@ namespace lima {
 namespace Simulator {
 
 struct LIBSIMULATOR_API GaussPeak {
+// workaround to avoid a name conflict
+#ifdef max
+#undef max
+#endif
+
 	double x0, y0;     /// The center of the peak
 	double fwhm;       /// Full Width at Half Maximum
 	double max;        /// The maximum value

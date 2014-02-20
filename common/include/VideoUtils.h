@@ -107,7 +107,7 @@ namespace lima
       case Y64: stringMode = "Y64";break;
       case RGB555: stringMode = "RGB555";break;
       case RGB565: stringMode = "RGB565";break;
-      case RGB24: stringMode = "RGB24";break;
+	  case RGB24: stringMode = "RGB24";break;
       case RGB32: stringMode = "RGB32";break;
       case BGR24: stringMode = "BGR24";break;
       case BGR32: stringMode = "BGR32";break;

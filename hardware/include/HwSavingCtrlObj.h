@@ -80,7 +80,7 @@ namespace lima
       virtual ~Callback() {}
 #ifdef __linux__
       virtual void prepare(const DirectoryEvent::Parameters &) {};
-      virtual bool newFrameWritten(int frame_id) = 0;
+      virtual bool newFrameWritten(int frame_id) = 0;    
 #endif
     };
     
@@ -109,9 +109,9 @@ namespace lima
     class DirectoryCallback;
 
     Callback*		m_callback;
-#ifdef __linux__
+#ifdef __linux__  
     DirectoryCallback*  m_dir_cbk;
-    DirectoryEvent 	m_dir_event;
+    DirectoryEvent 	m_dir_event; 
 #endif
   };
 }

@@ -70,6 +70,18 @@ void SaveContainerNxs::_close()
   DEB_MEMBER_FUNCT();
 }
 
+
+//--------------------------------------------------------------------------------------------------------------------
+//- Event rising by CtSaving when ???
+//--------------------------------------------------------------------------------------------------------------------
+void SaveContainerNxs::_clear()
+{
+  DEB_MEMBER_FUNCT();
+
+	nxcpp::DataStreamer::ResetBufferIndex();
+}
+
+
 //--------------------------------------------------------------------------------------------------------------------
 //- create nexus object
 //- Initialize nexus object
@@ -91,7 +103,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 	  {
 		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() aData.frameNumber = "<<aData.frameNumber;
 		  //that's mean that snap was stopped previous by user command or device was hang
-		  //so me must clean the N4T object
+		  //so me must clean the NXS object
 		  if(m_writer && aData.frameNumber==0)
 		  {
 			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Abort() current Nexus writer";
