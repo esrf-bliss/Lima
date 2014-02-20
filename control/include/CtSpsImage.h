@@ -46,6 +46,7 @@ class CtSpsImage
 	
 	void setNames(const std::string& spec_name, 
 		      const std::string& array_name);
+        void getNames(std::string &spec_name, std::string &array_name) const;
 	void prepare(const FrameDim &frame_dim);
 	void frameReady(Data&);
 	void reset();

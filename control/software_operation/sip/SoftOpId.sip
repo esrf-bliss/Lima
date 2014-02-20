@@ -798,7 +798,7 @@ public:
   SoftOpFlatfieldCorrection();
   virtual ~SoftOpFlatfieldCorrection();
     
-  void setFlatFieldImage(Data &aData);
+  void setFlatFieldImage(Data &aData,bool normalize = true);
 };
 
 class SoftOpFlip
