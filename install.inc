@@ -201,6 +201,13 @@ ifneq ($(COMPILE_CONFIG),0)
 INSTALL_CONFIG_DEFINES += -DWITH_CONFIG
 INSTALL_DEPS += libconfig.install
 endif
+
+ifneq ($(COMPILE_GLDISPLAY), 0)
+INSTALL_GLDISPLAY_DIR = $(INSTALL_PLAT_DIR)/GLDisplay
+GLDISPLAY_FULL_VERSION = $(shell cat third-party/gldisplay/VERSION)
+INSTALL_GLDISPLAY_VDIR = $(INSTALL_GLDISPLAY_DIR)/v$(GLDISPLAY_FULL_VERSION)
+endif
+
 ##################
 #  INSTALL DEPS  #
 ##################
@@ -437,4 +444,14 @@ ifneq ($(COMPILE_IMXPAD), 0)
 	cp -d build/liblimaimxpad.so* $(INSTALL_LIB_DIR)
 	cp sip/imxpad/limaimxpad.so $(INSTALL_IMXPAD_VDIR)
 	cp camera/imxpad/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_GLDISPLAY), 0)
+	mkdir -p $(INSTALL_GLDISPLAY_VDIR)
+	cp third-party/gldisplay/python/__init__.py $(INSTALL_GLDISPLAY_DIR)
+	$(call install_core_dep,$(INSTALL_GLDISPLAY_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/libgldisplay.so*
+	cp -d third-party/gldisplay/build/libgldisplay.so* $(INSTALL_LIB_DIR)
+	cp third-party/gldisplay/sip/gldisplay.so $(INSTALL_GLDISPLAY_VDIR)
+	cp third-party/gldisplay/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
