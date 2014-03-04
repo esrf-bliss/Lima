@@ -589,7 +589,8 @@ endif
 ############################
 ifneq ($(COMPILE_RAYONIXHS),0)
 
-RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
+#RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
+RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L/opt/rayonix/lib64
 RAYONIXHS_LDLIBS	:= $(LDLIBS) -lcraydl
 
 rayonixhs-name	:= rayonixhs
