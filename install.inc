@@ -219,6 +219,13 @@ ifneq ($(COMPILE_CONFIG),0)
 INSTALL_CONFIG_DEFINES += -DWITH_CONFIG
 INSTALL_DEPS += libconfig.install
 endif
+
+ifneq ($(COMPILE_GLDISPLAY), 0)
+INSTALL_GLDISPLAY_DIR = $(INSTALL_PLAT_DIR)/GLDisplay
+GLDISPLAY_FULL_VERSION = $(shell cat third-party/gldisplay/VERSION)
+INSTALL_GLDISPLAY_VDIR = $(INSTALL_GLDISPLAY_DIR)/v$(GLDISPLAY_FULL_VERSION)
+endif
+
 ##################
 #  INSTALL DEPS  #
 ##################
@@ -490,4 +497,14 @@ ifneq ($(COMPILE_RAYONIXHS), 0)
 	#cp -dr camera/rayonixhs/sdk/lib64/libcraydl_nocuda $(INSTALL_LIB_DIR)
 	cp sip/rayonixhs/limarayonixhs.so $(INSTALL_RAYONIXHS_VDIR)
 	cp camera/rayonixhs/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_GLDISPLAY), 0)
+	mkdir -p $(INSTALL_GLDISPLAY_VDIR)
+	cp third-party/gldisplay/python/__init__.py $(INSTALL_GLDISPLAY_DIR)
+	$(call install_core_dep,$(INSTALL_GLDISPLAY_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/libgldisplay.so*
+	cp -d third-party/gldisplay/build/libgldisplay.so* $(INSTALL_LIB_DIR)
+	cp third-party/gldisplay/sip/gldisplay.so $(INSTALL_GLDISPLAY_VDIR)
+	cp third-party/gldisplay/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

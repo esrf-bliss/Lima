@@ -269,7 +269,8 @@ namespace lima {
       void prepare();
       void createSaveContainer();
       void checkWriteAccess();
-      
+      void checkDirectoryAccess(const std::string&);
+
       bool needCompression()
       { return m_save_cnt->needParallelCompression(); }
 
@@ -328,6 +329,9 @@ namespace lima {
     typedef std::vector<SinkTaskBase *> TaskList;
     typedef std::map<long, long>	FrameCbkCountMap;
     typedef std::map<long, HeaderMap>	FrameHeaderMap;
+
+    void _validateFrameHeader(long frame_nr,
+			      AutoMutex&);
 
     CtControl& 			m_ctrl;
 

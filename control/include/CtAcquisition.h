@@ -142,7 +142,7 @@ namespace lima
     void _setDefaultPars(Parameters* pars);
     void _apply();
     void _hwRead();
-
+    void _check_timing_ranges();
 #ifdef WITH_CONFIG
     class _ConfigHandler;
     CtConfig::ModuleTypeCallback* _getConfigHandler();
