@@ -104,8 +104,28 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifndef COMPILE_XH
+COMPILE_XH = 0
+endif
+
 ifneq ($(COMPILE_XH),0)
 sub-dirs += xh
+endif
+
+ifndef COMPILE_XSPRESS3
+COMPILE_XSPRESS3 = 0
+endif
+
+ifneq ($(COMPILE_XSPRESS3),0)
+sub-dirs += xspress3
+endif
+
+ifndef COMPILE_ULTRA
+COMPILE_ULTRA = 0
+endif
+
+ifneq ($(COMPILE_ULTRA),0)
+sub-dirs += ultra
 endif
 
 ifndef COMPILE_XPAD
@@ -146,6 +166,14 @@ endif
 
 ifneq ($(COMPILE_IMXPAD),0)
 sub-dirs += imxpad
+endif
+
+ifndef COMPILE_RAYONIXHS
+COMPILE_RAYONIXHS = 0
+endif
+
+ifneq ($(COMPILE_RAYONIXHS),0)
+sub-dirs += rayonixhs
 endif
 
 include ../global.inc

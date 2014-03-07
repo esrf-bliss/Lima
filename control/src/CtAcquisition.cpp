@@ -23,18 +23,18 @@
 #include "CtAcquisition.h"
 #include "math.h"
 
-#define CHECK_EXPOTIME(val)					     \
-  if (val < m_valid_ranges.min_exp_time)			     \
-  {								     \
-  DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too short: "     \
-  << DEB_VAR1(m_valid_ranges.min_exp_time);			     \
-  THROW_CTL_ERROR(InvalidValue) <<  "Exposure time too short";	     \
-  }								     \
-  else if (val > m_valid_ranges.max_exp_time)			     \
-  {								     \
-  DEB_ERROR() << "Specified " << DEB_VAR1(val) << " too long: "	     \
-  << DEB_VAR1(m_valid_ranges.max_exp_time);			     \
-  THROW_CTL_ERROR(InvalidValue) <<  "Exposure time too long";	     \
+#define CHECK_EXPOTIME(val)						\
+  if (val < m_valid_ranges.min_exp_time)				\
+  {									\
+    THROW_CTL_ERROR(InvalidValue)					\
+      << "Specified exposure time " << DEB_VAR1(val) << " too short: "	\
+      << DEB_VAR1(m_valid_ranges.min_exp_time);				\
+  }									\
+  else if (val > m_valid_ranges.max_exp_time)				\
+  {									\
+    THROW_CTL_ERROR(InvalidValue)					\
+      << "Specified exposure time " << DEB_VAR1(val) << " too long: "	\
+      << DEB_VAR1(m_valid_ranges.max_exp_time);				\
   }
 
 using namespace lima;
@@ -55,6 +55,7 @@ public:
     DEB_PARAM() << DEB_VAR1(ranges);
 
     m_acq.m_valid_ranges = ranges;
+    m_acq._check_timing_ranges();
   }
 private:
   CtAcquisition& m_acq;
@@ -180,6 +181,22 @@ void CtAcquisition::reset()
   //Check auto exposure capability
   m_inpars.autoExpoMode = 
     m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::OFF) ? OFF : ON;
+
+  _check_timing_ranges();
+}
+
+void CtAcquisition::_check_timing_ranges()
+{
+  //Set exposure time and accumulation time in valide ranges
+  if(m_inpars.acqExpoTime < m_valid_ranges.min_exp_time)
+    m_inpars.acqExpoTime = m_valid_ranges.min_exp_time;
+  else if(m_inpars.acqExpoTime > m_valid_ranges.max_exp_time)
+    m_inpars.acqExpoTime = m_valid_ranges.max_exp_time;
+
+  if(m_inpars.accMaxExpoTime < m_valid_ranges.min_exp_time)
+    m_inpars.accMaxExpoTime = m_valid_ranges.min_exp_time;
+  else if(m_inpars.accMaxExpoTime > m_valid_ranges.max_exp_time)
+    m_inpars.accMaxExpoTime = m_valid_ranges.max_exp_time;
 }
 
 void CtAcquisition::apply(CtControl::ApplyPolicy policy)
@@ -624,7 +641,9 @@ void CtAcquisition::setLatencyTime(double lat_time)
   if (lat_time < m_valid_ranges.min_lat_time)
     lat_time = m_valid_ranges.min_lat_time;
   if (lat_time > m_valid_ranges.max_lat_time)
-    THROW_CTL_ERROR(InvalidValue) <<  "Latency time too long";
+    THROW_CTL_ERROR(InvalidValue) 
+      << "Specified latency time " << DEB_VAR1(lat_time) << " too long: "
+      << DEB_VAR1(m_valid_ranges.max_lat_time);	
   m_inpars.latencyTime= lat_time;
 }
 

@@ -37,8 +37,9 @@ config.inc:
 	@false
 
 config:
-	cd third-party/Processlib/sip; python configure.py
+	make -C third-party prelima.config
 	$(MAKE) -C sip config
+	make -C third-party postlima.config
 
 include install.inc
 

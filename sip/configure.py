@@ -54,6 +54,9 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ('imxpad',           [os.path.join('camera','imxpad')]),
            ('dexela',          [os.path.join('camera','dexela')]),
+           ('xspress3',        [os.path.join('camera','xspress3')]),
+           ('rayonixhs',        [os.path.join('camera','rayonixhs')]),
+           ('ultra',           [os.path.join('camera','ultra')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -96,7 +99,8 @@ def main():
             except ValueError:
                 continue
             if not value:
-                excludeMods.add(var.split('_')[-1].lower())
+                modname = '_'.join([x.lower() for x in var.split('_')[1:]])
+                excludeMods.add(modname)
 
     for modName, modDirs in modules:
     
@@ -179,7 +183,8 @@ def main():
 	    extraIncludes += ['../../third-party/yat/include'] 
         elif(modName == 'pointgrey'):
 	    extraIncludes += ['/usr/include/flycapture']
-
+        elif(modName == 'rayonixhs'):
+            extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include']
         extraIncludes += findModuleIncludes(modName)
         
         sipFile = open(sipFileName,"a")
@@ -228,8 +233,11 @@ def main():
 		plat = 'WIN32_PLATFORM'
         else:
             plat = 'POSIX_PLATFORM'
-        cmd = " ".join([config.sip_bin,"-g", "-e","-c", '.','-t',plat,
-                        "-b", build_file,sipFileName])
+        cmdargs = [config.sip_bin,"-g", "-e","-c", '.','-t',plat]
+        if 'config' in excludeMods:
+            cmdargs.extend(['-x','WITH_CONFIG'])
+        cmdargs.extend(["-b", build_file,sipFileName])
+        cmd = " ".join(cmdargs)
         print cmd
         os.system(cmd)
 
@@ -287,7 +295,9 @@ def main():
                 makefile.extra_lib_dirs += ['%s\lib\Win32' % os.environ['PYLON_ROOT']]
         else:
             makefile.extra_libs = ['pthread','lima%s' % modName]
-            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE','-DWITH_CONFIG'] + extra_cxxflags
+            makefile.extra_cxxflags = ['-pthread', '-g','-DWITH_SPS_IMAGE'] + extra_cxxflags
+            if 'config' not in excludeMods:
+                makefile.extra_cxxflags.append('-DWITH_CONFIG')
             makefile.extra_lib_dirs = [rootName('build')]
         makefile.extra_cxxflags.extend(['-I"%s"' % x for x in extraIncludes])
         
