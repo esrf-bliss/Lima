@@ -101,6 +101,7 @@ namespace lima
 
     // --- settings
     Type getType() const;
+    int getLength() const;
     const char* getName() const;
     bool isGroup() const;
 
