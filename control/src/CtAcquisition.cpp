@@ -55,6 +55,7 @@ public:
     DEB_PARAM() << DEB_VAR1(ranges);
 
     m_acq.m_valid_ranges = ranges;
+    m_acq._check_timing_ranges();
   }
 private:
   CtAcquisition& m_acq;
@@ -180,6 +181,22 @@ void CtAcquisition::reset()
   //Check auto exposure capability
   m_inpars.autoExpoMode = 
     m_hw_sync->checkAutoExposureMode(HwSyncCtrlObj::OFF) ? OFF : ON;
+
+  _check_timing_ranges();
+}
+
+void CtAcquisition::_check_timing_ranges()
+{
+  //Set exposure time and accumulation time in valide ranges
+  if(m_inpars.acqExpoTime < m_valid_ranges.min_exp_time)
+    m_inpars.acqExpoTime = m_valid_ranges.min_exp_time;
+  else if(m_inpars.acqExpoTime > m_valid_ranges.max_exp_time)
+    m_inpars.acqExpoTime = m_valid_ranges.max_exp_time;
+
+  if(m_inpars.accMaxExpoTime < m_valid_ranges.min_exp_time)
+    m_inpars.accMaxExpoTime = m_valid_ranges.min_exp_time;
+  else if(m_inpars.accMaxExpoTime > m_valid_ranges.max_exp_time)
+    m_inpars.accMaxExpoTime = m_valid_ranges.max_exp_time;
 }
 
 void CtAcquisition::apply(CtControl::ApplyPolicy policy)

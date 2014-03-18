@@ -6,7 +6,7 @@
 # Version 1.0
 #
 #
-# Hacked from S. Poirier
+# Author: FL / AN(Hacked from S. Poirier)
 
 import os
 import sys
@@ -59,6 +59,31 @@ def build():
   rc = os.system(maven_install)
   if rc != 0:
 	raise BuildError
+
+#------------------------------------------------------------------------------
+# Clean
+#------------------------------------------------------------------------------
+def clean():
+  rc = os.system(maven_clean)
+  if rc != 0:
+	raise BuildError
+
+#------------------------------------------------------------------------------
+# Clean all modules
+#------------------------------------------------------------------------------
+def clean_all():
+  set_project_dir('.');clean()
+  set_project_dir('camera/adsc');clean()
+  set_project_dir('camera/aviex');clean()
+  set_project_dir('camera/basler');clean()
+  set_project_dir('camera/marccd');clean()
+  set_project_dir('camera/pilatus');clean()
+  set_project_dir('camera/prosilica');clean()
+  set_project_dir('camera/simulator');clean()
+  set_project_dir('camera/xpad');clean()
+  set_project_dir('applications/tango/LimaDetector');clean()
+
+	
 
 #------------------------------------------------------------------------------
 # build the LimaDetector device
@@ -151,7 +176,7 @@ def build_win32_plugins(target_path):
 #------------------------------------------------------------------------------
 def usage():
   print "Usage: [python] mvn_build.py <target> [<installation_folder>]"
-  print "target: all|processlib|lima|cameras|a specific camera name|device"
+  print "target: all|processlib|lima|cameras|a specific camera name|device||cleanall"
   sys.exit(1)
 
 #------------------------------------------------------------------------------
@@ -233,6 +258,9 @@ if __name__ == "__main__":
 	#### Build simulator
 	elif target =='simulator':
 		build_plugins('camera/simulator', target_path)
+	#### Clean all
+	elif target =='cleanall':
+		clean_all()
 	#### Print Help usage Message
 	else:
 	  usage()

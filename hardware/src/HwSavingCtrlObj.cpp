@@ -30,7 +30,6 @@ const char* HwSavingCtrlObj::EDF_FORMAT_STR = "EDF"; ///< EDF format (Esrf Data 
 const char* HwSavingCtrlObj::CBF_FORMAT_STR = "CBF"; ///< CBF format
 const char* HwSavingCtrlObj::TIFF_FORMAT_STR = "TIFF"; ///< TIFF format
 #ifdef __linux__
-#ifdef __soleil_linux__
 class HwSavingCtrlObj::DirectoryCallback : public DirectoryEvent::Callback
 {
 public:
@@ -68,7 +67,7 @@ public:
 	++next_file_number;
 	m_image_ids.pop_front();
       }
-    next_file_number_expected = next_file_number_expected;
+    next_file_number_expected = next_file_number;
     return continueFlag;
   }
 
@@ -83,17 +82,14 @@ private:
   std::deque<int> 	m_image_ids;
 };
 #endif
-#endif
 
 HwSavingCtrlObj::HwSavingCtrlObj(int capabilities) :
   m_caps(capabilities),
   m_active(false),
   m_callback(NULL)
 #ifdef __linux__
-#ifdef __soleil_linux__
   ,m_dir_cbk(new HwSavingCtrlObj::DirectoryCallback(*this)),
   m_dir_event(true,*m_dir_cbk)
-#endif
 #endif
 {
 }
@@ -101,10 +97,8 @@ HwSavingCtrlObj::HwSavingCtrlObj(int capabilities) :
 HwSavingCtrlObj::~HwSavingCtrlObj()
 {
 #ifdef __linux__
-#ifdef __soleil_linux__    
   delete m_dir_cbk;
 #endif  
-#endif
 }
 
 void HwSavingCtrlObj::setActive(bool flag)
@@ -182,8 +176,7 @@ void HwSavingCtrlObj::prepare()
   if(m_active)
     {
       _prepare();
-#ifdef __linux__
-#ifdef __soleil_linux__      
+#ifdef __linux__ 
       DirectoryEvent::Parameters params;
       params.watch_path = m_directory;
       params.file_pattern = m_prefix;
@@ -193,8 +186,7 @@ void HwSavingCtrlObj::prepare()
       m_dir_event.prepare(params);
 
       if(m_callback)
-	m_callback->prepare(params);
-#endif      
+	m_callback->prepare(params);  
 #endif
     }
 }
@@ -207,19 +199,15 @@ void HwSavingCtrlObj::start()
     {
       _start();
 #ifdef __linux__
-#ifdef __soleil_linux__      
-      m_dir_event.start();
-#endif      
+      m_dir_event.start();   
 #endif
     }
 }
 void HwSavingCtrlObj::stop()
 {
 #ifdef __linux__
-#ifdef __soleil_linux__    
   m_dir_event.stop();
 #endif  
-#endif
 }
 
 int HwSavingCtrlObj::getCapabilities() const
