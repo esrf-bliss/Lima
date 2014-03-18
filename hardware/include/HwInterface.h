@@ -38,7 +38,7 @@ class LIMACORE_API HwInterface
 	typedef std::vector<HwCap> CapList;
 
 	typedef struct Status {
-	  enum Basic {Ready,Exposure,Readout,Latency,Config};
+	  enum Basic {Ready,Exposure,Readout,Latency,Config, Fault};
 	  inline void set(Basic);
 
 		AcqStatus acq;

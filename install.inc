@@ -120,6 +120,12 @@ ROPERSCIENTIFIC_FULL_VERSION = $(shell cat camera/roperscientific/VERSION)
 INSTALL_ROPERSCIENTIFIC_VDIR = $(INSTALL_ROPERSCIENTIFIC_DIR)/v$(ROPERSCIENTIFIC_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_AVIEX), 0)
+INSTALL_AVIEX_DIR = $(INSTALL_PLAT_DIR)/AVIEX
+AVIEX_FULL_VERSION = $(shell cat camera/aviex/VERSION)
+INSTALL_AVIEX_VDIR = $(INSTALL_AVIEX_DIR)/v$(AVIEX_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_ADSC), 0)
 INSTALL_ADSC_DIR = $(INSTALL_PLAT_DIR)/Adsc
 ADSC_FULL_VERSION = $(shell cat camera/adsc/VERSION)
@@ -351,6 +357,17 @@ ifneq ($(COMPILE_ROPERSCIENTIFIC), 0)
 	cp -d build/liblimaroperscientific.so* $(INSTALL_LIB_DIR)
 	cp sip/roperscientific/limaroperscientific.so $(INSTALL_ROPERSCIENTIFIC_VDIR)
 	cp camera/roperscientific/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_AVIEX), 0)
+	mkdir -p $(INSTALL_AVIEX_VDIR)
+	cp camera/aviex/python/__init__.py $(INSTALL_AVIEX_DIR)
+	$(call install_core_dep,$(INSTALL_AVIEX_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaaviex.so*
+	cp -d build/liblimaaviex.so* $(INSTALL_LIB_DIR)
+	cp sip/aviex/limaaviex.so $(INSTALL_AVIEX_VDIR)
+	cp camera/aviex/sdk/linux/lib/libMx.so.1 $(INSTALL_LIB_DIR)/libMx.so.1
+	cp camera/aviex/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_ADSC), 0)
