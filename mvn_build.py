@@ -6,7 +6,7 @@
 # Version 1.0
 #
 #
-# Hacked from S. Poirier
+# Author: FL / AN(Hacked from S. Poirier)
 
 import os
 import sys
