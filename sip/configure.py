@@ -184,7 +184,7 @@ def main():
         elif(modName == 'pointgrey'):
 	    extraIncludes += ['/usr/include/flycapture']
         elif(modName == 'rayonixhs'):
-            extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include']
+            extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include','/opt/rayonix/include/marccd']
         extraIncludes += findModuleIncludes(modName)
         
         sipFile = open(sipFileName,"a")
