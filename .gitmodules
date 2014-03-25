@@ -106,3 +106,6 @@
 [submodule "third-party/gldisplay"]
 	path = third-party/gldisplay
 	url = git://github.com/esrf-bliss/gldisplay.git
+[submodule "camera/aviex"]
+	path = camera/aviex
+	url = git://github.com/esrf-bliss/Lima-camera-aviex.git

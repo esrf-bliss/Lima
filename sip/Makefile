@@ -113,6 +113,10 @@ ifneq ($(COMPILE_RAYONIXHS), 0)
 sip-modules += rayonixhs
 endif
 
+ifneq ($(COMPILE_AVIEX), 0)
+sip-modules += aviex
+endif
+
 all:	src
 
 src:
