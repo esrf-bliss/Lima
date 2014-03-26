@@ -143,6 +143,7 @@ mod_version_data = {
     'tango/camera/pco': 'applications/tango/camera/Pco_VERSION',
     'tango/camera/ueye': 'applications/tango/camera/Ueye_VERSION',
     'tango/camera/simulator': 'applications/tango/camera/Simulator_VERSION',
+    'spec': 'applications/spec/VERSION',
 }
 
 windows_plugins = ['pco', 'perkinelmer']
