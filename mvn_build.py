@@ -6,7 +6,7 @@
 # Version 1.0
 #
 #
-# Author: FL / AN(Hacked from S. Poirier)
+# Author: FL / AN (Hacked from S. Poirier)
 
 import os
 import sys
@@ -18,8 +18,12 @@ maven_install = "mvn clean install -DenableCheckRelease=false"
 maven_clean =	"mvn clean"
 current_dir = os.getcwd()
 
-if "linux" in sys.platform: platform = "linux"
-if "win32" in sys.platform: platform = "win32"
+if "linux" in sys.platform: 
+	platform = "linux"
+	camera_list = ["aviex", "basler","marccd","pilatus","prosilica","simulator","xpad"]
+if "win32" in sys.platform:
+	platform = "win32"
+	camera_list = ["andor", "pco","perkinelmer","roperscientific","simulator"]
 print "platform : ", platform
 
 #------------------------------------------------------------------------------
@@ -72,18 +76,12 @@ def clean():
 # Clean all modules
 #------------------------------------------------------------------------------
 def clean_all():
-  set_project_dir('.');clean()
-  set_project_dir('camera/adsc');clean()
-  set_project_dir('camera/aviex');clean()
-  set_project_dir('camera/basler');clean()
-  set_project_dir('camera/marccd');clean()
-  set_project_dir('camera/pilatus');clean()
-  set_project_dir('camera/prosilica');clean()
-  set_project_dir('camera/simulator');clean()
-  set_project_dir('camera/xpad');clean()
-  set_project_dir('applications/tango/LimaDetector');clean()
 
-	
+	set_project_dir('.');clean()
+	set_project_dir('third-party/Processlib');clean()
+	for cam in camera_list:
+		set_project_dir('camera/'+ cam);clean()
+	set_project_dir('applications/tango/LimaDetector');clean()
 
 #------------------------------------------------------------------------------
 # build the LimaDetector device
@@ -128,7 +126,7 @@ def build_lima_core(target_path):
 #------------------------------------------------------------------------------
 # build the Plugin 'plugin'
 #------------------------------------------------------------------------------
-def build_plugins(plugin,target_path):
+def build_plugin(plugin,target_path):
   
   """Build the selected plugin"""
   
@@ -152,31 +150,16 @@ def build_plugins(plugin,target_path):
 #------------------------------------------------------------------------------
 # build all linux cameras
 #------------------------------------------------------------------------------
-def build_linux_plugins(target_path):
-	build_plugins('camera/adsc', target_path)
-	build_plugins('camera/aviex', target_path)
-	build_plugins('camera/basler', target_path)
-	build_plugins('camera/marccd', target_path)
-	build_plugins('camera/pilatus', target_path)
-	build_plugins('camera/prosilica', target_path)
-	build_plugins('camera/simulator', target_path)
-	build_plugins('camera/xpad', target_path)
-
-#------------------------------------------------------------------------------
-# build all win32 cameras
-#------------------------------------------------------------------------------
-def build_win32_plugins(target_path):
-	build_plugins('camera/pco', target_path)
-	build_plugins('camera/perkinelmer', target_path)
-	build_plugins('camera/roperscientific', target_path)
-	build_plugins('camera/simulator', target_path)
-
+def build_all_camera(target_path):
+	for cam in camera_list:
+		build_plugin('camera/' + cam, target_path)
+	
 #------------------------------------------------------------------------------
 # Usage
 #------------------------------------------------------------------------------
 def usage():
   print "Usage: [python] mvn_build.py <target> [<installation_folder>]"
-  print "target: all|processlib|lima|cameras|a specific camera name|device||cleanall"
+  print "target: all|processlib|lima|cameras|", camera_list, "|device||cleanall"
   sys.exit(1)
 
 #------------------------------------------------------------------------------
@@ -198,17 +181,14 @@ if __name__ == "__main__":
 	#### Build all
 	if target == 'all':	 
 		print 'BUILD ALL\n'
-		build_plugins('third-party/Processlib', target_path)
+		build_plugin('third-party/Processlib', target_path)
 		build_lima_core(target_path)
-		if platform == "linux":
-			build_linux_plugins(target_path)
-		elif platform == "win32":
-			build_win32_plugins(target_path)
+		build_all_camera(target_path)
 		build_device(target_path)
 	#### Build processlib
 	elif target == 'processlib':
 		print 'BUILD ProcessLib\n'
-		build_plugins('third-party/Processlib', target_path)
+		build_plugin('third-party/Processlib', target_path)
 	#### Build device
 	elif target == 'device':
 		print 'BUILD Device\n'
@@ -219,50 +199,19 @@ if __name__ == "__main__":
 		build_lima_core(target_path)
 	#### Build cameras
 	elif target == 'cameras':
-		if platform == "linux":
-			print 'BUILD All Linux Cameras\n'
-			build_linux_plugins(target_path)
-		elif platform == "win32":
-			print 'BUILD All Win32 Cameras\n'
-			build_win32_plugins(target_path)
-	#### Build adsc
-	elif target =='adsc':
-		build_plugins('camera/adsc', target_path)
-	#### Build aviex
-	elif target =='aviex':
-		build_plugins('camera/aviex', target_path)
-	#### Build basler
-	elif target =='basler':
-		build_plugins('camera/basler', target_path)	
-	#### Build marccd
-	elif target =='marccd':
-		build_plugins('camera/marccd', target_path)	
-	#### Build pilatus
-	elif target =='pilatus':
-		build_plugins('camera/pilatus', target_path)
-	#### Build prosilica
-	elif target =='prosilica':
-		build_plugins('camera/prosilica', target_path)
-	#### Build xpad
-	elif target =='xpad':
-		build_plugins('camera/xpad', target_path)
-	#### Build pco
-	elif target =='pco':
-		build_plugins('camera/pco', target_path)
-	#### Build perkinelmer
-	elif target =='perkinelmer':
-		build_plugins('camera/perkinelmer', target_path)
-	#### Build roperscientific
-	elif target =='roperscientific':
-		build_plugins('camera/roperscientific', target_path)
-	#### Build simulator
-	elif target =='simulator':
-		build_plugins('camera/simulator', target_path)
+		print 'BUILD All ',platform,' Cameras\n'
+		build_all_camera(target_path)
 	#### Clean all
 	elif target =='cleanall':
 		clean_all()
-	#### Print Help usage Message
+	#### Build cam
 	else:
-	  usage()
+		for cam in camera_list:
+			if target == cam:
+				build_plugin('camera/'+cam, target_path)
+				break
+		
+		usage()
+		
   except BuildError, e:
 	sys.stderr.write("!!!BUILD FAILED!!!\n")
