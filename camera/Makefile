@@ -104,6 +104,14 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifndef COMPILE_AVIEX
+COMPILE_AVIEX = 0
+endif
+
+ifneq ($(COMPILE_AVIEX),0)
+sub-dirs += aviex
+endif
+
 ifndef COMPILE_XH
 COMPILE_XH = 0
 endif
