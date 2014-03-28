@@ -193,6 +193,12 @@ RAYONIXHS_FULL_VERSION = $(shell cat camera/rayonixhs/VERSION)
 INSTALL_RAYONIXHS_VDIR = $(INSTALL_RAYONIXHS_DIR)/v$(RAYONIXHS_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_AVIEX), 0)
+INSTALL_AVIEX_DIR = $(INSTALL_PLAT_DIR)/Aviex
+AVIEX_FULL_VERSION = $(shell cat camera/aviex/VERSION)
+INSTALL_AVIEX_VDIR = $(INSTALL_AVIEX_DIR)/v$(AVIEX_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -497,6 +503,17 @@ ifneq ($(COMPILE_RAYONIXHS), 0)
 	#cp -dr camera/rayonixhs/sdk/lib64/libcraydl_nocuda $(INSTALL_LIB_DIR)
 	cp sip/rayonixhs/limarayonixhs.so $(INSTALL_RAYONIXHS_VDIR)
 	cp camera/rayonixhs/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_AVIEX), 0)
+	mkdir -p $(INSTALL_AVIEX_VDIR)
+	cp camera/aviex/python/__init__.py $(INSTALL_AVIEX_DIR)
+	$(call install_core_dep,$(INSTALL_AVIEX_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaaviex.so*
+	cp -d build/liblimaaviex.so* $(INSTALL_LIB_DIR)
+	cp sip/aviex/limaaviex.so $(INSTALL_AVIEX_VDIR)
+	#cp camera/aviex/sdk/linux/lib/libMx.so.1 $(INSTALL_LIB_DIR)/libMx.so.1
+	cp camera/aviex/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_GLDISPLAY), 0)
