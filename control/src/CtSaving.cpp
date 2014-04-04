@@ -599,6 +599,7 @@ void CtSaving::setDirectory(const std::string &directory, int stream_idx)
   AutoMutex aLock(m_cond.mutex());
   Stream& stream = getStream(stream_idx);
   Parameters pars = stream.getParameters(Auto);
+  stream.checkDirectoryAccess(directory);
   pars.directory = directory;
   stream.setParameters(pars);
 }
@@ -1039,6 +1040,7 @@ void CtSaving::updateFrameHeader(long frame_nr,const HeaderMap &header)
       if(!result.second)
 	result.first->second = i->second;
     }
+  _validateFrameHeader(frame_nr,aLock);
 }
 /** @brief validate a header for a frame.
     this mean that the header is ready and can now be save.
@@ -1050,6 +1052,12 @@ void CtSaving::validateFrameHeader(long frame_nr)
   DEB_PARAM() << DEB_VAR1(frame_nr);
 
   AutoMutex aLock(m_cond.mutex());
+  _validateFrameHeader(frame_nr,aLock);
+}
+
+void CtSaving::_validateFrameHeader(long frame_nr,
+				    AutoMutex& aLock)
+{
   SavingMode saving_mode = getAcqSavingMode();
   if (saving_mode != CtSaving::AutoHeader)
     return;
@@ -1891,11 +1899,11 @@ void CtSaving::Stream::checkWriteAccess()
 	  THROW_CTL_ERROR(Error) << output;
 	}
 
-      // check if it's writtable
-      DEB_TRACE() << "Check if directory is writtable";
+      // check if it's writable
+      DEB_TRACE() << "Check if directory is writable";
       if(access(m_pars.directory.c_str(),W_OK))
 	{
-	  output = "Directory : " + m_pars.directory + " is not writtable";
+	  output = "Directory : " + m_pars.directory + " is not writable";
 	  THROW_CTL_ERROR(Error) << output;
 	}
     }
@@ -1997,4 +2005,58 @@ void CtSaving::Stream::checkWriteAccess()
       if(errorFlag)
 	        THROW_CTL_ERROR(Error) << output;
     } // if(m_pars.overwritePolicy == Abort)
+}
+
+void CtSaving::Stream::checkDirectoryAccess(const std::string& directory)
+{
+  DEB_MEMBER_FUNCT();
+  std::string local_directory = directory;
+  std::string output;
+  // check if directory exist
+  DEB_TRACE() << "Check if directory exist";
+  if(access(local_directory.c_str(),F_OK))
+    {
+      bool continue_flag;
+      do
+	{
+#ifdef WIN32
+      size_t pos = local_directory.find_last_of("\\/");
+#else
+      size_t pos = local_directory.find_last_of("/");
+#endif
+      size_t string_length = local_directory.size() - 1;
+      continue_flag = pos == string_length;
+      if(pos != std::string::npos)
+	local_directory = local_directory.substr(0,pos);
+	}
+      while(continue_flag);
+
+      if(access(local_directory.c_str(),F_OK))
+	{
+	  output = "Directory :" + local_directory + " doesn't exist";
+	  THROW_CTL_ERROR(Error) << output;
+	}
+    }
+
+  // check if it's a directory
+  struct stat aDirectoryStat;
+  if(stat(local_directory.c_str(),&aDirectoryStat))
+    {
+      output = "Can stat directory : " + local_directory;
+      THROW_CTL_ERROR(Error) << output;
+    }
+  DEB_TRACE() << "Check if it's really a directory";
+  if(!S_ISDIR(aDirectoryStat.st_mode))
+    {
+      output = "Path : " + local_directory + " is not a directory";
+      THROW_CTL_ERROR(Error) << output;
+    }
+  
+  // check if it's writable
+  DEB_TRACE() << "Check if directory is writable";
+  if(access(local_directory.c_str(),W_OK))
+    {
+      output = "Directory : " + local_directory + " is not writable";
+      THROW_CTL_ERROR(Error) << output;
+    }
 }

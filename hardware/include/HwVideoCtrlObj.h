@@ -2,6 +2,7 @@
 #define HWVIDEOCTRLOBJ_H
 #include <list>
 #include <algorithm>
+#include "LimaCompatibility.h"
 #include "Debug.h"
 #include "Constants.h"
 #include "SizeUtils.h"
@@ -10,7 +11,7 @@
 
 namespace lima
 {
-  class HwVideoCtrlObj
+  class LIMACORE_API HwVideoCtrlObj
   {
     DEB_CLASS(DebModHardware,"HwVideoCtrlObj");
   public:

@@ -35,6 +35,7 @@ class Camera
 	~Camera();
 
 	HwBufferCtrlObj* getBufferCtrlObj();
+	Simulator::FrameBuilder* getFrameBuilder();
 	
 	void startAcq();
 	void stopAcq();

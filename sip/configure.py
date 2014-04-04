@@ -57,6 +57,10 @@ modules = [('core',		['common', 'hardware', 'control']),
 #           ('sisome4',          [os.path.join('camera','common','siso-me4')]),
            ('vieworksvp',       [os.path.join('camera','vieworks-vp')]),
            ('dexela',          [os.path.join('camera','dexela')]),
+           ('xspress3',        [os.path.join('camera','xspress3')]),
+           ('rayonixhs',        [os.path.join('camera','rayonixhs')]),
+           ('aviex',           [os.path.join('camera','aviex')]),
+           ('ultra',           [os.path.join('camera','ultra')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -185,8 +189,11 @@ def main():
 	    extraIncludes += ['/usr/include/flycapture']
         elif(modName == 'vieworksvp'):
             extraIncludes += ['../../camera/common/siso-me4/include',
-                              '/opt/siso/include'] # howto not hardode this
-
+                              '/opt/siso/include'] # howto not hardcode this
+        elif(modName == 'rayonixhs'):
+            extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include','/opt/rayonix/include/marccd']
+        elif(modName == 'aviex'):
+            extra_cxxflags += ['-DOS_UNIX']
         extraIncludes += findModuleIncludes(modName)
         
         sipFile = open(sipFileName,"a")

@@ -106,3 +106,15 @@
 [submodule "camera/vieworks-vp"]
 	path = camera/vieworks-vp
 	url = https://serge-cohen@github.com/serge-cohen/Lima-camera-vieworks-vp
+[submodule "camera/xspress3"]
+	path = camera/xspress3
+	url = git://github.com/esrf-bliss/Lima-camera-xspress3
+[submodule "camera/ultra"]
+	path = camera/ultra
+	url = git://github.com/esrf-bliss/Lima-camera-ultra
+[submodule "third-party/gldisplay"]
+	path = third-party/gldisplay
+	url = git://github.com/esrf-bliss/gldisplay.git
+[submodule "camera/aviex"]
+	path = camera/aviex
+	url = git://github.com/esrf-bliss/Lima-camera-aviex.git

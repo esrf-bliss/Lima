@@ -459,6 +459,67 @@ build_targets	+= $(call lib-full,$(xh-name),$(xh-ver))
 endif
 
 ############################
+# LIMA - XSPRESS3
+############################
+
+ifneq ($(COMPILE_XSPRESS3),0)
+
+PROCESSOR_TYPE := $(shell uname -m)
+ifeq ($(PROCESSOR_TYPE),x86_64)
+XSPRESS3_LDFLAGS	:= -L../camera/xspress3/sdk/libs/linux.x86_64
+else
+XSPRESS3_LDFLAGS	:= -L../camera/xspress3/sdk/libs/linux.x86
+endif
+XSPRESS3_LDLIBS	:= -lxspress3 -limg_mod
+
+xspress3-name	:= xspress3
+xspress3-objs	:= ../camera/xspress3/src/Xspress3.o
+xspress3-ver	:= ../camera/xspress3/VERSION
+xspress3-flags	:= $(XSPRESS3_LDFLAGS) $(LDFLAGS)
+xspress3-deps	:= $(XSPRESS3_LDLIBS) $(LDLIBS) 
+
+$(call lib-full,$(xspress3-name),$(xspress3-ver)): $(xspress3-objs)
+	$(call compile-lib,$(xspress3-name),$(xspress3-ver),\
+			   $(xspress3-flags),$(xspress3-deps),$@,$+)
+	$(call create-links,$(xspress3-name),$(xspress3-ver))
+
+build_targets	+= $(call lib-full,$(xspress3-name),$(xspress3-ver))
+
+endif
+
+############################
+# LIMA - ULTRA
+############################
+
+ifneq ($(COMPILE_ULTRA),0)
+
+PROCESSOR_TYPE := $(shell uname -m)
+#ifeq ($(PROCESSOR_TYPE),x86_64)
+#ULTRA_LDFLAGS	:= -L../camera/ultra/sdk/libs/linux.x86_64
+#ULTRA_LDFLAGS	:= 
+#else
+#ULTRA_LDFLAGS	:= -L../camera/ultra/sdk/libs/linux.x86_64
+ULTRA_LDFLAGS	:= 
+#endif
+#ULTRA_LDLIBS	:= -lultra -limg_mod
+ULTRA_LDLIBS	:= 
+
+ultra-name	:= ultra
+ultra-objs	:= ../camera/ultra/src/Ultra.o
+ultra-ver	:= ../camera/ultra/VERSION
+ultra-flags	:= $(ULTRA_LDFLAGS) $(LDFLAGS)
+ultra-deps	:= $(ULTRA_LDLIBS) $(LDLIBS) 
+
+$(call lib-full,$(ultra-name),$(ultra-ver)): $(ultra-objs)
+	$(call compile-lib,$(ultra-name),$(ultra-ver),\
+			   $(ultra-flags),$(ultra-deps),$@,$+)
+	$(call create-links,$(ultra-name),$(ultra-ver))
+
+build_targets	+= $(call lib-full,$(ultra-name),$(ultra-ver))
+
+endif
+
+############################
 # LIMA - XPAD
 ############################
 
@@ -596,6 +657,52 @@ $(call lib-full,$(vieworks-vp-name),$(vieworks-vp-ver)): $(vieworks-vp-objs)
 	$(call create-links,$(vieworks-vp-name),$(vieworks-vp-ver))
 
 build_targets	+= $(call lib-full,$(vieworks-vp-name),$(vieworks-vp-ver))
+
+endif
+
+############################
+# LIMA - RAYONIXHS
+############################
+ifneq ($(COMPILE_RAYONIXHS),0)
+
+#RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
+RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L/opt/rayonix/lib64
+RAYONIXHS_LDLIBS	:= $(LDLIBS) -lcraydl
+
+rayonixhs-name	:= rayonixhs
+rayonixhs-objs	:= ../camera/rayonixhs/src/RayonixHs.o
+rayonixhs-ver	:= ../camera/rayonixhs/VERSION
+rayonixhs-flags	:= $(RAYONIXHS_LDFLAGS)
+rayonixhs-deps	:= $(RAYONIXHS_LDLIBS)
+
+$(call lib-full,$(rayonixhs-name),$(rayonixhs-ver)): $(rayonixhs-objs)
+	$(call compile-lib,$(rayonixhs-name),$(rayonixhs-ver),\
+			   $(rayonixhs-flags),$(rayonixhs-deps),$@,$+)
+	$(call create-links,$(rayonixhs-name),$(rayonixhs-ver))
+
+build_targets	+= $(call lib-full,$(rayonixhs-name),$(rayonixhs-ver))
+
+endif
+############################
+# LIMA - AVIEX
+############################
+ifneq ($(COMPILE_AVIEX),0)
+
+AVIEX_LDFLAGS	:= $(LDFLAGS) -L../camera/aviex/sdk/linux/lib
+AVIEX_LDLIBS	:= $(LDLIBS) -lMx
+
+aviex-name	:= aviex
+aviex-objs	:= ../camera/aviex/src/Aviex.o
+aviex-ver	:= ../camera/aviex/VERSION
+aviex-flags	:= $(AVIEX_LDFLAGS)
+aviex-deps	:= $(AVIEX_LDLIBS)
+
+$(call lib-full,$(aviex-name),$(aviex-ver)): $(aviex-objs)
+	$(call compile-lib,$(aviex-name),$(aviex-ver),\
+			   $(aviex-flags),$(aviex-deps),$@,$+)
+	$(call create-links,$(aviex-name),$(aviex-ver))
+
+build_targets	+= $(call lib-full,$(aviex-name),$(aviex-ver))
 
 endif
 

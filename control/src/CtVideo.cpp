@@ -3,6 +3,7 @@
 #include "CtVideo.h"
 #include "CtAcquisition.h"
 #include "CtImage.h"
+#include "CtBuffer.h"
 
 #include "PoolThreadMgr.h"
 #include "SinkTask.h"
@@ -25,7 +26,7 @@ class CtVideo::_Data2ImageTask : public SinkTaskBase
 {
   DEB_CLASS_NAMESPC(DebModControl,"Data to image","Control");
 public:
-  _Data2ImageTask(CtVideo &cnt) : SinkTaskBase(),m_cnt(cnt) {}
+  _Data2ImageTask(CtVideo &cnt) : SinkTaskBase(),m_nb_buffer(0),m_cnt(cnt) {}
 
   virtual void process(Data &aData)
   {
@@ -42,8 +43,18 @@ public:
     
     data2Image(aData,*anImage);
     
+    //Check if data is still available
+    bool still_available = _check_available(aData);
+
     aLock.lock();
     anImage->inused = 0;	// Unlock
+    if(!still_available)
+      {
+	DEB_ALWAYS() << "invalidate video copy";
+	anImage->frameNumber = -1; // invalidate copy
+	return;
+      }
+
     ++m_cnt.m_image_counter;
 
     // if read Image is not use, swap
@@ -62,7 +73,18 @@ public:
 	  }
       }
   }
+
+  long m_nb_buffer;
 private:
+  inline bool _check_available(Data& aData)
+  {
+    CtControl::ImageStatus status;
+    m_cnt.m_ct.getImageStatus(status);
+    
+    long offset = status.LastImageAcquired - aData.frameNumber;
+    return offset < m_nb_buffer;
+  }
+
   CtVideo &m_cnt;
 };
 
@@ -653,7 +675,7 @@ void CtVideo::getLastImage(CtVideo::Image &anImage) const
 void CtVideo::getLastImageCounter(long long &anImageCounter) const
 {
   AutoMutex aLock(m_cond.mutex());
-  anImageCounter = (int) m_image_counter;
+  anImageCounter = m_image_counter;
 }
 
 void CtVideo::registerImageCallback(ImageCallback &cb)
@@ -664,10 +686,7 @@ void CtVideo::registerImageCallback(ImageCallback &cb)
   DEB_PARAM() << DEB_VAR2(&cb, m_image_callback);
   
   if(m_image_callback)
-    {
-      DEB_ERROR() << "ImageCallback already registered";
-      THROW_CTL_ERROR(InvalidValue) <<  "ImageCallback already registered";
-    }
+    THROW_CTL_ERROR(InvalidValue) << "ImageCallback already registered";
 
   m_image_callback = &cb;
 }
@@ -679,10 +698,7 @@ void CtVideo::unregisterImageCallback(ImageCallback &cb)
   AutoMutex aLock(m_cond.mutex());
   DEB_PARAM() << DEB_VAR2(&cb, m_image_callback);
   if(m_image_callback != &cb)
-    {
-      DEB_ERROR() << "ImageCallback not registered";
-      THROW_CTL_ERROR(InvalidValue) <<  "ImageCallback not registered"; 
-    }
+    THROW_CTL_ERROR(InvalidValue) << "ImageCallback not registered"; 
 
   m_image_callback = NULL;
 }
@@ -926,6 +942,9 @@ void CtVideo::_prepareAcq()
   
   m_read_image->frameNumber = -1;
   m_write_image->frameNumber = -1;
+
+  CtBuffer* buffer = m_ct.buffer();
+  buffer->getNumber(m_data_2_image_task->m_nb_buffer);
 }
 
 #ifdef WITH_CONFIG

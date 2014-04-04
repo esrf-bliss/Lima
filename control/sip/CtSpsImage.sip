@@ -32,6 +32,9 @@ using namespace lima;
 	
 	void setNames(const std::string& spec_name, 
 		      const std::string& array_name);
+        void getNames(std::string& spec_name /Out/,
+		      std::string& array_name /Out/);
+		
 	void prepare(const FrameDim &frame_dim);
 	void frameReady(Data&);
 	void reset();

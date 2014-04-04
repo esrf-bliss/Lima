@@ -42,8 +42,9 @@ class LIBSIMULATOR_API Camera
 	Camera();
 	~Camera();
 
-	HwBufferCtrlObj* getBufferCtrlObj();
-	
+	HwBufferCtrlObj *getBufferCtrlObj();
+	FrameBuilder *getFrameBuilder();
+
 	void startAcq();
 	void stopAcq();
 

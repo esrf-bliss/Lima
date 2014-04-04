@@ -40,7 +40,9 @@ public:
 
 	void setNames(const std::string& spec_name, 
 		      const std::string& array_name);
-
+        void getNames(std::string &spec_name,
+                      std::string &array_name) const;
+ 
 	void setFrameDim(const FrameDim& frame_dim);
 
 	void update(Data& data);
@@ -170,12 +172,22 @@ void CtSpsImage::_update_finnished(Data &aData)
 	m_next_data = Data();
 	
 }
+
 void CtSpsImage::setNames(const std::string& spec_name, 
 			 const std::string& array_name)
 {
 	DEB_MEMBER_FUNCT();
 	
 	m_sps_cnt->setNames(spec_name,array_name);
+}
+
+void CtSpsImage::getNames(std::string& spec_name,
+			std::string& array_name) const
+{
+	DEB_MEMBER_FUNCT();
+
+	m_sps_cnt->getNames(spec_name, array_name);
+
 }
 
 void CtSpsImage::prepare(const FrameDim &frame_dim)
@@ -228,6 +240,17 @@ void _SpsImage::setNames(const std::string& spec_name,
 	m_spec_name = spec_name;
 	m_array_name = array_name;
 }
+
+void _SpsImage::getNames(std::string &spec_name, std::string &array_name) const
+{
+	DEB_MEMBER_FUNCT();
+
+	spec_name = m_spec_name;
+	array_name = m_array_name;
+
+ 	DEB_RETURN() << DEB_VAR2(spec_name, array_name);
+}
+ 
 
 void _SpsImage::setFrameDim(const FrameDim& frame_dim)
 {
