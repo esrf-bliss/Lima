@@ -38,7 +38,8 @@ CPPFLAGS += $(INC)
 CXXFLAGS += -g -Wall -pthread
 LDFLAGS = -pthread
 LDLIBS = -L../../build -llimacore \
-         -L../../third-party/Processlib/build -lprocesslib
+         -L../../third-party/Processlib/build -lprocesslib \
+         -lnexuscpp -lyat
 
 build_targets = roicountertest
 
@@ -57,6 +58,11 @@ LDLIBS += -L../../third-party/CCfits/.libs \
 	-L../../third-party/cfitsio/lib \
 	-lcfitsio \
 	-lCCfits
+endif
+
+## Making sure that we link with nexus libraries if set to do so :
+ifneq ($(COMPILE_NXS_SAVING), 0)
+LDLIBS += -lnexuscpp -lyat
 endif
 
 ifndef COMPILE_SIMULATOR

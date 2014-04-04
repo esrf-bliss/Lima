@@ -1,0 +1,12 @@
+prefix=/usr
+libdir=${prefix}/lib
+includedir=${prefix}/include
+config_defines= -DWITH_SPS_IMAGE -DWITH_NXS_SAVING -DWITH_CONFIG_CONTEXT
+libadd=
+
+Name: Lima
+Description: LImA (L ibrary for Im age A cquisition) is a project for the unified control of 2D detectors.
+Requires:
+Version: 1.3.0
+Libs: -L${libdir} -llimacore ${libadd}
+Cflags: -I${includedir} ${config_defines}

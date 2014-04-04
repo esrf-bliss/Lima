@@ -21,7 +21,9 @@
 	url = git://github.com/esrf-bliss/Lima-camera-pilatus
 [submodule "applications/tango"]
 	path = applications/tango
-	url = git://github.com/esrf-bliss/Lima-tango
+#	url = git://github.com/esrf-bliss/Lima-tango
+#	url = git://github.com/soleil-ica/Lima-tango
+	url = https://serge-cohen@github.com/serge-cohen/Lima-tango
 [submodule "camera/maxipix"]
 	path = camera/maxipix
 	url = git://github.com/esrf-bliss/Lima-camera-maxipix
@@ -81,7 +83,8 @@
 	url = git://github.com/esrf-bliss/Lima-camera-rayonixhs
 [submodule "camera/andor3"]
 	path = camera/andor3
-	url = git://github.com/esrf-bliss/Lima-camera-andor3.git
+##	url = git://github.com/esrf-bliss/Lima-camera-andor3.git
+	url = https://github.com/serge-cohen/Lima-camera-andor3.git
 [submodule "third-party/libconfig"]
 	path = third-party/libconfig
 	url = git://github.com/esrf-bliss/libconfig.git
@@ -97,6 +100,12 @@
 [submodule "camera/dexela"]
 	path = camera/dexela
 	url = git://github.com/esrf-bliss/Lima-camera-dexela.git
+[submodule "camera/common/siso-me4"]
+	path = camera/common/siso-me4
+	url = https://serge-cohen@github.com/serge-cohen/Lima-camera-common-siso-me4.git
+[submodule "camera/vieworks-vp"]
+	path = camera/vieworks-vp
+	url = https://serge-cohen@github.com/serge-cohen/Lima-camera-vieworks-vp
 [submodule "camera/xspress3"]
 	path = camera/xspress3
 	url = git://github.com/esrf-bliss/Lima-camera-xspress3

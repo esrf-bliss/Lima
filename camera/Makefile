@@ -104,6 +104,14 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
+ifndef COMPILE_ANDOR3
+COMPILE_ANDOR3 = 0
+endif
+
+ifneq ($(COMPILE_ANDOR3),0)
+sub-dirs += andor3
+endif
+
 ifndef COMPILE_XH
 COMPILE_XH = 0
 endif
@@ -166,6 +174,14 @@ endif
 
 ifneq ($(COMPILE_IMXPAD),0)
 sub-dirs += imxpad
+endif
+
+ifndef COMPILE_VIEWORKSVP
+COMPILE_VIEWORKSVP = 0
+endif
+
+ifneq ($(COMPILE_VIEWORKSVP),0)
+sub-dirs += vieworks-vp
 endif
 
 ifndef COMPILE_RAYONIXHS

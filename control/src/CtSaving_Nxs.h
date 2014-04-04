@@ -41,8 +41,7 @@ namespace lima
 	  virtual bool _open(const std::string &filename, std::ios_base::openmode flags);
 	  virtual void _close();
 	  virtual void _writeFile(Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
-          virtual void _clear();
-		
+	  virtual void _clear();
 	private:
       nxcpp::DataStreamer* 	m_writer;
 	  CtSaving::Parameters	m_pars;

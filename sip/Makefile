@@ -77,6 +77,10 @@ ifneq ($(COMPILE_ANDOR), 0)
 sip-modules += andor
 endif
 
+ifneq ($(COMPILE_ANDOR3), 0)
+sip-modules += andor3
+endif
+
 ifneq ($(COMPILE_XH), 0)
 sip-modules += xh
 endif
@@ -108,6 +112,14 @@ endif
 ifneq ($(COMPILE_IMXPAD), 0)
 sip-modules += imxpad
 endif
+
+# ifneq ($(COMPILE_SISOME4), 0)
+# sip-modules += sisome4
+# endif
+
+# ifneq ($(COMPILE_VIEWORKSVP), 0)
+# sip-modules += vieworksvp
+# endif
 
 ifneq ($(COMPILE_RAYONIXHS), 0)
 sip-modules += rayonixhs

@@ -46,6 +46,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('mythen',           [os.path.join('camera','mythen')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
            ('andor',      	[os.path.join('camera','andor')]),
+           ('andor3',      	[os.path.join('camera','andor3')]),
            ('xh',             	[os.path.join('camera','xh')]),
            ('xpad',             [os.path.join('camera','xpad')]),
            ('marccd',           [os.path.join('camera','marccd')]),
@@ -53,6 +54,8 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('pilatus',          [os.path.join('camera','pilatus')]),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ('imxpad',           [os.path.join('camera','imxpad')]),
+#           ('sisome4',          [os.path.join('camera','common','siso-me4')]),
+           ('vieworksvp',       [os.path.join('camera','vieworks-vp')]),
            ('dexela',          [os.path.join('camera','dexela')]),
            ('xspress3',        [os.path.join('camera','xspress3')]),
            ('rayonixhs',        [os.path.join('camera','rayonixhs')]),
@@ -184,6 +187,9 @@ def main():
 	    extraIncludes += ['../../third-party/yat/include'] 
         elif(modName == 'pointgrey'):
 	    extraIncludes += ['/usr/include/flycapture']
+        elif(modName == 'vieworksvp'):
+            extraIncludes += ['../../camera/common/siso-me4/include',
+                              '/opt/siso/include'] # howto not hardcode this
         elif(modName == 'rayonixhs'):
             extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include','/opt/rayonix/include/marccd']
         elif(modName == 'aviex'):

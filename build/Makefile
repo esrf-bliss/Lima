@@ -64,6 +64,10 @@ CORE_LDFLAGS += -L../third-party/CBFLib/lib
 CORE_LDLIBS += -lcbf
 endif
 
+ifneq ($(COMPILE_NXS_SAVING),0)
+CORE_LDLIBS += -lnexuscpp -lyat -lNeXus -lmxml -lhdf5 -lmfhdf
+endif
+
 ifneq ($(COMPILE_FITS_SAVING),0)
 CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
 CORE_LDLIBS += -lCCfits -lcfitsio
@@ -383,6 +387,30 @@ build_targets	+= $(call lib-full,$(andor-name),$(andor-ver))
 endif
 
 ############################
+# LIMA - ANDOR3
+############################
+
+ifneq ($(COMPILE_ANDOR3),0)
+
+ANDOR3_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
+ANDOR3_LDLIBS	:= $(LDLIBS) -latcore
+
+andor3-name	:= andor3
+andor3-objs	:= ../camera/andor3/src/Andor3.o
+andor3-ver	:= ../camera/andor3/VERSION
+andor3-flags	:= $(ANDOR3_LDFLAGS)
+andor3-deps	:= $(ANDOR3_LDLIBS)
+
+$(call lib-full,$(andor3-name),$(andor3-ver)): $(andor3-objs)
+	$(call compile-lib,$(andor3-name),$(andor3-ver),\
+			   $(andor3-flags),$(andor3-deps),$@,$+)
+	$(call create-links,$(andor3-name),$(andor3-ver))
+
+build_targets	+= $(call lib-full,$(andor3-name),$(andor3-ver))
+
+endif
+
+############################
 # LIMA - MARCCD
 ############################
 
@@ -581,6 +609,54 @@ $(call lib-full,$(imxpad-name),$(imxpad-ver)): $(imxpad-objs)
 	$(call create-links,$(imxpad-name),$(imxpad-ver))
 
 build_targets	+= $(call lib-full,$(imxpad-name),$(imxpad-ver))
+
+endif
+
+############################
+# LIMA - SISOME4
+############################
+
+ifneq ($(COMPILE_SISOME4),0)
+
+SISOME4_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/siso/lib
+SISOME4_LDLIBS	:= $(LDLIBS) -lfglib5 -lclserme4
+
+siso-me4-name	:= siso-me4
+siso-me4-objs	:= ../camera/common/siso-me4/src/SiSoME4.o
+siso-me4-ver	:= ../camera/common/siso-me4/VERSION
+siso-me4-flags	:= $(SISOME4_LDFLAGS)
+siso-me4-deps	:= $(SISOME4_LDLIBS)
+
+$(call lib-full,$(siso-me4-name),$(siso-me4-ver)): $(siso-me4-objs)
+	$(call compile-lib,$(siso-me4-name),$(siso-me4-ver),\
+			   $(siso-me4-flags),$(siso-me4-deps),$@,$+)
+	$(call create-links,$(siso-me4-name),$(siso-me4-ver))
+
+build_targets	+= $(call lib-full,$(siso-me4-name),$(siso-me4-ver))
+
+endif
+
+############################
+# LIMA - VIEWORKSVP
+############################
+
+ifneq ($(COMPILE_VIEWORKSVP),0)
+
+VIEWORKSVP_LDFLAGS	:= $(LDFLAGS) -L. -L/opt/siso/lib
+VIEWORKSVP_LDLIBS	:= $(LDLIBS) -llimasiso-me4 ## -lfglib5 -lclserme4
+
+vieworks-vp-name	:= vieworks-vp
+vieworks-vp-objs	:= ../camera/vieworks-vp/src/VieworksVP.o
+vieworks-vp-ver		:= ../camera/vieworks-vp/VERSION
+vieworks-vp-flags	:= $(VIEWORKSVP_LDFLAGS)
+vieworks-vp-deps	:= $(VIEWORKSVP_LDLIBS)
+
+$(call lib-full,$(vieworks-vp-name),$(vieworks-vp-ver)): $(vieworks-vp-objs)
+	$(call compile-lib,$(vieworks-vp-name),$(vieworks-vp-ver),\
+			   $(vieworks-vp-flags),$(vieworks-vp-deps),$@,$+)
+	$(call create-links,$(vieworks-vp-name),$(vieworks-vp-ver))
+
+build_targets	+= $(call lib-full,$(vieworks-vp-name),$(vieworks-vp-ver))
 
 endif
 

@@ -37,6 +37,7 @@
       << DEB_VAR1(m_valid_ranges.max_exp_time);				\
   }
 
+
 using namespace lima;
 /*----------------------------------------------------------------------
 			 validRangesCallback
