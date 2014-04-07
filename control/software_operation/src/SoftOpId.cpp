@@ -135,9 +135,9 @@ SoftOpFlatfieldCorrection::~SoftOpFlatfieldCorrection()
   m_opt->unref();
 }
 
-void SoftOpFlatfieldCorrection::setFlatFieldImage(Data &aData)
+void SoftOpFlatfieldCorrection::setFlatFieldImage(Data &aData,bool normalize)
 {
-  m_opt->setFlatFieldImageData(aData);
+  m_opt->setFlatFieldImageData(aData,normalize);
 }
 
 bool SoftOpFlatfieldCorrection::addTo(TaskMgr &aMgr,int stage)

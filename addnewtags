@@ -117,6 +117,7 @@ class Version:
           
 mod_version_data = {
     'core': 'common/VERSION',
+    'gldisplay': 'third-party/gldisplay/VERSION',
     'espia': 'camera/common/espia/VERSION',
     'frelon': 'camera/frelon/VERSION',
     'maxipix': 'camera/maxipix/VERSION',

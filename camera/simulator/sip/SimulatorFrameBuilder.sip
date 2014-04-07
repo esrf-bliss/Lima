@@ -140,11 +140,11 @@ class FrameBuilder
 
 	void getBin( Bin &bin /Out/ ) const;
 	void setBin( const Bin &bin );
-	void checkBin( Bin &bin /InOut/ ) const;
+	void checkBin( Bin &bin /In,Out/ ) const;
 
 	void getRoi( Roi &roi /Out/ ) const;
 	void setRoi( const Roi &roi );
-	void checkRoi( Roi &roi /InOut/ ) const;
+	void checkRoi( Roi &roi /In,Out/ ) const;
 
 	void getPeaks( std::vector<struct Simulator::GaussPeak> &peaks /Out/ ) 
 									const;

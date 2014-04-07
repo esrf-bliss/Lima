@@ -157,6 +157,12 @@ XSPRESS3_FULL_VERSION = $(shell cat camera/xspress3/VERSION)
 INSTALL_XSPRESS3_VDIR = $(INSTALL_XSPRESS3_DIR)/v$(XSPRESS3_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_ULTRA), 0)
+INSTALL_ULTRA_DIR = $(INSTALL_PLAT_DIR)/Ultra
+ULTRA_FULL_VERSION = $(shell cat camera/ultra/VERSION)
+INSTALL_ULTRA_VDIR = $(INSTALL_ULTRA_DIR)/v$(ULTRA_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 INSTALL_XPAD_DIR = $(INSTALL_PLAT_DIR)/Xpad
 XPAD_FULL_VERSION = $(shell cat camera/xpad/VERSION)
@@ -187,6 +193,12 @@ RAYONIXHS_FULL_VERSION = $(shell cat camera/rayonixhs/VERSION)
 INSTALL_RAYONIXHS_VDIR = $(INSTALL_RAYONIXHS_DIR)/v$(RAYONIXHS_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_AVIEX), 0)
+INSTALL_AVIEX_DIR = $(INSTALL_PLAT_DIR)/Aviex
+AVIEX_FULL_VERSION = $(shell cat camera/aviex/VERSION)
+INSTALL_AVIEX_VDIR = $(INSTALL_AVIEX_DIR)/v$(AVIEX_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -213,6 +225,13 @@ ifneq ($(COMPILE_CONFIG),0)
 INSTALL_CONFIG_DEFINES += -DWITH_CONFIG
 INSTALL_DEPS += libconfig.install
 endif
+
+ifneq ($(COMPILE_GLDISPLAY), 0)
+INSTALL_GLDISPLAY_DIR = $(INSTALL_PLAT_DIR)/GLDisplay
+GLDISPLAY_FULL_VERSION = $(shell cat third-party/gldisplay/VERSION)
+INSTALL_GLDISPLAY_VDIR = $(INSTALL_GLDISPLAY_DIR)/v$(GLDISPLAY_FULL_VERSION)
+endif
+
 ##################
 #  INSTALL DEPS  #
 ##################
@@ -420,6 +439,16 @@ ifneq ($(COMPILE_XSPRESS3), 0)
 	cp camera/xspress3/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
+ifneq ($(COMPILE_ULTRA), 0)
+	mkdir -p $(INSTALL_ULTRA_VDIR)
+	cp camera/ultra/python/__init__.py $(INSTALL_ULTRA_DIR)
+	$(call install_core_dep,$(INSTALL_ULTRA_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaultra.so*
+	cp -d build/liblimaultra.so* $(INSTALL_LIB_DIR)
+	cp sip/ultra/limaultra.so $(INSTALL_ULTRA_VDIR)
+	cp camera/ultra/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 	mkdir -p $(INSTALL_XPAD_VDIR)
 	cp camera/xpad/python/__init__.py $(INSTALL_XPAD_DIR)
@@ -467,10 +496,32 @@ ifneq ($(COMPILE_RAYONIXHS), 0)
 	$(call install_core_dep,$(INSTALL_RAYONIXHS_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimarayonixhs.so*
 	cp -d build/liblimarayonixhs.so* $(INSTALL_LIB_DIR)
-	cp -d camera/rayonixhs/sdk/lib64/libcraydl.so* $(INSTALL_LIB_DIR)
-	cp -d camera/rayonixhs/sdk/lib64/libcraydl_gpu.so* $(INSTALL_LIB_DIR)
-	cp -d camera/rayonixhs/sdk/lib64/libcbf.so* $(INSTALL_LIB_DIR)
-	cp -dr camera/rayonixhs/sdk/lib64/libcraydl_nocuda $(INSTALL_LIB_DIR)
+	#cp -d camera/rayonixhs/sdk/lib64/libcraydl.so* $(INSTALL_LIB_DIR)
+	#cp -d camera/rayonixhs/sdk/lib64/libcraydl_gpu.so* $(INSTALL_LIB_DIR)
+	#cp -d camera/rayonixhs/sdk/lib64/libcbf.so* $(INSTALL_LIB_DIR)
+	#cp -d camera/rayonixhs/sdk/lib64/libSiVCamDll.so* $(INSTALL_LIB_DIR)
+	#cp -dr camera/rayonixhs/sdk/lib64/libcraydl_nocuda $(INSTALL_LIB_DIR)
 	cp sip/rayonixhs/limarayonixhs.so $(INSTALL_RAYONIXHS_VDIR)
 	cp camera/rayonixhs/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_AVIEX), 0)
+	mkdir -p $(INSTALL_AVIEX_VDIR)
+	cp camera/aviex/python/__init__.py $(INSTALL_AVIEX_DIR)
+	$(call install_core_dep,$(INSTALL_AVIEX_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaaviex.so*
+	cp -d build/liblimaaviex.so* $(INSTALL_LIB_DIR)
+	cp sip/aviex/limaaviex.so $(INSTALL_AVIEX_VDIR)
+	#cp camera/aviex/sdk/linux/lib/libMx.so.1 $(INSTALL_LIB_DIR)/libMx.so.1
+	cp camera/aviex/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_GLDISPLAY), 0)
+	mkdir -p $(INSTALL_GLDISPLAY_VDIR)
+	cp third-party/gldisplay/python/__init__.py $(INSTALL_GLDISPLAY_DIR)
+	$(call install_core_dep,$(INSTALL_GLDISPLAY_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/libgldisplay.so*
+	cp -d third-party/gldisplay/build/libgldisplay.so* $(INSTALL_LIB_DIR)
+	cp third-party/gldisplay/sip/gldisplay.so $(INSTALL_GLDISPLAY_VDIR)
+	cp third-party/gldisplay/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

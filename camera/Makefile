@@ -120,6 +120,14 @@ ifneq ($(COMPILE_XSPRESS3),0)
 sub-dirs += xspress3
 endif
 
+ifndef COMPILE_ULTRA
+COMPILE_ULTRA = 0
+endif
+
+ifneq ($(COMPILE_ULTRA),0)
+sub-dirs += ultra
+endif
+
 ifndef COMPILE_XPAD
 COMPILE_XPAD = 0
 endif
@@ -166,6 +174,14 @@ endif
 
 ifneq ($(COMPILE_RAYONIXHS),0)
 sub-dirs += rayonixhs
+endif
+
+ifndef COMPILE_AVIEX
+COMPILE_AVIEX = 0
+endif
+
+ifneq ($(COMPILE_AVIEX),0)
+sub-dirs += aviex
 endif
 
 include ../global.inc

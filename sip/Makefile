@@ -85,6 +85,10 @@ ifneq ($(COMPILE_XSPRESS3), 0)
 sip-modules += xspress3
 endif
 
+ifneq ($(COMPILE_ULTRA), 0)
+sip-modules += ultra
+endif
+
 ifneq ($(COMPILE_XPAD), 0)
 sip-modules += xpad
 endif
@@ -109,13 +113,18 @@ ifneq ($(COMPILE_RAYONIXHS), 0)
 sip-modules += rayonixhs
 endif
 
+ifneq ($(COMPILE_AVIEX), 0)
+sip-modules += aviex
+endif
+
 all:	src
 
 src:
-	$(MAKE) -C ../third-party sip
+	$(MAKE) -C ../third-party prelima.sip
 	for d in $(sip-modules); do \
 		$(MAKE) -C $$d || break; \
 	done
+	$(MAKE) -C ../third-party postlima.sip
 
 config:	clean mrproper
 	python configure.py
