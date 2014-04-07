@@ -34,6 +34,7 @@ static SoftOpKey SoftOpTable[] = {
   SoftOpKey(SOFTROI,"Software roi"),
   SoftOpKey(USER_LINK_TASK,"User link task"),
   SoftOpKey(USER_SINK_TASK,"User sink task"),
+  SoftOpKey(PEAKFINDER,"Peak Finder"),
   SoftOpKey()
 };
 
@@ -144,6 +145,9 @@ void SoftOpExternalMgr::addOp(SoftOpId aSoftOpId,
       newInstance.m_opt = new SoftOpSoftRoi();
       newInstance.m_linkable = true;
       break;
+    case PEAKFINDER:
+      newInstance.m_opt = new SoftOpPeakFinder();
+      break;      
     case USER_LINK_TASK:
       newInstance.m_opt = new SoftUserLinkTask();
       newInstance.m_linkable = true;
@@ -283,6 +287,7 @@ void SoftOpExternalMgr::_checkIfPossible(SoftOpId aSoftOpId,
     case FLIP:
     case MASK:
     case SOFTROI:
+    case PEAKFINDER:
     case USER_LINK_TASK:
       checkLinkable = true;
       break;
