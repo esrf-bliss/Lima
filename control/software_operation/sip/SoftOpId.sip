@@ -733,6 +733,7 @@ enum SoftOpId
  SOFTROI,
  USER_LINK_TASK,
  USER_SINK_TASK,
+ PEAKFINDER,
 };
 
 struct SoftOpKey
@@ -758,6 +759,120 @@ using namespace lima;
   ~SoftOpBackgroundSubstraction();
     
   void setBackgroundImage(Data &aData);
+};
+
+
+
+%MappedType std::list<Tasks::PeakFinderResult>
+{
+%TypeHeaderCode
+#include <list>
+#include <PeakFinder.h>
+%End
+
+%ConvertFromTypeCode
+   PyObject *l;
+
+   // Create the Python list of the correct length.
+   if ((l = PyList_New(sipCpp -> size())) == NULL)
+       return NULL;
+
+   // Go through each element in the C++ instance and convert it to a
+   // wrapped TYPE.
+   
+   int i=0;
+   for (std::list<Tasks::PeakFinderResult>::iterator iter = sipCpp->begin(); iter != sipCpp->end(); iter++)
+   {
+       Tasks::PeakFinderResult *cpp = new Tasks::PeakFinderResult(*iter);
+       PyObject *pobj;
+
+       // Get the Python wrapper for the Type instance, creating a new
+       if ((pobj = sipConvertFromNewType(cpp, sipType_Tasks_PeakFinderResult, sipTransferObj)) == NULL)
+       // one if necessary, and handle any ownership transfer.
+       {
+           // There was an error so garbage collect the Python list.
+           Py_DECREF(l);
+           return NULL;
+       }
+
+       // Add the wrapper to the list.
+       PyList_SET_ITEM(l, i++, pobj);
+   }
+
+   // Return the Python list.
+   return l;
+%End
+
+%ConvertToTypeCode
+   // Check if type is compatible
+   if (sipIsErr == NULL)
+   {
+       // Must be any iterable
+       PyObject *i = PyObject_GetIter(sipPy);
+       bool iterable = (i != NULL);
+       Py_XDECREF(i);
+       return iterable;
+   }
+
+   // Iterate over the object
+   PyObject *iterator = PyObject_GetIter(sipPy);
+   PyObject *item;
+
+   std::list<Tasks::PeakFinderResult> *l = new std::list<Tasks::PeakFinderResult>;
+
+   while ((item = PyIter_Next(iterator)))
+   {
+       if (!sipCanConvertToType(item, sipType_Tasks_PeakFinderResult, SIP_NOT_NONE))
+       {
+           PyErr_Format(PyExc_TypeError, "object in iterable cannot be converted to Tasks::PeakFinderResult");
+           *sipIsErr = 1;
+           break;
+       }
+
+       int state;
+       Tasks::PeakFinderResult* p = reinterpret_cast<Tasks::PeakFinderResult*>(
+            sipConvertToType(item, sipType_Tasks_PeakFinderResult, 0, SIP_NOT_NONE, &state, sipIsErr));
+
+       if (!*sipIsErr)
+           l->push_back(*p);
+
+       sipReleaseType(p, sipType_Tasks_PeakFinderResult, state);
+       Py_DECREF(item);
+   }
+
+   Py_DECREF(iterator);
+
+   if (*sipIsErr)
+   {
+       delete l;
+       return 0;
+   }
+
+   *sipCppPtr = l;
+   return sipGetState(sipTransferObj);
+%End
+};
+
+class SoftOpPeakFinder
+{
+%TypeHeaderCode
+#include <SoftOpId.h>
+using namespace lima;
+%End
+ public:
+
+  SoftOpPeakFinder();
+  ~SoftOpPeakFinder();
+
+  void clearCounterStatus();
+  int  getCounterStatus() const;
+  
+  void setBufferSize(int size);
+  void getBufferSize(int &size /Out/) const;
+   
+  void setMask(Data &aMask); 
+  void readPeaks(std::list<Tasks::PeakFinderResult> &result /Out/) const;
+  
 };
 
 class SoftOpBinning
