@@ -197,7 +197,7 @@ void DetInfoCtrlObj::getDetectorModel(std::string& det_model)
       if(!det_model.size())
 	det_model = local_det_model;
       else
-	det_model += "\n" + local_det_model;
+	det_model += " / " + local_det_model;
     }
 }
 
