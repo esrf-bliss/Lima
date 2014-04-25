@@ -106,6 +106,8 @@ CATCH
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpRoi2Spectrum,NULL);break; \
 	case(SOFTROI): \
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpSoftRoi,NULL);break; \
+	case(PEAKFINDER): \
+	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftOpPeakFinder,NULL);break; \
 	case(USER_LINK_TASK): \
 	  sipRes = sipConvertFromType(anInstance.m_opt,sipType_SoftUserLinkTask,NULL);break; \
 	case(USER_SINK_TASK): \
