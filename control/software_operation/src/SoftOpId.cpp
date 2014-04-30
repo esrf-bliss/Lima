@@ -843,3 +843,36 @@ void SoftOpPeakFinder::readPeaks(std::list<Tasks::PeakFinderResult>& result) con
     i->second.first->getHistory(result, from);
   }
 }
+
+void SoftOpPeakFinder::setComputingMode(std::string computing_mode)
+{
+  for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
+    if(!computing_mode.compare("MAXIMUM")){
+      i->second.second->setComputingMode(0);
+    } else if (!computing_mode.compare("CM")){
+      i->second.second->setComputingMode(1);
+    } else {
+      i->second.second->setComputingMode(0);
+    }
+  }
+}
+
+void SoftOpPeakFinder::getComputingMode(std::string &computing_mode) const
+{
+  int icm;
+  for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
+    icm = i->second.second->getComputingMode(); 
+  }
+  switch(icm)
+    {
+    case 0:
+      computing_mode = "MAXIMUM";
+      break;
+    case 1:
+      computing_mode = "CM";
+      break;
+    default:
+      computing_mode = "MAXIMUM";
+      break;      
+    }
+}

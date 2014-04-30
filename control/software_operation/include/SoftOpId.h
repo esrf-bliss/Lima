@@ -803,6 +803,9 @@ namespace lima
 
     void readPeaks(std::list<Tasks::PeakFinderResult> &result) const;
 
+    void setComputingMode( std::string computing_mode);
+    void getComputingMode( std::string &computing_mode) const;
+
   protected:
     virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};
@@ -818,6 +821,7 @@ namespace lima
     //    LinkTask *m_opt;
     Tasks::PeakFinderTask *m_opt;
     mutable Cond		m_cond;
+    
   };
 
 

@@ -872,7 +872,8 @@ using namespace lima;
    
   void setMask(Data &aMask); 
   void readPeaks(std::list<Tasks::PeakFinderResult> &result /Out/) const;
-  
+  void setComputingMode( std::string computing_mode);
+  void getComputingMode( std::string &computing_mode /Out/) const;	   	   
 };
 
 class SoftOpBinning
