@@ -791,6 +791,7 @@ namespace lima
   class LIMACORE_API SoftOpPeakFinder : public SoftOpBaseClass
   {
   public:
+    enum ComputingMode {MAXIMUM,CM};
     SoftOpPeakFinder();
     virtual ~SoftOpPeakFinder();
     
@@ -803,8 +804,8 @@ namespace lima
 
     void readPeaks(std::list<Tasks::PeakFinderResult> &result) const;
 
-    void setComputingMode( std::string computing_mode);
-    void getComputingMode( std::string &computing_mode) const;
+    void setComputingMode( ComputingMode);
+    void getComputingMode( ComputingMode&) const;
 
   protected:
     virtual bool addTo(TaskMgr&,int stage);

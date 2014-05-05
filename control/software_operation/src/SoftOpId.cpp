@@ -844,35 +844,20 @@ void SoftOpPeakFinder::readPeaks(std::list<Tasks::PeakFinderResult>& result) con
   }
 }
 
-void SoftOpPeakFinder::setComputingMode(std::string computing_mode)
+void SoftOpPeakFinder::setComputingMode(ComputingMode aComputingMode)
 {
   for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
-    if(!computing_mode.compare("MAXIMUM")){
-      i->second.second->setComputingMode(0);
-    } else if (!computing_mode.compare("CM")){
-      i->second.second->setComputingMode(1);
-    } else {
-      i->second.second->setComputingMode(0);
-    }
+    i->second.second->setComputingMode(aComputingMode == SoftOpPeakFinder::MAXIMUM ?
+				       Tasks::PeakFinderTask::MAXIMUM : Tasks::PeakFinderTask::CM );
   }
 }
 
-void SoftOpPeakFinder::getComputingMode(std::string &computing_mode) const
+void SoftOpPeakFinder::getComputingMode(ComputingMode &aComputingMode) const
 {
-  int icm;
+  Tasks::PeakFinderTask::ComputingMode aMode;
   for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
-    icm = i->second.second->getComputingMode(); 
+    i->second.second->getComputingMode(aMode); 
   }
-  switch(icm)
-    {
-    case 0:
-      computing_mode = "MAXIMUM";
-      break;
-    case 1:
-      computing_mode = "CM";
-      break;
-    default:
-      computing_mode = "MAXIMUM";
-      break;      
-    }
+  aComputingMode = aMode == Tasks::PeakFinderTask::MAXIMUM ?
+    SoftOpPeakFinder::MAXIMUM : SoftOpPeakFinder::CM;
 }
