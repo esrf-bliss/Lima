@@ -861,6 +861,7 @@ using namespace lima;
 %End
  public:
 
+  enum ComputingMode {MAXIMUM,CM};
   SoftOpPeakFinder();
   ~SoftOpPeakFinder();
 
@@ -872,7 +873,8 @@ using namespace lima;
    
   void setMask(Data &aMask); 
   void readPeaks(std::list<Tasks::PeakFinderResult> &result /Out/) const;
-  
+  void setComputingMode( SoftOpPeakFinder::ComputingMode );
+  void getComputingMode( SoftOpPeakFinder::ComputingMode& /Out/) const;	   	   
 };
 
 class SoftOpBinning
