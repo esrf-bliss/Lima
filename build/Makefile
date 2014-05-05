@@ -589,7 +589,8 @@ endif
 ############################
 ifneq ($(COMPILE_RAYONIXHS),0)
 
-RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
+#RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
+RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L/opt/rayonix/lib64
 RAYONIXHS_LDLIBS	:= $(LDLIBS) -lcraydl
 
 rayonixhs-name	:= rayonixhs
@@ -604,6 +605,28 @@ $(call lib-full,$(rayonixhs-name),$(rayonixhs-ver)): $(rayonixhs-objs)
 	$(call create-links,$(rayonixhs-name),$(rayonixhs-ver))
 
 build_targets	+= $(call lib-full,$(rayonixhs-name),$(rayonixhs-ver))
+
+endif
+############################
+# LIMA - AVIEX
+############################
+ifneq ($(COMPILE_AVIEX),0)
+
+AVIEX_LDFLAGS	:= $(LDFLAGS) -L../camera/aviex/sdk/linux/lib
+AVIEX_LDLIBS	:= $(LDLIBS) -lMx
+
+aviex-name	:= aviex
+aviex-objs	:= ../camera/aviex/src/Aviex.o
+aviex-ver	:= ../camera/aviex/VERSION
+aviex-flags	:= $(AVIEX_LDFLAGS)
+aviex-deps	:= $(AVIEX_LDLIBS)
+
+$(call lib-full,$(aviex-name),$(aviex-ver)): $(aviex-objs)
+	$(call compile-lib,$(aviex-name),$(aviex-ver),\
+			   $(aviex-flags),$(aviex-deps),$@,$+)
+	$(call create-links,$(aviex-name),$(aviex-ver))
+
+build_targets	+= $(call lib-full,$(aviex-name),$(aviex-ver))
 
 endif
 

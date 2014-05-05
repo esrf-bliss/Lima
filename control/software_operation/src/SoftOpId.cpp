@@ -772,3 +772,74 @@ bool SoftUserSinkTask::addTo(TaskMgr &aMgr,int stage)
     aMgr.addSinkTask(stage,m_sink_task);
   return !!m_sink_task;
 }
+
+//-------------------- PEAK FINDER --------------------
+
+SoftOpPeakFinder::SoftOpPeakFinder() : 
+  SoftOpBaseClass(),
+  m_history_size(DEFAULT_HISTORY_SIZE)
+{
+  SoftManager *aCounterMgrPt;
+  SoftTask *aCounterTaskPt;
+  aCounterMgrPt = new SoftManager(m_history_size);
+  aCounterTaskPt = new SoftTask(*aCounterMgrPt);
+  TaskMap::ManagerAndTask man_task(aCounterMgrPt, aCounterTaskPt);
+  m_task_manager.insert("my_name",man_task);
+}
+
+SoftOpPeakFinder::~SoftOpPeakFinder()
+{
+  m_opt->unref();
+}
+void SoftOpPeakFinder::setMask(Data& aMask)
+{
+}
+
+bool SoftOpPeakFinder::addTo(TaskMgr &aMgr,int stage)
+{
+  AutoMutex aLock(m_cond.mutex());
+  return m_task_manager.addTo(aMgr, stage);
+}
+
+void SoftOpPeakFinder::clearCounterStatus()
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_task_manager.clearCounterStatus();
+}
+
+/** @brief get the counter status
+ *  counter status indicate the status of roi counters
+ *  if counterStatus == -2 acquisition didn't started
+ *  if counterStatus == -1 acquisition has started
+ *  counterStatus > -1 == nb image pending :
+ *  i.e: if counterStatus == 10, it's mean image id 10 is in progress or finnished
+ */
+int SoftOpPeakFinder::getCounterStatus() const
+{
+  AutoMutex aLock(m_cond.mutex());
+  return m_task_manager.getCounterStatus();
+}
+
+void SoftOpPeakFinder::setBufferSize(int size)
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(NameMapIterator i = m_task_manager.begin();
+      i != m_task_manager.end();++i)
+    i->second.first->resizeHistory(size);
+  m_history_size = size;
+}
+
+void SoftOpPeakFinder::getBufferSize(int& size) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  size = m_history_size;
+}
+
+void SoftOpPeakFinder::readPeaks(std::list<Tasks::PeakFinderResult>& result) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
+    int from = 0;
+    i->second.first->getHistory(result, from);
+  }
+}

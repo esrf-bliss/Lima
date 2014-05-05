@@ -56,6 +56,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('dexela',          [os.path.join('camera','dexela')]),
            ('xspress3',        [os.path.join('camera','xspress3')]),
            ('rayonixhs',        [os.path.join('camera','rayonixhs')]),
+           ('aviex',           [os.path.join('camera','aviex')]),
            ('ultra',           [os.path.join('camera','ultra')]),
            ]
 
@@ -184,7 +185,9 @@ def main():
         elif(modName == 'pointgrey'):
 	    extraIncludes += ['/usr/include/flycapture']
         elif(modName == 'rayonixhs'):
-            extraIncludes += ['../../camera/rayonixhs/sdk/include/craydl']
+            extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include','/opt/rayonix/include/marccd']
+        elif(modName == 'aviex'):
+            extra_cxxflags += ['-DOS_UNIX']
         extraIncludes += findModuleIncludes(modName)
         
         sipFile = open(sipFileName,"a")

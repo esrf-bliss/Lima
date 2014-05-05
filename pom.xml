@@ -64,7 +64,6 @@
 				<artifactId>YAT-${aol}-static-${mode}</artifactId>
 				<version>1.8.0-vc9</version>
 			</dependency>
-			
 			<dependency>
 				<groupId>fr.soleil.lib</groupId>
 				<artifactId>NexusCPP-${aol}-static-${mode}</artifactId>
