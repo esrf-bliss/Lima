@@ -269,9 +269,18 @@ void Setting::set(const char* alias,
   CHECK_NULL();							\
   try									\
     {									\
-      libconfig::Setting &alias_setting =				\
-	m_setting->add(alias,type);					\
-      return Setting(&alias_setting);					\
+      if(alias)								\
+	{								\
+	  libconfig::Setting &alias_setting =				\
+	    m_setting->add(alias,type);					\
+	  return Setting(&alias_setting);				\
+	}								\
+      else								\
+	{								\
+	  libconfig::Setting &alias_setting =				\
+	    m_setting->add(type);					\
+	  return Setting(&alias_setting);				\
+	}								\
     }									\
   catch(libconfig::SettingNameException& exp)				\
     {									\
@@ -482,6 +491,11 @@ Setting::Type Setting::getType() const
       aReturnType = None;break;
     }
   return aReturnType;
+}
+
+int Setting::getLength() const
+{
+  return m_setting->getLength();
 }
 
 const char* Setting::getName() const

@@ -36,6 +36,7 @@
 #include "RoiCounter.h"
 #include "Roi2Spectrum.h"
 #include "SoftRoi.h"
+#include "PeakFinder.h"
 
 namespace lima
 {
@@ -65,6 +66,7 @@ namespace lima
       SOFTROI,
       USER_LINK_TASK,
       USER_SINK_TASK,
+      PEAKFINDER,
     };
 
   struct LIMACORE_API SoftOpKey
@@ -785,5 +787,40 @@ namespace lima
   private:
     SinkTaskBase* m_sink_task;
   };
+
+  class LIMACORE_API SoftOpPeakFinder : public SoftOpBaseClass
+  {
+  public:
+    SoftOpPeakFinder();
+    virtual ~SoftOpPeakFinder();
+    
+    void setMask(Data &aData);
+    void clearCounterStatus();
+    int  getCounterStatus() const;
+
+    void setBufferSize(int size);
+    void getBufferSize(int &size) const;
+
+    void readPeaks(std::list<Tasks::PeakFinderResult> &result) const;
+
+  protected:
+    virtual bool addTo(TaskMgr&,int stage);
+    virtual void prepare() {};
+  private:
+    typedef Tasks::PeakFinderTask SoftTask;
+    typedef Tasks::PeakFinderManager SoftManager;
+    typedef NameTaskMap<SoftManager, SoftTask> TaskMap;
+    typedef TaskMap::NameMapIterator NameMapIterator;
+    typedef TaskMap::NameMapConstIterator NameMapConstIterator;
+
+    TaskMap			m_task_manager;
+    int				m_history_size;
+    //    LinkTask *m_opt;
+    Tasks::PeakFinderTask *m_opt;
+    mutable Cond		m_cond;
+  };
+
+
+
 }
 #endif
