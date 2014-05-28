@@ -137,6 +137,7 @@ class CtControl::_ReconstructionChangeCallback : public HwReconstructionCtrlObj:
 public:
   _ReconstructionChangeCallback(CtControl& ctrl) : m_ct(ctrl) {}
 
+  virtual ~_ReconstructionChangeCallback() {}
   virtual void change(LinkTask* aNewLinkTaskPt)
   {
     m_ct.setReconstructionTask(aNewLinkTaskPt);

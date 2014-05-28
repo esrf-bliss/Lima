@@ -50,6 +50,15 @@ ifneq ($(COMPILE_CBF_SAVING),0)
 LDLIBS += -L../../third-party/CBFLib/lib -lcbf
 endif
 
+ifneq ($(COMPILE_HDF5_SAVING),0)
+PROCESSOR_TYPE := $(shell uname -m)
+ifeq ($(PROCESSOR_TYPE),x86_64)
+LDFLAGS += -L../../third-party/hdf5-1.8.12/libs/linux.x86_64 -lhdf5_cpp -lhdf5 -lsz
+else
+LDFLAGS += -L../../third-party/hdf5-1.8.12/libs/linux.x86 -lhdf5_cpp -lhdf5 -lsz
+endif
+endif
+
 ifneq ($(COMPILE_FITS_SAVING),0)
 CXXFLAGS += -DWITH_FITS_SAVING -I../../third-party/cfitsio \
 		-I../../third-party

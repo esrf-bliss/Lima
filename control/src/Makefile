@@ -61,6 +61,12 @@ INCLUDES += -I../../third-party/CBFLib/include
 CXXFLAGS += -DWITH_CBF_SAVING
 endif
 
+ifneq ($(COMPILE_HDF5_SAVING),0)
+ct-objs += CtSaving_Hdf5.o 
+INCLUDES += -I../../third-party/hdf5-1.8.12/include
+CXXFLAGS += -DWITH_HDF5_SAVING
+endif
+
 ifneq ($(COMPILE_NXS_SAVING),0)
 ct-objs += CtSaving_Nxs.o 
 # nexus4tango lib is not yet available but soon !

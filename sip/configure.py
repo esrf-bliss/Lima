@@ -175,6 +175,8 @@ def main():
             extraIncludes += ['/usr/local/include']
 	elif(modName == 'xpad'):
             extraIncludes += ['../../third-party/yat/include','/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib']
+	elif(modName == 'xspress3'):
+            extraIncludes += ['../../third-party/hdf5-1.8.12/include']
 	elif(modName == 'pco'):
             extraIncludes += ['R:/bliss/projects/LIMA/package/WIN32/PCO/sdkPco/include']
         elif(modName == 'marccd'):

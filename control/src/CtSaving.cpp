@@ -53,6 +53,10 @@
 #include "CtSaving_Tiff.h"
 #endif
 
+#ifdef WITH_HDF5_SAVING
+#include "CtSaving_Hdf5.h"
+#endif
+
 #include "TaskMgr.h"
 #include "SinkTask.h"
 
@@ -309,6 +313,12 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed";  
 #endif
     goto common;
+  case HDF5:
+#ifndef WITH_HDF5_SAVING
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 "
+                                     "saving option, not managed";
+#endif
+    goto common;
   case RAW:
   case EDF:
 
@@ -350,6 +360,11 @@ void CtSaving::Stream::createSaveContainer()
   case TIFFFormat:
     m_save_cnt = new SaveContainerTiff(*this);
     m_pars.framesPerFile = 1;
+    break;
+#endif
+#ifdef WITH_HDF5_SAVING
+  case HDF5:
+    m_save_cnt = new SaveContainerHdf5(*this, m_pars.fileFormat);
     break;
 #endif
   default:
@@ -1616,6 +1631,7 @@ void CtSaving::_prepare()
 	case CBFFormat: fileFormat = HwSavingCtrlObj::CBF_FORMAT_STR;break;
 	case HARDWARE_SPECIFIC: fileFormat = m_specific_hardware_format;break;
 	case TIFFFormat: fileFormat = HwSavingCtrlObj::TIFF_FORMAT_STR;break;
+	case HDF5: fileFormat = HwSavingCtrlObj::HDF5_FORMAT_STR;break;
 	default:
 	  THROW_CTL_ERROR(NotSupported) << "Not supported yet";break;
 	}

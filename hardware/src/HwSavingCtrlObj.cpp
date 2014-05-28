@@ -29,6 +29,7 @@ const char* HwSavingCtrlObj::RAW_FORMAT_STR = "RAW"; ///< Raw format (no header)
 const char* HwSavingCtrlObj::EDF_FORMAT_STR = "EDF"; ///< EDF format (Esrf Data Format)
 const char* HwSavingCtrlObj::CBF_FORMAT_STR = "CBF"; ///< CBF format
 const char* HwSavingCtrlObj::TIFF_FORMAT_STR = "TIFF"; ///< TIFF format
+const char* HwSavingCtrlObj::HDF5_FORMAT_STR = "HDF5"; ///< HDF5 format
 #ifdef __linux__
 class HwSavingCtrlObj::DirectoryCallback : public DirectoryEvent::Callback
 {
@@ -67,7 +68,7 @@ public:
 	++next_file_number;
 	m_image_ids.pop_front();
       }
-    next_file_number_expected = next_file_number_expected;
+    next_file_number_expected = next_file_number;
     return continueFlag;
   }
 

@@ -56,7 +56,8 @@ namespace lima {
     enum ManagedMode
       {
 	Software,		///< Saving will be managed by Lima Core (Control)
-	Hardware		///< Saving will be managed by Hardware or Camera SDK
+	Hardware,		///< Saving will be managed by Hardware or Camera SDK
+	Camera			///< Saving will be managed by the Camera plugin
       };
 
     enum FileFormat 
@@ -69,6 +70,7 @@ namespace lima {
 	FITS,			///< Flexible Image Transport Layer (NOST)
 	EDFGZ,			///< EDF format with gzip compression
 	TIFFFormat,		///< TIFF format
+	HDF5,			///< HDF5 format
       };
 
     enum SavingMode 
@@ -422,6 +424,8 @@ namespace lima {
 	  aFileFormatHumanPt = "EDF gzip";break;
 	case CtSaving::TIFFFormat:
 	  aFileFormatHumanPt = "TIFF";break;
+	case CtSaving::HDF5:
+	  aFileFormatHumanPt = "HDF5";break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -441,6 +445,7 @@ namespace lima {
       else if(buffer == "edf gzip") 	fileFormat = CtSaving::EDFGZ;
       else if(buffer == "raw")		fileFormat = CtSaving::RAW;
       else if(buffer == "tiff")		fileFormat = CtSaving::TIFFFormat;
+      else if(buffer == "hdf5")		fileFormat = CtSaving::HDF5;
       else
 	{
 	  std::ostringstream msg;
