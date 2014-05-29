@@ -110,6 +110,7 @@ class LIMACORE_API Thread
 
 	bool hasStarted();
 	bool hasFinished();
+	pthread_t getThreadID() {return m_thread;}
 
  protected:
 	virtual void threadFunction() = 0;
