@@ -37,6 +37,7 @@ class LIMACORE_API HwSyncCtrlObj
 	friend class CtAcquisition;
 public:
 	enum AutoExposureMode {OFF,ON};
+	enum AccessMode {Master,Monitor};
 
 	struct ValidRangesType {
 		ValidRangesType() :
@@ -113,10 +114,13 @@ public:
 	    m_valid_ranges_cb->validRangesChanged(ranges);
 	}
 	inline void getAcqMode(AcqMode &acqMode) const {acqMode = m_acq_mode;}
+
+	inline void getAccessMode(AccessMode& mode) const {mode = m_access_mode;}
  protected:
 	inline void setAcqMode(AcqMode acqMode) {m_acq_mode = acqMode;}
 
 	AutoExposureMode        m_auto_exposure_mode;
+	AccessMode		m_access_mode;
  private:
 	AcqMode		 	m_acq_mode;
 	ValidRangesCallback* 	m_valid_ranges_cb;

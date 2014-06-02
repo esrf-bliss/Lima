@@ -560,6 +560,19 @@ CtImage::CtImage(HwInterface *hw,CtControl &ct)
 
 	m_cb_size= new CtMaxImageSizeCB(this);
 	m_hw_det->registerMaxImageSizeCallback(*m_cb_size);
+
+	//Check if monitor mode
+	HwSyncCtrlObj	*hw_sync;
+	if(hw->getHwCtrlObj(hw_sync))
+	  {
+	    HwSyncCtrlObj::AccessMode access_mode;
+	    hw_sync->getAccessMode(access_mode);
+	    m_monitor_mode = access_mode == HwSyncCtrlObj::Monitor;
+	    // Force image operation to be Software in monitor mode
+	    m_mode = SoftOnly;
+	  }
+	else
+	  m_monitor_mode = false;
 }
 
 CtImage::~CtImage()
@@ -653,6 +666,10 @@ void CtImage::setMode(ImageOpMode mode)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(mode);
+
+	if(m_monitor_mode && mode != SoftOnly)
+	  THROW_CTL_ERROR(Error) << "Hardware image operation " 
+				 << "are not possible in monitor mode";
 
 	if (mode != m_mode) {
 		if (mode==HardOnly)
