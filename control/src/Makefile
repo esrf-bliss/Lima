@@ -61,6 +61,13 @@ INCLUDES += -I../../third-party/CBFLib/include
 CXXFLAGS += -DWITH_CBF_SAVING
 endif
 
+ifneq ($(COMPILE_HDF5_SAVING),0)
+ct-objs += CtSaving_Hdf5.o 
+INCLUDES += -I../../third-party/hdf5/src
+INCLUDES += -I../../third-party/hdf5/c++/src
+CXXFLAGS += -DWITH_HDF5_SAVING
+endif
+
 ifneq ($(COMPILE_NXS_SAVING),0)
 ct-objs += CtSaving_Nxs.o 
 # nexuscpp lib is not yet available but soon !

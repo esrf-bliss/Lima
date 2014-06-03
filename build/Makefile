@@ -77,6 +77,13 @@ ifneq ($(COMPILE_TIFF_SAVING),0)
 CORE_LDLIBS += -ltiff
 endif
 
+ifneq ($(COMPILE_HDF5_SAVING),0)
+PROCESSOR_TYPE := $(shell uname -m)
+CORE_LDFLAGS += -L../third-party/hdf5/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/src/.libs
+CORE_LDFLAGS += -L../third-party/hdf5/c++/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/c++/src/.libs
+CORE_LDLIBS += -lhdf5_cpp -lhdf5
+endif
+
 ifneq ($(COMPILE_CONFIG),0)
 CORE_LDLIBS += -L../third-party/libconfig/lib/.libs -Wl,-rpath=$(shell pwd)/../third-party/libconfig/lib/.libs  -lconfig++
 endif
@@ -543,7 +550,7 @@ endif
 ############################
 ifneq ($(COMPILE_POINTGREY),0)
 
-POINTGREY_LDFLAGS	:= $(LDFLAGS)
+POINTGREY_LDFLAGS	:= $(LDFLAGS) -L../camera/pointgrey/sdk/lib
 POINTGREY_LDLIBS	:= $(LDLIBS) -lflycapture
 
 pointgrey-name	:= pointgrey

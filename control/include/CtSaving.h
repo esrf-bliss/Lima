@@ -56,7 +56,8 @@ namespace lima {
     enum ManagedMode
       {
 	Software,		///< Saving will be managed by Lima Core (Control)
-	Hardware		///< Saving will be managed by Hardware or Camera SDK
+	Hardware,		///< Saving will be managed by Hardware or Camera SDK
+	Camera			///< Saving will be managed by the Camera plugin
       };
 
     enum FileFormat 
@@ -69,6 +70,7 @@ namespace lima {
 	FITS,			///< Flexible Image Transport Layer (NOST)
 	EDFGZ,			///< EDF format with gzip compression
 	TIFFFormat,		///< TIFF format
+	HDF5,			///< HDF5 format
       };
 
     enum SavingMode 
@@ -83,6 +85,7 @@ namespace lima {
 	Abort,			///< Abort acquisition if file already exist
 	Overwrite,		///< Overwrite old files
 	Append,			///< Append new data at the end of already existing files
+	MultiSet,		///< Like append but doesn't use file counter
       };	
 
     struct LIMACORE_API Parameters 
@@ -187,6 +190,7 @@ namespace lima {
     // --- misc
 
     void clear();
+    void close();
     //                  frame_nr == -1 => last frame
     void writeFrame(int frame_nr = -1, int nb_frames = 1,bool synchronous = true); 
 
@@ -210,7 +214,7 @@ namespace lima {
       void getStatistic(std::list<double>&) const;
       void getParameters(CtSaving::Parameters&) const;
       void clear();
-      
+      void prepare(CtControl&);
       /** @brief should return true if container has compression or
        *  havy task to do before saving
        *  if return is true, getCompressionTask should return a Task
@@ -231,6 +235,7 @@ namespace lima {
 			      CtSaving::HeaderMap &aHeader,
 			      FileFormat) = 0;
       virtual void _clear() {};
+      virtual void _prepare(CtControl&) {};
 
       int			m_written_frames;
       Stream			&m_stream;
@@ -239,6 +244,7 @@ namespace lima {
       int			m_statistic_size;
       mutable Cond		m_cond;
       bool			m_file_opened;
+      long			m_nb_frames_to_write;
     };
     friend class SaveContainer;
 
@@ -266,7 +272,8 @@ namespace lima {
       void setParameters(const Parameters& pars);
       void updateParameters();
 
-      void prepare();
+      void prepare(CtControl& ct);
+      void close();
       void createSaveContainer();
       void checkWriteAccess();
       void checkDirectoryAccess(const std::string&);
@@ -354,7 +361,8 @@ namespace lima {
     HwSavingCtrlObj*		m_hwsaving;
     _NewFrameSaveCBK*		m_new_frame_save_cbk;
     ManagedMode			m_managed_mode;	///< two option either harware (manage by SDK,hardware) or software (Lima core)
-      std::string			m_specific_hardware_format;
+    std::string			m_specific_hardware_format;
+    bool			m_saving_stop;
 
       Stream& getStream(int stream_idx)
 	{ bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
@@ -386,7 +394,9 @@ namespace lima {
       }
 
       // --- internal call
-      void _prepare();
+      void _prepare(CtControl&);
+      void _stop(CtControl&);
+      void _close();
       void _getCommonHeader(HeaderMap&);
       void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		       bool keep_in_map);
@@ -426,6 +436,8 @@ namespace lima {
 	  aFileFormatHumanPt = "EDF gzip";break;
 	case CtSaving::TIFFFormat:
 	  aFileFormatHumanPt = "TIFF";break;
+	case CtSaving::HDF5:
+	  aFileFormatHumanPt = "HDF5";break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -445,6 +457,7 @@ namespace lima {
       else if(buffer == "edf gzip") 	fileFormat = CtSaving::EDFGZ;
       else if(buffer == "raw")		fileFormat = CtSaving::RAW;
       else if(buffer == "tiff")		fileFormat = CtSaving::TIFFFormat;
+      else if(buffer == "hdf5")		fileFormat = CtSaving::HDF5;
       else
 	{
 	  std::ostringstream msg;
@@ -494,6 +507,8 @@ namespace lima {
 	  anOverwritePolicyHumanPt = "Overwrite";break;
 	case CtSaving::Append:
 	  anOverwritePolicyHumanPt = "Append";break;
+	case CtSaving::MultiSet:
+	  anOverwritePolicyHumanPt = "MultiSet";break;
 	default:		// Abort
 	  anOverwritePolicyHumanPt = "Abort";break;
 	}
@@ -506,9 +521,10 @@ namespace lima {
       std::transform(buffer.begin(),buffer.end(),
 		     buffer.begin(),::tolower);
 
-      if(buffer == "overwrite") 		overwritePolicy = CtSaving::Overwrite;
+      if(buffer == "overwrite") 	overwritePolicy = CtSaving::Overwrite;
       else if(buffer == "append") 	overwritePolicy = CtSaving::Append;
       else if(buffer == "abort") 	overwritePolicy = CtSaving::Abort;
+      else if(buffer == "multiset")	overwritePolicy = CtSaving::MultiSet;
       else
 	{
 	  std::ostringstream msg;

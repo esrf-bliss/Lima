@@ -53,6 +53,10 @@
 #include "CtSaving_Tiff.h"
 #endif
 
+#ifdef WITH_HDF5_SAVING
+#include "CtSaving_Hdf5.h"
+#endif
+
 #include "TaskMgr.h"
 #include "SinkTask.h"
 
@@ -246,7 +250,7 @@ void CtSaving::Stream::setActive(bool active)
   m_active = active;
 }
 
-void CtSaving::Stream::prepare()
+void CtSaving::Stream::prepare(CtControl& ct)
 {
   DEB_MEMBER_FUNCT();
 
@@ -256,8 +260,13 @@ void CtSaving::Stream::prepare()
       updateParameters();
       checkWriteAccess();
     }
+  m_save_cnt->prepare(ct);
 }
 
+void CtSaving::Stream::close()
+{
+  m_save_cnt->close();
+}
 void CtSaving::Stream::updateParameters()
 {
   DEB_MEMBER_FUNCT();
@@ -309,6 +318,12 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed";  
 #endif
     goto common;
+  case HDF5:
+#ifndef WITH_HDF5_SAVING
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 "
+                                     "saving option, not managed";
+#endif
+    goto common;
   case RAW:
   case EDF:
 
@@ -350,6 +365,11 @@ void CtSaving::Stream::createSaveContainer()
   case TIFFFormat:
     m_save_cnt = new SaveContainerTiff(*this);
     m_pars.framesPerFile = 1;
+    break;
+#endif
+#ifdef WITH_HDF5_SAVING
+  case HDF5:
+    m_save_cnt = new SaveContainerHdf5(*this, m_pars.fileFormat);
     break;
 #endif
   default:
@@ -827,6 +847,8 @@ void CtSaving::setOverwritePolicy(OverwritePolicy policy, int stream_idx)
   Stream& stream = getStream(stream_idx);
   Parameters pars = stream.getParameters(Auto);
   pars.overwritePolicy = policy;
+  if(policy == MultiSet)
+    pars.nextNumber = -1,pars.framesPerFile = -1;
   stream.setParameters(pars);
 }
 /** @brief get the overwrite policy for a saving stream
@@ -1337,6 +1359,14 @@ void CtSaving::clear()
   m_frame_datas.clear();
   
 }
+
+void CtSaving::close()
+{
+  DEB_MEMBER_FUNCT();
+  AutoMutex aLock(m_cond.mutex());
+  _close();
+}
+
 /** @brief write manually a frame
 
     @param aFrameNumber the frame id you want to save
@@ -1524,6 +1554,7 @@ void CtSaving::_saveFinished(Data &aData, Stream& stream)
   if (!auto_saving || !data_available || 
       ((saving_mode == AutoHeader) && !header_available)) {
     m_ready_flag = true;
+    if(m_saving_stop) _close();
     m_cond.signal();
     return;
   }
@@ -1573,7 +1604,7 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
     this methode will resetLastFrameNb if mode is AutoSave
     and validate the parameter for this new acquisition
  */
-void CtSaving::_prepare()
+void CtSaving::_prepare(CtControl& ct)
 {
   DEB_MEMBER_FUNCT();
 
@@ -1591,7 +1622,9 @@ void CtSaving::_prepare()
       for (int s = 0; s < m_nb_stream; ++s) {
 	Stream& stream = getStream(s);
 	if (stream.isActive()) {
-	  stream.prepare();
+	  aLock.unlock();
+	  stream.prepare(ct);
+	  aLock.lock();
 	  if (stream.needCompression())
 	    m_need_compression = true;
 	}
@@ -1624,6 +1657,7 @@ void CtSaving::_prepare()
 	case CBFFormat: fileFormat = HwSavingCtrlObj::CBF_FORMAT_STR;break;
 	case HARDWARE_SPECIFIC: fileFormat = m_specific_hardware_format;break;
 	case TIFFFormat: fileFormat = HwSavingCtrlObj::TIFF_FORMAT_STR;break;
+	case HDF5: fileFormat = HwSavingCtrlObj::HDF5_FORMAT_STR;break;
 	default:
 	  THROW_CTL_ERROR(NotSupported) << "Not supported yet";break;
 	}
@@ -1636,6 +1670,27 @@ void CtSaving::_prepare()
       m_hwsaving->prepare();
       m_hwsaving->start();
     }
+  m_saving_stop = false;
+}
+
+void CtSaving::_stop(CtControl&)
+{
+  close();
+}
+
+void CtSaving::_close()
+{
+  if(m_ready_flag)
+    {
+      for (int s = 0; s < m_nb_stream; ++s)
+	{
+	  Stream& stream = getStream(s);
+	  if(stream.isActive())
+	    stream.close();
+	}
+    }
+  else
+    m_saving_stop = true;
 }
 
 #ifdef WITH_CONFIG
@@ -1723,7 +1778,11 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
       THROW_CTL_ERROR(Error) << "Save unknown error";
     }
 
-  if(++m_written_frames == pars.framesPerFile) {
+  ++m_written_frames;
+  if((pars.overwritePolicy != MultiSet &&
+      m_written_frames == pars.framesPerFile) ||
+     m_written_frames == m_nb_frames_to_write) // Close file at the end of acquisition
+    {
     try {
       close();
     } catch (...) {
@@ -1784,16 +1843,30 @@ void CtSaving::SaveContainer::clear()
   _clear();			// call inheritance if needed
 }
 
+void CtSaving::SaveContainer::prepare(CtControl& ct)
+{
+  DEB_MEMBER_FUNCT();
+  int nb_frames;
+  ct.acquisition()->getAcqNbFrames(nb_frames);
+  m_nb_frames_to_write = nb_frames;
+  _prepare(ct);			// call inheritance if needed
+}
+
 void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 {
   DEB_MEMBER_FUNCT();
 
   if(!m_file_opened)
     {
-      char idx[64];
-      snprintf(idx,sizeof(idx),pars.indexFormat.c_str(),pars.nextNumber);
 
-      std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix + idx + pars.suffix;
+      std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix;
+      if(pars.overwritePolicy != MultiSet)
+	{
+	  char idx[64];
+	  snprintf(idx,sizeof(idx),pars.indexFormat.c_str(),pars.nextNumber);
+	  aFileName += idx;
+	}
+      aFileName += pars.suffix;
       DEB_TRACE() << DEB_VAR1(aFileName);
 
       if(pars.overwritePolicy == Abort && 
@@ -1804,8 +1877,9 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
 	  output = "Try to over write file: " + aFileName;
 	  THROW_CTL_ERROR(Error) << output;
 	}
-	  std::ios_base::openmode openFlags = std::ios_base::out | std::ios_base::binary;
-      if(pars.overwritePolicy == Append)
+      std::ios_base::openmode openFlags = std::ios_base::out | std::ios_base::binary;
+      if(pars.overwritePolicy == Append ||
+	 pars.overwritePolicy == MultiSet)
 	openFlags |= std::ios_base::app;
       else if(pars.overwritePolicy == Overwrite)
 	openFlags |= std::ios_base::trunc;
@@ -1867,7 +1941,8 @@ void CtSaving::SaveContainer::close()
   m_file_opened = false;
   m_written_frames = 0;
   Parameters& pars = m_stream.getParameters(Acq);
-  ++pars.nextNumber;
+  if(pars.overwritePolicy != MultiSet)
+    ++pars.nextNumber;
 }
 
 /** @brief check if all file can be written

@@ -109,3 +109,6 @@
 [submodule "camera/aviex"]
 	path = camera/aviex
 	url = git://github.com/esrf-bliss/Lima-camera-aviex.git
+[submodule "third-party/hdf5"]
+	path = third-party/hdf5
+	url = git://github.com/esrf-bliss/hdf5.git

@@ -221,6 +221,11 @@ ifneq ($(COMPILE_TIFF_SAVING),0)
 INSTALL_CONFIG_DEFINES += -DWITH_TIFF_SAVING
 endif
 
+ifneq ($(COMPILE_HDF5_SAVING),0)
+INSTALL_CONFIG_DEFINES += -DWITH_HDF5_SAVING
+INSTALL_DEPS += hdf5.install
+endif
+
 ifneq ($(COMPILE_CONFIG),0)
 INSTALL_CONFIG_DEFINES += -DWITH_CONFIG
 INSTALL_DEPS += libconfig.install
@@ -254,6 +259,8 @@ CCfits.install:
 
 libconfig.install:
 	$(MAKE) -C third-party libconfig.install
+hdf5.install:
+	$(MAKE) -C third-party hdf5.install
 
 ##################
 # INSTALL TARGET #

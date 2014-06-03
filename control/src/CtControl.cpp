@@ -137,6 +137,7 @@ class CtControl::_ReconstructionChangeCallback : public HwReconstructionCtrlObj:
 public:
   _ReconstructionChangeCallback(CtControl& ctrl) : m_ct(ctrl) {}
 
+  virtual ~_ReconstructionChangeCallback() {}
   virtual void change(LinkTask* aNewLinkTaskPt)
   {
     m_ct.setReconstructionTask(aNewLinkTaskPt);
@@ -308,7 +309,7 @@ void CtControl::prepareAcq()
   m_ct_accumulation->prepare();
 
   DEB_TRACE() << "Prepare Saving if needed";
-  m_ct_saving->_prepare();
+  m_ct_saving->_prepare(*this);
   m_autosave= m_ct_saving->hasAutoSaveMode();
   m_ready= true;
 
@@ -424,6 +425,7 @@ void CtControl::stopAcq()
   m_running = false;
   DEB_TRACE() << "Hardware Acquisition Stopped";
   _calcAcqStatus();
+  m_ct_saving->_stop(*this);
 }
 void CtControl::getStatus(Status& status) const
 {

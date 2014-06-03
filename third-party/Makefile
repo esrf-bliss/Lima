@@ -1,7 +1,7 @@
 ############################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-# Copyright (C) : 2009-2011
+# Copyright (C) : 2009-2014
 # European Synchrotron Radiation Facility
 # BP 220, Grenoble 38043
 # FRANCE
@@ -103,11 +103,27 @@ ifeq ($(COMPILE_SPS_IMAGE),0)
 $(error "GLDisplay requires SPS. Please set COMPILE_SPS_IMAGE=1 in config.inc)
 endif
 
+
 PROJECTS += gldisplay.src
 PROJECTS_TEST += gldisplay.test
 PROJECTS_POSTLIMA_CONFIG += gldisplay.config
 PROJECTS_POSTLIMA_SIP += gldisplay.sip
 PROJECTS_CLEAN += gldisplay.clean
+endif
+
+
+ifndef COMPILE_HDF5_SAVING
+COMPILE_HDF5_SAVING = 0
+endif
+
+ifneq ($(COMPILE_HDF5_SAVING),0)
+ifneq ($(wildcard hdf5/Makefile),)
+PROJECTS_CLEAN += hdf5.clean
+else
+PROJECTS += hdf5.confsrc
+endif
+
+PROJECTS += hdf5.src
 endif
 
 # meta targets
@@ -228,3 +244,23 @@ gldisplay/sip/gldisplay.so:	gldisplay_build_libgldisplay.so \
 				gldisplay/sip/Makefile
 	$(MAKE) -C gldisplay sip
 
+hdf5.src:
+	$(MAKE) -C hdf5 all
+
+hdf5.clean:
+	$(MAKE) -C hdf5 clean
+
+hdf5.confsrc:
+	cd hdf5 && ./configure 	--enable-cxx \
+				--enable-unsupported \
+				--enable-threadsafe \
+				--with-pthread=/usr/lib,/usr/include \
+				--prefix=$(INSTALL_PLAT_DIR)
+
+hdf5.install:
+	cd hdf5 && ./configure 	--enable-cxx \
+				--enable-unsupported \
+				--enable-threadsafe \
+				--with-pthread=/usr/lib,/usr/include \
+				--prefix=$(INSTALL_PLAT_DIR) \
+		&& $(MAKE) install
