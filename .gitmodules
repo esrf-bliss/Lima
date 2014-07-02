@@ -112,3 +112,9 @@
 [submodule "camera/aviex"]
 	path = camera/aviex
 	url = git://github.com/esrf-bliss/Lima-camera-aviex.git
+[submodule "camera/Lima-camera-hamamatsu"]
+	path = camera/Lima-camera-hamamatsu
+	url = git@github.com:soleil-ica/Lima-camera-hamamatsu.git
+[submodule "camera/hamamatsu"]
+	path = camera/hamamatsu
+	url = git@github.com:soleil-ica/Lima-camera-hamamatsu.git
