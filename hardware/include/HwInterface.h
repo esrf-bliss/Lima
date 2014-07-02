@@ -110,6 +110,10 @@ void HwInterface::StatusType::set(HwInterface::StatusType::Basic basic_status)
     Running:
       acq = AcqRunning;
       break;
+    case HwInterface::StatusType::Fault:
+      acq = AcqFault;
+      det = DetFault;
+      break;      
     }
   det_mask = DetExposure | DetReadout | DetLatency;
 }
