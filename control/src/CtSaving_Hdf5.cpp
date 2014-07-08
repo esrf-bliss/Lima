@@ -53,8 +53,6 @@ DataType get_h5_type(bool)			{return PredType(PredType::NATIVE_UINT8);}
 template <class T>
 void write_h5_dataset(Group group,const char* entry_name,T& val)
 {
-       //hsize_t strdim[1] = { 1 }; /* Dataspace dimensions */
-       //DataSpace dataspace(RANK_ONE, strdim);
        DataSpace dataspace(H5S_SCALAR);
        DataType datatype = get_h5_type(val);
        DataSet dataset(group.createDataSet(entry_name,datatype, dataspace));
@@ -75,8 +73,6 @@ void write_h5_dataset(Group group,const char* entry_name,std::string& val)
 template <class L,class T>
 void write_h5_attribute(L location,const char* entry_name,T& val)
 {
-       //hsize_t strdim[1] = { 1 }; /* Dataspace dimensions */
-       //DataSpace dataspace(RANK_ONE, strdim);
        DataSpace dataspace(H5S_SCALAR);
        DataType datatype = get_h5_type(val);
        Attribute attr(location.createAttribute(entry_name,datatype, dataspace));
@@ -101,15 +97,15 @@ static void calculate_chunck(hsize_t* data_size, hsize_t* chunck, int  depth)
        const double request_chunck_size = 256.;
        const double request_chunck_memory_size = 1024.*1024.;
        double request_chunck_pixel_nb = request_chunck_memory_size / depth;
-       long x_chunk = ceil(double(data_size[2]) / request_chunck_size);
-       long y_chunk = ceil(double(data_size[1]) / request_chunck_size);
-       long z_chunk = ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
+       long x_chunk = (long) ceil(double(data_size[2]) / request_chunck_size);
+       long y_chunk = (long) ceil(double(data_size[1]) / request_chunck_size);
+       long z_chunk = (long) ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
 
        hsize_t nb_image = data_size[0];
        while(hsize_t(z_chunk) > nb_image) {
               --x_chunk,--y_chunk;
 	      if(!x_chunk  || !y_chunk) break;
-	      z_chunk = ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
+	      z_chunk = (long) ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
        }
        if(!x_chunk) x_chunk = 1;
        else if(x_chunk > 8) x_chunk = 8;
@@ -117,14 +113,14 @@ static void calculate_chunck(hsize_t* data_size, hsize_t* chunck, int  depth)
        if(!y_chunk) y_chunk = 1;
        else if(y_chunk > 8) y_chunk = 8;
        
-       z_chunk = ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
+       z_chunk = (long) ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
               
        if(hsize_t(z_chunk) > nb_image) z_chunk = nb_image;
        else if(!z_chunk) z_chunk = 1;
 
        chunck[0] = z_chunk;
-       chunck[1] = ceil(double(data_size[1]) / y_chunk);
-       chunck[2] = ceil(double(data_size[2]) / x_chunk);
+       chunck[1] = (hsize_t) ceil(double(data_size[1]) / y_chunk);
+       chunck[2] = (hsize_t) ceil(double(data_size[2]) / x_chunk);
 }
 
 /** @brief saving container
@@ -186,10 +182,10 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	// Check if the overwrite policy if "MultiSet" is activated	
 	CtSaving::OverwritePolicy overwrite_policy;
 	control.saving()->getOverwritePolicy(overwrite_policy);
-	m_is_mutltiset = (overwrite_policy == CtSaving::MultiSet);
+	m_is_multiset = (overwrite_policy == CtSaving::MultiSet);
 	CtSaving::Parameters pars;
 	control.saving()->getParameters(pars);
-	if (m_is_mutltiset) 
+	if (m_is_multiset) 
 	  m_nbframes = m_ct_parameters.acq_nbframes;
 	else 
 	  m_nbframes = pars.framesPerFile;
@@ -204,7 +200,8 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 		// handle the errors appropriately
 		H5::Exception::dontPrint();
 
-		bool in_append = false;
+		m_in_append = false;
+		m_dataset_extended = false;
 		bool is_hdf5 = false;
 		bool file_exists = true;
 
@@ -225,7 +222,13 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 				}
 				if (file_exists && is_hdf5){
 				        m_file->openFile(filename, H5F_ACC_RDWR);
-				        in_append = true;
+				        m_in_append = true;
+				        m_entry_index = findLastEntry();
+				        if (m_is_multiset) {
+				            m_entry_index++;
+				        } else {
+				            m_format_written = true;
+				        }
 				}  else if (!file_exists){
 				        DEB_TRACE() << "append mode but file does not exist, " << filename;
 				        delete m_file;
@@ -245,15 +248,15 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 			//fails if it already exists in the file
 			char strname[256];
 			sprintf(strname,"/entry_%04d", m_entry_index);			
-			Group *group = NULL;
-			if (in_append) {
-			       try {
-			              group = new Group(m_file->openGroup(strname));
-				      DEB_TRACE() << "Hoops the new entry " << strname << " already exists in file " << filename;
-				      delete group;
-				      THROW_CTL_ERROR(Error) << "In file " << filename 
-							     << " the entry  " 
-							     << strname << " already exists";	
+			if (!m_format_written) {
+				Group *group = NULL;
+				if (m_in_append) {
+					try {
+						group = new Group(m_file->openGroup(strname));
+						DEB_TRACE() << "Hoops the new entry " << strname << " already exists in file " << filename;
+						delete group;
+						THROW_CTL_ERROR(Error) << "In file " << filename << " the entry  " << strname 
+								<< " already exists";	
 			       } catch (...) {
 				      DEB_TRACE() << "Ok the new entry " << strname << " is free in file " << filename;
 			       }
@@ -347,7 +350,15 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 			write_h5_dataset(flipping,"y",m_ct_parameters.image_flip.y);			  			      		      
 			string rot = lima::convert_2_string(m_ct_parameters.image_rotation);
 			write_h5_dataset(image, "rotation", rot);					
-	
+			} else {
+				m_entry = new Group(m_file->openGroup(strname));
+				Group instrument = Group(m_entry->openGroup("instrument"));
+				Group measurement = Group(m_entry->openGroup("measurement"));
+				m_measurement_detector = new Group(measurement.openGroup(m_ct_parameters.det_name));
+				m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
+				m_measurement_detector_info = new Group(m_measurement_detector->openGroup("info"));
+			}
+
 			m_already_opened = true;
 		}
 	} catch (FileIException &error) {
@@ -361,25 +372,26 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 void SaveContainerHdf5::_close() {
 	DEB_MEMBER_FUNCT();
 
-	// Create hard link to the Data group.
-	string img_path = m_entry_name; img_path += "/measurement/" + m_ct_parameters.det_name+"/data";
-	m_instrument_detector->link(H5L_TYPE_HARD, img_path, "data");
+	if (!m_in_append || m_is_multiset) {
+		// Create hard link to the Data group.
+		string img_path = m_entry_name;
+		img_path += "/measurement/" + m_ct_parameters.det_name+"/data";
+		m_instrument_detector->link(H5L_TYPE_HARD, img_path, "data");
 
-	// ISO 8601 Time format
-	time_t now;
-	time(&now);
-	char buf[sizeof("2011-10-08T07:07:09Z")];
-	strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
-	string etime = string(buf);
-	write_h5_dataset(*m_entry,"end_time",etime);
-
-        	
+		// ISO 8601 Time format
+		time_t now;
+		time(&now);
+		char buf[sizeof("2011-10-08T07:07:09Z")];
+		strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
+		string etime = string(buf);
+		write_h5_dataset(*m_entry,"end_time",etime);
+	}
 	m_already_opened = false;
 	m_format_written = false;
 	delete m_image_dataspace;
 	delete m_image_dataset;
-	delete m_measurement_detector_info;
 	delete m_measurement_detector;
+	delete m_measurement_detector_info;
 	delete m_instrument_detector;
 	delete m_entry;
 	delete m_file;
@@ -452,27 +464,48 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 				}
 
 				// create the image data structure in the file
-				hsize_t data_dims[3];
+				hsize_t data_dims[3], max_dims[3];
 				data_dims[1] = aData.dimensions[1];
 				data_dims[2] = aData.dimensions[0];
 				data_dims[0] = m_nbframes;
+				max_dims[1] = aData.dimensions[1];
+				max_dims[2] = aData.dimensions[0];
+				max_dims[0] = H5S_UNLIMITED;
 				// Create property list for the dataset and setup chunk size
 				DSetCreatPropList plist;
 				hsize_t chunk_dims[3];
 				// calculate a optimized chunking
 				calculate_chunck(data_dims, chunk_dims, aData.depth());
-				//chunk_dims[0] = 1;
-				//chunk_dims[1] = aData.dimensions[1]/4;
-				//chunk_dims[2] = aData.dimensions[0]/4;
 				plist.setChunk(RANK_THREE, chunk_dims);
 
-				m_image_dataspace = new DataSpace(RANK_THREE, data_dims); // create new dspace
+				m_image_dataspace = new DataSpace(RANK_THREE, data_dims, max_dims); // create new dspace
 				m_image_dataset = new DataSet(m_measurement_detector->createDataSet("data", data_type, *m_image_dataspace, plist));
 				string nxdata = "NXdata";
 				write_h5_attribute(*m_image_dataset, "NX_class", nxdata);
 				string image = "image"; 
 				write_h5_attribute(*m_image_dataset, "interpretation", image);
+				m_prev_images_written = 0;
 				m_format_written = true;
+			} else if (m_in_append && !m_is_multiset && !m_dataset_extended) {
+				hsize_t allocated_dims[3];
+				m_image_dataset = new DataSet(m_measurement_detector->openDataSet("data"));
+				m_image_dataspace = new DataSpace(m_image_dataset->getSpace());
+				m_image_dataspace->getSimpleExtentDims(allocated_dims);
+
+				hsize_t data_dims[3];
+				data_dims[1] = aData.dimensions[1];
+				data_dims[2] = aData.dimensions[0];
+				data_dims[0] = allocated_dims[0] + m_nbframes;
+
+				if (data_dims[1] != allocated_dims[1] && data_dims[2] != allocated_dims[2]) {
+					THROW_CTL_ERROR(Error) << "You are trying to extend the dataset with mismatching image dimensions";
+				}
+
+				m_image_dataset->extend(data_dims);
+				m_image_dataspace->close();
+				m_image_dataspace = new DataSpace(m_image_dataset->getSpace());
+				m_prev_images_written = allocated_dims[0];
+				m_dataset_extended = true;
 			}
 			// write the image data
 			hsize_t slab_dim[3];
@@ -481,7 +514,7 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 			slab_dim[0] = 1;
 			DataSpace slabspace = DataSpace(RANK_THREE, slab_dim);
 			int image_nb = aData.frameNumber % m_nbframes;
-			hsize_t start[] = { image_nb, 0, 0 };
+			hsize_t start[] = { m_prev_images_written + image_nb, 0, 0 };
 			hsize_t count[] = { 1, aData.dimensions[1], aData.dimensions[0] };
 			m_image_dataspace->selectHyperslab(H5S_SELECT_SET, count, start);
 			m_image_dataset->write((u_int8_t*) aData.data(), data_type, slabspace, *m_image_dataspace);
@@ -512,5 +545,20 @@ void SaveContainerHdf5::_clear()
 {
 	// dont know what to do yet!
 	// Inheritance requires me.
+}
+
+int SaveContainerHdf5::findLastEntry() {
+	char entryName[32];
+	int index = -1;
+	try { // determine the next group Entry index
+		do {
+			sprintf(entryName, "/entry_%04d", index+1);
+			m_file->openGroup(entryName);
+			index++;
+		} while (1);
+	} catch (H5::Exception &no_group) {
+		// ignore this indicates the last group
+	}
+	return index;
 }
 

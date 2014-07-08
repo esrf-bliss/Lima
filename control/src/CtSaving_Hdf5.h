@@ -53,6 +53,7 @@ protected:
 	virtual void _clear();
 
 private:
+	int findLastEntry();
 
 	struct Parameters{
 	  string det_name;
@@ -84,17 +85,20 @@ private:
 	CtImage *m_ct_image;
 	CtAcquisition *m_ct_acq;
 	HwInterface *m_hw_int;
-	bool m_is_mutltiset;
+	bool m_is_multiset;
 	int m_nbframes;
 	Mutex m_lock;
 	bool m_already_opened;
 	bool m_format_written;
+	bool m_in_append;
+	bool m_dataset_extended;
+	int m_prev_images_written;
 	DataSpace *m_image_dataspace;
 	DataSet *m_image_dataset;
 	H5File *m_file;
 	Group *m_entry, *m_measurement_detector, *m_instrument_detector, *m_measurement_detector_info;
 	int m_entry_index;
-        string m_entry_name;
+	string m_entry_name;
 };
 
 }

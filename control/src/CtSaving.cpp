@@ -701,6 +701,7 @@ void CtSaving::setNextNumber(long number, int stream_idx)
   AutoMutex aLock(m_cond.mutex());
   Stream& stream = getStream(stream_idx);
   Parameters pars = stream.getParameters(Auto);
+  //if(pars.overwritePolicy != MultiSet && pars.overwritePolicy != Append)
   pars.nextNumber = number;
   stream.setParameters(pars);
 }
@@ -847,8 +848,13 @@ void CtSaving::setOverwritePolicy(OverwritePolicy policy, int stream_idx)
   Stream& stream = getStream(stream_idx);
   Parameters pars = stream.getParameters(Auto);
   pars.overwritePolicy = policy;
+  // in multiset framesPerFile is not relevant set it to -1
+  // but when switching to an other policy default is 1 
   if(policy == MultiSet)
-    pars.nextNumber = -1,pars.framesPerFile = -1;
+    pars.framesPerFile = -1;
+  else if (pars.framesPerFile == -1)
+    pars.framesPerFile = 1;
+
   stream.setParameters(pars);
 }
 /** @brief get the overwrite policy for a saving stream
@@ -1860,11 +1866,23 @@ void CtSaving::SaveContainer::open(const CtSaving::Parameters &pars)
     {
 
       std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix;
-      if(pars.overwritePolicy != MultiSet)
+      long index = pars.nextNumber;
+      if(pars.overwritePolicy == MultiSet || pars.overwritePolicy == Append)
 	{
 	  char idx[64];
-	  snprintf(idx,sizeof(idx),pars.indexFormat.c_str(),pars.nextNumber);
+	  if (index < 0) index = 0;
+	  snprintf(idx,sizeof(idx),pars.indexFormat.c_str(),index);
 	  aFileName += idx;
+	} 
+      else
+	{
+	  char idx[64];
+	  //snprintf(idx, sizeof(idx), pars.indexFormat.c_str(), ++index);
+	  snprintf(idx, sizeof(idx), pars.indexFormat.c_str(), index);
+	  aFileName += idx;
+	  //Parameters& params = m_stream.getParameters(Acq);
+	  //params.nextNumber = index;
+	  //m_stream.setParameters(params);
 	}
       aFileName += pars.suffix;
       DEB_TRACE() << DEB_VAR1(aFileName);
@@ -1941,7 +1959,7 @@ void CtSaving::SaveContainer::close()
   m_file_opened = false;
   m_written_frames = 0;
   Parameters& pars = m_stream.getParameters(Acq);
-  if(pars.overwritePolicy != MultiSet)
+  if(pars.overwritePolicy != MultiSet && pars.overwritePolicy != Append)
     ++pars.nextNumber;
 }
 
