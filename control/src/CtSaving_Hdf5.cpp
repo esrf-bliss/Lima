@@ -257,106 +257,114 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 						delete group;
 						THROW_CTL_ERROR(Error) << "In file " << filename << " the entry  " << strname 
 								<< " already exists";	
-			       } catch (...) {
-				      DEB_TRACE() << "Ok the new entry " << strname << " is free in file " << filename;
-			       }
-			}
-			// fine, this entry does not exist
-			m_entry_name = strname;
-			// Create the new entry  for the dataset
-			m_entry = new Group(m_file->createGroup(m_entry_name));	
-			string nxentry = "NXentry";
-			write_h5_attribute(*m_entry, "NX_class", nxentry);
-			string title = "Lima 2D detector acquisition";
-			write_h5_dataset(*m_entry, "title", title);
+					} catch (...) {
+					      DEB_TRACE() << "Ok the new entry " << strname << " is free in file " << filename;
+					}
+				}
+				// fine, this entry does not exist
+				m_entry_name = strname;
+				// Create the new entry  for the dataset
+				m_entry = new Group(m_file->createGroup(m_entry_name));	
+				string nxentry = "NXentry";
+				write_h5_attribute(*m_entry, "NX_class", nxentry);
+				string title = "Lima 2D detector acquisition";
+				write_h5_dataset(*m_entry, "title", title);
+				
+				Group instrument = Group(m_entry->createGroup("instrument"));
+				string nxinstrument = "NXinstrument";
+				write_h5_attribute(instrument, "NX_class", nxinstrument);
+				
+				//m_instrument_detector = new Group(instrument.createGroup(m_ct_parameters.det_name));
+				m_instrument_detector = new Group(instrument.createGroup("detector"));
+				
+				Group measurement = Group(m_entry->createGroup("measurement"));
+				string nxcollection = "NXcollection";
+				write_h5_attribute(measurement, "NX_class", nxcollection);
+				
+				//m_measurement_detector = new Group(measurement.createGroup(m_ct_parameters.det_name));
+				m_measurement_detector = new Group(measurement.createGroup("detector"));
+				//m_measurement_detector_info = new Group(m_measurement_detector->createGroup("info"));
+				////string grppath = m_entry_name + "/instrument/" + m_ct_parameters.det_name;
+				//string grppath = m_entry_name + "/instrument/detector";
+				// link between /entry_xxxx/instrument/<det-name> and /entry_xxxx/measurement/<det-name>/info/detector
+				//m_measurement_detector_info->link(H5L_TYPE_HARD, grppath, "detector");
 			
-			Group instrument = Group(m_entry->createGroup("instrument"));
-			string nxinstrument = "NXinstrument";
-			write_h5_attribute(instrument, "NX_class", nxinstrument);
+				m_measurement_detector_parameters = new Group(m_measurement_detector->createGroup("parameters"));
+
+				// write the control parameters (detinfo, acq and image)
 			
-			m_instrument_detector = new Group(instrument.createGroup(m_ct_parameters.det_name));
-			
-			Group measurement = Group(m_entry->createGroup("measurement"));
-			string nxcollection = "NXcollection";
-			write_h5_attribute(measurement, "NX_class", nxcollection);
-			
-			m_measurement_detector = new Group(measurement.createGroup(m_ct_parameters.det_name));
-			m_measurement_detector_info = new Group(m_measurement_detector->createGroup("info"));
-			string grppath = m_entry_name + "/instrument/" + m_ct_parameters.det_name;
-			// link between /entry_xxxx/instrument/<det-name> and /entry_xxxx/measurement/<det-name>/info/detector
-			m_measurement_detector_info->link(H5L_TYPE_HARD, grppath, "detector");
-			
-			// write the control parameters (detinfo, acq and image)
-			
-			//Det Info
-			Group det_info = Group(m_instrument_detector->createGroup("detector_information"));
-			write_h5_dataset(det_info,"type",m_ct_parameters.det_type);
-			write_h5_dataset(det_info,"model",m_ct_parameters.det_model);
-			Group pixelsize = Group(det_info.createGroup("pixel_size"));
-			write_h5_dataset(pixelsize,"xsize",m_ct_parameters.pixel_size[0]);
-			write_h5_dataset(pixelsize,"ysize",m_ct_parameters.pixel_size[1]);
-			Group imagesize = Group(det_info.createGroup("max_image_size"));
-			int width = m_ct_parameters.max_image_size.getWidth();
-			int height = m_ct_parameters.max_image_size.getHeight();
-			write_h5_dataset(imagesize,"xsize",width);
-			write_h5_dataset(imagesize,"ysize",height);
-			string im_type=lima::convert_2_string(m_ct_parameters.curr_image_type);
-			write_h5_dataset(det_info,"image_lima_type",im_type);
-			// Acquisition
-			Group acq = Group(m_instrument_detector->createGroup("acquisition"));
-			string acq_mode = lima::convert_2_string(m_ct_parameters.acq_mode);
-			write_h5_dataset(acq,"mode",acq_mode);
-			write_h5_dataset(acq,"exposure_time",m_ct_parameters.acq_expo_time);
-			write_h5_dataset(acq,"latency_time",m_ct_parameters.acq_latency_time);
-			write_h5_dataset(acq,"nb_frames",m_ct_parameters.acq_nbframes);
-			string trig_mode = lima::convert_2_string(m_ct_parameters.acq_trigger_mode);
-			write_h5_dataset(acq,"trigger_mode",trig_mode);
-			if (m_ct_parameters.acq_mode == Accumulation) {
-			  Group acc = Group(acq.createGroup("accumulation"));
-			  string time_mode = lima::convert_2_string(m_ct_parameters.acc_time_mode);
-			  write_h5_dataset(acc,"time_mode",time_mode);
-			  write_h5_dataset(acc,"max_exposure_time",m_ct_parameters.acc_max_expotime);
-			  write_h5_dataset(acc,"exposure_time",m_ct_parameters.acc_expotime);
-			  write_h5_dataset(acc,"live_time",m_ct_parameters.acc_livetime);
-			  write_h5_dataset(acc,"dead_time",m_ct_parameters.acc_deadtime);
-			}
-			if (m_ct_parameters.acq_mode == Concatenation) {
-			  Group concat = Group(acq.createGroup("concatenation"));
-			  write_h5_dataset(concat,"nb_frames",m_ct_parameters.concat_nbframes);				  
-			}
-			// Image
-			Group image = Group(m_instrument_detector->createGroup("image_operation"));
-			Group dim = Group(image.createGroup("dimension"));
-			int xsize = m_ct_parameters.image_dim.getSize().getWidth();
-			int ysize = m_ct_parameters.image_dim.getSize().getHeight();
-			write_h5_dataset(dim,"xsize",xsize);				  
-			write_h5_dataset(dim,"ysize",ysize);				  
-			Group bin = Group(image.createGroup("binning"));
-			int xbin = m_ct_parameters.image_bin.getX();
-			int ybin = m_ct_parameters.image_bin.getY();
-			write_h5_dataset(bin,"x",xbin);				  
-			write_h5_dataset(bin,"y",ybin);				  				
-			Group roi = Group(image.createGroup("region_of_interest"));
-			Point roip = m_ct_parameters.image_roi.getTopLeft();
-			Size roiz = m_ct_parameters.image_roi.getSize();
-			xsize = roiz.getWidth();
-			ysize = roiz.getHeight();
-			write_h5_dataset(roi,"xstart",roip.x);
-			write_h5_dataset(roi,"ystart",roip.y);
-			write_h5_dataset(roi,"xsize",xsize);
-			write_h5_dataset(roi,"ysize",ysize);			  			      				
-			Group flipping = Group(image.createGroup("flipping"));
-			write_h5_dataset(flipping,"x",m_ct_parameters.image_flip.x);
-			write_h5_dataset(flipping,"y",m_ct_parameters.image_flip.y);			  			      		      
-			string rot = lima::convert_2_string(m_ct_parameters.image_rotation);
-			write_h5_dataset(image, "rotation", rot);					
+				//Det Info
+				Group det_info = Group(m_instrument_detector->createGroup("detector_information"));			
+				write_h5_dataset(det_info,"name",m_ct_parameters.det_name);
+				write_h5_dataset(det_info,"type",m_ct_parameters.det_type);
+				write_h5_dataset(det_info,"model",m_ct_parameters.det_model);
+				Group pixelsize = Group(det_info.createGroup("pixel_size"));
+				write_h5_dataset(pixelsize,"xsize",m_ct_parameters.pixel_size[0]);
+				write_h5_dataset(pixelsize,"ysize",m_ct_parameters.pixel_size[1]);
+				Group imagesize = Group(det_info.createGroup("max_image_size"));
+				int width = m_ct_parameters.max_image_size.getWidth();
+				int height = m_ct_parameters.max_image_size.getHeight();
+				write_h5_dataset(imagesize,"xsize",width);
+				write_h5_dataset(imagesize,"ysize",height);
+				string im_type=lima::convert_2_string(m_ct_parameters.curr_image_type);
+				write_h5_dataset(det_info,"image_lima_type",im_type);
+				// Acquisition
+				Group acq = Group(m_instrument_detector->createGroup("acquisition"));
+				string acq_mode = lima::convert_2_string(m_ct_parameters.acq_mode);
+				write_h5_dataset(acq,"mode",acq_mode);
+				write_h5_dataset(acq,"exposure_time",m_ct_parameters.acq_expo_time);
+				write_h5_dataset(acq,"latency_time",m_ct_parameters.acq_latency_time);
+				write_h5_dataset(acq,"nb_frames",m_ct_parameters.acq_nbframes);
+				string trig_mode = lima::convert_2_string(m_ct_parameters.acq_trigger_mode);
+				write_h5_dataset(acq,"trigger_mode",trig_mode);
+				if (m_ct_parameters.acq_mode == Accumulation) {
+				  Group acc = Group(acq.createGroup("accumulation"));
+				  string time_mode = lima::convert_2_string(m_ct_parameters.acc_time_mode);
+				  write_h5_dataset(acc,"time_mode",time_mode);
+				  write_h5_dataset(acc,"max_exposure_time",m_ct_parameters.acc_max_expotime);
+				  write_h5_dataset(acc,"exposure_time",m_ct_parameters.acc_expotime);
+				  write_h5_dataset(acc,"live_time",m_ct_parameters.acc_livetime);
+				  write_h5_dataset(acc,"dead_time",m_ct_parameters.acc_deadtime);
+				}
+				if (m_ct_parameters.acq_mode == Concatenation) {
+				  Group concat = Group(acq.createGroup("concatenation"));
+				  write_h5_dataset(concat,"nb_frames",m_ct_parameters.concat_nbframes);				  
+				}
+				// Image
+				Group image = Group(m_instrument_detector->createGroup("image_operation"));
+				Group dim = Group(image.createGroup("dimension"));
+				int xsize = m_ct_parameters.image_dim.getSize().getWidth();
+				int ysize = m_ct_parameters.image_dim.getSize().getHeight();
+				write_h5_dataset(dim,"xsize",xsize);				  
+				write_h5_dataset(dim,"ysize",ysize);				  
+				Group bin = Group(image.createGroup("binning"));
+				int xbin = m_ct_parameters.image_bin.getX();
+				int ybin = m_ct_parameters.image_bin.getY();
+				write_h5_dataset(bin,"x",xbin);				  
+				write_h5_dataset(bin,"y",ybin);				  				
+				Group roi = Group(image.createGroup("region_of_interest"));
+				Point roip = m_ct_parameters.image_roi.getTopLeft();
+				Size roiz = m_ct_parameters.image_roi.getSize();
+				xsize = roiz.getWidth();
+				ysize = roiz.getHeight();
+				write_h5_dataset(roi,"xstart",roip.x);
+				write_h5_dataset(roi,"ystart",roip.y);
+				write_h5_dataset(roi,"xsize",xsize);
+				write_h5_dataset(roi,"ysize",ysize);			  			      				
+				Group flipping = Group(image.createGroup("flipping"));
+				write_h5_dataset(flipping,"x",m_ct_parameters.image_flip.x);
+				write_h5_dataset(flipping,"y",m_ct_parameters.image_flip.y);			  			      	       
+				string rot = lima::convert_2_string(m_ct_parameters.image_rotation);
+				write_h5_dataset(image, "rotation", rot);					
 			} else {
-				m_entry = new Group(m_file->openGroup(strname));
+			        m_entry = new Group(m_file->openGroup(strname));
 				Group instrument = Group(m_entry->openGroup("instrument"));
 				Group measurement = Group(m_entry->openGroup("measurement"));
-				m_measurement_detector = new Group(measurement.openGroup(m_ct_parameters.det_name));
-				m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
-				m_measurement_detector_info = new Group(m_measurement_detector->openGroup("info"));
+				//m_measurement_detector = new Group(measurement.openGroup(m_ct_parameters.det_name));
+				m_measurement_detector = new Group(measurement.openGroup("detector"));
+				//m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
+				m_instrument_detector = new Group(instrument.openGroup("detector"));
+				//m_measurement_detector_info = new Group(m_measurement_detector->openGroup("info"));
 			}
 
 			m_already_opened = true;
@@ -375,7 +383,8 @@ void SaveContainerHdf5::_close() {
 	if (!m_in_append || m_is_multiset) {
 		// Create hard link to the Data group.
 		string img_path = m_entry_name;
-		img_path += "/measurement/" + m_ct_parameters.det_name+"/data";
+		//img_path += "/measurement/" + m_ct_parameters.det_name+"/data";
+		img_path += "/measurement/detector/data";
 		m_instrument_detector->link(H5L_TYPE_HARD, img_path, "data");
 
 		// ISO 8601 Time format
@@ -392,6 +401,7 @@ void SaveContainerHdf5::_close() {
 	delete m_image_dataset;
 	delete m_measurement_detector;
 	delete m_measurement_detector_info;
+	delete m_measurement_detector_parameters;
 	delete m_instrument_detector;
 	delete m_entry;
 	delete m_file;
@@ -452,14 +462,14 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 				strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
 				string stime = string(buf);
 				write_h5_dataset(*m_entry,"start_time",stime);
-				// write header only once into "info" group 
+				// write header only once into "parameters" group 
 				// but we should write some keys into measurement, like motor_pos counter_pos (spec)???
 				if (!aHeader.empty()) {
 					for (map<string, string>::const_iterator it = aHeader.begin(); it != aHeader.end(); it++) {
 
 						string key = it->first;
 						string value = it->second;
-						write_h5_dataset(*m_measurement_detector_info,key.c_str(),value);
+						write_h5_dataset(*m_measurement_detector_parameters,key.c_str(),value);
 					}
 				}
 

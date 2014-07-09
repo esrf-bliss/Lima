@@ -96,7 +96,7 @@ private:
 	DataSpace *m_image_dataspace;
 	DataSet *m_image_dataset;
 	H5File *m_file;
-	Group *m_entry, *m_measurement_detector, *m_instrument_detector, *m_measurement_detector_info;
+	Group *m_entry, *m_measurement_detector, *m_instrument_detector, *m_measurement_detector_info, *m_measurement_detector_parameters;
 	int m_entry_index;
 	string m_entry_name;
 };
