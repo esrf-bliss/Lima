@@ -150,6 +150,7 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	HwDetInfoCtrlObj *det_info;
 	m_hw_int->getHwCtrlObj(det_info);
 	det_info->getUserDetectorName(m_ct_parameters.det_name);
+	det_info->getInstrumentName(m_ct_parameters.instrument_name);
 	det_info->getDetectorModel(m_ct_parameters.det_model);
 	det_info->getDetectorType(m_ct_parameters.det_type);
 	det_info->getPixelSize(m_ct_parameters.pixel_size[0], m_ct_parameters.pixel_size[1]);
@@ -236,7 +237,7 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 					m_entry_index = 0;
 				} else {
 				        THROW_CTL_ERROR(Error) << "File " << filename 
-							  << "is not an HDF5 file, bad or corrupted format !" ;
+							  <<  "is not an HDF5 file, bad or corrupted format !" ;
 				}
 			} else {
 			        // fail if file already exists
@@ -269,25 +270,22 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 				write_h5_attribute(*m_entry, "NX_class", nxentry);
 				string title = "Lima 2D detector acquisition";
 				write_h5_dataset(*m_entry, "title", title);
-				
-				Group instrument = Group(m_entry->createGroup("instrument"));
+
+				// could be the beamline/instrument name instead
+				Group instrument = Group(m_entry->createGroup(m_ct_parameters.instrument_name));
 				string nxinstrument = "NXinstrument";
 				write_h5_attribute(instrument, "NX_class", nxinstrument);
 				
-				//m_instrument_detector = new Group(instrument.createGroup(m_ct_parameters.det_name));
-				m_instrument_detector = new Group(instrument.createGroup("detector"));
+				m_instrument_detector = new Group(instrument.createGroup(m_ct_parameters.det_name));
+				string nxdetector = "NXdetector";
+				write_h5_attribute(*m_instrument_detector, "NX_class", nxdetector);
 				
 				Group measurement = Group(m_entry->createGroup("measurement"));
 				string nxcollection = "NXcollection";
 				write_h5_attribute(measurement, "NX_class", nxcollection);
 				
-				//m_measurement_detector = new Group(measurement.createGroup(m_ct_parameters.det_name));
-				m_measurement_detector = new Group(measurement.createGroup("detector"));
-				//m_measurement_detector_info = new Group(m_measurement_detector->createGroup("info"));
-				////string grppath = m_entry_name + "/instrument/" + m_ct_parameters.det_name;
-				//string grppath = m_entry_name + "/instrument/detector";
-				// link between /entry_xxxx/instrument/<det-name> and /entry_xxxx/measurement/<det-name>/info/detector
-				//m_measurement_detector_info->link(H5L_TYPE_HARD, grppath, "detector");
+				m_measurement_detector = new Group(measurement.createGroup(m_ct_parameters.det_name));
+				write_h5_attribute(*m_measurement_detector, "NX_class", nxdetector);
 			
 				m_measurement_detector_parameters = new Group(m_measurement_detector->createGroup("parameters"));
 
@@ -358,13 +356,10 @@ bool SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmo
 				write_h5_dataset(image, "rotation", rot);					
 			} else {
 			        m_entry = new Group(m_file->openGroup(strname));
-				Group instrument = Group(m_entry->openGroup("instrument"));
+				Group instrument = Group(m_entry->openGroup(m_ct_parameters.instrument_name));
 				Group measurement = Group(m_entry->openGroup("measurement"));
-				//m_measurement_detector = new Group(measurement.openGroup(m_ct_parameters.det_name));
-				m_measurement_detector = new Group(measurement.openGroup("detector"));
-				//m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
-				m_instrument_detector = new Group(instrument.openGroup("detector"));
-				//m_measurement_detector_info = new Group(m_measurement_detector->openGroup("info"));
+				m_measurement_detector = new Group(measurement.openGroup(m_ct_parameters.det_name));
+				m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
 			}
 
 			m_already_opened = true;
@@ -383,8 +378,7 @@ void SaveContainerHdf5::_close() {
 	if (!m_in_append || m_is_multiset) {
 		// Create hard link to the Data group.
 		string img_path = m_entry_name;
-		//img_path += "/measurement/" + m_ct_parameters.det_name+"/data";
-		img_path += "/measurement/detector/data";
+		img_path += "/measurement/" + m_ct_parameters.det_name+"/data";
 		m_instrument_detector->link(H5L_TYPE_HARD, img_path, "data");
 
 		// ISO 8601 Time format
@@ -400,7 +394,6 @@ void SaveContainerHdf5::_close() {
 	delete m_image_dataspace;
 	delete m_image_dataset;
 	delete m_measurement_detector;
-	delete m_measurement_detector_info;
 	delete m_measurement_detector_parameters;
 	delete m_instrument_detector;
 	delete m_entry;

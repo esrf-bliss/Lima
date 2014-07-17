@@ -57,6 +57,7 @@ private:
 
 	struct Parameters{
 	  string det_name;
+	  string instrument_name;
 	  string det_model;
 	  string det_type;
 	  double pixel_size[2];
