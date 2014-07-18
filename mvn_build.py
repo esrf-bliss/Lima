@@ -23,7 +23,7 @@ if "linux" in sys.platform:
 	camera_list = ["adsc", "aviex", "basler","marccd","pilatus","prosilica","simulator","xpad"]
 if "win32" in sys.platform:
 	platform = "win32"
-	camera_list = ["andor", "pco","perkinelmer","roperscientific","simulator"]
+	camera_list = ["andor", "hamamatsu", "pco","perkinelmer","roperscientific","simulator"]
 print "platform : ", platform
 
 #------------------------------------------------------------------------------
