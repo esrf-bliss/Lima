@@ -62,7 +62,7 @@
 			<dependency>
 				<groupId>fr.soleil.lib</groupId>
 				<artifactId>YAT-${aol}-static-${mode}</artifactId>
-				<version>1.7.18</version> <!--version>1.7.18-vc9</version-->
+				<version>1.8.8-vc9</version>
 			</dependency>
 			<dependency>
 				<groupId>fr.soleil.lib</groupId>
