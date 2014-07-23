@@ -127,11 +127,11 @@ void SaveContainerNxs::_writeFile(Data &aData,
             m_writer = new nxcpp::DataStreamer(m_pars.prefix, (std::size_t)m_pars.nbframes, (std::size_t)m_pars.framesPerFile);     
 						
 			m_writer->Initialize(m_pars.directory, "");
-
+			m_writer->SetWriteMode(nxcpp::NexusFileWriter::IMMEDIATE);
 			
 			//Add sensor 2D (image) // height,width
 			m_writer->AddDataItem2D(m_pars.prefix, aData.dimensions[1],aData.dimensions[0]);
-
+			//m_writer->SetDataItemMemoryMode(m_pars.prefix,nxcpp::DataStreamer::MemoryMode::NO_COPY);
 			//Set sensors node's name
 			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
 		  }
@@ -169,10 +169,10 @@ void SaveContainerNxs::_writeFile(Data &aData,
 		  DEB_TRACE()<<"fInstantMbPerSec = "		<<nxsStats.fInstantMbPerSec;
 		  DEB_TRACE()<<"fPeakMbPerSec = "			<<nxsStats.fPeakMbPerSec;
 		  DEB_TRACE()<<"fAverageMbPerSec = "		<<nxsStats.fAverageMbPerSec;
-
+		  
 		  //destroy Nexus object : to do once for each new sequence at the last image
 		  if( (aData.frameNumber+1) == (m_pars.nbframes))
-		  {
+		  {	  
 			//Finalize
 			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Finalize()";
 			m_writer->Finalize();
@@ -182,6 +182,11 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			delete m_writer;
 			m_writer = 0;
 		  }
+	  }
+	  catch (std::bad_alloc& ex)
+	  {	  
+		  DEB_TRACE() << "Bad alloc exception: " << ex.what();
+		  THROW_CTL_ERROR(Error) << "Bad alloc exception: " << ex.what();
 	  }
 	  catch(yat::Exception& ex)
 	  {
@@ -202,16 +207,4 @@ void SaveContainerNxs::_writeFile(Data &aData,
 	  }
 }
 
-//--------------------------------------------------------------------------------------------------------------------
-
-
-//--------------------------------------------------------------------------------------------------------------------
-//- reset the file counter index to 0
-//--------------------------------------------------------------------------------------------------------------------
-void
-SaveContainerNxs::_clear() {
-  DEB_MEMBER_FUNCT();
-  DEB_TRACE() << "In SaveContainerNxs::_clear, resetting the buffer index CLEAR .";
-  nxcpp::DataStreamer::ResetBufferIndex();
-}
 //--------------------------------------------------------------------------------------------------------------------
