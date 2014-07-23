@@ -108,6 +108,7 @@ public:
 	void unregisterValidRangesCallback(ValidRangesCallback* cb);
         inline void validRangesChanged(const ValidRangesType &ranges)
         {
+	  DEB_MEMBER_FUNCT();
 	  if(m_valid_ranges_cb)
 	    m_valid_ranges_cb->validRangesChanged(ranges);
 	}
