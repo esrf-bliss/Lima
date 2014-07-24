@@ -88,7 +88,7 @@ using namespace lima;
 %End
     };
 
-    CtControl(HwInterface *hw);
+    CtControl(HwInterface *hw /KeepReference/);
     ~CtControl();
 
     void prepareAcq();

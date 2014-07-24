@@ -102,7 +102,7 @@ class Interface : HwInterface
 %End
 
  public:
-	Interface(Simulator::Camera& simu);
+	Interface(Simulator::Camera& simu /KeepReference/);
 	virtual ~Interface();
 
 //	virtual const CapList& getCapList() const;
