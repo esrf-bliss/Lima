@@ -519,21 +519,132 @@ void CtControl::getImageStatus(ImageStatus& status) const
   DEB_RETURN() << DEB_VAR1(status);
 }
 
-void CtControl::ReadImage(Data &aReturnData,long frameNumber, 
+void CtControl::ReadImage(Data &aReturnData,long frameNumber,
 			  long readBlockLen)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
+  readBlock(aReturnData, frameNumber, readBlockLen, false);
+}
+
+void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber,
+			      long readBlockLen)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
+  readBlock(aReturnData, frameNumber, readBlockLen, true);
+}
+
+void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
+			  bool baseImage)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR3(frameNumber, readBlockLen, baseImage);
+
+  FrameDim imgDim;
+  m_ct_image->getImageDim(imgDim);
+
+  int concatNbFrames = 1;
 
   AutoMutex aLock(m_cond.mutex());
-  if(m_op_ext_link_task_active)
-    {
-      if (readBlockLen != 1)
-	throw LIMA_CTL_EXC(NotSupported, "Cannot read more than one frame "
-			   "at a time with External Operations");
-      if(frameNumber < 0)
-	frameNumber = m_status.ImageCounters.LastImageReady;
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  long lastFrame;
+  if (m_op_ext_link_task_active && !baseImage) {
+    lastFrame = imgStatus.LastImageReady;
+  } else {
+    CtSaving::ManagedMode savingManagedMode;
+    m_ct_saving->getManagedMode(savingManagedMode);
+    if ((savingManagedMode == CtSaving::Hardware) && !baseImage) {
+      lastFrame = imgStatus.LastImageSaved;
+    } else {
+      lastFrame = imgStatus.LastBaseImageReady;
 
+      AcqMode acqMode;
+      m_ct_acq->getAcqMode(acqMode);
+      //Authorize to read the current frame in Accumulation Mode
+      int acq_nb_frames;
+      m_ct_acq->getAcqNbFrames(acq_nb_frames);
+      if (acqMode == Accumulation && lastFrame < acq_nb_frames - 1)
+	++lastFrame;
+
+      // Only read multiple frames in one block if not software ROI
+      if (acqMode == Concatenation) {
+	FrameDim hwImgDim;
+	m_ct_image->getHwImageDim(hwImgDim);
+	if (hwImgDim == imgDim)
+	  m_ct_acq->getConcatNbFrames(concatNbFrames);
+      }
+    }
+  }
+
+  if (frameNumber < 0) {
+    frameNumber = lastFrame - (readBlockLen - 1);
+    if (frameNumber < 0)
+      THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
+  } else if (frameNumber + readBlockLen - 1 > lastFrame)
+    THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
+  aLock.unlock();
+
+  bool one_block = (readBlockLen == 1);
+  if (concatNbFrames > 1) {
+    long firstBuffer = frameNumber / concatNbFrames;
+    long lastBuffer = (frameNumber + readBlockLen - 1) / concatNbFrames;
+    one_block = (firstBuffer == lastBuffer);
+  }
+
+  char *p = NULL;
+  long framesRead = 0; 
+  while (framesRead < readBlockLen) {
+    int nbFrames = 1;
+    if ((readBlockLen > 1) && (concatNbFrames > 1)) {
+      long lastFrame = frameNumber + (readBlockLen - framesRead);
+      long nextBuffer = frameNumber / concatNbFrames + 1;
+      if (lastFrame > nextBuffer * concatNbFrames)
+	lastFrame = nextBuffer * concatNbFrames;
+      nbFrames = lastFrame - frameNumber;
+    }
+
+    Data auxData;
+    readOneImageBuffer(auxData, frameNumber, nbFrames, baseImage);
+
+    int imageSize = imgDim.getMemSize();
+    if (imageSize * nbFrames > auxData.size())
+      THROW_CTL_ERROR(Error) << "Roi dim > HwBuffer dim";
+
+    if (one_block) {
+      aReturnData = auxData;
+    } else {
+      if (p == NULL) {
+	aReturnData = auxData;
+	Buffer *buffer = new Buffer(imageSize * readBlockLen);
+	aReturnData.setBuffer(buffer);
+	if (readBlockLen > 1) {
+	  if (aReturnData.dimensions.size() == 2)
+	    aReturnData.dimensions.push_back(readBlockLen);
+	  else
+	    aReturnData.dimensions[2] = readBlockLen;
+	}
+	p = (char *) aReturnData.data();
+      }
+      memcpy(p, auxData.data(), imageSize * nbFrames);
+      p += imageSize * nbFrames;
+    }
+
+    framesRead += nbFrames;
+  }
+
+  DEB_RETURN() << DEB_VAR1(aReturnData);
+}
+
+void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber, 
+				   long readBlockLen, bool baseImage)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR3(frameNumber, readBlockLen, baseImage);
+
+  AutoMutex aLock(m_cond.mutex());
+  if(m_op_ext_link_task_active && !baseImage)
+    {
       std::map<int,Data>::iterator i = m_images_buffer.find(frameNumber);
       if(i != m_images_buffer.end())
 	aReturnData = i->second;
@@ -550,59 +661,16 @@ void CtControl::ReadImage(Data &aReturnData,long frameNumber,
       aLock.unlock();
       CtSaving::ManagedMode savingManagedMode;
       m_ct_saving->getManagedMode(savingManagedMode);
-      if(savingManagedMode == CtSaving::Hardware)
-	{
-	  if (readBlockLen != 1)
-	    THROW_CTL_ERROR(NotSupported) << "Cannot read more than one frame " 
-					  << "at a time with Hardware Saving";
-
-	  m_ct_saving->_ReadImage(aReturnData,frameNumber);
-	}
-      else
-	ReadBaseImage(aReturnData,frameNumber,readBlockLen);
+      if((savingManagedMode == CtSaving::Hardware) && !baseImage) {
+	m_ct_saving->_ReadImage(aReturnData,frameNumber);
+      } else {
+	m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
+	FrameDim imgDim;
+	m_ct_image->getImageDim(imgDim);
+	aReturnData.dimensions[0] = imgDim.getSize().getWidth();
+	aReturnData.dimensions[1] = imgDim.getSize().getHeight();
+      }
     }
-
-  DEB_RETURN() << DEB_VAR1(aReturnData);
-}
-
-void CtControl::ReadBaseImage(Data &aReturnData,long frameNumber, 
-			      long readBlockLen)
-{
-  DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(frameNumber, readBlockLen);
-
-  AcqMode acqMode;
-  m_ct_acq->getAcqMode(acqMode);
-  int acq_nb_frames;
-  m_ct_acq->getAcqNbFrames(acq_nb_frames);
-
-  AutoMutex aLock(m_cond.mutex());
-  ImageStatus &imgStatus = m_status.ImageCounters;
-  long lastFrame = imgStatus.LastBaseImageReady;
-
-  //Authorize to read the current frame in Accumulation Mode
-  if(acqMode == Accumulation && lastFrame < acq_nb_frames - 1)
-    ++lastFrame;
-
-  if (frameNumber < 0) {
-    frameNumber = lastFrame - (readBlockLen - 1);
-    if (frameNumber < 0)
-      THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
-  } else if (frameNumber + readBlockLen - 1 > lastFrame)
-    THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
-  aLock.unlock();
-  m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
-  
-  FrameDim img_dim;
-  m_ct_image->getImageDim(img_dim);
-  int roiWidth = img_dim.getSize().getWidth();
-  int roiHeight = img_dim.getSize().getHeight() * readBlockLen;
-  if((roiWidth * roiHeight) >
-     (aReturnData.dimensions[0] * aReturnData.dimensions[1]))
-    THROW_CTL_ERROR(Error) << "Roi dim > HwBuffer dim";
-
-  aReturnData.dimensions[0] = roiWidth;
-  aReturnData.dimensions[1] = roiHeight;
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
 }

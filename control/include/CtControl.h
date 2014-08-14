@@ -272,6 +272,11 @@ namespace lima
 
     inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();
+
+    void readBlock(Data&, long frameNumber, long readBlockLen,
+		   bool baseImage);
+    void readOneImageBuffer(Data&, long frameNumber, long readBlockLen,
+			    bool baseImage);
   };
 
   inline std::ostream& operator<<(std::ostream &os,
