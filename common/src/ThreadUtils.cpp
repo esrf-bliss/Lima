@@ -241,9 +241,25 @@ void Thread::start()
 	m_started = true;
 }
 
+bool Thread::waitOn(Cond& cond, double timeout)
+{
+	bool ret;
+	pthread_cleanup_push(staticWaitCleanup, &cond);
+	// assume no exception in wait: push/pop managed with exceptions
+	ret = cond.wait(timeout);
+	pthread_cleanup_pop(0);
+	return ret;
+}
+
+void Thread::staticWaitCleanup(void *data)
+{
+	Cond *cond = (Cond *) data;
+	cond->release();
+}
+
 void Thread::join()
 {
-  pthread_join(m_thread,NULL);
+	pthread_join(m_thread,NULL);
 }
 
 void Thread::abort()
