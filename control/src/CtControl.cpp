@@ -743,7 +743,10 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
 
     int imageSize = imgDim.getMemSize();
     if (imageSize * nbFrames > auxData.size())
-      THROW_CTL_ERROR(Error) << "Roi dim > HwBuffer dim";
+      THROW_CTL_ERROR(Error) << "Roi dim (" << imgDim << ") * "
+			     << "nbFrames (" << nbFrames << ") > "
+			     << "HwBuffer dim (" << auxData.size() << "): "
+			     << DEB_VAR1(auxData);
 
     if (one_block) {
       aReturnData = auxData;
@@ -947,7 +950,7 @@ void CtControl::newBaseImageReady(Data &aData)
 
   m_ct_video->frameReady(aData);
 
-  if(m_op_ext_link_task_active && m_img_status_thread)
+  if(m_img_status_thread)
     m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
 
   _calcAcqStatus();
