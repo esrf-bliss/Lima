@@ -113,10 +113,12 @@ class LIMACORE_API Thread
 
  protected:
 	virtual void threadFunction() = 0;
+	virtual bool waitOn(Cond& cond, double timeout = -1);
 
 	pthread_attr_t	m_thread_attr;
  private:
 	static void *staticThreadFunction(void *data);
+	static void staticWaitCleanup(void *data);
 
 	pthread_t m_thread;
 	bool m_started;
