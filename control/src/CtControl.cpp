@@ -637,7 +637,7 @@ void CtControl::_calcAcqStatus()
 
       if (m_img_status_thread && (m_status.AcquisitionStatus != AcqRunning)) {
 	aLock.unlock();
-	m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1, 1);
+	m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1);
 	return;
       }
     }
@@ -863,7 +863,7 @@ void CtControl::resetStatus(bool only_acq_status)
   } else {
     m_status.reset();
     if (m_img_status_thread)
-      m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1, 1);
+      m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1);
   }
 }
 
