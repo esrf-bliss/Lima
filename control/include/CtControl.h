@@ -98,14 +98,23 @@ namespace lima
       DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatusCallback", 
 			"Control");
     public:
+      enum {
+	RateAsFastAsPossible,
+	RateAllFrames,
+      };
+
       ImageStatusCallback();
       virtual ~ImageStatusCallback();
+
+      void setRatePolicy(int rate_policy);
+      void getRatePolicy(int& rate_policy);
     protected:
       virtual void imageStatusChanged(const ImageStatus& img_status) = 0;
     private:
       friend class CtControl;
       void setImageStatusCallbackGen(CtControl *cb_gen);
       CtControl *m_cb_gen;
+      int m_rate_policy;
     };
 
     enum ErrorCode {NoError,

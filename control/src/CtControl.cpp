@@ -176,7 +176,7 @@ private:
   Cond& m_cond;
   ImageStatusCallback *m_cb;
   ImageStatus m_last_status;
-  std::list<ChangeEvent *> m_event_list; 
+  std::list<ChangeEvent *> m_event_list;
 };
 
 CtControl::ImageStatusThread::ImageStatusThread(Cond& cond, 
@@ -189,7 +189,7 @@ CtControl::ImageStatusThread::ImageStatusThread(Cond& cond,
   start();
 
   // wait thread is ready
-  waitOn(m_cond);
+  m_cond.wait();
 }
 
 CtControl::ImageStatusThread::~ImageStatusThread()
@@ -197,8 +197,12 @@ CtControl::ImageStatusThread::~ImageStatusThread()
   DEB_DESTRUCTOR();
   AutoMutex lock(m_cond.mutex());
 
+  // signal quit
+  m_event_list.push_front(NULL);
+  m_cond.broadcast();
+
   while (!m_event_list.empty())
-    waitOn(m_cond);
+    m_cond.wait();
 }
   
 void CtControl::ImageStatusThread::imageStatusChanged(const ImageStatus& status, 
@@ -212,6 +216,10 @@ void CtControl::ImageStatusThread::imageStatusChanged(const ImageStatus& status,
 
   AutoMutex lock(m_cond.mutex());
 
+  int cb_rate_policy;
+  m_cb->getRatePolicy(cb_rate_policy);
+  if (cb_rate_policy == ImageStatusCallback::RateAllFrames)
+    force = true;
   if ((status == m_last_status) || ((status < m_last_status) && !force)) {
     DEB_TRACE() << "Skipping";
     return;
@@ -239,7 +247,7 @@ void CtControl::ImageStatusThread::imageStatusChanged(const ImageStatus& status,
   m_cond.broadcast();
 
   while (wait && !finished)
-    waitOn(m_cond);
+    m_cond.wait();
 }
 
 void CtControl::ImageStatusThread::threadFunction()
@@ -253,11 +261,14 @@ void CtControl::ImageStatusThread::threadFunction()
 
   while (true) {
     while (m_event_list.empty())
-      waitOn(m_cond);
+      m_cond.wait();
 
     ChangeEvent *event = m_event_list.back();
     m_event_list.pop_back();
-    
+
+    if (!event)
+      break;
+
     lock.unlock();
     DEB_TRACE() << "Calling callback: " << DEB_VAR1(event->status);
     m_cb->imageStatusChanged(event->status);
@@ -270,6 +281,8 @@ void CtControl::ImageStatusThread::threadFunction()
 
     delete event;
   }
+
+  m_cond.broadcast();
 }
 
 
@@ -1163,7 +1176,7 @@ void CtControl::Status::reset()
 // class ImageStatus
 // ----------------------------------------------------------------------------
 CtControl::ImageStatusCallback::ImageStatusCallback()
-  : m_cb_gen(NULL)
+  : m_cb_gen(NULL), m_rate_policy(RateAsFastAsPossible)
 {
   DEB_CONSTRUCTOR();
 }
@@ -1180,6 +1193,22 @@ CtControl::ImageStatusCallback::setImageStatusCallbackGen(CtControl *cb_gen)
 {
   DEB_MEMBER_FUNCT();
   m_cb_gen = cb_gen;
+}
+
+void
+CtControl::ImageStatusCallback::setRatePolicy(int rate_policy)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(rate_policy);
+  m_rate_policy = rate_policy;
+}
+
+void
+CtControl::ImageStatusCallback::getRatePolicy(int& rate_policy)
+{
+  DEB_MEMBER_FUNCT();
+  rate_policy = m_rate_policy;
+  DEB_RETURN() << DEB_VAR1(rate_policy);
 }
 
 #ifdef WIN32

@@ -223,10 +223,8 @@ Thread::Thread()
 
 Thread::~Thread()
 {
-	if (m_started) {
-		abort();
-		pthread_join(m_thread, NULL);
-	}
+	if (m_started)
+		join();
 	pthread_attr_destroy(&m_thread_attr);
 }
 
@@ -235,40 +233,20 @@ void Thread::start()
 	if (m_started)
 		throw LIMA_COM_EXC(Error, "Thread already started");
 
+	m_finished = false;
 	if (pthread_create(&m_thread, &m_thread_attr, staticThreadFunction, this) != 0)
 		throw LIMA_HW_EXC(Error, "Error creating thread");
 
 	m_started = true;
 }
 
-bool Thread::waitOn(Cond& cond, double timeout)
-{
-	bool ret;
-	pthread_cleanup_push(staticWaitCleanup, &cond);
-	// assume no exception in wait: push/pop managed with exceptions
-	ret = cond.wait(timeout);
-	pthread_cleanup_pop(0);
-	return ret;
-}
-
-void Thread::staticWaitCleanup(void *data)
-{
-	Cond *cond = (Cond *) data;
-	cond->release();
-}
-
 void Thread::join()
 {
-	pthread_join(m_thread,NULL);
-}
-
-void Thread::abort()
-{
 	if (!m_started)
-		throw LIMA_COM_EXC(Error, "Thread has not been started");
+		throw LIMA_COM_EXC(Error, "Thread not started or joined");
 
-	if (!m_finished)
-		pthread_cancel(m_thread);
+	pthread_join(m_thread, NULL);
+	m_started = false;
 }
 
 bool Thread::hasStarted()

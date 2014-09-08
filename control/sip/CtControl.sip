@@ -55,8 +55,16 @@ using namespace lima;
     class ImageStatusCallback 
     {
     public:
+      enum {
+	RateAsFastAsPossible,
+	RateAllFrames,
+      };
+
       ImageStatusCallback();
       virtual ~ImageStatusCallback();
+
+      void setRatePolicy(int rate_policy);
+      void getRatePolicy(int& rate_policy);
     protected:
       virtual void imageStatusChanged(const CtControl::ImageStatus& status)=0;
     };
