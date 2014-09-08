@@ -216,7 +216,7 @@ void CtControl::ImageStatusThread::imageStatusChanged(const ImageStatus& status,
 
   AutoMutex lock(m_cond.mutex());
 
-  int cb_rate_policy;
+  ImageStatusCallback::RatePolicy cb_rate_policy;
   m_cb->getRatePolicy(cb_rate_policy);
   if (cb_rate_policy == ImageStatusCallback::RateAllFrames)
     force = true;
@@ -1196,7 +1196,7 @@ CtControl::ImageStatusCallback::setImageStatusCallbackGen(CtControl *cb_gen)
 }
 
 void
-CtControl::ImageStatusCallback::setRatePolicy(int rate_policy)
+CtControl::ImageStatusCallback::setRatePolicy(RatePolicy rate_policy)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(rate_policy);
@@ -1204,7 +1204,7 @@ CtControl::ImageStatusCallback::setRatePolicy(int rate_policy)
 }
 
 void
-CtControl::ImageStatusCallback::getRatePolicy(int& rate_policy)
+CtControl::ImageStatusCallback::getRatePolicy(RatePolicy& rate_policy)
 {
   DEB_MEMBER_FUNCT();
   rate_policy = m_rate_policy;
