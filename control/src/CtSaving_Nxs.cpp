@@ -136,24 +136,31 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
 		  }
 		  
-		  //write data in Nexys file
+		  //write data in Nexus file
 		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - PushData()";
 		  switch(m_pars.imageType)
 		  {
 		    case Bpp8:
-		    //push data into file
-		    m_writer->PushData( m_pars.prefix, (unsigned char*)(aData.data()));
-		    break;
+				//push data into file
+				m_writer->PushData( m_pars.prefix, (unsigned char*)(aData.data()));
+				break;
+			case Bpp16:
+				//push data into file
+				m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
+				break;
 		    case Bpp32:
-		    //push data into file
-		    m_writer->PushData( m_pars.prefix, (unsigned int*)(aData.data()));
-		    break;
+				//push data into file
+				m_writer->PushData( m_pars.prefix, (unsigned int*)(aData.data()));
+				break;
+			case Float:
+				//push data into file
+				m_writer->PushData( m_pars.prefix, (float*)(aData.data()));
+				break;
 		    default:  //UINT16 by default
-		    //push data into file
-		    m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
+				//push data into file
+				m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
 		    break;
-	    }
-
+		  }
 
           //- Display Nexus statistics
 		  nxcpp::DataStreamer::Statistics nxsStats;
