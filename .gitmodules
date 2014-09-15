@@ -118,3 +118,6 @@
 [submodule "camera/hamamatsu"]
 	path = camera/hamamatsu
 	url = git@github.com:soleil-ica/Lima-camera-hamamatsu.git
+[submodule "camera/uview"]
+	path = camera/uview
+	url = git@github.com:soleil-ica/Lima-camera-uview.git
