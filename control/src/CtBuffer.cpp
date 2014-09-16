@@ -242,6 +242,7 @@ void CtBuffer::setup(CtControl *ct)
 
   int max_nbuffers;
   m_hw_buffer->getMaxNbBuffers(max_nbuffers);
+  max_nbuffers *= m_pars.maxMemory / 100.;
   if (hwNbBuffer > max_nbuffers)
     hwNbBuffer = max_nbuffers;
   m_hw_buffer->setNbBuffers(hwNbBuffer);
@@ -337,7 +338,7 @@ void CtBuffer::Parameters::reset()
 
   mode= Linear;
   nbBuffers= 1;
-  maxMemory= 75;
+  maxMemory= 70;
 
   DEB_TRACE() << *this;
 }

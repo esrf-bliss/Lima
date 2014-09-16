@@ -82,18 +82,15 @@ void lima::GetPageSize(int& page_size)
 #endif
 }
 
-int lima::GetDefMaxNbBuffers(const FrameDim& frame_dim, double sys_mem_factor)
+int lima::GetDefMaxNbBuffers(const FrameDim& frame_dim)
 {
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
 
-	if (sys_mem_factor == 0)
-		sys_mem_factor = 0.7;
-
 	int tot_buffers;
 	GetSystemMem(frame_size, tot_buffers);
-	return int(tot_buffers * sys_mem_factor);
+	return int(tot_buffers);
 }
 	
 void lima::ClearBuffer(void *ptr, int nb_concat_frames, 

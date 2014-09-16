@@ -33,7 +33,7 @@ void LIMACORE_API GetSystemMem(int& mem_unit, int& system_mem);
 	
 void LIMACORE_API GetPageSize(int& page_size);
 
-int LIMACORE_API GetDefMaxNbBuffers(const FrameDim& frame_dim, double sys_mem_factor = 0);
+int LIMACORE_API GetDefMaxNbBuffers(const FrameDim& frame_dim);
 
 void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
 
