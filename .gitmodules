@@ -133,3 +133,6 @@
 [submodule "camera/xpad_v1"]
 	path = camera/xpad_v1
 	url = git@github.com:soleil-ica/Lima-camera-xpad.git
+[submodule "camera/eiger"]
+	path = camera/eiger
+	url = git@github.com:soleil-ica/Lima-camera-eiger.git
