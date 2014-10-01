@@ -8,19 +8,20 @@
 #
 # Author: FL / AN (Hacked from S. Poirier)
 
+from multiprocessing import Pool
 import os
 import sys
 import ConfigParser
 import shutil
 import string
 
-maven_install = "mvn clean install -DenableCheckRelease=false"
+maven_install = "mvn clean install -DenableCheckRelease=false -o"
 maven_clean =	"mvn clean"
 current_dir = os.getcwd()
 
 if "linux" in sys.platform: 
 	platform = "linux"
-	camera_list = ["aviex", "basler","marccd","pilatus","prosilica","simulator","xpad"]
+	camera_list = ["adsc", "aviex", "basler", "eiger", "marccd","pilatus","prosilica","simulator","xpad"]
 if "win32" in sys.platform:
 	platform = "win32"
 	camera_list = ["andor", "hamamatsu", "pco","perkinelmer","roperscientific","simulator"]
@@ -56,6 +57,21 @@ def copy_file_ext(from_path, to_path, file_ext):
 		shutil.copy(full_name, to_path)
 		print '\n' + file + ' copied in ' + to_path
 
+
+#------------------------------------------------------------------------------
+# Compilation
+#------------------------------------------------------------------------------
+def build_limadetector():
+  if "linux" in sys.platform: 
+    rc = os.system("mvn clean install --file pom-linux.xml -o")
+    if rc != 0:
+	  raise BuildError
+  if "win32" in sys.platform:
+    rc = os.system("mvn clean install --file pom-win.xml -o")
+    if rc != 0:
+	  raise BuildError  
+
+
 #------------------------------------------------------------------------------
 # Compilation
 #------------------------------------------------------------------------------
@@ -89,7 +105,7 @@ def clean_all():
 def build_device(target_path):
   print 'Build Device LimaDetector\n'
   set_project_dir('applications/tango/LimaDetector')
-  build()
+  build_limadetector()
   
   if target_path is not None:
 	dest_path = os.path.join(target_path, '')
@@ -151,8 +167,20 @@ def build_plugin(plugin,target_path):
 # build all linux cameras
 #------------------------------------------------------------------------------
 def build_all_camera(target_path):
-	for cam in camera_list:
-		build_plugin('camera/' + cam, target_path)
+    # tests 
+    multi_proc = True
+    # this take 2 min 45 sec on a quad core
+    if multi_proc == False:
+        for cam in camera_list:
+            build_plugin('camera/' + cam, target_path)
+    else:
+        # this take 1 min 26 sec on a quad core
+        pool = Pool()           
+        for cam in camera_list:
+            print "multi proc: Building:	" , cam, "\n" 
+            pool.apply_async(build_plugin,('camera/' + cam, target_path))
+        pool.close()
+        pool.join()
 	
 #------------------------------------------------------------------------------
 # Usage
