@@ -458,6 +458,7 @@ void CtVideo::getParameters(Parameters &pars) const
 void CtVideo::_setLive(bool liveFlag)
 {
   DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(liveFlag);
   AutoMutex aLock(m_cond.mutex());
 
   while(m_stopping_live) m_cond.wait();
@@ -491,17 +492,25 @@ void CtVideo::_setLive(bool liveFlag)
     }
   else
     {
+      DEB_TRACE() << "NO specific video controller do the defaults :";
       if(liveFlag)
 	{
 	  CtAcquisition *acqPt = m_ct.acquisition();
 	  acqPt->setAcqNbFrames(0);	// Live
+	  DEB_TRACE() << "Set the number of frame to collect to 0 at the CtAcquisition level";
 	  aLock.unlock();
+	  DEB_TRACE() << "Preparing the acquisition at the controller level";
 	  m_ct.prepareAcq();
 	  aLock.lock();
+	  DEB_TRACE() << "Starting the acquisition at teh controller level";
 	  m_ct.startAcq();
+	  DEB_TRACE() << "Done with the startAcq.";
 	}
-      else
+      else {
+	//aLock.unlock();
+	DEB_TRACE() << "Stopping the acquisition at the controller level";
 	m_ct.stopAcq();
+      }
     }
   m_pars.live = liveFlag;
   m_active_flag = m_active_flag || m_pars.live;

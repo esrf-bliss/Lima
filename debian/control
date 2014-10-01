@@ -1,0 +1,25 @@
+Source: lima
+Section: science
+Priority: extra
+Maintainer: Picca Frédéric-Emmanuel <picca@debian.org>
+Build-Depends: debhelper (>= 7.0.50~),
+               chrpath,
+	       python-numpy,
+	       python-sip-dev,
+	       nexuscpp,
+               libtiff4-dev
+Standards-Version: 3.9.1
+X-Python-Version: 2.6
+
+Package: lima
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: lima package
+ LimA detector package.
+
+Package: python-lima
+Architecture: any
+Section: python
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${python:Depends}
+Description: Lima python package
+ LimA python package

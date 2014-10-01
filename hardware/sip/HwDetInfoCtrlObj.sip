@@ -38,6 +38,10 @@ using namespace lima;
 	virtual void getPixelSize(double& x_size /Out/,double &y_size /Out/) = 0;
 	virtual void getDetectorType(std::string& det_type /Out/) = 0;
 	virtual void getDetectorModel(std::string& det_model /Out/) = 0;
+	virtual void setUserDetectorName(const std::string &username);
+	virtual void getUserDetectorName(std::string& username /Out/);
+	virtual void setInstrumentName(const std::string &name);
+	virtual void getInstrumentName(std::string& name /Out/);
 
 	virtual void registerMaxImageSizeCallback(
 					HwMaxImageSizeCallback& cb) = 0;

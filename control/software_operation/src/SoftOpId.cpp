@@ -843,3 +843,21 @@ void SoftOpPeakFinder::readPeaks(std::list<Tasks::PeakFinderResult>& result) con
     i->second.first->getHistory(result, from);
   }
 }
+
+void SoftOpPeakFinder::setComputingMode(ComputingMode aComputingMode)
+{
+  for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
+    i->second.second->setComputingMode(aComputingMode == SoftOpPeakFinder::MAXIMUM ?
+				       Tasks::PeakFinderTask::MAXIMUM : Tasks::PeakFinderTask::CM );
+  }
+}
+
+void SoftOpPeakFinder::getComputingMode(ComputingMode &aComputingMode) const
+{
+  Tasks::PeakFinderTask::ComputingMode aMode;
+  for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
+    i->second.second->getComputingMode(aMode); 
+  }
+  aComputingMode = aMode == Tasks::PeakFinderTask::MAXIMUM ?
+    SoftOpPeakFinder::MAXIMUM : SoftOpPeakFinder::CM;
+}

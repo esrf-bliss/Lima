@@ -52,7 +52,20 @@ class LIMACORE_API HwDetInfoCtrlObj
 					HwMaxImageSizeCallback& cb) = 0;
 	virtual void unregisterMaxImageSizeCallback(
 					HwMaxImageSizeCallback& cb) = 0;
+	virtual void setUserDetectorName(const std::string &username){m_username = username;};
+	virtual void getUserDetectorName(std::string &username) {
+	  if (!m_username.empty()) username = m_username;
+	  else getDetectorType(username);	  
+	};
+	virtual void setInstrumentName(const std::string& name){m_instrument_name = name;};
+	virtual void getInstrumentName(std::string& name){
+	  if (!m_instrument_name.empty()) name = m_instrument_name;
+	  else name = "instrument";
+	}
 
+private:
+	std::string m_username;
+	std::string m_instrument_name;
 };
 
 

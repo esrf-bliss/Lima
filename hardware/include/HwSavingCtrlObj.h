@@ -46,6 +46,7 @@ namespace lima
     static const char *EDF_FORMAT_STR;
     static const char *CBF_FORMAT_STR;
     static const char *TIFF_FORMAT_STR;
+    static const char *HDF5_FORMAT_STR;
 
     explicit HwSavingCtrlObj(int capabilities = 0);
     virtual ~HwSavingCtrlObj();

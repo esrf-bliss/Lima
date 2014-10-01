@@ -45,6 +45,7 @@ Global
 		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Debug|Win32.Build.0 = Debug|Win32
 		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Release_Win7_Sync|Win32.ActiveCfg = Release|Win32
+		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Release_Win7_Sync|Win32.Build.0 = Release|Win32
 		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Release|Win32.ActiveCfg = Release|Win32
 		{A0C36CE7-D908-4573-8B69-249EEEB7D2BE}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

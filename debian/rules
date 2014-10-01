@@ -1,0 +1,53 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+LIMAPC=debian/lima/usr/lib/pkgconfig/Lima.pc
+PY2VER = $(shell pyversions -d -v)
+
+%:
+	dh $@ --with python2 --dbg-package=lima-dbg
+
+override_dh_auto_configure:
+	dh_auto_configure
+##   COMPILE_CONFIG is MANDATORY : otherwise the python module is not working.
+##	sed -i -e 's,COMPILE_CONFIG=1,COMPILE_CONFIG=0,g' config.inc  # do not compile the config library
+	sed -i -e 's,COMPILE_ANDOR3=0,COMPILE_ANDOR3=1,g' config.inc
+	sed -i -e 's,COMPILE_NXS_SAVING=0,COMPILE_NXS_SAVING=1,g' config.inc
+	sed -i -e 's,COMPILE_TIFF_SAVING=0,COMPILE_TIFF_SAVING=1,g' config.inc
+	$(MAKE) config  # configure the sip part
+
+override_dh_auto_clean:
+	rm -rf install # The make clean is forgetting this directory behind full
+	rm -f config.inc
+	-$(MAKE) config.inc # used to generate the config.inc file
+	dh_auto_clean
+
+override_dh_auto_build:
+	dh_auto_build
+	$(MAKE) -C sip
+
+override_dh_install:
+	# deal with the libconfig installation this is a hack until we
+	# use the system one. It is not yet possible to use the system once
+	# the install target of Lima does not take into account that COMPIL_CONFIG=0
+	dh_install -p lima -X.a -X.la debian/tmp/`pwd`/install/Lima/* usr
+
+	dh_install -p lima -X.a -X.la install/Lima/lib/* usr/lib
+	dh_install -p lima install/Lima/include/* usr/include/Lima
+
+	# fix the Lima.pc file which is wrong
+	sed -i -e "s,^prefix=.*$$,prefix=/usr,g" $(LIMAPC)
+	sed -i -e "s,^libdir=.*$$,libdir=\$${prefix}/lib,g" $(LIMAPC)
+	sed -i -e "s,^includedir=.*$$,includedir=\$${prefix}/include/Lima,g" $(LIMAPC)
+
+	# installation of the python module only for the default version
+	dh_install -p python-lima install/Lima usr/lib/python$(PY2VER)/dist-packages/
+	rm -rf debian/python-lima/usr/lib/python$(PY2VER)/dist-packages/Lima/include
+	rm -rf debian/python-lima/usr/lib/python$(PY2VER)/dist-packages/Lima/lib
+	dh_numpy
+
+	# remove the rpath
+	find debian/lima -name *.so -exec chrpath -d {} \;
+	find debian/python-lima -name *.so -exec chrpath -d {} \;

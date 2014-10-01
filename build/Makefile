@@ -77,6 +77,13 @@ ifneq ($(COMPILE_TIFF_SAVING),0)
 CORE_LDLIBS += -ltiff
 endif
 
+ifneq ($(COMPILE_HDF5_SAVING),0)
+PROCESSOR_TYPE := $(shell uname -m)
+CORE_LDFLAGS += -L../third-party/hdf5/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/src/.libs
+CORE_LDFLAGS += -L../third-party/hdf5/c++/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/c++/src/.libs
+CORE_LDLIBS += -lhdf5_cpp -lhdf5
+endif
+
 ifneq ($(COMPILE_CONFIG),0)
 CORE_LDLIBS += -L../third-party/libconfig/lib/.libs -Wl,-rpath=$(shell pwd)/../third-party/libconfig/lib/.libs  -lconfig++
 endif
@@ -383,6 +390,30 @@ build_targets	+= $(call lib-full,$(andor-name),$(andor-ver))
 endif
 
 ############################
+# LIMA - ANDOR3
+############################
+
+ifneq ($(COMPILE_ANDOR3),0)
+
+ANDOR3_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
+ANDOR3_LDLIBS	:= $(LDLIBS) -latcore
+
+andor3-name	:= andor3
+andor3-objs	:= ../camera/andor3/src/Andor3.o
+andor3-ver	:= ../camera/andor3/VERSION
+andor3-flags	:= $(ANDOR3_LDFLAGS)
+andor3-deps	:= $(ANDOR3_LDLIBS)
+
+$(call lib-full,$(andor3-name),$(andor3-ver)): $(andor3-objs)
+	$(call compile-lib,$(andor3-name),$(andor3-ver),\
+			   $(andor3-flags),$(andor3-deps),$@,$+)
+	$(call create-links,$(andor3-name),$(andor3-ver))
+
+build_targets	+= $(call lib-full,$(andor3-name),$(andor3-ver))
+
+endif
+
+############################
 # LIMA - MARCCD
 ############################
 
@@ -543,7 +574,7 @@ endif
 ############################
 ifneq ($(COMPILE_POINTGREY),0)
 
-POINTGREY_LDFLAGS	:= $(LDFLAGS)
+POINTGREY_LDFLAGS	:= $(LDFLAGS) -L../camera/pointgrey/sdk/lib
 POINTGREY_LDLIBS	:= $(LDLIBS) -lflycapture
 
 pointgrey-name	:= pointgrey

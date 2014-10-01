@@ -20,6 +20,7 @@ ueye
 pco
 perkinelmer
 andor
+andor3
 xh
 xpad
 photonicscience
@@ -36,3 +37,5 @@ lima*.lib
 *.pyd
 .svn
 imxpad
+ultra
+xspress3

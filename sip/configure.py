@@ -46,6 +46,7 @@ modules = [('core',		['common', 'hardware', 'control']),
            ('mythen',           [os.path.join('camera','mythen')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
            ('andor',      	[os.path.join('camera','andor')]),
+           ('andor3',      	[os.path.join('camera','andor3')]),
            ('xh',             	[os.path.join('camera','xh')]),
            ('xpad',             [os.path.join('camera','xpad')]),
            ('marccd',           [os.path.join('camera','marccd')]),
@@ -177,6 +178,8 @@ def main():
             extraIncludes += ['/usr/local/include']
 	elif(modName == 'xpad'):
             extraIncludes += ['../../third-party/yat/include','/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib']
+	elif(modName == 'xspress3'):
+            extraIncludes += ['../../third-party/hdf5/include']
 	elif(modName == 'pco'):
             extraIncludes += ['R:/bliss/projects/LIMA/package/WIN32/PCO/sdkPco/include']
         elif(modName == 'marccd'):

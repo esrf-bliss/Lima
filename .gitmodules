@@ -121,3 +121,15 @@
 [submodule "camera/uview"]
 	path = camera/uview
 	url = git@github.com:soleil-ica/Lima-camera-uview.git
+[submodule "third-party/hdf5"]
+	path = third-party/hdf5
+	url = git://github.com/esrf-bliss/hdf5.git
+[submodule "applications/tango_xpix_v1"]
+	path = applications/tango_xpix_v1
+	url = git@github.com:soleil-ica/Lima-tango.git
+[submodule "camera/xpad_old_way"]
+	path = camera/xpad_old_way
+	url = git@github.com:soleil-ica/Lima-camera-xpad.git
+[submodule "camera/xpad_v1"]
+	path = camera/xpad_v1
+	url = git@github.com:soleil-ica/Lima-camera-xpad.git
