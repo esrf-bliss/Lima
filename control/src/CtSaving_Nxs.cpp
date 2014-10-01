@@ -137,7 +137,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 		  }
 		  
 		  //write data in Nexus file
-		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - PushData()";
+		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - PushData() [type = " << m_pars.imageType << " ]" ;
 		  switch(m_pars.imageType)
 		  {
 		    case Bpp8:
@@ -152,7 +152,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 				//push data into file
 				m_writer->PushData( m_pars.prefix, (unsigned int*)(aData.data()));
 				break;
-			case Float:
+			case Bpp32F:
 				//push data into file
 				m_writer->PushData( m_pars.prefix, (float*)(aData.data()));
 				break;

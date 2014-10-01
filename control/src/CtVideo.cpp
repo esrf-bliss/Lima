@@ -722,6 +722,7 @@ void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList)
 	  modeList.push_back(Y16); break;
 	case Bpp32:
 	case Bpp32S:
+	case Bpp32F:
 	  modeList.push_back(Y32); break;
 	default:
 	  THROW_CTL_ERROR(Error) <<  "Image type not yet managed";
