@@ -121,3 +121,6 @@
 [submodule "camera/uview"]
 	path = camera/uview
 	url = git@github.com:soleil-ica/Lima-camera-uview.git
+[submodule "camera/eiger"]
+	path = camera/eiger
+	url = git@github.com:soleil-ica/Lima-camera-eiger.git
