@@ -14,18 +14,7 @@ import sys
 import ConfigParser
 import shutil
 import string
-
-maven_install = "mvn clean install -DenableCheckRelease=false -o"
-maven_clean =	"mvn clean"
-current_dir = os.getcwd()
-
-if "linux" in sys.platform: 
-	platform = "linux"
-	camera_list = ["adsc", "aviex", "basler", "eiger", "marccd","pilatus","prosilica","simulator","xpad"]
-if "win32" in sys.platform:
-	platform = "win32"
-	camera_list = ["andor", "hamamatsu", "pco","perkinelmer","roperscientific","simulator"]
-print "platform : ", platform
+from argparse import ArgumentParser
 
 #------------------------------------------------------------------------------
 # build exception
@@ -62,12 +51,19 @@ def copy_file_ext(from_path, to_path, file_ext):
 # Compilation
 #------------------------------------------------------------------------------
 def build_limadetector():
-  if "linux" in sys.platform: 
-    rc = os.system("mvn clean install --file pom-linux.xml -o")
+  if platform == "linux":
+    if mvn_offline == True:
+        rc = os.system("mvn clean install --file pom-linux.xml -o")
+    else:
+        rc = os.system("mvn clean install --file pom-linux.xml")
     if rc != 0:
-	  raise BuildError
-  if "win32" in sys.platform:
-    rc = os.system("mvn clean install --file pom-win.xml -o")
+      raise BuildError
+      
+  elif platform == "win32":
+    if mvn_offline == True:
+        rc = os.system("mvn clean install --file pom-win.xml -o")
+    else:
+        rc = os.system("mvn clean install --file pom-win.xml")
     if rc != 0:
 	  raise BuildError  
 
@@ -167,8 +163,7 @@ def build_plugin(plugin,target_path):
 # build all linux cameras
 #------------------------------------------------------------------------------
 def build_all_camera(target_path):
-    # tests 
-    multi_proc = True
+    
     # this take 2 min 45 sec on a quad core
     if multi_proc == False:
         for cam in camera_list:
@@ -183,63 +178,86 @@ def build_all_camera(target_path):
         pool.join()
 	
 #------------------------------------------------------------------------------
-# Usage
-#------------------------------------------------------------------------------
-def usage():
-  print "Usage: [python] mvn_build.py <target> [<installation_folder>]"
-  print "target: all|processlib|lima|cameras|", camera_list, "|device||cleanall"
-  sys.exit(1)
-
-#------------------------------------------------------------------------------
 # Main Entry point
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
   
-  if len(sys.argv) < 2:
-	usage()
-  
-  target = sys.argv[1]
+  if "linux" in sys.platform: 
+	platform = "linux"
+	camera_list = ["adsc", "aviex", "basler", "eiger", "marccd","pilatus","prosilica","simulator","xpad"]
+  if "win32" in sys.platform:
+	platform = "win32"
+	camera_list = ["andor", "hamamatsu", "pco","perkinelmer","roperscientific","simulator"]
+  print "platform : ", platform
 
-  target_path = None
+  # command line parsing
+  parser = ArgumentParser(description="Lima compilation script")
+  cams_string = ""
+  for cam in camera_list:
+    cams_string += cam + "|"
+  help_string = "module to compile (possible values are: all|processlib|lima|cameras|"+ cams_string+ "|device||cleanall)"
+  parser.add_argument("module", help=help_string)  # positional
+  parser.add_argument("-o","--offline", help="mvn will be offline",action="store_true")
+  parser.add_argument("-m","--multiproc", help="cameras will be compiled in multiprocessing way",action="store_true")
+  parser.add_argument("-d","--directory", help="automatically install Lima binaries into the specified installation directory")
+  #parser.add_argument("-q","--quiet", help="mvn will be quiet", action="store_true")
+  args = parser.parse_args()
   
-  if len(sys.argv) == 3:
-	target_path = sys.argv[2]
+  # manage command line option  
+  if args.directory:
+    target_path = args.directory
+  else:
+    target_path = None
+    
+  if args.multiproc:
+    multi_proc = True
+  else:
+    multi_proc = False
+    
+  if args.offline:
+    mvn_offline = True
+    maven_install = "mvn clean install -DenableCheckRelease=false -o"
+  else:
+    maven_install = "mvn clean install -DenableCheckRelease=false"
+    mvn_offline = False
+    
+  # variables
+  maven_clean =	"mvn clean"
+  current_dir = os.getcwd()
 
   try:
-	#### Build all
-	if target == 'all':	 
+	# Build all
+	if args.module == 'all':	 
 		print 'BUILD ALL\n'
 		build_plugin('third-party/Processlib', target_path)
 		build_lima_core(target_path)
 		build_all_camera(target_path)
 		build_device(target_path)
-	#### Build processlib
-	elif target == 'processlib':
+	# Build processlib
+	elif args.module == 'processlib':
 		print 'BUILD ProcessLib\n'
 		build_plugin('third-party/Processlib', target_path)
-	#### Build device
-	elif target == 'device':
+	# Build device
+	elif args.module == 'device':
 		print 'BUILD Device\n'
 		build_device(target_path)
-	#### Build lima
-	elif target == 'lima':
+	# Build lima
+	elif args.module == 'lima':
 		print 'BUILD Lima Core\n'
 		build_lima_core(target_path)
-	#### Build cameras
-	elif target == 'cameras':
+	# Build cameras
+	elif args.module == 'cameras':
 		print 'BUILD All ',platform,' Cameras\n'
 		build_all_camera(target_path)
-	#### Clean all
-	elif target =='cleanall':
+	# Clean all
+	elif args.module =='cleanall':
 		clean_all()
-	#### Build cam
+	# Build cam
 	else:
 		for cam in camera_list:
-			if target == cam:
+			if args.module == cam:
 				build_plugin('camera/'+cam, target_path)
 				break
 		
-		usage()
-		
   except BuildError, e:
-	sys.stderr.write("!!!BUILD FAILED!!!\n")
+	sys.stderr.write("!!!   BUILD FAILED    !!!\n")
