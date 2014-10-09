@@ -200,6 +200,7 @@ if __name__ == "__main__":
   parser.add_argument("-o","--offline", help="mvn will be offline",action="store_true")
   parser.add_argument("-m","--multiproc", help="cameras will be compiled in multiprocessing way",action="store_true")
   parser.add_argument("-d","--directory", help="automatically install Lima binaries into the specified installation directory")
+  #parser.add_argument("-q","--quiet", help="mvn will be quiet", action="store_true")
   args = parser.parse_args()
   
   # manage command line option  
