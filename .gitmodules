@@ -6,22 +6,22 @@
 	url = git://git.epn-campus.eu/repositories/Sps.git
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
-	url = git://github.com/esrf-bliss/Processlib.git
+	url = git://github.com/soleil-ica/Processlib.git
 [submodule "camera/basler"]
 	path = camera/basler
-	url = git://github.com/esrf-bliss/Lima-camera-basler
+	url = git://github.com/soleil-ica/Lima-camera-basler
 [submodule "applications/spec"]
 	path = applications/spec
 	url = git://github.com/esrf-bliss/Lima-spec
 [submodule "camera/pco"]
 	path = camera/pco
-	url = git://github.com/esrf-bliss/Lima-camera-pco
+	url = git://github.com/soleil-ica/Lima-camera-pco
 [submodule "camera/pilatus"]
 	path = camera/pilatus
-	url = git://github.com/esrf-bliss/Lima-camera-pilatus
+	url = git://github.com/soleil-ica/Lima-camera-pilatus
 [submodule "applications/tango"]
 	path = applications/tango
-	url = git://github.com/esrf-bliss/Lima-tango
+	url = git://github.com/soleil-ica/Lima-tango
 [submodule "camera/maxipix"]
 	path = camera/maxipix
 	url = git://github.com/esrf-bliss/Lima-camera-maxipix
@@ -42,19 +42,19 @@
 	url = git://git.epn-campus.eu/repositories/yat
 [submodule "camera/prosilica"]
 	path = camera/prosilica
-	url = git://github.com/esrf-bliss/Lima-camera-prosilica
+	url = git://github.com/soleil-ica/Lima-camera-prosilica
 [submodule "camera/xpad"]
 	path = camera/xpad
-	url = git://github.com/esrf-bliss/Lima-camera-xpad
+	url = git://github.com/soleil-ica/Lima-camera-xpad
 [submodule "camera/marccd"]
 	path = camera/marccd
-	url = git://github.com/esrf-bliss/Lima-camera-marccd
+	url = git://github.com/soleil-ica/Lima-camera-marccd
 [submodule "camera/adsc"]
 	path = camera/adsc
-	url = git://github.com/esrf-bliss/Lima-camera-adsc
+	url = git://github.com/soleil-ica/Lima-camera-adsc
 [submodule "camera/roperscientific"]
 	path = camera/roperscientific
-	url = git://github.com/esrf-bliss/Lima-camera-roperscientific
+	url = git://github.com/soleil-ica/Lima-camera-roperscientific
 [submodule "camera/mythen"]
 	path = camera/mythen
 	url = git://github.com/esrf-bliss/Lima-camera-mythen
@@ -63,10 +63,10 @@
 	url = git://github.com/esrf-bliss/Lima-camera-ueye
 [submodule "camera/perkinelmer"]
 	path = camera/perkinelmer
-	url = git://github.com/esrf-bliss/Lima-camera-perkinelmer
+	url = git://github.com/soleil-ica/Lima-camera-perkinelmer
 [submodule "camera/andor"]
 	path = camera/andor
-	url = git://github.com/esrf-bliss/Lima-camera-andor
+	url = git://github.com/soleil-ica/Lima-camera-andor
 [submodule "camera/photonicscience"]
 	path = camera/photonicscience
 	url = git://github.com/esrf-bliss/Lima-camera-photonicscience
@@ -81,7 +81,7 @@
 	url = git://github.com/esrf-bliss/Lima-camera-rayonixhs
 [submodule "camera/andor3"]
 	path = camera/andor3
-	url = git://github.com/esrf-bliss/Lima-camera-andor3.git
+	url = git://github.com/soleil-ica/Lima-camera-andor3.git
 [submodule "third-party/libconfig"]
 	path = third-party/libconfig
 	url = git://github.com/esrf-bliss/libconfig.git
@@ -108,7 +108,7 @@
 	url = git://github.com/esrf-bliss/gldisplay.git
 [submodule "camera/aviex"]
 	path = camera/aviex
-	url = git://github.com/esrf-bliss/Lima-camera-aviex.git
+	url = git://github.com/soleil-ica/Lima-camera-aviex.git
 [submodule "camera/hamamatsu"]
 	path = camera/hamamatsu
 	url = git://github.com/soleil-ica/Lima-camera-hamamatsu.git
