@@ -87,15 +87,10 @@ def build_device(target_path):
   if rc != 0:
     raise BuildError
   
-  if target_path is not None:
-    dest_path = os.path.join(target_path, '')
-
-    if platform == "linux":
-        src_path = './target/nar/bin/i386-Linux-g++/'
-    elif platform == "win32":
-        src_path = './target/nar/bin/x86-Windows-msvc/'
-
-    copy_file_ext(src_path, dest_path, '')
+  if end_copy == False:
+      if target_path is not None:
+        dest_path = os.path.join(target_path, '')
+        copy_file_ext(device_src_path, dest_path, '')
     
   print '\n'
 
@@ -107,15 +102,10 @@ def build_lima_core(target_path):
   set_project_dir('.')
   build()
   
-  if target_path is not None:
-    dest_path = os.path.join(target_path, '')
-
-    if platform == "linux":
-        src_path = './target/nar/lib/i386-Linux-g++/shared/'
-    elif platform == "win32":
-        src_path = './target/nar/lib/x86-Windows-msvc/shared/'
-
-    copy_file_ext(src_path, dest_path, '.so')
+  if end_copy == False:
+      if target_path is not None:
+        dest_path = os.path.join(target_path, '')
+        copy_file_ext(src_path, dest_path, '.so')
     
   print '\n'
 
@@ -130,15 +120,10 @@ def build_plugin(plugin,target_path):
   set_project_dir(plugin)
   build()
   
-  if target_path is not None:
-    dest_path = os.path.join(target_path, '')
-
-    if platform == "linux":
-        src_path = './target/nar/lib/i386-Linux-g++/shared/'
-    elif platform == "win32":
-        src_path = './target/nar/lib/x86-Windows-msvc/shared/'
-
-    copy_file_ext(src_path, dest_path, '.so')
+  if end_copy == False:
+      if target_path is not None:
+        dest_path = os.path.join(target_path, '')
+        copy_file_ext(src_path, dest_path, '.so')
     
   print '\n'
 
@@ -172,10 +157,15 @@ if __name__ == "__main__":
     platform = "linux"
     camera_list = ["adsc", "aviex", "basler", "marccd","pilatus","prosilica","simulator","xpad"]
     maven_platform_options = " --file pom-linux.xml"
+    src_path = './target/nar/lib/i386-Linux-g++/shared/'
+    device_src_path = './target/nar/bin/i386-Linux-g++/'
   if "win32" in sys.platform:
     platform = "win32"
-    camera_list = ["andor", "hamamatsu", "pco","perkinelmer","roperscientific","simulator"]
+    camera_list = ["andor", "hamamatsu", "pco","perkinelmer","roperscientific","simulator","uview"]
     maven_platform_options = " --file pom-win.xml"
+    src_path = './target/nar/lib/x86-Windows-msvc/shared/'
+    device_src_path = './target/nar/bin/x86-Windows-msvc/'
+    
   print "platform : ", platform
 
   # command line parsing
@@ -190,6 +180,8 @@ if __name__ == "__main__":
   parser.add_argument("-q","--quiet", help="mvn will be quiet", action="store_true")
   parser.add_argument("-m","--multiproc", help="cameras will be compiled in multiprocessing way",action="store_true")
   parser.add_argument("-d","--directory", help="automatically install Lima binaries into the specified installation directory")
+  parser.add_argument("-e","--endcopy", help="if true, will copy file at the end of compil only",action="store_false")
+  
   args = parser.parse_args()
   
   maven_options = ""
@@ -212,6 +204,11 @@ if __name__ == "__main__":
     target_path = args.directory
   else:
     target_path = None
+    
+  if args.endcopy:
+    end_copy  = True
+  else:
+    end_copy  = False
     
   # variables
   maven_clean_install   = "mvn clean install -DenableCheckRelease=false"
@@ -252,6 +249,17 @@ if __name__ == "__main__":
                 build_plugin('camera/'+cam, target_path)
                 break
         
+    # everything went ok: copy files if needed
+    # if end_copy:
+        # print "All modules are compiled, now: copying them to: ", target_path
+    # else:
+        # print "All modules are compiled, and are already copyed to: ", target_path
+    
   except BuildError, e:
     sys.stderr.write("!!!   BUILD FAILED    !!!\n")
+    # print compil errors
+    # for mod in module_error_list:
+        # print "Error in compiling : " , mod 
+        # if target_path != None
+            # print "copying only 
   
