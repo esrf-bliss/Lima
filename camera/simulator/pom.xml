@@ -9,17 +9,23 @@
 
     <groupId>fr.soleil.lib.Lima.Camera</groupId>
     <artifactId>LimaSimulator-${aol}-shared-${mode}</artifactId>
-	<version>1.3.1</version>
+	<version>1.3.3</version>
 
     <packaging>nar</packaging>
     <name>LimaSimulator</name>
     <description>This module controls the Simulator Camera</description>
+    
+    <scm>
+       <connection>scm:git:git://github.com/soleil-ica/Lima.git</connection>
+       <developerConnection>scm:git:git://github.com/soleil-ica/Lima.git</developerConnection>
+       <url>https://github.com/soleil-ica/Lima</url>
+    </scm>
 	
 	<dependencies>
 		<dependency>
 			<groupId>fr.soleil.lib</groupId>
 			<artifactId>LimaCore-${aol}-shared-${mode}</artifactId>
-			<version>1.3.0</version>
+			<version>1.3.2</version>
 		</dependency>
 	</dependencies>
 
