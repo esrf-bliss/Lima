@@ -155,7 +155,7 @@ if __name__ == "__main__":
   
   if "linux" in sys.platform: 
     platform = "linux"
-    camera_list = ["adsc", "aviex", "basler", "marccd","pilatus","prosilica","simulator","xpad"]
+    camera_list = ["adsc", "aviex", "basler", "eiger", "marccd","pilatus","prosilica","simulator","xpad"]
     maven_platform_options = " --file pom-linux.xml"
     src_path = './target/nar/lib/i386-Linux-g++/shared/'
     device_src_path = './target/nar/bin/i386-Linux-g++/'
