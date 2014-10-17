@@ -127,11 +127,24 @@ void SaveContainerNxs::_writeFile(Data &aData,
             m_writer = new nxcpp::DataStreamer(m_pars.prefix, (std::size_t)m_pars.nbframes, (std::size_t)m_pars.framesPerFile);     
 						
 			m_writer->Initialize(m_pars.directory, "");
-			m_writer->SetWriteMode(nxcpp::NexusFileWriter::IMMEDIATE);
-			
+            
+#ifdef  NXS_IMMEDIATE             
+			m_writer->SetWriteMode(nxcpp::NexusFileWriter::IMMEDIATE);         
+#elif   NXS_SYNCHRONOUS
+			m_writer->SetWriteMode(nxcpp::NexusFileWriter::SYNCHRONOUS);
+#elif   NXS_DELAYED
+			m_writer->SetWriteMode(nxcpp::NexusFileWriter::DELAYED);
+#endif  
+        
 			//Add sensor 2D (image) // height,width
 			m_writer->AddDataItem2D(m_pars.prefix, aData.dimensions[1],aData.dimensions[0]);
-			//m_writer->SetDataItemMemoryMode(m_pars.prefix,nxcpp::DataStreamer::MemoryMode::NO_COPY);
+            
+#ifdef  NXS_COPY            
+            m_writer->SetDataItemMemoryMode(m_pars.prefix,nxcpp::DataStreamer::MemoryMode::COPY);
+#elif   NXS_NOCOPY            
+			m_writer->SetDataItemMemoryMode(m_pars.prefix,nxcpp::DataStreamer::MemoryMode::NO_COPY);
+#endif      
+            
 			//Set sensors node's name
 			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
 		  }
