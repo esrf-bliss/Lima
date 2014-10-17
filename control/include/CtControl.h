@@ -98,14 +98,23 @@ namespace lima
       DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatusCallback", 
 			"Control");
     public:
+      enum RatePolicy {
+	RateAsFastAsPossible,
+	RateAllFrames,
+      };
+
       ImageStatusCallback();
       virtual ~ImageStatusCallback();
+
+      void setRatePolicy(RatePolicy rate_policy);
+      void getRatePolicy(RatePolicy& rate_policy);
     protected:
       virtual void imageStatusChanged(const ImageStatus& img_status) = 0;
     private:
       friend class CtControl;
       void setImageStatusCallbackGen(CtControl *cb_gen);
       CtControl *m_cb_gen;
+      RatePolicy m_rate_policy;
     };
 
     enum ErrorCode {NoError,
@@ -227,6 +236,8 @@ namespace lima
     class _AbortAcqCallback;
     friend class _AbortAcqCallback;
 
+    class ImageStatusThread;
+
     HwInterface		*m_hw;
     mutable Cond	m_cond;
     mutable Status      m_status;
@@ -266,12 +277,17 @@ namespace lima
 #ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
 #endif
-    ImageStatusCallback *m_img_status_cb;
+    ImageStatusThread   *m_img_status_thread;
     SoftOpErrorHandler* m_soft_op_error_handler;
     _ReconstructionChangeCallback* m_reconstruction_cbk;
 
     inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();
+
+    void readBlock(Data&, long frameNumber, long readBlockLen,
+		   bool baseImage);
+    void readOneImageBuffer(Data&, long frameNumber, long readBlockLen,
+			    bool baseImage);
   };
 
   inline std::ostream& operator<<(std::ostream &os,
@@ -320,6 +336,45 @@ namespace lima
     os << ", ImageCounters=" << status.ImageCounters;
     return os;
   }
+
+  inline bool operator <(const CtControl::ImageStatus& a, 
+			 const CtControl::ImageStatus& b)
+  {
+    return ((a.LastImageAcquired < b.LastImageAcquired) ||
+	    (a.LastBaseImageReady < b.LastBaseImageReady) ||
+	    (a.LastImageReady < b.LastImageReady) ||
+	    (a.LastImageSaved < b.LastImageSaved) ||
+	    (a.LastCounterReady < b.LastCounterReady));
+  }
+
+  inline bool operator ==(const CtControl::ImageStatus& a, 
+			 const CtControl::ImageStatus& b)
+  {
+    return ((a.LastImageAcquired == b.LastImageAcquired) &&
+	    (a.LastBaseImageReady == b.LastBaseImageReady) &&
+	    (a.LastImageReady == b.LastImageReady) &&
+	    (a.LastImageSaved == b.LastImageSaved) &&
+	    (a.LastCounterReady == b.LastCounterReady));
+  }
+
+  inline bool operator <=(const CtControl::ImageStatus& a, 
+			  const CtControl::ImageStatus& b)
+  {
+    return (a < b) || (a == b);
+  }
+
+  inline bool operator >(const CtControl::ImageStatus& a, 
+			 const CtControl::ImageStatus& b)
+  {
+    return !(a <= b);
+  }
+
+  inline bool operator >=(const CtControl::ImageStatus& a, 
+			  const CtControl::ImageStatus& b)
+  {
+    return !(a < b);
+  }
+
 } // namespace lima
 
 #endif // CTCONTROL_H

@@ -205,6 +205,12 @@ AVIEX_FULL_VERSION = $(shell cat camera/aviex/VERSION)
 INSTALL_AVIEX_VDIR = $(INSTALL_AVIEX_DIR)/v$(AVIEX_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_META), 0)
+INSTALL_META_DIR = $(INSTALL_PLAT_DIR)/Meta
+META_FULL_VERSION = $(shell cat camera/common/meta/VERSION)
+INSTALL_META_VDIR = $(INSTALL_META_DIR)/v$(META_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -548,4 +554,14 @@ ifneq ($(COMPILE_GLDISPLAY), 0)
 	cp -d third-party/gldisplay/build/libgldisplay.so* $(INSTALL_LIB_DIR)
 	cp third-party/gldisplay/sip/gldisplay.so $(INSTALL_GLDISPLAY_VDIR)
 	cp third-party/gldisplay/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_META), 0)
+	mkdir -p $(INSTALL_META_VDIR)
+	cp camera/common/meta/python/__init__.py $(INSTALL_META_DIR)
+	$(call install_core_dep,$(INSTALL_META_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimameta.so*
+	cp -d build/liblimameta.so* $(INSTALL_LIB_DIR)
+	cp sip/meta/limameta.so $(INSTALL_META_VDIR)
+	cp camera/common/meta/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

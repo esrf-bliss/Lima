@@ -70,8 +70,12 @@ namespace lima
     void stop();
     bool isStopped() const;
     int  getNextFileNumberExpected() const;
+    
+    void watch_moved_to();
+    void watch_close_write();
   private:
-    _Event	*m_event;
+    _Event*	m_event;
+    bool	m_local;
   };
 
   inline std::ostream& operator<<(std::ostream &os,

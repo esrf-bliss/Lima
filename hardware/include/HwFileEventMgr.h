@@ -32,6 +32,7 @@ namespace lima
 {
   class HwFileEventCallbackHelper : public DirectoryEvent::Callback
   {
+    DEB_CLASS_NAMESPC(DebModHardware, "HwFileEventCallbackHelper", "Hardware");
   public:
     enum CallFrom {Acquisition,OnDemand};
     class Callback
@@ -72,6 +73,7 @@ namespace lima
 				HwFileEventCallbackHelper::CallFrom,
 				HwFrameInfoType&) = 0;
       virtual void getFrameDim(FrameDim& frame_dim) = 0;
+      virtual HwBufferCtrlObj::Callback* getBufferCallback() {return NULL;}
     };
 
     HwTmpfsBufferMgr(const char *tmpfs_path,const char* file_pattern,
@@ -88,6 +90,8 @@ namespace lima
 
     int getNbOfFramePending() const {return m_directory_cbk.getNbOfFramePending();}
 
+    //Raw access functions
+    DirectoryEvent& getDirectoryEvent() {return m_directory_event;}
     //methodes used by Lima core
     virtual void setFrameDim(const FrameDim& frame_dim);
     virtual void getFrameDim(FrameDim& frame_dim);
@@ -108,6 +112,7 @@ namespace lima
 
     virtual void registerFrameCallback(HwFrameCallback& frame_cb);
     virtual void unregisterFrameCallback(HwFrameCallback& frame_cb);
+    virtual HwBufferCtrlObj::Callback* getBufferCallback();
   private:
     class _CBK;
     friend class _CBK;

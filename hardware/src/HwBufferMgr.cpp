@@ -827,9 +827,8 @@ void SoftBufferCtrlObj::Sync::release(void *address)
 	if (it == m_buffer_in_use.end())
 		THROW_HW_ERROR(Error) << "Internal error: releasing buffer not in used list";
 
-	m_buffer_in_use.erase(it);
-	it = m_buffer_in_use.find(address);
-	if (it == m_buffer_in_use.end())
+	m_buffer_in_use.erase(it++);
+	if (it == m_buffer_in_use.end() || *it != address)
 		m_cond.broadcast();
 }
 

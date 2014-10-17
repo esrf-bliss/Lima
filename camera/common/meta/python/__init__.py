@@ -19,30 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-#!/usr/bin/env python
+from Lima import module_helper
 
-import os
-import os.path
-import glob
-import shutil
+mod_path = __path__
+depends_on = 'Core'
+has_dependent = False
 
-from configure import modules
-f = open('.gitignore')
-patterns = [x.strip() for x in f]
+cleanup_data = module_helper.load_prepare(mod_path, depends_on, has_dependent)
 
+from Lima import Core
 
-rmList = []
+cleanup_data = module_helper.load_dep_cleanup(cleanup_data)
 
-for pat in patterns:
-    if pat.find('*') > -1:
-        rmList.extend(glob.glob(os.path.join('*',pat)))
-    rmList.extend(glob.glob(pat))
+from Lima.Meta.limameta import Meta as _B
+globals().update(_B.__dict__)
 
-    
-for filename in rmList :
-    if os.path.isdir(filename):
-        print(("exec: rmtree %s" % filename))
-        shutil.rmtree(filename)
-    else:
-        print(("exec: rm %s" % filename))
-        os.remove(filename)
+module_helper.load_cleanup(cleanup_data)
+
+del mod_path, depends_on, has_dependent, cleanup_data
+del module_helper

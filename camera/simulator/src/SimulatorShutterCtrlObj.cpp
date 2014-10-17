@@ -29,7 +29,10 @@ using namespace std;
 // @brief Ctor
 //-----------------------------------------------------
 ShutterCtrlObj::ShutterCtrlObj(Camera& cam)
-: m_cam(cam),m_simu_shutter_mode(Camera::FRAME)
+  : m_cam(cam),m_simu_shutter_mode(Camera::FRAME),
+    m_manual_state(false),
+    m_open_time(0.),
+    m_close_time(0.)
 {
     DEB_CONSTRUCTOR();
 }

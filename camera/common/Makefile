@@ -31,4 +31,12 @@ ifneq ($(COMPILE_ESPIA),0)
 sub-dirs += espia
 endif
 
+ifndef COMPILE_META
+COMPILE_META = 0
+endif
+
+ifneq ($(COMPILE_META),0)
+sub-dirs += meta
+endif
+
 include ../../global.inc

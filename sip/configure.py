@@ -32,33 +32,34 @@ str_version = sipconfig.version_to_string(sipconfig.Configuration().sip_version)
 versions = [int(x) for x in str_version.split('.')]
 major,minor = versions[0],versions[1]
 
-modules = [('core',		['common', 'hardware', 'control']),
-	   ('simulator',	[os.path.join('camera','simulator')]),
-	   ('pco',	        [os.path.join('camera','pco')]),
-	   ('espia',		[os.path.join('camera','common','espia')]),
-	   ('frelon',		[os.path.join('camera','frelon')]),
-	   ('maxipix',		[os.path.join('camera','maxipix')]),
+modules = [('core',             ['common', 'hardware', 'control']),
+           ('simulator',        [os.path.join('camera','simulator')]),
+           ('pco',              [os.path.join('camera','pco')]),
+           ('espia',            [os.path.join('camera','common','espia')]),
+           ('frelon',           [os.path.join('camera','frelon')]),
+           ('maxipix',          [os.path.join('camera','maxipix')]),
            ('basler',           [os.path.join('camera','basler')]),
            ('prosilica',        [os.path.join('camera','prosilica')]),
            ('ueye',             [os.path.join('camera','ueye')]),
            ('roperscientific',  [os.path.join('camera','roperscientific')]),
-           ('adsc',  		[os.path.join('camera','adsc')]),
+           ('adsc',             [os.path.join('camera','adsc')]),
            ('mythen',           [os.path.join('camera','mythen')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
-           ('andor',      	[os.path.join('camera','andor')]),
-           ('andor3',      	[os.path.join('camera','andor3')]),
-           ('xh',             	[os.path.join('camera','xh')]),
+           ('andor',            [os.path.join('camera','andor')]),
+           ('andor3',           [os.path.join('camera','andor3')]),
+           ('xh',               [os.path.join('camera','xh')]),
            ('xpad',             [os.path.join('camera','xpad')]),
            ('marccd',           [os.path.join('camera','marccd')]),
            ('photonicscience',  [os.path.join('camera','photonicscience')]),
            ('pilatus',          [os.path.join('camera','pilatus')]),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ('imxpad',           [os.path.join('camera','imxpad')]),
-           ('dexela',          [os.path.join('camera','dexela')]),
-           ('xspress3',        [os.path.join('camera','xspress3')]),
+           ('dexela',           [os.path.join('camera','dexela')]),
+           ('xspress3',         [os.path.join('camera','xspress3')]),
            ('rayonixhs',        [os.path.join('camera','rayonixhs')]),
-           ('aviex',           [os.path.join('camera','aviex')]),
-           ('ultra',           [os.path.join('camera','ultra')]),
+           ('aviex',            [os.path.join('camera','aviex')]),
+           ('ultra',            [os.path.join('camera','ultra')]),
+           ('meta',             [os.path.join('camera','common','meta')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -128,11 +129,11 @@ def main():
                 sipFileNameIn = os.path.join("..","limamodules_before_4_12.sip.in")
             else:
                 sipFileNameIn = os.path.join("..","limamodules.sip.in")
-            f = file(sipFileNameIn)
+            f = open(sipFileNameIn)
             lines = f.read()
             f.close()
             newlines = lines.replace('%NAME',modName)
-            d = file(sipFileNameSrc,'w')
+            d = open(sipFileNameSrc,'w')
             d.write(newlines)
             d.close()
         elif major == 4 and minor < 12:
@@ -176,17 +177,17 @@ def main():
             extra_cxxflags += ['-D__LINUX__']
         elif(modName == 'andor') :
             extraIncludes += ['/usr/local/include']
-	elif(modName == 'xpad'):
+        elif(modName == 'xpad'):
             extraIncludes += ['../../third-party/yat/include','/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib']
-	elif(modName == 'xspress3'):
+        elif(modName == 'xspress3'):
             extraIncludes += ['../../third-party/hdf5/include']
-	elif(modName == 'pco'):
+        elif(modName == 'pco'):
             extraIncludes += ['R:/bliss/projects/LIMA/package/WIN32/PCO/sdkPco/include']
         elif(modName == 'marccd'):
-	    extraIncludes += ['../../../include/DiffractionImage']
-	    extraIncludes += ['../../third-party/yat/include'] 
+            extraIncludes += ['../../../include/DiffractionImage']
+            extraIncludes += ['../../third-party/yat/include'] 
         elif(modName == 'pointgrey'):
-	    extraIncludes += ['/usr/include/flycapture']
+            extraIncludes += ['/usr/include/flycapture']
         elif(modName == 'rayonixhs'):
             extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include','/opt/rayonix/include/marccd']
         elif(modName == 'aviex'):
@@ -233,10 +234,10 @@ def main():
         # Run SIP to generate the code.
         # module's specification files using the -I flag.
         if platform.system() == 'Windows':
-	    if platform.machine() == 'AMD64':
-		plat = 'WIN64_PLATFORM'
-	    else:
-		plat = 'WIN32_PLATFORM'
+            if platform.machine() == 'AMD64':
+                plat = 'WIN64_PLATFORM'
+            else:
+                plat = 'WIN32_PLATFORM'
         else:
             plat = 'POSIX_PLATFORM'
         cmdargs = [config.sip_bin,"-g", "-e","-c", '.','-t',plat]
@@ -244,7 +245,7 @@ def main():
             cmdargs.extend(['-x','WITH_CONFIG'])
         cmdargs.extend(["-b", build_file,sipFileName])
         cmd = " ".join(cmdargs)
-        print cmd
+        print(cmd)
         os.system(cmd)
 
         #little HACK for adding source
@@ -284,11 +285,11 @@ def main():
             if modName != 'core' :
                 makefile.extra_libs += ['liblimacore']
             makefile.extra_cxxflags = ['/EHsc','/DWITH_CONFIG'] + extra_cxxflags
-	    if platform.machine() == 'AMD64':
-		libpath = 'build\msvc\9.0\*\\x64\Release'
-		makefile.extra_cxxflags.append('/DWITHOUT_GSL')
-	    else:
-		libpath = 'build\msvc\9.0\*\Release'
+            if platform.machine() == 'AMD64':
+                libpath = 'build\msvc\9.0\*\\x64\Release'
+                makefile.extra_cxxflags.append('/DWITHOUT_GSL')
+            else:
+                libpath = 'build\msvc\9.0\*\Release'
             
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName(''),libpath))
             makefile.extra_lib_dirs += glob.glob(os.path.join(rootName('third-party\Processlib'), libpath))

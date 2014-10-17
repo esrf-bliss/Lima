@@ -41,6 +41,10 @@ namespace lima {
   public:
     struct Parameters
     {
+    Parameters() : 
+      mode(ShutterManual),
+      close_time(-1.),
+      open_time(-1.) {}
       ShutterMode 	mode;
       double	  	close_time;
       double 		open_time;
@@ -81,7 +85,15 @@ namespace lima {
     Parameters		m_hw_pars;
     Parameters		m_pars;
   };
-  
+  inline std::ostream& operator <<(std::ostream& os,const CtShutter::Parameters& pars)
+  {
+    os << "<"
+       << "mode : " << convert_2_string(pars.mode) << ","
+       << "close time :" << pars.close_time << ","
+       << "open_time :" << pars.open_time
+       << ">";
+    return os;
+  }
 } // namespace lima
 
 #endif // CTSHUTTER_H

@@ -73,6 +73,8 @@ CtShutter::CtShutter(HwInterface *hw)
   DEB_CONSTRUCTOR();
 
   m_has_shutter = hw->getHwCtrlObj(m_hw_shutter);
+
+  DEB_TRACE() << DEB_VAR2(m_has_shutter,m_hw_shutter);
   reset();
 }
 
@@ -154,6 +156,7 @@ void CtShutter::getCloseTime(double& shut_close_time) const
  */
 void CtShutter::reset()
 {
+  DEB_MEMBER_FUNCT();
   if(m_has_shutter)
     {
       m_hw_shutter->getMode(m_hw_pars.mode);
@@ -161,6 +164,8 @@ void CtShutter::reset()
       m_hw_shutter->getOpenTime(m_hw_pars.open_time);
 
       m_pars = m_hw_pars;
+
+      DEB_TRACE() << DEB_VAR1(m_pars);
     }
 }
 void CtShutter::getParameters(CtShutter::Parameters& pars) const
@@ -178,10 +183,12 @@ void CtShutter::setParameters(const CtShutter::Parameters& pars)
  */
 void CtShutter::apply()
 {
+  DEB_MEMBER_FUNCT();
   if(m_has_shutter)
     {
       try
 	{
+	  DEB_TRACE() << DEB_VAR2(m_pars,m_hw_pars);
 	  if(m_pars.mode != m_hw_pars.mode)
 	    m_hw_shutter->setMode(m_pars.mode);
 	  if(m_pars.close_time != m_hw_pars.close_time)

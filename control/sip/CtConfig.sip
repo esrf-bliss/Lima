@@ -37,6 +37,8 @@ class Setting;
 #pragma warning( disable : 4800 )
 #endif
 
+#include "numpy/npy_3kcompat.h"
+
 inline long _from_python_long_2_c(PyObject* value,int& return_value)
 {
 #if PY_VERSION_HEX >= 0x02070000
@@ -50,6 +52,7 @@ inline long _from_python_long_2_c(PyObject* value,int& return_value)
       return -1;
     }
 #else
+  return_value = 0;
   long cValue = PyLong_AsLong(value);
 #endif
   return cValue;
