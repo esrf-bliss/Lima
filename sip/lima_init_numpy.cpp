@@ -25,8 +25,15 @@
 #include "numpy/arrayobject.h"
 extern "C"
 {
+#if PY_VERSION_HEX >= 0x03000000
+  int lima_import_array()
+  {
+    import_array();
+  }
+#else
   void lima_import_array()
   {
     import_array();
   }
+#endif
 }

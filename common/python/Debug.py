@@ -20,7 +20,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 from limacore import DebParams, DebObj
-import os, sys, new
+import os, sys, types
 import functools
 
 def DEB_GLOBAL_FUNCT(fn):
@@ -47,8 +47,8 @@ def DEB_FUNCT(fn, in_global=True, frame=1, deb_container=None):
         fn_globals['deb'] = deb_obj
         if deb_container is not None:
             deb_container.add(deb_obj)
-        new_fn = new.function(fn.func_code, fn_globals, fn.func_name,
-                              fn.func_defaults)
+        new_fn = types.FunctionType(fn.func_code, fn_globals, fn.func_name,
+                                    fn.func_defaults)
         return new_fn(*arg, **kw)
     return real_fn
         

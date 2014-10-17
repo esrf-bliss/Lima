@@ -27,28 +27,28 @@ csadmin_dirs = ['/csadmin/local', '/csadmin/common']
 script_get_os = 'scripts/get_compat_os.share'
 get_os = None
 for d in csadmin_dirs:
-	aux_get_os = os.path.join(d, script_get_os)
-	if os.path.exists(aux_get_os):
-		get_os = aux_get_os
-		break
+        aux_get_os = os.path.join(d, script_get_os)
+        if os.path.exists(aux_get_os):
+                get_os = aux_get_os
+                break
 if get_os is not None:
         compat_plat = os.popen(get_os).readline().strip()
-	if compat_plat:
-		plat = None
-		compat_plat_list = compat_plat.split()
-		for aux_plat in compat_plat_list:
-			if aux_plat.strip() in os.listdir(root_name):
-				plat = aux_plat
-				break
-		if plat is None:
-			raise ImportError, ('Could not find Lima directory for %s '
-					    '(nor compat. %s) platform(s) at %s' %
-					    (compat_plat_list[0],
-					     compat_plat_list[1:], root_name))
-		lima_plat = os.path.join(root_name, plat)
-		__path__.insert(0, lima_plat)
-	else:
-		get_os = None
+        if compat_plat:
+                plat = None
+                compat_plat_list = compat_plat.split()
+                for aux_plat in compat_plat_list:
+                        if aux_plat.strip() in os.listdir(root_name):
+                                plat = aux_plat
+                                break
+                if plat is None:
+                        raise ImportError('Could not find Lima directory for %s '
+                                          '(nor compat. %s) platform(s) at %s' %
+                                          (compat_plat_list[0],
+                                           compat_plat_list[1:], root_name))
+                lima_plat = os.path.join(root_name, plat)
+                __path__.insert(0, lima_plat)
+        else:
+                get_os = None
 # This mandatory variable is systematically overwritten by 'make install'
 os.environ['LIMA_LINK_STRICT_VERSION'] = 'MINOR'
 

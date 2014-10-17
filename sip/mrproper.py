@@ -27,7 +27,7 @@ import glob
 import shutil
 
 from configure import modules
-f = file('.gitignore')
+f = open('.gitignore')
 patterns = [x.strip() for x in f]
 
 
@@ -41,8 +41,8 @@ for pat in patterns:
     
 for filename in rmList :
     if os.path.isdir(filename):
-        print "exec: rmtree", filename
+        print(("exec: rmtree %s" % filename))
         shutil.rmtree(filename)
     else:
-        print "exec: rm ", filename
+        print(("exec: rm %s" % filename))
         os.remove(filename)
