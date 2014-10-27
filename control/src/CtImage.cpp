@@ -771,8 +771,11 @@ void CtImage::_setHSRoi(const Roi &roi)
 		} else {
 			// Apply software flip to hardware roi
 			roi_set_hw = roi_set_hw.getFlipped(aSoftwareFlip,max_roi_size);
+			roi_by_hw = roi_by_hw.getFlipped(aSoftwareFlip,max_roi_size);
 			//Apply software rotation to hardware roi
 			roi_set_hw = roi_set_hw.getRotated(aSoftwareRotation,max_roi_size);
+			roi_by_hw = roi_by_hw.getRotated(aSoftwareRotation,max_roi_size);
+			//Calc the roi by soft needed
 			roi_by_sw= roi_set_hw.subRoiAbs2Rel(roi_by_hw);
 			roi_by_sw= roi_by_sw.getBinned(bin_by_sw);
 			m_sw->setRoi(roi_by_sw);
