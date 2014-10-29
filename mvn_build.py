@@ -15,8 +15,10 @@ import os
 import sys
 import shutil
 import string
-import time  
-    
+import time
+
+
+copied_files = []
 
 #------------------------------------------------------------------------------
 # build exception
@@ -30,15 +32,16 @@ class BuildError(Exception):
 def set_project_dir(sub_dir):
   project_dir = os.path.join(current_dir, sub_dir)
   os.chdir(project_dir)
-  
+
 #------------------------------------------------------------------------------
 # Copy library
 #------------------------------------------------------------------------------
+
 def copy_file_ext(from_path, to_path, file_ext):
-  
+
   if not os.path.isdir(to_path):
     os.makedirs(to_path)
-    
+
   files = os.listdir(from_path)
   for file in files:
     full_name = os.path.join(from_path, file)
@@ -46,7 +49,8 @@ def copy_file_ext(from_path, to_path, file_ext):
       root, ext = os.path.splitext(full_name)
       if ext == file_ext:
         shutil.copy(full_name, to_path)
-        print '\n' + file + ' copied in ' + to_path
+        file_to_copy = file + ' copied in ' + to_path
+        copied_files.append(file_to_copy)
 
 #------------------------------------------------------------------------------
 # Compilation
@@ -81,17 +85,23 @@ def clean_all():
 def build_device(target_path):
   print 'Build Device LimaDetector\n'
   set_project_dir('applications/tango/LimaDetector')
-  
+
   print "Maven command = ", maven_clean_install + maven_platform_options + maven_options
   rc = os.system(maven_clean_install + maven_platform_options + maven_options)
   if rc != 0:
     raise BuildError
-  
-  if end_copy == False:
-      if target_path is not None:
-        dest_path = os.path.join(target_path, '')
-        copy_file_ext(device_src_path, dest_path, '')
-    
+
+  if "linux" in sys.platform:
+    if target_path is not None:
+      dest_path = os.path.join(target_path, '')
+      print 'device_src_path = ', device_src_path
+      copy_file_ext(device_src_path, dest_path, '')
+  if "win32" in sys.platform:
+    if target_path is not None:
+      dest_path = os.path.join(target_path, '')
+      copy_file_ext(device_src_path, dest_path, '.exe')
+      copy_file_ext(device_src_path, dest_path, '.pdb')
+
   print '\n'
 
 #------------------------------------------------------------------------------
@@ -101,30 +111,39 @@ def build_lima_core(target_path):
   print 'Build Lima\n'
   set_project_dir('.')
   build()
-  
-  if end_copy == False:
-      if target_path is not None:
-        dest_path = os.path.join(target_path, '')
-        copy_file_ext(src_path, dest_path, '.so')
-    
+
+  if "linux" in sys.platform:
+    if target_path is not None:
+      dest_path = os.path.join(target_path, '')
+      copy_file_ext(src_path, dest_path, '.so')
+  if "win32" in sys.platform:
+    if target_path is not None:
+      dest_path = os.path.join(target_path, '')
+      copy_file_ext(src_path, dest_path, '.dll')
+      copy_file_ext(src_path, dest_path, '.pdb')
   print '\n'
 
 #------------------------------------------------------------------------------
 # build the Plugin 'plugin'
 #------------------------------------------------------------------------------
 def build_plugin(plugin,target_path):
-  
+
   """Build the selected plugin"""
-  
-  print "Building:    " , plugin, "\n" 
+
+  print "Building:    " , plugin, "\n"
   set_project_dir(plugin)
   build()
-  
-  if end_copy == False:
-      if target_path is not None:
-        dest_path = os.path.join(target_path, '')
-        copy_file_ext(src_path, dest_path, '.so')
-    
+
+  if "linux" in sys.platform:
+    if target_path is not None:
+      dest_path = os.path.join(target_path, '')
+      copy_file_ext(src_path, dest_path, '.so')
+  if "win32" in sys.platform:
+    if target_path is not None:
+      dest_path = os.path.join(target_path, '')
+      copy_file_ext(src_path, dest_path, '.dll')
+      copy_file_ext(src_path, dest_path, '.pdb')
+
   print '\n'
 
 
@@ -139,21 +158,21 @@ def build_all_camera(target_path):
             build_plugin('camera/' + cam, target_path)
     else:
         # this take 1 min 26 sec on a quad core
-        pool = Pool()           
+        pool = Pool()
         for cam in camera_list:
-            print "multi proc: Building:    " , cam, "\n" 
+            print "multi proc: Building:    " , cam, "\n"
             pool.apply_async(build_plugin,('camera/' + cam, target_path))
         pool.close()
         pool.join()
         time.strftime("%M min %S sec", time.localtime(170))
     print "duration for compiling all cameras (MultiProc = ",multi_proc, ") = ", time.strftime("%M min %S sec", time.localtime(time.time() - start))
-    
+
 #------------------------------------------------------------------------------
 # Main Entry point
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
-  
-  if "linux" in sys.platform: 
+
+  if "linux" in sys.platform:
     platform = "linux"
     camera_list = ["adsc", "aviex", "basler", "eiger", "marccd","pilatus","prosilica","simulator","xpad"]
     maven_platform_options = " --file pom-linux.xml"
@@ -165,7 +184,7 @@ if __name__ == "__main__":
     maven_platform_options = " --file pom-win.xml"
     src_path = './target/nar/lib/x86-Windows-msvc/shared/'
     device_src_path = './target/nar/bin/x86-Windows-msvc/'
-    
+
   print "platform : ", platform
 
   # command line parsing
@@ -174,16 +193,15 @@ if __name__ == "__main__":
   for cam in camera_list:
     cams_string += cam + "|"
   help_string = "module to compile (possible values are: all|processlib|lima|cameras|"+ cams_string+ "|device||cleanall)"
-  parser.add_argument("module", help=help_string) 
+  parser.add_argument("module", help=help_string)
   parser.add_argument("-o","--offline", help="mvn will be offline",action="store_true")
   parser.add_argument("-f","--pomfile", help="name of the pom file(for the Tango device only)")
   parser.add_argument("-q","--quiet", help="mvn will be quiet", action="store_true")
   parser.add_argument("-m","--multiproc", help="cameras will be compiled in multiprocessing way",action="store_true")
   parser.add_argument("-d","--directory", help="automatically install Lima binaries into the specified installation directory")
-  parser.add_argument("-e","--endcopy", help="if true, will copy file at the end of compil only",action="store_false")
-  
+
   args = parser.parse_args()
-  
+
   maven_options = ""
   # manage command line option  
   if args.offline:
@@ -191,25 +209,20 @@ if __name__ == "__main__":
 
   if args.pomfile:
     maven_platform_options = " --file " + args.pomfile
-  
+
   if args.quiet:
     maven_options += " -q"
-    
+
   if args.multiproc:
     multi_proc = True
   else:
     multi_proc = False
-    
+
   if args.directory:
     target_path = args.directory
   else:
     target_path = None
-    
-  if args.endcopy:
-    end_copy  = True
-  else:
-    end_copy  = False
-    
+
   # variables
   maven_clean_install   = "mvn clean install -DenableCheckRelease=false"
   maven_clean           = "mvn clean"
@@ -217,7 +230,7 @@ if __name__ == "__main__":
 
   try:
     # Build all
-    if args.module == 'all':     
+    if args.module == 'all':
         print 'BUILD ALL\n'
         build_plugin('third-party/Processlib', target_path)
         build_lima_core(target_path)
@@ -248,18 +261,22 @@ if __name__ == "__main__":
             if args.module == cam:
                 build_plugin('camera/'+cam, target_path)
                 break
-        
-    # everything went ok: copy files if needed
-    # if end_copy:
-        # print "All modules are compiled, now: copying them to: ", target_path
-    # else:
-        # print "All modules are compiled, and are already copyed to: ", target_path
-    
+
+    # display list of copied files, if -d option is used
+    if args.directory:
+        print '\n'
+        print '============================================='
+        print 'Modules are compiled & copied as shown below:'
+        print '============================================='
+        for file in copied_files:
+            print '- ',file
+        print '\n'
+
   except BuildError, e:
     sys.stderr.write("!!!   BUILD FAILED    !!!\n")
     # print compil errors
     # for mod in module_error_list:
-        # print "Error in compiling : " , mod 
+        # print "Error in compiling : " , mod
         # if target_path != None
-            # print "copying only 
-  
+            # print "copying only
+
