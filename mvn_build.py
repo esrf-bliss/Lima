@@ -94,7 +94,6 @@ def build_device(target_path):
   if "linux" in sys.platform:
     if target_path is not None:
       dest_path = os.path.join(target_path, '')
-      print 'device_src_path = ', device_src_path
       copy_file_ext(device_src_path, dest_path, '')
   if "win32" in sys.platform:
     if target_path is not None:
