@@ -23,7 +23,8 @@
 #define LIMACOMPATIBILITY_H
 
 #ifdef WIN32
-	#include <WTypes.h> // Include this first on Win (bug #35683 aka bug #73144)
+ 	//- workaround to avoid a compil pb for Uview plugin
+	#include <WTypes.h>
 	#ifdef LIMACORE_EXPORTS
 		#define LIMACORE_API __declspec(dllexport)
 	#else
