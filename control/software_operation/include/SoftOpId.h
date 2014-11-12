@@ -419,19 +419,8 @@ namespace lima
     void _get_or_create(const std::string& roi_name,
 			SoftManager *&, SoftTask *&);
 
-    template <SoftTask::type roi_type, class R>
-    void _get_rois_of_type(std::list<std::pair<std::string, R> >& names_rois) const;
-    template <class R>
-    void _get_task_roi(SoftTask *task, R& roi) const;
-
-    TaskMap			m_task_manager;
-    int				m_history_size;
-    Data			m_mask;
-    mutable Cond		m_cond;
-  };
-
-  template <SoftOpRoiCounter::SoftTask::type type, class R>
-  void SoftOpRoiCounter::_get_rois_of_type(std::list<std::pair<std::string, R> >& names_rois) const
+    template <SoftTask::type type, class R>
+    void _get_rois_of_type(std::list<std::pair<std::string, R> >& names_rois) const
   {
     for(NameMapConstIterator i = m_task_manager.begin();
 	i != m_task_manager.end();++i) {
@@ -445,6 +434,15 @@ namespace lima
       names_rois.push_back(std::pair<std::string, R>(i->first, roi));
     }
   }
+
+    template <class R>
+    void _get_task_roi(SoftTask *task, R& roi) const;
+
+    TaskMap			m_task_manager;
+    int				m_history_size;
+    Data			m_mask;
+    mutable Cond		m_cond;
+  };
 
   template <>
   inline void SoftOpRoiCounter::_get_task_roi(SoftTask *task, Roi& roi) const

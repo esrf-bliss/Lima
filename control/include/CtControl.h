@@ -92,6 +92,7 @@ namespace lima
       long	LastCounterReady;
     };
 
+    class ImageStatusThread;
 
     class LIMACORE_API ImageStatusCallback 
     {
@@ -112,6 +113,7 @@ namespace lima
       virtual void imageStatusChanged(const ImageStatus& img_status) = 0;
     private:
       friend class CtControl;
+      friend class CtControl::ImageStatusThread;
       void setImageStatusCallbackGen(CtControl *cb_gen);
       CtControl *m_cb_gen;
       RatePolicy m_rate_policy;
@@ -235,8 +237,6 @@ namespace lima
 
     class _AbortAcqCallback;
     friend class _AbortAcqCallback;
-
-    class ImageStatusThread;
 
     HwInterface		*m_hw;
     mutable Cond	m_cond;
