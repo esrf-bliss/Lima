@@ -95,6 +95,7 @@ namespace lima {
       std::string directory;	///< base path where the files will be saved
       std::string prefix;	///< prefix of the filename
       std::string suffix;	///< suffix of the filename
+      std::string options;
       ImageType   imageType;
       long nextNumber;		///< next file number
       FileFormat fileFormat;	///< the saving format (EDF,CBF...)
@@ -125,6 +126,9 @@ namespace lima {
 
     void setSuffix(const std::string &suffix, int stream_idx=0);
     void getSuffix(std::string& suffix, int stream_idx=0) const;
+    
+    void setOptions(const std::string &options, int stream_idx=0);
+    void getOptions(std::string& options, int stream_idx=0) const;    
     
     void setNextNumber(long number, int stream_idx=0);
     void getNextNumber(long& number, int stream_idx=0) const;
