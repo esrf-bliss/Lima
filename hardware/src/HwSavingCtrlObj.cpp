@@ -125,6 +125,10 @@ void HwSavingCtrlObj::setSuffix(const std::string& suffix)
 {
   m_suffix = suffix;
 }
+void HwSavingCtrlObj::setOptions(const std::string& options)
+{
+  m_options = options;
+}
 void HwSavingCtrlObj::setNextNumber(long number)
 {
   m_next_number = number;
