@@ -273,9 +273,4 @@ if __name__ == "__main__":
 
   except BuildError, e:
     sys.stderr.write("!!!   BUILD FAILED    !!!\n")
-    # print compil errors
-    # for mod in module_error_list:
-        # print "Error in compiling : " , mod
-        # if target_path != None
-            # print "copying only
 
