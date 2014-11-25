@@ -25,7 +25,7 @@ enum AlignDir {
 
 enum ImageType {
   Bpp8, Bpp8S, Bpp10, Bpp10S, Bpp12, Bpp12S, Bpp14, Bpp14S, Bpp16, Bpp16S, Bpp32, Bpp32S,
-  Float
+  Bpp32F
 };
 
 enum AcqMode {
