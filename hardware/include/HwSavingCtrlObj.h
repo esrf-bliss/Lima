@@ -57,6 +57,7 @@ namespace lima
     void setDirectory(const std::string&);
     void setPrefix(const std::string&);
     void setSuffix(const std::string&);
+    void setOptions(const std::string&);
     void setNextNumber(long number);
     void setIndexFormat(const std::string&);
 
@@ -102,6 +103,7 @@ namespace lima
     std::string m_directory;
     std::string m_prefix;
     std::string m_suffix;
+    std::string m_options;
     long 	m_next_number;
     std::string m_file_format;
     std::string m_index_format;

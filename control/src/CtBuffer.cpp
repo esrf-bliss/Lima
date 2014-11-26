@@ -284,6 +284,8 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
     fdata.type= Data::UINT32; break;
   case Bpp32S:
     fdata.type = Data::INT32; break;
+  case Bpp32F:
+    fdata.type = Data::FLOAT; break;
   default:
     THROW_CTL_ERROR(InvalidValue) << "Data type not yet managed" << DEB_VAR1(ftype);
   }

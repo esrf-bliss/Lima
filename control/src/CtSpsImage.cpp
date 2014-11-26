@@ -132,6 +132,7 @@ void CtSpsImage::_check_data_size(Data &data)
 	case Data::INT16: image_type = Bpp16S; break;
 	case Data::UINT32: image_type = Bpp32; break;
 	case Data::INT32: image_type = Bpp32S; break;
+	case Data::FLOAT: image_type = Bpp32F; break;
 	default:
 		THROW_CTL_ERROR(InvalidValue) << "Invalid " 
 					      << DEB_VAR1(data.type);
@@ -305,6 +306,9 @@ void _SpsImage::createSPS(const FrameDim& frame_dim)
 		break;
 	case Bpp32S:
 		sps_type = SPS_INT;
+		break;
+	case Bpp32F:
+		sps_type = SPS_FLOAT;
 		break;
 	default:
 		THROW_CTL_ERROR(InvalidValue) << "Unknown " 

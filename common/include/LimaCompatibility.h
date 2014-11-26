@@ -23,13 +23,15 @@
 #define LIMACOMPATIBILITY_H
 
 #ifdef WIN32
-#ifdef LIMACORE_EXPORTS
-#define LIMACORE_API __declspec(dllexport)
-#else
-#define LIMACORE_API __declspec(dllimport)
-#endif
+ 	//- workaround to avoid a compil pb for Uview plugin
+	#include <WTypes.h>
+	#ifdef LIMACORE_EXPORTS
+		#define LIMACORE_API __declspec(dllexport)
+	#else
+		#define LIMACORE_API __declspec(dllimport)
+	#endif
 #else  /* Unix */
-#define LIMACORE_API
+		#define LIMACORE_API
 #endif
 
-#endif
+#endif //- LIMACOMPATIBILITY_H

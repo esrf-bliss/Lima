@@ -451,6 +451,7 @@ public:
     saving_setting.set("directory",pars.directory);
     saving_setting.set("prefix",pars.prefix);
     saving_setting.set("suffix",pars.suffix);
+    saving_setting.set("options",pars.options);
     saving_setting.set("imageType",convert_2_string(pars.imageType));
     saving_setting.set("nextNumber",pars.nextNumber);
     saving_setting.set("fileFormat",convert_2_string(pars.fileFormat));
@@ -472,6 +473,7 @@ public:
     saving_setting.get("directory",pars.directory);
     saving_setting.get("prefix",pars.prefix);
     saving_setting.get("suffix",pars.suffix);
+    saving_setting.get("options",pars.options);
 
     std::string strimageType;
     if(saving_setting.get("imageType",strimageType))
@@ -691,6 +693,35 @@ void CtSaving::getSuffix(std::string& suffix, int stream_idx) const
 
   DEB_RETURN() << DEB_VAR1(suffix);
 }
+
+/** @brief set the additional options for a saving stream
+ */
+void CtSaving::setOptions(const std::string &options, int stream_idx)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(options, stream_idx);
+
+  AutoMutex aLock(m_cond.mutex());
+  Stream& stream = getStream(stream_idx);
+  Parameters pars = stream.getParameters(Auto);
+  pars.options = options;
+  stream.setParameters(pars);
+}
+/** @brief get the additional options for a saving stream
+ */
+void CtSaving::getOptions(std::string& options, int stream_idx) const
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(stream_idx);
+
+  AutoMutex aLock(m_cond.mutex());
+  const Stream& stream = getStream(stream_idx);
+  const Parameters& pars = stream.getParameters(Auto);
+  options = pars.options;
+
+  DEB_RETURN() << DEB_VAR1(options);
+}
+
 /** @brief set the next number for the filename for a saving stream
  */
 void CtSaving::setNextNumber(long number, int stream_idx)
@@ -1647,6 +1678,7 @@ void CtSaving::_prepare(CtControl& ct)
       m_hwsaving->setDirectory(params.directory);
       m_hwsaving->setPrefix(params.prefix);
       m_hwsaving->setSuffix(params.suffix);
+      m_hwsaving->setOptions(params.options);
       m_hwsaving->setNextNumber(params.nextNumber);
       m_hwsaving->setIndexFormat(params.indexFormat);
       std::string fileFormat;
