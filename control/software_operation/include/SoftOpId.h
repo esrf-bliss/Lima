@@ -365,6 +365,7 @@ namespace lima
     SoftOpRoiCounter();
     virtual ~SoftOpRoiCounter();
 
+#ifdef USE_DEPRECATED
     /** Old way to manage roi's counters
      * they are now deprecated, 
      * please use the new set of methods.
@@ -375,7 +376,7 @@ namespace lima
     void get(std::list<Roi>&) const;
     void del(const std::list<int> &roiIds);
     void readCounters(int from,std::list<RoiIdAndResults> &result) const;
-
+#endif
     /** New methods set */
     void updateRois(const std::list<RoiNameAndRoi>&);
     void updateArcRois(const std::list<RoiNameAndArcRoi>&);
@@ -462,6 +463,7 @@ namespace lima
     roi = ArcRoi(x,y,r1,r2,a1,a2);
   }
 
+#ifdef USE_DEPRECATED
 #define ROI_WARNING
 #ifdef WIN32
 #pragma message ("deprecated use new methods set")
@@ -537,6 +539,7 @@ namespace lima
 	result.push_back(RoiIdAndResults(roi_id,i->second));
       }
   }
+#endif
 
 
   class LIMACORE_API SoftOpRoi2Spectrum : public SoftOpBaseClass
@@ -554,6 +557,7 @@ namespace lima
     SoftOpRoi2Spectrum();
     virtual ~SoftOpRoi2Spectrum();
 
+#ifdef USE_DEPRECATED
     /** Old way to manage roi2spectrum counters
      * they are now deprecated,
      * please use the new set of methods.
@@ -568,7 +572,7 @@ namespace lima
 
     void getRoiMode(std::list<int>&) const;
     void setRoiMode(int roiId,int mode);
-
+#endif
     /** New methods set */
     void updateRois(const std::list<RoiNameAndRoi>&);
     void getRois(std::list<RoiNameAndRoi>&) const;
@@ -613,7 +617,7 @@ namespace lima
     //Data			m_mask;
     mutable Cond		m_cond;
   };
-
+#ifdef USE_DEPRECATED
   inline void SoftOpRoi2Spectrum::add(const std::list<Roi> &rois)
   {
     ROI_WARNING;
@@ -711,7 +715,7 @@ namespace lima
     std::list<RoiNameAndMode> rois_modes(&name_mode, &name_mode + 1);
     setRoiModes(rois_modes);
   }
-
+#endif
 
 
   class LIMACORE_API SoftOpSoftRoi : public SoftOpBaseClass
