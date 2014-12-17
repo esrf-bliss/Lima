@@ -48,6 +48,23 @@ CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size) :
 	m_max_roi= Roi(Point(0,0), m_max_size);
 }
 
+CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size, const Bin& bin, const Roi& roi,
+                               const Flip& flip, RotationMode rotation) :
+  m_rotation(Rotation_0)
+{
+	DEB_CONSTRUCTOR();
+	DEB_PARAM() << DEB_VAR5(size, bin, roi, flip, rotation);
+
+	m_max_size= size;
+	m_max_roi= Roi(Point(0,0), m_max_size);
+
+	setBin(bin);
+	if (!roi.isEmpty())
+		setRoi(roi);
+	setFlip(flip);
+	setRotation(rotation);
+}
+
 CtSwBinRoiFlip::~CtSwBinRoiFlip()
 {
   DEB_DESTRUCTOR();

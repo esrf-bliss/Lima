@@ -42,6 +42,8 @@ class LIMACORE_API CtSwBinRoiFlip {
 	friend std::ostream& operator<<(std::ostream &os,const CtSwBinRoiFlip &binroi);
 
 	CtSwBinRoiFlip(Size& size);
+	CtSwBinRoiFlip(Size& size, const Bin& bin, const Roi& roi,
+		       const Flip& flip, RotationMode rotation);
 	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);

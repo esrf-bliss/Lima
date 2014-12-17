@@ -35,6 +35,8 @@ using namespace lima;
 
     struct ImageStatus {
       ImageStatus();
+      ImageStatus(long lastImgAcq, long lastBaseImgReady, long lastImgReady,
+                  long lastImgSaved, long lastCntReady);
       void reset();
 
       long	LastImageAcquired;
@@ -49,6 +51,14 @@ using namespace lima;
 	str << *sipCpp;	
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
+%End
+
+%PickleCode
+      sipRes = Py_BuildValue("lllll", sipCpp->LastImageAcquired,
+                             sipCpp->LastBaseImageReady,
+                             sipCpp->LastImageReady,
+                             sipCpp->LastImageSaved,
+                             sipCpp->LastCounterReady);
 %End
     };
 

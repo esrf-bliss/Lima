@@ -83,6 +83,8 @@ namespace lima
       DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatus","Control");
     public:
       ImageStatus();
+      ImageStatus(long lastImgAcq, long lastBaseImgReady,
+                  long lastImgReady, long lastImgSaved, long lastCntReady);
       void reset();
 
       long	LastImageAcquired;

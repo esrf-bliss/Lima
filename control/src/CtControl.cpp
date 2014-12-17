@@ -1137,6 +1137,16 @@ CtControl::ImageStatus::ImageStatus()
   reset();
 }
 
+CtControl::ImageStatus::ImageStatus(long lastImgAcq, long lastBaseImgReady,
+				    long lastImgReady, long lastImgSaved,
+				    long lastCntReady):
+    LastImageAcquired(lastImgAcq), LastBaseImageReady(lastBaseImgReady),
+    LastImageReady(lastImgReady), LastImageSaved(lastImgSaved),
+    LastCounterReady(lastCntReady)
+{
+    DEB_CONSTRUCTOR();
+}
+
 void CtControl::ImageStatus::reset()
 {
   DEB_MEMBER_FUNCT();
