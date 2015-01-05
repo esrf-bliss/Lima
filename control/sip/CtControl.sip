@@ -21,8 +21,8 @@
 //###########################################################################
 class CtControl {
 %TypeHeaderCode
-#include <CtControl.h>
-#include <LinkTask.h>
+#include "lima/CtControl.h"
+#include "processlib/LinkTask.h"
 using namespace lima;
 %End  
   public:

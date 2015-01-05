@@ -22,8 +22,8 @@
 #ifndef HWBUFFERCTRLOBJ_H
 #define HWBUFFERCTRLOBJ_H
 
-#include "LimaCompatibility.h"
-#include "HwFrameCallback.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/HwFrameCallback.h"
 
 namespace lima
 {

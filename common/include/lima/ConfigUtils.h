@@ -22,8 +22,8 @@
 #ifdef WITH_CONFIG
 #ifndef CONFIGUTILS_H
 #define CONFIGUTILS_H
-#include "Debug.h"
-#include "LimaCompatibility.h"
+#include "lima/Debug.h"
+#include "lima/LimaCompatibility.h"
 
 struct Data;
 

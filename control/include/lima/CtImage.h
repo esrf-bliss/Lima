@@ -24,13 +24,13 @@
 
 #include <algorithm>
 
-#include "LimaCompatibility.h"
-#include "CtControl.h"
-#include "CtConfig.h"
-#include "Constants.h"
-#include "HwInterface.h"
-#include "HwDetInfoCtrlObj.h"
-#include "SoftOpInternalMgr.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/CtControl.h"
+#include "lima/CtConfig.h"
+#include "lima/Constants.h"
+#include "lima/HwInterface.h"
+#include "lima/HwDetInfoCtrlObj.h"
+#include "lima/SoftOpInternalMgr.h"
 
 namespace lima {
 

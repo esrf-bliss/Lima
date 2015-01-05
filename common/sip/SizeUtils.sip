@@ -24,7 +24,7 @@ bool IsPowerOf2(int x);
 class Point
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 %End
  public:
 	int x;
@@ -75,7 +75,7 @@ enum YBorder {
 class Corner
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -104,7 +104,7 @@ using namespace lima;
 class Size
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -151,7 +151,7 @@ using namespace lima;
 class Bin
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -190,7 +190,7 @@ using namespace lima;
 class Flip
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -227,7 +227,7 @@ Flip operator+(const Flip &f,const Flip &s);
 class Roi
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -289,7 +289,7 @@ bool operator !=(const Roi& r1, const Roi& r2);
 {
 %TypeHeaderCode
 #include <list>
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
 
@@ -369,7 +369,7 @@ return sipGetState(sipTransferObj);
 class FrameDim
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -415,7 +415,7 @@ using namespace lima;
 class ArcRoi
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
 public:

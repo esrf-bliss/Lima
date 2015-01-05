@@ -29,11 +29,11 @@
 #include <ios>
 #include <algorithm>
 
-#include "LimaCompatibility.h"
-#include "ThreadUtils.h"
-#include "CtControl.h"
-#include "CtConfig.h"
-#include "HwSavingCtrlObj.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/ThreadUtils.h"
+#include "lima/CtControl.h"
+#include "lima/CtConfig.h"
+#include "lima/HwSavingCtrlObj.h"
 
 struct Data;
 class TaskEventCallback;

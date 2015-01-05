@@ -22,14 +22,14 @@
 #ifndef CTBUFFER_H
 #define CTBUFFER_H
 
-#include "Constants.h"
-#include "SizeUtils.h"
-#include "CtAcquisition.h"
-#include "CtImage.h"
-#include "HwInterface.h"
-#include "HwFrameCallback.h"
+#include "lima/Constants.h"
+#include "lima/SizeUtils.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtImage.h"
+#include "lima/HwInterface.h"
+#include "lima/HwFrameCallback.h"
 
-#include "Data.h"
+#include "processlib/Data.h"
 
 namespace lima {
 

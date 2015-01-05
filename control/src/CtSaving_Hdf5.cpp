@@ -22,11 +22,11 @@
 #include <cmath>
 #include "CtSaving_Hdf5.h"
 #include "H5Cpp.h"
-#include "CtControl.h"
-#include "CtImage.h"
-#include "CtAcquisition.h"
-#include "HwInterface.h"
-#include "HwCap.h"
+#include "lima/CtControl.h"
+#include "lima/CtImage.h"
+#include "lima/CtAcquisition.h"
+#include "lima/HwInterface.h"
+#include "lima/HwCap.h"
 
 using namespace lima;
 using namespace H5;

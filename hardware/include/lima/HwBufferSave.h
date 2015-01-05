@@ -34,8 +34,8 @@
 #include <string>
 #include <fstream>
 
-#include "LimaCompatibility.h"
-#include "HwFrameInfo.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/HwFrameInfo.h"
 
 namespace lima {
 

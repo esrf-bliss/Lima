@@ -22,9 +22,9 @@
 #ifndef HWSHUTTERCTRLOBJ_H
 #define HWSHUTTERCTRLOBJ_H
 
-#include "LimaCompatibility.h"
-#include "Constants.h"
-#include "Debug.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Constants.h"
+#include "lima/Debug.h"
 #include <vector>
 
 namespace lima

@@ -20,9 +20,9 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#include "CtImage.h"
-#include "CtAcquisition.h"
-#include "CtSaving.h"
+#include "lima/CtImage.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtSaving.h"
 
 using namespace lima;
 

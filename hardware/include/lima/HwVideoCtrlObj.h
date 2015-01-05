@@ -2,12 +2,12 @@
 #define HWVIDEOCTRLOBJ_H
 #include <list>
 #include <algorithm>
-#include "LimaCompatibility.h"
-#include "Debug.h"
-#include "Constants.h"
-#include "SizeUtils.h"
-#include "HwBufferMgr.h"
-#include "HwBufferCtrlObj.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Debug.h"
+#include "lima/Constants.h"
+#include "lima/SizeUtils.h"
+#include "lima/HwBufferMgr.h"
+#include "lima/HwBufferCtrlObj.h"
 
 namespace lima
 {

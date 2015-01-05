@@ -34,8 +34,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "DirectoryEventUtils.h"
-#include "Event.h"
+#include "lima/DirectoryEventUtils.h"
+#include "lima/Event.h"
 
 using namespace lima;
 //Base class event

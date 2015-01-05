@@ -22,8 +22,8 @@
 #ifndef ACQSTATE_H
 #define ACQSTATE_H
 
-#include "LimaCompatibility.h"
-#include "ThreadUtils.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/ThreadUtils.h"
 
 #include <ostream>
 

@@ -22,8 +22,8 @@
 #ifndef HWCAP_H
 #define HWCAP_H
 
-#include "LimaCompatibility.h"
-#include "Constants.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Constants.h"
 
 namespace lima
 {
@@ -95,15 +95,15 @@ public:
  
 } // namespace lima
 
-#include "HwDetInfoCtrlObj.h"
-#include "HwBufferCtrlObj.h"
-#include "HwSyncCtrlObj.h"
-#include "HwBinCtrlObj.h"
-#include "HwRoiCtrlObj.h"
-#include "HwFlipCtrlObj.h"
-#include "HwShutterCtrlObj.h"
-#include "HwVideoCtrlObj.h"
-#include "HwEventCtrlObj.h"
-#include "HwSavingCtrlObj.h"
+#include "lima/HwDetInfoCtrlObj.h"
+#include "lima/HwBufferCtrlObj.h"
+#include "lima/HwSyncCtrlObj.h"
+#include "lima/HwBinCtrlObj.h"
+#include "lima/HwRoiCtrlObj.h"
+#include "lima/HwFlipCtrlObj.h"
+#include "lima/HwShutterCtrlObj.h"
+#include "lima/HwVideoCtrlObj.h"
+#include "lima/HwEventCtrlObj.h"
+#include "lima/HwSavingCtrlObj.h"
 
 #endif // HWCAP_H

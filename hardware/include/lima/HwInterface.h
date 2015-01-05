@@ -22,8 +22,8 @@
 #ifndef HWINTERFACE_H
 #define HWINTERFACE_H
 
-#include "LimaCompatibility.h"
-#include "HwCap.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/HwCap.h"
 #include <vector>
 #include <ostream>
 

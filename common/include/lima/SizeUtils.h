@@ -22,9 +22,9 @@
 #ifndef SIZEUTILS_H
 #define SIZEUTILS_H
 
-#include "LimaCompatibility.h"
-#include "Constants.h"
-#include "Exceptions.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Constants.h"
+#include "lima/Exceptions.h"
 #include <ostream>
 
 namespace lima

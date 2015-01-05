@@ -22,9 +22,9 @@
 #ifndef __SOFTOPINTERNAL_H
 #define __SOFTOPINTERNAL_H
 
-#include "TaskMgr.h"
-#include "LinkTask.h"
-#include "SizeUtils.h"
+#include "processlib/TaskMgr.h"
+#include "processlib/LinkTask.h"
+#include "lima/SizeUtils.h"
 
 namespace lima
 {

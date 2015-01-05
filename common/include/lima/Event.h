@@ -22,8 +22,8 @@
 #ifndef EVENT_H
 #define EVENT_H
 
-#include "LimaCompatibility.h"
-#include "Timestamp.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Timestamp.h"
 #include <string>
 #include <ostream>
 

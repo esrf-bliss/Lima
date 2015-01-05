@@ -31,7 +31,7 @@ class Setting;
 #include "sipAPIlimacore.h"
  //END TRICK
 
-#include <ConfigUtils.h>
+#include "lima/ConfigUtils.h"
 #ifdef WIN32
 #pragma warning( disable : 4290 )
 #pragma warning( disable : 4800 )
@@ -311,7 +311,7 @@ inline bool _build_dict_from_setting(const Setting &setting,
 class CtConfig
 {
 %TypeHeaderCode
-#include <CtConfig.h>
+#include "lima/CtConfig.h"
 using namespace lima;
 %End
 public:
@@ -349,7 +349,7 @@ public:
   class ModuleTypeCallback
     {
 %TypeHeaderCode
-#include <CtConfig.h>
+#include "lima/CtConfig.h"
 using namespace lima;
 %End
 

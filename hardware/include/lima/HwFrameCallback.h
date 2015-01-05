@@ -22,10 +22,10 @@
 #ifndef HWFRAMECALLBACK_H
 #define HWFRAMECALLBACK_H
 
-#include "SizeUtils.h"
-#include "Timestamp.h"
-#include "HwFrameInfo.h"
-#include "Debug.h"
+#include "lima/SizeUtils.h"
+#include "lima/Timestamp.h"
+#include "lima/HwFrameInfo.h"
+#include "lima/Debug.h"
 
 namespace lima
 {

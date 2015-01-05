@@ -23,20 +23,20 @@
 #define __SOFTOPID_H
 
 
-#include "SizeUtils.h"
+#include "lima/SizeUtils.h"
 
-#include "TaskMgr.h"
+#include "processlib/TaskMgr.h"
 
-#include "BackgroundSubstraction.h"
-#include "Binning.h"
-#include "Bpm.h"
-#include "FlatfieldCorrection.h"
-#include "Flip.h"
-#include "Mask.h"
-#include "RoiCounter.h"
-#include "Roi2Spectrum.h"
-#include "SoftRoi.h"
-#include "PeakFinder.h"
+#include "processlib/BackgroundSubstraction.h"
+#include "processlib/Binning.h"
+#include "processlib/Bpm.h"
+#include "processlib/FlatfieldCorrection.h"
+#include "processlib/Flip.h"
+#include "processlib/Mask.h"
+#include "processlib/RoiCounter.h"
+#include "processlib/Roi2Spectrum.h"
+#include "processlib/SoftRoi.h"
+#include "processlib/PeakFinder.h"
 
 namespace lima
 {

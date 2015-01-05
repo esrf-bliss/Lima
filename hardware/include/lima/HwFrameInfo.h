@@ -22,9 +22,9 @@
 #ifndef HWFRAMEINFO_H
 #define HWFRAMEINFO_H
 
-#include "LimaCompatibility.h"
-#include "SizeUtils.h"
-#include "Timestamp.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/SizeUtils.h"
+#include "lima/Timestamp.h"
 #include <ostream>
 
 namespace lima

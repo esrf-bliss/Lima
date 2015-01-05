@@ -21,7 +21,7 @@
 //###########################################################################
 class CtSwBinRoiFlip {
 %TypeHeaderCode
-#include <CtImage.h>
+#include "lima/CtImage.h"
 #include <sstream>
 using namespace lima;
 %End
@@ -71,7 +71,7 @@ using namespace lima;
 class CtHwBinRoiFlip 
 {
 %TypeHeaderCode
-#include <CtImage.h>
+#include "lima/CtImage.h"
 using namespace lima;
 %End
     public:
@@ -104,7 +104,7 @@ using namespace lima;
 
 class CtImage {
 %TypeHeaderCode
-#include <CtImage.h>
+#include "lima/CtImage.h"
 using namespace lima;
 %End
     public:

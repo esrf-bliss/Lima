@@ -22,7 +22,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#include "LimaCompatibility.h"
+#include "lima/LimaCompatibility.h"
 #include <ostream>
 #include <vector>
 #include <list>

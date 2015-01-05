@@ -24,11 +24,11 @@ class HwCap
 {
 %TypeHeaderCode
 #include <iostream>
-#include <HwCap.h>
-#include <HwDetInfoCtrlObj.h>
-#include <HwBufferCtrlObj.h>
-#include <HwSyncCtrlObj.h>
-#include <HwBinCtrlObj.h>
+#include "lima/HwCap.h"
+#include "lima/HwDetInfoCtrlObj.h"
+#include "lima/HwBufferCtrlObj.h"
+#include "lima/HwSyncCtrlObj.h"
+#include "lima/HwBinCtrlObj.h"
 #include <LimaConvertor.h>
 using namespace lima;
 %End

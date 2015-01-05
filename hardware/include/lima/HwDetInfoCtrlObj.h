@@ -22,8 +22,8 @@
 #ifndef HWDETINFOCTRLOBJ_H
 #define HWDETINFOCTRLOBJ_H
 
-#include "LimaCompatibility.h"
-#include "HwMaxImageSizeCallback.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/HwMaxImageSizeCallback.h"
 #include <string>
 
 namespace lima

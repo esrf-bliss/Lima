@@ -25,9 +25,9 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include "LimaCompatibility.h"
-#include "StreamUtils.h"
-#include "ThreadUtils.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/StreamUtils.h"
+#include "lima/ThreadUtils.h"
 
 #include <string>
 #include <map>

@@ -22,9 +22,9 @@
 
 #ifndef HWCONFIGCTRLOBJ_H
 #define HWCONFIGCTRLOBJ_H
-#include "Debug.h"
-#include "LimaCompatibility.h"
-#include "ConfigUtils.h"
+#include "lima/Debug.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/ConfigUtils.h"
 
 namespace lima
 {

@@ -22,8 +22,8 @@
 #ifndef HWRECONSTRUCTIONCTRLOBJ_H
 #define HWRECONSTRUCTIONCTRLOBJ_H
 
-#include "Debug.h"
-#include "LimaCompatibility.h"
+#include "lima/Debug.h"
+#include "lima/LimaCompatibility.h"
 
 class LinkTask;
 

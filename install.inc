@@ -260,7 +260,7 @@ install.mkdir:
 	mkdir -p $(INSTALL_PLAT_DIR)
 	cp python/module_helper.py $(INSTALL_PLAT_DIR)
 	mkdir -p $(INSTALL_LIB_DIR)
-	mkdir -p $(INSTALL_INCLUDE_DIR)
+	mkdir -p $(INSTALL_INCLUDE_DIR)/lima
 	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
 
 cfitsio.install:
@@ -300,12 +300,12 @@ ifneq ($(COMPILE_CORE), 0)
 	cp -d build/liblimacore.so* $(INSTALL_LIB_DIR)
 	cp sip/core/limacore.so $(INSTALL_CORE_VDIR)
 	cp common/python/Debug.py $(INSTALL_CORE_VDIR)
-	cp common/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp control/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp control/software_operation/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp hardware/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp third-party/Processlib/core/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp third-party/Processlib/core/include/*.i $(INSTALL_INCLUDE_DIR)
+	cp -r common/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r control/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r control/software_operation/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r hardware/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r third-party/Processlib/core/include/processlib $(INSTALL_INCLUDE_DIR)
+	cp -r third-party/Processlib/tasks/include/processlib $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_SIMULATOR), 0)
 	mkdir -p $(INSTALL_SIMU_VDIR)

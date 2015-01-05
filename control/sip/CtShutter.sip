@@ -21,8 +21,8 @@
 //###########################################################################
 class CtShutter {
 %TypeHeaderCode
-#include <CtShutter.h>
-#include <Constants.h>
+#include "lima/CtShutter.h"
+#include "lima/Constants.h"
 #include <sstream>
 using namespace lima;
 %End

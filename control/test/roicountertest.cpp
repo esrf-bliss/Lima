@@ -20,8 +20,8 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include <iostream>
-#include "SoftOpExternalMgr.h"
-#include "SizeUtils.h"
+#include "lima/SoftOpExternalMgr.h"
+#include "lima/SizeUtils.h"
 
 using namespace std;
 using namespace lima;

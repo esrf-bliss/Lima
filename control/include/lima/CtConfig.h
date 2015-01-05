@@ -25,8 +25,8 @@
 #include <string>
 #include <map>
 
-#include "CtControl.h"
-#include "ConfigUtils.h"
+#include "lima/CtControl.h"
+#include "lima/ConfigUtils.h"
 
 namespace libconfig
 {

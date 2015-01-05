@@ -22,7 +22,7 @@
 class HwDetInfoCtrlObj
 {
 %TypeHeaderCode
-#include "HwDetInfoCtrlObj.h"
+#include "lima/HwDetInfoCtrlObj.h"
 using namespace lima;
 %End
  public:

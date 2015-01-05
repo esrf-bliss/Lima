@@ -22,7 +22,7 @@
 #ifndef CTSAVING_EDF_H
 #define CTSAVING_EDF_H
 
-#include "CtSaving.h"
+#include "lima/CtSaving.h"
 
 namespace lima {
 

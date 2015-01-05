@@ -22,9 +22,9 @@
 #ifndef EXCEPTIONS_H
 #define EXCEPTIONS_H
 
-#include "LimaCompatibility.h"
+#include "lima/LimaCompatibility.h"
 
-#include "Debug.h"
+#include "lima/Debug.h"
 
 #include <string.h>
 #include <ostream>

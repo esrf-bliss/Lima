@@ -23,7 +23,7 @@
 {
 %TypeHeaderCode
 #include <list>
-#include <RoiCounter.h>
+#include "processlib/RoiCounter.h"
 using namespace lima;
 %End
 
@@ -136,7 +136,7 @@ return sipGetState(sipTransferObj);
 {
 %TypeHeaderCode
 #include <list>
-#include <RoiCounter.h>
+#include "processlib/RoiCounter.h"
 %End
 
 %ConvertToTypeCode
@@ -210,7 +210,7 @@ if(sipIsErr == NULL)
 {
 %TypeHeaderCode
 #include <list>
-#include <RoiCounter.h>
+#include "processlib/RoiCounter.h"
 %End
 
 %ConvertToTypeCode
@@ -284,7 +284,7 @@ if(sipIsErr == NULL)
 {
 %TypeHeaderCode
 #include <list>
-#include <RoiCounter.h>
+#include "processlib/RoiCounter.h"
 %End
 
 %ConvertToTypeCode
@@ -337,7 +337,7 @@ if(sipIsErr == NULL)
 {
 %TypeHeaderCode
 #include <list>
-#include <RoiCounter.h>
+#include "processlib/RoiCounter.h"
 %End
 
 %ConvertToTypeCode
@@ -410,7 +410,7 @@ if(sipIsErr == NULL)
 {
 %TypeHeaderCode
 #include <list>
-#include <Roi2Spectrum.h>
+#include "processlib/Roi2Spectrum.h"
 using namespace lima;
 %End
 
@@ -523,7 +523,7 @@ return sipGetState(sipTransferObj);
 {
 %TypeHeaderCode
 #include <list>
-#include <Roi2Spectrum.h>
+#include "processlib/Roi2Spectrum.h"
 %End
 
 %ConvertToTypeCode
@@ -597,7 +597,7 @@ if(sipIsErr == NULL)
 {
 %TypeHeaderCode
 #include <list>
-#include <Roi2Spectrum.h>
+#include "processlib/Roi2Spectrum.h"
 %End
 
 %ConvertToTypeCode
@@ -670,7 +670,7 @@ if(sipIsErr == NULL)
 {
 %TypeHeaderCode
 #include <list>
-#include <Roi2Spectrum.h>
+#include "processlib/Roi2Spectrum.h"
 %End
 
 %ConvertToTypeCode
@@ -739,7 +739,7 @@ enum SoftOpId
 struct SoftOpKey
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 %End
  SoftOpKey();
  SoftOpKey(SoftOpId id,const char *name);
@@ -751,7 +751,7 @@ struct SoftOpKey
 class SoftOpBackgroundSubstraction
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
  public:
@@ -767,7 +767,7 @@ using namespace lima;
 {
 %TypeHeaderCode
 #include <list>
-#include <PeakFinder.h>
+#include "processlib/PeakFinder.h"
 %End
 
 %ConvertFromTypeCode
@@ -856,7 +856,7 @@ using namespace lima;
 class SoftOpPeakFinder
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
  public:
@@ -880,7 +880,7 @@ using namespace lima;
 class SoftOpBinning
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -893,7 +893,7 @@ public:
 class SoftOpBpm
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -908,7 +908,7 @@ public:
 class SoftOpFlatfieldCorrection
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -921,7 +921,7 @@ public:
 class SoftOpFlip
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -934,7 +934,7 @@ public:
 class SoftOpMask
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -950,7 +950,7 @@ public:
 class SoftOpRoiCounter
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
  public:
@@ -995,7 +995,7 @@ using namespace lima;
 class SoftOpRoi2Spectrum
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -1035,7 +1035,7 @@ public:
 class SoftOpSoftRoi
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -1048,7 +1048,7 @@ public:
 class SoftCallback
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -1061,7 +1061,7 @@ protected:
 class SoftUserLinkTask
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:
@@ -1077,7 +1077,7 @@ public:
 class SoftUserSinkTask
 {
 %TypeHeaderCode
-#include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 using namespace lima;
 %End
 public:

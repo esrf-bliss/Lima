@@ -24,11 +24,11 @@
 
 #include <string>
 
-#include "ThreadUtils.h"
-#include "Debug.h"
-#include "SizeUtils.h"
+#include "lima/ThreadUtils.h"
+#include "lima/Debug.h"
+#include "lima/SizeUtils.h"
 
-#include <Data.h>
+#include "processlib/Data.h"
 
 namespace lima
 {

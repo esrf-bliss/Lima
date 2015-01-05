@@ -22,7 +22,7 @@
 class HwFlipCtrlObj
 {
 %TypeHeaderCode
-#include <HwFlipCtrlObj.h>
+#include "lima/HwFlipCtrlObj.h"
 using namespace lima;
 %End
  public:

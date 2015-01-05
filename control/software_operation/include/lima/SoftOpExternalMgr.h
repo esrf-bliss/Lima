@@ -24,8 +24,8 @@
 #include <string>
 #include <list>
 #include <map>
-#include "SoftOpId.h"
-#include "TaskMgr.h"
+#include "lima/SoftOpId.h"
+#include "processlib/TaskMgr.h"
 
 namespace lima
 {

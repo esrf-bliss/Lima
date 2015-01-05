@@ -1,9 +1,9 @@
 #ifndef CTEVENT_H
 #define CTEVENT_H
 
-#include "LimaCompatibility.h"
-#include "CtControl.h"
-#include "Event.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/CtControl.h"
+#include "lima/Event.h"
 
 namespace lima
 {

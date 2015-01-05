@@ -22,9 +22,9 @@
 #ifndef HWFLIPCTRLOBJ_H
 #define HWFLIPCTRLOBJ_H
 
-#include "LimaCompatibility.h"
-#include "SizeUtils.h"
-#include "Debug.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/SizeUtils.h"
+#include "lima/Debug.h"
 
 namespace lima
 {

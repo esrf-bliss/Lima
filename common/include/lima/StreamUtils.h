@@ -29,7 +29,7 @@
 #include <sstream>
 #include <vector>
 
-#include "LimaCompatibility.h"
+#include "lima/LimaCompatibility.h"
 
 class LIMACORE_API NullStreamBuf : public std::stringbuf
 {

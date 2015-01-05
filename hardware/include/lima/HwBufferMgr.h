@@ -22,10 +22,10 @@
 #ifndef HWBUFFERMGR_H
 #define HWBUFFERMGR_H
 
-#include "LimaCompatibility.h"
-#include "HwFrameCallback.h"
-#include "HwBufferCtrlObj.h"
-#include "MemUtils.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/HwFrameCallback.h"
+#include "lima/HwBufferCtrlObj.h"
+#include "lima/MemUtils.h"
 
 #include <vector>
 #include <set>

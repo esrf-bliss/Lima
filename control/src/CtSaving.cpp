@@ -32,10 +32,10 @@
 #include <direct.h>
 #endif
 
-#include "CtSaving.h"
+#include "lima/CtSaving.h"
 #include "CtSaving_Edf.h"
-#include "CtAcquisition.h"
-#include "CtBuffer.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtBuffer.h"
 
 #ifdef WITH_NXS_SAVING
 #include "CtSaving_Nxs.h"
@@ -57,8 +57,8 @@
 #include "CtSaving_Hdf5.h"
 #endif
 
-#include "TaskMgr.h"
-#include "SinkTask.h"
+#include "processlib/TaskMgr.h"
+#include "processlib/SinkTask.h"
 
 using namespace lima;
 

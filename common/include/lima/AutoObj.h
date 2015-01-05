@@ -24,7 +24,7 @@
 
 #include <stdio.h>	// For NULL
 
-#include "LimaCompatibility.h"
+#include "lima/LimaCompatibility.h"
 
 namespace lima
 {

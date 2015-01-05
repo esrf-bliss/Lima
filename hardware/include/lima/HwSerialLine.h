@@ -30,10 +30,10 @@
 #ifndef HWSERIALLINE_H
 #define HWSERIALLINE_H
 
-#include "LimaCompatibility.h"
+#include "lima/LimaCompatibility.h"
 #include <string>
-#include "Debug.h"
-#include "Exceptions.h"
+#include "lima/Debug.h"
+#include "lima/Exceptions.h"
 
 
 namespace lima {

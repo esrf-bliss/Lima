@@ -23,8 +23,8 @@
 #define CTSAVING_HDF5_H
 
 #include "H5Cpp.h"
-#include "CtSaving.h"
-#include "CtAcquisition.h"
+#include "lima/CtSaving.h"
+#include "lima/CtAcquisition.h"
 #include <string>
 
 using namespace H5;

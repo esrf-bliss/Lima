@@ -1,10 +1,10 @@
 #ifndef CTVIDEO_H
 #define CTVIDEO_H
 
-#include "LimaCompatibility.h"
-#include "CtControl.h"
-#include "CtConfig.h"
-#include "VideoUtils.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/CtControl.h"
+#include "lima/CtConfig.h"
+#include "lima/VideoUtils.h"
 
 namespace lima
 {

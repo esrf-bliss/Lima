@@ -24,13 +24,13 @@
 
 #include <set>
 
-#include "LimaCompatibility.h"
-#include "ThreadUtils.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/ThreadUtils.h"
 
-#include "HwInterface.h"
+#include "lima/HwInterface.h"
 
-#include "Data.h"
-#include "LinkTask.h"
+#include "processlib/Data.h"
+#include "processlib/LinkTask.h"
 
 
 namespace lima 

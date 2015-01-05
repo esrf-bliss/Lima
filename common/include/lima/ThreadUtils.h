@@ -22,8 +22,8 @@
 #ifndef THREADUTILS_H
 #define THREADUTILS_H
 
-#include "LimaCompatibility.h"
-#include "AutoObj.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/AutoObj.h"
 #include <pthread.h>
 
 namespace lima

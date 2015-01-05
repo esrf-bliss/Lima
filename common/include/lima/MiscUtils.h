@@ -25,7 +25,7 @@
 #include <map>
 #include <algorithm>
 
-#include "LimaCompatibility.h"
+#include "lima/LimaCompatibility.h"
 
 namespace lima
 {

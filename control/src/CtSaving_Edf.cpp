@@ -32,7 +32,7 @@ using namespace lima;
 
 #ifdef WITH_EDFGZ_SAVING
 #include <zlib.h>
-#include "SinkTask.h"
+#include "processlib/SinkTask.h"
 
 #define TEST_AVAIL_OUT	if(!m_compression_struct.avail_out) \
     {							    \

@@ -22,11 +22,11 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include "HwInterface.h"
-#include "HwBufferMgr.h"
+#include "lima/HwInterface.h"
+#include "lima/HwBufferMgr.h"
 #include "SimulatorFrameBuilder.h"
-#include "ThreadUtils.h"
-#include "SizeUtils.h"
+#include "lima/ThreadUtils.h"
+#include "lima/SizeUtils.h"
 #include <ostream>
 
 namespace lima

@@ -23,10 +23,10 @@
 #define HWFILEEVENT_H
 #ifdef __linux__
 
-#include "DirectoryEventUtils.h"
-#include "HwFrameInfo.h"
-#include "HwFrameCallback.h"
-#include "HwBufferCtrlObj.h"
+#include "lima/DirectoryEventUtils.h"
+#include "lima/HwFrameInfo.h"
+#include "lima/HwFrameCallback.h"
+#include "lima/HwBufferCtrlObj.h"
 
 namespace lima
 {

@@ -19,9 +19,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SoftOpId.h"
+#include "lima/SoftOpId.h"
 using namespace lima;
-#include "BackgroundSubstraction.h"
+#include "processlib/BackgroundSubstraction.h"
 
 //-------------------- BACKGROUND SUBSTRACTION --------------------
 				   

@@ -19,8 +19,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "HwSavingCtrlObj.h"
-#include "Exceptions.h"
+#include "lima/HwSavingCtrlObj.h"
+#include "lima/Exceptions.h"
 #include <deque>
 #include <algorithm>
 

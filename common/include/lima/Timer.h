@@ -21,7 +21,7 @@
 //###########################################################################
 #ifndef TIMER_H
 #define TIMER_H
-#include "ThreadUtils.h"
+#include "lima/ThreadUtils.h"
 
 #ifdef WIN32
 

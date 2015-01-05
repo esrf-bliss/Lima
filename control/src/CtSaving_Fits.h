@@ -18,7 +18,7 @@
 #ifndef CTSAVING_FITS_H
 #define CTSAVING_FITS_H
 
-#include "CtSaving.h"
+#include "lima/CtSaving.h"
 
 #include <memory>
 

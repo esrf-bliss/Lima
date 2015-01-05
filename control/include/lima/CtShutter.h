@@ -22,12 +22,12 @@
 #ifndef CTSHUTTER_H
 #define CTSHUTTER_H
 
-#include "LimaCompatibility.h"
-#include "Constants.h"
-#include "SizeUtils.h"
-#include "HwInterface.h"
-#include "HwShutterCtrlObj.h"
-#include "CtConfig.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Constants.h"
+#include "lima/SizeUtils.h"
+#include "lima/HwInterface.h"
+#include "lima/HwShutterCtrlObj.h"
+#include "lima/CtConfig.h"
 
 #include <vector>
 

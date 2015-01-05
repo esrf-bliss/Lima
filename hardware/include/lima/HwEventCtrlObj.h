@@ -22,7 +22,7 @@
 #ifndef HWEVENTCTRLOBJ_H
 #define HWEVENTCTRLOBJ_H
 
-#include "Event.h"
+#include "lima/Event.h"
 
 namespace lima
 {

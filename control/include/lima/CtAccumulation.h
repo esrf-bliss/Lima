@@ -22,13 +22,13 @@
 #ifndef CTACCUMULATION_H
 #define CTACCUMULATION_H
 
-#include "LimaCompatibility.h"
+#include "lima/LimaCompatibility.h"
 #include <list>
 #include <deque>
 
-#include "CtControl.h"
-#include "CtConfig.h"
-#include "SinkTaskMgr.h"
+#include "lima/CtControl.h"
+#include "lima/CtConfig.h"
+#include "processlib/SinkTaskMgr.h"
 
 namespace lima
 {

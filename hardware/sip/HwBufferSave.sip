@@ -22,7 +22,7 @@
 class HwBufferSave 
 {
 %TypeHeaderCode
-#include <HwBufferSave.h>
+#include "lima/HwBufferSave.h"
 using namespace lima;
 %End
   public :

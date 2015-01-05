@@ -24,7 +24,7 @@
 
 #ifdef __linux__
 #include <string>
-#include "Debug.h"
+#include "lima/Debug.h"
 
 namespace lima
 {

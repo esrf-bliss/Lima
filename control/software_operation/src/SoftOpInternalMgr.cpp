@@ -19,13 +19,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SoftOpInternalMgr.h"
+#include "lima/SoftOpInternalMgr.h"
 using namespace lima;
 
-#include "Flip.h"
-#include "Binning.h"
-#include "SoftRoi.h"
-#include "Rotation.h"
+#include "processlib/Flip.h"
+#include "processlib/Binning.h"
+#include "processlib/SoftRoi.h"
+#include "processlib/Rotation.h"
 
 SoftOpInternalMgr::SoftOpInternalMgr() :
   m_reconstruction_task(NULL),m_end_callback(NULL)

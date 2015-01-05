@@ -22,8 +22,8 @@
 #ifndef TIMESTAMP_H
 #define TIMESTAMP_H
 
-#include "LimaCompatibility.h"
-#include "Exceptions.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Exceptions.h"
 
 namespace lima
 {

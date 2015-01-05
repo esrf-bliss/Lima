@@ -22,7 +22,7 @@
 #ifndef REGEX_H
 #define REGEX_H
 
-#include "Exceptions.h"
+#include "lima/Exceptions.h"
 
 #include <string>
 #include <vector>

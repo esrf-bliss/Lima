@@ -22,9 +22,9 @@
 #ifndef HWSYNCCTRLOBJ_H
 #define HWSYNCCTRLOBJ_H
 
-#include "LimaCompatibility.h"
-#include "Constants.h"
-#include "HwBufferCtrlObj.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Constants.h"
+#include "lima/HwBufferCtrlObj.h"
 
 namespace lima
 {

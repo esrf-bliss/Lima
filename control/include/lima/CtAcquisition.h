@@ -25,13 +25,13 @@
 #include <algorithm>
 #include <sstream>
 
-#include "LimaCompatibility.h"
-#include "Constants.h"
-#include "HwInterface.h"
-#include "HwCap.h"
-#include "CtControl.h"
-#include "CtConfig.h"
-#include "Debug.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Constants.h"
+#include "lima/HwInterface.h"
+#include "lima/HwCap.h"
+#include "lima/CtControl.h"
+#include "lima/CtConfig.h"
+#include "lima/Debug.h"
 
 namespace lima 
 {	

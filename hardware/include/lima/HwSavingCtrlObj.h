@@ -24,10 +24,10 @@
 #include <string>
 #include <map>
 #include <list>
-#include "LimaCompatibility.h"
-#include "Debug.h"
-#include "HwFrameInfo.h"
-#include "DirectoryEventUtils.h"
+#include "lima/LimaCompatibility.h"
+#include "lima/Debug.h"
+#include "lima/HwFrameInfo.h"
+#include "lima/DirectoryEventUtils.h"
 
 namespace lima
 {
