@@ -880,7 +880,7 @@ void CtImage::_setHSFlip(const Flip &flip)
       else
 	{
 	  Flip set_sw_flip = flip - set_hw_flip;
-	  m_sw->setFlip(set_hw_flip);
+	  m_sw->setFlip(set_sw_flip);
 	}
     }
   else
