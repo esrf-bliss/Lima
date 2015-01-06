@@ -38,7 +38,7 @@ namespace lima
     class Callback
     {
     public:
-
+      virtual ~Callback() {}
       virtual void prepare(const DirectoryEvent::Parameters&) {}
       virtual bool getFrameInfo(int image_number,const char* full_path,
 				CallFrom,HwFrameInfoType&) = 0;

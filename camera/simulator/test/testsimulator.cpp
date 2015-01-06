@@ -63,7 +63,6 @@ int main(int argc, char *argv[])
 
 	FrameDim frame_dim;
 	simu.getFrameDim(frame_dim);
-	Size size = frame_dim.getSize();
 
 	HwBufferCtrlObj *buffer_ctrl_obj = simu.getBufferCtrlObj();
 	buffer_ctrl_obj->setFrameDim(frame_dim);
