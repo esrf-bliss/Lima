@@ -1,15 +1,15 @@
 #include <list>
-#include "HwVideoCtrlObj.h"
-#include "CtVideo.h"
-#include "CtAcquisition.h"
-#include "CtImage.h"
-#include "CtBuffer.h"
+#include "lima/HwVideoCtrlObj.h"
+#include "lima/CtVideo.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtImage.h"
+#include "lima/CtBuffer.h"
 
-#include "PoolThreadMgr.h"
-#include "SinkTask.h"
-#include "TaskMgr.h"
-#include "Binning.h"
-#include "SoftRoi.h"
+#include "processlib/PoolThreadMgr.h"
+#include "processlib/SinkTask.h"
+#include "processlib/TaskMgr.h"
+#include "processlib/Binning.h"
+#include "processlib/SoftRoi.h"
 
 using namespace lima;
 enum ParModifyMask

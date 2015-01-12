@@ -21,8 +21,8 @@
 //###########################################################################
 class CtBuffer {
 %TypeHeaderCode
-#include <CtBuffer.h>
-#include <Constants.h>
+#include "lima/CtBuffer.h"
+#include "lima/Constants.h"
 #include <sstream>
 using namespace lima;
 %End

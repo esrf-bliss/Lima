@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include "SimulatorInterface.h"
-#include "HwBufferSave.h"
+#include "lima/HwBufferSave.h"
 
 #include <iostream>
 

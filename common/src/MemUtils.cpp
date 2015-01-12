@@ -19,8 +19,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "MemUtils.h"
-#include "Exceptions.h"
+#include "lima/MemUtils.h"
+#include "lima/Exceptions.h"
 
 #include <cstdlib>
 #include <sstream>

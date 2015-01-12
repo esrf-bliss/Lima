@@ -22,7 +22,7 @@
 class HwFrameCallbackGen
 {
 %TypeHeaderCode
-#include <HwFrameCallback.h>
+#include "lima/HwFrameCallback.h"
 using namespace lima;
 %End
  public:
@@ -41,7 +41,7 @@ using namespace lima;
 class HwFrameCallback
 {
 %TypeHeaderCode
-#include <HwFrameCallback.h>
+#include "lima/HwFrameCallback.h"
 using namespace lima;
 %End
  public:

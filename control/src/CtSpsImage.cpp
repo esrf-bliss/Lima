@@ -19,10 +19,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SinkTask.h"
-#include "TaskMgr.h"
+#include "processlib/SinkTask.h"
+#include "processlib/TaskMgr.h"
 
-#include "CtSpsImage.h"
+#include "lima/CtSpsImage.h"
 
 #include <sps.h>
 

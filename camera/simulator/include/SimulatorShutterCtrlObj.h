@@ -22,7 +22,7 @@
 #ifndef SIMULATORSHUTTERCTRLOBJ_H
 #define SIMULATORSHUTTERCTRLOBJ_H
 
-#include "HwInterface.h"
+#include "lima/HwInterface.h"
 #include "SimulatorCamera.h"
 
 namespace lima

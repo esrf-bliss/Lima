@@ -23,9 +23,9 @@
 #define METAINTERFACE_H
 #include <map>
 
-#include "HwInterface.h"
+#include "lima/HwInterface.h"
 
-#include "Data.h"
+#include "processlib/Data.h"
 
 namespace lima
 {

@@ -191,8 +191,8 @@ endif
 
 ifneq ($(COMPILE_MAXIPIX),0)
 
-MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L.
-MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia
+MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L. -g
+MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia 
 
 maxipix-name	:= maxipix
 maxipix-objs	:= ../camera/maxipix/src/Maxipix.o

@@ -22,6 +22,10 @@
 
 #ifdef __unix
 #include <sys/time.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #else
 #include <time_compat.h>
 #endif
@@ -32,7 +36,7 @@ using namespace lima;
 
 #ifdef WITH_EDFGZ_SAVING
 #include <zlib.h>
-#include "SinkTask.h"
+#include "processlib/SinkTask.h"
 
 #define TEST_AVAIL_OUT	if(!m_compression_struct.avail_out) \
     {							    \
@@ -245,6 +249,7 @@ bool SaveContainerEdf::_open(const std::string &filename,
   m_fout.clear();
   m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
   m_fout.open(filename.c_str(),openFlags);
+  m_current_filename = filename;
   return true;
 }
 
@@ -260,6 +265,13 @@ void SaveContainerEdf::_close()
   DEB_TRACE() << "Close current file";
 
   m_fout.close();
+#ifdef __unix
+  if(m_mmap_info.mmap_addr)
+    {
+      munmap(m_mmap_info.mmap_addr,m_mmap_info.header_size);
+      m_mmap_info.mmap_addr = NULL;
+    }
+#endif
 }
 
 void SaveContainerEdf::_writeFile(Data &aData,
@@ -288,7 +300,45 @@ void SaveContainerEdf::_writeFile(Data &aData,
       _writeEdfHeader(aData,aHeader,
 		      pars.framesPerFile,m_fout);
     }
-  
+#ifdef __unix
+  else if(aFormat == CtSaving::EDFConcat)
+    {
+      m_mmap_info.height += aData.dimensions[1];
+      m_mmap_info.size += aData.size();
+      if(!m_mmap_info.mmap_addr)	// Create header and mmap
+	{
+	  const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
+	  m_mmap_info = _writeEdfHeader(aData,aHeader,pars.framesPerFile,m_fout,8);
+	  m_fout.flush();
+	  long long header_position = m_fout.tellp();
+	  header_position -= m_mmap_info.header_size;
+          long sz = sysconf(_SC_PAGESIZE);
+	  long long mapping_offset = header_position / sz * sz;
+	  m_mmap_info.header_size += header_position - mapping_offset;
+	  m_mmap_info.height_offset -= mapping_offset;
+	  m_mmap_info.size_offset -= mapping_offset;
+	  int fd = ::open(m_current_filename.c_str(),O_RDWR);
+	  if(fd > -1)
+	    {
+	      m_mmap_info.mmap_addr = mmap(NULL,m_mmap_info.header_size,
+					   PROT_WRITE,MAP_SHARED,fd,mapping_offset);
+	      ::close(fd);
+	    }
+	  m_mmap_info.height = aData.dimensions[1];
+	  m_mmap_info.size = aData.size();
+	}
+      else
+	{
+	  char* start_size_string = (char*)m_mmap_info.mmap_addr + m_mmap_info.size_offset;
+	  int nbchar = sprintf(start_size_string,"%lld",m_mmap_info.size);
+	  start_size_string[nbchar] = ' ';
+
+	  char* start_height_string = (char*)m_mmap_info.mmap_addr + m_mmap_info.height_offset;
+	  nbchar = sprintf(start_height_string,"%lld",m_mmap_info.height);
+	  start_height_string[nbchar] = ' ';
+	}
+    }
+#endif
   m_fout.write((char*)aData.data(),aData.size());
 
 
@@ -298,9 +348,12 @@ void SaveContainerEdf::_writeFile(Data &aData,
 }
 
 template<class Stream>
-void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader,
-				       int framesPerFile,
-				       Stream &sout)
+SaveContainerEdf::MmapInfo
+SaveContainerEdf::_writeEdfHeader(Data &aData,
+				  CtSaving::HeaderMap &aHeader,
+				  int framesPerFile,
+				  Stream &sout,
+				  int nbCharReserved)
 {
   time_t ctime_now;
   time(&ctime_now);
@@ -340,9 +393,17 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader,
     }
   sout << "DataType = " << aStringType << " ;\n";
 
-  sout << "Size = " << aData.size() << " ;\n";
+  SaveContainerEdf::MmapInfo offset;
+  sout << "Size = "; offset.size_offset = sout.tellp();
+  snprintf(aBuffer,sizeof(aBuffer),"%*s ;\n",nbCharReserved,"");
+  sout << aData.size() << aBuffer;
+
   sout << "Dim_1 = " << aData.dimensions[0] << " ;\n";
-  sout << "Dim_2 = " << aData.dimensions[1] << " ;\n";
+
+  sout << "Dim_2 = "; offset.height_offset = sout.tellp();
+  snprintf(aBuffer,sizeof(aBuffer),"%*s ;\n",nbCharReserved,"");
+  sout << aData.dimensions[1] << aBuffer;
+  
   sout << "Image = " << image_nb << " ;\n";
 
   sout << "acq_frame_nb = " << aData.frameNumber << " ;\n";
@@ -383,6 +444,8 @@ void SaveContainerEdf::_writeEdfHeader(Data &aData,CtSaving::HeaderMap &aHeader,
   long long finalHeaderLenght = (lenght + 1023) & ~1023; // 1024 alignment
   snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght),"");
   sout << aBuffer;
+  offset.header_size = finalHeaderLenght;
+  return offset;
 }
 
 SinkTaskBase* SaveContainerEdf::getCompressionTask(const CtSaving::HeaderMap& header)

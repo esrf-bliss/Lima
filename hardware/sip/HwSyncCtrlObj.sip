@@ -22,7 +22,7 @@
 class HwSyncCtrlObj
 {
 %TypeHeaderCode
-#include <HwSyncCtrlObj.h>
+#include "lima/HwSyncCtrlObj.h"
 using namespace lima;
 %End
 public:

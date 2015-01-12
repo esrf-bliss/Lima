@@ -22,7 +22,7 @@
   class CtVideo
   {
 %TypeHeaderCode
-#include <CtVideo.h>
+#include "lima/CtVideo.h"
 using namespace lima;
 %End
 
@@ -145,7 +145,7 @@ using namespace lima;
 {
 %TypeHeaderCode
 #include <vector>
-#include <CtVideo.h>
+#include "lima/CtVideo.h"
 using namespace lima;
 %End
 

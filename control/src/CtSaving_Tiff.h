@@ -20,7 +20,7 @@
 
 #include <tiffio.h>
 
-#include "CtSaving.h"
+#include "lima/CtSaving.h"
 
 namespace lima {
 

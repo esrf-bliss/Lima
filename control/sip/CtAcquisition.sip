@@ -21,8 +21,8 @@
 //###########################################################################
 class CtAcquisition {
 %TypeHeaderCode
-#include <CtAcquisition.h>
-#include <Constants.h>
+#include "lima/CtAcquisition.h"
+#include "lima/Constants.h"
 using namespace lima;
 %End
     public:
@@ -111,7 +111,7 @@ using namespace lima;
 {
 %TypeHeaderCode
 #include <vector>
-#include <CtAcquisition.h>
+#include "lima/CtAcquisition.h"
 using namespace lima;
 %End
 

@@ -22,13 +22,13 @@
 #include "MetaInterface.h"
 #include "MetaDetInfoCtrlObj.h"
 #include "MetaSyncCtrlObj.h"
-#include "HwReconstructionCtrlObj.h"
+#include "lima/HwReconstructionCtrlObj.h"
 
-#include "PoolThreadMgr.h"
-#include "TaskMgr.h"
-#include "LinkTask.h"
+#include "processlib/PoolThreadMgr.h"
+#include "processlib/TaskMgr.h"
+#include "processlib/LinkTask.h"
 
-#include "CtBuffer.h"
+#include "lima/CtBuffer.h"
 
 using namespace lima;
 using namespace lima::Meta;

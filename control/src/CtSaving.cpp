@@ -32,10 +32,10 @@
 #include <direct.h>
 #endif
 
-#include "CtSaving.h"
+#include "lima/CtSaving.h"
 #include "CtSaving_Edf.h"
-#include "CtAcquisition.h"
-#include "CtBuffer.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtBuffer.h"
 
 #ifdef WITH_NXS_SAVING
 #include "CtSaving_Nxs.h"
@@ -57,8 +57,8 @@
 #include "CtSaving_Hdf5.h"
 #endif
 
-#include "TaskMgr.h"
-#include "SinkTask.h"
+#include "processlib/TaskMgr.h"
+#include "processlib/SinkTask.h"
 
 using namespace lima;
 
@@ -324,8 +324,15 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed";
 #endif
     goto common;
+  case EDFConcat:
+#ifndef __unix
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf concat "
+                                     "saving option, not managed";
+#endif
+    goto common;
   case RAW:
   case EDF:
+
 
   common:
     if (m_save_cnt) {
@@ -343,6 +350,7 @@ void CtSaving::Stream::createSaveContainer()
   case RAW:
   case EDF:
   case EDFGZ:
+  case EDFConcat:
     m_save_cnt = new SaveContainerEdf(*this,m_pars.fileFormat);
     break;
 #ifdef WITH_CBF_SAVING

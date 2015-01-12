@@ -22,7 +22,7 @@
 class HwShutterCtrlObj
 {
 %TypeHeaderCode
-#include <HwShutterCtrlObj.h>
+#include "lima/HwShutterCtrlObj.h"
 using namespace lima;
 %End
 

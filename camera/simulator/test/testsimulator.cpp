@@ -20,8 +20,8 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include "SimulatorCamera.h"
-#include "HwBufferSave.h"
-#include "PoolThreadMgr.h"
+#include "lima/HwBufferSave.h"
+#include "processlib/PoolThreadMgr.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -63,7 +63,6 @@ int main(int argc, char *argv[])
 
 	FrameDim frame_dim;
 	simu.getFrameDim(frame_dim);
-	Size size = frame_dim.getSize();
 
 	HwBufferCtrlObj *buffer_ctrl_obj = simu.getBufferCtrlObj();
 	buffer_ctrl_obj->setFrameDim(frame_dim);

@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#include "CtAcquisition.h"
+#include "lima/CtAcquisition.h"
 #include "math.h"
 
 #define CHECK_EXPOTIME(val)						\

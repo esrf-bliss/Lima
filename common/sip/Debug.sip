@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 %ExportedHeaderCode
-#include <Debug.h>
+#include "lima/Debug.h"
 using namespace lima;
 %End
 
@@ -72,8 +72,8 @@ typedef const char *ConstStr;
 class DebParams
 {
 %TypeHeaderCode
-#include <Debug.h>
-#include <AutoObj.h>
+#include "lima/Debug.h"
+#include "lima/AutoObj.h"
 using namespace lima;
 %End
 
@@ -197,8 +197,8 @@ bool DebHasFlag(DebParams::Flags flags, int val);
 class DebObj
 {
 %TypeHeaderCode
-#include <Debug.h>
-#include <AutoObj.h>
+#include "lima/Debug.h"
+#include "lima/AutoObj.h"
 using namespace lima;
 %End
 

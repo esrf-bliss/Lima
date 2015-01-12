@@ -22,7 +22,7 @@
 class HwMaxImageSizeCallback
 {
 %TypeHeaderCode
-#include "HwMaxImageSizeCallback.h"
+#include "lima/HwMaxImageSizeCallback.h"
 using namespace lima;
 %End
  public:
@@ -39,7 +39,7 @@ using namespace lima;
 class HwMaxImageSizeCallbackGen
 {
 %TypeHeaderCode
-#include "HwMaxImageSizeCallback.h"
+#include "lima/HwMaxImageSizeCallback.h"
 using namespace lima;
 %End
  public:

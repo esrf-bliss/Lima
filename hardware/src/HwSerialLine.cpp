@@ -27,8 +27,8 @@
  * @date   03/06/2009
  *******************************************************************/
 
-#include "HwSerialLine.h"
-#include "Timestamp.h"
+#include "lima/HwSerialLine.h"
+#include "lima/Timestamp.h"
 
 using namespace lima;
 using namespace std;

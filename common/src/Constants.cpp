@@ -21,9 +21,9 @@
 //###########################################################################
 #include <algorithm>
 
-#include "Debug.h"
-#include "Exceptions.h"
-#include "Constants.h"
+#include "lima/Debug.h"
+#include "lima/Exceptions.h"
+#include "lima/Constants.h"
 
 using namespace lima;
 using namespace std;
