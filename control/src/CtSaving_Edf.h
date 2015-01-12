@@ -60,9 +60,26 @@ namespace lima {
   private:
     typedef std::vector<_BufferHelper*> ZBufferType;
     typedef std::map<int,ZBufferType*> dataId2ZBufferType;
+    struct MmapInfo
+    {
+      MmapInfo() :
+	header_size(0),
+	height_offset(0),
+	size_offset(0),
+	height(0),
+	size(0),
+	mmap_addr(NULL) {}
+      long long header_size;
+      long long height_offset;
+      long long size_offset;
+      long long height;
+      long long size;
+      void* mmap_addr;
+    };
     template<class Stream>
-      static void _writeEdfHeader(Data&,CtSaving::HeaderMap&,
-				  int framesPerFile,Stream&);
+      static MmapInfo _writeEdfHeader(Data&,CtSaving::HeaderMap&,
+				      int framesPerFile,Stream&,
+				      int nbCharReserved = 0);
     void _setBuffer(int frameNumber,ZBufferType*);
     ZBufferType* _takeBuffer(int dataId);
 #ifdef WIN32
@@ -96,6 +113,8 @@ namespace lima {
     CtSaving::FileFormat	 m_format;
     dataId2ZBufferType		 m_buffers;
     Mutex			 m_lock;
+    MmapInfo			 m_mmap_info;
+    std::string			 m_current_filename;
   };
 
 }

@@ -326,6 +326,7 @@ void CtSaving::Stream::createSaveContainer()
     goto common;
   case RAW:
   case EDF:
+  case EDFConcat:
 
   common:
     if (m_save_cnt) {
@@ -343,6 +344,7 @@ void CtSaving::Stream::createSaveContainer()
   case RAW:
   case EDF:
   case EDFGZ:
+  case EDFConcat:
     m_save_cnt = new SaveContainerEdf(*this,m_pars.fileFormat);
     break;
 #ifdef WITH_CBF_SAVING
