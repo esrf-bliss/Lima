@@ -22,13 +22,13 @@
 
 #ifdef __unix
 #include <sys/time.h>
-#else
-#include <time_compat.h>
-#endif
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#else
+#include <time_compat.h>
+#endif
 
 #include "CtSaving_Edf.h"
 
@@ -265,11 +265,13 @@ void SaveContainerEdf::_close()
   DEB_TRACE() << "Close current file";
 
   m_fout.close();
+#ifdef __unix
   if(m_mmap_info.mmap_addr)
     {
       munmap(m_mmap_info.mmap_addr,m_mmap_info.header_size);
       m_mmap_info.mmap_addr = NULL;
     }
+#endif
 }
 
 void SaveContainerEdf::_writeFile(Data &aData,
@@ -298,6 +300,7 @@ void SaveContainerEdf::_writeFile(Data &aData,
       _writeEdfHeader(aData,aHeader,
 		      pars.framesPerFile,m_fout);
     }
+#ifdef __unix
   else if(aFormat == CtSaving::EDFConcat)
     {
       m_mmap_info.height += aData.dimensions[1];
@@ -335,6 +338,7 @@ void SaveContainerEdf::_writeFile(Data &aData,
 	  start_height_string[nbchar] = ' ';
 	}
     }
+#endif
   m_fout.write((char*)aData.data(),aData.size());
 
 

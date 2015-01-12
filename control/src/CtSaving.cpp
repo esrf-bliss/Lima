@@ -324,9 +324,15 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed";
 #endif
     goto common;
+  case EDFConcat:
+#ifndef __unix
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf concat "
+                                     "saving option, not managed";
+#endif
+    goto common;
   case RAW:
   case EDF:
-  case EDFConcat:
+
 
   common:
     if (m_save_cnt) {
