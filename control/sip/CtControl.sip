@@ -90,6 +90,9 @@ using namespace lima;
     struct Status
     {
       Status();
+      Status(AcqStatus acq_status, CtControl::ErrorCode err,
+             CtControl::CameraErrorCode cam_err,
+             const CtControl::ImageStatus& img_status);
       void reset();
 
       AcqStatus		         AcquisitionStatus;
@@ -103,6 +106,18 @@ using namespace lima;
 	str << *sipCpp;	
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
+%End
+
+%PickleCode
+      PyObject* image_status = sipConvertFromType(&(sipCpp->ImageCounters),
+                                                  sipType_CtControl_ImageStatus,
+                                                  NULL);
+      sipRes = Py_BuildValue("iiiO", sipCpp->AcquisitionStatus,
+                             sipCpp->Error,
+                             sipCpp->CameraStatus,
+                             image_status);
+      Py_DECREF(image_status);
+
 %End
     };
 

@@ -133,6 +133,8 @@ namespace lima
       DEB_CLASS_NAMESPC(DebModControl,"Control::Status","Control");
     public:
       Status();
+      Status(AcqStatus acq_status, ErrorCode err,
+	     CameraErrorCode cam_err, const ImageStatus& img_status);
       void reset();
 
       AcqStatus		AcquisitionStatus;

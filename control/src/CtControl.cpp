@@ -1172,6 +1172,17 @@ CtControl::Status::Status() :
   DEB_CONSTRUCTOR();
 }
 
+CtControl::Status::Status(AcqStatus acq_status, ErrorCode err,
+			  CameraErrorCode cam_err,
+			  const ImageStatus& img_status) :
+  AcquisitionStatus(acq_status),
+  Error(err),
+  CameraStatus(cam_err),
+  ImageCounters(img_status)
+{
+  DEB_CONSTRUCTOR();
+}
+
 void CtControl::Status::reset()
 {
   DEB_MEMBER_FUNCT();
