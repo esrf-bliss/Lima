@@ -22,7 +22,7 @@
 
 #include <cstdio>
 #include <iostream>
-#include "CtSaving.h"
+#include "lima/CtSaving.h"
 
 #include <nexuscpp/nexuscpp.h>
 
@@ -44,8 +44,9 @@ namespace lima
           virtual void _clear();
 		
 	private:
-      nxcpp::DataStreamer* 	m_writer;
-	  CtSaving::Parameters	m_pars;
+    nxcpp::DataStreamer*        m_writer;
+	CtSaving::Parameters        m_pars;
+    std::vector<std::string>    m_options;
   };
 
 }

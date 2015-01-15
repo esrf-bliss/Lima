@@ -31,13 +31,18 @@ class Setting;
 #include "sipAPIlimacore.h"
  //END TRICK
 
-#include <ConfigUtils.h>
+#include "lima/ConfigUtils.h"
 #ifdef WIN32
 #pragma warning( disable : 4290 )
 #pragma warning( disable : 4800 )
 #endif
 
+#include "numpy/numpyconfig.h"
+#if (defined(NPY_API_VERSION) && NPY_API_VERSION >= 0x00000004 && PY_VERSION_HEX >= 0x03000000)
+#define NO_IMPORT_ARRAY
+#define PY_ARRAY_UNIQUE_SYMBOL _LimaNumPy
 #include "numpy/npy_3kcompat.h"
+#endif
 
 inline long _from_python_long_2_c(PyObject* value,int& return_value)
 {
@@ -306,7 +311,7 @@ inline bool _build_dict_from_setting(const Setting &setting,
 class CtConfig
 {
 %TypeHeaderCode
-#include <CtConfig.h>
+#include "lima/CtConfig.h"
 using namespace lima;
 %End
 public:
@@ -344,7 +349,7 @@ public:
   class ModuleTypeCallback
     {
 %TypeHeaderCode
-#include <CtConfig.h>
+#include "lima/CtConfig.h"
 using namespace lima;
 %End
 

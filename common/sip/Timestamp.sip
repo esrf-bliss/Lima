@@ -22,7 +22,7 @@
 class Timestamp
 {
 %TypeHeaderCode
-#include <Timestamp.h>
+#include "lima/Timestamp.h"
 using namespace lima;
 %End
  public:

@@ -21,12 +21,14 @@
 //###########################################################################
 class CtSwBinRoiFlip {
 %TypeHeaderCode
-#include <CtImage.h>
+#include "lima/CtImage.h"
 #include <sstream>
 using namespace lima;
 %End
     public:
 	CtSwBinRoiFlip(Size& size);
+	CtSwBinRoiFlip(Size& size, const Bin& bin, const Roi& roi,
+		       const Flip& flip, RotationMode rotation);
 	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);
@@ -54,12 +56,22 @@ using namespace lima;
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
 %End
+
+%PickleCode
+	sipRes = Py_BuildValue("OOOOO",
+		sipConvertFromType((void*)&sipCpp->getSize(), sipType_Size, NULL),
+		sipConvertFromType((void*)&sipCpp->getBin(), sipType_Bin, NULL),
+		sipConvertFromType((void*)&sipCpp->getRoi(), sipType_Roi, NULL),
+		sipConvertFromType((void*)&sipCpp->getFlip(), sipType_Flip, NULL),
+		sipConvertFromEnum(sipCpp->getRotation(), sipType_RotationMode));
+%End
+
 };
 
 class CtHwBinRoiFlip 
 {
 %TypeHeaderCode
-#include <CtImage.h>
+#include "lima/CtImage.h"
 using namespace lima;
 %End
     public:
@@ -92,7 +104,7 @@ using namespace lima;
 
 class CtImage {
 %TypeHeaderCode
-#include <CtImage.h>
+#include "lima/CtImage.h"
 using namespace lima;
 %End
     public:

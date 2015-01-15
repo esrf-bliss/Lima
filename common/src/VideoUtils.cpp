@@ -1,6 +1,6 @@
-#include "Exceptions.h"
+#include "lima/Exceptions.h"
 
-#include "VideoUtils.h"
+#include "lima/VideoUtils.h"
 using namespace lima;
 
 /** func tool to convert from color 2 yuv

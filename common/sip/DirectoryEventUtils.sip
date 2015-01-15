@@ -24,7 +24,7 @@
 class DirectoryEvent
 {
 %TypeHeaderCode
-#include <DirectoryEventUtils.h>
+#include "lima/DirectoryEventUtils.h"
 using namespace lima;
 %End
 

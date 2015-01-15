@@ -22,27 +22,27 @@
 #include <string>
 #include <sstream>
 
-#include "CtControl.h"
-#include "CtSaving.h"
+#include "lima/CtControl.h"
+#include "lima/CtSaving.h"
 #ifdef WITH_SPS_IMAGE
-#include "CtSpsImage.h"
+#include "lima/CtSpsImage.h"
 #endif
-#include "CtAcquisition.h"
-#include "CtImage.h"
-#include "CtBuffer.h"
-#include "CtShutter.h"
-#include "CtAccumulation.h"
-#include "CtVideo.h"
-#include "CtEvent.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtImage.h"
+#include "lima/CtBuffer.h"
+#include "lima/CtShutter.h"
+#include "lima/CtAccumulation.h"
+#include "lima/CtVideo.h"
+#include "lima/CtEvent.h"
 #ifdef WITH_CONFIG
-#include "CtConfig.h"
+#include "lima/CtConfig.h"
 #endif
-#include "SoftOpInternalMgr.h"
-#include "SoftOpExternalMgr.h"
+#include "lima/SoftOpInternalMgr.h"
+#include "lima/SoftOpExternalMgr.h"
 
-#include "HwReconstructionCtrlObj.h"
+#include "lima/HwReconstructionCtrlObj.h"
 
-#include "PoolThreadMgr.h"
+#include "processlib/PoolThreadMgr.h"
 
 using namespace lima;
 
@@ -1135,6 +1135,16 @@ CtControl::ImageStatus::ImageStatus()
 {
   DEB_CONSTRUCTOR();
   reset();
+}
+
+CtControl::ImageStatus::ImageStatus(long lastImgAcq, long lastBaseImgReady,
+				    long lastImgReady, long lastImgSaved,
+				    long lastCntReady):
+    LastImageAcquired(lastImgAcq), LastBaseImageReady(lastBaseImgReady),
+    LastImageReady(lastImgReady), LastImageSaved(lastImgSaved),
+    LastCounterReady(lastCntReady)
+{
+    DEB_CONSTRUCTOR();
 }
 
 void CtControl::ImageStatus::reset()

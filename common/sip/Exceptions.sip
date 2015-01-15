@@ -32,7 +32,7 @@ enum ErrorType {
 %Exception Exception(SIP_Exception) /Default/
 {
 %TypeHeaderCode
-#include <Exceptions.h>
+#include "lima/Exceptions.h"
 using namespace lima;
 %End
 %RaiseCode

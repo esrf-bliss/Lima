@@ -22,7 +22,7 @@
 class HwRoiCtrlObj
 {
 %TypeHeaderCode
-#include <HwRoiCtrlObj.h>
+#include "lima/HwRoiCtrlObj.h"
 %End
  public:
 	HwRoiCtrlObj();

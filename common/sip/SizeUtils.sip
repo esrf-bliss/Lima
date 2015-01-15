@@ -24,7 +24,7 @@ bool IsPowerOf2(int x);
 class Point
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 %End
  public:
 	int x;
@@ -75,7 +75,7 @@ enum YBorder {
 class Corner
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -104,7 +104,7 @@ using namespace lima;
 class Size
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -141,12 +141,17 @@ using namespace lima;
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
 %End
+
+%PickleCode
+	sipRes = Py_BuildValue("ii", sipCpp->getWidth(),
+	       	               sipCpp->getHeight());
+%End
 };
 
 class Bin
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -176,12 +181,16 @@ using namespace lima;
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
 %End
+
+%PickleCode
+	sipRes = Py_BuildValue("ii", sipCpp->getX(), sipCpp->getY());
+%End
 };
 
 class Flip
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -205,6 +214,10 @@ using namespace lima;
 	str << *sipCpp;	
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
+%End
+
+%PickleCode
+	sipRes = Py_BuildValue("ii", sipCpp->x, sipCpp->y);
 %End	
 };
 
@@ -214,7 +227,7 @@ Flip operator+(const Flip &f,const Flip &s);
 class Roi
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -260,6 +273,13 @@ using namespace lima;
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
 %End
+
+%PickleCode
+	const Point& topLeft = sipCpp->getTopLeft();
+	const Size& size = sipCpp->getSize();
+	sipRes = Py_BuildValue("iiii", topLeft.x, topLeft.y,
+	       	               size.getWidth(), size.getHeight());
+%End
 };
 
 bool operator ==(const Roi& r1, const Roi& r2);
@@ -269,7 +289,7 @@ bool operator !=(const Roi& r1, const Roi& r2);
 {
 %TypeHeaderCode
 #include <list>
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
 
@@ -349,7 +369,7 @@ return sipGetState(sipTransferObj);
 class FrameDim
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
  public:
@@ -384,12 +404,18 @@ using namespace lima;
 	const std::string& tmpString = str.str();
 	sipRes = tmpString.c_str();
 %End
+
+%PickleCode
+	const Size& size = sipCpp->getSize();
+	sipRes = Py_BuildValue("iii", size.getWidth(), size.getHeight(),
+	       	               sipCpp->getImageType());
+%End
 };
 
 class ArcRoi
 {
 %TypeHeaderCode
-#include <SizeUtils.h>
+#include "lima/SizeUtils.h"
 using namespace lima;
 %End
 public:

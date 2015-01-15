@@ -22,7 +22,7 @@
 class HwBufferCtrlObj
 {
 %TypeHeaderCode
-#include <HwBufferCtrlObj.h>
+#include "lima/HwBufferCtrlObj.h"
 %End
 public:
 	HwBufferCtrlObj();

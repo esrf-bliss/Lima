@@ -22,7 +22,7 @@
 class MutexAttr
 {
 %TypeHeaderCode
-#include <ThreadUtils.h>
+#include "lima/ThreadUtils.h"
 using namespace lima;
 %End
  public:
@@ -42,7 +42,7 @@ using namespace lima;
 class Mutex
 {
 %TypeHeaderCode
-#include <ThreadUtils.h>
+#include "lima/ThreadUtils.h"
 using namespace lima;
 %End
  public:
@@ -70,7 +70,7 @@ using namespace lima;
 class Cond
 {
 %TypeHeaderCode
-#include <ThreadUtils.h>
+#include "lima/ThreadUtils.h"
 using namespace lima;
 %End
  public:

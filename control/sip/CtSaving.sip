@@ -101,7 +101,7 @@ return aReturnTuple;
 class CtSaving 
 {
 %TypeHeaderCode
-#include <CtSaving.h>
+#include "lima/CtSaving.h"
 #include <sstream>
 using namespace lima;
 %End
@@ -126,6 +126,7 @@ using namespace lima;
 	EDFGZ,
 	TIFFFormat,
 	HDF5,
+	EDFConcat,
     };
 
     enum SavingMode {

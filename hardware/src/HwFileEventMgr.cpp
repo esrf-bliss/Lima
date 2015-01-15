@@ -24,7 +24,7 @@
 #include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "HwFileEventMgr.h"
+#include "lima/HwFileEventMgr.h"
 using namespace lima;
 
 void HwFileEventCallbackHelper::prepare(const DirectoryEvent::Parameters& params)

@@ -27,18 +27,18 @@
 #include <libconfig.h++>
 #include <unistd.h>
 
-#include "CtAccumulation.h"
-#include "CtAcquisition.h"
-#include "CtConfig.h"
-#include "CtImage.h"
-#include "CtSaving.h"
-#include "CtShutter.h"
-#include "CtVideo.h"
+#include "lima/CtAccumulation.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtConfig.h"
+#include "lima/CtImage.h"
+#include "lima/CtSaving.h"
+#include "lima/CtShutter.h"
+#include "lima/CtVideo.h"
 
-#include "HwConfigCtrlObj.h"
-#include "HwInterface.h"
+#include "lima/HwConfigCtrlObj.h"
+#include "lima/HwInterface.h"
 
-#include "ConfigUtils.h"
+#include "lima/ConfigUtils.h"
 
 using namespace lima;
 

@@ -22,8 +22,8 @@
 #ifndef METASYNCCTRLOBJ_H
 #define METASYNCCTRLOBJ_H
 
-#include "HwSyncCtrlObj.h"
-#include "HwInterface.h"
+#include "lima/HwSyncCtrlObj.h"
+#include "lima/HwInterface.h"
 
 namespace lima
 {

@@ -27,7 +27,7 @@
  * @date 03/06/2009
  *******************************************************************/
 
-#include "HwBufferSave.h"
+#include "lima/HwBufferSave.h"
 
 #include <ctime>
 #include <cstdio>

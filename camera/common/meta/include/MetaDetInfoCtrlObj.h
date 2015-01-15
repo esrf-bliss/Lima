@@ -22,8 +22,8 @@
 #ifndef METADETINFOCTRLOBJ_H
 #define METADETINFOCTRLOBJ_H
 
-#include "HwDetInfoCtrlObj.h"
-#include "Debug.h"
+#include "lima/HwDetInfoCtrlObj.h"
+#include "lima/Debug.h"
 
 namespace lima
 {

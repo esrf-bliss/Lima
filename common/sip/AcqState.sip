@@ -22,7 +22,7 @@
 class AcqState
 {
 %TypeHeaderCode
-#include <AcqState.h>
+#include "lima/AcqState.h"
 using namespace lima;
 %End
 public:

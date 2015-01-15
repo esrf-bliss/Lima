@@ -40,7 +40,7 @@
 #endif
 #include <unistd.h>
 #include "SimulatorFrameBuilder.h"
-#include "SizeUtils.h"
+#include "lima/SizeUtils.h"
 
 using namespace lima;
 using namespace lima::Simulator;

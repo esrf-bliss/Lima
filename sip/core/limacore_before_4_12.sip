@@ -26,7 +26,7 @@
 %Feature WITH_CONFIG
 
 %ModuleHeaderCode
-  #include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 %End
 
 %MappedType std::string

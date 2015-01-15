@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 %ModuleHeaderCode
-#include <MemUtils.h>
+#include "lima/MemUtils.h"
 using namespace lima;
 %End
 void GetSystemMem(int& mem_unit, int& system_mem);

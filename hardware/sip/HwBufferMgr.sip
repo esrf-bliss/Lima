@@ -22,7 +22,7 @@
 class BufferAllocMgr
 {
 %TypeHeaderCode
-#include <HwBufferMgr.h>
+#include "lima/HwBufferMgr.h"
 using namespace lima;
 %End
  public:
@@ -45,7 +45,7 @@ using namespace lima;
 class SoftBufferAllocMgr : BufferAllocMgr
 {
 %TypeHeaderCode
-#include <HwBufferMgr.h>
+#include "lima/HwBufferMgr.h"
 using namespace lima;
 %End
  public:
@@ -66,7 +66,7 @@ using namespace lima;
 class BufferCbMgr : HwFrameCallbackGen
 {
 %TypeHeaderCode
-#include <HwBufferMgr.h>
+#include "lima/HwBufferMgr.h"
 using namespace lima;
 %End
  public:
@@ -102,7 +102,7 @@ using namespace lima;
 class StdBufferCbMgr : BufferCbMgr
 {
 %TypeHeaderCode
-#include <HwBufferMgr.h>
+#include "lima/HwBufferMgr.h"
 using namespace lima;
 %End
  public:
@@ -137,7 +137,7 @@ using namespace lima;
 class BufferCtrlMgr
 {
 %TypeHeaderCode
-#include <HwBufferMgr.h>
+#include "lima/HwBufferMgr.h"
 using namespace lima;
 %End
  public:
