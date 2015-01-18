@@ -190,6 +190,7 @@ def main():
             extraIncludes += ['/usr/include/flycapture']
         elif(modName == 'rayonixhs'):
             extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include','/opt/rayonix/include/marccd']
+            extra_cxxflags += ['-std=c++0x']
         elif(modName == 'aviex'):
             extra_cxxflags += ['-DOS_UNIX']
         extraIncludes += findModuleIncludes(modName)
