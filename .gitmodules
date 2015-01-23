@@ -112,3 +112,6 @@
 [submodule "third-party/hdf5"]
 	path = third-party/hdf5
 	url = git://github.com/esrf-bliss/hdf5.git
+[submodule "camera/merlin"]
+	path = camera/merlin
+	url = git://github.com/esrf-bliss/Lima-camera-merlin
