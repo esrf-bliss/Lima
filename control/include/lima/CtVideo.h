@@ -139,7 +139,7 @@ namespace lima
     void _read_hw_params();
     void _check_video_mode(VideoMode);
     void _prepareAcq();
-    
+    void _startAcqTime();
 #ifdef WITH_CONFIG
     class _ConfigHandler;
     CtConfig::ModuleTypeCallback* _getConfigHandler();

@@ -130,6 +130,7 @@ public:
     m_video(video),m_buffer(video.m_video->getBuffer()) {}
   virtual ~_InternalImageCBK() {}
   
+    Timestamp		m_start_time;
 protected:
   virtual bool newImage(char * data,int width,int height,VideoMode mode);
 private:
@@ -142,9 +143,12 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR4((void*)data,width,height,mode);
 
+  
   bool liveFlag;
   AutoMutex aLock(m_video.m_cond.mutex());
   if(m_video.m_stopping_live) return false;
+
+  Timestamp now = Timestamp::now();
 
   liveFlag = m_video.m_pars.live;
   int image_counter = (int) m_video.m_image_counter + 1;
@@ -158,6 +162,7 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
 	  lima::image2YUV((unsigned char*)data,width,height,mode,(unsigned char*)ptr);
 	  HwFrameInfoType frame_info;
 	  frame_info.acq_frame_nb = image_counter;
+	  frame_info.frame_timestamp = now - m_start_time;
 	  m_buffer.newFrameReady(frame_info);
 	}
       // Should happen only when video format is not implemented (Debug mode)
@@ -947,6 +952,10 @@ void CtVideo::_prepareAcq()
   buffer->getNumber(m_data_2_image_task->m_nb_buffer);
 }
 
+void CtVideo::_startAcqTime()
+{
+  m_internal_image_callback->m_start_time = Timestamp::now();
+}
 #ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtVideo::_getConfigHandler()
 {
