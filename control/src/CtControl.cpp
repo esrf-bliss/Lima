@@ -410,6 +410,7 @@ void CtControl::startAcq()
 
   AutoMutex aLock(m_cond.mutex());
 
+  m_ct_video->_startAcqTime();
   m_hw->startAcq();
   m_status.AcquisitionStatus = AcqRunning;
   DEB_TRACE() << "Hardware Acquisition started";
