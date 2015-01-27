@@ -63,6 +63,7 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('ultra',            [os.path.join('camera','ultra')]),
            ('meta',             [os.path.join('camera','common','meta')]),
            ('v4l2',         [os.path.join('camera','v4l2')]),
+           ('eiger',            [os.path.join('camera','eiger')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']

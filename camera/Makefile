@@ -216,4 +216,12 @@ ifneq ($(COMPILE_V4l2),0)
 sub-dirs += v4l2
 endif
 
+ifndef COMPILE_EIGER
+COMPILE_EIGER = 0
+endif
+
+ifneq ($(COMPILE_EIGER),0)
+sub-dirs += eiger
+endif
+
 include ../global.inc

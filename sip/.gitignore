@@ -34,6 +34,7 @@ aviex
 meta
 merlin
 v4l2
+eiger
 *.obj
 lima*.exp
 lima*.lib

@@ -750,6 +750,29 @@ $(call lib-full,$(v4l2-name),$(v4l2-ver)): $(v4l2-objs)
 build_targets	+= $(call lib-full,$(v4l2-name),$(v4l2-ver))
 endif
 
+############################
+# LIMA - EIGER
+############################
+ifneq ($(COMPILE_EIGER),0)
+
+EIGER_LDFLAGS	:= $(LDFLAGS) 
+EIGER_LDLIBS	:= $(LDLIBS) -ljsoncpp -lcurl -llz4 -lzmq
+
+eiger-name	:= eiger
+eiger-objs	:= ../camera/eiger/src/Eiger.o
+eiger-ver	:= ../camera/eiger/VERSION
+eiger-flags	:= $(EIGER_LDFLAGS)
+eiger-deps	:= $(EIGER_LDLIBS)
+
+$(call lib-full,$(eiger-name),$(eiger-ver)): $(eiger-objs)
+	$(call compile-lib,$(eiger-name),$(eiger-ver),\
+			   $(eiger-flags),$(eiger-deps),$@,$+)
+	$(call create-links,$(eiger-name),$(eiger-ver))
+
+build_targets	+= $(call lib-full,$(eiger-name),$(eiger-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:

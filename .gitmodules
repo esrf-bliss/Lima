@@ -127,3 +127,6 @@
 [submodule "applications/tango/cpp"]
 	path = applications/tango/cpp
 	url = git://github.com/esrf-bliss/Lima-tango-cpp
+[submodule "camera/eiger"]
+	path = camera/eiger
+	url = git://github.com/esrf-bliss/Lima-camera-eiger.git

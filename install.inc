@@ -230,6 +230,12 @@ V4l2_FULL_VERSION = $(shell cat camera/v4l2/VERSION)
 INSTALL_V4l2_VDIR = $(INSTALL_V4l2_DIR)/v$(V4l2_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_EIGER), 0)
+INSTALL_EIGER_DIR = $(INSTALL_PLAT_DIR)/Eiger
+EIGER_FULL_VERSION = $(shell cat camera/eiger/VERSION)
+INSTALL_EIGER_VDIR = $(INSTALL_EIGER_DIR)/v$(EIGER_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -613,4 +619,14 @@ ifneq ($(COMPILE_V4l2), 0)
 	cp -d build/liblimav4l2.so* $(INSTALL_LIB_DIR)
 	cp sip/v4l2/limav4l2.so $(INSTALL_V4l2_VDIR)
 	cp camera/v4l2/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_EIGER), 0)
+	mkdir -p $(INSTALL_EIGER_VDIR)
+	cp camera/eiger/python/__init__.py $(INSTALL_EIGER_DIR)
+	$(call install_core_dep,$(INSTALL_EIGER_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaeiger.so*
+	cp -d build/liblimaeiger.so* $(INSTALL_LIB_DIR)
+	cp sip/eiger/limaeiger.so $(INSTALL_EIGER_VDIR)
+	cp camera/eiger/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
