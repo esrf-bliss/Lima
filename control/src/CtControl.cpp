@@ -184,12 +184,7 @@ CtControl::ImageStatusThread::ImageStatusThread(Cond& cond,
   : m_cond(cond), m_cb(cb)
 {
   DEB_CONSTRUCTOR();
-  AutoMutex lock(m_cond.mutex());
-
   start();
-
-  // wait thread is ready
-  m_cond.wait();
 }
 
 CtControl::ImageStatusThread::~ImageStatusThread()
@@ -256,9 +251,6 @@ void CtControl::ImageStatusThread::threadFunction()
 
   AutoMutex lock(m_cond.mutex());
 
-  // notify we're ready
-  m_cond.signal();
-
   while (true) {
     while (m_event_list.empty())
       m_cond.wait();
@@ -299,7 +291,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
-  m_img_status_thread(NULL),
+  m_img_status_thread_list(new std::list<ImageStatusThread*>),
   m_reconstruction_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
@@ -368,9 +360,14 @@ CtControl::~CtControl()
   PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
   pool_thread_mgr.wait();
 
-  if (m_img_status_thread)
-    unregisterImageStatusCallback(*m_img_status_thread->cb());
-  
+  for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+      i != m_img_status_thread_list->end();++i)
+    {
+      (*i)->cb()->setImageStatusCallbackGen(NULL);
+      delete *i;
+    }
+  delete m_img_status_thread_list;
+
   if(m_reconstruction_cbk)
     {
       HwReconstructionCtrlObj* reconstruction_obj;
@@ -648,9 +645,12 @@ void CtControl::_calcAcqStatus()
 	  DEB_TRACE() << DEB_VAR1(m_status);
 	}
 
-      if (m_img_status_thread && (m_status.AcquisitionStatus != AcqRunning)) {
+      if (!m_img_status_thread_list->empty() && 
+	  (m_status.AcquisitionStatus != AcqRunning)) {
 	aLock.unlock();
-	m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1);
+	for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+	    i != m_img_status_thread_list->end();++i)
+	  (*i)->imageStatusChanged(m_status.ImageCounters, 1);
 	return;
       }
     }
@@ -875,8 +875,9 @@ void CtControl::resetStatus(bool only_acq_status)
     m_status.AcquisitionStatus = AcqReady;
   } else {
     m_status.reset();
-    if (m_img_status_thread)
-      m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1);
+    for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+	i != m_img_status_thread_list->end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters, 1);
   }
 }
 
@@ -914,8 +915,9 @@ bool CtControl::newFrameReady(Data& fdata)
       if (!internal_stage)
 	newBaseImageReady(fdata);
 
-      if (m_img_status_thread)
-	m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+    for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+	i != m_img_status_thread_list->end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters);
       _calcAcqStatus();
     }
 
@@ -963,8 +965,9 @@ void CtControl::newBaseImageReady(Data &aData)
 
   m_ct_video->frameReady(aData);
 
-  if(m_img_status_thread)
-    m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+  for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+      i != m_img_status_thread_list->end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters);
 
   _calcAcqStatus();
 }
@@ -1005,8 +1008,9 @@ void CtControl::newImageReady(Data &aData)
   if(m_autosave)
     newFrameToSave(aData);
 
-  if (m_img_status_thread)
-    m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+  for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+      i != m_img_status_thread_list->end();++i)
+    (*i)->imageStatusChanged(m_status.ImageCounters);
   _calcAcqStatus();
 }
 
@@ -1038,8 +1042,9 @@ void CtControl::newImageSaved(Data&)
     }
   aLock.unlock();
 
-  if (m_img_status_thread)
-    m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+  for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+      i != m_img_status_thread_list->end();++i)
+    (*i)->imageStatusChanged(m_status.ImageCounters);
   _calcAcqStatus();
 }
 
@@ -1053,29 +1058,52 @@ void CtControl::newFrameToSave(Data& fdata)
   m_ct_saving->frameReady(fdata);
 }
 
+/** registerImageStatusCallback is not thread safe!!!
+ */
 void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_thread);
+  DEB_PARAM() << DEB_VAR1(&cb);
 
-  if (m_img_status_thread)
-    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus != AcqReady)
+    THROW_CTL_ERROR(Error) << "Can't register callback if acquisition is not idle";
 
+  ImageStatusThread *thread = new ImageStatusThread(m_cond, &cb);
+  AutoMutex aLock(m_cond.mutex());
   cb.setImageStatusCallbackGen(this);
-  m_img_status_thread = new ImageStatusThread(m_cond, &cb);
+  m_img_status_thread_list->push_back(thread);
 }
-
+/** unregisterImageStatusCallback is not thread safe!!!
+ */
 void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_thread);
+  DEB_PARAM() << DEB_VAR1(&cb);
 
-  if (!m_img_status_thread || (m_img_status_thread->cb() != &cb))
-    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus != AcqReady)
+    THROW_CTL_ERROR(Error) << "Can't unregister callback if acquisition is not idle";
+
+  AutoMutex aLock(m_cond.mutex());
+  bool found = false;
+  for(std::list<ImageStatusThread*>::iterator i = m_img_status_thread_list->begin();
+      i != m_img_status_thread_list->end();++i)
+    {
+      if((*i)->cb() == &cb)
+	{
+	  found = true;
+	  delete *i;
+	  m_img_status_thread_list->erase(i);
+	  cb.setImageStatusCallbackGen(NULL);
+	  break;
+	}
+    }
   
-  delete m_img_status_thread;
-  m_img_status_thread = NULL;
-  cb.setImageStatusCallbackGen(NULL);
+  if (!found)
+    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
 }
 
 /** @brief this methode check if an overrun 

@@ -281,7 +281,7 @@ namespace lima
 #ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
 #endif
-    ImageStatusThread   *m_img_status_thread;
+    std::list<ImageStatusThread*>*  m_img_status_thread_list;
     SoftOpErrorHandler* m_soft_op_error_handler;
     _ReconstructionChangeCallback* m_reconstruction_cbk;
 
