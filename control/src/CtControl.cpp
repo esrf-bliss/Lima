@@ -157,7 +157,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
-  m_img_status_cb(NULL),
+  m_img_status_cbk_list(new std::list<ImageStatusCallback*>),
   m_reconstruction_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
@@ -226,9 +226,8 @@ CtControl::~CtControl()
   PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
   pool_thread_mgr.wait();
 
-  if (m_img_status_cb)
-    unregisterImageStatusCallback(*m_img_status_cb);
-  
+  delete m_img_status_cbk_list;
+
   if(m_reconstruction_cbk)
     {
       HwReconstructionCtrlObj* reconstruction_obj;
@@ -505,6 +504,14 @@ void CtControl::_calcAcqStatus()
 	    m_status.AcquisitionStatus = AcqReady;
 	  DEB_TRACE() << DEB_VAR1(m_status);
 	}
+      if (!m_img_status_cbk_list->empty() && 
+	  (m_status.AcquisitionStatus != AcqRunning)) {
+	aLock.unlock();
+	for(std::list<ImageStatusCallback*>::iterator i = m_img_status_cbk_list->begin();
+	    i != m_img_status_cbk_list->end();++i)
+	  (*i)->imageStatusChanged(m_status.ImageCounters);
+	return;
+      }
     }
 }
 
@@ -656,6 +663,9 @@ void CtControl::resetStatus(bool only_acq_status)
     m_status.AcquisitionStatus = AcqReady;
   else
     m_status.reset();
+    for(std::list<ImageStatusCallback*>::iterator i = m_img_status_cbk_list->begin();
+	i != m_img_status_cbk_list->end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters);
 }
 
 bool CtControl::newFrameReady(Data& fdata)
@@ -692,8 +702,9 @@ bool CtControl::newFrameReady(Data& fdata)
       if (!internal_stage)
 	newBaseImageReady(fdata);
 
-      if (m_img_status_cb)
-	m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+    for(std::list<ImageStatusCallback*>::iterator i = m_img_status_cbk_list->begin();
+	i != m_img_status_cbk_list->end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters);
       _calcAcqStatus();
     }
 
@@ -744,8 +755,9 @@ void CtControl::newBaseImageReady(Data &aData)
 
   m_ct_video->frameReady(aData);
 
-  if(m_op_ext_link_task_active && m_img_status_cb && img_status_changed)
-    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+  for(std::list<ImageStatusCallback*>::iterator i = m_img_status_cbk_list->begin();
+      i != m_img_status_cbk_list->end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters);
 
   _calcAcqStatus();
 }
@@ -789,8 +801,9 @@ void CtControl::newImageReady(Data &aData)
   if(m_autosave)
     newFrameToSave(aData);
 
-  if (m_img_status_cb && img_status_changed)
-    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+  for(std::list<ImageStatusCallback*>::iterator i = m_img_status_cbk_list->begin();
+      i != m_img_status_cbk_list->end();++i)
+    (*i)->imageStatusChanged(m_status.ImageCounters);
   _calcAcqStatus();
 }
 
@@ -822,8 +835,9 @@ void CtControl::newImageSaved(Data&)
     }
   aLock.unlock();
 
-  if (m_img_status_cb)
-    m_img_status_cb->imageStatusChanged(m_status.ImageCounters);
+  for(std::list<ImageStatusCallback*>::iterator i = m_img_status_cbk_list->begin();
+      i != m_img_status_cbk_list->end();++i)
+    (*i)->imageStatusChanged(m_status.ImageCounters);
   _calcAcqStatus();
 }
 
@@ -837,28 +851,48 @@ void CtControl::newFrameToSave(Data& fdata)
   m_ct_saving->frameReady(fdata);
 }
 
+/** registerImageStatusCallback is not thread safe!!!
+ */
 void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_cb);
+  DEB_PARAM() << DEB_VAR1(&cb);
 
-  if (m_img_status_cb)
-    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus != AcqReady)
+    THROW_CTL_ERROR(Error) << "Can't register callback if acquisition is not idle";
 
-  cb.setImageStatusCallbackGen(this);
-  m_img_status_cb = &cb;
+  AutoMutex aLock(m_cond.mutex());
+  m_img_status_cbk_list->push_back(&cb);
 }
-
+/** unregisterImageStatusCallback is not thread safe!!!
+ */
 void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_cb);
+  DEB_PARAM() << DEB_VAR1(&cb);
 
-  if (m_img_status_cb != &cb)
-    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus != AcqReady)
+    THROW_CTL_ERROR(Error) << "Can't unregister callback if acquisition is not idle";
+
+  AutoMutex aLock(m_cond.mutex());
+  bool found = false;
+  for(std::list<ImageStatusCallback*>::iterator i = m_img_status_cbk_list->begin();
+      i != m_img_status_cbk_list->end();++i)
+    {
+      if((*i) == &cb)
+	{
+	  found = true;
+	  m_img_status_cbk_list->erase(i);
+	  break;
+	}
+    }
   
-  m_img_status_cb = NULL;
-  cb.setImageStatusCallbackGen(NULL);
+  if (!found)
+    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
 }
 
 /** @brief this methode check if an overrun 
