@@ -77,6 +77,7 @@ def clean_all():
   set_project_dir('camera/aviex');clean()
   set_project_dir('camera/basler');clean()
   set_project_dir('camera/marccd');clean()
+  set_project_dir('camera/merlin');clean()
   set_project_dir('camera/pilatus');clean()
   set_project_dir('camera/prosilica');clean()
   set_project_dir('camera/simulator');clean()
@@ -153,14 +154,15 @@ def build_plugins(plugin,target_path):
 # build all linux cameras
 #------------------------------------------------------------------------------
 def build_linux_plugins(target_path):
-	build_plugins('camera/adsc', target_path)
-	build_plugins('camera/aviex', target_path)
-	build_plugins('camera/basler', target_path)
-	build_plugins('camera/marccd', target_path)
-	build_plugins('camera/pilatus', target_path)
-	build_plugins('camera/prosilica', target_path)
-	build_plugins('camera/simulator', target_path)
-	build_plugins('camera/xpad', target_path)
+    build_plugins('camera/adsc', target_path)
+    build_plugins('camera/aviex', target_path)
+    build_plugins('camera/basler', target_path)
+    build_plugins('camera/marccd', target_path)
+    build_plugins('camera/merlin', target_path)
+    build_plugins('camera/pilatus', target_path)
+    build_plugins('camera/prosilica', target_path)
+    build_plugins('camera/simulator', target_path)
+    build_plugins('camera/xpad', target_path)
 
 #------------------------------------------------------------------------------
 # build all win32 cameras
@@ -237,6 +239,9 @@ if __name__ == "__main__":
 	#### Build marccd
 	elif target =='marccd':
 		build_plugins('camera/marccd', target_path)	
+    #### Build merlin
+    elif target =='merlin':
+        build_plugins('camera/merlin', target_path)    
 	#### Build pilatus
 	elif target =='pilatus':
 		build_plugins('camera/pilatus', target_path)
