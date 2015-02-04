@@ -562,7 +562,7 @@ ifneq ($(COMPILE_AVIEX), 0)
 	cp camera/aviex/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
-ifneq ($(COMPILE_MERLIN, 0)
+ifneq ($(COMPILE_MERLIN), 0)
 	mkdir -p $(INSTALL_MERLIN_VDIR)
 	cp camera/merlin/python/__init__.py $(INSTALL_MERLIN_DIR)
 	$(call install_core_dep,$(INSTALL_MERLIN_VDIR))
