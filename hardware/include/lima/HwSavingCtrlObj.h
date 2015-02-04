@@ -60,6 +60,7 @@ namespace lima
     void setOptions(const std::string&);
     void setNextNumber(long number);
     void setIndexFormat(const std::string&);
+    void setOverwritePolicy(const std::string &overwritePolicy);
 
     void setSaveFormat(const std::string &format);
     virtual void getPossibleSaveFormat(std::list<std::string> &format_list) const = 0;
@@ -107,6 +108,7 @@ namespace lima
     long 	m_next_number;
     std::string m_file_format;
     std::string m_index_format;
+    std::string m_overwritePolicy;
 
   private:
     class DirectoryCallback;
