@@ -149,7 +149,7 @@ COMPILE_MERLIN = 0
 endif
 
 ifneq ($(COMPILE_MERLIN),0)
-sub-dirs += MERLIN
+sub-dirs += merlin
 endif
 
 ifndef COMPILE_XPAD
