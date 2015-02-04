@@ -21,7 +21,7 @@
 //###########################################################################
 class CtEvent {
 %TypeHeaderCode
-#include <CtEvent.h>
+#include "lima/CtEvent.h"
 #include <sstream>
 using namespace lima;
 %End

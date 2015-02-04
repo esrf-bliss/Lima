@@ -22,7 +22,7 @@
 #include <ctype.h>
 
 #include "CtSaving_Cbf.h"
-#include "SinkTask.h"
+#include "processlib/SinkTask.h"
 
 using namespace lima;
 

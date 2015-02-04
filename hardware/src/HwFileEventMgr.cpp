@@ -24,7 +24,7 @@
 #include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "HwFileEventMgr.h"
+#include "lima/HwFileEventMgr.h"
 using namespace lima;
 
 void HwFileEventCallbackHelper::prepare(const DirectoryEvent::Parameters& params)
@@ -44,6 +44,9 @@ bool HwFileEventCallbackHelper::nextFileExpected(int file_number,
 						 const char *full_path,
 						 int &next_file_number_expected) throw()
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR3(file_number,full_path,next_file_number_expected);
+
   HwFrameInfoType aNewFrameInfo;
   bool continueFlag = true;
   try
@@ -58,7 +61,7 @@ bool HwFileEventCallbackHelper::nextFileExpected(int file_number,
 	  ++file_number;
 	  if(i->first == file_number)
 	    {
-	      next_file_number_expected = file_number;
+	      next_file_number_expected = file_number + 1;
 	      continueFlag = m_cbk.newFrameReady(i->second);
 	      m_pending_frame_infos.erase(i);
 	    }
@@ -76,6 +79,9 @@ bool HwFileEventCallbackHelper::nextFileExpected(int file_number,
 
 bool HwFileEventCallbackHelper::newFile(int file_number,const char *full_path) throw()
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(file_number,full_path);
+
   bool continueFlag = true;
   DatasPendingType::iterator i = m_pending_frame_infos.find(file_number);
   if(i == m_pending_frame_infos.end())
@@ -297,6 +303,11 @@ void HwTmpfsBufferMgr::registerFrameCallback(HwFrameCallback& frame_cb)
 void HwTmpfsBufferMgr::unregisterFrameCallback(HwFrameCallback& frame_cb)
 {
   HwFrameCallbackGen::unregisterFrameCallback(frame_cb);
+}
+
+HwBufferCtrlObj::Callback* HwTmpfsBufferMgr::getBufferCallback()
+{
+  return m_cbk.getBufferCallback();
 }
 
 int HwTmpfsBufferMgr::_calcNbMaxImages()

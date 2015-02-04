@@ -19,8 +19,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "Timestamp.h"
-#include "Exceptions.h"
+#include "lima/Timestamp.h"
+#include "lima/Exceptions.h"
 
 #ifdef __unix
 #include <sys/time.h>

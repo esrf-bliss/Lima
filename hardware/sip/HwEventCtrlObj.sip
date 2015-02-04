@@ -22,7 +22,7 @@
 class HwEventCtrlObj
 {
 %TypeHeaderCode
-#include "HwEventCtrlObj.h"
+#include "lima/HwEventCtrlObj.h"
 using namespace lima;
 %End
  public:

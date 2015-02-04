@@ -1,4 +1,4 @@
-#include "HwVideoCtrlObj.h"
+#include "lima/HwVideoCtrlObj.h"
 using namespace lima;
 
 HwVideoCtrlObj::HwVideoCtrlObj() 

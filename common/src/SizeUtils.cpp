@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SizeUtils.h"
+#include "lima/SizeUtils.h"
 
 using namespace lima;
 using namespace std;
@@ -163,6 +163,7 @@ int FrameDim::getImageTypeBpp(ImageType type)
 	case Bpp16S:
 	case Bpp16: return 16;
 	case Bpp32S:
+	case Bpp32F:
 	case Bpp32: return 32;
 
 	case Bpp1:
@@ -194,6 +195,7 @@ int FrameDim::getImageTypeDepth(ImageType type)
 		return 2;
 	case Bpp32: 
 	case Bpp32S: 
+	case Bpp32F:
 		return 4;
 
 	case Bpp1:

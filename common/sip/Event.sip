@@ -23,7 +23,7 @@
 class Event
 {
 %TypeHeaderCode
-#include <Event.h>
+#include "lima/Event.h"
 using namespace lima;
 %End
  public:
@@ -61,7 +61,7 @@ using namespace lima;
 class EventCallback
 {
 %TypeHeaderCode
-#include <Event.h>
+#include "lima/Event.h"
 using namespace lima;
 %End
  public:
@@ -75,7 +75,7 @@ using namespace lima;
 class EventCallbackGen
 {
 %TypeHeaderCode
-#include <Event.h>
+#include "lima/Event.h"
 using namespace lima;
 %End
  public:

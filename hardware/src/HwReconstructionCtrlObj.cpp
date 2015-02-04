@@ -19,15 +19,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "HwReconstructionCtrlObj.h"
-#include "Exceptions.h"
-#include "LinkTask.h"
+#include "lima/HwReconstructionCtrlObj.h"
+#include "lima/Exceptions.h"
+#include "processlib/LinkTask.h"
 
 using namespace lima;
 
 HwReconstructionCtrlObj::HwReconstructionCtrlObj() : m_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
+  DEB_TRACE() << DEB_VAR1(m_cbk);
 }
 
 HwReconstructionCtrlObj::~HwReconstructionCtrlObj()

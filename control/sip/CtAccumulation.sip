@@ -23,7 +23,7 @@
 class CtAccumulation
 {
 %TypeHeaderCode
-#include <CtAccumulation.h>
+#include "lima/CtAccumulation.h"
 using namespace lima;
 %End
 public:

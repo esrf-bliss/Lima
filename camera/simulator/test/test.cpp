@@ -32,10 +32,10 @@
 #include <iostream>
 
 #include "SimulatorFrameBuilder.h"
-#include "HwBufferSave.h"
-#include "SizeUtils.h"
-#include "Exceptions.h"
-#include "AutoObj.h"
+#include "lima/HwBufferSave.h"
+#include "lima/SizeUtils.h"
+#include "lima/Exceptions.h"
+#include "lima/AutoObj.h"
 
 using namespace std;
 using namespace lima;

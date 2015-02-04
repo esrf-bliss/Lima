@@ -22,7 +22,7 @@
 class SoftOpExternalMgr
 {
 %TypeHeaderCode
-#include <SoftOpExternalMgr.h>
+#include "lima/SoftOpExternalMgr.h"
 using namespace lima;
 %End
 

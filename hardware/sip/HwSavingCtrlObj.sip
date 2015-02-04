@@ -22,7 +22,7 @@
 class HwSavingCtrlObj
 {
 %TypeHeaderCode
-#include <HwSavingCtrlObj.h>
+#include "lima/HwSavingCtrlObj.h"
 using namespace lima;
 %End
 public:

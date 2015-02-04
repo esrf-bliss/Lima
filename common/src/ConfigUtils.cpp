@@ -25,10 +25,10 @@
 #endif
 #include <libconfig.h++>
 
-#include "Exceptions.h"
-#include "ConfigUtils.h"
+#include "lima/Exceptions.h"
+#include "lima/ConfigUtils.h"
 using namespace lima;
-#include "Data.h"
+#include "processlib/Data.h"
 
 #define CHECK_NULL()				\
   DEB_MEMBER_FUNCT();				\

@@ -22,7 +22,7 @@
 class HwSerialLine
 {
 %TypeHeaderCode
-#include <HwSerialLine.h>
+#include "lima/HwSerialLine.h"
 using namespace lima;
 %End
   public :

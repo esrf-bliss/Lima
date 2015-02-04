@@ -24,7 +24,7 @@
 class Timer
 {
 %TypeHeaderCode
-#include <Timer.h>
+#include "lima/Timer.h"
 %End
 
 public:

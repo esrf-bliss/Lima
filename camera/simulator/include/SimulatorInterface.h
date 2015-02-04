@@ -23,7 +23,7 @@
 #define SIMUHWINTERFACE_H
 
 #include "SimulatorCompatibility.h"
-#include "HwInterface.h"
+#include "lima/HwInterface.h"
 #include "SimulatorCamera.h"
 #include "SimulatorSyncCtrlObj.h"
 #include "SimulatorDetInfoCtrlObj.h"

@@ -23,7 +23,7 @@
 {
 %TypeHeaderCode
 #include <vector>
-#include <HwCap.h>
+#include "lima/HwCap.h"
 %End
 %ConvertToTypeCode
 if(sipIsErr == NULL)
@@ -71,8 +71,8 @@ return returnList;
 class HwInterface
 {
 %TypeHeaderCode
-#include <HwCap.h>
-#include <HwInterface.h>
+#include "lima/HwCap.h"
+#include "lima/HwInterface.h"
 #include <LimaConvertor.h>
 using namespace lima;
 %End  

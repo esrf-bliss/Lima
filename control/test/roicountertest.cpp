@@ -20,8 +20,8 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include <iostream>
-#include "SoftOpExternalMgr.h"
-#include "SizeUtils.h"
+#include "lima/SoftOpExternalMgr.h"
+#include "lima/SizeUtils.h"
 
 using namespace std;
 using namespace lima;
@@ -43,16 +43,16 @@ int main(int argc, char *argv[])
 	SoftOpBaseClass *p = roi_cnt_op_inst.m_opt;
 	SoftOpRoiCounter *roi_cnt_op = static_cast<SoftOpRoiCounter *>(p);
 
-	list<Roi> roi_list;
-	roi_list.push_back(roi);
-	roi_cnt_op->set(roi_list);
+	list<SoftOpRoiCounter::RoiNameAndRoi> roi_list;
+	roi_list.push_back(SoftOpRoiCounter::RoiNameAndRoi("roi1",roi));
+	roi_cnt_op->updateRois(roi_list);
 	cout << "roi list added!" << endl;
 
-	list<Roi> roi_list_check;
-	roi_cnt_op->get(roi_list_check);
-	list<Roi>::const_iterator i, end = roi_list_check.end();
+	list<SoftOpRoiCounter::RoiNameAndRoi> roi_list_check;
+	roi_cnt_op->getRois(roi_list_check);
+	list<SoftOpRoiCounter::RoiNameAndRoi>::const_iterator i, end = roi_list_check.end();
 	for (i = roi_list_check.begin(); i != end; ++i) {
-		const Roi& roi_check = *i;
+		const Roi& roi_check = i->second;
 		cout << "roi_check=" << roi_check << endl;
 	}
 

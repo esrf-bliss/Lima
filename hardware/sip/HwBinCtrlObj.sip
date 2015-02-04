@@ -22,7 +22,7 @@
 class HwBinCtrlObj
 {
 %TypeHeaderCode
-#include <HwBinCtrlObj.h>
+#include "lima/HwBinCtrlObj.h"
 using namespace lima;
 %End
  public:

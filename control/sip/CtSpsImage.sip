@@ -23,7 +23,7 @@
 class CtSpsImage 
 {
 %TypeHeaderCode
-#include <CtSpsImage.h>
+#include "lima/CtSpsImage.h"
 using namespace lima;
 %End  
  public:

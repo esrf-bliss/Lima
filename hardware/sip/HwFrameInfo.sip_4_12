@@ -25,7 +25,7 @@ struct HwFrameInfoType
 #define NO_IMPORT_ARRAY
 #define PY_ARRAY_UNIQUE_SYMBOL _LimaNumPy
 #include "numpy/arrayobject.h"
-#include <HwFrameInfo.h>
+#include <lima/HwFrameInfo.h>
 #include <sstream>
 using namespace lima;
 %End

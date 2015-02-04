@@ -21,9 +21,9 @@
 //###########################################################################
 #include <algorithm>
 
-#include "Debug.h"
-#include "Exceptions.h"
-#include "Constants.h"
+#include "lima/Debug.h"
+#include "lima/Exceptions.h"
+#include "lima/Constants.h"
 
 using namespace lima;
 using namespace std;
@@ -54,7 +54,7 @@ const char* lima::convert_2_string(ImageType image_type)
 	case Bpp16S:		name = "Bpp16S";	break;
 	case Bpp32:		name = "Bpp32";		break;
 	case Bpp32S:		name = "Bpp32S";	break;
-
+	case Bpp32F:		name = "Bpp32F";	break;
 	case Bpp1:		name = "Bpp1";		break;
 	case Bpp4:		name = "Bpp4";		break;
 	case Bpp6:		name = "Bpp6";		break;
@@ -82,7 +82,7 @@ void lima::convert_from_string(const std::string& val,
   else if(buffer == "bpp16s") 	image_type = Bpp16S;
   else if(buffer == "bpp32") 	image_type = Bpp32;
   else if(buffer == "bpp32s") 	image_type = Bpp32S;
-
+  else if(buffer == "bpp32f") 	image_type = Bpp32F;
   else if(buffer == "bpp1") 	image_type = Bpp1;
   else if(buffer == "bpp4") 	image_type = Bpp4;
   else if(buffer == "bpp6") 	image_type = Bpp6;

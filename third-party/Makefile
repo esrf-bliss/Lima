@@ -190,10 +190,10 @@ cfitsio.src:
 	cd cfitsio && $(MAKE) && $(MAKE) install
 
 cfitsio.install:
-	cd cfitsio && ./configure --prefix=$(INSTALL_PLAT_DIR) && $(MAKE) && $(MAKE) install
+	$(MAKE) -C cfitsio install prefix=$(INSTALL_PLAT_DIR)
 
 cfitsio.clean:
-	cd cfitsio && $(MAKE) clean
+	$(MAKE) -C cfitsio clean
 
 CCfits.confsrc:
 	cd CCfits && ./configure --with-cfitsio=`pwd`/../cfitsio --prefix=$(INSTALL_PLAT_DIR)
@@ -217,7 +217,7 @@ libconfig.confsrc:
 	cd libconfig && ./configure --prefix=$(INSTALL_PLAT_DIR)
 
 libconfig.install:
-	cd libconfig && ./configure --prefix=$(INSTALL_PLAT_DIR) && $(MAKE) install
+	$(MAKE) -C libconfig install prefix=$(INSTALL_PLAT_DIR)
 
 gldisplay.src:			gldisplay_build_libgldisplay.so
 
@@ -258,4 +258,4 @@ hdf5.confsrc:
 				--prefix=$(INSTALL_PLAT_DIR)
 
 hdf5.install:
-	cd hdf5	&& $(MAKE) install
+	$(MAKE) -C hdf5 install prefix=$(INSTALL_PLAT_DIR)

@@ -24,7 +24,7 @@
 class DirectoryEvent
 {
 %TypeHeaderCode
-#include <DirectoryEventUtils.h>
+#include "lima/DirectoryEventUtils.h"
 using namespace lima;
 %End
 
@@ -53,5 +53,8 @@ public:
   void stop();
   bool isStopped() const;
   int  getNextFileNumberExpected() const;
+
+  void watch_moved_to();
+  void watch_close_write();
 };
 %End

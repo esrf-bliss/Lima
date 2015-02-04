@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "HwBufferMgr.h"
+#include "lima/HwBufferMgr.h"
 
 #include <cstring>
 
@@ -827,9 +827,8 @@ void SoftBufferCtrlObj::Sync::release(void *address)
 	if (it == m_buffer_in_use.end())
 		THROW_HW_ERROR(Error) << "Internal error: releasing buffer not in used list";
 
-	m_buffer_in_use.erase(it);
-	it = m_buffer_in_use.find(address);
-	if (it == m_buffer_in_use.end())
+	m_buffer_in_use.erase(it++);
+	if (it == m_buffer_in_use.end() || *it != address)
 		m_cond.broadcast();
 }
 

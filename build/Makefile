@@ -191,8 +191,8 @@ endif
 
 ifneq ($(COMPILE_MAXIPIX),0)
 
-MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L.
-MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia
+MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L. -g
+MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia 
 
 maxipix-name	:= maxipix
 maxipix-objs	:= ../camera/maxipix/src/Maxipix.o
@@ -702,6 +702,29 @@ $(call lib-full,$(aviex-name),$(aviex-ver)): $(aviex-objs)
 	$(call create-links,$(aviex-name),$(aviex-ver))
 
 build_targets	+= $(call lib-full,$(aviex-name),$(aviex-ver))
+
+endif
+
+############################
+# LIMA - META
+############################
+ifneq ($(COMPILE_META),0)
+
+META_LDFLAGS	:= $(LDFLAGS)
+META_LDLIBS	:= $(LDLIBS)
+
+meta-name	:= meta
+meta-objs	:= ../camera/common/meta/src/Meta.o
+meta-ver	:= ../camera/common/meta/VERSION
+meta-flags	:= $(META_LDFLAGS)
+meta-deps	:= $(META_LDLIBS)
+
+$(call lib-full,$(meta-name),$(meta-ver)): $(meta-objs)
+	$(call compile-lib,$(meta-name),$(meta-ver),\
+			   $(meta-flags),$(meta-deps),$@,$+)
+	$(call create-links,$(meta-name),$(meta-ver))
+
+build_targets	+= $(call lib-full,$(meta-name),$(meta-ver))
 
 endif
 

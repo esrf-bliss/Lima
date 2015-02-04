@@ -20,9 +20,9 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#include "CtImage.h"
-#include "CtAcquisition.h"
-#include "CtSaving.h"
+#include "lima/CtImage.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtSaving.h"
 
 using namespace lima;
 
@@ -46,6 +46,23 @@ CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size) :
 
 	m_max_size= size;
 	m_max_roi= Roi(Point(0,0), m_max_size);
+}
+
+CtSwBinRoiFlip::CtSwBinRoiFlip(Size& size, const Bin& bin, const Roi& roi,
+                               const Flip& flip, RotationMode rotation) :
+  m_rotation(Rotation_0)
+{
+	DEB_CONSTRUCTOR();
+	DEB_PARAM() << DEB_VAR5(size, bin, roi, flip, rotation);
+
+	m_max_size= size;
+	m_max_roi= Roi(Point(0,0), m_max_size);
+
+	setBin(bin);
+	if (!roi.isEmpty())
+		setRoi(roi);
+	setFlip(flip);
+	setRotation(rotation);
 }
 
 CtSwBinRoiFlip::~CtSwBinRoiFlip()
@@ -771,8 +788,11 @@ void CtImage::_setHSRoi(const Roi &roi)
 		} else {
 			// Apply software flip to hardware roi
 			roi_set_hw = roi_set_hw.getFlipped(aSoftwareFlip,max_roi_size);
+			roi_by_hw = roi_by_hw.getFlipped(aSoftwareFlip,max_roi_size);
 			//Apply software rotation to hardware roi
 			roi_set_hw = roi_set_hw.getRotated(aSoftwareRotation,max_roi_size);
+			roi_by_hw = roi_by_hw.getRotated(aSoftwareRotation,max_roi_size);
+			//Calc the roi by soft needed
 			roi_by_sw= roi_set_hw.subRoiAbs2Rel(roi_by_hw);
 			roi_by_sw= roi_by_sw.getBinned(bin_by_sw);
 			m_sw->setRoi(roi_by_sw);
@@ -860,7 +880,7 @@ void CtImage::_setHSFlip(const Flip &flip)
       else
 	{
 	  Flip set_sw_flip = flip - set_hw_flip;
-	  m_sw->setFlip(set_hw_flip);
+	  m_sw->setFlip(set_sw_flip);
 	}
     }
   else

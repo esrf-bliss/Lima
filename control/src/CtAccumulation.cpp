@@ -19,10 +19,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "CtAccumulation.h"
-#include "CtAcquisition.h"
-#include "CtBuffer.h"
-#include "SinkTask.h"
+#include "lima/CtAccumulation.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtBuffer.h"
+#include "processlib/SinkTask.h"
 #ifndef __unix
 #include "SinkTaskMgr.i"
 #endif

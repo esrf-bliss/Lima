@@ -92,7 +92,7 @@ def checksipexc(ifname,trace_output = None) :
     ifile.close()
     ofile.close()
     if modified:
-        print "File %s was modified" % ifname
+        print(("File %s was modified" % ifname))
     return modified
 
 if __name__ == '__main__':

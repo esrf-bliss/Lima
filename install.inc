@@ -217,6 +217,12 @@ MERLIN_FULL_VERSION = $(shell cat camera/merlin/VERSION)
 INSTALL_MERLIN_VDIR = $(INSTALL_MERLIN_DIR)/v$(MERLIN_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_META), 0)
+INSTALL_META_DIR = $(INSTALL_PLAT_DIR)/Meta
+META_FULL_VERSION = $(shell cat camera/common/meta/VERSION)
+INSTALL_META_VDIR = $(INSTALL_META_DIR)/v$(META_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -266,7 +272,7 @@ install.mkdir:
 	mkdir -p $(INSTALL_PLAT_DIR)
 	cp python/module_helper.py $(INSTALL_PLAT_DIR)
 	mkdir -p $(INSTALL_LIB_DIR)
-	mkdir -p $(INSTALL_INCLUDE_DIR)
+	mkdir -p $(INSTALL_INCLUDE_DIR)/lima
 	mkdir -p $(INSTALL_PKG_CONFIG_DIR)
 
 cfitsio.install:
@@ -306,12 +312,12 @@ ifneq ($(COMPILE_CORE), 0)
 	cp -d build/liblimacore.so* $(INSTALL_LIB_DIR)
 	cp sip/core/limacore.so $(INSTALL_CORE_VDIR)
 	cp common/python/Debug.py $(INSTALL_CORE_VDIR)
-	cp common/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp control/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp control/software_operation/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp hardware/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp third-party/Processlib/core/include/*.h $(INSTALL_INCLUDE_DIR)
-	cp third-party/Processlib/core/include/*.i $(INSTALL_INCLUDE_DIR)
+	cp -r common/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r control/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r control/software_operation/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r hardware/include/lima $(INSTALL_INCLUDE_DIR)
+	cp -r third-party/Processlib/core/include/processlib $(INSTALL_INCLUDE_DIR)
+	cp -r third-party/Processlib/tasks/include/processlib $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_SIMULATOR), 0)
 	mkdir -p $(INSTALL_SIMU_VDIR)
@@ -580,4 +586,14 @@ ifneq ($(COMPILE_GLDISPLAY), 0)
 	cp -d third-party/gldisplay/build/libgldisplay.so* $(INSTALL_LIB_DIR)
 	cp third-party/gldisplay/sip/gldisplay.so $(INSTALL_GLDISPLAY_VDIR)
 	cp third-party/gldisplay/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_META), 0)
+	mkdir -p $(INSTALL_META_VDIR)
+	cp camera/common/meta/python/__init__.py $(INSTALL_META_DIR)
+	$(call install_core_dep,$(INSTALL_META_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimameta.so*
+	cp -d build/liblimameta.so* $(INSTALL_LIB_DIR)
+	cp sip/meta/limameta.so $(INSTALL_META_VDIR)
+	cp camera/common/meta/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
