@@ -1649,6 +1649,7 @@ void CtSaving::_prepare(CtControl& ct)
       m_hwsaving->setSuffix(params.suffix);
       m_hwsaving->setNextNumber(params.nextNumber);
       m_hwsaving->setIndexFormat(params.indexFormat);
+      m_hwsaving->setOverwritePolicy(convert_2_string(params.overwritePolicy));
       std::string fileFormat;
       switch(params.fileFormat)
 	{

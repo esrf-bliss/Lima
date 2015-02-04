@@ -49,6 +49,8 @@ public:
   void setNextNumber(long number);
   void setIndexFormat(const std::string&);
   
+void setOverwritePolicy(const std::string&);
+  
   void setSaveFormat(const std::string &format);
   virtual void getPossibleSaveFormat(std::list<std::string> &format_list) const = 0;
 
