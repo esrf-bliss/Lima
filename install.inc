@@ -437,7 +437,7 @@ ifneq ($(COMPILE_MYTHEN3), 0)
 	$(call install_core_dep,$(INSTALL_MYTHEN3_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimamythen3.so*
 	cp -d build/liblimamythen3.so* $(INSTALL_LIB_DIR)
-	cp sip/mythen3/limamythen3.so $(INSTALL_MYTHEN_VDIR)
+	cp sip/mythen3/limamythen3.so $(INSTALL_MYTHEN3_VDIR)
 	cp camera/mythen3/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
