@@ -954,7 +954,8 @@ void CtVideo::_prepareAcq()
 
 void CtVideo::_startAcqTime()
 {
-  m_internal_image_callback->m_start_time = Timestamp::now();
+  if(m_internal_image_callback)
+    m_internal_image_callback->m_start_time = Timestamp::now();
 }
 #ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtVideo::_getConfigHandler()
