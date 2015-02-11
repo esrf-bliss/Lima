@@ -1033,13 +1033,13 @@ void CtControl::newCounterReady(Data&)
  *  @warning due to sequential saving, no check with image number!!!
  *  @see newImageReady
 */
-void CtControl::newImageSaved(Data&)
+void CtControl::newImageSaved(Data &data)
 {
   DEB_MEMBER_FUNCT();
   CtSaving::ManagedMode savingManagedMode;
   m_ct_saving->getManagedMode(savingManagedMode);
   AutoMutex aLock(m_cond.mutex());
-  ++m_status.ImageCounters.LastImageSaved;
+  m_status.ImageCounters.LastImageSaved = data.frameNumber;
   if(savingManagedMode == CtSaving::Hardware)
     {
       m_status.ImageCounters.LastImageAcquired = m_status.ImageCounters.LastImageSaved;
