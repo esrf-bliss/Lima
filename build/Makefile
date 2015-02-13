@@ -340,6 +340,28 @@ build_targets	+= $(call lib-full,$(adsc-name),$(adsc-ver))
 
 endif
 
+############################
+# LIMA - MERLIN
+############################
+ifneq ($(COMPILE_MERLIN),0)
+
+MERLIN_LDFLAGS	:= $(LDFLAGS)
+MERLIN_LDLIBS	:= $(LDLIBS)
+
+merlin-name	:= merlin
+merlin-objs	:= ../camera/merlin/src/Merlin.o
+merlin-ver	:= ../camera/merlin/VERSION
+merlin-flags	:= $(MERLIN_LDFLAGS)
+merlin-deps	:= $(MERLIN_LDLIBS)
+
+$(call lib-full,$(merlin-name),$(merlin-ver)): $(merlin-objs)
+	$(call compile-lib,$(merlin-name),$(merlin-ver),\
+			   $(merlin-flags),$(merlin-deps),$@,$+)
+	$(call create-links,$(merlin-name),$(merlin-ver))
+
+build_targets	+= $(call lib-full,$(merlin-name),$(merlin-ver))
+
+endif
 
 ############################
 # LIMA - MYTHEN
@@ -364,6 +386,28 @@ build_targets	+= $(call lib-full,$(mythen-name),$(mythen-ver))
 
 endif
 
+############################
+# LIMA - MYTHEN3
+############################
+
+ifneq ($(COMPILE_MYTHEN3),0)
+
+MYTHEN3_LDLIBS	:= $(LDLIBS)
+
+mythen3-name	:= mythen3
+mythen3-objs	:= ../camera/mythen3/src/Mythen3.o
+mythen3-ver	:= ../camera/mythen3/VERSION
+mythen3-flags	:= $(LDFLAGS)
+mythen3-deps	:= $(MYTHEN3_LDLIBS)
+
+$(call lib-full,$(mythen3-name),$(mythen3-ver)): $(mythen3-objs)
+	$(call compile-lib,$(mythen3-name),$(mythen3-ver),\
+			   $(mythen3-flags),$(mythen3-deps),$@,$+)
+	$(call create-links,$(mythen3-name),$(mythen3-ver))
+
+build_targets	+= $(call lib-full,$(mythen3-name),$(mythen3-ver))
+
+endif
 
 ############################
 # LIMA - ANDOR

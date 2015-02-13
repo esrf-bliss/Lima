@@ -152,7 +152,7 @@ namespace lima {
     void getOverwritePolicy(OverwritePolicy& policy, int stream_idx=0) const;
 
     void setFramesPerFile(unsigned long frames_per_file, int stream_idx=0);
-    void getFramePerFile(unsigned long& frames_per_file, 
+    void getFramesPerFile(unsigned long& frames_per_file, 
 			 int stream_idx=0) const;
     
     void setManagedMode(ManagedMode mode);
