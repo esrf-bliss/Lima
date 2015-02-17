@@ -141,6 +141,10 @@ void HwSavingCtrlObj::setSaveFormat(const std::string &format)
 {
   m_file_format = format;
 }
+void HwSavingCtrlObj::setOverwritePolicy(const std::string &overwritePolicy)
+{
+  m_overwritePolicy = overwritePolicy;
+}
 
 
 /** @brief write manualy a frame

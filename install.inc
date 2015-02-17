@@ -133,6 +133,12 @@ MYTHEN_FULL_VERSION = $(shell cat camera/mythen/VERSION)
 INSTALL_MYTHEN_VDIR = $(INSTALL_MYTHEN_DIR)/v$(MYTHEN_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_MYTHEN3), 0)
+INSTALL_MYTHEN3_DIR = $(INSTALL_PLAT_DIR)/Mythen3
+MYTHEN3_FULL_VERSION = $(shell cat camera/mythen3/VERSION)
+INSTALL_MYTHEN3_VDIR = $(INSTALL_MYTHEN3_DIR)/v$(MYTHEN3_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_UEYE), 0)
 INSTALL_UEYE_DIR = $(INSTALL_PLAT_DIR)/Ueye
 UEYE_FULL_VERSION = $(shell cat camera/ueye/VERSION)
@@ -205,10 +211,17 @@ AVIEX_FULL_VERSION = $(shell cat camera/aviex/VERSION)
 INSTALL_AVIEX_VDIR = $(INSTALL_AVIEX_DIR)/v$(AVIEX_FULL_VERSION)
 endif
 
+
 ifneq ($(COMPILE_META), 0)
 INSTALL_META_DIR = $(INSTALL_PLAT_DIR)/Meta
 META_FULL_VERSION = $(shell cat camera/common/meta/VERSION)
 INSTALL_META_VDIR = $(INSTALL_META_DIR)/v$(META_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_MERLIN), 0)
+INSTALL_MERLIN_DIR = $(INSTALL_PLAT_DIR)/Merlin
+MERLIN_FULL_VERSION = $(shell cat camera/merlin/VERSION)
+INSTALL_MERLIN_VDIR = $(INSTALL_MERLIN_DIR)/v$(MERLIN_FULL_VERSION)
 endif
 
 ifneq ($(COMPILE_SPS_IMAGE),0)
@@ -419,6 +432,16 @@ ifneq ($(COMPILE_MYTHEN), 0)
 	cp camera/mythen/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
+ifneq ($(COMPILE_MYTHEN3), 0)
+	mkdir -p $(INSTALL_MYTHEN3_VDIR)
+	cp camera/mythen3/python/__init__.py $(INSTALL_MYTHEN3_DIR)
+	$(call install_core_dep,$(INSTALL_MYTHEN3_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimamythen3.so*
+	cp -d build/liblimamythen3.so* $(INSTALL_LIB_DIR)
+	cp sip/mythen3/limamythen3.so $(INSTALL_MYTHEN3_VDIR)
+	cp camera/mythen3/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
 ifneq ($(COMPILE_UEYE), 0)
 	mkdir -p $(INSTALL_UEYE_VDIR)
 	cp camera/ueye/python/__init__.py $(INSTALL_UEYE_DIR)
@@ -544,6 +567,16 @@ ifneq ($(COMPILE_AVIEX), 0)
 	cp sip/aviex/limaaviex.so $(INSTALL_AVIEX_VDIR)
 	#cp camera/aviex/sdk/linux/lib/libMx.so.1 $(INSTALL_LIB_DIR)/libMx.so.1
 	cp camera/aviex/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_MERLIN), 0)
+	mkdir -p $(INSTALL_MERLIN_VDIR)
+	cp camera/merlin/python/__init__.py $(INSTALL_MERLIN_DIR)
+	$(call install_core_dep,$(INSTALL_MERLIN_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimamerlin.so*
+	cp -d build/liblimamerlin.so* $(INSTALL_LIB_DIR)
+	cp sip/merlin/limamerlin.so $(INSTALL_MERLIN_VDIR)
+	cp camera/merlin/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_GLDISPLAY), 0)
