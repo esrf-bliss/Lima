@@ -241,6 +241,7 @@ namespace lima
     friend class _AbortAcqCallback;
 
     class ImageStatusThread;
+    typedef std::list<ImageStatusThread*>  ImageStatusThreadList;
 
     HwInterface		*m_hw;
     mutable Cond	m_cond;
@@ -281,7 +282,7 @@ namespace lima
 #ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
 #endif
-    ImageStatusThread   *m_img_status_thread;
+    ImageStatusThreadList m_img_status_thread_list;
     SoftOpErrorHandler* m_soft_op_error_handler;
     _ReconstructionChangeCallback* m_reconstruction_cbk;
 
