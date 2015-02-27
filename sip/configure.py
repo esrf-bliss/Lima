@@ -194,6 +194,9 @@ def main():
         elif(modName == 'aviex'):
             extra_cxxflags += ['-DOS_UNIX']
         extraIncludes += findModuleIncludes(modName)
+	if (modName == 'roperscientific'):
+            extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
+            print extraIncludes
         
         sipFile = open(sipFileName,"a")
         sipFile.write('\n')
