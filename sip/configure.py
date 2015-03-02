@@ -42,8 +42,10 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('prosilica',        [os.path.join('camera','prosilica')]),
            ('ueye',             [os.path.join('camera','ueye')]),
            ('roperscientific',  [os.path.join('camera','roperscientific')]),
-           ('adsc',             [os.path.join('camera','adsc')]),
+           ('adsc',  		[os.path.join('camera','adsc')]),
+           ('merlin',		[os.path.join('camera','merlin')]),
            ('mythen',           [os.path.join('camera','mythen')]),
+           ('mythen3',		[os.path.join('camera','mythen3')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
            ('andor',            [os.path.join('camera','andor')]),
            ('andor3',           [os.path.join('camera','andor3')]),
@@ -180,7 +182,8 @@ def main():
         elif(modName == 'xpad'):
             extraIncludes += ['../../third-party/yat/include','/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib']
         elif(modName == 'xspress3'):
-            extraIncludes += ['../../third-party/hdf5/include']
+            extraIncludes += ['../../third-party/hdf5/c++/src']
+            extra_cxxflags += ['-DSIPCOMPILATION']
         elif(modName == 'pco'):
             extraIncludes += ['R:/bliss/projects/LIMA/package/WIN32/PCO/sdkPco/include']
         elif(modName == 'marccd'):
@@ -196,7 +199,6 @@ def main():
         extraIncludes += findModuleIncludes(modName)
 	if (modName == 'roperscientific'):
             extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
-            print extraIncludes
         
         sipFile = open(sipFileName,"a")
         sipFile.write('\n')
