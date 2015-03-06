@@ -392,6 +392,7 @@ CtControl::~CtControl()
   delete m_ct_shutter;
   delete m_ct_accumulation;
   delete m_ct_video;
+  delete m_ct_event;
 
   delete m_op_int;
   delete m_op_ext;
