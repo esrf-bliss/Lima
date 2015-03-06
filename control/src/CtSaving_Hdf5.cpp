@@ -394,7 +394,6 @@ void SaveContainerHdf5::_close() {
 	delete m_image_dataspace;
 	delete m_image_dataset;
 	delete m_measurement_detector;
-	delete m_measurement_detector_parameters;
 	delete m_instrument_detector;
 	delete m_entry;
 	delete m_file;
@@ -464,6 +463,7 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 						string value = it->second;
 						write_h5_dataset(*m_measurement_detector_parameters,key.c_str(),value);
 					}
+					delete m_measurement_detector_parameters;
 				}
 
 				// create the image data structure in the file
@@ -506,6 +506,7 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 
 				m_image_dataset->extend(data_dims);
 				m_image_dataspace->close();
+				delete m_image_dataset;
 				m_image_dataspace = new DataSpace(m_image_dataset->getSpace());
 				m_prev_images_written = allocated_dims[0];
 				m_dataset_extended = true;
@@ -521,8 +522,8 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 			hsize_t count[] = { 1, aData.dimensions[1], aData.dimensions[0] };
 			m_image_dataspace->selectHyperslab(H5S_SELECT_SET, count, start);
 			m_image_dataset->write((u_int8_t*) aData.data(), data_type, slabspace, *m_image_dataspace);
-			// catch failure caused by the DataSet operations
 
+		// catch failure caused by the DataSet operations
 		} catch (DataSetIException& error) {
 			THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
 			error.printError();
