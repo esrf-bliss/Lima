@@ -1066,8 +1066,8 @@ void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
 
   Status aStatus;
   getStatus(aStatus);
-  if(aStatus.AcquisitionStatus != AcqReady)
-    THROW_CTL_ERROR(Error) << "Can't register callback if acquisition is not idle";
+  if(aStatus.AcquisitionStatus == AcqRunning)
+    THROW_CTL_ERROR(Error) << "Can't register callback if acquisition is running";
 
   ImageStatusThread *thread = new ImageStatusThread(m_cond, &cb);
   AutoMutex aLock(m_cond.mutex());
