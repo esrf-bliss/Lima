@@ -130,6 +130,7 @@ mod_version_data = {
     'pco': 'camera/pco/VERSION',
     'ueye': 'camera/ueye/VERSION',
     'simulator': 'camera/simulator/VERSION',
+    'roperscientific': 'camera/roperscientific/VERSION',
     'taco/camera/frelon': 'applications/taco/VERSION',
     'tango/common': 'applications/tango/VERSION',
     'tango/camera/maxipix': 'applications/tango/camera/Maxipix_VERSION',
@@ -145,6 +146,7 @@ mod_version_data = {
     'tango/camera/simulator': 'applications/tango/camera/Simulator_VERSION',
     'tango/camera/andor3': 'applications/tango/camera/Andor3_VERSION',
     'tango/camera/rayonixhs': 'applications/tango/camera/RayonixHs_VERSION',
+    'tango/camera/roperscientific': 'applications/tango/camera/RoperScientific_VERSION',
 }
 
 windows_plugins = ['pco', 'perkinelmer']
