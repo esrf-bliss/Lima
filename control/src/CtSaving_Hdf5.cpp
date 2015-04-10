@@ -47,7 +47,7 @@ DataType get_h5_type(unsigned long long)	{return PredType(PredType::NATIVE_UINT6
 DataType get_h5_type(long long)			{return PredType(PredType::NATIVE_INT64);}
 DataType get_h5_type(float)			{return PredType(PredType::NATIVE_FLOAT);}
 DataType get_h5_type(double)			{return PredType(PredType::NATIVE_DOUBLE);}
-DataType get_h5_type(std::string& s)            {return StrType(H5T_C_S1, s.size());}
+DataType get_h5_type(std::string& s)            {return StrType(H5T_C_S1, s.size()? s.size():1);}
 DataType get_h5_type(bool)			{return PredType(PredType::NATIVE_UINT8);}
 
 template <class T>
