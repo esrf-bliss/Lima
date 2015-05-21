@@ -27,6 +27,11 @@ namespace lima
     };
     typedef std::vector<AutoGainMode> AutoGainModeList;
 
+    enum VideoSource {
+      BASE_IMAGE,		///< video image source is BaseImage
+      LAST_IMAGE		///< video image source is the last image (after all processing)
+    };
+
     CtVideo(CtControl&);
     ~CtVideo();
     
@@ -41,6 +46,7 @@ namespace lima
       double		exposure;	///< exposure time in second
       double		gain;		///< % of gain (0. <= gain <= 1.)
       AutoGainMode	auto_gain_mode;
+      VideoSource	video_source;
       VideoMode		mode;
       Roi		roi;
       Bin		bin;
@@ -105,6 +111,9 @@ namespace lima
     void getAutoGainModeList(AutoGainModeList& modes) const;
     void setAutoGainMode(AutoGainMode mode);
     void getAutoGainMode(AutoGainMode& mode) const;
+
+    void setVideoSource(VideoSource source);
+    void getVideoSource(VideoSource& source) const;
 
     void setMode(VideoMode aMode);
     void getMode(VideoMode &aMode) const;
@@ -203,6 +212,40 @@ namespace lima
   {
     return os << convert_2_string(mode);
   }
+  inline const char* convert_2_string(CtVideo::VideoSource source)
+  {
+    const char *name;
+    switch(source)
+      {
+      case CtVideo::BASE_IMAGE: name = "BASE_IMAGE";break;
+      case CtVideo::LAST_IMAGE: name = "LAST_IMAGE";break;
+      default:
+	name = "UNKNOWN";
+	break;
+      }
+    return name;
+  }
+  inline void convert_from_string(const std::string& val,
+				  CtVideo::VideoSource& source)
+  {
+    std::string buffer = val;
+    std::transform(buffer.begin(),buffer.end(),
+		   buffer.begin(),::tolower);
+    
+    if(buffer == "base_image") source = CtVideo::BASE_IMAGE;
+    else if(buffer == "last_image") source = CtVideo::LAST_IMAGE;
+    else
+      {
+	std::ostringstream msg;
+	msg << "VideoSource can't be:" << DEB_VAR1(val);
+	throw LIMA_EXC(Common,InvalidValue,msg.str());
+      }
+  }
+  inline std::ostream& operator<<(std::ostream &os,
+				  CtVideo::VideoSource source)
+  {
+    return os << convert_2_string(source);
+  }
   inline std::ostream& operator<<(std::ostream &os,
 				  const CtVideo::Parameters& params)
     {
@@ -213,7 +256,8 @@ namespace lima
 	 << "auto_gain_mode=" << convert_2_string(params.auto_gain_mode) << ", "
 	 << "mode=" << convert_2_string(params.mode) << ", "
 	 << "roi=" << params.roi << ", "
-	 << "bin=" << params.bin
+	 << "bin=" << params.bin << ", "
+	 << "source=" << params.video_source
 	 << ">";
       return os;
     }

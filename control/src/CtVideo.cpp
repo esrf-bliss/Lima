@@ -231,6 +231,7 @@ public:
     video_setting.set("exposure",pars.exposure);
     video_setting.set("gain",pars.gain);
     video_setting.set("auto_gain_mode",convert_2_string(pars.auto_gain_mode));
+    video_setting.set("video_source",convert_2_string(pars.video_source));
     video_setting.set("mode",convert_2_string(pars.mode));
 
     // --- Roi
@@ -262,6 +263,10 @@ public:
     std::string str_auto_gain_mode;
     if(video_setting.get("auto_gain_mode",str_auto_gain_mode))
       convert_from_string(str_auto_gain_mode,pars.auto_gain_mode);
+
+    std::string str_video_source;
+    if(video_setting.get("video_source",str_video_source))
+      convert_from_string(str_video_source,pars.video_source);
 
     std::string strmode;
     if(video_setting.get("mode",strmode))
@@ -628,6 +633,20 @@ void CtVideo::getAutoGainMode(AutoGainMode& mode) const
   mode = m_pars.auto_gain_mode;
 }
 
+void CtVideo::setVideoSource(VideoSource source)
+{
+  DEB_MEMBER_FUNCT();
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.video_source = source;
+  _apply_params(aLock);
+}
+
+void CtVideo::getVideoSource(VideoSource& source) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  source = m_pars.video_source;
+}
+
 void CtVideo::setMode(VideoMode aMode)
 {
   _check_video_mode(aMode);
@@ -992,6 +1011,7 @@ void CtVideo::Parameters::reset()
   exposure = 1.;
   gain = -1.;
   auto_gain_mode = CtVideo::OFF;
+  video_source = CtVideo::BASE_IMAGE;
   mode = Y8;
   roi.reset();
   bin.reset();
