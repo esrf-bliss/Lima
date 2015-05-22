@@ -565,6 +565,12 @@ bool CtVideo::checkAutoGainMode(AutoGainMode mode) const
 void CtVideo::getAutoGainModeList(AutoGainModeList& modes) const
 {
   DEB_MEMBER_FUNCT();
+  if(!m_has_video)
+    {
+      modes.push_back(OFF);
+      return;
+    }
+
   int nb_modes = 0;
   if(m_video->checkAutoGainMode(HwVideoCtrlObj::OFF))
     modes.push_back(OFF),++nb_modes;
