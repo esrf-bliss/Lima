@@ -391,12 +391,13 @@ void SaveContainerHdf5::_close() {
 	}
 	m_already_opened = false;
 	m_format_written = false;
-	delete m_image_dataspace;
-	delete m_image_dataset;
-	delete m_measurement_detector;
-	delete m_instrument_detector;
-	delete m_entry;
-	delete m_file;
+	delete m_image_dataspace;			m_image_dataspace = NULL;
+	delete m_image_dataset;				m_image_dataset = NULL;
+	delete m_measurement_detector;			m_measurement_detector = NULL;
+	delete m_instrument_detector;			m_instrument_detector = NULL;
+	delete m_measurement_detector_parameters; 	m_measurement_detector_parameters = NULL;
+	delete m_entry;					m_entry = NULL;
+	delete m_file;					m_file = NULL;
 	DEB_TRACE() << "Close current file";
 	// increase the entry number for the next acquisition if MultiSet mode
 	m_entry_index++;
@@ -463,9 +464,9 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 						string value = it->second;
 						write_h5_dataset(*m_measurement_detector_parameters,key.c_str(),value);
 					}
-					delete m_measurement_detector_parameters;
 				}
-
+				delete m_measurement_detector_parameters;m_measurement_detector_parameters = NULL;
+					
 				// create the image data structure in the file
 				hsize_t data_dims[3], max_dims[3];
 				data_dims[1] = aData.dimensions[1];
