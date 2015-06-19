@@ -188,7 +188,9 @@ private:
 CtAccumulation::Parameters::Parameters() : 
   pixelThresholdValue(2^16),
   savingFlag(false),
-  savePrefix("saturated_")
+  savePrefix("saturated_"),
+  mode(CtAccumulation::Parameters::STANDARD),
+  thresholdB4Acc(0)
 {
   reset();
 }
@@ -348,6 +350,30 @@ void CtAccumulation::getSavePrefix(std::string &savePrefix) const
 
   AutoMutex aLock(m_cond.mutex());
   savePrefix = m_pars.savePrefix;
+}
+
+void CtAccumulation::getMode(Parameters::Mode &mode) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  mode = m_pars.mode;
+}
+
+void CtAccumulation::setMode(Parameters::Mode mode)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.mode = mode;
+}
+
+void CtAccumulation::getThresholdBeforeAcc(long long& threshold) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  threshold = m_pars.thresholdB4Acc;
+}
+
+void CtAccumulation::setThresholdBeforeAcc(const long long& threshold)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.thresholdB4Acc = threshold;
 }
 
 /** @brief read the saturated image of accumulated image which id is frameNumber
@@ -614,12 +640,20 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   Data saturatedImg;
   if(active)
     saturatedImg = m_saturated_images.back();
+  Parameters::Mode aMode = m_pars.mode;
+  long long threshold_value = m_pars.thresholdB4Acc;
   aLock.unlock();
 
   if(active)
     _calcSaturatedImageNCounters(aData,saturatedImg);
 
-  _accFrame(aData,accFrame);
+ switch(aMode)
+   {
+   case Parameters::STANDARD:
+     _accFrame(aData,accFrame);break;
+   case Parameters::THRESHOLD_BEFORE:
+     _accFrameWithThreshold(aData,accFrame,threshold_value);break;
+   }
 
   if(!((aData.frameNumber + 1) % nb_acc_frame))
     m_last_continue_flag = m_ct.newFrameReady(accFrame);
@@ -685,7 +719,35 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
       THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
     }
 }
+template <class SrcType, class DstType> 
+void accumulateFrameThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long threshold)
+{
+  SrcType *sp  = (SrcType *) src_ptr;
+  DstType *dp = (DstType *) dst_ptr;
+	
+  for(int i = nb_items;i;--i,++sp,++dp)
+    if(*sp > threshold)
+      *dp += *sp;
+}
 
+void CtAccumulation::_accFrameWithThreshold(Data &src,Data &dst,long long threshold_value)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(src,dst);
+
+  int nb_items = src.dimensions[0] * src.dimensions[1];
+  switch(src.type)
+    {
+    case Data::UINT8: 	accumulateFrameThreshold<unsigned char,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::INT8: 	accumulateFrameThreshold<char,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::UINT16: 	accumulateFrameThreshold<unsigned short,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::INT16: 	accumulateFrameThreshold<short,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::UINT32: 	accumulateFrameThreshold<unsigned int,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::INT32: 	accumulateFrameThreshold<int,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
+    default:
+      THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
+    }
+}
 #ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtAccumulation::_getConfigHandler()
 {

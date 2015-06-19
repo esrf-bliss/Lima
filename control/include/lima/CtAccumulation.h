@@ -48,6 +48,7 @@ namespace lima
     {
       DEB_CLASS_NAMESPC(DebModControl,"Accumulation::Parameters","Control");
     public:
+      enum Mode {STANDARD,THRESHOLD_BEFORE};
       Parameters();
       void reset();
       
@@ -56,6 +57,8 @@ namespace lima
 
       bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
       std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
+      Mode		mode;
+      long long		thresholdB4Acc; ///< value used in mode THRESHOLD_BEFORE
     };
     
     class ThresholdCallback
@@ -93,6 +96,12 @@ namespace lima
 
     void setSavePrefix(const std::string &savePrefix);
     void getSavePrefix(std::string &savePrefix) const;
+
+    void getMode(Parameters::Mode& mode) const;
+    void setMode(Parameters::Mode mode);
+
+    void getThresholdBeforeAcc(long long&) const;
+    void setThresholdBeforeAcc(const long long&);
 
     // --- variable and data result of Concatenation or Accumulation
 
@@ -159,6 +168,7 @@ namespace lima
     void getFrame(Data &,int frameNumber);
 
     void _accFrame(Data &src,Data &dst);
+    void _accFrameWithThreshold(Data &src,Data &dst,long long threshold_value);
     void _calcSaturatedImageNCounters(Data &src,Data &dst);
 
     inline void _callIfNeedThresholdCallback(Data &aData,long long value);
