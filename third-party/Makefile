@@ -55,12 +55,12 @@ endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
 
-ifeq ($(wildcard cfitsio/zutil.o),)
+ifeq ($(wildcard cfitsio/Makefile),)
 PROJECTS += cfitsio.confsrc
 endif
 PROJECTS += cfitsio.src
 
-ifeq ($(wildcard CCfits/.libs/libCCfits.lai),)
+ifeq ($(wildcard CCfits/Makefile),)
 PROJECTS += CCfits.confsrc
 endif
 PROJECTS += CCfits.src

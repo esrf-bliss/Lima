@@ -66,7 +66,8 @@ endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
 CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
-CORE_LDLIBS += -lCCfits -lcfitsio
+CORE_LDLIBS +=  -Wl,-rpath=$(shell pwd)/../third-party/CCfits/.libs  -lCCfits \
+                -Wl,-rpath=$(shell pwd)/../third-party/cfitsio/lib -lcfitsio
 endif
 
 ifneq ($(COMPILE_EDFGZ_SAVING),0)
