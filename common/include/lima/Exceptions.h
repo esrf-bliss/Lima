@@ -34,7 +34,7 @@ namespace lima
 {
 
 enum Layer {
-	Common, Control, Hardware,
+        Common, Control, Hardware, CameraPlugin,
 };
 
 enum ErrorType {

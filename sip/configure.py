@@ -196,6 +196,8 @@ def main():
             extra_cxxflags += ['-std=c++0x']
         elif(modName == 'aviex'):
             extra_cxxflags += ['-DOS_UNIX']
+	elif (modName == 'maxipix'):
+            extraIncludes += ['../../camera/maxipix/tools/src']
         extraIncludes += findModuleIncludes(modName)
 	if (modName == 'roperscientific'):
             extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
