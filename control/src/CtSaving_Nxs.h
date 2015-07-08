@@ -25,7 +25,7 @@
 #include "lima/CtSaving.h"
 
 #include <nexuscpp/nexuscpp.h>
-
+const int NEXUS_SAVING_OPTIONS_NUMBER = 3;
 
 //--------------------------------------------------------------------------------------------------------------------
 namespace lima
