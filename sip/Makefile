@@ -132,6 +132,10 @@ ifneq ($(COMPILE_MERLIN), 0)
 sip-modules += merlin
 endif
 
+ifneq ($(COMPILE_V4l2), 0)
+sip-modules += v4l2
+endif
+
 all:	src
 
 src:

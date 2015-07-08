@@ -66,7 +66,8 @@ endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
 CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
-CORE_LDLIBS += -lCCfits -lcfitsio
+CORE_LDLIBS +=  -Wl,-rpath=$(shell pwd)/../third-party/CCfits/.libs  -lCCfits \
+                -Wl,-rpath=$(shell pwd)/../third-party/cfitsio/lib -lcfitsio
 endif
 
 ifneq ($(COMPILE_EDFGZ_SAVING),0)
@@ -725,7 +726,28 @@ $(call lib-full,$(meta-name),$(meta-ver)): $(meta-objs)
 	$(call create-links,$(meta-name),$(meta-ver))
 
 build_targets	+= $(call lib-full,$(meta-name),$(meta-ver))
+endif
 
+############################
+# LIMA - V4l2
+############################
+ifneq ($(COMPILE_V4l2),0)
+
+V4l2_LDFLAGS	:= $(LDFLAGS)
+V4l2_LDLIBS	:= $(LDLIBS) -lv4l2
+
+v4l2-name	:= v4l2
+v4l2-objs	:= ../camera/v4l2/src/V4L2.o
+v4l2-ver	:= ../camera/v4l2/VERSION
+v4l2-flags	:= $(V4l2_LDFLAGS)
+v4l2-deps	:= $(V4l2_LDLIBS)
+
+$(call lib-full,$(v4l2-name),$(v4l2-ver)): $(v4l2-objs)
+	$(call compile-lib,$(v4l2-name),$(v4l2-ver),\
+			   $(v4l2-flags),$(v4l2-deps),$@,$+)
+	$(call create-links,$(v4l2-name),$(v4l2-ver))
+
+build_targets	+= $(call lib-full,$(v4l2-name),$(v4l2-ver))
 endif
 
 src:		$(build_targets)

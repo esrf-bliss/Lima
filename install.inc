@@ -224,6 +224,12 @@ MERLIN_FULL_VERSION = $(shell cat camera/merlin/VERSION)
 INSTALL_MERLIN_VDIR = $(INSTALL_MERLIN_DIR)/v$(MERLIN_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_V4l2), 0)
+INSTALL_V4l2_DIR = $(INSTALL_PLAT_DIR)/v4l2
+V4l2_FULL_VERSION = $(shell cat camera/v4l2/VERSION)
+INSTALL_V4l2_VDIR = $(INSTALL_V4l2_DIR)/v$(V4l2_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -597,4 +603,14 @@ ifneq ($(COMPILE_META), 0)
 	cp -d build/liblimameta.so* $(INSTALL_LIB_DIR)
 	cp sip/meta/limameta.so $(INSTALL_META_VDIR)
 	cp camera/common/meta/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_V4l2), 0)
+	mkdir -p $(INSTALL_V4l2_VDIR)
+	cp camera/v4l2/python/__init__.py $(INSTALL_V4l2_DIR)
+	$(call install_core_dep,$(INSTALL_V4l2_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimav4l2.so*
+	cp -d build/liblimav4l2.so* $(INSTALL_LIB_DIR)
+	cp sip/v4l2/limav4l2.so $(INSTALL_V4l2_VDIR)
+	cp camera/v4l2/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

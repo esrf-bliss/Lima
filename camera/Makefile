@@ -208,4 +208,12 @@ ifneq ($(COMPILE_AVIEX),0)
 sub-dirs += aviex
 endif
 
+ifndef COMPILE_V4l2
+COMPILE_V4l2 = 0
+endif
+
+ifneq ($(COMPILE_V4l2),0)
+sub-dirs += v4l2
+endif
+
 include ../global.inc

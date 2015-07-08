@@ -962,8 +962,10 @@ void CtControl::newBaseImageReady(Data &aData)
   if(m_display_active_flag)
     m_ct_sps_image->frameReady(aData);
 #endif
-
-  m_ct_video->frameReady(aData);
+  CtVideo::VideoSource source;m_ct_video->getVideoSource(source);
+  if(source == CtVideo::BASE_IMAGE ||
+        (source == CtVideo::LAST_IMAGE && !m_op_ext_link_task_active))
+    m_ct_video->frameReady(aData);
 
   for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
       i != m_img_status_thread_list.end();++i)
@@ -1007,6 +1009,10 @@ void CtControl::newImageReady(Data &aData)
 
   if(m_autosave)
     newFrameToSave(aData);
+
+  CtVideo::VideoSource source;m_ct_video->getVideoSource(source);
+  if(source == CtVideo::LAST_IMAGE)
+    m_ct_video->frameReady(aData);
 
   for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
       i != m_img_status_thread_list.end();++i)
