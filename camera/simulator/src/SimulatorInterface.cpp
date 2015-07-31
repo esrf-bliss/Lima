@@ -95,6 +95,7 @@ void Interface::reset(ResetLevel reset_level)
 
 void Interface::prepareAcq()
 {
+  m_simu.prepareAcq();
 }
 
 void Interface::startAcq()
