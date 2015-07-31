@@ -41,18 +41,26 @@ SyncCtrlObj::~SyncCtrlObj()
 
 bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
 {
-	return (trig_mode == IntTrig);
+  switch(trig_mode)
+    {
+    case IntTrig:
+    case IntTrigMult:
+      return true;
+    default:
+      return false;
+    }
 }
 
 void SyncCtrlObj::setTrigMode(TrigMode trig_mode)
 {
 	if (!checkTrigMode(trig_mode))
 		throw LIMA_HW_EXC(InvalidValue, "Invalid (external) trigger");
+	m_simu.setTrigMode(trig_mode);
 }
 
 void SyncCtrlObj::getTrigMode(TrigMode& trig_mode)
 {
-	trig_mode = IntTrig;
+  m_simu.getTrigMode(trig_mode);
 }
 
 void SyncCtrlObj::setExpTime(double exp_time)

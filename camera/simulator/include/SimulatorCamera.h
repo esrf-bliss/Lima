@@ -45,6 +45,7 @@ class LIBSIMULATOR_API Camera
 	HwBufferCtrlObj *getBufferCtrlObj();
 	FrameBuilder *getFrameBuilder();
 
+	void prepareAcq();
 	void startAcq();
 	void stopAcq();
 
@@ -57,6 +58,8 @@ class LIBSIMULATOR_API Camera
 	void setLatTime(double  lat_time);
 	void getLatTime(double& lat_time);
 
+	void setTrigMode(TrigMode trig_mode) {m_trig_mode = trig_mode;};
+	void getTrigMode(TrigMode& trig_mode) {trig_mode = m_trig_mode;};
 	void setBin(const Bin& bin);
 	void getBin(Bin& bin);
 	void checkBin(Bin& bin);
@@ -93,16 +96,14 @@ class LIBSIMULATOR_API Camera
 
 		virtual void start();
 		
-		int getNbAcquiredFrames();
 		bool m_force_stop;
-
+		int m_acq_frame_nb;
 	protected:
 		virtual void init();
 		virtual void execCmd(int cmd);
 	private:
 		void execStartAcq();
 		Camera* m_simu;
-		int m_acq_frame_nb;
 	};
 	friend class SimuThread;
 
@@ -113,7 +114,7 @@ class LIBSIMULATOR_API Camera
 	double m_exp_time;
 	double m_lat_time;
 	int m_nb_frames;
-
+	TrigMode m_trig_mode;
 	SimuThread m_thread;
 };
 
