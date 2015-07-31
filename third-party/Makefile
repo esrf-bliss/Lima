@@ -202,7 +202,7 @@ CCfits.src:
 	cd CCfits && $(MAKE)
 
 CCfits.install:
-	$(MAKE) -C CCfits all install
+	$(MAKE) -C CCfits install prefix=$(INSTALL_PLAT_DIR)
 
 CCfits.clean:
 	$(MAKE) -C CCfits clean
