@@ -517,9 +517,10 @@ void CtVideo::_setLive(bool liveFlag)
 	  DEB_TRACE() << "Done with the startAcq.";
 	}
       else {
-	//aLock.unlock();
+	aLock.unlock();
 	DEB_TRACE() << "Stopping the acquisition at the controller level";
 	m_ct.stopAcq();
+	aLock.lock();
       }
     }
   m_pars.live = liveFlag;
@@ -898,11 +899,11 @@ void CtVideo::_apply_params(AutoMutex &aLock,bool aForceLiveFlag)
               acquisition->setAcqExpoTime(m_pars.exposure);
 	      if(m_pars.live)
 	        {
-		  m_ct.stopAcq();
 		  aLock.unlock();
+		  m_ct.stopAcq();
 		  m_ct.prepareAcq();
-		  aLock.lock();
 		  m_ct.startAcq();
+		  aLock.lock();
 		  m_pars.live = true;
 		}
             }
