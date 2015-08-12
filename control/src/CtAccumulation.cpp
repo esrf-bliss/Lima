@@ -190,7 +190,8 @@ CtAccumulation::Parameters::Parameters() :
   savingFlag(false),
   savePrefix("saturated_"),
   mode(CtAccumulation::Parameters::STANDARD),
-  thresholdB4Acc(0)
+  thresholdB4Acc(0),
+  offsetB4Acc(0)
 {
   reset();
 }
@@ -364,16 +365,28 @@ void CtAccumulation::setMode(Parameters::Mode mode)
   m_pars.mode = mode;
 }
 
-void CtAccumulation::getThresholdBeforeAcc(long long& threshold) const
+void CtAccumulation::getThresholdBefore(long long& threshold) const
 {
   AutoMutex aLock(m_cond.mutex());
   threshold = m_pars.thresholdB4Acc;
 }
 
-void CtAccumulation::setThresholdBeforeAcc(const long long& threshold)
+void CtAccumulation::setThresholdBefore(const long long& threshold)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.thresholdB4Acc = threshold;
+}
+
+void CtAccumulation::getOffsetBefore(long long& offset) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  offset = m_pars.offsetB4Acc;
+}
+
+void CtAccumulation::setOffsetBefore(const long long& offset)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.offsetB4Acc = offset;
 }
 
 /** @brief read the saturated image of accumulated image which id is frameNumber
@@ -642,6 +655,8 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     saturatedImg = m_saturated_images.back();
   Parameters::Mode aMode = m_pars.mode;
   long long threshold_value = m_pars.thresholdB4Acc;
+  long long offset_value = m_pars.offsetB4Acc;
+
   aLock.unlock();
 
   if(active)
@@ -652,7 +667,9 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
    case Parameters::STANDARD:
      _accFrame(aData,accFrame);break;
    case Parameters::THRESHOLD_BEFORE:
-     _accFrameWithThreshold(aData,accFrame,threshold_value);break;
+     _accFrameWithThreshold(aData,accFrame, threshold_value);break;
+   case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
+     _accFrameWithOffsetThenThreshold(aData,accFrame,offset_value, threshold_value);break;
    }
 
   if(!((aData.frameNumber + 1) % nb_acc_frame))
@@ -748,6 +765,41 @@ void CtAccumulation::_accFrameWithThreshold(Data &src,Data &dst,long long thresh
       THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
     }
 }
+
+template <class SrcType, class DstType> 
+void accumulateFrameOffsetThenThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long offset, long long threshold)
+{
+  SrcType *sp  = (SrcType *) src_ptr;
+  DstType *dp = (DstType *) dst_ptr;
+  DstType tmp_d;
+	
+  for(int i = nb_items;i;--i,++sp,++dp)
+    {
+      tmp_d = DstType(*sp) - offset;
+      if(tmp_d > threshold)
+	*dp += tmp_d;
+    }
+}
+
+void CtAccumulation::_accFrameWithOffsetThenThreshold(Data &src,Data &dst,long long offset_value, long long threshold_value)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(src,dst);
+
+  int nb_items = src.dimensions[0] * src.dimensions[1];
+  switch(src.type)
+    {
+    case Data::UINT8: 	accumulateFrameOffsetThenThreshold<unsigned char,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::INT8: 	accumulateFrameOffsetThenThreshold<char,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::UINT16: 	accumulateFrameOffsetThenThreshold<unsigned short,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::INT16: 	accumulateFrameOffsetThenThreshold<short,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::UINT32: 	accumulateFrameOffsetThenThreshold<unsigned int,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::INT32: 	accumulateFrameOffsetThenThreshold<int,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    default:
+      THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
+    }
+}
+
 #ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtAccumulation::_getConfigHandler()
 {
