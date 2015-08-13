@@ -258,4 +258,9 @@ hdf5.confsrc:
 				--prefix=$(INSTALL_PLAT_DIR)
 
 hdf5.install:
-	$(MAKE) -C hdf5 install prefix=$(INSTALL_PLAT_DIR)
+	cd hdf5 && ./configure 	--enable-cxx \
+				--enable-unsupported \
+				--enable-threadsafe \
+				--with-pthread=/usr/lib,/usr/include \
+				--prefix=$(INSTALL_PLAT_DIR) \
+		&& $(MAKE) install
