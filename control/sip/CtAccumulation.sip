@@ -31,7 +31,7 @@ public:
 
   struct Parameters
   {
-    enum Mode {STANDARD,THRESHOLD_BEFORE};
+    enum Mode {STANDARD,THRESHOLD_BEFORE, OFFSET_THEN_THRESHOLD_BEFORE};
     Parameters();
     void reset();
     
@@ -88,8 +88,12 @@ public:
   void getMode(Parameters::Mode& mode) const;
   void setMode(Parameters::Mode mode);
 
-  void getThresholdBeforeAcc(long long&) const;
-  void setThresholdBeforeAcc(const long long&);
+  void getThresholdBefore(long long&) const;
+  void setThresholdBefore(const long long&);
+
+  void getOffsetBefore(long long&) const;
+  void setOffsetBefore(const long long&);
+
 
   // --- variable and data result of Concatenation or Accumulation
 
