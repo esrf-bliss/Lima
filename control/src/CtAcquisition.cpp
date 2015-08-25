@@ -144,7 +144,6 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
 CtAcquisition::~CtAcquisition()
 {
   DEB_DESTRUCTOR();
-  m_hw_sync->unregisterValidRangesCallback(m_valid_ranges_cb);
   delete m_valid_ranges_cb;
 }
 
