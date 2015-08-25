@@ -70,12 +70,14 @@ public:
 	class ValidRangesCallback
 	{
 	  DEB_CLASS(DebModHardware,"HwSyncCtrlObj::ValidRangesCallback");
-
-	  friend class HwSyncCtrlObj;
 	public:
-	  virtual ~ValidRangesCallback() {};
+	  ValidRangesCallback();
+	  virtual ~ValidRangesCallback();
 	protected:
 	  virtual void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&) = 0;
+	private:
+	  friend class HwSyncCtrlObj;
+	  HwSyncCtrlObj*	m_hw_sync;
 	};
 
 	HwSyncCtrlObj();
