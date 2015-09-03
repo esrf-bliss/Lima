@@ -19,6 +19,12 @@ if platform.machine() == 'AMD64':
 		    ('camera/dexela/src/DexelaConfig.cfg','Lima'),
 		    ('camera/dexela/build/msvc/9.0/LibDexela/x64/Release/liblimadexela.dll','Lima'),
 		    ('sip/dexela/limadexela.pyd','Lima')],
+        'pco' : [('camera/pco/python/Pco.py','Lima'),
+                 ('camera/pco/build/msvc/9.0/liblimapco/x64/Release/liblimapco.dll','Lima'),
+                 ('camera/pco/sdkPco/bin/SC2_Cam.dll','Lima'),
+                 ('camera/pco/sdkPco/bin/sc2_cl_me4.dll','Lima'),
+                 ('applications/tango/camera/Pco.py','camera'),
+                 ('sip/pco/limapco.pyd','Lima')],
 	}
 else:
     module2Installfiles = {
