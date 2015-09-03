@@ -67,7 +67,7 @@ public:
 		double min_lat_time, max_lat_time;
 	};
 
-	class ValidRangesCallback
+	class LIMACORE_API ValidRangesCallback
 	{
 	  DEB_CLASS(DebModHardware,"HwSyncCtrlObj::ValidRangesCallback");
 	public:
