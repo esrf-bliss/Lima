@@ -105,6 +105,8 @@ using namespace lima;
 	void setTriggerMode(TrigMode mode);
 	void getTriggerMode(TrigMode& mode /Out/) const;
 	void getTriggerModeList(TrigModeList& modes /Out/) const;
+
+	bool isMonitorMode() const;
 };
 
 %MappedType CtAcquisition::AutoExposureModeList

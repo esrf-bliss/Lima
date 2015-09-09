@@ -118,6 +118,8 @@ namespace lima
     void getTriggerMode(TrigMode& mode) const;
 
     void getTriggerModeList(TrigModeList& modes) const;
+    
+    bool isMonitorMode() const {return m_monitor_mode;}
   private:
     class _ValidRangesCallback;
     friend class _ValidRangesCallback;
@@ -160,6 +162,7 @@ namespace lima
     mutable double	m_acc_dead_time;
     bool		m_applied_once;
     _ValidRangesCallback *m_valid_ranges_cb;
+    bool		m_monitor_mode;
   };
 
   inline const char* convert_2_string(CtAcquisition::AccTimeMode accTimeMode)
