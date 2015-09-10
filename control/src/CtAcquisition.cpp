@@ -136,6 +136,11 @@ CtAcquisition::CtAcquisition(HwInterface *hw) :
   m_hw_sync->registerValidRangesCallback(m_valid_ranges_cb);
   DEB_TRACE() << DEB_VAR1(m_valid_ranges);
 
+  //Access mode Master or Monitor
+  HwSyncCtrlObj::AccessMode access_mode;
+  m_hw_sync->getAccessMode(access_mode);
+  m_monitor_mode = access_mode == HwSyncCtrlObj::Monitor;
+
   reset();
 }
 
@@ -150,6 +155,9 @@ void CtAcquisition::setPars(const Parameters &pars)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(pars);
+
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change acquisition parameters";
 
   setAcqMode(pars.acqMode);
   setAcqNbFrames(pars.acqNbFrames);
@@ -203,6 +211,9 @@ void CtAcquisition::apply(CtControl::ApplyPolicy policy)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(policy);
+
+  // do not change acquisition parameters in monitor mode
+  if(m_monitor_mode) return;
 
   CtControl::ApplyPolicy use_policy;
 
@@ -331,6 +342,9 @@ void CtAcquisition::setTriggerMode(TrigMode mode)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(mode);
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change trigger mode";
+
   if(!m_hw_sync->checkTrigMode(mode))
     THROW_CTL_ERROR(Error) << "Trigger mode:" << DEB_VAR1(mode) << " not available";
 
@@ -362,6 +376,9 @@ void CtAcquisition::setAcqMode(AcqMode mode)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(mode);
+
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change acquisition mode";
 
   m_inpars.acqMode= mode;
   switch (m_inpars.acqMode) {
@@ -416,6 +433,9 @@ void CtAcquisition::setAccTimeMode(AccTimeMode mode)
 {
   DEB_MEMBER_FUNCT();
 
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change accumulation mode";
+
   m_inpars.accTimeMode = mode;
 
   DEB_RETURN() << DEB_VAR1(mode);
@@ -425,6 +445,9 @@ void CtAcquisition::setAcqNbFrames(int nframes)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(nframes);
+
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change nb frames";
 
   m_inpars.acqNbFrames= nframes;
 }
@@ -443,6 +466,9 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
   DEB_MEMBER_FUNCT(); 
   DEB_PARAM() << DEB_VAR1(acq_time);
 
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change acquisition exposition time";
+
   if(m_inpars.autoExpoMode == ON)
     THROW_CTL_ERROR(Error) << "Should disable auto exposure to set exposure time";
 
@@ -459,7 +485,7 @@ void CtAcquisition::getAcqExpoTime(double& acq_time) const
 
   HwSyncCtrlObj::AutoExposureMode mode;
   m_hw_sync->getAutoExposureMode(mode);
-  if(mode == HwSyncCtrlObj::ON)
+  if(mode == HwSyncCtrlObj::ON || m_monitor_mode)
     m_hw_sync->getExpTime(acq_time);
   else
     acq_time= m_inpars.acqExpoTime;
@@ -504,6 +530,10 @@ void CtAcquisition::getAutoExposureModeList(AutoExposureModeList& modes) const
 void CtAcquisition::setAutoExposureMode(AutoExposureMode mode)
 {
   DEB_MEMBER_FUNCT();
+
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change auto exposure mode";
+
   if(!checkAutoExposureMode(mode))
     THROW_CTL_ERROR(NotSupported) << DEB_VAR1(mode);
   m_inpars.autoExpoMode = mode;
@@ -618,6 +648,9 @@ void CtAcquisition::setConcatNbFrames(int nframes)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(nframes);
 
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change the nb of concatenation frames";
+
   if (nframes < 0)
     THROW_CTL_ERROR(InvalidValue) << "Invalid concat. " << DEB_VAR1(nframes);
 
@@ -637,6 +670,9 @@ void CtAcquisition::setLatencyTime(double lat_time)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(lat_time);
+
+  if(m_monitor_mode) 
+    THROW_CTL_ERROR(Error) << "In monitor mode, you can not change the latency time";
 
   if (lat_time < m_valid_ranges.min_lat_time)
     lat_time = m_valid_ranges.min_lat_time;

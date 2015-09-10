@@ -1101,9 +1101,11 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
       if((*i)->cb() == &cb)
 	{
 	  found = true;
-	  delete *i;
+	  ImageStatusThread* status_thread = *i;
 	  m_img_status_thread_list.erase(i);
 	  cb.setImageStatusCallbackGen(NULL);
+	  aLock.unlock();
+	  delete status_thread;
 	  break;
 	}
     }

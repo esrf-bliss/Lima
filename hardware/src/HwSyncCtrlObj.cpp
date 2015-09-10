@@ -25,7 +25,8 @@
 using namespace lima;
 
 HwSyncCtrlObj::HwSyncCtrlObj()
-  : m_acq_mode(Single),
+  : m_access_mode(Master),
+    m_acq_mode(Single),
     m_valid_ranges_cb(NULL)
 {
 	DEB_CONSTRUCTOR();

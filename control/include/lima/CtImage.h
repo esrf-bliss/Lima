@@ -205,6 +205,7 @@ class LIMACORE_API CtImage {
 	ImageType		m_img_type;
 	ImageType		m_next_image_type;
 	ImageOpMode		m_mode;
+	bool			m_monitor_mode;
 };
  
 inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoiFlip &binroi)
