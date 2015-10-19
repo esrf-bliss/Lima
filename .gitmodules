@@ -19,9 +19,6 @@
 [submodule "camera/pilatus"]
 	path = camera/pilatus
 	url = git://github.com/esrf-bliss/Lima-camera-pilatus
-[submodule "applications/tango"]
-	path = applications/tango
-	url = git://github.com/esrf-bliss/Lima-tango
 [submodule "camera/maxipix"]
 	path = camera/maxipix
 	url = git://github.com/esrf-bliss/Lima-camera-maxipix
@@ -124,3 +121,9 @@
 [submodule "camera/v4l2"]
 	path = camera/v4l2
 	url = git://github.com/esrf-bliss/Lima-camera-v4l2.git
+[submodule "applications/tango/python"]
+	path = applications/tango/python
+	url = git://github.com/esrf-bliss/Lima-tango-python
+[submodule "applications/tango/cpp"]
+	path = applications/tango/cpp
+	url = git://github.com/esrf-bliss/Lima-tango-cpp
