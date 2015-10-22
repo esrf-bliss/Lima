@@ -569,7 +569,7 @@ CtImage::CtImage(HwInterface *hw,CtControl &ct)
 	    hw_sync->getAccessMode(access_mode);
 	    m_monitor_mode = access_mode == HwSyncCtrlObj::Monitor;
 	    // Force image operation to be Software in monitor mode
-	    m_mode = SoftOnly;
+	    m_mode = m_monitor_mode ? SoftOnly : HardAndSoft;
 	  }
 	else
 	  m_monitor_mode = false;
