@@ -757,7 +757,9 @@ using namespace lima;
  public:
   SoftOpBackgroundSubstraction();
   ~SoftOpBackgroundSubstraction();
-    
+  void setOffset(int value);
+  void getOffset(int& value /Out/) const;
+
   void setBackgroundImage(Data &aData);
 };
 

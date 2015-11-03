@@ -100,7 +100,8 @@ namespace lima
     virtual ~SoftOpBackgroundSubstraction();
     
     void setBackgroundImage(Data &aData);
-    
+    void setOffset(int value);
+    void getOffset(int& value) const;
   protected:
     virtual bool addTo(TaskMgr&,int stage);
     virtual void prepare() {};

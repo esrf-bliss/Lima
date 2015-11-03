@@ -44,6 +44,16 @@ void SoftOpBackgroundSubstraction::setBackgroundImage(Data &anImage)
   m_opt->setBackgroundImageData(anImage);
 }
 
+void SoftOpBackgroundSubstraction::setOffset(int value)
+{
+  m_opt->setOffset(value);
+}
+
+void SoftOpBackgroundSubstraction::getOffset(int& value) const
+{
+  m_opt->getOffset(value);
+}
+
 bool SoftOpBackgroundSubstraction::addTo(TaskMgr &aMgr,int stage)
 {
   aMgr.setLinkTask(stage,m_opt);
