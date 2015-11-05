@@ -1,0 +1,30 @@
+Stable branch core-1.5
+----------------------
+
+
+core-1.5.4 2015-08-14
+Features
+ * New tags for submodules: Espia-1.5.1/maxipix-1.5.2/v4l2-1.5.3/ueye-1.5.0/tango-camera-andor3-1.5.0
+Bug Fixes
+ * hdf5: revert install in Makefile
+
+core.1.5.3 2015-08-12
+Features
+ * control: accumalation mode enhanced again
+
+core-1.5.2 2015-07-27
+Features
+ * New tag for andor3 needs core-1.5 for using accumulation mode
+ * New tag for prosilica under core-1.5
+ * simulator: add IntTrigMulti capability
+ * Updated camera/prosilica
+Bug Fixes
+ * control: fixed deadlock in unregisterImageStatusCallback
+ * video: fixing dead lock when stopping and changing expo time.
+
+core-1.5.1 2015-06-19
+Features
+ * New tags: v4l2, basler, tango/camera/v4l2. basler-1.5.1/tango-camera-v4l2-1.5.1/v4l2-1.5.1 
+ * Enhanced Accumulation and acc_mode with new mode for threshold and/or offset correction. Updated Spec and Tango for that purpose too.
+ * accumulation: extend accumulation algorithm to be able to ignore noise lower than a threshold
+
