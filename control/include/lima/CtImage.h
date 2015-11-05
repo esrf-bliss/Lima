@@ -186,6 +186,7 @@ class LIMACORE_API CtImage {
     private:
 	void _setMaxImage(const Size &size, ImageType type);
 	void _setHSRoi(const Roi &roi);
+	void _completeWithSoftRoi(Roi roi_set,Roi hw_roi);
 	void _setHSBin(const Bin &bin);
 	void _setHSFlip(const Flip &flip);
 	void _resetFlip();
