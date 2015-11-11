@@ -42,10 +42,10 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('prosilica',        [os.path.join('camera','prosilica')]),
            ('ueye',             [os.path.join('camera','ueye')]),
            ('roperscientific',  [os.path.join('camera','roperscientific')]),
-           ('adsc',  		[os.path.join('camera','adsc')]),
-           ('merlin',		[os.path.join('camera','merlin')]),
+           ('adsc',             [os.path.join('camera','adsc')]),
+           ('merlin',           [os.path.join('camera','merlin')]),
            ('mythen',           [os.path.join('camera','mythen')]),
-           ('mythen3',		[os.path.join('camera','mythen3')]),
+           ('mythen3',          [os.path.join('camera','mythen3')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
            ('andor',            [os.path.join('camera','andor')]),
            ('andor3',           [os.path.join('camera','andor3')]),
@@ -198,10 +198,10 @@ def main():
             extra_cxxflags += ['-std=c++0x']
         elif(modName == 'aviex'):
             extra_cxxflags += ['-DOS_UNIX']
-	elif (modName == 'maxipix'):
+        elif (modName == 'maxipix'):
             extraIncludes += ['../../camera/maxipix/tools/src']
         extraIncludes += findModuleIncludes(modName)
-	if (modName == 'roperscientific'):
+        if (modName == 'roperscientific'):
             extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
         
         sipFile = open(sipFileName,"a")
