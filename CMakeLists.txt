@@ -27,6 +27,16 @@ set(COMPILE_BASLER ON CACHE BOOL "compile basler?")
 #set(COMPILE_CORE ON CACHE BOOL "compile core?")
 
 #add_subdirectory(third-party)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/build/libprocesslib.so
+    COMMAND ${MAKE}
+    ARGS -C third-party/Processlib/build
+)
+add_custom_target(
+    libprocesslib
+    COMMAND make
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/build
+)
 
 set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Timestamp.cpp common/src/ThreadUtils.cpp
                 common/src/Exceptions.cpp common/src/MemUtils.cpp common/src/RegExUtils.cpp common/src/AcqState.cpp
@@ -80,5 +90,7 @@ endif()
 TARGET_LINK_LIBRARIES(limacore "rt")
 FIND_LIBRARY(PROCESSLIB processlib "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/build")
 TARGET_LINK_LIBRARIES(limacore ${PROCESSLIB})
+ADD_DEPENDENCIES(limacore libprocesslib)
 SET_TARGET_PROPERTIES(limacore PROPERTIES VERSION ${core_ver} SOVERSION "1")
 
+add_subdirectory(camera/simulator)
