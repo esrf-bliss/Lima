@@ -94,3 +94,4 @@ ADD_DEPENDENCIES(limacore libprocesslib)
 SET_TARGET_PROPERTIES(limacore PROPERTIES VERSION ${core_ver} SOVERSION "1")
 
 add_subdirectory(camera/simulator)
+add_subdirectory(camera/basler)
