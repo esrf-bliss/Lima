@@ -21,6 +21,7 @@
 //###########################################################################
 #include "lima/CtBuffer.h"
 #include "lima/CtAccumulation.h"
+#include "lima/CtSaving.h"
 
 using namespace lima;
 
@@ -212,6 +213,11 @@ void CtBuffer::setup(CtControl *ct)
   acq= ct->acquisition();
   acq->getAcqMode(mode);
   acq->getAcqNbFrames(acq_nframes);
+  
+  CtSaving* saving = ct->saving();
+  CtSaving::ManagedMode saving_mode;
+  saving->getManagedMode(saving_mode);
+  
 
   img= ct->image();
   img->getHwImageDim(fdim);
@@ -220,6 +226,8 @@ void CtBuffer::setup(CtControl *ct)
   m_ct_accumulation = NULL;
   if(!acq_nframes)		// continous mode
     hwNbBuffer = nbuffers = 16;
+  else if(saving_mode != CtSaving::Software)
+    hwNbBuffer = nbuffers = 1;
 
   switch (mode) {
   case Single:
