@@ -777,7 +777,7 @@ void CtImage::_setHSRoi(const Roi &roi)
 		m_hw->setRoi(roi_set_hw, true);
 		DEB_TRACE() << DEB_VAR2(roi_by_hw, roi_set_hw);
 
-		_completeWithSoftRoi(roi_set_hw,roi_by_hw);
+		_completeWithSoftRoi(roi_by_hw, roi_set_hw);
 	} else {
 		m_sw->setRoi(roi);
 	}
