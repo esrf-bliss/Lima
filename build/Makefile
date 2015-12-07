@@ -441,7 +441,7 @@ endif
 ifneq ($(COMPILE_ANDOR3),0)
 
 ANDOR3_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
-ANDOR3_LDLIBS	:= $(LDLIBS) -latcore
+ANDOR3_LDLIBS	:= $(LDLIBS) -latcore -latutility
 
 andor3-name	:= andor3
 andor3-objs	:= ../camera/andor3/src/Andor3.o
