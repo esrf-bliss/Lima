@@ -777,6 +777,29 @@ build_targets	+= $(call lib-full,$(eiger-name),$(eiger-ver))
 
 endif
 
+############################
+# LIMA - DEXELA
+############################
+ifneq ($(COMPILE_DEXELA),0)
+
+DEXELA_LDFLAGS	:= $(LDFLAGS) 
+DEXELA_LDLIBS	:= $(LDLIBS) -ldexela
+
+dexela-name	:= dexela
+dexela-objs	:= ../camera/dexela/src/Dexela.o
+dexela-ver	:= ../camera/dexela/VERSION
+dexela-flags	:= $(DEXELA_LDFLAGS)
+dexela-deps	:= $(DEXELA_LDLIBS)
+
+$(call lib-full,$(dexela-name),$(dexela-ver)): $(dexela-objs)
+	$(call compile-lib,$(dexela-name),$(dexela-ver),\
+			   $(dexela-flags),$(dexela-deps),$@,$+)
+	$(call create-links,$(dexela-name),$(dexela-ver))
+
+build_targets	+= $(call lib-full,$(dexela-name),$(dexela-ver))
+
+endif
+
 src:		$(build_targets)
 
 test:

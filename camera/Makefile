@@ -224,4 +224,12 @@ ifneq ($(COMPILE_EIGER),0)
 sub-dirs += eiger
 endif
 
+ifndef COMPILE_DEXELA
+COMPILE_DEXELA = 0
+endif
+
+ifneq ($(COMPILE_DEXELA),0)
+sub-dirs += dexela
+endif
+
 include ../global.inc

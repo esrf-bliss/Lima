@@ -141,6 +141,10 @@ ifneq ($(COMPILE_EIGER), 0)
 sip-modules += eiger
 endif
 
+ifneq ($(COMPILE_DEXELA), 0)
+sip-modules += dexela
+endif
+
 all:	src
 
 src:
