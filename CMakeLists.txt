@@ -9,34 +9,9 @@ set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 set(COMPILE_CORE ON CACHE BOOL "compile core?")
 set(COMPILE_SIMULATOR ON CACHE BOOL "compile simulator?")
 set(COMPILE_SPS_IMAGE ON CACHE BOOL "compile sps_image?")
-set(COMPILE_ESPIA ON CACHE BOOL "compile espia?")
-set(COMPILE_FRELON ON CACHE BOOL "compile frelon?")
-set(COMPILE_MAXIPIX ON CACHE BOOL "compile maxipix?")
-set(COMPILE_PILATUS ON CACHE BOOL "compile pilatus?")
 set(COMPILE_BASLER ON CACHE BOOL "compile basler?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
-#set(COMPILE_CORE ON CACHE BOOL "compile core?")
 
-#add_subdirectory(third-party)
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/build/libprocesslib.so
-    COMMAND ${MAKE}
-    ARGS -C third-party/Processlib/build
-)
-add_custom_target(
-    libprocesslib
-    COMMAND make
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/build
-)
+add_subdirectory(third-party/Processlib)
 
 set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Timestamp.cpp common/src/ThreadUtils.cpp
                 common/src/Exceptions.cpp common/src/MemUtils.cpp common/src/RegExUtils.cpp common/src/AcqState.cpp
@@ -58,14 +33,6 @@ set(control_srcs control/src/CtSaving.cpp control/src/CtControl.cpp control/src/
                  control/src/CtEvent.cpp)
 set(ct_srcs control/software_operation/src/SoftOpInternalMgr.cpp control/software_operation/src/SoftOpExternalMgr.cpp control/software_operation/src/SoftOpId.cpp)
 
-#if (COMPILE_CORE)
-#    add_subdirectory(common)
-#    add_subdirectory(hardware)
-#    add_subdirectory(control)
-#    add_subdirectory(camera)
-#    add_subdirectory(build)
-#endif (COMPILE_CORE)
-
 file(STRINGS "common/VERSION" core_ver)
 add_library(limacore SHARED
     ${common_srcs}
@@ -73,12 +40,12 @@ add_library(limacore SHARED
     ${control_srcs}
     ${ct_srcs}
 )
-TARGET_INCLUDE_DIRECTORIES(limacore PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/common/include")
-TARGET_INCLUDE_DIRECTORIES(limacore PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/hardware/include")
-TARGET_INCLUDE_DIRECTORIES(limacore PRIVATE
+TARGET_INCLUDE_DIRECTORIES(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/common/include")
+TARGET_INCLUDE_DIRECTORIES(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/hardware/include")
+TARGET_INCLUDE_DIRECTORIES(limacore PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/control/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/include")
-TARGET_INCLUDE_DIRECTORIES(limacore PRIVATE
+TARGET_INCLUDE_DIRECTORIES(limacore PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/core/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/include")
 if(THREADS_HAVE_PTHREAD_ARG)
@@ -88,10 +55,15 @@ if(CMAKE_THREAD_LIBS_INIT)
     target_link_libraries(limacore "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 TARGET_LINK_LIBRARIES(limacore "rt")
-FIND_LIBRARY(PROCESSLIB processlib "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/build")
-TARGET_LINK_LIBRARIES(limacore ${PROCESSLIB})
-ADD_DEPENDENCIES(limacore libprocesslib)
+TARGET_LINK_LIBRARIES(limacore processlib)
 SET_TARGET_PROPERTIES(limacore PROPERTIES VERSION ${core_ver} SOVERSION "1")
+INSTALL(TARGETS limacore
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include)
 
-add_subdirectory(camera/simulator)
-add_subdirectory(camera/basler)
+if(COMPILE_SIMULATOR)
+    add_subdirectory(camera/simulator)
+endif(COMPILE_SIMULATOR)
+if(COMPILE_BASLER)
+    add_subdirectory(camera/basler)
+endif(COMPILE_BASLER)
