@@ -7,4 +7,7 @@
 %PostInitialisationCode
 lima_import_array();
 %End
+
+%Import limacore.sip
+
 @INCLUDES@
