@@ -2142,9 +2142,13 @@ void CtSaving::Stream::checkDirectoryAccess(const std::string& directory)
       size_t pos = local_directory.find_last_of("/");
 #endif
       size_t string_length = local_directory.size() - 1;
-      continue_flag = pos == string_length;
       if(pos != std::string::npos)
-	local_directory = local_directory.substr(0,pos);
+	{
+	  local_directory = local_directory.substr(0,pos);
+	  continue_flag = pos == string_length;
+	}
+	else
+	  continue_flag = false;
 	}
       while(continue_flag);
 
