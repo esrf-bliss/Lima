@@ -1,6 +1,20 @@
 Stable branch core-1.5
 ----------------------
 
+core-1.5.5 2015-12-11
+Features
+ * New tags for submodules: spec-1.4.7/andor3.1.5.1/tango-camera-andor3-1.5.1
+ * andor3:  Compressed data (Mono12Packed) and IntTrigMult trigger mode
+ * tango python: andor3 updaded, no more destride attr
+ * spec: andor3 updaded, no more destride option
+
+Bug Fixes
+ * image: fixed checkValid() missing #ifdef for TIFF, only 1 frame per file supported
+ * saving: Fixed a infinite loop in  checkDirectoryAccess() when dir is an empty string
+ * image: fixed in reevalutation with _setHSRoi
+ * basler: external trigger fixes
+ * image: reevaluate software roi when binning change
+
 
 core-1.5.4 2015-08-14
 Features
