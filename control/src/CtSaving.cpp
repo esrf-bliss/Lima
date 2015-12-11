@@ -167,6 +167,8 @@ void CtSaving::Parameters::checkValid() const
 	THROW_CTL_ERROR(InvalidValue) << "CBF file format does not support "
 			                 "multi frame per file";
       break;
+#endif
+#ifdef WITH_TIFF_SAVING
     case TIFFFormat :
       if(framesPerFile > 1)
 	THROW_CTL_ERROR(InvalidValue) << "TIFF file format does not support "
