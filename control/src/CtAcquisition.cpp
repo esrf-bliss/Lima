@@ -22,6 +22,8 @@
 
 #include "lima/CtAcquisition.h"
 #include "math.h"
+#include <algorithm>
+using std::max;
 
 #define CHECK_EXPOTIME(val)						\
   if (val < m_valid_ranges.min_exp_time)				\
@@ -183,7 +185,7 @@ void CtAcquisition::reset()
   DEB_MEMBER_FUNCT();
   
   m_inpars.reset();
-  m_inpars.latencyTime = m_valid_ranges.min_lat_time;
+  m_inpars.latencyTime = 0;
   m_applied_once= false;
 
   //Check auto exposure capability
@@ -260,6 +262,8 @@ void CtAcquisition::_hwRead()
   m_hw_sync->getTrigMode(m_hwpars.triggerMode);
   m_hw_sync->getExpTime(m_hwpars.acqExpoTime);
   m_hw_sync->getLatTime(m_hwpars.latencyTime);
+  if (m_hwpars.latencyTime <= m_valid_ranges.min_lat_time)
+    m_hwpars.latencyTime = 0;
   m_hw_sync->getNbFrames(m_hwpars.acqNbFrames);
 
   switch (m_hwpars.acqMode) {
@@ -287,7 +291,8 @@ void CtAcquisition::_apply()
   m_hw_sync->setAcqMode(m_inpars.acqMode);
 
   if (m_changes.triggerMode) m_hw_sync->setTrigMode(m_inpars.triggerMode);
-  if (m_changes.latencyTime) m_hw_sync->setLatTime(m_inpars.latencyTime);
+  double lat_time = max(m_inpars.latencyTime, m_valid_ranges.min_lat_time);
+  if (m_changes.latencyTime) m_hw_sync->setLatTime(lat_time);
   
   if(m_changes.acqMode || m_changes.acqNbFrames)
     {
@@ -674,8 +679,8 @@ void CtAcquisition::setLatencyTime(double lat_time)
   if(m_monitor_mode) 
     THROW_CTL_ERROR(Error) << "In monitor mode, you can not change the latency time";
 
-  if (lat_time < m_valid_ranges.min_lat_time)
-    lat_time = m_valid_ranges.min_lat_time;
+  if (lat_time <= m_valid_ranges.min_lat_time)
+    lat_time = 0;
   if (lat_time > m_valid_ranges.max_lat_time)
     THROW_CTL_ERROR(InvalidValue) 
       << "Specified latency time " << DEB_VAR1(lat_time) << " too long: "
@@ -687,7 +692,7 @@ void CtAcquisition::getLatencyTime(double& time) const
 {
   DEB_MEMBER_FUNCT();
 
-  time= m_inpars.latencyTime;
+  time= max(m_inpars.latencyTime, m_valid_ranges.min_lat_time);
 
   DEB_RETURN() << DEB_VAR1(time);
 }
