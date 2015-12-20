@@ -210,6 +210,9 @@ namespace lima
 
     void setReconstructionTask(LinkTask*);
 
+    void setPrepareTimeout(double timeout); 
+    void getPrepareTimeout(double& timeout) const;
+
   protected:
     bool newFrameReady(Data& data);
     void newFrameToSave(Data& data);
@@ -285,6 +288,8 @@ namespace lima
     ImageStatusThreadList m_img_status_thread_list;
     SoftOpErrorHandler* m_soft_op_error_handler;
     _ReconstructionChangeCallback* m_reconstruction_cbk;
+
+    static double	m_prepare_timeout;
 
     inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();
