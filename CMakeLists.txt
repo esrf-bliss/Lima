@@ -5,7 +5,7 @@ project (lima)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 FIND_PACKAGE(PythonInterp 2.7)
 FIND_PACKAGE(PythonLibs 2.7)
-IF (${PythonInterp_FOUND})
+IF (${PYTHONINTERP_FOUND})
     # python site-packages folder
     execute_process(
        COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
