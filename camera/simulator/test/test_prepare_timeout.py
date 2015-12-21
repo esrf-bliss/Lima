@@ -58,7 +58,6 @@ class TestControl:
 		self.cb_end = threading.Event()
 		self.cb = self.ImageStatusCallback(self, self.cb_end)
 		self.ct_control.registerImageStatusCallback(self.cb)
-		self.acq_state = Core.AcqState()
 
 	@Core.DEB_MEMBER_FUNCT
 	def __del__(self):
@@ -71,15 +70,19 @@ class TestControl:
 		ct_acq.setAcqExpoTime(exp_time)
 		ct_acq.setAcqNbFrames(nb_frames)
 		self.sleep_time = sleep_time
-		self.ct_control.setPrepareTimeout(prepare_timeout)
+		if hasattr(self.ct_control, 'setPrepareTimeout'):
+			self.ct_control.setPrepareTimeout(prepare_timeout)
 		self.ct_control.prepareAcq()
 		deb.Always('prepareAcq finished')
-		self.acq_state.set(Core.AcqState.Acquiring)
 		self.ct_control.startAcq()
 
 	@Core.DEB_MEMBER_FUNCT
 	def waitAcq(self):
-		self.acq_state.waitNot(Core.AcqState.Acquiring)
+		def acq_status():
+			return self.ct_control.getStatus().AcquisitionStatus
+		while acq_status() == Core.AcqRunning:
+			time.sleep(10e-3)
+		deb.Always('Acq. is ready')
 
 	@Core.DEB_MEMBER_FUNCT
 	def sync(self):
@@ -88,20 +91,13 @@ class TestControl:
 
 	@Core.DEB_MEMBER_FUNCT
 	def imageStatusChanged(self, img_status):
-		if self.acq_state.get() != Core.AcqState.Acquiring:
-			return
-
-		ct_acq = self.ct_control.acquisition()
-		nb_frames = ct_acq.getAcqNbFrames()
 		last_img_ready = img_status.LastImageReady
-		if last_img_ready == nb_frames - 1:
-			deb.Always('Acq. is ready')
-			self.acq_state.set(Core.AcqState.Idle)
-
-		time.sleep(self.sleep_time)
-
-		deb.Always('Forcing read frame %d memory' % last_img_ready)
+		if last_img_ready < 0:
+			return
+		
 		image = self.ct_control.ReadImage(last_img_ready)
+		time.sleep(self.sleep_time)
+		deb.Always('Forcing read frame %d memory' % last_img_ready)
 		data = ' ' + image.buffer.tostring()
 
 
@@ -138,7 +134,7 @@ def main(argv):
 	deb_type_flags = Core.DebParams.AllFlags if verbose else 0
 	Core.DebParams.setTypeFlags(deb_type_flags)
 
-	exp_time = 1e-3
+	exp_time = 0.1
 
 	test_control = TestControlAutoSync()
 
