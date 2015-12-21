@@ -168,6 +168,9 @@ using namespace lima;
 
     void setReconstructionTask(LinkTask*);
 
+    void setPrepareTimeout(double timeout);
+    void getPrepareTimeout(double& timeout /Out/) const;
+
   protected:
     bool newFrameReady(Data& data);
     void newFrameToSave(Data& data);
