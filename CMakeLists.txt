@@ -3,6 +3,16 @@ cmake_minimum_required(VERSION 2.8)
 project (lima)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+FIND_PACKAGE(PythonInterp 2.7)
+FIND_PACKAGE(PythonLibs 2.7)
+IF (${PythonInterp_FOUND})
+    # python site-packages folder
+    execute_process(
+       COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
+       OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+ENDIF()
+FIND_PACKAGE(SIP)
+INCLUDE(SIPMacros)
 
 find_package(Threads REQUIRED)
 
@@ -16,14 +26,9 @@ set(COMPILE_SIP OFF CACHE BOOL "compile python modules?")
 set(COMPILE_TIFF_SAVING OFF CACHE BOOL "compile tiff saving code?")
 
 if(COMPILE_SIP)
-    FIND_PACKAGE(PythonInterp 2.7 REQUIRED)
-    FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
-    # python site-packages folder
-    execute_process(
-       COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
-       OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-    FIND_PACKAGE(SIP REQUIRED)
-    INCLUDE(SIPMacros)
+    IF(!${SIP_FOUND})
+        MESSAGE(FATAL_ERROR "sip executable not found, cannot build python extensions")
+    ENDIF()
     if (WIN32)
         set(SIP_TAGS WIN32_PLATFORM)
     elseif(UNIX)
