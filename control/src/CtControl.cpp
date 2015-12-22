@@ -163,6 +163,8 @@ public:
   void imageStatusChanged(const ImageStatus& status, bool force=false,
 			  bool wait=false);
 
+  bool waitIdle(double timeout=-1.0);
+
 protected:
   virtual void threadFunction();
   
@@ -177,14 +179,16 @@ private:
   ImageStatusCallback *m_cb;
   ImageStatus m_last_status;
   std::list<ChangeEvent *> m_event_list;
+  bool m_waiting;
 };
 
 CtControl::ImageStatusThread::ImageStatusThread(Cond& cond, 
 						ImageStatusCallback *cb)
-  : m_cond(cond), m_cb(cb)
+  : m_cond(cond), m_cb(cb), m_waiting(false)
 {
   DEB_CONSTRUCTOR();
   start();
+  waitIdle();
 }
 
 CtControl::ImageStatusThread::~ImageStatusThread()
@@ -252,8 +256,12 @@ void CtControl::ImageStatusThread::threadFunction()
   AutoMutex lock(m_cond.mutex());
 
   while (true) {
-    while (m_event_list.empty())
+    while (m_event_list.empty()) {
+      m_waiting = true;
+      m_cond.broadcast();
       m_cond.wait();
+      m_waiting = false;
+    }
 
     ChangeEvent *event = m_event_list.back();
     m_event_list.pop_back();
@@ -274,7 +282,21 @@ void CtControl::ImageStatusThread::threadFunction()
     delete event;
   }
 
+  m_waiting = false;
   m_cond.broadcast();
+}
+
+bool CtControl::ImageStatusThread::waitIdle(double timeout)
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex lock(m_cond.mutex());
+
+  while (!m_waiting)
+    if (!m_cond.wait(timeout))
+      break;
+
+  return m_waiting;
 }
 
 
@@ -291,7 +313,8 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
-  m_reconstruction_cbk(NULL)
+  m_reconstruction_cbk(NULL),
+  m_prepare_timeout(2)
 {
   DEB_CONSTRUCTOR();
 
@@ -415,6 +438,12 @@ void CtControl::getApplyPolicy(ApplyPolicy &policy) const
 void CtControl::prepareAcq()
 {
   DEB_MEMBER_FUNCT();
+
+  ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
+  for (i = m_img_status_thread_list.begin(); i != end; ++i)
+    if (!(*i)->waitIdle(m_prepare_timeout))
+      THROW_CTL_ERROR(Error) << "ImageStatusCallback still active after "
+			     << m_prepare_timeout << " sec";
 
   Status aStatus;
   getStatus(aStatus);
@@ -828,6 +857,22 @@ void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber,
 void CtControl::setReconstructionTask(LinkTask *task)
 {
   m_op_int->setReconstructionTask(task);
+}
+
+void CtControl::setPrepareTimeout(double timeout)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(timeout);
+  if ((timeout < 0) && (timeout != -1))
+    THROW_CTL_ERROR(InvalidValue) << "Invalid timeout: " << timeout;
+  m_prepare_timeout = timeout;
+}
+
+void CtControl::getPrepareTimeout(double& timeout) const
+{
+  DEB_MEMBER_FUNCT();
+  timeout = m_prepare_timeout;
+  DEB_RETURN() << DEB_VAR1(timeout);
 }
 
 void CtControl::reset()

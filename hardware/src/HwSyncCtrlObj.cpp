@@ -24,17 +24,30 @@
 
 using namespace lima;
 
+HwSyncCtrlObj::ValidRangesCallback::ValidRangesCallback()
+  : m_hw_sync(NULL)
+{
+}
+
+HwSyncCtrlObj::ValidRangesCallback::~ValidRangesCallback()
+{
+  if (m_hw_sync)
+    m_hw_sync->unregisterValidRangesCallback(this);
+}
+
 HwSyncCtrlObj::HwSyncCtrlObj()
   : m_access_mode(Master),
     m_acq_mode(Single),
     m_valid_ranges_cb(NULL)
 {
-	DEB_CONSTRUCTOR();
+  DEB_CONSTRUCTOR();
 }
 
 HwSyncCtrlObj::~HwSyncCtrlObj()
 {
-	DEB_DESTRUCTOR();
+  DEB_DESTRUCTOR();
+  if (m_valid_ranges_cb)
+    unregisterValidRangesCallback(m_valid_ranges_cb);
 }
 
 bool HwSyncCtrlObj::checkAutoExposureMode(AutoExposureMode mode) const
@@ -93,6 +106,7 @@ void HwSyncCtrlObj::registerValidRangesCallback(ValidRangesCallback *cb)
       throw LIMA_CTL_EXC(InvalidValue,"ValidRangesCallback already registered");
     }
 
+  cb->m_hw_sync = this;
   m_valid_ranges_cb = cb;
 }
 
@@ -108,6 +122,7 @@ void HwSyncCtrlObj::unregisterValidRangesCallback(ValidRangesCallback *cb)
     }
 
   m_valid_ranges_cb = NULL;
+  cb->m_hw_sync = NULL;
 }
 
 std::ostream& lima::operator<<(std::ostream& os,const HwSyncCtrlObj::ValidRangesType &range)
