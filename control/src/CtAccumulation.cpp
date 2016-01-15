@@ -24,7 +24,7 @@
 #include "lima/CtBuffer.h"
 #include "processlib/SinkTask.h"
 #ifndef __unix
-#include "SinkTaskMgr.i"
+#include "processlib/SinkTaskMgr.i"
 #endif
 using namespace lima;
 /****************************************************************************
