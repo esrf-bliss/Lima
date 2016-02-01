@@ -9,10 +9,12 @@ IF (${PYTHONINTERP_FOUND})
     # python site-packages folder
     execute_process(
        COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
-       OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+       OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 ENDIF()
 FIND_PACKAGE(SIP)
 INCLUDE(SIPMacros)
+
+SET(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
 find_package(Threads REQUIRED)
 
