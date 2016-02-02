@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+static const long int WRITE_BUFFER_SIZE = 64*1024;
 #else
 #include <time_compat.h>
 #endif
@@ -235,11 +236,18 @@ SaveContainerEdf::SaveContainerEdf(CtSaving::Stream& stream,
   m_format(format)
 {
   DEB_CONSTRUCTOR();
+#ifdef __unix
+  if(posix_memalign(&m_fout_buffer,4*1024,WRITE_BUFFER_SIZE))
+    THROW_CTL_ERROR(Error) << "Can't allocated write buffer";
+#endif
 }
 
 SaveContainerEdf::~SaveContainerEdf()
 {
   DEB_DESTRUCTOR();
+#ifdef __unix
+  free(m_fout_buffer);
+#endif
 }
 
 bool SaveContainerEdf::_open(const std::string &filename,
@@ -249,6 +257,9 @@ bool SaveContainerEdf::_open(const std::string &filename,
   m_fout.clear();
   m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
   m_fout.open(filename.c_str(),openFlags);
+#ifdef __unix
+  m_fout.rdbuf()->pubsetbuf((char*)m_fout_buffer,WRITE_BUFFER_SIZE);
+#endif
   m_current_filename = filename;
   return true;
 }

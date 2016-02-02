@@ -58,6 +58,7 @@ namespace lima {
     cbf_handle _takeHandle(int dataId);
     
     FILE* 		m_fout;
+    void*		m_fout_buffer;
     dataId2cbfHandle 	m_cbfs;
     cbf_handle  	m_current_cbf;
     Mutex		m_lock;

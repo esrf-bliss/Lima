@@ -108,6 +108,7 @@ namespace lima {
     };
     _OfStream			 m_fout;
 #else
+    void*                        m_fout_buffer;
     std::ofstream                m_fout;
 #endif
     CtSaving::FileFormat	 m_format;

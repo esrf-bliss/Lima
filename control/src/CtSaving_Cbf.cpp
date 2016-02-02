@@ -28,6 +28,7 @@ using namespace lima;
 
 static const char *DEFAULT_CATEGORY = "Misc";
 static const char LIMA_HEADER_KEY_SEPARATOR = '/';
+static const long int WRITE_BUFFER_SIZE = 64*1024;
 
 class SaveContainerCbf::Compression : public SinkTaskBase
 {
@@ -194,12 +195,15 @@ SaveContainerCbf::SaveContainerCbf(CtSaving::Stream& stream) :
   m_lock(MutexAttr::Normal)
 {
   DEB_CONSTRUCTOR();
+  if(posix_memalign(&m_fout_buffer,4*1024,WRITE_BUFFER_SIZE))
+    THROW_CTL_ERROR(Error) << "Can't allocated write buffer";
 }
 
 SaveContainerCbf::~SaveContainerCbf()
 {
   DEB_DESTRUCTOR();
   _close();
+  free(m_fout_buffer);
 }
 
 SinkTaskBase* SaveContainerCbf::getCompressionTask(const CtSaving::HeaderMap &header)
@@ -225,6 +229,7 @@ bool SaveContainerCbf::_open(const std::string &filename,
 
   DEB_TRACE() << "Open file name: " << filename << " with open flags: " << openFlags;
   m_fout = fopen(filename.c_str(),openFlags);
+  setbuffer(m_fout,(char*)m_fout_buffer,WRITE_BUFFER_SIZE);
 
   return !!m_fout;
 }
