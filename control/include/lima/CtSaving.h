@@ -72,6 +72,7 @@ namespace lima {
 	TIFFFormat,		///< TIFF format
 	HDF5,			///< HDF5 format
 	EDFConcat,		// < EDF format with frame concatenation mode
+	EDFLZ4,			// < EDF format with lz4 compression
       };
 
     enum SavingMode 
@@ -445,6 +446,8 @@ namespace lima {
 	  aFileFormatHumanPt = "HDF5";break;
 	case CtSaving::EDFConcat:
 	  aFileFormatHumanPt = "EDF Concat";break;
+	case CtSaving::EDFLZ4:
+	  aFileFormatHumanPt = "EDF lz4";break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -466,6 +469,7 @@ namespace lima {
       else if(buffer == "tiff")		fileFormat = CtSaving::TIFFFormat;
       else if(buffer == "hdf5")		fileFormat = CtSaving::HDF5;
       else if(buffer == "edf concat")	fileFormat = CtSaving::EDFConcat;
+      else if(buffer == "edf lz4") 	fileFormat = CtSaving::EDFLZ4;
       else
 	{
 	  std::ostringstream msg;

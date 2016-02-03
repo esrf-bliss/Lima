@@ -74,6 +74,10 @@ ifneq ($(COMPILE_EDFGZ_SAVING),0)
 CORE_LDLIBS += -lz
 endif
 
+ifneq ($(COMPILE_EDFLZ4_SAVING),0)
+CORE_LDLIBS += -llz4
+endif
+
 ifneq ($(COMPILE_TIFF_SAVING),0)
 CORE_LDLIBS += -ltiff
 endif
