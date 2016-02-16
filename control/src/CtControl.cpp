@@ -257,11 +257,14 @@ void CtControl::ImageStatusThread::threadFunction()
 
   while (true) {
     while (m_event_list.empty()) {
-      m_waiting = true;
-      m_cond.broadcast();
+      if (!m_waiting) {
+	m_waiting = true;
+	m_cond.broadcast();
+      }
       m_cond.wait();
-      m_waiting = false;
     }
+
+    m_waiting = false;
 
     ChangeEvent *event = m_event_list.back();
     m_event_list.pop_back();
