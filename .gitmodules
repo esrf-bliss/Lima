@@ -130,3 +130,6 @@
 [submodule "camera/eiger"]
 	path = camera/eiger
 	url = git://github.com/esrf-bliss/Lima-camera-eiger.git
+[submodule "camera/pixirad"]
+	path = camera/pixirad
+	url = git://github.com/esrf-bliss/Lima-camera-pixirad.git
