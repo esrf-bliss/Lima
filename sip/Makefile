@@ -145,6 +145,12 @@ ifneq ($(COMPILE_DEXELA), 0)
 sip-modules += dexela
 endif
 
+ifneq ($(COMPILE_PIXIRAD), 0)
+sip-modules += pixirad
+endif
+
+
+
 all:	src
 
 src:

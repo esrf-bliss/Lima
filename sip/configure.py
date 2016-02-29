@@ -54,6 +54,7 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('marccd',           [os.path.join('camera','marccd')]),
            ('photonicscience',  [os.path.join('camera','photonicscience')]),
            ('pilatus',          [os.path.join('camera','pilatus')]),
+           ('pixirad',          [os.path.join('camera','pixirad')]),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ('imxpad',           [os.path.join('camera','imxpad')]),
            ('dexela',           [os.path.join('camera','dexela')]),
@@ -200,7 +201,9 @@ def main():
             extra_cxxflags += ['-DOS_UNIX']
         elif (modName == 'maxipix'):
             extraIncludes += ['../../camera/maxipix/tools/src']
-        extraIncludes += findModuleIncludes(modName)
+        elif(modName == 'pixirad'):
+            extra_cxxflags += ['-std=c++11']
+	extraIncludes += findModuleIncludes(modName)
         if (modName == 'roperscientific'):
             extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
         

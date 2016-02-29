@@ -211,7 +211,6 @@ AVIEX_FULL_VERSION = $(shell cat camera/aviex/VERSION)
 INSTALL_AVIEX_VDIR = $(INSTALL_AVIEX_DIR)/v$(AVIEX_FULL_VERSION)
 endif
 
-
 ifneq ($(COMPILE_META), 0)
 INSTALL_META_DIR = $(INSTALL_PLAT_DIR)/Meta
 META_FULL_VERSION = $(shell cat camera/common/meta/VERSION)
@@ -240,6 +239,12 @@ ifneq ($(COMPILE_DEXELA), 0)
 INSTALL_DEXELA_DIR = $(INSTALL_PLAT_DIR)/Dexela
 DEXELA_FULL_VERSION = $(shell cat camera/dexela/VERSION)
 INSTALL_DEXELA_VDIR = $(INSTALL_DEXELA_DIR)/v$(DEXELA_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_PIXIRAD), 0)
+INSTALL_PIXIRAD_DIR = $(INSTALL_PLAT_DIR)/Pixirad
+PIXIRAD_FULL_VERSION = $(shell cat camera/pixirad/VERSION)
+INSTALL_PIXIRAD_VDIR = $(INSTALL_PIXIRAD_DIR)/v$(PIXIRAD_FULL_VERSION)
 endif
 
 ifneq ($(COMPILE_SPS_IMAGE),0)
@@ -645,4 +650,14 @@ ifneq ($(COMPILE_DEXELA), 0)
 	cp -d build/liblimadexela.so* $(INSTALL_LIB_DIR)
 	cp sip/dexela/limadexela.so $(INSTALL_DEXELA_VDIR)
 	cp camera/dexela/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_PIXIRAD), 0)
+	mkdir -p $(INSTALL_PIXIRAD_VDIR)
+	cp camera/pixirad/python/__init__.py $(INSTALL_PIXIRAD_DIR)
+	$(call install_core_dep,$(INSTALL_PIXIRAD_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimapixirad.so*
+	cp -d build/liblimapixirad.so* $(INSTALL_LIB_DIR)
+	cp sip/pixirad/limapixirad.so $(INSTALL_PIXIRAD_VDIR)
+	cp camera/pixirad/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

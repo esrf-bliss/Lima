@@ -800,6 +800,32 @@ build_targets	+= $(call lib-full,$(dexela-name),$(dexela-ver))
 
 endif
 
+
+
+###########################
+# LIMA - PIXIRAD
+############################
+ifneq ($(COMPILE_PIXIRAD),0)
+
+PIXIRAD_LDFLAGS  := $(LDFLAGS)
+PIXIRAD_LDLIBS   := $(LDLIBS)
+
+pixirad-name     := pixirad
+pixirad-objs     := ../camera/pixirad/src/Pixirad.o
+pixirad-ver      := ../camera/pixirad/VERSION
+pixirad-flags    := $(PIXIRAD_LDFLAGS)
+pixirad-deps     := $(PIXIRAD_LDLIBS)
+
+$(call lib-full,$(pixirad-name),$(pixirad-ver)): $(pixirad-objs)
+	$(call compile-lib,$(pixirad-name),$(pixirad-ver),\
+	$(pixirad-flags),$(pixirad-deps),$@,$+)
+	$(call create-links,$(pixirad-name),$(pixirad-ver))
+
+build_targets   += $(call lib-full,$(pixirad-name),$(pixirad-ver))
+
+endif
+
+
 src:		$(build_targets)
 
 test:

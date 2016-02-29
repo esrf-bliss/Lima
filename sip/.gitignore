@@ -35,6 +35,7 @@ meta
 merlin
 v4l2
 eiger
+pixirad
 *.obj
 lima*.exp
 lima*.lib
