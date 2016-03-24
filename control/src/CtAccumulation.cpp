@@ -26,6 +26,9 @@
 #ifndef __unix
 #include "processlib/SinkTaskMgr.i"
 #endif
+#ifdef __SSE2__
+#include <emmintrin.h>
+#endif
 using namespace lima;
 /****************************************************************************
 CtAccumulation::_ImageReady4AccCallback
@@ -717,6 +720,33 @@ void accumulateFrame(void *src_ptr,void *dst_ptr,int nb_items)
   for(int i = nb_items;i;--i,++sp,++dp)
     *dp += *sp;
 }
+
+#ifdef __SSE2__
+template<>
+void accumulateFrame<unsigned short,int>(void *src,
+					 void *dst,int nb_items)
+{
+  unsigned short *src_ptr = (unsigned short*)src;
+  int *dst_ptr = (int*)dst;
+
+  for(;nb_items >= 8;nb_items -= 8,dst_ptr += 8,src_ptr += 8)
+    {
+      __m128i src1,src2;
+      __m128i dst1,dst2;
+      src2 = _mm_load_si128((__m128i*)src_ptr);
+      dst1 = _mm_load_si128((__m128i*)dst_ptr);
+      dst2 = _mm_load_si128((__m128i*)(dst_ptr + 4));
+      src1 = _mm_unpacklo_epi16(src2,_mm_setzero_si128());
+      src2 = _mm_unpackhi_epi16(src2,_mm_setzero_si128());
+      dst1 = _mm_add_epi32(src1,dst1);
+      dst2 = _mm_add_epi32(src2,dst2);
+      _mm_store_si128((__m128i*)dst_ptr,dst1);
+      _mm_store_si128((__m128i*)(dst_ptr + 4),dst2);
+    }
+  for(;nb_items;--nb_items,++dst_ptr,++src_ptr)
+    *dst_ptr += *src_ptr;
+}
+#endif
 
 void CtAccumulation::_accFrame(Data &src,Data &dst)
 {
