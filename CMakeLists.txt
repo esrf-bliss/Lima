@@ -149,4 +149,7 @@ if(COMPILE_SIP)
         ${CMAKE_CURRENT_SOURCE_DIR}/sip/core
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip)
     TARGET_LINK_LIBRARIES(python_module_limacore limacore)
+
+    INSTALL(FILES python/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
+    INSTALL(FILES common/python/__init__.py common/python/Debug.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Core")
 endif(COMPILE_SIP)
