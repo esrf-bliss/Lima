@@ -3,7 +3,7 @@
 	url = git://git.epn-campus.eu/repositories/CBFlib.git
 [submodule "third-party/Sps"]
 	path = third-party/Sps
-	url = git://git.epn-campus.eu/repositories/Sps.git
+	url = git://github.com/esrf-bliss/Sps.git
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
 	url = git://github.com/esrf-bliss/Processlib.git
