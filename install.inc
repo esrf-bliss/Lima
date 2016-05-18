@@ -378,7 +378,6 @@ ifneq ($(COMPILE_MAXIPIX), 0)
 	rm -rf $(INSTALL_LIB_DIR)/liblimamaxipix.so*
 	cp -d build/liblimamaxipix.so* $(INSTALL_LIB_DIR)
 	cp sip/maxipix/limamaxipix.so $(INSTALL_MAXIPIX_VDIR)
-	cp camera/maxipix/python/Mpx*.py $(INSTALL_MAXIPIX_VDIR)
 	cp camera/maxipix/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_PILATUS), 0)
