@@ -146,6 +146,14 @@ void CtBuffer:: getNumber(long& nb_buffers) const
   DEB_RETURN() << DEB_VAR1(nb_buffers);
 }
 
+void CtBuffer::getMaxNumber(long& nb_buffers) const
+{
+  int max_nbuffers;
+  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
+  max_nbuffers = int(max_nbuffers * m_pars.maxMemory / 100.);
+  nb_buffers = max_nbuffers;
+}
+
 void CtBuffer:: setMaxMemory(short max_memory)
 {
   DEB_MEMBER_FUNCT();
@@ -248,9 +256,8 @@ void CtBuffer::setup(CtControl *ct)
   m_hw_buffer->setFrameDim(fdim);
   m_hw_buffer->setNbConcatFrames(concat_nframes);
 
-  int max_nbuffers;
-  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
-  max_nbuffers *= m_pars.maxMemory / 100.;
+  long max_nbuffers;
+  getMaxNumber(max_nbuffers);
   if (hwNbBuffer > max_nbuffers)
     hwNbBuffer = max_nbuffers;
   m_hw_buffer->setNbBuffers(hwNbBuffer);
