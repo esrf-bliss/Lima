@@ -61,7 +61,7 @@ CORE_LDLIBS	:= -lprocesslib -lrt
 
 ifneq ($(COMPILE_CBF_SAVING),0)
 CORE_LDFLAGS += -L../third-party/CBFLib/lib
-CORE_LDLIBS += -lcbf
+CORE_LDLIBS += -lcbf -lcrypto
 endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)

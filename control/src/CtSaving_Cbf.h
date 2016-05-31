@@ -32,8 +32,19 @@ namespace lima {
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving CBF Container","Control");
     class Compression;
+    class MHCompression;
   public:
-    SaveContainerCbf(CtSaving::Stream& stream);
+    struct Handle
+    {
+      CtSaving::FileFormat	format;
+      cbf_handle		handle;
+      void*			data_buffer;
+      int			data_buffer_size;
+      void*			header_data;
+      int			header_data_size;
+    };
+    SaveContainerCbf(CtSaving::Stream& stream,
+		     CtSaving::FileFormat format);
     virtual ~SaveContainerCbf();
 
     virtual bool needParallelCompression() const {return true;}
@@ -53,15 +64,16 @@ namespace lima {
     
     
     
-    typedef std::map<int,cbf_handle> dataId2cbfHandle;
-    void _setHandle(int dataId,cbf_handle);
-    cbf_handle _takeHandle(int dataId);
+    typedef std::map<int,Handle> dataId2cbfHandle;
+    void _setHandle(int dataId,Handle&);
+    Handle _takeHandle(int dataId);
     
-    FILE* 		m_fout;
-    void*		m_fout_buffer;
-    dataId2cbfHandle 	m_cbfs;
-    cbf_handle  	m_current_cbf;
-    Mutex		m_lock;
+    FILE*			m_fout;
+    void*			m_fout_buffer;
+    dataId2cbfHandle		m_cbfs;
+    cbf_handle			m_current_cbf;
+    Mutex			m_lock;
+    CtSaving::FileFormat	m_format;
   };
 
 }

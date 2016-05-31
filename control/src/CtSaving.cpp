@@ -163,6 +163,7 @@ void CtSaving::Parameters::checkValid() const
     {
 #ifdef WITH_CBF_SAVING
     case CBFFormat :
+    case CBFMiniHeader:
       if(framesPerFile > 1)
 	THROW_CTL_ERROR(InvalidValue) << "CBF file format does not support "
 			                 "multi frame per file";
@@ -289,6 +290,7 @@ void CtSaving::Stream::createSaveContainer()
 
   switch (m_pars.fileFormat) {
   case CBFFormat :
+  case CBFMiniHeader:
 #ifndef WITH_CBF_SAVING
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the cbf "
                                      "saving option, not managed";  
@@ -364,7 +366,8 @@ void CtSaving::Stream::createSaveContainer()
     break;
 #ifdef WITH_CBF_SAVING
   case CBFFormat:
-    m_save_cnt = new SaveContainerCbf(*this);
+  case CBFMiniHeader:
+    m_save_cnt = new SaveContainerCbf(*this,m_pars.fileFormat);
     m_pars.framesPerFile = 1;
     break;
 #endif

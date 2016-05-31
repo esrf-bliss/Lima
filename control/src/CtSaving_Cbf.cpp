@@ -20,8 +20,12 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include <ctype.h>
+#include <openssl/md5.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
 
 #include "CtSaving_Cbf.h"
+
 #include "processlib/SinkTask.h"
 
 using namespace lima;
@@ -127,7 +131,160 @@ public:
 	cbf_free_handle(cbf);
 	THROW_CTL_ERROR(Error) << "Something went wrong during CBF data filling";
       }
-    m_container._setHandle(aData.frameNumber,cbf);
+    Handle h;
+    h.format = CtSaving::CBFFormat,h.handle = cbf;
+    m_container._setHandle(aData.frameNumber,h);
+  }
+};
+
+class SaveContainerCbf::MHCompression : public SinkTaskBase
+{
+  DEB_CLASS_NAMESPC(DebModControl,"Compression MH Task","Control");
+  
+  SaveContainerCbf&	m_container;
+  CtSaving::HeaderMap	m_header;
+  void*			m_buffer;
+  int			m_buffer_size;
+  void*			m_header_str;
+  int			m_header_size;
+  int			m_header_memory_size;
+public:
+  MHCompression(SaveContainerCbf &save_cnt,const CtSaving::HeaderMap &header) :
+    SinkTaskBase(),m_container(save_cnt),m_header(header),
+    m_buffer(NULL),m_header_str(NULL),m_header_size(0),m_header_memory_size(0) {}
+  virtual ~MHCompression() 
+  {
+    if(m_buffer) free(m_buffer);
+    if(m_header_str) free(m_header_str);
+  }
+  virtual void process(Data &aData)
+  {
+    DEB_MEMBER_FUNCT();
+
+    if(aData.type != Data::INT32)
+      THROW_CTL_ERROR(Error) << "cbf mini header only manage signed int data type";
+
+    long width = aData.dimensions[0];
+    long height = aData.dimensions[1];
+    long nb_pixel = width * height;
+    long nb_pixel_4 = nb_pixel / 4;
+    if(posix_memalign(&m_buffer,4*1024,nb_pixel * sizeof(int) * 2))
+      THROW_CTL_ERROR(Error) << "Can't allocate compressed buffer";
+    union { char *cp; short *sp; int *ip;} dst;
+    dst.cp = (char*)m_buffer;
+    int *src = (int*)aData.data();
+    int prev_val = 0;
+    int nb_pixel_uncompressed = 0;
+    for(int i = 0; i < nb_pixel; ++i,++src)
+      {
+	int val = *src;
+	int diff = val - prev_val;
+	if(abs(diff) <= 127)
+	  *dst.cp++ = diff;
+	else
+	  {
+	    *dst.cp++ = 0x80;
+	    if(abs(diff) <= 32767)
+	      *dst.sp++ = diff;
+	    else
+	      {
+		*dst.sp++ = 0x8000;
+		*dst.ip++ = diff;
+		if(++nb_pixel_uncompressed > nb_pixel_4)
+		  goto end;
+	      }
+	  }
+	prev_val = val;
+      }
+    m_buffer_size = dst.cp - (char*)m_buffer;
+  end:
+    const char* cbf_convertion;
+    if(!m_buffer_size)		// compression went wrong
+      {
+	memcpy(m_buffer,aData.data(),aData.size());
+	m_buffer_size = aData.size();
+	cbf_convertion = "x-CBF_NONE";
+      }
+    else
+      cbf_convertion = "x-CBF_BYTE_OFFSET";
+
+    //MD5
+    MD5_CTX context;
+    MD5_Init(&context);
+    MD5_Update(&context,m_buffer,m_buffer_size);
+    unsigned char digest_str[MD5_DIGEST_LENGTH];
+    MD5_Final(digest_str,&context);
+    //MD5 in base64
+    BIO *base64_filter = BIO_new(BIO_f_base64());
+    BIO_set_flags(base64_filter, BIO_FLAGS_BASE64_NO_NL);
+    BIO *bio = BIO_new(BIO_s_mem());
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+    bio = BIO_push(base64_filter, bio);
+    BIO_write(bio, digest_str, sizeof(digest_str));
+    char* dige_str;
+    long digest_lenght = BIO_get_mem_data(bio, &dige_str);
+    std::string digest(dige_str,digest_lenght);
+    BIO_free_all(bio);
+
+    //build header
+    _append_header("###CBF: VERSION 1.5\r\n");
+    _append_header("# CBF file written by LImA\r\n\r\n");
+    _append_header("data_image_%d\r\n\r\n",aData.frameNumber);
+    //@todo probably one day need to fill image header
+    //_append_header("_array_data.header_contents\r\n;\r\n");
+    _append_header("\
+_array_data.data\r\n;\r\n\
+--CIF-BINARY-FORMAT-SECTION--\r\n\
+Content-Type: application/octet-stream;\r\n\
+     conversions=\"%s\"\r\n\
+Content-Transfer-Encoding: BINARY\r\n\
+X-Binary-Size: %d\r\n\
+X-Binary-ID: 1\r\n\
+X-Binary-Element-Type: \"signed 32-bit integer\"\r\n\
+X-Binary-Element-Byte-Order: LITTLE_ENDIAN\r\n\
+Content-MD5: %24s\r\n\
+X-Binary-Number-of-Elements: %d\r\n\
+X-Binary-Size-Fastest-Dimension: %d\r\n\
+X-Binary-Size-Second-Dimension: %d\r\n\
+X-Binary-Size-Padding: 1\r\n\
+\r\n\
+\f\032\004\325\
+", cbf_convertion,m_buffer_size, digest.c_str(),nb_pixel, 
+		   width, height);
+
+    Handle h;
+    h.format = CtSaving::CBFMiniHeader;
+    h.data_buffer = m_buffer,h.data_buffer_size = m_buffer_size;
+    // transfer ownership to Handler
+    m_buffer = NULL,m_buffer_size = 0;
+
+    h.header_data = m_header_str,h.header_data_size = m_header_size;
+    // transfer ownership to Handler
+    m_header_str = NULL,m_header_size = m_header_memory_size = 0;
+    
+    m_container._setHandle(aData.frameNumber,h);
+  }
+  inline void _append_header(const char* format,...)
+  {
+    DEB_MEMBER_FUNCT();
+
+    va_list args;
+    va_start(args,format);
+
+    int left_char =  m_header_memory_size - m_header_size;
+    int nb_char = vsnprintf((char*)m_header_str + m_header_size,left_char,
+				format,args);
+    if(nb_char >= left_char)
+      {
+	m_header_memory_size = (m_header_memory_size + nb_char + 4096) & ~4095; // 4096 include \0
+	m_header_str = realloc(m_header_str,m_header_memory_size);
+	left_char =  m_header_memory_size - m_header_size;
+	nb_char = vsnprintf((char*)m_header_str + m_header_size,left_char,
+				format,args);
+      }
+    else if(nb_char < 0)
+      THROW_CTL_ERROR(Error) << "header construction error";
+    m_header_size += nb_char;
   }
 };
 
@@ -189,10 +346,12 @@ static inline void outerror(int err)
  
 #endif
 
-SaveContainerCbf::SaveContainerCbf(CtSaving::Stream& stream) :
+SaveContainerCbf::SaveContainerCbf(CtSaving::Stream& stream,
+				   CtSaving::FileFormat format) :
   CtSaving::SaveContainer(stream),
   m_fout(NULL),
-  m_lock(MutexAttr::Normal)
+  m_lock(MutexAttr::Normal),
+  m_format(format)
 {
   DEB_CONSTRUCTOR();
   if(posix_memalign(&m_fout_buffer,4*1024,WRITE_BUFFER_SIZE))
@@ -208,7 +367,10 @@ SaveContainerCbf::~SaveContainerCbf()
 
 SinkTaskBase* SaveContainerCbf::getCompressionTask(const CtSaving::HeaderMap &header)
 {
-  return new Compression(*this,header);
+  if(m_format == CtSaving::CBFMiniHeader)
+    return new MHCompression(*this,header);
+  else
+    return new Compression(*this,header);
 }
 
 bool SaveContainerCbf::_open(const std::string &filename,
@@ -246,7 +408,8 @@ void SaveContainerCbf::_close()
 
   DEB_TRACE() << "Close current file";
 
-  cbf_free_handle(m_current_cbf);
+  if(m_current_cbf)
+    cbf_free_handle(m_current_cbf);
   fclose(m_fout);
   m_fout = NULL;
 }
@@ -266,7 +429,13 @@ void SaveContainerCbf::_clear()
   dataId2cbfHandle::iterator i = m_cbfs.begin();
   while(i != m_cbfs.end())
     {
-      cbf_free_handle(i->second);
+      if(i->second.format == CtSaving::CBFMiniHeader)
+	{
+	  free(i->second.data_buffer);
+	  free(i->second.header_data);
+	}
+      else
+	cbf_free_handle(i->second.handle);
       dataId2cbfHandle::iterator previous = i++;
       m_cbfs.erase(previous);
     }
@@ -275,28 +444,56 @@ void SaveContainerCbf::_clear()
 int SaveContainerCbf::_writeCbfData(Data &aData)
 {
   DEB_MEMBER_FUNCT();
-  m_current_cbf = _takeHandle(aData.frameNumber);
-  cbf_failnez(cbf_write_file(m_current_cbf,m_fout,0,CBF,MSG_DIGEST|MIME_HEADERS,0));
+  Handle handle = _takeHandle(aData.frameNumber);
+  if(handle.format == CtSaving::CBFMiniHeader)
+    {
+      m_current_cbf = NULL;
+      size_t write_size = fwrite(handle.header_data,sizeof(char),handle.header_data_size,m_fout);
+      if(write_size != size_t(handle.header_data_size))
+	{
+	  free(handle.header_data),free(handle.data_buffer);
+	  DEB_ERROR() << "Can't write header";
+	  return -1;		// error
+	}
+      free(handle.header_data);
+      
+      write_size = fwrite(handle.data_buffer,sizeof(char),handle.data_buffer_size,m_fout);
+      bool return_flag = write_size != size_t(handle.data_buffer_size);
+      if(return_flag) DEB_ERROR() << "Cannot write image data";
+      free(handle.data_buffer);
+      return return_flag;
+    }
+  else
+    {
+      m_current_cbf = handle.handle;
+      cbf_failnez(cbf_write_file(m_current_cbf,m_fout,0,CBF,MSG_DIGEST|MIME_HEADERS,0));
+    }
   return 0;
 }
 
-cbf_handle SaveContainerCbf::_takeHandle(int dataId)
+SaveContainerCbf::Handle SaveContainerCbf::_takeHandle(int dataId)
 {
   AutoMutex aLock(m_lock);
   dataId2cbfHandle::iterator i = m_cbfs.find(dataId);
-  cbf_handle aReturnHandle = i->second;
+  Handle aReturnHandle = i->second;
   m_cbfs.erase(i);
   return aReturnHandle;
 }
 
-void SaveContainerCbf::_setHandle(int dataId,cbf_handle cbf)
+void SaveContainerCbf::_setHandle(int dataId,Handle& handle)
 {
   AutoMutex aLock(m_lock);
   std::pair<dataId2cbfHandle::iterator,bool> result = 
-    m_cbfs.insert(std::pair<int,cbf_handle>(dataId,cbf));
+    m_cbfs.insert(std::pair<int,Handle>(dataId,handle));
   if(!result.second)		// It can happend if _open failed
     {
-      cbf_free_handle(result.first->second);
-      result.first->second = cbf;
+      if(result.first->second.format == CtSaving::CBFMiniHeader)
+	{
+	  free(result.first->second.data_buffer);
+	  free(result.first->second.header_data);
+	}
+      else
+	cbf_free_handle(result.first->second.handle);
+      result.first->second = handle;
     }
 }

@@ -128,6 +128,7 @@ using namespace lima;
 	HDF5,
 	EDFConcat,
 	EDFLZ4,
+	CBFMiniHeader,
     };
 
     enum SavingMode {
