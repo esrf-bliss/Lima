@@ -6,10 +6,10 @@
 	url = git://github.com/esrf-bliss/Sps.git
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
-	url = git://github.com/jcristau/Processlib.git
+	url = git://github.com/philpep/Processlib.git
 [submodule "camera/basler"]
 	path = camera/basler
-	url = git://github.com/jcristau/Lima-camera-basler
+	url = git://github.com/philpep/Lima-camera-basler
 [submodule "applications/spec"]
 	path = applications/spec
 	url = git://github.com/esrf-bliss/Lima-spec
@@ -24,7 +24,7 @@
 	url = git://github.com/esrf-bliss/Lima-camera-maxipix
 [submodule "documentation"]
 	path = documentation
-	url = git://github.com/jcristau/Lima-documentation
+	url = git://github.com/philpep/Lima-documentation
 [submodule "camera/frelon"]
 	path = camera/frelon
 	url = git://github.com/esrf-bliss/Lima-camera-frelon
