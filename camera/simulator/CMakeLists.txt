@@ -38,6 +38,7 @@ IF (COMPILE_SIP)
         "${CMAKE_SOURCE_DIR}/control/software_operation/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/sip")
     SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/sip/limasimulator.sip PROPERTIES OBJECT_DEPENDS ${sipfiles})
+    set(SIP_DISABLE_FEATURES WITH_CONFIG)
     ADD_SIP_PYTHON_MODULE(limasimulator ${CMAKE_CURRENT_BINARY_DIR}/sip/limasimulator.sip)
     TARGET_INCLUDE_DIRECTORIES(python_module_limasimulator PRIVATE
                                ${PYTHON_INCLUDE_DIRS}
