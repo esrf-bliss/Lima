@@ -19,16 +19,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-import os, sys
+import os
+import sys
+import logging
+import tempfile
+import shutil
 
-def checksipexc(ifname,trace_output = None) :
+logger = logging.getLogger(__file__)
+
+
+def checksipexc(ifname, inplace=False):
     ifile = open(ifname, "rt")
 
-    ofname = ifname + '.out'
-    ofile = open(ofname, "wt")
+    if inplace:
+        ofile = tempfile.NamedTemporaryFile(delete=False)
+        ofname = ofile.name
+    else:
+        ofname = ifname + '.out'
+        ofile = open(ofname, "wt")
 
-    Out, InTry, InExcHandler, InDefHandler = \
-         'Out', 'InTry', 'InExcHandler', 'InDefHandler'
+    Out, InTry, InExcHandler, InDefHandler = (
+        'Out', 'InTry', 'InExcHandler', 'InDefHandler')
 
     state = Out
     block = 0
@@ -84,18 +95,31 @@ def checksipexc(ifname,trace_output = None) :
                 modified = True
 
         if new_state != state:
-            if trace_output:
-                trace_output.write("Line %d: %s -> %s\n" % (linenr, state, new_state))
+            logger.debug("Line %d: %s -> %s", linenr, state, new_state)
             state = new_state
-
 
     ifile.close()
     ofile.close()
     if modified:
+        if inplace:
+            shutil.move(ofname, ifname)
         print(("File %s was modified" % ifname))
     return modified
 
+
 if __name__ == '__main__':
-    modified = checksipexc(sys.argv[1],sys.stderr)
-    if modified:
-        sys.exit(1)
+    sip_check_exc = os.environ.get('SIP_CHECK_EXC')
+    if sip_check_exc is None:
+        # run from command line
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+        if checksipexc(sys.argv[1], inplace=False):
+            sys.exit(1)
+    elif sip_check_exc == 'OFF':
+        # run from cmake with SIP_CHECK_EXC disabled
+        sys.exit(0)
+    else:
+        # run from cmake with SIP_CHECK_EXC enabled
+        srcs = []
+        for src in sys.argv[1:]:
+            checksipexc(src, inplace=True)
+        sys.exit(0)
