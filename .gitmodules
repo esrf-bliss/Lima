@@ -1,6 +1,6 @@
 [submodule "third-party/CBFLib"]
 	path = third-party/CBFLib
-	url = git://git.epn-campus.eu/repositories/CBFlib.git
+	url = git://github.com/esrf-bliss/cbflib.git
 [submodule "third-party/Sps"]
 	path = third-party/Sps
 	url = git://github.com/esrf-bliss/Sps.git
@@ -69,10 +69,10 @@
 	url = git://github.com/esrf-bliss/Lima-camera-photonicscience
 [submodule "third-party/CCfits"]
 	path = third-party/CCfits
-	url = git://git.epn-campus.eu/repositories/CCfits
+	url = git://github.com/esrf-bliss/CCfits
 [submodule "third-party/cfitsio"]
 	path = third-party/cfitsio
-	url = git://git.epn-campus.eu/repositories/cfitsio
+	url = git://github.com/esrf-bliss/cfitsio
 [submodule "camera/rayonixhs"]
 	path = camera/rayonixhs
 	url = git://github.com/esrf-bliss/Lima-camera-rayonixhs
