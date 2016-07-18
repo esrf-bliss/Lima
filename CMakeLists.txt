@@ -140,6 +140,7 @@ if(COMPILE_SIP)
         "${CMAKE_CURRENT_SOURCE_DIR}/control/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip")
     set(SIP_DISABLE_FEATURES WITH_CONFIG)
+    set(SIP_CHECK_EXC ON)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip PROPERTIES OBJECT_DEPENDS ${sipfiles})
     ADD_SIP_PYTHON_MODULE(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip)
     #ADD_SIP_PYTHON_MODULE(limacore sip/core/limacore.sip)
