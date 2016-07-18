@@ -20,9 +20,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 import sys
+import logging
+
+logger = logging.getLogger(__file__)
 
 
-def checksipexc(ifname, trace_output=None):
+def checksipexc(ifname):
     ifile = open(ifname, "rt")
 
     ofname = ifname + '.out'
@@ -85,8 +88,7 @@ def checksipexc(ifname, trace_output=None):
                 modified = True
 
         if new_state != state:
-            if trace_output:
-                trace_output.write("Line %d: %s -> %s\n" % (linenr, state, new_state))
+            logger.debug("Line %d: %s -> %s", linenr, state, new_state)
             state = new_state
 
     ifile.close()
@@ -97,6 +99,7 @@ def checksipexc(ifname, trace_output=None):
 
 
 if __name__ == '__main__':
-    modified = checksipexc(sys.argv[1], sys.stderr)
+    logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+    modified = checksipexc(sys.argv[1])
     if modified:
         sys.exit(1)
