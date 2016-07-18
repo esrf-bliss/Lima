@@ -19,16 +19,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-import os, sys
+import sys
 
-def checksipexc(ifname,trace_output = None) :
+
+def checksipexc(ifname, trace_output=None):
     ifile = open(ifname, "rt")
 
     ofname = ifname + '.out'
     ofile = open(ofname, "wt")
 
-    Out, InTry, InExcHandler, InDefHandler = \
-         'Out', 'InTry', 'InExcHandler', 'InDefHandler'
+    Out, InTry, InExcHandler, InDefHandler = (
+        'Out', 'InTry', 'InExcHandler', 'InDefHandler')
 
     state = Out
     block = 0
@@ -88,14 +89,14 @@ def checksipexc(ifname,trace_output = None) :
                 trace_output.write("Line %d: %s -> %s\n" % (linenr, state, new_state))
             state = new_state
 
-
     ifile.close()
     ofile.close()
     if modified:
         print(("File %s was modified" % ifname))
     return modified
 
+
 if __name__ == '__main__':
-    modified = checksipexc(sys.argv[1],sys.stderr)
+    modified = checksipexc(sys.argv[1], sys.stderr)
     if modified:
         sys.exit(1)
