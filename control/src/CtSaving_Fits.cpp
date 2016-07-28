@@ -55,27 +55,28 @@ SaveContainerFits::~SaveContainerFits()
   DEB_DESTRUCTOR();
 }
 
-bool SaveContainerFits::_open(const std::string &filename,
-			     std::ios_base::openmode openFlags)
+void* SaveContainerFits::_open(const std::string &filename,
+			       std::ios_base::openmode openFlags)
 {
   DEB_MEMBER_FUNCT();
-  _filename = "!" + filename + ".fits";
-  return true;
+  return new std::string("!" + filename + ".fits");
 }
 
-void SaveContainerFits::_close()
+void SaveContainerFits::_close(void* f)
 {
+  std::string* filename = (std::string*)f;
+  delete filename;
   DEB_MEMBER_FUNCT();
 }
 
-void SaveContainerFits::_writeFile(Data &aData,
+void SaveContainerFits::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
     DEB_MEMBER_FUNCT();
 
-
     // init file
+    std::string* _filename = (std::string*)f;
     long naxis = aData.dimensions.size()+1; // +1 = frames per files
     long *naxes = new long[naxis];
 
@@ -143,7 +144,7 @@ void SaveContainerFits::_writeFile(Data &aData,
 
 
         // create fits file
-        pFits.reset(new CCfits::FITS(_filename,bitpix,naxis,naxes));
+        pFits.reset(new CCfits::FITS(*_filename,bitpix,naxis,naxes));
         pFits->setVerboseMode(true);
 
         // write

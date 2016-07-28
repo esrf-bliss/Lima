@@ -56,28 +56,29 @@ SaveContainerTiff::~SaveContainerTiff()
   DEB_DESTRUCTOR();
 }
 
-bool SaveContainerTiff::_open(const std::string &filename,
+void* SaveContainerTiff::_open(const std::string &filename,
 		std::ios_base::openmode flags)
 {
   DEB_MEMBER_FUNCT();
-  _filename = filename;
-  return true;
+  return new std::string(filename);
 }
 
-void SaveContainerTiff::_close()
+void SaveContainerTiff::_close(void* f)
 {
   DEB_MEMBER_FUNCT();
+  std::string* filename = (std::string*)f;
+  delete filename;
 }
 
-void SaveContainerTiff::_writeFile(Data &aData,
+void SaveContainerTiff::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
     DEB_MEMBER_FUNCT();
 
     TIFF *image;
-
-    if((image = TIFFOpen((const char*)_filename.c_str(), "w")) == NULL)
+    std::string* filename = (std::string*)f;
+    if((image = TIFFOpen(filename->c_str(), "w")) == NULL)
       {
 	DEB_TRACE()<<"SaveContainerTiff::_writeFile() - not able to open tiff file";
 	throw LIMA_CTL_EXC(Error,"SaveContainerTiff::_writeFile() - not able to open tiff file");

@@ -1108,7 +1108,11 @@ void CtControl::newImageSaved(Data &data)
   CtSaving::ManagedMode savingManagedMode;
   m_ct_saving->getManagedMode(savingManagedMode);
   AutoMutex aLock(m_cond.mutex());
-  m_status.ImageCounters.LastImageSaved = data.frameNumber;
+  if(m_status.ImageCounters.LastImageSaved < data.frameNumber)
+    m_status.ImageCounters.LastImageSaved = data.frameNumber;
+  else
+    return;
+
   if(savingManagedMode == CtSaving::Hardware)
     {
       m_status.ImageCounters.LastImageAcquired = m_status.ImageCounters.LastImageSaved;

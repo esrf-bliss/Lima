@@ -179,7 +179,6 @@ namespace lima {
     void removeAllFrameHeaders();
 
     void frameReady(Data&);
-    void resetLastFrameNb();
 
     void setEndCallback(TaskEventCallback *);
 
@@ -205,19 +204,60 @@ namespace lima {
     void setStreamActive(int stream_idx, bool  active);
     void getStreamActive(int stream_idx, bool& active) const;
 
+    // --- parallel writing
+    void getMaxConcurrentWritingTask(int&,int stream_idx = 0) const;
+    void setMaxConcurrentWritingTask(int,int stream_idx = 0);
+
     class Stream;
 
     class LIMACORE_API SaveContainer
     {
       DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
+      struct FrameParameters
+      {
+	FrameParameters() : 
+	  m_threadable(false),
+	  m_running(false)
+	{}
+	FrameParameters(const CtSaving::Parameters& pars) :
+	  m_pars(pars),
+	  m_threadable(false),
+	  m_running(false)
+	{}
+
+	CtSaving::Parameters	m_pars;
+	bool			m_threadable;
+	bool			m_running;
+      };
+      typedef std::map<long,FrameParameters> Frame2Params;
+      struct Handler
+      {
+	Handler() : m_handler(NULL) {}
+
+	void*			m_handler;
+	int			m_nb_frames;
+      };
+      struct cmpParameters
+      {
+	bool operator() (const CtSaving::Parameters &p1,
+			 const CtSaving::Parameters &p2)
+	{
+	  return (p1.nextNumber < p2.nextNumber ||
+		  p1.prefix < p2.prefix ||
+		  p1.directory < p2.directory ||
+		  p1.suffix < p2.suffix);
+	}
+      };
+      typedef std::map<CtSaving::Parameters,Handler,cmpParameters> Params2Handler;
     public:
       SaveContainer(Stream& stream);
       virtual ~SaveContainer();
       
-      void open(const CtSaving::Parameters&);
-      void close();
+      Params2Handler::value_type open(FrameParameters&);
+      void close(const CtSaving::Parameters* = NULL);	// if NULL mean all
       void writeFile(Data&,CtSaving::HeaderMap &);
       void setStatisticSize(int aSize);
+      int  getStatisticSize() const;
       void getStatistic(std::list<double>&) const;
       void getParameters(CtSaving::Parameters&) const;
       void clear();
@@ -233,12 +273,17 @@ namespace lima {
        *  @see needParallelCompression
        */
       virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&) {return NULL;}
-
+      
+      virtual bool isReady(long frame_nr) const;
+      virtual void setReady(long frame_nr);
+      virtual void prepareWrittingFrame(long frame_nr);
+      int getMaxConcurrentWritingTask() const;
+      void setMaxConcurrentWritingTask(int nb);
     protected:
-      virtual bool _open(const std::string &filename,
+      virtual void* _open(const std::string &filename,
 			 std::ios_base::openmode flags) = 0;
-      virtual void _close() = 0;
-      virtual void _writeFile(Data &data,
+      virtual void _close(void*) = 0;
+      virtual void _writeFile(void*,Data &data,
 			      CtSaving::HeaderMap &aHeader,
 			      FileFormat) = 0;
       virtual void _clear() {};
@@ -250,8 +295,12 @@ namespace lima {
       std::list<double>		m_statistic_list;
       int			m_statistic_size;
       mutable Cond		m_cond;
-      bool			m_file_opened;
       long			m_nb_frames_to_write;
+
+      Frame2Params		m_frame_params;
+      Params2Handler		m_params_handler;
+      int			m_max_writing_task; ///< number of maximum parallel write
+      int			m_running_writing_task; ///< number of concurrent write running
     };
     friend class SaveContainer;
 
@@ -291,7 +340,7 @@ namespace lima {
       void setSavingError(CtControl::ErrorCode error)
       { m_saving._setSavingError(error); }
 
-      SinkTaskBase *getTask(TaskType type, const HeaderMap& header);
+      SinkTaskBase *getTask(TaskType type, const HeaderMap& header, long frame_nr);
 
       void compressionFinished(Data& data);
       void saveFinished(Data& data);
@@ -313,9 +362,20 @@ namespace lima {
       void setStatisticSize(int size) 
       { m_save_cnt->setStatisticSize(size); }
 
+      void getMaxConcurrentWritingTask(int& nb_threads) const
+      { nb_threads = m_save_cnt->getMaxConcurrentWritingTask(); }
+      void setMaxConcurrentWritingTask(int nb_threads)
+      { m_save_cnt->setMaxConcurrentWritingTask(nb_threads); }
+
       void clear()
       { m_save_cnt->clear(); }
 
+      bool isReady(long frame_id) const
+      { return m_save_cnt->isReady(frame_id); }
+      void setReady(long frame_id)
+      { m_save_cnt->setReady(frame_id); }
+      void prepareWrittingFrame(long frame_nr)
+      { m_save_cnt->prepareWrittingFrame(frame_nr); }
     private:
       class _SaveCBK;
       class _SaveTask;
@@ -340,6 +400,8 @@ namespace lima {
     friend class _ManualBackgroundSaveTask;
     class	_NewFrameSaveCBK;
     friend class _NewFrameSaveCBK;
+    class	_SavingErrorHandler;
+    friend class _SavingErrorHandler;
     typedef std::vector<SinkTaskBase *> TaskList;
     typedef std::map<long, long>	FrameCbkCountMap;
     typedef std::map<long, HeaderMap>	FrameHeaderMap;
@@ -359,11 +421,8 @@ namespace lima {
     FrameMap			m_frame_datas;
 
     mutable Cond		m_cond;
-    bool			m_ready_flag;
-    long			m_last_frameid_saved;
     bool			m_need_compression;
-    FrameCbkCountMap		m_nb_compression_cbk;
-    int				m_nb_save_cbk;
+    FrameCbkCountMap		m_nb_cbk;
     TaskEventCallback	       *m_end_cbk;
     bool			m_has_hwsaving;
     HwSavingCtrlObj*		m_hwsaving;
@@ -371,6 +430,7 @@ namespace lima {
     ManagedMode			m_managed_mode;	///< two option either harware (manage by SDK,hardware) or software (Lima core)
     std::string			m_specific_hardware_format;
     bool			m_saving_stop;
+    _SavingErrorHandler*	m_saving_error_handler;
 
       Stream& getStream(int stream_idx)
 	{ bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
@@ -420,7 +480,8 @@ namespace lima {
       bool _newFrameWrite(int);
       bool _checkHwFileFormat(const std::string&) const;
       void _ReadImage(Data&,int framenb);
-
+      bool _allStreamReady(long frame_nr);
+      void _waitWritingThreads();
 #ifdef WITH_CONFIG
       class _ConfigHandler;
       CtConfig::ModuleTypeCallback* _getConfigHandler();

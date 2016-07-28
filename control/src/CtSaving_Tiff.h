@@ -31,18 +31,16 @@ namespace lima {
     SaveContainerTiff(CtSaving::Stream& stream);
     virtual ~SaveContainerTiff();
   protected:
-    virtual bool _open(const std::string &filename,
-		std::ios_base::openmode flags);
-    virtual void _close();
-    virtual void _writeFile(Data &data,
+    virtual void* _open(const std::string &filename,
+			std::ios_base::openmode flags);
+    virtual void _close(void*);
+    virtual void _writeFile(void*,Data &data,
     			    CtSaving::HeaderMap &aHeader,
     			    CtSaving::FileFormat);
   private:
 
     CtSaving::FileFormat	 m_format;
     Mutex			 m_lock;
-
-    std::string     _filename;
   };
 
 }

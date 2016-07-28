@@ -226,7 +226,6 @@ using namespace lima;
     void removeAllFrameHeaders();
 
     void frameReady(Data &);
-    void resetLastFrameNb();
 
     void setEndCallback(TaskEventCallback *);
     // --- statistic
@@ -244,4 +243,7 @@ using namespace lima;
 
     void setStreamActive(int stream_idx, bool  active);
     void getStreamActive(int stream_idx, bool& active /Out/) const;
+
+    void getMaxConcurrentWritingTask(int& nb_thread /Out/,int stream_idx = 0) const;
+    void setMaxConcurrentWritingTask(int,int stream_idx = 0);
  };

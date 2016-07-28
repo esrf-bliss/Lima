@@ -34,6 +34,36 @@ static const char *DEFAULT_CATEGORY = "Misc";
 static const char LIMA_HEADER_KEY_SEPARATOR = '/';
 static const long int WRITE_BUFFER_SIZE = 64*1024;
 
+struct SaveContainerCbf::_File
+{
+  DEB_CLASS_NAMESPC(DebModControl,"Saving CBF Container","Control");
+
+public:
+  _File(const std::string& filename,char* openFlags) :
+    m_fout(NULL),
+    m_current_cbf(NULL)
+  {
+    DEB_CONSTRUCTOR();
+
+    if(posix_memalign(&m_fout_buffer,4*1024,WRITE_BUFFER_SIZE))
+      THROW_CTL_ERROR(Error) << "Can't allocated write buffer";
+    m_fout = fopen(filename.c_str(),openFlags);
+    if(m_fout)
+      setbuffer(m_fout,(char*)m_fout_buffer,WRITE_BUFFER_SIZE);
+    else
+      THROW_CTL_ERROR(Error) << "Can't open file:" << DEB_VAR1(filename);
+  }
+  ~_File()
+  {
+    if(m_current_cbf) cbf_free_handle(m_current_cbf);
+    if(m_fout) fclose(m_fout);
+    free(m_fout_buffer);
+  }
+  FILE*		m_fout;
+  void*		m_fout_buffer;
+  cbf_handle	m_current_cbf;
+};
+
 class SaveContainerCbf::Compression : public SinkTaskBase
 {
   DEB_CLASS_NAMESPC(DebModControl,"Compression Task","Control");
@@ -351,20 +381,15 @@ static inline void outerror(int err)
 SaveContainerCbf::SaveContainerCbf(CtSaving::Stream& stream,
 				   CtSaving::FileFormat format) :
   CtSaving::SaveContainer(stream),
-  m_fout(NULL),
   m_lock(MutexAttr::Normal),
   m_format(format)
 {
   DEB_CONSTRUCTOR();
-  if(posix_memalign(&m_fout_buffer,4*1024,WRITE_BUFFER_SIZE))
-    THROW_CTL_ERROR(Error) << "Can't allocated write buffer";
 }
 
 SaveContainerCbf::~SaveContainerCbf()
 {
   DEB_DESTRUCTOR();
-  _close();
-  free(m_fout_buffer);
 }
 
 SinkTaskBase* SaveContainerCbf::getCompressionTask(const CtSaving::HeaderMap &header)
@@ -375,7 +400,7 @@ SinkTaskBase* SaveContainerCbf::getCompressionTask(const CtSaving::HeaderMap &he
     return new Compression(*this,header);
 }
 
-bool SaveContainerCbf::_open(const std::string &filename,
+void* SaveContainerCbf::_open(const std::string &filename,
 			     std::ios_base::openmode stdOpenflags)
 {
   DEB_MEMBER_FUNCT();
@@ -392,36 +417,23 @@ bool SaveContainerCbf::_open(const std::string &filename,
 
 
   DEB_TRACE() << "Open file name: " << filename << " with open flags: " << openFlags;
-  m_fout = fopen(filename.c_str(),openFlags);
-  setbuffer(m_fout,(char*)m_fout_buffer,WRITE_BUFFER_SIZE);
-
-  return !!m_fout;
+  return new _File(filename,openFlags);
 }
 
-void SaveContainerCbf::_close()
+void SaveContainerCbf::_close(void* f)
 {
   DEB_MEMBER_FUNCT();
   
-  if (!m_fout)
-    {
-      DEB_TRACE() << "Nothing to do";
-      return;
-    }
-
-  DEB_TRACE() << "Close current file";
-
-  if(m_current_cbf)
-    cbf_free_handle(m_current_cbf);
-  fclose(m_fout);
-  m_fout = NULL;
+  _File* file = (_File*)f;
+  delete file;
 }
 
-void SaveContainerCbf::_writeFile(Data &aData,
+void SaveContainerCbf::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap&,
 				  CtSaving::FileFormat)
 {
   DEB_MEMBER_FUNCT();
-  if(_writeCbfData(aData))
+  if(_writeCbfData((_File*)f,aData))
     THROW_CTL_ERROR(Error) << "Something went wrong during CBF data writing";
 }
 
@@ -443,14 +455,14 @@ void SaveContainerCbf::_clear()
     }
 }
 
-int SaveContainerCbf::_writeCbfData(Data &aData)
+int SaveContainerCbf::_writeCbfData(_File* file,Data &aData)
 {
   DEB_MEMBER_FUNCT();
   Handle handle = _takeHandle(aData.frameNumber);
   if(handle.format == CtSaving::CBFMiniHeader)
     {
-      m_current_cbf = NULL;
-      size_t write_size = fwrite(handle.header_data,sizeof(char),handle.header_data_size,m_fout);
+      size_t write_size = fwrite(handle.header_data,sizeof(char),handle.header_data_size,
+				 file->m_fout);
       if(write_size != size_t(handle.header_data_size))
 	{
 	  free(handle.header_data),free(handle.data_buffer);
@@ -459,7 +471,8 @@ int SaveContainerCbf::_writeCbfData(Data &aData)
 	}
       free(handle.header_data);
       
-      write_size = fwrite(handle.data_buffer,sizeof(char),handle.data_buffer_size,m_fout);
+      write_size = fwrite(handle.data_buffer,sizeof(char),handle.data_buffer_size,
+			  file->m_fout);
       bool return_flag = write_size != size_t(handle.data_buffer_size);
       if(return_flag) DEB_ERROR() << "Cannot write image data";
       free(handle.data_buffer);
@@ -467,8 +480,9 @@ int SaveContainerCbf::_writeCbfData(Data &aData)
     }
   else
     {
-      m_current_cbf = handle.handle;
-      cbf_failnez(cbf_write_file(m_current_cbf,m_fout,0,CBF,MSG_DIGEST|MIME_HEADERS,0));
+      file->m_current_cbf = handle.handle;
+      cbf_failnez(cbf_write_file(file->m_current_cbf,file->m_fout,0,
+				 CBF,MSG_DIGEST|MIME_HEADERS,0));
     }
   return 0;
 }

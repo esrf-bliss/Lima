@@ -36,18 +36,15 @@ namespace lima {
     SaveContainerFits(CtSaving::Stream& stream);
     virtual ~SaveContainerFits();
   protected:
-    virtual bool _open(const std::string &filename,
+    virtual void* _open(const std::string &filename,
 		       std::ios_base::openmode flags);
-    virtual void _close();
-    virtual void _writeFile(Data &data,
+    virtual void _close(void*);
+    virtual void _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
   private:
     void writeHeader(std::auto_ptr<CCfits::FITS> &fitsFile, CtSaving::HeaderMap &header);
     void writeData(std::auto_ptr<CCfits::FITS> &fitsFile, Data &data, short dataType);
-
-    std::ofstream   m_fout;
-    std::string     _filename;
   };
 
 }

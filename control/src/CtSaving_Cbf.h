@@ -33,6 +33,7 @@ namespace lima {
     DEB_CLASS_NAMESPC(DebModControl,"Saving CBF Container","Control");
     class Compression;
     class MHCompression;
+    struct _File;
   public:
     struct Handle
     {
@@ -51,16 +52,16 @@ namespace lima {
     virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 
   protected:
-    virtual bool _open(const std::string &filename,
-		std::ios_base::openmode flags);
-    virtual void _close();
-    virtual void _writeFile(Data &data,
+    virtual void* _open(const std::string &filename,
+			std::ios_base::openmode flags);
+    virtual void _close(void*);
+    virtual void _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
     virtual void _clear();
   private:
     inline int _writeCbfHeader(Data&,CtSaving::HeaderMap&);
-    inline int _writeCbfData(Data&);
+    inline int _writeCbfData(_File*,Data&);
     
     
     
@@ -68,10 +69,7 @@ namespace lima {
     void _setHandle(int dataId,Handle&);
     Handle _takeHandle(int dataId);
     
-    FILE*			m_fout;
-    void*			m_fout_buffer;
     dataId2cbfHandle		m_cbfs;
-    cbf_handle			m_current_cbf;
     Mutex			m_lock;
     CtSaving::FileFormat	m_format;
   };
