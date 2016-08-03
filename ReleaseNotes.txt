@@ -1,0 +1,56 @@
+Stable branch core-1.5
+----------------------
+
+core-1.5.6 2015-12-21
+Features
+ * New tags for submodules: frelon-1.5.0/andor-1.5.0/pilatus-1.5.0
+ * Include Simulator test_prepare_timeout.py script
+ * Include COMPILE_MYTHEN3 into list of exported vars in config.inc_default
+ * frelon: Added Frelon native min_latency_time (Readout & Transfer) support
+ * control: Support dynamic min_latency_time with Accumulation in CtAcquisition
+
+Bug Fixes
+ * control: Synchronize with ImageStatusCallbacks at the beginning of prepareAcq
+ * control: Added set/getPrepareTimeout methods (default 2 sec)
+
+core-1.5.5 2015-12-11
+Features
+ * New tags for submodules: spec-1.4.7/andor3.1.5.1/tango-camera-andor3-1.5.1
+ * andor3:  Compressed data (Mono12Packed) and IntTrigMult trigger mode
+ * tango python: andor3 updaded, no more destride attr
+ * spec: andor3 updaded, no more destride option
+
+Bug Fixes
+ * image: fixed checkValid() missing #ifdef for TIFF, only 1 frame per file supported
+ * saving: Fixed a infinite loop in  checkDirectoryAccess() when dir is an empty string
+ * image: fixed in reevalutation with _setHSRoi
+ * basler: external trigger fixes
+ * image: reevaluate software roi when binning change
+
+
+core-1.5.4 2015-08-14
+Features
+ * New tags for submodules: Espia-1.5.1/maxipix-1.5.2/v4l2-1.5.3/ueye-1.5.0/tango-camera-andor3-1.5.0
+Bug Fixes
+ * hdf5: revert install in Makefile
+
+core.1.5.3 2015-08-12
+Features
+ * control: accumalation mode enhanced again
+
+core-1.5.2 2015-07-27
+Features
+ * New tag for andor3 needs core-1.5 for using accumulation mode
+ * New tag for prosilica under core-1.5
+ * simulator: add IntTrigMulti capability
+ * Updated camera/prosilica
+Bug Fixes
+ * control: fixed deadlock in unregisterImageStatusCallback
+ * video: fixing dead lock when stopping and changing expo time.
+
+core-1.5.1 2015-06-19
+Features
+ * New tags: v4l2, basler, tango/camera/v4l2. basler-1.5.1/tango-camera-v4l2-1.5.1/v4l2-1.5.1 
+ * Enhanced Accumulation and acc_mode with new mode for threshold and/or offset correction. Updated Spec and Tango for that purpose too.
+ * accumulation: extend accumulation algorithm to be able to ignore noise lower than a threshold
+
