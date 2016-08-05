@@ -167,6 +167,8 @@ void CtSaving::Parameters::checkValid() const
 	THROW_CTL_ERROR(InvalidValue) << "CBF file format does not support "
 			                 "multi frame per file";
       break;
+#endif
+#ifdef WITH_TIFF_SAVING
     case TIFFFormat :
       if(framesPerFile > 1)
 	THROW_CTL_ERROR(InvalidValue) << "TIFF file format does not support "
@@ -312,6 +314,12 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed"; 
 #endif
     goto common;
+  case EDFLZ4:
+#ifndef WITH_EDFLZ4_SAVING
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf lz4 "
+                                     "saving option, not managed"; 
+#endif
+    goto common;
   case TIFFFormat:
 #ifndef WITH_TIFF_SAVING
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the tiff "
@@ -350,6 +358,7 @@ void CtSaving::Stream::createSaveContainer()
   case RAW:
   case EDF:
   case EDFGZ:
+  case EDFLZ4:
   case EDFConcat:
     m_save_cnt = new SaveContainerEdf(*this,m_pars.fileFormat);
     break;
@@ -920,7 +929,7 @@ void CtSaving::setFramesPerFile(unsigned long frames_per_file, int stream_idx)
 }
 /** @brief get the number of frame saved per file for a saving stream
  */
-void CtSaving::getFramePerFile(unsigned long& frames_per_file, 
+void CtSaving::getFramesPerFile(unsigned long& frames_per_file, 
 			       int stream_idx) const
 {
   DEB_MEMBER_FUNCT();
@@ -1689,6 +1698,8 @@ void CtSaving::_prepare(CtControl& ct)
       m_hwsaving->setOptions(params.options);
       m_hwsaving->setNextNumber(params.nextNumber);
       m_hwsaving->setIndexFormat(params.indexFormat);
+      m_hwsaving->setOverwritePolicy(convert_2_string(params.overwritePolicy));
+      m_hwsaving->setFramesPerFile(params.framesPerFile);
       std::string fileFormat;
       switch(params.fileFormat)
 	{
@@ -2140,9 +2151,13 @@ void CtSaving::Stream::checkDirectoryAccess(const std::string& directory)
       size_t pos = local_directory.find_last_of("/");
 #endif
       size_t string_length = local_directory.size() - 1;
-      continue_flag = pos == string_length;
       if(pos != std::string::npos)
-	local_directory = local_directory.substr(0,pos);
+	{
+	  local_directory = local_directory.substr(0,pos);
+	  continue_flag = pos == string_length;
+	}
+	else
+	  continue_flag = false;
 	}
       while(continue_flag);
 

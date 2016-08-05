@@ -123,9 +123,10 @@ ostream& lima::operator <<(ostream& os, Layer layer)
 {
 	string name = "Unknown";
 	switch (layer) {
-	case Common:	name = "Common";	break;
-	case Control:	name = "Control";	break;
-	case Hardware:	name = "Hardware";	break;
+	case Common:		name = "Common";	break;
+	case Control:		name = "Control";	break;
+	case Hardware:		name = "Hardware";	break;
+	case CameraPlugin:	name = "CameraPlugin";	break;
 	}
 	return os << name;
 }

@@ -43,7 +43,9 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('ueye',             [os.path.join('camera','ueye')]),
            ('roperscientific',  [os.path.join('camera','roperscientific')]),
            ('adsc',             [os.path.join('camera','adsc')]),
+           ('merlin',           [os.path.join('camera','merlin')]),
            ('mythen',           [os.path.join('camera','mythen')]),
+           ('mythen3',          [os.path.join('camera','mythen3')]),
            ('perkinelmer',      [os.path.join('camera','perkinelmer')]),
            ('andor',            [os.path.join('camera','andor')]),
            ('andor3',           [os.path.join('camera','andor3')]),
@@ -52,6 +54,7 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('marccd',           [os.path.join('camera','marccd')]),
            ('photonicscience',  [os.path.join('camera','photonicscience')]),
            ('pilatus',          [os.path.join('camera','pilatus')]),
+           ('pixirad',          [os.path.join('camera','pixirad')]),
            ('pointgrey',        [os.path.join('camera','pointgrey')]),
            ('imxpad',           [os.path.join('camera','imxpad')]),
            ('dexela',           [os.path.join('camera','dexela')]),
@@ -60,6 +63,8 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('aviex',            [os.path.join('camera','aviex')]),
            ('ultra',            [os.path.join('camera','ultra')]),
            ('meta',             [os.path.join('camera','common','meta')]),
+           ('v4l2',         [os.path.join('camera','v4l2')]),
+           ('eiger',            [os.path.join('camera','eiger')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -180,7 +185,8 @@ def main():
         elif(modName == 'xpad'):
             extraIncludes += ['../../third-party/yat/include','/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib']
         elif(modName == 'xspress3'):
-            extraIncludes += ['../../third-party/hdf5/include']
+            extraIncludes += ['../../third-party/hdf5/c++/src']
+            extra_cxxflags += ['-DSIPCOMPILATION']
         elif(modName == 'pco'):
             extraIncludes += ['R:/bliss/projects/LIMA/package/WIN32/PCO/sdkPco/include']
         elif(modName == 'marccd'):
@@ -193,7 +199,13 @@ def main():
             extra_cxxflags += ['-std=c++0x']
         elif(modName == 'aviex'):
             extra_cxxflags += ['-DOS_UNIX']
-        extraIncludes += findModuleIncludes(modName)
+        elif (modName == 'maxipix'):
+            extraIncludes += ['../../camera/maxipix/tools/src']
+        elif(modName == 'pixirad'):
+            extra_cxxflags += ['-std=c++11']
+	extraIncludes += findModuleIncludes(modName)
+        if (modName == 'roperscientific'):
+            extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
         
         sipFile = open(sipFileName,"a")
         sipFile.write('\n')

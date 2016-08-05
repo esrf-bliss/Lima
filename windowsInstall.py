@@ -34,7 +34,7 @@ else:
                  ('camera/pco/build/msvc/9.0/liblimapco/Release/liblimapco.dll','Lima'),
                  ('camera/pco/sdkPco/bin/SC2_Cam.dll','Lima'),
                  ('camera/pco/sdkPco/bin/sc2_cl_me4.dll','Lima'),
-                 ('applications/tango/camera/Pco.py','camera'),
+                 ('applications/tango/python/camera/Pco.py','camera'),
                  ('sip/pco/limapco.pyd','Lima')],
         'perkinelmer' : [('camera/perkinelmer/python/PerkinElmer.py','Lima'),
                          ('camera/perkinelmer/build/msvc/9.0/LibPerkinElmer/Release/liblimaperkinelmer.dll','Lima'),
@@ -52,14 +52,14 @@ else:
 	}
 #Add Src 
 module2Installfiles.update({
-    'tango-core' : [('applications/tango/LimaCCDs.py',''),
-		    ('applications/tango/AttrHelper.py',''),
-                    ('applications/tango/EnvHelper.py',''),
-                    ('applications/tango/camera/__init__.py','camera'),
-		    ('applications/tango/plugins','')],
-    'tango-simulator' : [('applications/tango/camera/Simulator.py','camera')],
-    'tango-perkinelmer' : [('applications/tango/camera/PerkinElmer.py','camera')],
-    'tango-dexela' : [('applications/tango/camera/Dexela.py','camera')],
+    'tango-core' : [('applications/tango/python/LimaCCDs.py',''),
+		    ('applications/tango/python/AttrHelper.py',''),
+                    ('applications/tango/python/EnvHelper.py',''),
+                    ('applications/tango/python/camera/__init__.py','camera'),
+		    ('applications/tango/python/plugins','')],
+    'tango-simulator' : [('applications/tango/python/camera/Simulator.py','camera')],
+    'tango-perkinelmer' : [('applications/tango/python/camera/PerkinElmer.py','camera')],
+    'tango-dexela' : [('applications/tango/python/camera/Dexela.py','camera')],
     }
 			   )
 

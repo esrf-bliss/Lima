@@ -48,7 +48,8 @@ namespace lima
     static const char *TIFF_FORMAT_STR;
     static const char *HDF5_FORMAT_STR;
 
-    explicit HwSavingCtrlObj(int capabilities = 0);
+    explicit HwSavingCtrlObj(int capabilities = 0,
+			     bool directory_event = true);
     virtual ~HwSavingCtrlObj();
     
     void setActive(bool);
@@ -60,6 +61,8 @@ namespace lima
     void setOptions(const std::string&);
     void setNextNumber(long number);
     void setIndexFormat(const std::string&);
+    void setOverwritePolicy(const std::string &overwritePolicy);
+    void setFramesPerFile(long);
 
     void setSaveFormat(const std::string &format);
     virtual void getPossibleSaveFormat(std::list<std::string> &format_list) const = 0;
@@ -107,11 +110,14 @@ namespace lima
     long 	m_next_number;
     std::string m_file_format;
     std::string m_index_format;
+    std::string m_overwritePolicy;
+    long	m_frames_per_file;
 
+    Callback*	m_callback;
   private:
+    bool m_directory_event;
     class DirectoryCallback;
 
-    Callback*		m_callback;
 #ifdef __linux__
     DirectoryCallback*  m_dir_cbk;
     DirectoryEvent 	m_dir_event;

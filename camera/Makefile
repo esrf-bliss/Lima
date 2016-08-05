@@ -88,6 +88,14 @@ ifneq ($(COMPILE_MYTHEN),0)
 sub-dirs += mythen
 endif
 
+ifndef COMPILE_MYTHEN3
+COMPILE_MYTHEN3 = 0
+endif
+
+ifneq ($(COMPILE_MYTHEN3),0)
+sub-dirs += mythen3
+endif
+
 ifndef COMPILE_UEYE
 COMPILE_UEYE = 0
 endif
@@ -104,16 +112,16 @@ ifneq ($(COMPILE_ANDOR),0)
 sub-dirs += andor
 endif
 
-ifndef COMPILE_XH
-COMPILE_XH = 0
-endif
-
 ifndef COMPILE_ANDOR3
 COMPILE_ANDOR3 = 0
 endif
 
 ifneq ($(COMPILE_ANDOR3),0)
 sub-dirs += andor3
+endif
+
+ifndef COMPILE_XH
+COMPILE_XH = 0
 endif
 
 ifneq ($(COMPILE_XH),0)
@@ -134,6 +142,14 @@ endif
 
 ifneq ($(COMPILE_ULTRA),0)
 sub-dirs += ultra
+endif
+
+ifndef COMPILE_MERLIN
+COMPILE_MERLIN = 0
+endif
+
+ifneq ($(COMPILE_MERLIN),0)
+sub-dirs += merlin
 endif
 
 ifndef COMPILE_XPAD
@@ -190,6 +206,30 @@ endif
 
 ifneq ($(COMPILE_AVIEX),0)
 sub-dirs += aviex
+endif
+
+ifndef COMPILE_V4l2
+COMPILE_V4l2 = 0
+endif
+
+ifneq ($(COMPILE_V4l2),0)
+sub-dirs += v4l2
+endif
+
+ifndef COMPILE_EIGER
+COMPILE_EIGER = 0
+endif
+
+ifneq ($(COMPILE_EIGER),0)
+sub-dirs += eiger
+endif
+
+ifndef COMPILE_DEXELA
+COMPILE_DEXELA = 0
+endif
+
+ifneq ($(COMPILE_DEXELA),0)
+sub-dirs += dexela
 endif
 
 include ../global.inc

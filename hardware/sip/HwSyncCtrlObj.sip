@@ -54,6 +54,7 @@ sipRes = tmpString.c_str();
 	class ValidRangesCallback
 	{
 	public:
+	  ValidRangesCallback();
 	  virtual ~ValidRangesCallback();
 	protected:
 	  virtual void validRangesChanged(const HwSyncCtrlObj::ValidRangesType&) = 0;

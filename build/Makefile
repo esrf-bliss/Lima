@@ -66,11 +66,16 @@ endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
 CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
-CORE_LDLIBS += -lCCfits -lcfitsio
+CORE_LDLIBS +=  -Wl,-rpath=$(shell pwd)/../third-party/CCfits/.libs  -lCCfits \
+                -Wl,-rpath=$(shell pwd)/../third-party/cfitsio/lib -lcfitsio
 endif
 
 ifneq ($(COMPILE_EDFGZ_SAVING),0)
 CORE_LDLIBS += -lz
+endif
+
+ifneq ($(COMPILE_EDFLZ4_SAVING),0)
+CORE_LDLIBS += -llz4
 endif
 
 ifneq ($(COMPILE_TIFF_SAVING),0)
@@ -340,6 +345,28 @@ build_targets	+= $(call lib-full,$(adsc-name),$(adsc-ver))
 
 endif
 
+############################
+# LIMA - MERLIN
+############################
+ifneq ($(COMPILE_MERLIN),0)
+
+MERLIN_LDFLAGS	:= $(LDFLAGS)
+MERLIN_LDLIBS	:= $(LDLIBS)
+
+merlin-name	:= merlin
+merlin-objs	:= ../camera/merlin/src/Merlin.o
+merlin-ver	:= ../camera/merlin/VERSION
+merlin-flags	:= $(MERLIN_LDFLAGS)
+merlin-deps	:= $(MERLIN_LDLIBS)
+
+$(call lib-full,$(merlin-name),$(merlin-ver)): $(merlin-objs)
+	$(call compile-lib,$(merlin-name),$(merlin-ver),\
+			   $(merlin-flags),$(merlin-deps),$@,$+)
+	$(call create-links,$(merlin-name),$(merlin-ver))
+
+build_targets	+= $(call lib-full,$(merlin-name),$(merlin-ver))
+
+endif
 
 ############################
 # LIMA - MYTHEN
@@ -364,6 +391,28 @@ build_targets	+= $(call lib-full,$(mythen-name),$(mythen-ver))
 
 endif
 
+############################
+# LIMA - MYTHEN3
+############################
+
+ifneq ($(COMPILE_MYTHEN3),0)
+
+MYTHEN3_LDLIBS	:= $(LDLIBS)
+
+mythen3-name	:= mythen3
+mythen3-objs	:= ../camera/mythen3/src/Mythen3.o
+mythen3-ver	:= ../camera/mythen3/VERSION
+mythen3-flags	:= $(LDFLAGS)
+mythen3-deps	:= $(MYTHEN3_LDLIBS)
+
+$(call lib-full,$(mythen3-name),$(mythen3-ver)): $(mythen3-objs)
+	$(call compile-lib,$(mythen3-name),$(mythen3-ver),\
+			   $(mythen3-flags),$(mythen3-deps),$@,$+)
+	$(call create-links,$(mythen3-name),$(mythen3-ver))
+
+build_targets	+= $(call lib-full,$(mythen3-name),$(mythen3-ver))
+
+endif
 
 ############################
 # LIMA - ANDOR
@@ -396,7 +445,7 @@ endif
 ifneq ($(COMPILE_ANDOR3),0)
 
 ANDOR3_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
-ANDOR3_LDLIBS	:= $(LDLIBS) -latcore
+ANDOR3_LDLIBS	:= $(LDLIBS) -latcore -latutility
 
 andor3-name	:= andor3
 andor3-objs	:= ../camera/andor3/src/Andor3.o
@@ -681,8 +730,101 @@ $(call lib-full,$(meta-name),$(meta-ver)): $(meta-objs)
 	$(call create-links,$(meta-name),$(meta-ver))
 
 build_targets	+= $(call lib-full,$(meta-name),$(meta-ver))
+endif
+
+############################
+# LIMA - V4l2
+############################
+ifneq ($(COMPILE_V4l2),0)
+
+V4l2_LDFLAGS	:= $(LDFLAGS)
+V4l2_LDLIBS	:= $(LDLIBS) -lv4l2
+
+v4l2-name	:= v4l2
+v4l2-objs	:= ../camera/v4l2/src/V4L2.o
+v4l2-ver	:= ../camera/v4l2/VERSION
+v4l2-flags	:= $(V4l2_LDFLAGS)
+v4l2-deps	:= $(V4l2_LDLIBS)
+
+$(call lib-full,$(v4l2-name),$(v4l2-ver)): $(v4l2-objs)
+	$(call compile-lib,$(v4l2-name),$(v4l2-ver),\
+			   $(v4l2-flags),$(v4l2-deps),$@,$+)
+	$(call create-links,$(v4l2-name),$(v4l2-ver))
+
+build_targets	+= $(call lib-full,$(v4l2-name),$(v4l2-ver))
+endif
+
+############################
+# LIMA - EIGER
+############################
+ifneq ($(COMPILE_EIGER),0)
+
+EIGER_LDFLAGS	:= $(LDFLAGS) 
+EIGER_LDLIBS	:= $(LDLIBS) -ljsoncpp -lcurl -llz4 -lzmq
+
+eiger-name	:= eiger
+eiger-objs	:= ../camera/eiger/src/Eiger.o
+eiger-ver	:= ../camera/eiger/VERSION
+eiger-flags	:= $(EIGER_LDFLAGS)
+eiger-deps	:= $(EIGER_LDLIBS)
+
+$(call lib-full,$(eiger-name),$(eiger-ver)): $(eiger-objs)
+	$(call compile-lib,$(eiger-name),$(eiger-ver),\
+			   $(eiger-flags),$(eiger-deps),$@,$+)
+	$(call create-links,$(eiger-name),$(eiger-ver))
+
+build_targets	+= $(call lib-full,$(eiger-name),$(eiger-ver))
 
 endif
+
+############################
+# LIMA - DEXELA
+############################
+ifneq ($(COMPILE_DEXELA),0)
+
+DEXELA_LDFLAGS	:= $(LDFLAGS) 
+DEXELA_LDLIBS	:= $(LDLIBS) -ldexela
+
+dexela-name	:= dexela
+dexela-objs	:= ../camera/dexela/src/Dexela.o
+dexela-ver	:= ../camera/dexela/VERSION
+dexela-flags	:= $(DEXELA_LDFLAGS)
+dexela-deps	:= $(DEXELA_LDLIBS)
+
+$(call lib-full,$(dexela-name),$(dexela-ver)): $(dexela-objs)
+	$(call compile-lib,$(dexela-name),$(dexela-ver),\
+			   $(dexela-flags),$(dexela-deps),$@,$+)
+	$(call create-links,$(dexela-name),$(dexela-ver))
+
+build_targets	+= $(call lib-full,$(dexela-name),$(dexela-ver))
+
+endif
+
+
+
+###########################
+# LIMA - PIXIRAD
+############################
+ifneq ($(COMPILE_PIXIRAD),0)
+
+PIXIRAD_LDFLAGS  := $(LDFLAGS)
+PIXIRAD_LDLIBS   := $(LDLIBS)
+
+pixirad-name     := pixirad
+pixirad-objs     := ../camera/pixirad/src/Pixirad.o
+pixirad-ver      := ../camera/pixirad/VERSION
+pixirad-flags    := $(PIXIRAD_LDFLAGS)
+pixirad-deps     := $(PIXIRAD_LDLIBS)
+
+$(call lib-full,$(pixirad-name),$(pixirad-ver)): $(pixirad-objs)
+	$(call compile-lib,$(pixirad-name),$(pixirad-ver),\
+	$(pixirad-flags),$(pixirad-deps),$@,$+)
+	$(call create-links,$(pixirad-name),$(pixirad-ver))
+
+build_targets   += $(call lib-full,$(pixirad-name),$(pixirad-ver))
+
+endif
+
 
 src:		$(build_targets)
 

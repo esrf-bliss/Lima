@@ -165,6 +165,14 @@ int FrameDim::getImageTypeBpp(ImageType type)
 	case Bpp32S:
 	case Bpp32F:
 	case Bpp32: return 32;
+
+	case Bpp1:
+	case Bpp4:
+	case Bpp6:
+		return 8;
+	case Bpp24:
+	case Bpp24S:
+		return 32;
 	default:
 		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");
 	}
@@ -189,6 +197,15 @@ int FrameDim::getImageTypeDepth(ImageType type)
 	case Bpp32S: 
 	case Bpp32F:
 		return 4;
+
+	case Bpp1:
+	case Bpp4:
+	case Bpp6:
+		return 1;
+	case Bpp24:
+	case Bpp24S:
+		return 4;
+
 	default:    
 		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");
 	}

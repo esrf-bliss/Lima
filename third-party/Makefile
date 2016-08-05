@@ -55,12 +55,12 @@ endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
 
-ifeq ($(wildcard cfitsio/zutil.o),)
+ifeq ($(wildcard cfitsio/Makefile),)
 PROJECTS += cfitsio.confsrc
 endif
 PROJECTS += cfitsio.src
 
-ifeq ($(wildcard CCfits/.libs/libCCfits.lai),)
+ifeq ($(wildcard CCfits/Makefile),)
 PROJECTS += CCfits.confsrc
 endif
 PROJECTS += CCfits.src
@@ -202,7 +202,7 @@ CCfits.src:
 	cd CCfits && $(MAKE)
 
 CCfits.install:
-	$(MAKE) -C CCfits all install
+	$(MAKE) -C CCfits install prefix=$(INSTALL_PLAT_DIR)
 
 CCfits.clean:
 	$(MAKE) -C CCfits clean
@@ -258,4 +258,9 @@ hdf5.confsrc:
 				--prefix=$(INSTALL_PLAT_DIR)
 
 hdf5.install:
-	$(MAKE) -C hdf5 install prefix=$(INSTALL_PLAT_DIR)
+	cd hdf5 && ./configure 	--enable-cxx \
+				--enable-unsupported \
+				--enable-threadsafe \
+				--with-pthread=/usr/lib,/usr/include \
+				--prefix=$(INSTALL_PLAT_DIR) \
+		&& $(MAKE) install

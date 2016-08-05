@@ -21,6 +21,7 @@
 //###########################################################################
 #include "lima/CtBuffer.h"
 #include "lima/CtAccumulation.h"
+#include "lima/CtSaving.h"
 
 using namespace lima;
 
@@ -145,6 +146,14 @@ void CtBuffer:: getNumber(long& nb_buffers) const
   DEB_RETURN() << DEB_VAR1(nb_buffers);
 }
 
+void CtBuffer::getMaxNumber(long& nb_buffers) const
+{
+  int max_nbuffers;
+  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
+  max_nbuffers = int(max_nbuffers * m_pars.maxMemory / 100.);
+  nb_buffers = max_nbuffers;
+}
+
 void CtBuffer:: setMaxMemory(short max_memory)
 {
   DEB_MEMBER_FUNCT();
@@ -212,6 +221,11 @@ void CtBuffer::setup(CtControl *ct)
   acq= ct->acquisition();
   acq->getAcqMode(mode);
   acq->getAcqNbFrames(acq_nframes);
+  
+  CtSaving* saving = ct->saving();
+  CtSaving::ManagedMode saving_mode;
+  saving->getManagedMode(saving_mode);
+  
 
   img= ct->image();
   img->getHwImageDim(fdim);
@@ -220,6 +234,8 @@ void CtBuffer::setup(CtControl *ct)
   m_ct_accumulation = NULL;
   if(!acq_nframes)		// continous mode
     hwNbBuffer = nbuffers = 16;
+  else if(saving_mode != CtSaving::Software)
+    hwNbBuffer = nbuffers = 1;
 
   switch (mode) {
   case Single:
@@ -240,9 +256,8 @@ void CtBuffer::setup(CtControl *ct)
   m_hw_buffer->setFrameDim(fdim);
   m_hw_buffer->setNbConcatFrames(concat_nframes);
 
-  int max_nbuffers;
-  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
-  max_nbuffers *= m_pars.maxMemory / 100.;
+  long max_nbuffers;
+  getMaxNumber(max_nbuffers);
   if (hwNbBuffer > max_nbuffers)
     hwNbBuffer = max_nbuffers;
   m_hw_buffer->setNbBuffers(hwNbBuffer);
@@ -286,6 +301,14 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
     fdata.type = Data::INT32; break;
   case Bpp32F:
     fdata.type = Data::FLOAT; break;
+  case Bpp1:
+  case Bpp4:
+  case Bpp6:
+    fdata.type= Data::UINT8; break;
+  case Bpp24:
+    fdata.type= Data::UINT32; break;
+  case Bpp24S:
+    fdata.type = Data::INT32; break;
   default:
     THROW_CTL_ERROR(InvalidValue) << "Data type not yet managed" << DEB_VAR1(ftype);
   }

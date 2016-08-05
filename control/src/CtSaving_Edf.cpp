@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+static const long int WRITE_BUFFER_SIZE = 64*1024;
 #else
 #include <time_compat.h>
 #endif
@@ -33,6 +34,47 @@
 #include "CtSaving_Edf.h"
 
 using namespace lima;
+
+const int SaveContainerEdf::_BufferHelper::BUFFER_HELPER_SIZE = 64 * 1024;
+
+SaveContainerEdf::_BufferHelper::_BufferHelper()
+{
+  DEB_CONSTRUCTOR();
+
+  _init(BUFFER_HELPER_SIZE);
+}
+
+SaveContainerEdf::_BufferHelper::_BufferHelper(int buffer_size)
+{
+  DEB_CONSTRUCTOR();
+  DEB_PARAM() << DEB_VAR1(buffer_size);
+
+  _init(buffer_size);
+}
+
+void SaveContainerEdf::_BufferHelper::_init(int buffer_size)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(buffer_size);
+
+  used_size = 0;
+#ifdef __unix
+  if(posix_memalign(&buffer,4*1024,buffer_size))
+#else
+  buffer = _aligned_malloc(buffer_size,4*1024);
+  if(!buffer)
+#endif
+    THROW_CTL_ERROR(Error) << "Can't allocate buffer";
+}
+
+SaveContainerEdf::_BufferHelper::~_BufferHelper()
+{
+#ifdef __unix
+  free(buffer);
+#else
+  _aligned_free(buffer);
+#endif
+}
 
 #ifdef WITH_EDFGZ_SAVING
 #include <zlib.h>
@@ -145,6 +187,101 @@ public:
 };
 #endif
 
+#ifdef WITH_EDFLZ4_SAVING
+#include <lz4frame.h>
+#include "processlib/SinkTask.h"
+static const int LZ4_HEADER_SIZE = 19;
+static const int LZ4_FOOTER_SIZE = 4;
+
+static const LZ4F_preferences_t lz4_preferences = {
+  { LZ4F_max256KB, LZ4F_blockLinked, LZ4F_noContentChecksum, LZ4F_frame, 0, { 0, 0 } },
+  0,   /* compression level */
+  1,   /* autoflush */
+  { 0, 0, 0, 0 },  /* reserved, must be set to 0 */
+};
+class SaveContainerEdf::Lz4Compression : public SinkTaskBase
+{
+  DEB_CLASS_NAMESPC(DebModControl,"Lz4 Compression Task","Control");
+
+  SaveContainerEdf&		m_container;
+  int				m_frame_per_file;
+  CtSaving::HeaderMap		m_header;
+  LZ4F_compressionContext_t	m_ctx;
+public:
+  Lz4Compression(SaveContainerEdf &save_cnt,
+		 int framesPerFile,const CtSaving::HeaderMap &header) :
+    m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header)
+  {
+    DEB_CONSTRUCTOR();
+
+    LZ4F_errorCode_t result = LZ4F_createCompressionContext(&m_ctx, LZ4F_VERSION);
+    if(LZ4F_isError(result))
+      THROW_CTL_ERROR(Error) << "LZ4 context init failed: " << DEB_VAR1(result);
+  };
+
+  ~Lz4Compression()
+  {
+    LZ4F_freeCompressionContext(m_ctx);
+  }
+
+  virtual void process(Data &aData)
+  {
+    DEB_MEMBER_FUNCT();
+    DEB_PARAM() << DEB_VAR1(aData);
+
+    std::ostringstream buffer;
+    SaveContainerEdf::_writeEdfHeader(aData,m_header,
+ 				      m_frame_per_file,
+ 				      buffer);
+    ZBufferType *aBufferListPt = new ZBufferType();
+    const std::string& tmpBuffer = buffer.str();
+    try
+      {
+	_compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
+	_compression((char*)aData.data(),aData.size(),aBufferListPt);
+      }
+    catch(Exception&)
+      {
+	for(ZBufferType::iterator i = aBufferListPt->begin();
+	    i != aBufferListPt->end();++i)
+	  delete *i;
+	delete aBufferListPt;
+	throw;
+      }
+    m_container._setBuffer(aData.frameNumber,aBufferListPt);
+  }
+  void _compression(const char *src,int size,ZBufferType* return_buffers)
+  {
+    DEB_MEMBER_FUNCT();
+
+    int buffer_size = LZ4F_compressFrameBound(size,&lz4_preferences);
+    buffer_size += LZ4_HEADER_SIZE + LZ4_FOOTER_SIZE;
+
+    _BufferHelper *newBuffer = new _BufferHelper(buffer_size);
+    return_buffers->push_back(newBuffer);
+    char* buffer = (char*)newBuffer->buffer;
+
+    int offset = LZ4F_compressBegin(m_ctx,buffer,
+				    buffer_size,&lz4_preferences);
+    if(LZ4F_isError(offset))
+      THROW_CTL_ERROR(Error) << "Failed to start compression: " << DEB_VAR1(offset);
+
+    int error_code = LZ4F_compressUpdate(m_ctx,buffer + offset,buffer_size - offset,
+					 src,size,NULL);
+    if(LZ4F_isError(error_code))
+      THROW_CTL_ERROR(Error) << "Compression Failed: " 
+			     << DEB_VAR2(error_code,LZ4F_getErrorName(error_code));
+    offset += error_code;
+
+    error_code = LZ4F_compressEnd(m_ctx, buffer + offset, size - offset, NULL);
+    if(LZ4F_isError(error_code))
+      THROW_CTL_ERROR(Error) << "Failed to end compression: " << DEB_VAR1(error_code);
+    offset += error_code;
+    newBuffer->used_size = offset;
+  }
+};
+#endif
+
 
 
 #ifdef WIN32
@@ -235,11 +372,18 @@ SaveContainerEdf::SaveContainerEdf(CtSaving::Stream& stream,
   m_format(format)
 {
   DEB_CONSTRUCTOR();
+#ifdef __unix
+  if(posix_memalign(&m_fout_buffer,4*1024,WRITE_BUFFER_SIZE))
+    THROW_CTL_ERROR(Error) << "Can't allocated write buffer";
+#endif
 }
 
 SaveContainerEdf::~SaveContainerEdf()
 {
   DEB_DESTRUCTOR();
+#ifdef __unix
+  free(m_fout_buffer);
+#endif
 }
 
 bool SaveContainerEdf::_open(const std::string &filename,
@@ -249,6 +393,9 @@ bool SaveContainerEdf::_open(const std::string &filename,
   m_fout.clear();
   m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
   m_fout.open(filename.c_str(),openFlags);
+#ifdef __unix
+  m_fout.rdbuf()->pubsetbuf((char*)m_fout_buffer,WRITE_BUFFER_SIZE);
+#endif
   m_current_filename = filename;
   return true;
 }
@@ -278,14 +425,14 @@ void SaveContainerEdf::_writeFile(Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
-#ifdef WITH_EDFGZ_SAVING
-  if(aFormat == CtSaving::EDFGZ)
+#if defined(WITH_EDFGZ_SAVING) || defined(WITH_EDFLZ4_SAVING)
+  if(aFormat == CtSaving::EDFGZ || aFormat == CtSaving::EDFLZ4)
     {
       ZBufferType* buffers = _takeBuffer(aData.frameNumber);
       for(ZBufferType::iterator i = buffers->begin();
 	  i != buffers->end();++i)
 	{
-	  m_fout.write((*i)->buffer,(*i)->used_size);
+	  m_fout.write((char*)(*i)->buffer,(*i)->used_size);
 	  delete *i;
 	}
       delete buffers;
@@ -450,12 +597,19 @@ SaveContainerEdf::_writeEdfHeader(Data &aData,
 
 SinkTaskBase* SaveContainerEdf::getCompressionTask(const CtSaving::HeaderMap& header)
 {
-#ifdef WITH_EDFGZ_SAVING
   const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
-  return new Compression(*this,pars.framesPerFile,header);
-#else
-  return NULL;
+#ifdef WITH_EDFGZ_SAVING
+  if(m_format == CtSaving::EDFGZ)
+    return new Compression(*this,pars.framesPerFile,header);
+  else
 #endif
+    
+#ifdef WITH_EDFLZ4_SAVING
+  if(m_format == CtSaving::EDFLZ4)
+    return new Lz4Compression(*this,pars.framesPerFile,header);
+  else
+#endif
+  return NULL;
 }
 
 void SaveContainerEdf::_setBuffer(int frameNumber,

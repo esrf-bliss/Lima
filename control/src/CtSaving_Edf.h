@@ -31,14 +31,21 @@ namespace lima {
     DEB_CLASS_NAMESPC(DebModControl,"Saving EDF Container","Control");
     class Compression;
     friend class Compression;
+    class Lz4Compression;
+    friend class Lz4Compression;
   public:
     struct _BufferHelper
     {
-      static const int BUFFER_HELPER_SIZE = 64 * 1024;
-      _BufferHelper() : used_size(0) {}
-      
+      DEB_CLASS_NAMESPC(DebModControl,"_BufferHelper","Control");
+
+      void _init(int buffer_size);
+    public:
+      static const int BUFFER_HELPER_SIZE;
+      _BufferHelper();
+      _BufferHelper(int buffer_size);
+      ~_BufferHelper();
       int used_size;
-      char buffer[BUFFER_HELPER_SIZE];
+      void *buffer;
     };
 
     SaveContainerEdf(CtSaving::Stream& stream,
@@ -46,7 +53,7 @@ namespace lima {
     virtual ~SaveContainerEdf();
     
     virtual bool needParallelCompression() const 
-    {return m_format == CtSaving::EDFGZ;}
+    {return m_format == CtSaving::EDFGZ || m_format == CtSaving::EDFLZ4;}
     virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 
   protected:
@@ -108,6 +115,7 @@ namespace lima {
     };
     _OfStream			 m_fout;
 #else
+    void*                        m_fout_buffer;
     std::ofstream                m_fout;
 #endif
     CtSaving::FileFormat	 m_format;

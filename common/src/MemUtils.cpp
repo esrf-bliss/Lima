@@ -26,6 +26,9 @@
 #include <sstream>
 #ifdef __unix
 #include <sys/sysinfo.h>
+#ifdef __SSE2__
+#include <emmintrin.h>
+#endif
 #else
 #include <windows.h>
 #endif
@@ -109,7 +112,33 @@ MemBuffer::MemBuffer(int size)
 	: m_size(0), m_ptr(NULL)
 {
 	alloc(size);
+#ifdef __unix
+	long page_size = sysconf(_SC_PAGESIZE);
+#ifdef __SSE2__
+	char* ptr = (char*)m_ptr;
+	if(!((long)ptr & 15))	// aligned to 128 bits
+	  {
+              __m128i zero = _mm_setzero_si128();
+	      for(long i = 0;i < size;i += page_size,ptr+=page_size)
+		{
+		  if(size_t(size - page_size) > sizeof(__m128i))
+		    _mm_store_si128((__m128i*)ptr,zero);
+		  else
+		    *ptr = 0;
+		}
+          }
+	else
+	  {
+#endif
+	      for(long i = 0;i < size;i += page_size,ptr+=page_size)
+		*ptr = 0;
+#ifdef __SSE2__
+          }
+#endif
+
+#else
 	memset(getPtr(), 0, size);
+#endif
 }
 
 MemBuffer::MemBuffer(const MemBuffer& buffer)

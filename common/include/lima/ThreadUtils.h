@@ -114,10 +114,10 @@ class LIMACORE_API Thread
 	virtual void threadFunction() = 0;
 
 	pthread_attr_t	m_thread_attr;
+	pthread_t m_thread;
  private:
 	static void *staticThreadFunction(void *data);
 
-	pthread_t m_thread;
 	bool m_started;
 	bool m_finished;
 };

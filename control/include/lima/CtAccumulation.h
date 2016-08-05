@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2015
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -48,6 +48,7 @@ namespace lima
     {
       DEB_CLASS_NAMESPC(DebModControl,"Accumulation::Parameters","Control");
     public:
+      enum Mode {STANDARD,THRESHOLD_BEFORE, OFFSET_THEN_THRESHOLD_BEFORE};
       Parameters();
       void reset();
       
@@ -56,6 +57,9 @@ namespace lima
 
       bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
       std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
+      Mode		mode;
+      long long		thresholdB4Acc; ///< value used in mode THRESHOLD_BEFORE
+      long long         offsetB4Acc; ///< value used in OFFSET_THEN_THRESHOLD_BEFORE
     };
     
     class ThresholdCallback
@@ -93,6 +97,15 @@ namespace lima
 
     void setSavePrefix(const std::string &savePrefix);
     void getSavePrefix(std::string &savePrefix) const;
+
+    void getMode(Parameters::Mode& mode) const;
+    void setMode(Parameters::Mode mode);
+
+    void getThresholdBefore(long long&) const;
+    void setThresholdBefore(const long long&);
+
+    void getOffsetBefore(long long&) const;
+    void setOffsetBefore(const long long&);
 
     // --- variable and data result of Concatenation or Accumulation
 
@@ -159,6 +172,8 @@ namespace lima
     void getFrame(Data &,int frameNumber);
 
     void _accFrame(Data &src,Data &dst);
+    void _accFrameWithThreshold(Data &src,Data &dst,long long threshold_value);
+    void _accFrameWithOffsetThenThreshold(Data &src,Data &dst,long long offset, long long threshold_value);
     void _calcSaturatedImageNCounters(Data &src,Data &dst);
 
     inline void _callIfNeedThresholdCallback(Data &aData,long long value);

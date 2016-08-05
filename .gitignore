@@ -20,4 +20,7 @@ install
 *_test.py
 ~*vcproj
 *.tmp
+/.cproject
+/.pydevproject
+/.settings
 

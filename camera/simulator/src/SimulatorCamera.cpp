@@ -77,9 +77,9 @@ void Camera::SimuThread::execStartAcq()
 	FrameBuilder& frame_builder = m_simu->m_frame_builder;
 	frame_builder.resetFrameNr();
 
-	int nb_frames = m_simu->m_nb_frames;
+	int nb_frames = m_simu->m_trig_mode == IntTrig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
 	int& frame_nb = m_acq_frame_nb;
-	for (frame_nb = 0; (frame_nb < nb_frames)||(nb_frames==0); frame_nb++) {
+	for (;(frame_nb < nb_frames)||(nb_frames==0); frame_nb++) {
 		double req_time;
 		if(m_force_stop)
 		{
@@ -109,13 +109,6 @@ void Camera::SimuThread::execStartAcq()
 		}
 	}
 	setStatus(Ready);
-}
-
-int Camera::SimuThread::getNbAcquiredFrames()
-{
-    DEB_MEMBER_FUNCT();
-
-	return m_acq_frame_nb;
 }
 
 Camera::Camera() : 
@@ -244,6 +237,10 @@ HwInterface::StatusType::Basic Camera::getStatus()
 		throw LIMA_HW_EXC(Error, "Invalid thread status");
 	}
 }
+void Camera::prepareAcq()
+{
+  m_thread.m_acq_frame_nb = 0;
+}
 
 void Camera::startAcq()
 {
@@ -267,7 +264,7 @@ void Camera::stopAcq()
 
 int Camera::getNbAcquiredFrames()
 {
-	return m_thread.getNbAcquiredFrames();
+  return m_thread.m_acq_frame_nb;
 }
 
 ostream& lima::Simulator::operator <<(ostream& os, Camera& simu)

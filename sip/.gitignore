@@ -16,6 +16,7 @@ prosilica
 roperscientific
 adsc
 mythen
+mythen3
 ueye
 pco
 perkinelmer
@@ -31,6 +32,10 @@ dexela
 rayonixhs
 aviex
 meta
+merlin
+v4l2
+eiger
+pixirad
 *.obj
 lima*.exp
 lima*.lib

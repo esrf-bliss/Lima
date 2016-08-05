@@ -31,6 +31,7 @@ public:
 
   struct Parameters
   {
+    enum Mode {STANDARD,THRESHOLD_BEFORE, OFFSET_THEN_THRESHOLD_BEFORE};
     Parameters();
     void reset();
     
@@ -39,7 +40,9 @@ public:
 
     bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
     std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
-      const char* __repr__();
+    Mode		mode;
+    long long		thresholdB4Acc; ///< value used in mode THRESHOLD_BEFORE
+    const char* __repr__();
 %MethodCode
 	std::ostringstream str;
 	str << *sipCpp;	
@@ -81,6 +84,16 @@ public:
 
   void setSavePrefix(const std::string &savePrefix);
   void getSavePrefix(std::string &savePrefix /Out/) const;
+
+  void getMode(Parameters::Mode& mode) const;
+  void setMode(Parameters::Mode mode);
+
+  void getThresholdBefore(long long&) const;
+  void setThresholdBefore(const long long&);
+
+  void getOffsetBefore(long long&) const;
+  void setOffsetBefore(const long long&);
+
 
   // --- variable and data result of Concatenation or Accumulation
 

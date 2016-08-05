@@ -210,6 +210,9 @@ namespace lima
 
     void setReconstructionTask(LinkTask*);
 
+    void setPrepareTimeout(double timeout);
+    void getPrepareTimeout(double& timeout) const;
+
   protected:
     bool newFrameReady(Data& data);
     void newFrameToSave(Data& data);
@@ -241,6 +244,7 @@ namespace lima
     friend class _AbortAcqCallback;
 
     class ImageStatusThread;
+    typedef std::list<ImageStatusThread*>  ImageStatusThreadList;
 
     HwInterface		*m_hw;
     mutable Cond	m_cond;
@@ -281,9 +285,11 @@ namespace lima
 #ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
 #endif
-    ImageStatusThread   *m_img_status_thread;
+    ImageStatusThreadList m_img_status_thread_list;
     SoftOpErrorHandler* m_soft_op_error_handler;
     _ReconstructionChangeCallback* m_reconstruction_cbk;
+
+    double		m_prepare_timeout;
 
     inline bool _checkOverrun(Data&);
     inline void _calcAcqStatus();

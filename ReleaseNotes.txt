@@ -1,0 +1,185 @@
+LIMA Release Notes
+
+This is the release notes of LIMA, the library for image acquisition.
+
+You can find information releated to new features and bug fixes. The notes are ordered by branch and release number.
+The notes are prefixed with a category name for core, subsystems image/saving/processlib/..., camera names andor/andor3/basler...,  windows, applications tango python/tango c++/spec and third-party submodules sps/processlib/...
+
+
+
+Stable branch core-1.6
+----------------------
+
+core-1.6.1 2016-08-04
+Features
+ * maxipix: added initialization sequence in PriamSerial contructor in case of cold start.
+ * andor: added enum type for BaselineClamp() 
+ * tango python andor: updated properties vs_speed/p_gain/adc_speed to DevString type as for the attributes 
+   Changed baseline_clamp property/attribute to DevString type
+   Managed UNSUPPORTED enum for baseline_clamp/high_capacity/fan_mode property/attributes 
+   Removes label for all attributes (default is now label = attribute name) * Updated the doc/index.rst documentation 
+   for new/changed properties/attributes 
+
+Bug fixes
+ * core: buildfix on arm
+ * andor: fixed inverted enum value for BaselineClamp
+ * tango python: fix in LimaCCDs configStore() command, now it accepts a list of module names
+ * andor: fixed a bug in getImageType() throwing exception in some conditions
+
+core-1.6.0 2016-05-23
+Features
+ * marccd: merged marccd from esrf
+ * merlin: new plugin for Merlin camera family
+ * pco:  windows 64 version working
+ * xapd: refactoring and new version delivered
+ * sps: move Sps project to github.com
+ * maxipix: c++ version delivered !!
+ * spec: added a new hook for user macros (user2_) for add and remove of roicoutner, for further use like for zap pseudo counter.
+ * core: accumulation, use sse register to sum 16 bits images (optimization)
+ * core: prepare optimization, for linux just retrieved memory pages instead of clearing all memory.
+ * pixirad: new camera plugin for Pixirad camera family
+ * rayonixhs: a new readout mode been added, HDR16, thanks to the latest rayonix craydl sdk update.
+ * dexela: linux version available
+ * saving: add lz4 compression for edf format
+ * saving: changed the buffer write size to optimize GPFS throughput,
+   this optimization was done for cbf and edf
+ * perkinelmer: new version to manage XRD_1611_CP3
+ * tango python: added tiff as saving format
+ * core: Synchronize with ImageStatusCallbacks at the beginning of prepareAcq
+   Added CtControl::set/getPrepareTimeout methods (default 2 sec)
+   Include Simulator test_prepare_timeout.py script
+ * frelon: added Frelon::Camera::DeadTimeChangedCallback to notify Lima (Sync)   about changes 
+   in the detector-defined min_lat_time (valid_ranges)
+   Added Frelon TimeCalc and Acc. Mode test Python scripts
+   Added Frelon Readout & Charge-Transfer times by means of float registers * Frelon::SyncCtrlObj 
+   latency time now includes the detector dead time
+ * core: support dynamic min_latency_time with Accumulation in CtAcquisition
+ * andor3: compressed data (Mono12Packed) speed up acquisition and IntTrigMult trigger mode added
+ * imxpad: stable version working with XpadServer version 3.0.X
+ * background subtraction: add constant offset before subtraction to avoid data truncated to 0
+ * eiger: new version with stream and hardware saving tested
+ * eiger: added camera module (hardware saving + stream)
+ * saving: Could now disable the directory event feature
+   add frames per file parameters in hardware saving
+ * tango: split python and cpp server into two submodules
+ * v4l2:f ixed pb when calling prepareAcq() several times
+   now start in the native camera video mode. fixed setMode   
+ * ueye: patched for new sdk (4.61)
+ * prosilica: new version with monitor mode
+ * core: Manage monitor mode for cameras like prosilica or basler
+ * imxpad: for server version 3.X
+ * accumulation: enhanced Accumulation and acc_mode with new mode for threshold and/or offset correction. 
+   Updated Spec and Tango for that purpose too.
+ * spec: add new accumulation mode for threshold and/or offset correction
+ * simulator: add IntTrigMulti capability
+ * saving: add timestamp in Nexus file
+ * v4l2: new camera plugin v4l2 now managed.
+ * CCfits and cfitsio: configure script will be called only once
+ * accumulation: extend accumulation algorithm to be able to ignore noise lower than a threshold
+ * added extr module type CameraPlugin for exception
+ * added extra path for future maxipix_c++ in configure.py
+
+Bug Fixes
+ * core: accumulation, fixed a memory allocation.
+ * basler: external trigger fixed for ace,scout and pilot cameras
+ * imxpad: camWaitAcqEnd remove from prepareAcq and startAcq, waiting time move to 1s for camWaitAcqEnd()
+   SetModuleMask function added allowing to acquire smaller images, Abort fixed when images are transfered via TCP
+ * marccd: Add Mutex to setImagePath/getImagePath/..., removed useless getNbAcquiredFrames()
+ * merlin:check status for detector idle before startAcq, added image resizing & (image stacking - Soleil request)
+ * pco: a lot of fixes !!
+ * pilatus: extra delay removed due to wrong test in internal trigger
+ * ueye: fixed image bytes depth for mono 12bits camera
+ * spec:fixed pb when removing a roicounter, now update properly LIMA_ROI_SRV * Set the RunLevel 
+   to 5 to allow other tasks (mask/bgd/ff/..) to be applied before roicounter
+ * rayonixhs: added missing callback function call for readout mode change in image_type (bpp16<-->bpp32)
+ * core: ThreadUtils, moved thread id to protected
+ * tango python: windows, fixed path issue
+ * processlib: windows, fixed compilation issue
+ * core: fixed CPU overload bug in ImageStatusThread after registering multiple ImageStatusCallbacks
+ * core: fixed bug crashing when SyncCtrlObj is deleted before CtAcquisition
+ * image: disable roi when equal to full size (optimization)
+ * andor: fix for mt-safe in error exception handling
+ * saving: fixed checkValid() missing #ifdef for TIFF, only 1 frame per file supported
+ * image: fixed a infinite loop in  checkDirectoryAccess() when dir is an empty string
+ * image: fixed in reevalutation with _setHSRoi
+ * andor3: fixed bugs with Bin/Roi, Bin can change the hw_roi with extra stride columns
+   fixed bug with Bin enum. and bug with getBin
+ * buffer: memory management, avoid allocating memory if hardware saving is activated (optimization)
+ * image: reevaluate software roi when binning change
+ * image: fixed bug with new monitor mode
+ * sip: replaced tabs with blanks, otherwise will not work with python 3.
+ * saving: take into account the frame id in the saving callback
+ * xh:use int32_t instead of long
+   remove polluting debug message
+   correct sip for getMaxFrames (use str::string instead of string)
+   added getMaxFrames
+ * windows: fix export in ValidRangesCallback
+ * espia: added Espia::BufferMgr::CamMultiFrameXferMode enumeration type
+ * maxipix: fixed bug in Maxipix priam port number, now range from 1 to 5
+ * tango python: fixed again wizard mode
+ * processlib: windows compilation + roi counters mask patch
+ * prosilica: fixed a bug with non-color camera continuous acquisition
+ * spec: fixed bug with getNames() call when server is stopped.
+ * CCfits: fixed installation path
+ * control: fixed deadlock in unregisterImageStatusCallback
+ * video: fixing dead lock when stopping and changing expo time.
+ * spec: limaroi_server_initarr: use only rois that are defined for the actual  lima ccdname
+ * accumulation: fixed memory allocation.
+
+
+Stable branch core-1.5
+----------------------
+
+core-1.5.6 2015-12-21
+Features
+ * New tags for submodules: frelon-1.5.0/andor-1.5.0/pilatus-1.5.0
+ * Include Simulator test_prepare_timeout.py script
+ * Include COMPILE_MYTHEN3 into list of exported vars in config.inc_default
+ * frelon: Added Frelon native min_latency_time (Readout & Transfer) support
+ * control: Support dynamic min_latency_time with Accumulation in CtAcquisition
+
+Bug Fixes
+ * control: Synchronize with ImageStatusCallbacks at the beginning of prepareAcq
+ * control: Added set/getPrepareTimeout methods (default 2 sec)
+
+core-1.5.5 2015-12-11
+Features
+ * New tags for submodules: spec-1.4.7/andor3.1.5.1/tango-camera-andor3-1.5.1
+ * andor3:  Compressed data (Mono12Packed) and IntTrigMult trigger mode
+ * tango python: andor3 updaded, no more destride attr
+ * spec: andor3 updaded, no more destride option
+
+Bug Fixes
+ * image: fixed checkValid() missing #ifdef for TIFF, only 1 frame per file supported
+ * saving: Fixed a infinite loop in  checkDirectoryAccess() when dir is an empty string
+ * image: fixed in reevalutation with _setHSRoi
+ * basler: external trigger fixes
+ * image: reevaluate software roi when binning change
+
+
+core-1.5.4 2015-08-14
+Features
+ * New tags for submodules: Espia-1.5.1/maxipix-1.5.2/v4l2-1.5.3/ueye-1.5.0/tango-camera-andor3-1.5.0
+Bug Fixes
+ * hdf5: revert install in Makefile
+
+core.1.5.3 2015-08-12
+Features
+ * control: accumalation mode enhanced again
+
+core-1.5.2 2015-07-27
+Features
+ * New tag for andor3 needs core-1.5 for using accumulation mode
+ * New tag for prosilica under core-1.5
+ * simulator: add IntTrigMulti capability
+ * Updated camera/prosilica
+Bug Fixes
+ * control: fixed deadlock in unregisterImageStatusCallback
+ * video: fixing dead lock when stopping and changing expo time.
+
+core-1.5.1 2015-06-19
+Features
+ * New tags: v4l2, basler, tango/camera/v4l2. basler-1.5.1/tango-camera-v4l2-1.5.1/v4l2-1.5.1 
+ * Enhanced Accumulation and acc_mode with new mode for threshold and/or offset correction. Updated Spec and Tango for that purpose too.
+ * accumulation: extend accumulation algorithm to be able to ignore noise lower than a threshold
+

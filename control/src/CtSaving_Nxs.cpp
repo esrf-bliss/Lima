@@ -143,6 +143,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 
 			//decode options (split) ///////////////////////////////////////////////
 			//get acquisition parameters
+            DEB_TRACE()<<"m_pars.options = "<<m_pars.options;
 			std::stringstream ss(m_pars.options);
 			std::string field;
 			m_options.clear();
@@ -150,6 +151,26 @@ void SaveContainerNxs::_writeFile(Data &aData,
 				m_options.push_back(field);
 			////////////////////////////////////////////////////////////////////////	
 
+            // ensure that all options are here
+            if(m_options.size() != NEXUS_SAVING_OPTIONS_NUMBER)
+            {
+                DEB_TRACE() << "Bad Nexus Saving options number ! ("<<m_options.size()<<")";
+                THROW_CTL_ERROR(Error) << "Bad Nexus Saving options number ! ("<<m_options.size()<<")";
+            }
+            
+            // ask if timestamp is enabled            
+            if(m_options.at(2) == "TRUE" )
+            {
+                //Add sensor 0D (scalar) 
+                DEB_TRACE() << "SaveContainerNxs::_writeFile() - Add sensor 0D (scalar)";
+                m_writer->AddDataItem0D(m_pars.prefix+"_timestamp");
+            }
+
+            //Add sensor 2D (image) // height,width
+            DEB_TRACE() << "SaveContainerNxs::_writeFile() - Add sensor 2D (image)";
+            m_writer->AddDataItem2D(m_pars.prefix+"_image", aData.dimensions[1], aData.dimensions[0]);
+
+            // configure the Writer mode 
 			//by default is IMMEDIATE			
 			if(m_options.at(0) == "SYNCHRONOUS" )
 			{
@@ -167,59 +188,76 @@ void SaveContainerNxs::_writeFile(Data &aData,
 				m_writer->SetWriteMode(nxcpp::NexusFileWriter::IMMEDIATE);
 			}
 
-			//Add sensor 2D (image) // height,width
-			DEB_TRACE() << "SaveContainerNxs::_writeFile() - Add sensor 2D (image)";
-			m_writer->AddDataItem2D(m_pars.prefix, aData.dimensions[1], aData.dimensions[0]);
-
+            // configure the Memory mode 
 			//by default is COPY			
 			if(m_options.at(1) == "NO_COPY" )
 			{
 				DEB_TRACE() << "SaveContainerNxs::_writeFile() - Memory Mode = NO_COPY";
-				m_writer->SetDataItemMemoryMode(m_pars.prefix, nxcpp::DataStreamer::MemoryMode::NO_COPY);
+				m_writer->SetDataItemMemoryMode(m_pars.prefix+"_image", nxcpp::DataStreamer::MemoryMode::NO_COPY);
 			}
 			else
 			{
 				DEB_TRACE() << "SaveContainerNxs::_writeFile() - Memory Mode = COPY";
-				m_writer->SetDataItemMemoryMode(m_pars.prefix, nxcpp::DataStreamer::MemoryMode::COPY);
+				m_writer->SetDataItemMemoryMode(m_pars.prefix+"_image", nxcpp::DataStreamer::MemoryMode::COPY);
 			}
 
-			//Set sensors node's name
-			DEB_TRACE() << "SaveContainerNxs::_writeFile() - Set sensors node's name";
-			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
+            DEB_TRACE() << "Create/Initialize DataStreamer : " << t.elapsed_msec() << " ms\n";
+        }
 
-			DEB_TRACE() << "Create/Initialize DataStreamer : " << t.elapsed_msec() << " ms\n";
+        ////////////////////////////////////////////////////////////////////////
+        // push (timestamp & Data))into File 
+        ////////////////////////////////////////////////////////////////////////
+
+        // ask if timestamp is enabled
+        if(m_options.at(2) == "TRUE" )
+        {
+            //push timestamp in Nexus file
+            DEB_TRACE() << "SaveContainerNxs::_writeFile() - PushData(timestamp)" ;
+            m_writer->PushData( m_pars.prefix+"_timestamp", (double*) (&aData.timestamp));
 		}
 
+        DEB_TRACE() << "SaveContainerNxs::_writeFile() - PushData(Data [type = "<< aData.type <<"])" ;
+        t.restart();        
 		//write data in Nexus file
-		DEB_TRACE() << "SaveContainerNxs::_writeFile() - PushData(type = " << m_pars.imageType << " ]" ;
-		t.restart();
-		switch(m_pars.imageType)
+        switch(aData.type)
 		{
-			case Bpp8:
-				//push data into file
-				m_writer->PushData( m_pars.prefix, (unsigned char*) (aData.data()));
+            case Data::UINT8:
+				m_writer->PushData( m_pars.prefix+"_image", (unsigned char*) (aData.data()));
 				break;
-			case Bpp16:
-				//push data into file
-				m_writer->PushData( m_pars.prefix, (unsigned short*) (aData.data()));
+            case Data::INT8:
+                m_writer->PushData( m_pars.prefix+"_image", (char*) (aData.data()));
+                break;
+            case Data::UINT16:
+				m_writer->PushData( m_pars.prefix+"_image", (unsigned short*) (aData.data()));
 				break;
-			case Bpp32:
-				//push data into file
-				m_writer->PushData( m_pars.prefix, (unsigned int*) (aData.data()));
+            case Data::INT16:
+                m_writer->PushData( m_pars.prefix+"_image", (short*) (aData.data()));
+                break;
+            case Data::UINT32: 
+				m_writer->PushData( m_pars.prefix+"_image", (unsigned int*) (aData.data()));
 				break;
-			case Bpp32F:
-				//push data into file
-				m_writer->PushData( m_pars.prefix, (float*) (aData.data()));
+            case Data::INT32:
+                m_writer->PushData( m_pars.prefix+"_image", (int*) (aData.data()));
+                break;     
+            case Data::UINT64:
+                m_writer->PushData( m_pars.prefix+"_image", (unsigned long long*) (aData.data()));
+                break;    
+            case Data::INT64:
+                m_writer->PushData( m_pars.prefix+"_image", (long long*) (aData.data()));
+                break;    
+            case Data::FLOAT: 	
+				m_writer->PushData( m_pars.prefix+"_image", (float*) (aData.data()));
 				break;
-			default:  //UINT16 by default
-				//push data into file
-				m_writer->PushData( m_pars.prefix, (unsigned short*) (aData.data()));
+            case Data::DOUBLE:
+                m_writer->PushData( m_pars.prefix+"_image", (double*) (aData.data()));
 				break;
+            default: 
+                THROW_CTL_ERROR(Error) << "SaveContainerNxs::_writeFile() - This Data [type = "<< aData.type <<"] is not managed !";
 		}
+
 		DEB_TRACE() << "Push Data into DataStreamer : " << t.elapsed_msec() << " ms";
 		//- Display Nexus statistics
 		nxcpp::DataStreamer::Statistics nxsStats;
-
 		nxsStats = m_writer->GetStatistics();
 		DEB_TRACE() << "Nexus Writer Statistics : ";
 		DEB_TRACE() << "\t- WrittenBytes = "			<< nxsStats.ui64WrittenBytes;

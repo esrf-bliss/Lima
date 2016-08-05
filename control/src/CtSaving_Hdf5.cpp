@@ -47,7 +47,7 @@ DataType get_h5_type(unsigned long long)	{return PredType(PredType::NATIVE_UINT6
 DataType get_h5_type(long long)			{return PredType(PredType::NATIVE_INT64);}
 DataType get_h5_type(float)			{return PredType(PredType::NATIVE_FLOAT);}
 DataType get_h5_type(double)			{return PredType(PredType::NATIVE_DOUBLE);}
-DataType get_h5_type(std::string& s)            {return StrType(H5T_C_S1, s.size());}
+DataType get_h5_type(std::string& s)            {return StrType(H5T_C_S1, s.size()? s.size():1);}
 DataType get_h5_type(bool)			{return PredType(PredType::NATIVE_UINT8);}
 
 template <class T>
@@ -391,13 +391,13 @@ void SaveContainerHdf5::_close() {
 	}
 	m_already_opened = false;
 	m_format_written = false;
-	delete m_image_dataspace;
-	delete m_image_dataset;
-	delete m_measurement_detector;
-	delete m_measurement_detector_parameters;
-	delete m_instrument_detector;
-	delete m_entry;
-	delete m_file;
+	delete m_image_dataspace;			m_image_dataspace = NULL;
+	delete m_image_dataset;				m_image_dataset = NULL;
+	delete m_measurement_detector;			m_measurement_detector = NULL;
+	delete m_instrument_detector;			m_instrument_detector = NULL;
+	delete m_measurement_detector_parameters; 	m_measurement_detector_parameters = NULL;
+	delete m_entry;					m_entry = NULL;
+	delete m_file;					m_file = NULL;
 	DEB_TRACE() << "Close current file";
 	// increase the entry number for the next acquisition if MultiSet mode
 	m_entry_index++;
@@ -465,7 +465,8 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 						write_h5_dataset(*m_measurement_detector_parameters,key.c_str(),value);
 					}
 				}
-
+				delete m_measurement_detector_parameters;m_measurement_detector_parameters = NULL;
+					
 				// create the image data structure in the file
 				hsize_t data_dims[3], max_dims[3];
 				data_dims[1] = aData.dimensions[1];
@@ -506,6 +507,7 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 
 				m_image_dataset->extend(data_dims);
 				m_image_dataspace->close();
+				delete m_image_dataset;
 				m_image_dataspace = new DataSpace(m_image_dataset->getSpace());
 				m_prev_images_written = allocated_dims[0];
 				m_dataset_extended = true;
@@ -521,8 +523,8 @@ void SaveContainerHdf5::_writeFile(Data &aData, CtSaving::HeaderMap &aHeader, Ct
 			hsize_t count[] = { 1, aData.dimensions[1], aData.dimensions[0] };
 			m_image_dataspace->selectHyperslab(H5S_SELECT_SET, count, start);
 			m_image_dataset->write((u_int8_t*) aData.data(), data_type, slabspace, *m_image_dataspace);
-			// catch failure caused by the DataSet operations
 
+		// catch failure caused by the DataSet operations
 		} catch (DataSetIException& error) {
 			THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
 			error.printError();

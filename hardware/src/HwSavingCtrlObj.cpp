@@ -84,10 +84,12 @@ private:
 };
 #endif
 
-HwSavingCtrlObj::HwSavingCtrlObj(int capabilities) :
+HwSavingCtrlObj::HwSavingCtrlObj(int capabilities,
+				 bool directory_event) :
   m_caps(capabilities),
   m_active(false),
-  m_callback(NULL)
+  m_callback(NULL),
+  m_directory_event(directory_event)
 #ifdef __linux__
   ,m_dir_cbk(new HwSavingCtrlObj::DirectoryCallback(*this)),
   m_dir_event(true,*m_dir_cbk)
@@ -137,9 +139,17 @@ void HwSavingCtrlObj::setIndexFormat(const std::string& indexFormat)
 {
   m_index_format = indexFormat;
 }
+void HwSavingCtrlObj::setFramesPerFile(long frames_per_file)
+{
+  m_frames_per_file = frames_per_file;
+}
 void HwSavingCtrlObj::setSaveFormat(const std::string &format)
 {
   m_file_format = format;
+}
+void HwSavingCtrlObj::setOverwritePolicy(const std::string &overwritePolicy)
+{
+  m_overwritePolicy = overwritePolicy;
 }
 
 
@@ -188,7 +198,8 @@ void HwSavingCtrlObj::prepare()
       params.file_pattern += m_index_format;
       params.file_pattern += m_suffix;
       params.next_file_number_expected = m_next_number;
-      m_dir_event.prepare(params);
+      if(m_directory_event)
+	m_dir_event.prepare(params);
 
       if(m_callback)
 	m_callback->prepare(params);
@@ -204,14 +215,16 @@ void HwSavingCtrlObj::start()
     {
       _start();
 #ifdef __linux__
-      m_dir_event.start();
+      if(m_directory_event)
+	m_dir_event.start();
 #endif
     }
 }
 void HwSavingCtrlObj::stop()
 {
 #ifdef __linux__
-  m_dir_event.stop();
+  if(m_directory_event)
+    m_dir_event.stop();
 #endif
 }
 

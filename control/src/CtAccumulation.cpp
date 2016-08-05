@@ -24,7 +24,10 @@
 #include "lima/CtBuffer.h"
 #include "processlib/SinkTask.h"
 #ifndef __unix
-#include "SinkTaskMgr.i"
+#include "processlib/SinkTaskMgr.i"
+#endif
+#ifdef __SSE2__
+#include <emmintrin.h>
 #endif
 using namespace lima;
 /****************************************************************************
@@ -188,7 +191,10 @@ private:
 CtAccumulation::Parameters::Parameters() : 
   pixelThresholdValue(2^16),
   savingFlag(false),
-  savePrefix("saturated_")
+  savePrefix("saturated_"),
+  mode(CtAccumulation::Parameters::STANDARD),
+  thresholdB4Acc(0),
+  offsetB4Acc(0)
 {
   reset();
 }
@@ -348,6 +354,42 @@ void CtAccumulation::getSavePrefix(std::string &savePrefix) const
 
   AutoMutex aLock(m_cond.mutex());
   savePrefix = m_pars.savePrefix;
+}
+
+void CtAccumulation::getMode(Parameters::Mode &mode) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  mode = m_pars.mode;
+}
+
+void CtAccumulation::setMode(Parameters::Mode mode)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.mode = mode;
+}
+
+void CtAccumulation::getThresholdBefore(long long& threshold) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  threshold = m_pars.thresholdB4Acc;
+}
+
+void CtAccumulation::setThresholdBefore(const long long& threshold)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.thresholdB4Acc = threshold;
+}
+
+void CtAccumulation::getOffsetBefore(long long& offset) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  offset = m_pars.offsetB4Acc;
+}
+
+void CtAccumulation::setOffsetBefore(const long long& offset)
+{
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.offsetB4Acc = offset;
 }
 
 /** @brief read the saturated image of accumulated image which id is frameNumber
@@ -528,6 +570,18 @@ void CtAccumulation::prepare()
   m_saturated_images.clear();
   CtBuffer *buffer = m_ct.buffer();
   buffer->getNumber(m_buffers_size);
+  //Adjust number of acc image
+  CtImage *image = m_ct.image();
+  FrameDim image_dim;
+  image->getHwImageDim(image_dim);
+  int image_depth = image_dim.getDepth();
+  long max_nb_buffers;
+  buffer->getMaxNumber(max_nb_buffers);
+  max_nb_buffers = long(max_nb_buffers * double(image_depth) / sizeof(int));
+  if(m_pars.active) max_nb_buffers /= 2;
+  m_buffers_size = std::min(m_buffers_size,max_nb_buffers);
+  m_buffers_size = std::max(m_buffers_size,16L);
+
   CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
   acquisition->getAccNbFrames(acc_nframes);
@@ -536,6 +590,7 @@ void CtAccumulation::prepare()
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
   m_last_continue_flag = true;
   m_last_acc_frame_nb = -1;
+
 }
 /** @brief this is an internal call from CtBuffer in case of accumulation
  */
@@ -614,12 +669,24 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   Data saturatedImg;
   if(active)
     saturatedImg = m_saturated_images.back();
+  Parameters::Mode aMode = m_pars.mode;
+  long long threshold_value = m_pars.thresholdB4Acc;
+  long long offset_value = m_pars.offsetB4Acc;
+
   aLock.unlock();
 
   if(active)
     _calcSaturatedImageNCounters(aData,saturatedImg);
 
-  _accFrame(aData,accFrame);
+ switch(aMode)
+   {
+   case Parameters::STANDARD:
+     _accFrame(aData,accFrame);break;
+   case Parameters::THRESHOLD_BEFORE:
+     _accFrameWithThreshold(aData,accFrame, threshold_value);break;
+   case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
+     _accFrameWithOffsetThenThreshold(aData,accFrame,offset_value, threshold_value);break;
+   }
 
   if(!((aData.frameNumber + 1) % nb_acc_frame))
     m_last_continue_flag = m_ct.newFrameReady(accFrame);
@@ -667,6 +734,33 @@ void accumulateFrame(void *src_ptr,void *dst_ptr,int nb_items)
     *dp += *sp;
 }
 
+#ifdef __SSE2__
+template<>
+void accumulateFrame<unsigned short,int>(void *src,
+					 void *dst,int nb_items)
+{
+  unsigned short *src_ptr = (unsigned short*)src;
+  int *dst_ptr = (int*)dst;
+
+  for(;nb_items >= 8;nb_items -= 8,dst_ptr += 8,src_ptr += 8)
+    {
+      __m128i src1,src2;
+      __m128i dst1,dst2;
+      src2 = _mm_load_si128((__m128i*)src_ptr);
+      dst1 = _mm_load_si128((__m128i*)dst_ptr);
+      dst2 = _mm_load_si128((__m128i*)(dst_ptr + 4));
+      src1 = _mm_unpacklo_epi16(src2,_mm_setzero_si128());
+      src2 = _mm_unpackhi_epi16(src2,_mm_setzero_si128());
+      dst1 = _mm_add_epi32(src1,dst1);
+      dst2 = _mm_add_epi32(src2,dst2);
+      _mm_store_si128((__m128i*)dst_ptr,dst1);
+      _mm_store_si128((__m128i*)(dst_ptr + 4),dst2);
+    }
+  for(;nb_items;--nb_items,++dst_ptr,++src_ptr)
+    *dst_ptr += *src_ptr;
+}
+#endif
+
 void CtAccumulation::_accFrame(Data &src,Data &dst)
 {
   DEB_MEMBER_FUNCT();
@@ -681,6 +775,69 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
     case Data::INT16: 	accumulateFrame<short,int>		(src.data(),dst.data(),nb_items);break;
     case Data::UINT32: 	accumulateFrame<unsigned int,int>	(src.data(),dst.data(),nb_items);break;
     case Data::INT32: 	accumulateFrame<int,int>		(src.data(),dst.data(),nb_items);break;
+    default:
+      THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
+    }
+}
+template <class SrcType, class DstType> 
+void accumulateFrameThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long threshold)
+{
+  SrcType *sp  = (SrcType *) src_ptr;
+  DstType *dp = (DstType *) dst_ptr;
+	
+  for(int i = nb_items;i;--i,++sp,++dp)
+    if(*sp > threshold)
+      *dp += *sp;
+}
+
+void CtAccumulation::_accFrameWithThreshold(Data &src,Data &dst,long long threshold_value)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(src,dst);
+
+  int nb_items = src.dimensions[0] * src.dimensions[1];
+  switch(src.type)
+    {
+    case Data::UINT8: 	accumulateFrameThreshold<unsigned char,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::INT8: 	accumulateFrameThreshold<char,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::UINT16: 	accumulateFrameThreshold<unsigned short,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::INT16: 	accumulateFrameThreshold<short,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::UINT32: 	accumulateFrameThreshold<unsigned int,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
+    case Data::INT32: 	accumulateFrameThreshold<int,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
+    default:
+      THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
+    }
+}
+
+template <class SrcType, class DstType> 
+void accumulateFrameOffsetThenThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long offset, long long threshold)
+{
+  SrcType *sp  = (SrcType *) src_ptr;
+  DstType *dp = (DstType *) dst_ptr;
+  DstType tmp_d;
+	
+  for(int i = nb_items;i;--i,++sp,++dp)
+    {
+      tmp_d = DstType(*sp) - offset;
+      if(tmp_d > threshold)
+	*dp += tmp_d;
+    }
+}
+
+void CtAccumulation::_accFrameWithOffsetThenThreshold(Data &src,Data &dst,long long offset_value, long long threshold_value)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(src,dst);
+
+  int nb_items = src.dimensions[0] * src.dimensions[1];
+  switch(src.type)
+    {
+    case Data::UINT8: 	accumulateFrameOffsetThenThreshold<unsigned char,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::INT8: 	accumulateFrameOffsetThenThreshold<char,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::UINT16: 	accumulateFrameOffsetThenThreshold<unsigned short,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::INT16: 	accumulateFrameOffsetThenThreshold<short,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::UINT32: 	accumulateFrameOffsetThenThreshold<unsigned int,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
+    case Data::INT32: 	accumulateFrameOffsetThenThreshold<int,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
     default:
       THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
     }

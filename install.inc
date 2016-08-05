@@ -133,6 +133,12 @@ MYTHEN_FULL_VERSION = $(shell cat camera/mythen/VERSION)
 INSTALL_MYTHEN_VDIR = $(INSTALL_MYTHEN_DIR)/v$(MYTHEN_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_MYTHEN3), 0)
+INSTALL_MYTHEN3_DIR = $(INSTALL_PLAT_DIR)/Mythen3
+MYTHEN3_FULL_VERSION = $(shell cat camera/mythen3/VERSION)
+INSTALL_MYTHEN3_VDIR = $(INSTALL_MYTHEN3_DIR)/v$(MYTHEN3_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_UEYE), 0)
 INSTALL_UEYE_DIR = $(INSTALL_PLAT_DIR)/Ueye
 UEYE_FULL_VERSION = $(shell cat camera/ueye/VERSION)
@@ -209,6 +215,36 @@ ifneq ($(COMPILE_META), 0)
 INSTALL_META_DIR = $(INSTALL_PLAT_DIR)/Meta
 META_FULL_VERSION = $(shell cat camera/common/meta/VERSION)
 INSTALL_META_VDIR = $(INSTALL_META_DIR)/v$(META_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_MERLIN), 0)
+INSTALL_MERLIN_DIR = $(INSTALL_PLAT_DIR)/Merlin
+MERLIN_FULL_VERSION = $(shell cat camera/merlin/VERSION)
+INSTALL_MERLIN_VDIR = $(INSTALL_MERLIN_DIR)/v$(MERLIN_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_V4l2), 0)
+INSTALL_V4l2_DIR = $(INSTALL_PLAT_DIR)/v4l2
+V4l2_FULL_VERSION = $(shell cat camera/v4l2/VERSION)
+INSTALL_V4l2_VDIR = $(INSTALL_V4l2_DIR)/v$(V4l2_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_EIGER), 0)
+INSTALL_EIGER_DIR = $(INSTALL_PLAT_DIR)/Eiger
+EIGER_FULL_VERSION = $(shell cat camera/eiger/VERSION)
+INSTALL_EIGER_VDIR = $(INSTALL_EIGER_DIR)/v$(EIGER_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_DEXELA), 0)
+INSTALL_DEXELA_DIR = $(INSTALL_PLAT_DIR)/Dexela
+DEXELA_FULL_VERSION = $(shell cat camera/dexela/VERSION)
+INSTALL_DEXELA_VDIR = $(INSTALL_DEXELA_DIR)/v$(DEXELA_FULL_VERSION)
+endif
+
+ifneq ($(COMPILE_PIXIRAD), 0)
+INSTALL_PIXIRAD_DIR = $(INSTALL_PLAT_DIR)/Pixirad
+PIXIRAD_FULL_VERSION = $(shell cat camera/pixirad/VERSION)
+INSTALL_PIXIRAD_VDIR = $(INSTALL_PIXIRAD_DIR)/v$(PIXIRAD_FULL_VERSION)
 endif
 
 ifneq ($(COMPILE_SPS_IMAGE),0)
@@ -342,7 +378,6 @@ ifneq ($(COMPILE_MAXIPIX), 0)
 	rm -rf $(INSTALL_LIB_DIR)/liblimamaxipix.so*
 	cp -d build/liblimamaxipix.so* $(INSTALL_LIB_DIR)
 	cp sip/maxipix/limamaxipix.so $(INSTALL_MAXIPIX_VDIR)
-	cp camera/maxipix/python/Mpx*.py $(INSTALL_MAXIPIX_VDIR)
 	cp camera/maxipix/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_PILATUS), 0)
@@ -417,6 +452,16 @@ ifneq ($(COMPILE_MYTHEN), 0)
 	cp -d build/liblimamythen.so* $(INSTALL_LIB_DIR)
 	cp sip/mythen/limamythen.so $(INSTALL_MYTHEN_VDIR)
 	cp camera/mythen/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_MYTHEN3), 0)
+	mkdir -p $(INSTALL_MYTHEN3_VDIR)
+	cp camera/mythen3/python/__init__.py $(INSTALL_MYTHEN3_DIR)
+	$(call install_core_dep,$(INSTALL_MYTHEN3_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimamythen3.so*
+	cp -d build/liblimamythen3.so* $(INSTALL_LIB_DIR)
+	cp sip/mythen3/limamythen3.so $(INSTALL_MYTHEN3_VDIR)
+	cp camera/mythen3/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
 ifneq ($(COMPILE_UEYE), 0)
@@ -546,6 +591,16 @@ ifneq ($(COMPILE_AVIEX), 0)
 	cp camera/aviex/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 
+ifneq ($(COMPILE_MERLIN), 0)
+	mkdir -p $(INSTALL_MERLIN_VDIR)
+	cp camera/merlin/python/__init__.py $(INSTALL_MERLIN_DIR)
+	$(call install_core_dep,$(INSTALL_MERLIN_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimamerlin.so*
+	cp -d build/liblimamerlin.so* $(INSTALL_LIB_DIR)
+	cp sip/merlin/limamerlin.so $(INSTALL_MERLIN_VDIR)
+	cp camera/merlin/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
 ifneq ($(COMPILE_GLDISPLAY), 0)
 	mkdir -p $(INSTALL_GLDISPLAY_VDIR)
 	cp third-party/gldisplay/python/__init__.py $(INSTALL_GLDISPLAY_DIR)
@@ -564,4 +619,44 @@ ifneq ($(COMPILE_META), 0)
 	cp -d build/liblimameta.so* $(INSTALL_LIB_DIR)
 	cp sip/meta/limameta.so $(INSTALL_META_VDIR)
 	cp camera/common/meta/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_V4l2), 0)
+	mkdir -p $(INSTALL_V4l2_VDIR)
+	cp camera/v4l2/python/__init__.py $(INSTALL_V4l2_DIR)
+	$(call install_core_dep,$(INSTALL_V4l2_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimav4l2.so*
+	cp -d build/liblimav4l2.so* $(INSTALL_LIB_DIR)
+	cp sip/v4l2/limav4l2.so $(INSTALL_V4l2_VDIR)
+	cp camera/v4l2/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_EIGER), 0)
+	mkdir -p $(INSTALL_EIGER_VDIR)
+	cp camera/eiger/python/__init__.py $(INSTALL_EIGER_DIR)
+	$(call install_core_dep,$(INSTALL_EIGER_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimaeiger.so*
+	cp -d build/liblimaeiger.so* $(INSTALL_LIB_DIR)
+	cp sip/eiger/limaeiger.so $(INSTALL_EIGER_VDIR)
+	cp camera/eiger/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_DEXELA), 0)
+	mkdir -p $(INSTALL_DEXELA_VDIR)
+	cp camera/dexela/python/__init__.py $(INSTALL_DEXELA_DIR)
+	$(call install_core_dep,$(INSTALL_DEXELA_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimadexela.so*
+	cp -d build/liblimadexela.so* $(INSTALL_LIB_DIR)
+	cp sip/dexela/limadexela.so $(INSTALL_DEXELA_VDIR)
+	cp camera/dexela/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_PIXIRAD), 0)
+	mkdir -p $(INSTALL_PIXIRAD_VDIR)
+	cp camera/pixirad/python/__init__.py $(INSTALL_PIXIRAD_DIR)
+	$(call install_core_dep,$(INSTALL_PIXIRAD_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimapixirad.so*
+	cp -d build/liblimapixirad.so* $(INSTALL_LIB_DIR)
+	cp sip/pixirad/limapixirad.so $(INSTALL_PIXIRAD_VDIR)
+	cp camera/pixirad/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

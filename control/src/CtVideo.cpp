@@ -231,6 +231,7 @@ public:
     video_setting.set("exposure",pars.exposure);
     video_setting.set("gain",pars.gain);
     video_setting.set("auto_gain_mode",convert_2_string(pars.auto_gain_mode));
+    video_setting.set("video_source",convert_2_string(pars.video_source));
     video_setting.set("mode",convert_2_string(pars.mode));
 
     // --- Roi
@@ -262,6 +263,10 @@ public:
     std::string str_auto_gain_mode;
     if(video_setting.get("auto_gain_mode",str_auto_gain_mode))
       convert_from_string(str_auto_gain_mode,pars.auto_gain_mode);
+
+    std::string str_video_source;
+    if(video_setting.get("video_source",str_video_source))
+      convert_from_string(str_video_source,pars.video_source);
 
     std::string strmode;
     if(video_setting.get("mode",strmode))
@@ -435,6 +440,12 @@ bool CtVideo::isActive() const
 // --- parameters
 void CtVideo::setParameters(const Parameters &pars)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(pars);
+
+  if(m_ct.acquisition()->isMonitorMode())
+    THROW_CTL_ERROR(Error) << "Can't change any parameters on monitor mode";
+
   //All check
   _check_video_mode(pars.mode);
 
@@ -512,9 +523,10 @@ void CtVideo::_setLive(bool liveFlag)
 	  DEB_TRACE() << "Done with the startAcq.";
 	}
       else {
-	//aLock.unlock();
+	aLock.unlock();
 	DEB_TRACE() << "Stopping the acquisition at the controller level";
 	m_ct.stopAcq();
+	aLock.lock();
       }
     }
   m_pars.live = liveFlag;
@@ -528,6 +540,12 @@ void CtVideo::getLive(bool &liveFlag) const
 
 void CtVideo::setExposure(double anExposure)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(anExposure);
+
+  if(m_ct.acquisition()->isMonitorMode())
+    THROW_CTL_ERROR(Error) << "Can't change the gain on monitor mode";
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.exposure = anExposure,m_pars_modify_mask |= PARMODIFYMASK_EXPOSURE;
   _apply_params(aLock);
@@ -544,6 +562,8 @@ void CtVideo::setGain(double aGain)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aGain);
 
+  if(m_ct.acquisition()->isMonitorMode())
+    THROW_CTL_ERROR(Error) << "Can't change the gain on monitor mode";
   if(!m_has_video)
     THROW_CTL_ERROR(Error) << "Can't change the gain on Scientific camera";
   if(aGain < 0. || aGain > 1.)
@@ -596,6 +616,12 @@ bool CtVideo::checkAutoGainMode(AutoGainMode mode) const
 void CtVideo::getAutoGainModeList(AutoGainModeList& modes) const
 {
   DEB_MEMBER_FUNCT();
+  if(!m_has_video)
+    {
+      modes.push_back(OFF);
+      return;
+    }
+
   int nb_modes = 0;
   if(m_video->checkAutoGainMode(HwVideoCtrlObj::OFF))
     modes.push_back(OFF),++nb_modes;
@@ -609,6 +635,8 @@ void CtVideo::getAutoGainModeList(AutoGainModeList& modes) const
 void CtVideo::setAutoGainMode(AutoGainMode mode)
 {
   DEB_MEMBER_FUNCT();
+  if(m_ct.acquisition()->isMonitorMode())
+    THROW_CTL_ERROR(Error) << "Can't change the auto gain on monitor mode";
   if(!checkAutoGainMode(mode))
     THROW_CTL_ERROR(NotSupported) << DEB_VAR1(mode);
   AutoMutex aLock(m_cond.mutex());
@@ -622,8 +650,28 @@ void CtVideo::getAutoGainMode(AutoGainMode& mode) const
   mode = m_pars.auto_gain_mode;
 }
 
+void CtVideo::setVideoSource(VideoSource source)
+{
+  DEB_MEMBER_FUNCT();
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.video_source = source;
+  _apply_params(aLock);
+}
+
+void CtVideo::getVideoSource(VideoSource& source) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  source = m_pars.video_source;
+}
+
 void CtVideo::setMode(VideoMode aMode)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aMode);
+
+  if(m_ct.acquisition()->isMonitorMode())
+    THROW_CTL_ERROR(Error) << "Can't change video mode on monitor mode";
+
   _check_video_mode(aMode);
   AutoMutex aLock(m_cond.mutex());
   m_pars.mode = aMode,m_pars_modify_mask |= PARMODIFYMASK_MODE;
@@ -637,6 +685,12 @@ void CtVideo::getMode(VideoMode &aMode) const
 
 void CtVideo::setRoi(const Roi &aRoi)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aRoi);
+
+  if(m_ct.acquisition()->isMonitorMode())
+    THROW_CTL_ERROR(Error) << "Can't change the gain on monitor mode";
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.roi = aRoi,m_pars_modify_mask |= PARMODIFYMASK_ROI;
   _apply_params(aLock);
@@ -649,6 +703,12 @@ void CtVideo::getRoi(Roi &aRoi) const
 
 void CtVideo::setBin(const Bin &aBin)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aBin);
+
+  if(m_ct.acquisition()->isMonitorMode())
+      THROW_CTL_ERROR(Error) << "Can't change the gain on monitor mode";
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.bin = aBin,m_pars_modify_mask |= PARMODIFYMASK_BIN;
   _apply_params(aLock);
@@ -737,6 +797,15 @@ void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList)
 	case Bpp32:
 	case Bpp32S:
 	  modeList.push_back(Y32); break;
+
+	case Bpp1:
+	case Bpp4:
+	case Bpp6:
+	  modeList.push_back(Y8); break;
+	case Bpp24:
+	case Bpp24S:
+	  modeList.push_back(Y32); break;
+
 	default:
 	  THROW_CTL_ERROR(Error) <<  "Image type not yet managed";
 	}
@@ -817,6 +886,9 @@ void CtVideo::_data2image_finnished(Data&)
 
 void CtVideo::_apply_params(AutoMutex &aLock,bool aForceLiveFlag)
 {
+  if(m_ct.acquisition()->isMonitorMode())
+    return;
+
   if(aForceLiveFlag && !m_pars.live)
       m_read_image->frameNumber = m_write_image->frameNumber = m_image_counter = -1;
   
@@ -864,11 +936,11 @@ void CtVideo::_apply_params(AutoMutex &aLock,bool aForceLiveFlag)
               acquisition->setAcqExpoTime(m_pars.exposure);
 	      if(m_pars.live)
 	        {
-		  m_ct.stopAcq();
 		  aLock.unlock();
+		  m_ct.stopAcq();
 		  m_ct.prepareAcq();
-		  aLock.lock();
 		  m_ct.startAcq();
+		  aLock.lock();
 		  m_pars.live = true;
 		}
             }
@@ -919,21 +991,24 @@ void CtVideo::_prepareAcq()
   if(m_has_video)
     {
       m_video->setLive(false);
-      if(m_pars.auto_gain_mode == ON_LIVE)
+      if(!m_ct.acquisition()->isMonitorMode())
 	{
-	  int nb_frames;
-	  m_sync->getNbFrames(nb_frames);
-	  m_video->setAutoGainMode(nb_frames ? 
-				   HwVideoCtrlObj::OFF : HwVideoCtrlObj::ON);
-	  if(!nb_frames)
-	    m_video->setGain(m_pars.gain);
-	}
-      else
-	{
-	  m_video->setAutoGainMode(m_pars.auto_gain_mode == OFF ? 
-				   HwVideoCtrlObj::OFF : HwVideoCtrlObj::ON);
-	  if(m_pars.auto_gain_mode == OFF)
-	    m_video->setGain(m_pars.gain);
+	  if(m_pars.auto_gain_mode == ON_LIVE)
+	    {
+	      int nb_frames;
+	      m_sync->getNbFrames(nb_frames);
+	      m_video->setAutoGainMode(nb_frames ? 
+				       HwVideoCtrlObj::OFF : HwVideoCtrlObj::ON);
+	      if(!nb_frames)
+		m_video->setGain(m_pars.gain);
+	    }
+	  else
+	    {
+	      m_video->setAutoGainMode(m_pars.auto_gain_mode == OFF ? 
+				       HwVideoCtrlObj::OFF : HwVideoCtrlObj::ON);
+	      if(m_pars.auto_gain_mode == OFF)
+		m_video->setGain(m_pars.gain);
+	    }
 	}
     }
   
@@ -954,7 +1029,8 @@ void CtVideo::_prepareAcq()
 
 void CtVideo::_startAcqTime()
 {
-  m_internal_image_callback->m_start_time = Timestamp::now();
+  if(m_internal_image_callback)
+    m_internal_image_callback->m_start_time = Timestamp::now();
 }
 #ifdef WITH_CONFIG
 CtConfig::ModuleTypeCallback* CtVideo::_getConfigHandler()
@@ -976,6 +1052,7 @@ void CtVideo::Parameters::reset()
   exposure = 1.;
   gain = -1.;
   auto_gain_mode = CtVideo::OFF;
+  video_source = CtVideo::BASE_IMAGE;
   mode = Y8;
   roi.reset();
   bin.reset();
