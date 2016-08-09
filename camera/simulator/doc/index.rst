@@ -149,7 +149,7 @@ For a quick test one can use python, is this a short code example:
 .. code-block:: python
 
   from Lima import Simulator
-  from lima impor Core
+  from lima import Core
   import time
 
   cam = Simulator.Camera()
@@ -178,16 +178,16 @@ For a quick test one can use python, is this a short code example:
   acq.setAcqExpoTime(2)
   acq.setNbImages(10) 
   
-  acq.prepareAcq()
-  acq.startAcq()
+  control.prepareAcq()
+  control.startAcq()
 
   # wait for last image (#9) ready
   lastimg = control.getStatus().ImageCounters.LastImageReady
   while lastimg !=9:
-    time.sleep(1)
+    time.sleep(0.1)
     lastimg = control.getStatus().ImageCounters.LastImageReady
  
-  # read a image
+  # read the first image
   im0 = control.ReadImage(0)
   
 
