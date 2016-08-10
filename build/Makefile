@@ -224,8 +224,15 @@ ifndef PYLON_ROOT
 PYLON_ROOT	:= /opt/pylon
 endif
 
+PYLON_CONFIG    := $(PYLON_ROOT)/bin/pylon-config
+
+ifeq ("$(wildcard $(PYLON_CONFIG))", "")
 BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L$(PYLON_ROOT)/lib -L$(PYLON_ROOT)/lib64
-BASLER_LDLIBS	:= $(LDLIBS) -lpylongigesupp
+BASLER_LDLIBS	:= $(LDLIBS) -lpylonbase
+else
+BASLER_LDFLAGS  := $(LDFLAGS) $(shell $(PYLON_CONFIG) --libs-only-L)
+BASLER_LDLIBS   := $(LDLIBS) $(shell $(PYLON_CONFIG) --libs-only-l)
+endif
 
 basler-name	:= basler
 basler-objs	:= ../camera/basler/src/Basler.o
