@@ -232,4 +232,8 @@ ifneq ($(COMPILE_DEXELA),0)
 sub-dirs += dexela
 endif
 
+ifneq ($(COMPILE_PIXIRAD),0)
+sub-dirs += pixirad
+endif
+
 include ../global.inc
