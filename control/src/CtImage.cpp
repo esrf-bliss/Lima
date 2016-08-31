@@ -1014,6 +1014,12 @@ void CtImage::getRoi(Roi& roi) const
 		roi= m_sw->getRoi();
 	}
 
+	if(roi.isEmpty())
+	  {
+	    FrameDim dim;
+	    getImageDim(dim);
+	    roi = Roi(Point(0,0),dim.getSize());
+	  }
 	DEB_RETURN() << DEB_VAR1(roi);
 }
 
