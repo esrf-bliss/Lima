@@ -10,6 +10,15 @@ The notes are prefixed with a category name for core, subsystems image/saving/pr
 Stable branch core-1.6
 ----------------------
 
+core-1.6.2 2016-09-29
+Features
+ * tango python: added support for edf.lz4
+ * basler: Merge pull request for new initialisation with serial number, user name or IP address.
+ * pixirad: documentation updated, final cleanup of the code.
+
+Bug fixes
+ * image: fixed getRoi, returns now full frame roi if no roi was set.
+
 core-1.6.1 2016-08-04
 Features
  * maxipix: added initialization sequence in PriamSerial contructor in case of cold start.
