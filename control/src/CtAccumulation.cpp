@@ -23,6 +23,9 @@
 #include "lima/CtAcquisition.h"
 #include "lima/CtBuffer.h"
 #include "processlib/SinkTask.h"
+#include <algorithm>
+using std::min;
+using std::max;
 #ifndef __unix
 #include "processlib/SinkTaskMgr.i"
 #endif
@@ -579,8 +582,8 @@ void CtAccumulation::prepare()
   buffer->getMaxNumber(max_nb_buffers);
   max_nb_buffers = long(max_nb_buffers * double(image_depth) / sizeof(int));
   if(m_pars.active) max_nb_buffers /= 2;
-  m_buffers_size = std::min(m_buffers_size,max_nb_buffers);
-  m_buffers_size = std::max(m_buffers_size,16L);
+  m_buffers_size = min(m_buffers_size,max_nb_buffers);
+  m_buffers_size = max(m_buffers_size,16L);
 
   CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
