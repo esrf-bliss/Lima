@@ -59,7 +59,9 @@ class SaveContainerCbf::Compression : public SinkTaskBase
       {
 	size_t found = i->first.find_last_of(LIMA_HEADER_KEY_SEPARATOR);
 	std::string currentCategory = i->first.substr(0,found);
-	std::string key = i->first.substr(found);
+	std::string key;
+	if(found != std::string::npos)
+	  key = i->first.substr(found);
 	// no category was find so set it to default
 	if(key.empty())		
 	  {
