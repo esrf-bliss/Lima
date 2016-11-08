@@ -40,6 +40,9 @@ if(COMPILE_SIP)
 endif(COMPILE_SIP)
 
 add_subdirectory(third-party/Processlib)
+if(WIN32)
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/core/include/WindowSpecific")
+endif(WIN32)
 
 set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Timestamp.cpp common/src/ThreadUtils.cpp
                 common/src/Exceptions.cpp common/src/MemUtils.cpp common/src/RegExUtils.cpp common/src/AcqState.cpp
