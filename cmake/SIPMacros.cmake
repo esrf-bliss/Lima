@@ -40,7 +40,6 @@ SET(SIP_TAGS)
 SET(SIP_CONCAT_PARTS 8)
 SET(SIP_DISABLE_FEATURES)
 SET(SIP_EXTRA_OPTIONS)
-SET(SIP_CHECK_EXC OFF)
 
 MACRO(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
 
@@ -101,7 +100,7 @@ MACRO(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
         COMMAND ${CMAKE_COMMAND} -E echo ${message}
         COMMAND ${TOUCH_COMMAND} ${_sip_output_files} 
         COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS} -j ${SIP_CONCAT_PARTS} -c ${_module_path} ${_sip_includes} ${_abs_module_sip}
-        COMMAND env SIP_CHECK_EXC=${SIP_CHECK_EXC} ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/sip/checksipexc.py ${_sip_output_files}
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/sip/checksipexc.py ${_sip_output_files}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
     )
     # not sure if type MODULE could be uses anywhere, limit to cygwin for now
