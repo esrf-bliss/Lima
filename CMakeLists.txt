@@ -59,6 +59,10 @@ set(hw_srcs hardware/src/HwInterface.cpp hardware/src/HwCap.cpp hardware/src/HwS
             hardware/src/HwBufferSave.cpp hardware/src/HwVideoCtrlObj.cpp hardware/src/HwEventCtrlObj.cpp hardware/src/HwSavingCtrlObj.cpp
             hardware/src/HwFileEventMgr.cpp hardware/src/HwReconstructionCtrlObj.cpp)
 
+if(WIN32)
+    list(REMOVE_ITEM hw_srcs hardware/src/HwFileEventMgr.cpp)
+endif()
+
 set(control_srcs control/src/CtSaving.cpp control/src/CtControl.cpp control/src/CtAcquisition.cpp control/src/CtBuffer.cpp
                  control/src/CtImage.cpp control/src/CtSaving_Edf.cpp control/src/CtShutter.cpp control/src/CtAccumulation.cpp control/src/CtVideo.cpp
                  control/src/CtEvent.cpp)
