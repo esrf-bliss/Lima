@@ -16,9 +16,18 @@ INCLUDE(SIPMacros)
 
 SET(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
+IF (WIN32)
+    SET(NUMPY_INCLUDE_DIR "/usr/include" CACHE PATH "Path to NumPy include folder")
+    SET(NUMPY_LIB_DIR "/usr/include" CACHE PATH "Path to NumPy lib folder")
+    include_directories(${NUMPY_INCLUDE_DIR})
+    link_directories(${NUMPY_LIB_DIR})
+ENDIF()
+
 find_package(Threads REQUIRED)
 
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+IF(UNIX)
+    set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+ENDIF(UNIX)
 
 set(COMPILE_CORE ON CACHE BOOL "compile core?")
 set(COMPILE_SIMULATOR ON CACHE BOOL "compile simulator?")
@@ -40,6 +49,9 @@ if(COMPILE_SIP)
 endif(COMPILE_SIP)
 
 add_subdirectory(third-party/Processlib)
+if(WIN32)
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/core/include/WindowSpecific")
+endif(WIN32)
 
 set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Timestamp.cpp common/src/ThreadUtils.cpp
                 common/src/Exceptions.cpp common/src/MemUtils.cpp common/src/RegExUtils.cpp common/src/AcqState.cpp
@@ -49,12 +61,20 @@ set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Tim
 #    set(config_objs common/src/ConfigUtils.cpp)
 #endif (0 and COMPILE_CONFIG)
 
+if(WIN32)
+    list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp)
+endif()
+
 set(hw_srcs hardware/src/HwInterface.cpp hardware/src/HwCap.cpp hardware/src/HwSyncCtrlObj.cpp hardware/src/HwFrameInfo.cpp
             hardware/src/HwFrameCallback.cpp hardware/src/HwBufferCtrlObj.cpp hardware/src/HwBufferMgr.cpp
             hardware/src/HwShutterCtrlObj.cpp hardware/src/HwMaxImageSizeCallback.cpp hardware/src/HwDetInfoCtrlObj.cpp
             hardware/src/HwBinCtrlObj.cpp hardware/src/HwRoiCtrlObj.cpp hardware/src/HwFlipCtrlObj.cpp hardware/src/HwSerialLine.cpp
             hardware/src/HwBufferSave.cpp hardware/src/HwVideoCtrlObj.cpp hardware/src/HwEventCtrlObj.cpp hardware/src/HwSavingCtrlObj.cpp
             hardware/src/HwFileEventMgr.cpp hardware/src/HwReconstructionCtrlObj.cpp)
+
+if(WIN32)
+    list(REMOVE_ITEM hw_srcs hardware/src/HwFileEventMgr.cpp)
+endif()
 
 set(control_srcs control/src/CtSaving.cpp control/src/CtControl.cpp control/src/CtAcquisition.cpp control/src/CtBuffer.cpp
                  control/src/CtImage.cpp control/src/CtSaving_Edf.cpp control/src/CtShutter.cpp control/src/CtAccumulation.cpp control/src/CtVideo.cpp
@@ -97,12 +117,26 @@ endif()
 if(CMAKE_THREAD_LIBS_INIT)
     target_link_libraries(limacore "${CMAKE_THREAD_LIBS_INIT}")
 endif()
-TARGET_LINK_LIBRARIES(limacore "rt")
+if(UNIX)
+    TARGET_LINK_LIBRARIES(limacore "rt")
+endif()
 TARGET_LINK_LIBRARIES(limacore processlib)
+if(WIN32)
+	TARGET_COMPILE_DEFINITIONS(limacore PRIVATE LIMACORE_EXPORTS)
+endif()
 SET_TARGET_PROPERTIES(limacore PROPERTIES VERSION ${core_ver} SOVERSION "1")
-INSTALL(TARGETS limacore
-        LIBRARY DESTINATION lib
-        PUBLIC_HEADER DESTINATION include)
+if(WIN32)
+    SET_TARGET_PROPERTIES(limacore PROPERTIES PREFIX "lib")
+endif()
+if(WIN32)
+    INSTALL(TARGETS limacore
+            DESTINATION lib
+            PUBLIC_HEADER DESTINATION include)
+else()
+    INSTALL(TARGETS limacore
+            LIBRARY DESTINATION lib
+            PUBLIC_HEADER DESTINATION include)
+endif()
 
 if(COMPILE_SIMULATOR)
     add_subdirectory(camera/simulator)

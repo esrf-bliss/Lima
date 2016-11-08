@@ -10,9 +10,20 @@ TARGET_INCLUDE_DIRECTORIES(limasimulator PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc
 TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../common/include")
 TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../hardware/include")
 TARGET_LINK_LIBRARIES(limasimulator limacore)
+if(WIN32)
+	TARGET_COMPILE_DEFINITIONS(limasimulator PRIVATE LIBSIMULATOR_EXPORTS)
+endif()
 SET_TARGET_PROPERTIES(limasimulator PROPERTIES VERSION ${simu_ver} SOVERSION "1")
-INSTALL(TARGETS limasimulator
-        LIBRARY DESTINATION lib)
+if(WIN32)
+    SET_TARGET_PROPERTIES(limasimulator PROPERTIES PREFIX "lib")
+endif()
+if(WIN32)
+    INSTALL(TARGETS limasimulator
+            DESTINATION lib)
+else()
+    INSTALL(TARGETS limasimulator
+            LIBRARY DESTINATION lib)
+endif()
 
 IF (COMPILE_SIP)
     SET(NAME "simulator")
@@ -28,6 +39,7 @@ IF (COMPILE_SIP)
     ENDFOREACH()
 
     CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/limasimulator.sip)
+    SET(SIP_CONCAT_PARTS 1)
     SET(SIP_INCLUDES ${SIP_INCLUDES}
         "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip"
         "${CMAKE_BINARY_DIR}/sip/core"
