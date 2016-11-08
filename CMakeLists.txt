@@ -52,6 +52,10 @@ set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Tim
 #    set(config_objs common/src/ConfigUtils.cpp)
 #endif (0 and COMPILE_CONFIG)
 
+if(WIN32)
+    list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp)
+endif()
+
 set(hw_srcs hardware/src/HwInterface.cpp hardware/src/HwCap.cpp hardware/src/HwSyncCtrlObj.cpp hardware/src/HwFrameInfo.cpp
             hardware/src/HwFrameCallback.cpp hardware/src/HwBufferCtrlObj.cpp hardware/src/HwBufferMgr.cpp
             hardware/src/HwShutterCtrlObj.cpp hardware/src/HwMaxImageSizeCallback.cpp hardware/src/HwDetInfoCtrlObj.cpp
