@@ -108,18 +108,9 @@ def checksipexc(ifname, inplace=False):
 
 
 if __name__ == '__main__':
-    sip_check_exc = os.environ.get('SIP_CHECK_EXC')
-    if sip_check_exc is None:
-        # run from command line
-        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-        if checksipexc(sys.argv[1], inplace=False):
-            sys.exit(1)
-    elif sip_check_exc == 'OFF':
-        # run from cmake with SIP_CHECK_EXC disabled
-        sys.exit(0)
-    else:
-        # run from cmake with SIP_CHECK_EXC enabled
-        srcs = []
-        for src in sys.argv[1:]:
+    for src in sys.argv[1:]:
+        if 'camera' in src:
             checksipexc(src, inplace=True)
-        sys.exit(0)
+        else:
+            continue
+    sys.exit(0)
