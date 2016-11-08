@@ -16,6 +16,13 @@ INCLUDE(SIPMacros)
 
 SET(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
+IF (WIN32)
+    SET(NUMPY_INCLUDE_DIR "/usr/include" CACHE PATH "Path to NumPy include folder")
+    SET(NUMPY_LIB_DIR "/usr/include" CACHE PATH "Path to NumPy lib folder")
+    include_directories(${NUMPY_INCLUDE_DIR})
+    link_directories(${NUMPY_LIB_DIR})
+ENDIF()
+
 find_package(Threads REQUIRED)
 
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
