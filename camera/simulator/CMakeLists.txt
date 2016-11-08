@@ -11,8 +11,13 @@ TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..
 TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../hardware/include")
 TARGET_LINK_LIBRARIES(limasimulator limacore)
 SET_TARGET_PROPERTIES(limasimulator PROPERTIES VERSION ${simu_ver} SOVERSION "1")
-INSTALL(TARGETS limasimulator
-        LIBRARY DESTINATION lib)
+if(WIN32)
+    INSTALL(TARGETS limasimulator
+            DESTINATION lib)
+else()
+    INSTALL(TARGETS limasimulator
+            LIBRARY DESTINATION lib)
+endif()
 
 IF (COMPILE_SIP)
     SET(NAME "simulator")
