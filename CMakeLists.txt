@@ -100,9 +100,15 @@ endif()
 TARGET_LINK_LIBRARIES(limacore "rt")
 TARGET_LINK_LIBRARIES(limacore processlib)
 SET_TARGET_PROPERTIES(limacore PROPERTIES VERSION ${core_ver} SOVERSION "1")
-INSTALL(TARGETS limacore
-        LIBRARY DESTINATION lib
-        PUBLIC_HEADER DESTINATION include)
+if(WIN32)
+    INSTALL(TARGETS limacore
+            DESTINATION lib
+            PUBLIC_HEADER DESTINATION include)
+else()
+    INSTALL(TARGETS limacore
+            LIBRARY DESTINATION lib
+            PUBLIC_HEADER DESTINATION include)
+endif()
 
 if(COMPILE_SIMULATOR)
     add_subdirectory(camera/simulator)
