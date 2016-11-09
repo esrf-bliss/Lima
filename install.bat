@@ -2,65 +2,35 @@
 setlocal enabledelayedexpansion
 
 rem repertoire courant du batch 
+if exist "_build" (
+    rmdir /S /Q _build
+)
+mkdir _build
+cd _build
 set CurrentPath=%cd%
+
+rem execution de cmake pour créer les fichiers projets et solution
+cmake -G "Visual Studio 9 2008" -D PYLON_ROOT="C:\Program Files\Basler\pylon 3.2\pylon" -D GSL_INCLUDE_DIR="C:\Program Files (x86)\GnuWin32\include" -D GSL_LIB_DIR="C:\Program Files (x86)\GnuWin32\lib" -D NUMPY_INCLUDE_DIR="C:\Anaconda2\Lib\site-packages\numpy\core\include" -D NUMPY_LIB_DIR="C:\Anaconda2\Lib\site-packages\numpy\core\lib" -D COMPILE_SIP=1 -D COMPILE_SPS_IMAGE=0 ..
 
 rem configuration des variables d'environnement visual c++ 2008 express edition
 cd /D %VS90COMNTOOLS%..\..\VC
 call vcvarsall.bat
 
-rem compilation de la librairie libprocesslib
-cd /D %CurrentPath%\third-party\Processlib\build\msvc\9.0\libprocesslib
-msbuild.exe libprocesslib.sln /t:build /fl /flp:logfile=MyProjectOutput.log /p:Configuration=Release;Plateform=Win32 /v:d
-
-rem compilation de la librairie limacore
-cd /D %CurrentPath%\build\msvc\9.0\LimaCore
-msbuild.exe LimaCore.sln /t:build /fl /flp:logfile=MyProjectOutput.log /p:Configuration=Release;Plateform=Win32 /v:d
-
-rem compilation des plugins des cameras actives dans le fichier config.inc
-for /f "delims=:" %%i in ('type %CurrentPath%\config.inc') do (
-	set ligne=%%i
-	set ligne_temp=%%i
-	if "!ligne:~0,7!" == "COMPILE" (
-		rem call:strlen longueur !ligne! 
-		rem echo longueur : !longueur!
-		if "!ligne:~-1!" == "1" (
-			if not "!ligne:~8,-2!" == "CORE" (
-				rem compilation du plugin active
-				cd /D !CurrentPath!\camera\!ligne:~8,-2!\build\msvc\9.0\lib!ligne:~8,-2!
-				msbuild.exe Lib!ligne:~8,-2!.sln /t:build /fl /flp:logfile=MyProjectOutput.log /p:Configuration=Release;Plateform=Win32 /v:d
-			)
-		)
-	)
-)
-
-rem execution du script python configure.py
-cd /D %CurrentPath%\third-party\Processlib\sip
-call python configure.py
-
-rem execution du script python windowsSipCompilation --config
+rem compilation
 cd /D %CurrentPath%
-call python windowsSipCompilation.py --config
-
-cd /D %CurrentPath%\third-party\Processlib\sip
-call nmake
-
-rem execution du script python windowsSipCompilation
-cd /D %CurrentPath%
-call python windowsSipCompilation.py
+msbuild.exe lima.sln /t:build /fl /flp:logfile=limaOutput.log /p:Configuration=Release;Plateform=Win32 /v:d
 
 rem execution du script python windowsInstall
-cd /D %CurrentPath%
+cd ..
 
 if exist "python_path.tmp" (
     del python_path.tmp
 )
 
-call python_path.py
+call python python_path.py
 set /p python_path= < python_path.tmp
 call python windowsInstall.py --install_dir=%python_path%
 
 if exist "python_path.tmp" (
     del python_path.tmp
 )
-
-cd /D %CurrentPath%
