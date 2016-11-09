@@ -25,7 +25,9 @@ ENDIF()
 
 find_package(Threads REQUIRED)
 
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+IF(UNIX)
+    set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+ENDIF(UNIX)
 
 set(COMPILE_CORE ON CACHE BOOL "compile core?")
 set(COMPILE_SIMULATOR ON CACHE BOOL "compile simulator?")
