@@ -50,7 +50,7 @@ namespace lima
     void setReconstructionTask(LinkTask*);
     bool hasReconstructionTask();
 
-    void addTo(TaskMgr&,int&) const;
+    void addTo(TaskMgr&,int&,bool registerCallback = true) const;
 
     void setEndCallback(TaskEventCallback *aCbk)
     {
@@ -60,6 +60,8 @@ namespace lima
 	m_end_callback->unref();
       m_end_callback = aCbk;
     }
+    void setFirstProcessingInPlace(bool value)
+    { m_first_processing_in_place = value; }
   private:
     class _EndCbk;
     friend class _EndCbk;
@@ -70,6 +72,7 @@ namespace lima
     RotationMode	m_rotation;
     mutable LinkTask	*m_reconstruction_task;
     TaskEventCallback	*m_end_callback;
+    bool		m_first_processing_in_place;
   };
 }
 #endif

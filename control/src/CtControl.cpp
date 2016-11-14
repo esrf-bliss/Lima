@@ -378,6 +378,7 @@ CtControl::CtControl(HwInterface *hw) :
       LinkTask* rec_task = reconstruction_obj->getReconstructionTask();
       setReconstructionTask(rec_task);
     }
+  m_op_int->setFirstProcessingInPlace(hw->firstProcessingInPlace());
 }
 
 CtControl::~CtControl()
@@ -872,6 +873,18 @@ void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber,
 	m_ct_saving->_ReadImage(aReturnData,frameNumber);
       } else {
 	m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
+	// if the processing is not in place,
+	// the processed buffer is lost.
+	// need to re-do the internal processing
+	if(!m_hw->firstProcessingInPlace())
+	  {
+	    TaskMgr mgr;
+	    mgr.setInputData(aReturnData);
+	    int stage = 0;
+	    m_op_int->addTo(mgr,stage,false);
+	    if(stage)
+	      aReturnData = mgr.syncProcess();
+	  }
 	FrameDim imgDim;
 	m_ct_image->getImageDim(imgDim);
 	aReturnData.dimensions[0] = imgDim.getSize().getWidth();

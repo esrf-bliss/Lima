@@ -66,6 +66,8 @@ class LIMACORE_API HwInterface
 
 	virtual int getNbAcquiredFrames();
 	virtual int getNbHwAcquiredFrames() = 0;
+
+	virtual bool firstProcessingInPlace() const {return true;}
 };
 
 template <class CtrlObj>
