@@ -221,7 +221,11 @@ CtHwBinRoiFlip::CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi, Size
 		m_hw_roi->setRoi(m_set_roi);
 
 	m_max_size= size;
-	m_max_roi= Roi(Point(0,0), m_max_size / m_bin);
+	//WARNINGGGGGGGGGGGGGGGGGGGGGGGGG: called Roi() constructor is Roi(Point topleft, Point bottomright)
+	// becaus Size /Point -> Point and not Size !!!!
+	// So if size = 1024*1024 and m_bin = 1x1 then m_max_roi = 0,0 x 1025,1025
+	Size roi_size = m_max_size/m_bin;
+	m_max_roi= Roi(Point(0,0), roi_size);
 	m_size= m_max_size;
 }
 
