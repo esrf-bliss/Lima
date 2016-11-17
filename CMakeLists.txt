@@ -126,6 +126,9 @@ if(WIN32)
 endif()
 SET_TARGET_PROPERTIES(limacore PROPERTIES VERSION ${core_ver} SOVERSION "1")
 if(WIN32)
+    SET_TARGET_PROPERTIES(limacore PROPERTIES PREFIX "lib")
+endif()
+if(WIN32)
     INSTALL(TARGETS limacore
             DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
