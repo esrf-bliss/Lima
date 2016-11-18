@@ -20,30 +20,33 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 import os,sys
+import os.path as path
 from optparse import OptionParser
 
 configFile = 'config.inc'
 
-def getModuleConfig() :
+
+def getModuleConfig():
+    availableModules = set()
+    for dir_ in ('camera', 'sip'):
+        availableModules.update(
+            set([subdir for subdir in os.listdir(dir_)
+                 if os.path.isdir(path.join(dir_, subdir))])
+        )
+    config = {}
     try:
-        f = file(configFile)
+        with open(configFile) as f:
+            for line in f:
+                if line.startswith('COMPILE'):
+                    modName, active = line.split('=')
+                    modName = '_'.join(modName.split('_')[1:])
+                    modName = modName.lower()
+                    if modName in availableModules:
+                        config[modName] = bool(int(active))
+        return config
     except IOError:
         print 'You should Read the README_WINDOW First'
         raise
-    else:
-        os.chdir('sip')
-        availableModule = set([x for x in os.listdir('.') if os.path.isdir(x)])
-        config = {}
-        for line in f:
-            if line.startswith('COMPILE') :
-                modName,active = line.split('=')
-                modName = '_'.join(modName.split('_')[1:])
-                modName = modName.lower()
-                if modName in availableModule:
-                    config[modName] = bool(int(active))
-
-        os.chdir('..')
-        return config
 
 def compileModule(config) :
     os.chdir('sip')
