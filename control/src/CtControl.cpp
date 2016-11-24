@@ -457,6 +457,10 @@ void CtControl::prepareAcq()
   if(aStatus.AcquisitionStatus == AcqConfig)
     THROW_CTL_ERROR(Error) << "Configuration not finished";
 
+  //Abort previous acquisition tasks
+  PoolThreadMgr::get().abort();
+  m_ct_saving->_resetReadyFlag();
+
   resetStatus(false);
   
   //Clear common header
