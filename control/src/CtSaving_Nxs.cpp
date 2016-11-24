@@ -99,7 +99,7 @@ void SaveContainerNxs::_clear()
 //- 	.End Acquisition
 //- 	.Finalize
 //--------------------------------------------------------------------------------------------------------------------
-void SaveContainerNxs::_writeFile(void*,Data &aData,
+long SaveContainerNxs::_writeFile(void*,Data &aData,
 								  CtSaving::HeaderMap &aHeader,
 								  CtSaving::FileFormat aFormat)
 {
@@ -285,6 +285,7 @@ void SaveContainerNxs::_writeFile(void*,Data &aData,
 			m_writer = 0;
 			DEB_TRACE() << "Delete the DataStreamer : " << t.elapsed_msec() << " ms";
 		}
+		return aData.size(); // fix me
 	}
 	catch (std::bad_alloc& ex)
 	{

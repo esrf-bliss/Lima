@@ -60,7 +60,7 @@ namespace lima {
     virtual void* _open(const std::string &filename,
 			std::ios_base::openmode flags);
     virtual void _close(void*);
-    virtual void _writeFile(void*,Data &data,
+    virtual long _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
     virtual void _clear();

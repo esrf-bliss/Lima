@@ -70,7 +70,7 @@ void SaveContainerTiff::_close(void* f)
   delete filename;
 }
 
-void SaveContainerTiff::_writeFile(void* f,Data &aData,
+long SaveContainerTiff::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
@@ -163,7 +163,7 @@ void SaveContainerTiff::_writeFile(void* f,Data &aData,
 
     // Close the file
     TIFFClose(image);
-
+    return w_size;
 }
 
 

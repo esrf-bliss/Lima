@@ -69,7 +69,7 @@ void SaveContainerFits::_close(void* f)
   DEB_MEMBER_FUNCT();
 }
 
-void SaveContainerFits::_writeFile(void* f,Data &aData,
+long SaveContainerFits::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
@@ -159,6 +159,7 @@ void SaveContainerFits::_writeFile(void* f,Data &aData,
     }
 
     delete naxes;
+    return Data.size();		// @todo fix me (it's only use for statistics)
 }
 
 void SaveContainerFits::writeHeader(std::auto_ptr<CCfits::FITS> &fitsFile, CtSaving::HeaderMap &header)

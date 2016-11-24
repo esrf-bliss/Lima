@@ -190,9 +190,14 @@ namespace lima {
 				     const T&);
     // --- statistic
 
-    void getWriteTimeStatistic(std::list<double>&, int stream_idx=0) const;
+    void getStatistic(std::list<double>&,
+		      std::list<double>&,std::list<double>&,
+		      std::list<double>&,
+		      int stream_idx=0) const;
+    void getStatisticCounters(double&,double&,double&,double&,
+			      int stream_idx=0) const;
     void setStatisticHistorySize(int aSize, int stream_idx=0);
-
+    int getStatisticHistorySize(int stream_idx=0) const;
     // --- misc
 
     void clear();
@@ -250,6 +255,20 @@ namespace lima {
       };
       typedef std::map<CtSaving::Parameters,Handler,cmpParameters> Params2Handler;
     public:
+      struct Stat
+      {
+	Stat() : received_time(Timestamp::now()),incoming_size(-1),write_size(-1) {}
+
+	Timestamp	received_time;
+	Timestamp	compression_start;
+	Timestamp	compression_end;
+	Timestamp	writing_start;
+	Timestamp	writing_end;
+	long		incoming_size;
+	long		write_size;
+      };
+      typedef std::map<long,Stat> StatisticsType;
+
       SaveContainer(Stream& stream);
       virtual ~SaveContainer();
       
@@ -259,7 +278,12 @@ namespace lima {
       void writeFile(Data&,CtSaving::HeaderMap &);
       void setStatisticSize(int aSize);
       int  getStatisticSize() const;
-      void getStatistic(std::list<double>&) const;
+      void getStatistic(std::list<double> &saving_speed,
+			std::list<double> &compression_speed,
+			std::list<double> &compression_ratio,
+			std::list<double> &incoming_speed) const;
+      void getRawStatistic(StatisticsType&) const;
+
       void getParameters(CtSaving::Parameters&) const;
       void clear();
       void prepare(CtControl&);
@@ -278,13 +302,16 @@ namespace lima {
       virtual bool isReady(long frame_nr) const;
       virtual void setReady(long frame_nr);
       virtual void prepareWrittingFrame(long frame_nr);
+      void createStatistic(Data&);
+      void compressionStart(Data&);
+      void compressionFinished(Data&);
       int getMaxConcurrentWritingTask() const;
       void setMaxConcurrentWritingTask(int nb);
     protected:
       virtual void* _open(const std::string &filename,
 			 std::ios_base::openmode flags) = 0;
       virtual void _close(void*) = 0;
-      virtual void _writeFile(void*,Data &data,
+      virtual long _writeFile(void*,Data &data,
 			      CtSaving::HeaderMap &aHeader,
 			      FileFormat) = 0;
       virtual void _clear() {};
@@ -293,7 +320,7 @@ namespace lima {
       int			m_written_frames;
       Stream			&m_stream;
     private:
-      std::list<double>		m_statistic_list;
+      StatisticsType		m_statistic;
       int			m_statistic_size;
       mutable Cond		m_cond;
       long			m_nb_frames_to_write;
@@ -343,6 +370,8 @@ namespace lima {
 
       SinkTaskBase *getTask(TaskType type, const HeaderMap& header, long frame_nr);
 
+      void compressionStart(Data& data)
+      { m_save_cnt->compressionStart(data); }
       void compressionFinished(Data& data);
       void saveFinished(Data& data);
       int getNextNumber() const;
@@ -358,11 +387,18 @@ namespace lima {
 	return pars.savingMode != Manual; 
       }
 
-      void getStatistic(std::list<double>& stat_list) const
-      { m_save_cnt->getStatistic(stat_list); }
+      void getStatistic(std::list<double> &saving_speed,
+			std::list<double> &compression_speed,
+			std::list<double> &compression_ratio,
+			std::list<double> &incoming_speed) const
+      { m_save_cnt->getStatistic(saving_speed,
+				 compression_speed,compression_ratio,
+				 incoming_speed); }
+
       void setStatisticSize(int size) 
       { m_save_cnt->setStatisticSize(size); }
-
+      int getStatisticSize() const
+      { return m_save_cnt->getStatisticSize(); }
       void getMaxConcurrentWritingTask(int& nb_threads) const
       { nb_threads = m_save_cnt->getMaxConcurrentWritingTask(); }
       void setMaxConcurrentWritingTask(int nb_threads)
@@ -377,6 +413,8 @@ namespace lima {
       { m_save_cnt->setReady(frame_id); }
       void prepareWrittingFrame(long frame_nr)
       { m_save_cnt->prepareWrittingFrame(frame_nr); }
+      void createStatistic(Data& data)
+      { m_save_cnt->createStatistic(data); }
     private:
       class _SaveCBK;
       class _SaveTask;
@@ -467,6 +505,7 @@ namespace lima {
       void _stop(CtControl&);
       void _close();
       void _getCommonHeader(HeaderMap&);
+      void _createStatistic(Data&);
       void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		       bool keep_in_map);
       void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header, 

@@ -434,10 +434,11 @@ void SaveContainerEdf::_close(void* f)
 #endif
 }
 
-void SaveContainerEdf::_writeFile(void* f,Data &aData,
+long SaveContainerEdf::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
+  long write_size = 0;
 #ifdef WIN32
   _OfStream* fout = (_OfStream*)f;
 #else
@@ -452,6 +453,7 @@ void SaveContainerEdf::_writeFile(void* f,Data &aData,
 	  i != buffers->end();++i)
 	{
 	  fout->write((char*)(*i)->buffer,(*i)->used_size);
+	  write_size += (*i)->used_size;
 	  delete *i;
 	}
       delete buffers;
@@ -463,8 +465,9 @@ void SaveContainerEdf::_writeFile(void* f,Data &aData,
   if(aFormat == CtSaving::EDF)
     {
       const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
-      _writeEdfHeader(aData,aHeader,
-		      pars.framesPerFile,*fout);
+      MmapInfo info = _writeEdfHeader(aData,aHeader,
+				      pars.framesPerFile,*fout);
+      write_size += info.header_size;
     }
 #ifdef __unix
   else if(aFormat == CtSaving::EDFConcat)
@@ -475,6 +478,7 @@ void SaveContainerEdf::_writeFile(void* f,Data &aData,
 	{
 	  const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
 	  m_mmap_info = _writeEdfHeader(aData,aHeader,pars.framesPerFile,*fout,8);
+	  write_size += m_mmap_info.header_size;
 	  fout->flush();
 	  long long header_position = fout->tellp();
 	  header_position -= m_mmap_info.header_size;
@@ -506,11 +510,12 @@ void SaveContainerEdf::_writeFile(void* f,Data &aData,
     }
 #endif
   fout->write((char*)aData.data(),aData.size());
-
+  write_size += aData.size();
 
 #ifdef WITH_EDFGZ_SAVING
     } // else
 #endif
+  return write_size;
 }
 
 template<class Stream>

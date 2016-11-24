@@ -428,13 +428,14 @@ void SaveContainerCbf::_close(void* f)
   delete file;
 }
 
-void SaveContainerCbf::_writeFile(void* f,Data &aData,
+long SaveContainerCbf::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap&,
 				  CtSaving::FileFormat)
 {
   DEB_MEMBER_FUNCT();
   if(_writeCbfData((_File*)f,aData))
     THROW_CTL_ERROR(Error) << "Something went wrong during CBF data writing";
+  return ftell(((_File*)f)->m_fout);
 }
 
 void SaveContainerCbf::_clear()

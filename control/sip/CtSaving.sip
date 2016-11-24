@@ -230,10 +230,20 @@ using namespace lima;
     void setEndCallback(TaskEventCallback *);
     // --- statistic
 
-    void getWriteTimeStatistic(std::list<double>& /Out/, 
-                               int stream_idx=0) const;
-    void setStatisticHistorySize(int aSize, int stream_idx=0);
+    void getStatistic(std::list<double>& /Out/,
+		      std::list<double>& /Out/, 
+		      std::list<double>& /Out/, 
+		      std::list<double>& /Out/, 
+		      int stream_idx=0) const;
 
+    void getStatisticCounters(double& /Out/,
+			      double& /Out/,
+			      double& /Out/,
+			      double& /Out/,
+			      int stream_idx=0) const;
+
+    void setStatisticHistorySize(int aSize, int stream_idx=0);
+    int getStatisticHistorySize(int stream_idx=0) const;
     // --- misc
 
     void clear();

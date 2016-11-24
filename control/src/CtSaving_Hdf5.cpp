@@ -459,7 +459,7 @@ void SaveContainerHdf5::_close(void* f) {
 	DEB_TRACE() << "Close current file";
 }
 
-void SaveContainerHdf5::_writeFile(void* f,Data &aData,
+long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				   CtSaving::HeaderMap &aHeader,
 				   CtSaving::FileFormat aFormat) {
 	DEB_MEMBER_FUNCT();
@@ -610,6 +610,7 @@ void SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		}
 	}
 	DEB_RETURN();
+	return aData.size();	// fix me ;-o
 }
 
 
