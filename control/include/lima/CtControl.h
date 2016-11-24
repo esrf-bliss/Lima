@@ -149,6 +149,7 @@ namespace lima
     void prepareAcq();
     void startAcq();
     void stopAcq();
+    void abortAcq();
 
     void abortAcq(AcqStatus acq_status, ErrorCode error_code, Data &data,
 		  bool ctrl_mutex_locked=false);

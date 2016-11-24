@@ -597,6 +597,21 @@ void CtControl::stopAcq()
   _calcAcqStatus();
   m_ct_saving->_stop(*this);
 }
+/** @brief stop an acquisition and purge all pending tasks.
+ */
+void CtControl::abortAcq()
+{
+  DEB_MEMBER_FUNCT();
+
+  stopAcq();
+  PoolThreadMgr::get().abort();
+  
+  m_ct_saving->_resetReadyFlag();
+
+  AutoMutex aLock(m_cond.mutex());
+  m_status.AcquisitionStatus = AcqReady;
+}
+
 void CtControl::getStatus(Status& status) const
 {
   DEB_MEMBER_FUNCT();

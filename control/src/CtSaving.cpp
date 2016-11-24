@@ -1155,6 +1155,11 @@ void CtSaving::_validateFrameHeader(long frame_nr,
   aLock.unlock();
   _postTaskList(aData, task_list);
 }
+void CtSaving::_resetReadyFlag()
+{
+  AutoMutex lock(m_cond.mutex());
+  m_ready_flag = true;
+}
 /** @brief get the frame header.
 
     @param frame_nr the frame id

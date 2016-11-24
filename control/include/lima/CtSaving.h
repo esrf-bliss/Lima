@@ -345,6 +345,7 @@ namespace lima {
 
     void _validateFrameHeader(long frame_nr,
 			      AutoMutex&);
+    void _resetReadyFlag();
 
     CtControl& 			m_ctrl;
 
