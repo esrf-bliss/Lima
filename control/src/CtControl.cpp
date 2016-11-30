@@ -46,6 +46,8 @@
 
 using namespace lima;
 
+static const int ABORT_TASK_PRIORITY = 10;
+
 class CtControl::_LastBaseImageReadyCallback : public TaskEventCallback
 {
 public:
@@ -658,7 +660,7 @@ void CtControl::abortAcq(AcqStatus acq_status, ErrorCode error_code,
   abort_task->setEventCallback(abort_cb);
   abort_cb->unref();
 
-  TaskMgr *mgr = new TaskMgr();
+  TaskMgr *mgr = new TaskMgr(ABORT_TASK_PRIORITY);
   mgr->setInputData(data);
   mgr->addSinkTask(0, abort_task);
   abort_task->unref();
