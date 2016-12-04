@@ -149,6 +149,9 @@ ifneq ($(COMPILE_PIXIRAD), 0)
 sip-modules += pixirad
 endif
 
+ifneq ($(COMPILE_HEXITEC), 0)
+sip-modules += hexitec
+endif
 
 
 all:	src

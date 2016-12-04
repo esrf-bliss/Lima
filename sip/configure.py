@@ -63,8 +63,9 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('aviex',            [os.path.join('camera','aviex')]),
            ('ultra',            [os.path.join('camera','ultra')]),
            ('meta',             [os.path.join('camera','common','meta')]),
-           ('v4l2',         [os.path.join('camera','v4l2')]),
+           ('v4l2',             [os.path.join('camera','v4l2')]),
            ('eiger',            [os.path.join('camera','eiger')]),
+           ('hexitec',          [os.path.join('camera','hexitec')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -203,7 +204,12 @@ def main():
             extraIncludes += ['../../camera/maxipix/tools/src']
         elif(modName == 'pixirad'):
             extra_cxxflags += ['-std=c++11']
-	extraIncludes += findModuleIncludes(modName)
+            extraIncludes += findModuleIncludes(modName)
+        elif (modName == 'hexitec'):
+            extraIncludes += ['../../camera/hexitec/sdk','/opt/pleora/ebus_sdk/CentOS-RHEL-7-x86_64/include']
+            extra_cxxflags += ['-std=c++11']
+            extra_cxxflags += ['-DSIPCOMPILATION']
+        extraIncludes += findModuleIncludes(modName)
         if (modName == 'roperscientific'):
             extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
         

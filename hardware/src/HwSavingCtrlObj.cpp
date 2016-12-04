@@ -104,65 +104,70 @@ HwSavingCtrlObj::~HwSavingCtrlObj()
 #endif
 }
 
-void HwSavingCtrlObj::setActive(bool flag)
+void HwSavingCtrlObj::setActive(bool flag, int stream_idx)
 {
   _setActive(flag);
   m_active = flag;
 }
 
-bool HwSavingCtrlObj::isActive() const
+bool HwSavingCtrlObj::isActive(int stream_idx) const
 {
   return m_active;
 }
-void HwSavingCtrlObj::setDirectory(const std::string& directory)
+void HwSavingCtrlObj::setDirectory(const std::string& directory, int stream_idx)
 {
   m_directory = directory;
 }
 
-void HwSavingCtrlObj::setPrefix(const std::string& prefix)
+void HwSavingCtrlObj::setPrefix(const std::string& prefix, int stream_idx)
 {
   m_prefix = prefix;
 }
-void HwSavingCtrlObj::setSuffix(const std::string& suffix)
+void HwSavingCtrlObj::setSuffix(const std::string& suffix, int stream_idx)
 {
   m_suffix = suffix;
 }
-void HwSavingCtrlObj::setOptions(const std::string& options)
+void HwSavingCtrlObj::setOptions(const std::string& options, int stream_idx)
 {
   m_options = options;
 }
-void HwSavingCtrlObj::setNextNumber(long number)
+void HwSavingCtrlObj::setNextNumber(long number, int stream_idx)
 {
   m_next_number = number;
 }
-void HwSavingCtrlObj::setIndexFormat(const std::string& indexFormat)
+void HwSavingCtrlObj::setIndexFormat(const std::string& indexFormat, int stream_idx)
 {
   m_index_format = indexFormat;
 }
-void HwSavingCtrlObj::setFramesPerFile(long frames_per_file)
+void HwSavingCtrlObj::setFramesPerFile(long frames_per_file, int stream_idx)
 {
   m_frames_per_file = frames_per_file;
 }
-void HwSavingCtrlObj::setSaveFormat(const std::string &format)
+void HwSavingCtrlObj::setSaveFormat(const std::string &format, int stream_idx)
 {
   m_file_format = format;
 }
-void HwSavingCtrlObj::setOverwritePolicy(const std::string &overwritePolicy)
+void HwSavingCtrlObj::setOverwritePolicy(const std::string &overwritePolicy, int stream_idx)
 {
   m_overwritePolicy = overwritePolicy;
 }
 
-
-/** @brief write manualy a frame
+/** @brief write manually a frame
  */
-void HwSavingCtrlObj::writeFrame(int,int)
+void HwSavingCtrlObj::writeFrame(HwFrameInfoType& info, int stream_idx)
 {
   DEB_MEMBER_FUNCT();
   THROW_HW_ERROR(NotSupported) << "No available for this Hardware";
 }
-/** @brief write manualy a frame
+
+void HwSavingCtrlObj::writeFrame(int,int, int stream_idx)
+{
+  DEB_MEMBER_FUNCT();
+  THROW_HW_ERROR(NotSupported) << "No available for this Hardware";
+}
+/** @brief read manually a frame
  */
-void HwSavingCtrlObj::readFrame(HwFrameInfoType&,int)
+void HwSavingCtrlObj::readFrame(HwFrameInfoType&,int, int stream_idx)
 {
   DEB_MEMBER_FUNCT();
   THROW_HW_ERROR(NotSupported) << "No available for this Hardware";
@@ -184,13 +189,13 @@ void HwSavingCtrlObj::resetCommonHeader()
   THROW_HW_ERROR(NotSupported) << "No available for this Hardware";
 }
 
-void HwSavingCtrlObj::prepare()
+void HwSavingCtrlObj::prepare(int stream_idx)
 {
   DEB_MEMBER_FUNCT();
 
-  if(m_active)
+  if(isActive(stream_idx))
     {
-      _prepare();
+      _prepare(stream_idx);
 #ifdef __linux__
       DirectoryEvent::Parameters params;
       params.watch_path = m_directory;
@@ -207,11 +212,11 @@ void HwSavingCtrlObj::prepare()
     }
 }
 
-void HwSavingCtrlObj::start()
+void HwSavingCtrlObj::start(int stream_idx)
 {
   DEB_MEMBER_FUNCT();
 
-  if(m_active)
+  if(isActive(stream_idx))
     {
       _start();
 #ifdef __linux__
@@ -220,7 +225,7 @@ void HwSavingCtrlObj::start()
 #endif
     }
 }
-void HwSavingCtrlObj::stop()
+void HwSavingCtrlObj::stop(int stream_idx)
 {
 #ifdef __linux__
   if(m_directory_event)
@@ -251,7 +256,7 @@ void HwSavingCtrlObj::unregisterCallback(HwSavingCtrlObj::Callback *cbk)
   m_callback = NULL;
 }
 
-std::string HwSavingCtrlObj::_getFullPath(int image_number) const
+std::string HwSavingCtrlObj::_getFullPath(int image_number, int stream_idx) const
 {
   char nbBuffer[32];
   snprintf(nbBuffer,sizeof(nbBuffer),
