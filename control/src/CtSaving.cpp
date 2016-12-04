@@ -1652,76 +1652,87 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
     this methode will resetLastFrameNb if mode is AutoSave
     and validate the parameter for this new acquisition
  */
-void CtSaving::_prepare(CtControl& ct)
-{
-  DEB_MEMBER_FUNCT();
+void CtSaving::_prepare(CtControl& ct) {
+    DEB_MEMBER_FUNCT();
 
-  if(hasAutoSaveMode()) 
-    resetLastFrameNb();
-  else
-    DEB_TRACE() << "No auto save activated";
+    if (hasAutoSaveMode())
+        resetLastFrameNb();
+    else
+        DEB_TRACE() << "No auto save activated";
 
-  AutoMutex aLock(m_cond.mutex());
-  if(m_managed_mode == Software)
-    {
-      m_need_compression = false;
+    AutoMutex aLock(m_cond.mutex());
+    if (m_managed_mode == Software) {
+        m_need_compression = false;
 
-      //prepare all the active streams
-      for (int s = 0; s < m_nb_stream; ++s) {
-	Stream& stream = getStream(s);
-	if (stream.isActive()) {
-	  aLock.unlock();
-	  stream.prepare(ct);
-	  aLock.lock();
-	  if (stream.needCompression())
-	    m_need_compression = true;
-	}
-      }
+        //prepare all the active streams
+        for (int s = 0; s < m_nb_stream; ++s) {
+            Stream& stream = getStream(s);
+            if (stream.isActive()) {
+                aLock.unlock();
+                stream.prepare(ct);
+                aLock.lock();
+                if (stream.needCompression())
+                    m_need_compression = true;
+            }
+        }
 
-      m_nb_save_cbk = 0;
-      m_nb_compression_cbk.clear();
+        m_nb_save_cbk = 0;
+        m_nb_compression_cbk.clear();
 
-      if(m_has_hwsaving)
-	{
-	  m_hwsaving->stop();
-	  m_hwsaving->setActive(false);
-	}
+        if (m_has_hwsaving) {
+            m_hwsaving->stop();
+            m_hwsaving->setActive(false);
+        }
+    } else {
+        for (int s = 0; s < m_nb_stream; ++s) {
+            const Stream& stream = getStream(s);
+            if (stream.isActive()) {
+            Parameters params = stream.getParameters(Auto);
+
+            m_hwsaving->setDirectory(params.directory, s);
+            m_hwsaving->setPrefix(params.prefix, s);
+            m_hwsaving->setSuffix(params.suffix, s);
+            m_hwsaving->setOptions(params.options, s);
+            m_hwsaving->setNextNumber(params.nextNumber, s);
+            m_hwsaving->setIndexFormat(params.indexFormat, s);
+            m_hwsaving->setOverwritePolicy(convert_2_string(params.overwritePolicy), s);
+            m_hwsaving->setFramesPerFile(params.framesPerFile, s);
+            std::string fileFormat;
+            switch (params.fileFormat) {
+            case RAW:
+                fileFormat = HwSavingCtrlObj::RAW_FORMAT_STR;
+                break;
+            case EDF:
+                fileFormat = HwSavingCtrlObj::EDF_FORMAT_STR;
+                break;
+            case CBFFormat:
+                fileFormat = HwSavingCtrlObj::CBF_FORMAT_STR;
+                break;
+            case HARDWARE_SPECIFIC:
+                fileFormat = m_specific_hardware_format;
+                break;
+            case TIFFFormat:
+                fileFormat = HwSavingCtrlObj::TIFF_FORMAT_STR;
+                break;
+            case HDF5:
+                fileFormat = HwSavingCtrlObj::HDF5_FORMAT_STR;
+                break;
+            default:
+                THROW_CTL_ERROR(NotSupported) << "Not supported yet";
+                break;
+            }
+
+            if (!_checkHwFileFormat(fileFormat))
+                THROW_CTL_ERROR(NotSupported) << "Hardware doesn't support " << DEB_VAR1(fileFormat);
+
+            m_hwsaving->setSaveFormat(fileFormat, s);
+            m_hwsaving->setActive(true, s);
+            m_hwsaving->prepare(s);
+            m_hwsaving->start(s);
+            }
+        }
     }
-  else
-    {
-      const Stream& stream = getStream(0);
-      Parameters params = stream.getParameters(Auto);
-
-      m_hwsaving->setDirectory(params.directory);
-      m_hwsaving->setPrefix(params.prefix);
-      m_hwsaving->setSuffix(params.suffix);
-      m_hwsaving->setOptions(params.options);
-      m_hwsaving->setNextNumber(params.nextNumber);
-      m_hwsaving->setIndexFormat(params.indexFormat);
-      m_hwsaving->setOverwritePolicy(convert_2_string(params.overwritePolicy));
-      m_hwsaving->setFramesPerFile(params.framesPerFile);
-      std::string fileFormat;
-      switch(params.fileFormat)
-	{
-	case RAW: fileFormat = HwSavingCtrlObj::RAW_FORMAT_STR;break;
-	case EDF: fileFormat = HwSavingCtrlObj::EDF_FORMAT_STR;break;
-	case CBFFormat: fileFormat = HwSavingCtrlObj::CBF_FORMAT_STR;break;
-	case HARDWARE_SPECIFIC: fileFormat = m_specific_hardware_format;break;
-	case TIFFFormat: fileFormat = HwSavingCtrlObj::TIFF_FORMAT_STR;break;
-	case HDF5: fileFormat = HwSavingCtrlObj::HDF5_FORMAT_STR;break;
-	default:
-	  THROW_CTL_ERROR(NotSupported) << "Not supported yet";break;
-	}
-
-      if(!_checkHwFileFormat(fileFormat))
-	THROW_CTL_ERROR(NotSupported) << "Hardware doesn't support " << DEB_VAR1(fileFormat);
-
-      m_hwsaving->setSaveFormat(fileFormat);
-      m_hwsaving->setActive(true);
-      m_hwsaving->prepare();
-      m_hwsaving->start();
-    }
-  m_saving_stop = false;
+    m_saving_stop = false;
 }
 
 void CtSaving::_stop(CtControl&)

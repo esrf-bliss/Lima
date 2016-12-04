@@ -52,32 +52,32 @@ namespace lima
 			     bool directory_event = true);
     virtual ~HwSavingCtrlObj();
     
-    void setActive(bool);
-    bool isActive() const;
+    virtual void setActive(bool, int stream_idx=0);
+    virtual bool isActive(int stream_idx=0) const;
 
-    void setDirectory(const std::string&);
-    void setPrefix(const std::string&);
-    void setSuffix(const std::string&);
-    void setOptions(const std::string&);
-    void setNextNumber(long number);
-    void setIndexFormat(const std::string&);
-    void setOverwritePolicy(const std::string &overwritePolicy);
-    void setFramesPerFile(long);
-
-    void setSaveFormat(const std::string &format);
+    virtual void setDirectory(const std::string&, int stream_idx=0);
+    virtual void setPrefix(const std::string&, int stream_idx=0);
+    virtual void setSuffix(const std::string&, int stream_idx=0);
+    virtual void setOptions(const std::string&, int stream_idx=0);
+    virtual void setNextNumber(long number, int stream_idx=0);
+    virtual void setIndexFormat(const std::string&, int stream_idx=0);
+    virtual void setOverwritePolicy(const std::string &overwritePolicy, int stream_idx=0);
+    virtual void setFramesPerFile(long, int stream_idx=0);
+    virtual void setSaveFormat(const std::string &format, int stream_idx=0);
     virtual void getPossibleSaveFormat(std::list<std::string> &format_list) const = 0;
 
     int getCapabilities() const;
 
-    virtual void writeFrame(int frame_nr = -1,int nb_frames = 1);
-    virtual void readFrame(HwFrameInfoType&,int frame_nr);
+    virtual void writeFrame(HwFrameInfoType& info, int stream_idx=0);
+    virtual void writeFrame(int frame_nr = -1,int nb_frames = 1, int stream_idx=0);
+    virtual void readFrame(HwFrameInfoType&,int frame_nr, int stream_idx=0);
 
     virtual void setCommonHeader(const HeaderMap&);
     virtual void resetCommonHeader();
 
-    void prepare();
-    void start();
-    void stop();
+    void prepare(int stream_idx=0);
+    void start(int stream_idx=0);
+    void stop(int stream_idx=0);
 
     class Callback
     {
@@ -93,12 +93,12 @@ namespace lima
     void unregisterCallback(Callback *cbk);
 
   protected:
-    virtual void _setActive(bool) {}
-    virtual void _prepare() {}
-    virtual void _start() {}
+    virtual void _setActive(bool, int stream_idx=0) {}
+    virtual void _prepare(int stream_idx=0) {}
+    virtual void _start(int stream_idx=0) {}
     /** @brief return the full path of acquired image
      */
-    std::string _getFullPath(int image_number) const;
+    std::string _getFullPath(int image_number, int stream_idx=0) const;
 
     int		m_caps;
 
@@ -114,7 +114,7 @@ namespace lima
     long	m_frames_per_file;
 
     Callback*	m_callback;
-  private:
+  protected:
     bool m_directory_event;
     class DirectoryCallback;
 
