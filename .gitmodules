@@ -135,4 +135,4 @@
 	url = git://github.com/esrf-bliss/Lima-camera-pixirad.git
 [submodule "camera/hexitec"]
 	path = camera/hexitec
-	url = git://github.com/grm84/Lima-camera-hexitec.git
+	url = git://github.com/esrf-bliss/Lima-camera-hexitec.git
