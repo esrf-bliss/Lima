@@ -247,6 +247,12 @@ PIXIRAD_FULL_VERSION = $(shell cat camera/pixirad/VERSION)
 INSTALL_PIXIRAD_VDIR = $(INSTALL_PIXIRAD_DIR)/v$(PIXIRAD_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_HEXITEC), 0)
+INSTALL_HEXITEC_DIR = $(INSTALL_PLAT_DIR)/Hexitec
+HEXITEC_FULL_VERSION = $(shell cat camera/hexitec/VERSION)
+INSTALL_HEXITEC_VDIR = $(INSTALL_HEXITEC_DIR)/v$(HEXITEC_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -659,4 +665,14 @@ ifneq ($(COMPILE_PIXIRAD), 0)
 	cp -d build/liblimapixirad.so* $(INSTALL_LIB_DIR)
 	cp sip/pixirad/limapixirad.so $(INSTALL_PIXIRAD_VDIR)
 	cp camera/pixirad/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_HEXITEC), 0)
+	mkdir -p $(INSTALL_HEXITEC_VDIR)
+	cp camera/hexitec/python/__init__.py $(INSTALL_HEXITEC_DIR)
+	$(call install_core_dep,$(INSTALL_HEXITEC_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimahexitec.so*
+	cp -d build/liblimahexitec.so* $(INSTALL_LIB_DIR)
+	cp sip/hexitec/limahexitec.so $(INSTALL_HEXITEC_VDIR)
+	cp camera/hexitec/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
