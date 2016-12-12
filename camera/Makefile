@@ -232,8 +232,20 @@ ifneq ($(COMPILE_DEXELA),0)
 sub-dirs += dexela
 endif
 
+ifndef COMPILE_PIXIRAD
+COMPILE_PIXIRAD = 0
+endif
+
 ifneq ($(COMPILE_PIXIRAD),0)
 sub-dirs += pixirad
+endif
+
+ifndef COMPILE_HEXITEC
+COMPILE_HEXITEC = 0
+endif
+
+ifneq ($(COMPILE_HEXITEC),0)
+sub-dirs += hexitec
 endif
 
 include ../global.inc
