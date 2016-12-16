@@ -254,7 +254,8 @@ namespace lima {
       virtual ~SaveContainer();
       
       Params2Handler::value_type open(FrameParameters&);
-      void close(const CtSaving::Parameters* = NULL);	// if NULL mean all
+      void close(const CtSaving::Parameters* = NULL,	// if NULL mean all
+		 bool force_close = false);
       void writeFile(Data&,CtSaving::HeaderMap &);
       void setStatisticSize(int aSize);
       int  getStatisticSize() const;
@@ -470,7 +471,7 @@ namespace lima {
 		       bool keep_in_map);
       void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header, 
 			TaskList& task_list);
-      void _postTaskList(Data&, const TaskList&);
+      void _postTaskList(Data&, const TaskList&, int priority);
       void _compressionFinished(Data&, Stream&);
       void _saveFinished(Data&, Stream&);
       void _setSavingError(CtControl::ErrorCode);

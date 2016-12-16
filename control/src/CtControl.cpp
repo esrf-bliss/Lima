@@ -315,6 +315,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_op_ext_sink_task_active(false),
   m_base_images_ready(CtControl::ltData()),
   m_images_ready(CtControl::ltData()),
+  m_images_saved(CtControl::ltData()),
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
@@ -465,6 +466,12 @@ void CtControl::prepareAcq()
 
   resetStatus(false);
   
+  //Clear all re-ordered image counters
+  m_images_ready.clear();
+  m_base_images_ready.clear();
+  m_images_buffer.clear();
+  m_images_saved.clear();
+
   //Clear common header
   m_ct_saving->resetInternalCommonHeader();
 
@@ -537,9 +544,6 @@ void CtControl::prepareAcq()
     m_ct_sps_image->prepare(dim);
   }
 #endif
-  m_images_ready.clear();
-  m_base_images_ready.clear();
-  m_images_buffer.clear();
   m_ct_video->_prepareAcq();
   m_ct_event->_prepareAcq();
 
@@ -999,28 +1003,11 @@ void CtControl::newBaseImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
-  long expectedImageReady = m_status.ImageCounters.LastBaseImageReady + 1;
-  if(aData.frameNumber == expectedImageReady)
-    {
-      while(!m_base_images_ready.empty())
-	{
-	  std::set<Data,ltData>::iterator i = m_base_images_ready.begin();
-	  long nextExpectedImageReady = expectedImageReady + 1;
-	  if(nextExpectedImageReady == i->frameNumber)
-	    {
-	      expectedImageReady = nextExpectedImageReady;
-	      m_base_images_ready.erase(i);
-	    }
-	  else
-	    break;
-	}
-      ImageStatus &imgStatus = m_status.ImageCounters;
-      imgStatus.LastBaseImageReady = expectedImageReady;
-      if(!m_op_ext_link_task_active)
-	imgStatus.LastImageReady = expectedImageReady;
-    }
-  else
-    m_base_images_ready.insert(aData);
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  imgStatus.LastBaseImageReady = _increment_image_cnt(aData,imgStatus.LastBaseImageReady,
+						      m_base_images_ready);
+  if(!m_op_ext_link_task_active)
+    imgStatus.LastImageReady = imgStatus.LastBaseImageReady;
 
   aLock.unlock();
 
@@ -1049,25 +1036,10 @@ void CtControl::newImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
-  long expectedImageReady = m_status.ImageCounters.LastImageReady + 1;
-  if(aData.frameNumber == expectedImageReady)
-    {
-      while(!m_images_ready.empty())
-	{
-	  std::set<Data,ltData>::iterator i = m_images_ready.begin();
-	  long nextExpectedImageReady = expectedImageReady + 1;
-	  if(nextExpectedImageReady == i->frameNumber)
-	    {
-	      expectedImageReady = nextExpectedImageReady;
-	      m_images_ready.erase(i);
-	    }
-	  else
-	    break;
-	}
-      m_status.ImageCounters.LastImageReady = expectedImageReady;
-    }
-  else
-    m_images_ready.insert(aData);
+
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  imgStatus.LastImageReady = _increment_image_cnt(aData,imgStatus.LastImageReady,
+						  m_images_ready);
 
   m_images_buffer.insert(std::pair<int,Data>(aData.frameNumber,aData));
   //pop out the oldest Data
@@ -1097,6 +1069,33 @@ void CtControl::newCounterReady(Data&)
   aLock.unlock();
   _calcAcqStatus();
 }
+/** function to re-order image counters
+ */
+
+long CtControl::_increment_image_cnt(Data& aData,
+				     long image_cnt,SortedDataType& cnt)
+{
+  long expectedImageCnt = image_cnt + 1;
+  if(aData.frameNumber == expectedImageCnt)
+    {
+      while(!cnt.empty())
+	{
+	  SortedDataType::iterator i = cnt.begin();
+	  long nextExpectedImageCnt = expectedImageCnt + 1;
+	  if(nextExpectedImageCnt == i->frameNumber)
+	    {
+	      expectedImageCnt = nextExpectedImageCnt;
+	      cnt.erase(i);
+	    }
+	  else
+	    break;
+	}
+      return expectedImageCnt;
+    }
+  else
+    cnt.insert(aData);
+  return image_cnt;
+}
 
 /** @brief inc the save counter.
  *  @warning due to sequential saving, no check with image number!!!
@@ -1108,10 +1107,9 @@ void CtControl::newImageSaved(Data &data)
   CtSaving::ManagedMode savingManagedMode;
   m_ct_saving->getManagedMode(savingManagedMode);
   AutoMutex aLock(m_cond.mutex());
-  if(m_status.ImageCounters.LastImageSaved < data.frameNumber)
-    m_status.ImageCounters.LastImageSaved = data.frameNumber;
-  else
-    return;
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  imgStatus.LastImageSaved = _increment_image_cnt(data,imgStatus.LastImageSaved,
+						  m_images_saved);
 
   if(savingManagedMode == CtSaving::Hardware)
     {

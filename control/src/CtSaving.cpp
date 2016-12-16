@@ -64,7 +64,8 @@
 using namespace lima;
 
 static const char DIR_SEPARATOR = '/';
-
+static const int COMPRESSION_PRIORITY = 0;
+static const int SAVING_PRIORITY = 1;
 /** @brief save task class
  */
 class CtSaving::Stream::_SaveTask : public SinkTaskBase
@@ -1210,7 +1211,8 @@ void CtSaving::_validateFrameHeader(long frame_nr,
     m_frame_datas.erase(frame_iter);
    }
   aLock.unlock();
-  _postTaskList(aData, task_list);
+  _postTaskList(aData, task_list,
+		m_need_compression ? COMPRESSION_PRIORITY : SAVING_PRIORITY);
 }
 void CtSaving::_resetReadyFlag()
 {
@@ -1391,7 +1393,8 @@ void CtSaving::frameReady(Data &aData)
   _getTaskList(task_type, frame_nr, task_header, task_list);
 
   aLock.unlock();
-  _postTaskList(aData, task_list);
+  _postTaskList(aData, task_list,
+		m_need_compression ? COMPRESSION_PRIORITY: SAVING_PRIORITY);
 }
 /** @brief get write statistic
     this is the last write time
@@ -1588,12 +1591,13 @@ void CtSaving::_synchronousSaving(Data &anImage2Save,HeaderMap &header)
     stream.writeFile(anImage2Save, header);
   }
 }
-void CtSaving::_postTaskList(Data& aData, const TaskList& task_list)
+void CtSaving::_postTaskList(Data& aData,
+			     const TaskList& task_list,int priority)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(aData, task_list.size());
 
-  TaskMgr *aSavingMgrPt = new TaskMgr();
+  TaskMgr *aSavingMgrPt = new TaskMgr(priority);
   aSavingMgrPt->setEventCallback(m_saving_error_handler);
 
   TaskList::const_iterator it, end = task_list.end();
@@ -1636,7 +1640,7 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
   _getTaskList(Save, frame_nr, header, task_list);
 
   aLock.unlock();
-  _postTaskList(aData, task_list);
+  _postTaskList(aData, task_list,SAVING_PRIORITY);
 }
 
 void CtSaving::_saveFinished(Data &aData, Stream& stream)
@@ -1687,7 +1691,7 @@ void CtSaving::_saveFinished(Data &aData, Stream& stream)
       _getTaskList(Save, nextDataIter->first, task_header, task_list);
       m_frame_datas.erase(nextDataIter);
       aLock.unlock();
-      _postTaskList(aNewData, task_list);
+      _postTaskList(aNewData, task_list, SAVING_PRIORITY);
       break;
     }
 }
@@ -1912,8 +1916,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
     }
 
   lock.lock();
-  if(m_written_frames < (frameId + 1))
-    m_written_frames = frameId + 1;
+  ++m_written_frames;
   
   m_frame_params.erase(frameId);
   --m_running_writing_task;
@@ -1923,7 +1926,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
      m_written_frames == m_nb_frames_to_write) // Close file at the end of acquisition
     {
     try {
-      close(&pars);
+      close(&pars,m_written_frames == m_nb_frames_to_write);
     } catch (...) {
       m_stream.setSavingError(CtControl::SaveCloseError);
       THROW_CTL_ERROR(Error) << "Save file close error";
@@ -2001,7 +2004,7 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
   if(m_nb_frames_to_write && 	// if not live
      pars.savingMode != CtSaving::Manual)
     {
-      long nextNumber = pars.nextNumber;
+      long nextNumber = pars.nextNumber - 1;
       for(long i = 0;i < nb_frames;++i)
 	{
 	  FrameParameters frame_par(pars);
@@ -2011,9 +2014,9 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	  else
 	    {
 	      bool new_file = !(i % pars.framesPerFile);
+	      if(new_file) ++nextNumber;
 	      frame_par.m_pars.nextNumber = nextNumber;
 	      frame_par.m_threadable = new_file;
-	      if(new_file) ++nextNumber;
 	    }  
 	  std::pair<Frame2Params::iterator,bool> result = 
 	    m_frame_params.insert(Frame2Params::value_type(i,frame_par));
@@ -2199,7 +2202,8 @@ CtSaving::SaveContainer::open(FrameParameters &fpars)
   return Params2Handler::value_type(CtSaving::Parameters(),Handler());
 }
 
-void CtSaving::SaveContainer::close(const CtSaving::Parameters* params)
+void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
+				    bool force_close)
 {
   DEB_MEMBER_FUNCT();
 
@@ -2217,7 +2221,7 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params)
   else
     {
       Params2Handler::iterator handler = m_params_handler.find(*params);
-      if(!--handler->second.m_nb_frames)
+      if(force_close || !--handler->second.m_nb_frames)
 	{
 	  void* raw_handler = handler->second.m_handler;
 	  const Parameters frame_pars = handler->first;
