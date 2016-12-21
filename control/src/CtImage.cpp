@@ -979,6 +979,11 @@ void CtImage::reset()
 	m_sw->reset();
 
 	// Resync FrameDim just in case
+	syncDim();
+}
+
+void CtImage::syncDim()
+{
 	m_hw_det->getMaxImageSize(m_max_size);
 	m_hw_det->getCurrImageType(m_img_type);
 	m_next_image_type = m_img_type;

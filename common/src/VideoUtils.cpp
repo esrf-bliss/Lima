@@ -3,7 +3,7 @@
 #include "lima/VideoUtils.h"
 using namespace lima;
 
-/** func tool to convert from color 2 yuv
+/** func tool to convert from color to Y only (luma) for greyscale image
  */
 inline void _rgb555_2_yuv(const unsigned char *data,unsigned char *luma,
 			   int column,int row)
@@ -148,6 +148,19 @@ inline void _bayer_bg_2_yuv(const xClass* bayer0,xClass* luma,
   _bayer_2_yuv<xClass>(bayer0,luma,column,row,-1,0);
 }
 
+inline void _yuv422packed_2_yuv(const unsigned char *data,unsigned char *luma,
+			int column,int row)
+{
+  // format 4 bytes for 2 pixels U and V common for 2pixels: |U0|Y0|V0|Y1|  |U2|Y2|V2|Y3|
+  // so Y (luma) is every 2 bytes
+  long nbIter = column * row /2;
+  --nbIter;
+  for(const unsigned char *src = data+1; nbIter; --nbIter, src += 4, luma+=2)
+    {
+      luma[0] = src[0];
+      luma[1] = src[2];
+    }
+}
 
 void lima::data2Image(Data &aData,VideoImage &anImage)
 {
@@ -180,6 +193,9 @@ void lima::data2Image(Data &aData,VideoImage &anImage)
     }
 }
 
+/*
+ * convert the video color image to Y (luma only) greyscale image
+ */
 void lima::image2YUV(const unsigned char *srcPt,int width,int height,VideoMode mode,
 		     unsigned char *dst)
 {
@@ -201,6 +217,8 @@ void lima::image2YUV(const unsigned char *srcPt,int width,int height,VideoMode m
     case YUV444:
       memcpy(dst,srcPt,width * height);
       break;
+    case YUV422PACKED:
+      _yuv422packed_2_yuv(srcPt,dst,width,height);
     case RGB555:
       _rgb555_2_yuv(srcPt,dst,width,height);
       break;

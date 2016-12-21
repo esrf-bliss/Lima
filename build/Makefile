@@ -228,7 +228,7 @@ PYLON_CONFIG    := $(PYLON_ROOT)/bin/pylon-config
 
 ifeq ("$(wildcard $(PYLON_CONFIG))", "")
 BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L$(PYLON_ROOT)/lib -L$(PYLON_ROOT)/lib64
-BASLER_LDLIBS	:= $(LDLIBS) -lpylonbase
+BASLER_LDLIBS	:= $(LDLIBS) -lpylonbase -lpylongigesupp
 else
 BASLER_LDFLAGS  := $(LDFLAGS) $(shell $(PYLON_CONFIG) --libs-only-L)
 BASLER_LDLIBS   := $(LDLIBS) $(shell $(PYLON_CONFIG) --libs-only-l)

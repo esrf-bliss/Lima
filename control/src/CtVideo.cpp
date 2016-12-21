@@ -897,7 +897,13 @@ void CtVideo::_apply_params(AutoMutex &aLock,bool aForceLiveFlag)
       if(m_has_video)
 	{
 	  if(m_pars_modify_mask & PARMODIFYMASK_MODE)
-	    m_video->setVideoMode(m_pars.mode);
+	    {
+	      m_video->setVideoMode(m_pars.mode);
+	      CtImage* image = m_ct.image();
+	      // change on video mode can change the image depth,so ask ctimage
+	      // to resynchronize with the camera
+	      image->syncDim();
+	    }
 	  if(m_pars_modify_mask & PARMODIFYMASK_AUTO_GAIN)
 	    m_video->setHwAutoGainMode(m_pars.auto_gain_mode == OFF ? 
 				       HwVideoCtrlObj::OFF : HwVideoCtrlObj::ON);
