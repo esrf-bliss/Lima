@@ -1068,20 +1068,22 @@ void CtImage::applyHard()
 	CtSaving* saving = m_ct.saving();
 
 	Bin bin;getBin(bin);
-	if(!bin.isOne())
-	  saving->addToInternalCommonHeader("binning",bin);
+	saving->addToInternalCommonHeader("image_bin",bin);
 
 	Roi roi;getRoi(roi);
-	if(!roi.isEmpty())
-	  saving->addToInternalCommonHeader("roi",roi);
-
+	if(roi.isEmpty()) {
+	  FrameDim dim;
+	  getImageDim(dim);
+	  const Size &size = dim.getSize();
+	  roi = Roi(0, 0, size.getWidth(), size.getHeight());
+	}	
+	saving->addToInternalCommonHeader("image_roi",roi);
+	
 	Flip flip;getFlip(flip);
-	if(flip.x || flip.y)
-	  saving->addToInternalCommonHeader("flip",flip);
+	saving->addToInternalCommonHeader("image_flip",flip);
 
 	RotationMode rMode;getRotation(rMode);
-	if(rMode != Rotation_0)
-	  saving->addToInternalCommonHeader("rotation",rMode);
+	saving->addToInternalCommonHeader("image_rotation",rMode);
 }
 
 bool CtImage::applySoft(SoftOpInternalMgr *op)

@@ -483,7 +483,7 @@ void CtControl::prepareAcq()
   m_ct_buffer->setup(this);
 
   DEB_TRACE() << "Apply Acquisition Parameters";
-  m_ct_acq->apply(m_policy);
+  m_ct_acq->apply(m_policy, this);
 
   DEB_TRACE() << "Apply Shutter Parameters";
   m_ct_shutter->apply();
