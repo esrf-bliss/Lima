@@ -57,6 +57,7 @@ namespace lima
       switch(m)
 	{
 	case YUV411:
+	case YUV411PACKED:
 	  return 1.5;
 	case BAYER_RG8:
 	case BAYER_BG8:
@@ -69,6 +70,7 @@ namespace lima
 	case I420:
 	case Y16:
 	case YUV422:
+	case YUV422PACKED:
 	  return 2.;
 	case RGB32:
 	case BGR32:
@@ -77,6 +79,7 @@ namespace lima
 	case RGB24:
 	case BGR24:
 	case YUV444:
+	case YUV444PACKED:
 	  return 3.;
 	  
 	default:
@@ -119,6 +122,9 @@ namespace lima
       case YUV411: stringMode = "YUV411";break;
       case YUV422: stringMode = "YUV422";break;
       case YUV444: stringMode = "YUV444";break;
+      case YUV411PACKED: stringMode = "YUV411PACKED";break;
+      case YUV422PACKED: stringMode = "YUV422PACKED";break;
+      case YUV444PACKED: stringMode = "YUV444PACKED";break;
       default:
 	stringMode = "Unknowed";
 	break;
