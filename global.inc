@@ -27,13 +27,13 @@ test-targets  += $(sub-dirs:%=%.test)
 clean-targets += $(sub-dirs:%=%.clean)
 
 $(src-targets):
-	make -C $(@:%.src=%)   src
+	$(MAKE) -C $(@:%.src=%)   src
 
 $(test-targets):
-	make -C $(@:%.test=%)  test 
+	$(MAKE) -C $(@:%.test=%)  test 
 
 $(clean-targets):
-	make -C $(@:%.clean=%) clean
+	$(MAKE) -C $(@:%.clean=%) clean
 
 else
 
@@ -48,13 +48,13 @@ clean-targets += $(test-dirs:%=%.clean)
 endif
 
 $(src-targets):
-	make -C $(@:%.src=%)
+	$(MAKE) -C $(@:%.src=%)
 
 $(test-targets):
-	make -C $(@:%.test=%)
+	$(MAKE) -C $(@:%.test=%)
 
 $(clean-targets):
-	make -C $(@:%.clean=%) clean
+	$(MAKE) -C $(@:%.clean=%) clean
 
 endif
 

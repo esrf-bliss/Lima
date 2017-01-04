@@ -19,6 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+
+.NOTPARALLEL:
+
 include ../config.inc
 
 PROJECTS = processlib.src
@@ -163,11 +166,11 @@ Processlib/sip/Makefile:
 	cd Processlib/sip && python configure.py
 
 Processlib_build_libprocesslib.so:
-	$(MAKE) -C Processlib/build -j2
+	$(MAKE) -C Processlib/build
 
 Processlib/sip/processlib.so:	Processlib_build_libprocesslib.so \
 				Processlib/sip/Makefile
-	$(MAKE) -C Processlib/sip -j2
+	$(MAKE) -C Processlib/sip
 
 sps.src:	Sps/Src/sps.o
 
