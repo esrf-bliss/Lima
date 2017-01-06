@@ -47,7 +47,12 @@ lib-flags	= -fPIC -Wl,-soname,$(call lib-link,$(1),$(2))
 lib-depshcmd	= for p in $(1); do \
                       d=$$(echo $${p} | cut -d, -f1); \
                       l=$$(echo $${p} | cut -d, -f2); \
-                      echo $(2); \
+                      template=$$(echo $${p} | cut -d, -f3); \
+		      if [ ! -z $${template} ] ; then \
+			 eval echo $${template}; \
+		      else \
+                         echo $(2); \
+		      fi \
                   done
 lib-depflagsstr = "-L $${d} -Wl,-rpath=$${d}"
 lib-depflags	= $(shell $(call lib-depshcmd,$(1),$(lib-depflagsstr)))
@@ -76,7 +81,7 @@ CORE_DEPLIBS	:= $(third-party-dir)/Processlib/build,processlib
 
 ifneq ($(COMPILE_CBF_SAVING),0)
 CORE_LDLIBS += -lcrypto
-CORE_DEPLIBS += $(third-party-dir)/CBFLib/lib,cbf
+CORE_DEPLIBS += $(third-party-dir)/CBFLib/lib,cbf,'$${d}/lib$${l}.a'
 endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
