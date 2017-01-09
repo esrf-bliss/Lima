@@ -251,4 +251,12 @@ ifneq ($(COMPILE_HEXITEC),0)
 sub-dirs += hexitec
 endif
 
+ifndef COMPILE_ZWO
+COMPILE_ZWO = 0
+endif
+
+ifneq ($(COMPILE_ZWO),0)
+sub-dirs += zwo
+endif
+
 include ../global.inc

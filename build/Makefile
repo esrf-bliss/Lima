@@ -948,6 +948,32 @@ $(call lib-full,$(hexitec-name),$(hexitec-ver)): $(hexitec-objs)
 build_targets	+= $(call lib-full,$(hexitec-name),$(hexitec-ver))
 endif
 
+############################
+# LIMA - ZWO
+############################
+
+ifneq ($(COMPILE_ZWO),0)
+
+ZWO_LDFLAGS	:= $(LDFLAGS)
+ZWO_LDLIBS	:= $(LDLIBS)
+
+
+zwo-name	:= zwo
+zwo-objs	:= ../camera/zwo/src/Zwo.o
+zwo-ver		:= ../camera/zwo/VERSION
+zwo-flags	:= $(ZWO_LDFLAGS)
+zwo-deps	:= $(ZWO_LDLIBS)
+zwo-libdeps	:= $(call lib-deps,$(zwo-deps))
+zwo-libfull	:= $(call lib-full,$(zwo-name),$(zwo-ver))
+
+$(zwo-libfull): $(zwo-objs) $(zwo-deps)
+	$(call compile-lib,$(zwo-name),$(zwo-ver),$(zwo-deps),\
+                           $(zwo-flags),$(zwo-libs),$@,$(zwo-objs))
+	$(call create-links,$(zwo-name),$(zwo-ver))
+
+build_targets	+= $(call lib-full,$(zwo-name),$(zwo-ver))
+endif
+
 src:		$(build_targets)
 
 test:

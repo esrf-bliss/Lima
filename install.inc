@@ -253,6 +253,12 @@ HEXITEC_FULL_VERSION = $(shell cat camera/hexitec/VERSION)
 INSTALL_HEXITEC_VDIR = $(INSTALL_HEXITEC_DIR)/v$(HEXITEC_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_ZWO), 0)
+INSTALL_ZWO_DIR = $(INSTALL_PLAT_DIR)/Zwo
+ZWO_FULL_VERSION = $(shell cat camera/zwo/VERSION)
+INSTALL_ZWO_VDIR = $(INSTALL_ZWO_DIR)/v$(ZWO_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -675,4 +681,14 @@ ifneq ($(COMPILE_HEXITEC), 0)
 	cp -d build/liblimahexitec.so* $(INSTALL_LIB_DIR)
 	cp sip/hexitec/limahexitec.so $(INSTALL_HEXITEC_VDIR)
 	cp camera/hexitec/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_ZWO), 0)
+	mkdir -p $(INSTALL_ZWO_VDIR)
+	cp camera/zwo/python/__init__.py $(INSTALL_ZWO_DIR)
+	$(call install_core_dep,$(INSTALL_ZWO_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimazwo.so*
+	cp -d build/liblimazwo.so* $(INSTALL_LIB_DIR)
+#	cp sip/zwo/limazwo.so $(INSTALL_ZWO_VDIR)
+#	cp camera/zwo/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

@@ -136,3 +136,6 @@
 [submodule "camera/hexitec"]
 	path = camera/hexitec
 	url = git://github.com/esrf-bliss/Lima-camera-hexitec
+[submodule "camera/zwo"]
+	path = camera/zwo
+	url = git://github.com/esrf-bliss/Lima-camera-zwo.git
