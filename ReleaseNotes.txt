@@ -6,6 +6,65 @@ You can find information releated to new features and bug fixes. The notes are o
 The notes are prefixed with a category name for core, subsystems image/saving/processlib/..., camera names andor/andor3/basler...,  windows, applications tango python/tango c++/spec and third-party submodules sps/processlib/...
 
 
+Stable branch core-1.7
+----------------------
+
+core-1.7.2 2017-02-03
+Bug Fixes
+ * video: Fixed an inconsistency for scientific (monochrome) camera between
+   getSupportedVideoMode() and getMode().
+
+core-1.7.1 2017-01-06
+Features
+  * new tag 1.7.0 for cameras: andor/andor3/basler/dexela/espia/frelon/
+    maxipix/perkinelmer/pixirad/pointgrey/prosilica/roperscientific/simulator/
+    ueye/v4l2/xh
+
+Bug Fixes
+  * maxipix: maxipix-1.7.1, Fixed for setFillMode, 2 reconstructionTask objects
+    created one passed to HwInterface the other kept internally in Camera object
+  * basler: basler-1.7.2,  fixed monochrome vs. color mode
+  * basler: basler.-1.7.1, fixed bug introduced in 1.7.0 for Roi increments
+  * saving cbf: fixed Makefile + bison parser generation
+    New patch version just for CBF compilation
+
+core-1.7.0 2017-04-01
+Features
+  * Makefile: Improve Makefile library dependency definitions for parallel build
+  * tango: server with new saving statistics and with abort command
+  * basler: for color camera added yuv422packed video format
+  
+  * saving header: add acquisiton and images parameters
+  
+  * saving: added statistics.    
+    We can now have saving, compression and incoming speed statistics
+    changing cbf,edf,fits,hdf5,nxs and tiff to manage statistics
+    
+  * software operation: add possibility to force a copy for the first operation 
+    internals operation are normally done in place but it's not always
+    safe with some type of memory.
+    i.e: You can not memove on a memory map, this cause a crash.
+
+  * saving: we can now write severals frames in parallel.
+    To control saving concurrency, you have to change the number of writing task
+    with method get/setMaxConcurrentWritingTask.
+    This commit contains also a small fix for write statistics:
+    As we recreate the container when changing saving type, thoses parameters
+    were not keeped.
+    We now set event callback in case of error when writing.
+    
+  * saving cbf: compession optimisation with CBFMiniHeader format.    
+    For now is only available for INT 32 images.
+  * control: added abort acquisition method
+  * basler: Pylon5 support and find proper pylon link flags
+
+Bug Fixes
+  * video: fixed synchro to image when changing video mode.
+      - WARNING: only applied when live is started on already running
+  * saving cbf: fixed a bug in cbf header
+  * image: fixed roi when software operation is activated (rotation,flip...)
+  * image: fixed maximum roi
+
 
 Stable branch core-1.6
 ----------------------
