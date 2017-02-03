@@ -680,7 +680,14 @@ void CtVideo::setMode(VideoMode aMode)
 void CtVideo::getMode(VideoMode &aMode) const
 {
   AutoMutex aLock(m_cond.mutex());
-  aMode = m_pars.mode;
+  if(m_has_video)
+    aMode = m_pars.mode;
+  else
+    {
+      std::list<VideoMode> modeList;
+      getSupportedVideoMode(modeList);
+      aMode = modeList.front();
+    }
 }
 
 void CtVideo::setRoi(const Roi &aRoi)
@@ -769,7 +776,7 @@ void CtVideo::unregisterImageCallback(ImageCallback &cb)
 }
 
 // --- video mode
-void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList)
+void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList) const
 {
   DEB_MEMBER_FUNCT();
 

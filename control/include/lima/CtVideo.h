@@ -132,7 +132,7 @@ namespace lima
     void unregisterImageCallback(ImageCallback &cb);
 
     // --- video mode
-    void getSupportedVideoMode(std::list<VideoMode> &modeList);
+    void getSupportedVideoMode(std::list<VideoMode> &modeList) const;
   private:
     class _Data2ImageCBK;
     friend class _Data2ImageCBK;
