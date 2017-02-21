@@ -204,9 +204,7 @@ void CtSaving::Parameters::checkValid() const
 			                 "multi frame per file";
       break;
 #endif
-#ifndef __unix
-#pragma message ( "--- WARNING / TODO - no cases???" )
-#endif
+	case EDF:
     default:
       break;
     }
@@ -1073,9 +1071,9 @@ void CtSaving::_getTaskList(TaskType type, long frame_nr,
 	task_list.push_back(save_task);
     }
   }
-  int nb_cbk = task_list.size();
+  size_t nb_cbk = task_list.size();
   DEB_TRACE() << DEB_VAR1(nb_cbk);
-  FrameCbkCountMap::value_type map_pair(frame_nr, nb_cbk);
+  FrameCbkCountMap::value_type map_pair(frame_nr, long(nb_cbk));
   m_nb_cbk.insert(map_pair);
 }
 /** @brief clear the common header
@@ -2031,7 +2029,7 @@ void CtSaving::SaveContainer::setStatisticSize(int aSize)
   AutoMutex aLock = AutoMutex(m_cond.mutex());
   if(long(m_statistic.size()) > aSize)
     {
-      int aDiffSize = m_statistic.size() - aSize;
+      size_t aDiffSize = m_statistic.size() - aSize;
       for(StatisticsType::iterator i = m_statistic.begin();
 	  aDiffSize;--aDiffSize)
 	m_statistic.erase(i++);
