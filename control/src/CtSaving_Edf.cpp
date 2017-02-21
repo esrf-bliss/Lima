@@ -324,9 +324,9 @@ __int64 SaveContainerEdf::_OfStream::tellp() const
 }
 
 SaveContainerEdf::_OfStream& 
-SaveContainerEdf::_OfStream::write(const char* data,int size)
+SaveContainerEdf::_OfStream::write(const char* data,size_t size)
 {
-  int nbItemsWritten = fwrite(data,size,1,m_fout);
+  size_t nbItemsWritten = fwrite(data,size,1,m_fout);
   if(nbItemsWritten <= 0 &&
      (m_exc_flag & std::ios_base::badbit))
     throw std::ios_base::failure("Failed to write");

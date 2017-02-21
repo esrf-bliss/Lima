@@ -104,7 +104,7 @@ namespace lima {
       bool is_open() const;
       void close();
       _int64 tellp() const;
-      inline _OfStream& write(const char* data,int size);
+      inline _OfStream& write(const char* data,size_t size);
       inline _OfStream& operator<< (const char *data);
       inline _OfStream& operator<< (const std::string& data);
       inline _OfStream& operator<< (const int data);

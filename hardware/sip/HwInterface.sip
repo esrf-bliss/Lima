@@ -120,4 +120,7 @@ using namespace lima;
 	virtual void getStatus(StatusType& status /Out/) = 0;
 	virtual int getNbAcquiredFrames();
 	virtual int getNbHwAcquiredFrames() = 0;
+	
+	virtual bool firstProcessingInPlace() const ;
+
 };
