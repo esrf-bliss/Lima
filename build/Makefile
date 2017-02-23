@@ -912,7 +912,7 @@ endif
 ifneq ($(COMPILE_SLSDETECTOR),0)
 
 slsdetector-name     := slsdetector
-slsdetector-objs     := ../camera/slsdetector/src/Slsdetector.o
+slsdetector-objs     := ../camera/slsdetector/src/SlsDetector.o
 slsdetector-ver      := ../camera/slsdetector/VERSION
 slsdetector-flags    := $(LDFLAGS)
 slsdetector-libs     := $(LDLIBS)
