@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="LibLimaCore"
 	ProjectGUID="{A4B703A6-C50F-442F-8952-54FB8EA51FF3}"
 	RootNamespace="LimaCore"
@@ -431,6 +431,62 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Release_Win7_Sync|x64"
+			ConfigurationType="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -645,187 +701,203 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\..\common\include\AcqState.h"
+				RelativePath="..\..\..\..\common\include\lima\AcqState.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\AutoObj.h"
+				RelativePath="..\..\..\..\common\include\lima\AutoObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\BufferSave.h"
+				RelativePath="..\..\..\..\common\include\lima\ConfigUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\Constants.h"
+				RelativePath="..\..\..\..\common\include\lima\Constants.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtAccumulation.h"
+				RelativePath="..\..\..\..\control\include\lima\CtAccumulation.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtAcquisition.h"
+				RelativePath="..\..\..\..\control\include\lima\CtAcquisition.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtBuffer.h"
+				RelativePath="..\..\..\..\control\include\lima\CtBuffer.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtConfig.h"
+				RelativePath="..\..\..\..\control\include\lima\CtConfig.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtControl.h"
+				RelativePath="..\..\..\..\control\include\lima\CtControl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtImage.h"
+				RelativePath="..\..\..\..\control\include\lima\CtEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtSaving.h"
+				RelativePath="..\..\..\..\control\include\lima\CtImage.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\src\CtSaving_Cbf.h"
+				RelativePath="..\..\..\..\control\include\lima\CtSaving.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\src\CtSaving_Edf.h"
+				RelativePath="..\..\..\..\control\include\lima\CtShutter.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtShutter.h"
+				RelativePath="..\..\..\..\control\include\lima\CtSpsImage.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\include\CtVideo.h"
+				RelativePath="..\..\..\..\control\include\lima\CtVideo.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\Debug.h"
+				RelativePath="..\..\..\..\common\include\lima\Debug.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\Event.h"
+				RelativePath="..\..\..\..\common\include\lima\DirectoryEventUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\Exceptions.h"
+				RelativePath="..\..\..\..\common\include\lima\Event.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwBinCtrlObj.h"
+				RelativePath="..\..\..\..\common\include\lima\Exceptions.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwBufferCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwBinCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwBufferMgr.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwBufferCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwCap.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwBufferMgr.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwConfigCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwBufferSave.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwDetInfoCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwCap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwFlipCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwConfigCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwFrameCallback.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwDetInfoCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwFrameInfo.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwEventCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwInterface.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwFileEventMgr.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwMaxImageSizeCallback.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwFlipCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwRoiCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwFrameCallback.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwSavingCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwFrameInfo.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwSerialLine.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwInterface.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwShutterCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwMaxImageSizeCallback.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwSyncCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwReconstructionCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\hardware\include\HwVideoCtrlObj.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwRoiCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\MemUtils.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwSavingCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\MiscUtils.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwSerialLine.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\camera\pco\include\PcoInterface.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwShutterCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\SizeUtils.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwSyncCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\software_operation\include\SoftOpExternalMgr.h"
+				RelativePath="..\..\..\..\hardware\include\lima\HwVideoCtrlObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\software_operation\include\SoftOpId.h"
+				RelativePath="..\..\..\..\common\include\lima\LimaCompatibility.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\control\software_operation\include\SoftOpInternalMgr.h"
+				RelativePath="..\..\..\..\common\include\lima\MemUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\StreamUtils.h"
+				RelativePath="..\..\..\..\common\include\lima\MiscUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\ThreadUtils.h"
+				RelativePath="..\..\..\..\common\include\lima\RegExUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\Timestamp.h"
+				RelativePath="..\..\..\..\common\include\lima\SizeUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\common\include\VideoUtils.h"
+				RelativePath="..\..\..\..\common\include\lima\StreamUtils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\include\lima\ThreadUtils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\include\lima\Timer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\include\lima\Timestamp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\common\include\lima\VideoUtils.h"
 				>
 			</File>
 		</Filter>

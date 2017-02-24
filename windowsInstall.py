@@ -1,5 +1,6 @@
 import os,shutil
 import platform
+import sip
 from windowsSipCompilation import getModuleConfig
 from optparse import OptionParser
 
@@ -15,6 +16,15 @@ if platform.machine() == 'AMD64':
 		  ('sip/core/limacore.pyd','Lima'),
 		  ('third-party/Processlib/sip/processlib.pyd','Lima'),
 		  ('third-party/Processlib/build/msvc/9.0/libprocesslib/x64/Release/libprocesslib.dll','Lima')],
+        'pco' : [('camera/pco/python/Pco.py','Lima'),
+                 ('camera/pco/build/msvc/9.0/liblimapco/x64/Release/liblimapco.dll','Lima'),
+                 ('camera/pco/sdkPco/bin64/SC2_Cam.dll','Lima'),
+                 ('camera/pco/sdkPco/bin64/sc2_cl_me4.dll','Lima'),
+                 ('camera/pco/sdkPco/bin64/sc2_clhs.dll','Lima'),
+                 ('camera/pco/sdkPco/bin64/sc2_clhs_v1.3.32.dll','Lima'),
+                 (sip.__file__,''),
+                 ('applications/tango/python/camera/Pco.py','camera'),
+                 ('sip/pco/limapco.pyd','Lima')],
 	'dexela' : [('camera/dexela/python/Dexela.py','Lima'),
 		    ('camera/dexela/src/DexelaConfig.cfg','Lima'),
 		    ('camera/dexela/build/msvc/9.0/LibDexela/x64/Release/liblimadexela.dll','Lima'),
