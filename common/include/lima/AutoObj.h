@@ -103,12 +103,12 @@ private:
 	{
 	public:
 		AutoLockData(M& mutex, int state=Locked) 
-			: m(mutex), l(false), ul_at_end(true)
+			: m(mutex), l(0), ul_at_end(true)
 		{
 			switch (state) { 
 			case Locked:     lock();    break;
 			case TryLocked:  tryLock(); break;
-			case PrevLocked: l = true;  break;
+			case PrevLocked: l = 1;     break;
 			default: break;
 			}
 		}
@@ -132,19 +132,22 @@ private:
 
 		void lock()
 		{ 
-			m.lock(); 
-			l = true; 
+			if (!l++)
+				m.lock(); 
 		}
 
 		void unlock()
 		{ 
-			m.unlock(); 
-			l = false; 
+			if (!--l)
+				m.unlock(); 
 		}
 
 		bool tryLock()
 		{ 
-			l = m.tryLock(); 
+			if (!l)
+				l = m.tryLock(); 
+			else
+				l++;
 			return l;
 		}
 
@@ -162,7 +165,7 @@ private:
 	private:
 		AutoCounter c;
 		M& m;
-		bool l;
+		char l;
 		bool ul_at_end;
 	};
 
@@ -178,6 +181,26 @@ private:
 
 	AutoLockData *d;
 };
+
+
+template <class M>
+class AutoUnlock
+{
+ public:
+	AutoUnlock(const AutoUnlock& o)
+		: l(o.l)
+	{ l.unlock(); }
+	 
+	AutoUnlock(AutoLock<M>& p)
+		: l(p)
+	{ l.unlock(); }
+	 
+	~AutoUnlock()
+	{ l.lock(); }
+	 
+ private:
+	 AutoLock<M>& l;
+ };
 
 
 /********************************************************************
