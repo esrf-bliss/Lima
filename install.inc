@@ -254,7 +254,7 @@ INSTALL_HEXITEC_VDIR = $(INSTALL_HEXITEC_DIR)/v$(HEXITEC_FULL_VERSION)
 endif
 
 ifneq ($(COMPILE_SLSDETECTOR), 0)
-INSTALL_SLSDETECTOR_DIR = $(INSTALL_PLAT_DIR)/Slsdetector
+INSTALL_SLSDETECTOR_DIR = $(INSTALL_PLAT_DIR)/SlsDetector
 SLSDETECTOR_FULL_VERSION = $(shell cat camera/slsdetector/VERSION)
 INSTALL_SLSDETECTOR_VDIR = $(INSTALL_SLSDETECTOR_DIR)/v$(SLSDETECTOR_FULL_VERSION)
 endif
@@ -685,10 +685,10 @@ endif
 
 ifneq ($(COMPILE_SLSDETECTOR), 0)
 	mkdir -p $(INSTALL_SLSDETECTOR_VDIR)
-#	cp camera/slsdetector/python/__init__.py $(INSTALL_SLSDETECTOR_DIR)
+	cp camera/slsdetector/python/__init__.py $(INSTALL_SLSDETECTOR_DIR)
 	$(call install_core_dep,$(INSTALL_SLSDETECTOR_VDIR))
 	rm -rf $(INSTALL_LIB_DIR)/liblimaslsdetector.so*
 	cp -d build/liblimaslsdetector.so* $(INSTALL_LIB_DIR)
-#	cp sip/slsdetector/limaslsdetector.so $(INSTALL_SLSDETECTOR_VDIR)
+	cp sip/slsdetector/limaslsdetector.so $(INSTALL_SLSDETECTOR_VDIR)
 	cp camera/slsdetector/include/*.h $(INSTALL_INCLUDE_DIR)
 endif

@@ -911,11 +911,14 @@ endif
 ############################
 ifneq ($(COMPILE_SLSDETECTOR),0)
 
+SLSDETECTOR_LDFLAGS  := -L$(SLS_DETECTORS_DIR)/bin
+SLSDETECTOR_LDLIBS   := -lSlsDetector -lSlsReceiver
+
 slsdetector-name     := slsdetector
 slsdetector-objs     := ../camera/slsdetector/src/SlsDetector.o
 slsdetector-ver      := ../camera/slsdetector/VERSION
-slsdetector-flags    := $(LDFLAGS)
-slsdetector-libs     := $(LDLIBS)
+slsdetector-flags    := $(LDFLAGS) $(SLSDETECTOR_LDFLAGS)
+slsdetector-libs     := $(LDLIBS) $(SLSDETECTOR_LDLIBS)
 slsdetector-deps     := $(DEPLIBS)
 slsdetector-libdeps  := $(call lib-deps,$(slsdetector-deps))
 slsdetector-libfull  := $(call lib-full,$(slsdetector-name),$(slsdetector-ver))
