@@ -24,20 +24,24 @@ LIMA_DIR := $(shell pwd)/../..
 include $(LIMA_DIR)/config.inc
 include $(LIMA_DIR)/control/control.inc
 
+CPPFLAGS = $(CT_CPPFLAGS)
 CXXFLAGS = $(CT_CXXFLAGS)
+LDFLAGS = $(CT_LDFLAGS)
+LDLIBS = $(CT_LIBS) $(lib-deplibs $(CT_DEPLIBS))
+
 SRCS = $(ct-objs:.o=.cpp)
 
 all: Ct.o
 
 
 Ct.o: $(ct-objs) ../software_operation/src/CtSoftwareOperation.o
-	ld $(CT_LIBS) -o $@ -r $+
+	ld -o $@ -r $+
 
 clean:
 	rm -f Ct.o $(ct-objs) *.P
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -47,4 +51,4 @@ clean:
 
 .PHONY: check-syntax
 check-syntax:
-	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
