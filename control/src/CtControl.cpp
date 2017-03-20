@@ -1089,25 +1089,21 @@ long CtControl::_increment_image_cnt(Data& aData,
 				     long image_cnt,SortedDataType& cnt)
 {
   long expectedImageCnt = image_cnt + 1;
-  if(aData.frameNumber == expectedImageCnt)
+  if(aData.frameNumber != expectedImageCnt)
     {
-      while(!cnt.empty())
-	{
-	  SortedDataType::iterator i = cnt.begin();
-	  long nextExpectedImageCnt = expectedImageCnt + 1;
-	  if(nextExpectedImageCnt == i->frameNumber)
-	    {
-	      expectedImageCnt = nextExpectedImageCnt;
-	      cnt.erase(i);
-	    }
-	  else
-	    break;
-	}
-      return expectedImageCnt;
+      cnt.insert(aData);
+      return image_cnt;
     }
-  else
-    cnt.insert(aData);
-  return image_cnt;
+
+  while(!cnt.empty())
+    {
+      SortedDataType::iterator i = cnt.begin();
+      if(i->frameNumber != expectedImageCnt + 1)
+	break;
+      expectedImageCnt = i->frameNumber;
+      cnt.erase(i);
+    }
+  return expectedImageCnt;
 }
 
 /** @brief inc the save counter.
