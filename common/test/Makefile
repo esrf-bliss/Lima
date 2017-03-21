@@ -19,20 +19,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+LIMA_DIR := $(shell pwd)/../..
+
+include $(LIMA_DIR)/control/control.inc
+
 SRCS = testregex.cpp
 
-CXXFLAGS = -Wall -I ../include -pthread -g
-LDFLAGS = -L../../build/ -Wl,--no-as-needed,-rpath=$(shell pwd)/../../build -llimacore -lpthread
+CPPFLAGS = $(CT_CPPFLAGS)
+CXXFLAGS = $(CT_CXXFLAGS)
+DEPLIBS = $(CT_DEPLIBS) $(LIMA_DIR)/build,limacore
+LDFLAGS = $(CT_LDFLAGS) $(call lib-depflags,$(DEPLIBS))
+LDLIBS = $(CT_LDLIBS) $(call lib-deplibs,$(DEPLIBS))
 
 all: testregex
 
 testregex:	testregex.o 
-	$(CXX) $(LDFLAGS) -o $@ $+
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 clean:
 	rm -f *.o testregex
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -42,4 +49,4 @@ clean:
 
 .PHONY: check-syntax
 check-syntax:
-	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)

@@ -19,13 +19,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+LIMA_DIR := $(shell pwd)/../../..
+
 ct-objs := SoftOpInternalMgr.o SoftOpExternalMgr.o SoftOpId.o
 
 SRCS = $(ct-objs:.o=.cpp) 
 
-INCLUDES=-I../include  -I../../../third-party/Processlib/core/include -I../../../third-party/Processlib/tasks/include -I../../../common/include
-
-CXXFLAGS += $(INCLUDES) -fPIC -Wall -pthread -g
+CPPFLAGS = -I../include \
+	   -I$(LIMA_DIR)/third-party/Processlib/core/include \
+	   -I$(LIMA_DIR)/third-party/Processlib/tasks/include \
+	   -I$(LIMA_DIR)/common/include
+CXXFLAGS = -fPIC -Wall -pthread -g
 
 all: CtSoftwareOperation.o
 
@@ -37,7 +41,7 @@ clean:
 	rm -f CtSoftwareOperation.o $(ct-objs) *.P
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -48,4 +52,4 @@ clean:
 
 .PHONY: check-syntax
 check-syntax:
-	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)

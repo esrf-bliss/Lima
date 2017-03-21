@@ -19,45 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-include ../../config.inc
+LIMA_DIR := $(shell pwd)/../..
 
-simu-objs = ../../camera/simulator/src/Simu.o
+include $(LIMA_DIR)/config.inc
+include $(LIMA_DIR)/control/control.inc
 
 simutest-objs = simutest.o
-simutest-ext-objs = $(simu-objs)
 
 SRCS = $(simutest-objs:.o=.cpp) 
 
-INC = -I../include -I../../common/include -I../control/include \
-	-I../../hardware/include -I../../camera/simulator/include \
-	-I../software_operation/include \
-	-I../../third-party/Processlib/core/include \
-	-I../../third-party/Processlib/tasks/include
-
-CPPFLAGS += $(INC) 
-CXXFLAGS += -g -Wall -pthread
-LDFLAGS = -pthread
-LDLIBS = -L../../build -llimacore \
-         -L../../third-party/Processlib/build -lprocesslib
+CPPFLAGS = $(CT_CPPFLAGS) 
+CXXFLAGS = $(CT_CXXFLAGS)
+DEPLIBS = $(CT_DEPLIBS) $(LIMA_DIR)/build,limacore
 
 build_targets = roicountertest
-
-ifndef COMPILE_CBF_SAVING
-COMPILE_CBF_SAVING = 0
-endif
-
-ifneq ($(COMPILE_CBF_SAVING),0)
-LDLIBS += -L../../third-party/CBFLib/lib -lcbf
-endif
-
-ifneq ($(COMPILE_FITS_SAVING),0)
-CXXFLAGS += -DWITH_FITS_SAVING -I../../third-party/cfitsio \
-		-I../../third-party
-LDLIBS += -L../../third-party/CCfits/.libs \
-	-L../../third-party/cfitsio/lib \
-	-lcfitsio \
-	-lCCfits
-endif
 
 ifndef COMPILE_SIMULATOR
 COMPILE_SIMULATOR = 0
@@ -65,12 +40,17 @@ endif
 
 ifneq ($(COMPILE_SIMULATOR),0)
 build_targets += simutest
+CPPFLAGS += -I$(LIMA_DIR)/camera/simulator/include
+DEPLIBS += $(LIMA_DIR)/build,limasimulator
 endif
+
+LDFLAGS = $(CT_LDFLAGS) $(call lib-depflags,$(DEPLIBS))
+LDLIBS = $(CT_LDLIBS) $(call lib-deplibs,$(DEPLIBS))
 
 
 all:	$(build_targets)
 
-simutest: $(simutest-objs) $(simutest-ext-objs) 
+simutest: $(simutest-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 roicountertest:		roicountertest.o
@@ -81,7 +61,7 @@ clean:
 	      roicountertest roicountertest.o
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -91,4 +71,4 @@ clean:
 
 .PHONY: check-syntax
 check-syntax:
-	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
