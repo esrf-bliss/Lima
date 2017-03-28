@@ -19,7 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-include ../../config.inc
+LIMA_DIR := $(shell pwd)/../..
+
+include $(LIMA_DIR)/config.inc
+include $(LIMA_DIR)/control/control.inc
 
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
                MemUtils.o RegExUtils.o AcqState.o Debug.o VideoUtils.o Event.o \
@@ -29,10 +32,11 @@ has_not_inotify = $(shell grep INOTIFY_USER /boot/config-$(shell uname -r) >/dev
 
 SRCS = $(common-objs:.o=.cpp)
 
-CXXFLAGS += -I../include -I../../hardware/include -I../../third-party/Processlib/core/include -Wall -pthread -fPIC -g
+CPPFLAGS = $(CT_CPPFLAGS)
+CXXFLAGS = $(CT_CXXFLAGS)
 
 ifeq ($(has_not_inotify),0)
-CXXFLAGS += -DHAS_INOTIFY
+CPPFLAGS += -DHAS_INOTIFY
 endif
 
 ifndef COMPILE_CONFIG
@@ -41,7 +45,7 @@ endif
 
 ifneq ($(COMPILE_CONFIG),0)
 common-objs += ConfigUtils.o
-CXXFLAGS += -DWITH_CONFIG -I../../third-party/libconfig/lib
+CPPFLAGS += -DWITH_CONFIG -I$(LIMA_DIR)/third-party/libconfig/lib
 endif
 
 all:	Common.o
@@ -54,7 +58,7 @@ clean:
 
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -64,4 +68,4 @@ clean:
 
 .PHONY: check-syntax
 check-syntax:
-	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)

@@ -19,14 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+LIMA_DIR := $(shell pwd)/../../..
+
+include $(LIMA_DIR)/config.inc
+include $(LIMA_DIR)/control/control.inc
+
 simu-objs = SimulatorFrameBuilder.o SimulatorCamera.o SimulatorInterface.o \
 	SimulatorSyncCtrlObj.o SimulatorDetInfoCtrlObj.o SimulatorShutterCtrlObj.o
 
 SRCS = $(simu-objs:.o=.cpp)
 
 CXX = g++
-INC = -I../include -I../../../common/include -I../../../hardware/include 
-CXXFLAGS += $(INC) -Wall -pthread -fPIC -g
+CPPFLAGS = -I../include $(CT_CPPFLAGS)
+CXXFLAGS = $(CT_CXXFLAGS)
 
 all: 	Simu.o
 
@@ -37,7 +42,7 @@ clean:
 	rm -f Simu.o *.P $(simu-objs)
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -47,4 +52,4 @@ clean:
 
 .PHONY: check-syntax
 check-syntax:
-	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
