@@ -47,7 +47,7 @@ ifneq ($(COMPILE_CBF_SAVING),0)
 ct-objs += CtSaving_Cbf.o 
 CT_INCLS += -I$(LIMA_DIR)/third-party/CBFLib/include
 CT_CPPFLAGS += -DWITH_CBF_SAVING
-CT_DEPLIBS += $(LIMA_DIR)/third-party/CBFLib/lib,cbf
+CT_DEPLIBS += $(LIMA_DIR)/third-party/CBFLib/lib,cbf,'$${d}/lib$${l}.a'
 CT_LDLIBS += -lcrypto
 endif
 
@@ -60,6 +60,8 @@ ct-objs += CtSaving_Hdf5.o
 CT_INCLS += -I$(LIMA_DIR)/third-party/hdf5/src
 CT_INCLS += -I$(LIMA_DIR)/third-party/hdf5/c++/src
 CT_CPPFLAGS += -DWITH_HDF5_SAVING
+CT_DEPLIBS += $(LIMA_DIR)/third-party/hdf5/src/.libs,hdf5 \
+	      $(LIMA_DIR)/third-party/hdf5/c++/src/.libs,hdf5_cpp
 endif
 
 ifndef COMPILE_NXS_SAVING
@@ -72,8 +74,6 @@ ct-objs += CtSaving_Nxs.o
 #CT_INCLS += -I$(LIMA_DIR)/third-party/NXSLib/include
 CT_INCLS += `pkg-config nexuscpp --cflags-only-I`
 CT_CPPFLAGS += -DWITH_NXS_SAVING
-CT_DEPLIBS += $(LIMA_DIR)/third-party/hdf5/src/.libs,hdf5 \
-	      $(LIMA_DIR)/third-party/hdf5/c++/src/.libs,hdf5_cpp
 endif
 
 ifndef COMPILE_FITS_SAVING
@@ -84,7 +84,7 @@ ifneq ($(COMPILE_FITS_SAVING),0)
 ct-objs += CtSaving_Fits.o
 CT_INCLS += -I$(LIMA_DIR)/third-party/cfitsio -I$(LIMA_DIR)/third-party
 CT_CPPFLAGS += -DWITH_FITS_SAVING
-CT_DEPLIBS += $(LIMA_DIR)/third-party/cfitsio/lib,cfitsio \
+CT_DEPLIBS += $(LIMA_DIR)/third-party/cfitsio/lib,cfitsio,'$${d}/lib$${l}.a' \
 	      $(LIMA_DIR)/third-party/CCfits/.libs,CCfits
 endif
 
@@ -111,8 +111,9 @@ COMPILE_TIFF_SAVING = 0
 endif
 
 ifneq ($(COMPILE_TIFF_SAVING),0)
-ct-objs += CtSaving_Tiff.o 
+ct-objs += CtSaving_Tiff.o
 CT_CPPFLAGS += -DWITH_TIFF_SAVING
+CT_LDLIBS += -ltiff
 endif
 
 ifndef COMPILE_SPS_IMAGE
@@ -143,12 +144,17 @@ CT_CXXFLAGS += -fPIC -Wall -pthread -g
 # HELPER MACROS
 ############################
 
-lib-depshcmd	= for p in $(1); do \
+lib-depshcmd    = for p in $(1); do \
                       d=$$(echo $${p} | cut -d, -f1); \
                       l=$$(echo $${p} | cut -d, -f2); \
-                      echo $(2); \
+                      template=$$(echo $${p} | cut -d, -f3); \
+                      if [ ! -z $${template} ] ; then \
+                         eval echo $${template}; \
+                      else \
+                         echo $(2); \
+                      fi \
                   done
 lib-depflagsstr = "-L $${d} -Wl,-rpath=$${d}"
-lib-depflags	= $(shell $(call lib-depshcmd,$(1),$(lib-depflagsstr)))
-lib-deplibs	= $(shell $(call lib-depshcmd,$(1),"-l$${l}"))
-lib-deps	= $(shell $(call lib-depshcmd,$(1),"$${d}/lib$${l}.so"))
+lib-depflags    = $(shell $(call lib-depshcmd,$(1),$(lib-depflagsstr)))
+lib-deplibs     = $(shell $(call lib-depshcmd,$(1),"-l$${l}"))
+lib-deps        = $(shell $(call lib-depshcmd,$(1),"$${d}/lib$${l}.so"))
