@@ -546,7 +546,7 @@ return aReturnListPt;
 %End
 };
 
-%MappedType std::map<int,std::set<int>>
+%MappedType std::map<unsigned long,std::set<int>>
 {
 %TypeHeaderCode
 #include <map>
@@ -571,13 +571,13 @@ if(sipIsErr == NULL)
   return aReturnFlag;
 }
 
-*sipCppPtr = new std::map<int,std::set<int> >();
+*sipCppPtr = new std::map<unsigned long,std::set<int> >();
 pos = 0;
 while(PyDict_Next(sipPy, &pos, &key, &value))
 {
-  int anIndex = PyInt_AS_LONG(key);
-  std::pair<std::map<int,std::set<int> >::iterator, bool> aResult = 
-  (*sipCppPtr)->insert(std::pair<int,std::set<int> >(anIndex,std::set<int>()));
+  unsigned long anIndex = PyInt_AS_LONG(key);
+  std::pair<std::map<unsigned long,std::set<int> >::iterator, bool> aResult = 
+  (*sipCppPtr)->insert(std::pair<unsigned long,std::set<int> >(anIndex,std::set<int>()));
   
   for(int i = 0;i < PyList_Size(value);++i)
   {
@@ -592,7 +592,7 @@ return sipGetState(sipTransferObj);
 PyObject* aReturnDictPt = PyDict_New();
 
 
-for(std::map<int,std::set<int> >::iterator mIter = sipCpp->begin();
+for(std::map<unsigned long,std::set<int> >::iterator mIter = sipCpp->begin();
     mIter != sipCpp->end();++mIter)
    {
     PyObject *aKeyPt = PyInt_FromLong(mIter->first);
