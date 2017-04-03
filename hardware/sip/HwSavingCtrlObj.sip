@@ -76,9 +76,9 @@ void setOverwritePolicy(const std::string&);
   void unregisterCallback(Callback *cbk);
 
 protected:
-  virtual void _setActive(bool);
-  virtual void _prepare();
-  virtual void _start();
+  virtual void _setActive(bool, int stream=0);
+  virtual void _prepare(int stream=0);
+  virtual void _start(int stream=0);
   /** @brief return the full path of acquired image
    */
   std::string _getFullPath(int image_number) const;
