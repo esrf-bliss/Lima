@@ -116,6 +116,7 @@ MemBuffer::MemBuffer(int size)
 	
 #ifdef __unix
 	long page_size = sysconf(_SC_PAGESIZE);
+        char* ptr = (char*)m_ptr;
 #ifdef __SSE2__
 	if(!((long)ptr & 15))	// aligned to 128 bits
 	  {
