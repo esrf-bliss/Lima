@@ -1,0 +1,44 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT display (#PCDATA)>
+<!ELEMENT part-number (#PCDATA)>
+<!ELEMENT revision (#PCDATA)>
+<!ELEMENT part (display, part-number, revision)>
+<!ELEMENT software_summary (part+)>
+<!ELEMENT si_data (software_summary)>
+]><si_data><software_summary>
+<part><display>Controller Processor Firmware</display><part-number>7322</part-number><revision>0</revision></part>
+<part><display>Controller FPGA Firmware</display><part-number>7321</part-number><revision>0</revision></part>
+<part><display>CCD 0 HKS Firmware</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 0 FPGA Firmware</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 0 CSM Program</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 0 State Table</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 0 SR0 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 0 SR0 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+<part><display>CCD 0 SR1 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 0 SR1 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+<part><display>CCD 1 HKS Firmware</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 1 FPGA Firmware</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 1 CSM Program</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 1 State Table</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 1 SR0 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 1 SR0 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+<part><display>CCD 1 SR1 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 1 SR1 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+<part><display>CCD 2 HKS Firmware</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 2 FPGA Firmware</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 2 CSM Program</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 2 State Table</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 2 SR0 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 2 SR0 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+<part><display>CCD 2 SR1 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 2 SR1 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+<part><display>CCD 3 HKS Firmware</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 3 FPGA Firmware</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 3 CSM Program</display><part-number>6698</part-number><revision>0</revision></part>
+<part><display>CCD 3 State Table</display><part-number>6699</part-number><revision>0</revision></part>
+<part><display>CCD 3 SR0 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 3 SR0 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+<part><display>CCD 3 SR1 HKS Firmware</display><part-number>6616</part-number><revision>0</revision></part>
+<part><display>CCD 3 SR1 FPGA Firmware</display><part-number>6615</part-number><revision>0</revision></part>
+</software_summary></si_data>

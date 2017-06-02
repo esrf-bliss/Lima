@@ -1,0 +1,33 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT display (#PCDATA)>
+<!ELEMENT read_only (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT parameter (display, value)>
+<!ELEMENT list (display, read_only?, parameter+)>
+<!ELEMENT si_data (list+)>
+]><si_data><list><display>Setup</display>
+<parameter><display>Exposure Time</display><value>100</value></parameter>
+<parameter><display>Minimum MPP Exposure</display><value>10000</value></parameter>
+<parameter><display>TDI Delay</display><value>1000</value></parameter>
+<parameter><display>Frame Count</display><value>1</value></parameter>
+<parameter><display>Inter-frame Gap</display><value>1000</value></parameter>
+<parameter><display>Inter-line Gap</display><value>100</value></parameter>
+<parameter><display>Inter-pixel Gap</display><value>0</value></parameter>
+<parameter><display>Trigger Mode</display><value>0</value></parameter>
+<parameter><display>Continuous Clear</display><value>0</value></parameter>
+<parameter><display>CCD Enable Mask</display><value>15</value></parameter>
+<parameter><display>CCD Temperature Setpoint</display><value>1932</value></parameter>
+<parameter><display>Trigger 1 In Setup</display><value>0</value></parameter>
+<parameter><display>Trigger 1 Out Setup</display><value>1</value></parameter>
+<parameter><display>Trigger 1 Out Selector</display><value>0</value></parameter>
+<parameter><display>Trigger 2 In Setup</display><value>0</value></parameter>
+<parameter><display>Trigger 2 Out Setup</display><value>0</value></parameter>
+<parameter><display>Trigger 2 Out Selector</display><value>2</value></parameter>
+<parameter><display>Shutter Open Delay</display><value>0</value></parameter>
+<parameter><display>Shutter Close Delay</display><value>0</value></parameter>
+<parameter><display>Parallel Shift Delay</display><value>17</value></parameter>
+<parameter><display>Parallel Clear Count</display><value>1</value></parameter>
+<parameter><display>Serial Clear Count</display><value>244</value></parameter>
+<parameter><display>Test Image Type</display><value>3</value></parameter>
+</list></si_data>

@@ -1,0 +1,44 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT display (#PCDATA)>
+<!ELEMENT mask (#PCDATA)>
+<!ELEMENT step (#PCDATA)>
+<!ELEMENT unit_type (#PCDATA)>
+<!ELEMENT units (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT bit_field (mask, display)>
+<!ELEMENT item (display, value, unit_type, (units | step | bit_field)?)>
+<!ELEMENT status (item+)>
+<!ELEMENT si_data (status)>
+]><si_data><status>
+<item><display>Controller Temperature</display><value>3258</value><unit_type>3</unit_type></item>
+<item><display>Controller 0.9V Supply</display><value>907</value><unit_type>4</unit_type></item>
+<item><display>Controller 1.2V Supply</display><value>1217</value><unit_type>4</unit_type></item>
+<item><display>Controller 1.8V Supply</display><value>1806</value><unit_type>4</unit_type></item>
+<item><display>Controller 2.5V Supply</display><value>2526</value><unit_type>4</unit_type></item>
+<item><display>Slot 0 Flags</display><value>256</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 1 Flags</display><value>256</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 2 Flags</display><value>256</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 3 Flags</display><value>256</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 4 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 5 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 6 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 7 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 8 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 9 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 10 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 11 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 12 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 13 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 14 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 15 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 16 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 17 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 18 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 19 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 20 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 21 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 22 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 23 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+<item><display>Slot 24 Flags</display><value>0</value><unit_type>10</unit_type><bit_field><mask>511</mask><display>Line,Frame,Integrating,Trigger Rise Armed,Trigger Rise Read,Trigger Fall Armed,Trigger Fall Read,Spare,No Sync.</display></bit_field></item>
+</status></si_data>

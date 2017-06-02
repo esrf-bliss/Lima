@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<si_data>
+    <interfaces>
+        <camIF>
+            <PluginName>SimCamera</PluginName>
+            <DeviceName>SISIM</DeviceName>
+            <InterfaceType>SiSimulator Interface</InterfaceType>
+            <InterfaceInfo>
+                <DriverRev>0</DriverRev>
+                <DriverDate>07/03/07</DriverDate>
+                <HardwareID>97</HardwareID>
+                <HardwareRev>1</HardwareRev>
+                <HWStatus>$3e</HWStatus>
+            </InterfaceInfo>
+            <CameraInfo>
+                <SerialNumber>9999</SerialNumber>
+                <CameraModel>850</CameraModel>
+                <BaudRate>250000</BaudRate>
+            </CameraInfo>
+        </camIF>
+    </interfaces>
+</si_data>

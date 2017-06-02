@@ -1,0 +1,24 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT display (#PCDATA)>
+<!ELEMENT mask (#PCDATA)>
+<!ELEMENT max (#PCDATA)>
+<!ELEMENT min (#PCDATA)>
+<!ELEMENT post_name (#PCDATA)>
+<!ELEMENT unit_type (#PCDATA)>
+<!ELEMENT units (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT bit_field (mask, display)>
+<!ELEMENT pull_down (display, value)>
+<!ELEMENT parameter (post_name, display, value, min, max, unit_type, (units | bit_field | pull_down+)?)>
+<!ELEMENT list (display, parameter+)>
+<!ELEMENT item (display, value, unit_type, (units | bit_field | pull_down+)?)>
+<!ELEMENT status (item+)>
+<!ELEMENT si_data (status?, list*)>
+]>
+<si_data><list><display>Miscellaneous</display><read_only>1</read_only>
+<parameter><post_name>MISC0_0</post_name><display>Tested Speeds</display><value>13</value><min>0</min><max>2</max><unit_type>9</unit_type>
+        <pull_down><display>675.7KHz</display><value>13</value></pull_down>
+        <pull_down><display>58.55KHz</display><value>208</value></pull_down>
+</parameter>
+</list></si_data>

@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT brief (#PCDATA)>
+<!ELEMENT Content-Type (#PCDATA)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT read_only (#PCDATA)>
+<!ELEMENT volatile (#PCDATA)>
+<!ELEMENT command_file (#PCDATA)>
+<!ELEMENT file (name, Content-Type, brief, read_only, volatile, command_file, software_summary)>
+<!ELEMENT filelist (file+)>
+<!ELEMENT si_data (filelist)>
+]><si_data><filelist>
+<file><name>command.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>1</read_only><volatile>0</volatile><command_file>1</command_file><software_summary>0</software_summary></file>
+<file><name>control.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>0</read_only><volatile>0</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>control_q.xml</name><Content-Type>text/xml</Content-Type><brief>1</brief><read_only>0</read_only><volatile>0</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>factory.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>1</read_only><volatile>0</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>files.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>1</read_only><volatile>0</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>modes.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>1</read_only><volatile>1</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>setup.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>0</read_only><volatile>0</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>setup_q.xml</name><Content-Type>text/xml</Content-Type><brief>1</brief><read_only>0</read_only><volatile>0</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>software_summary.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>1</read_only><volatile>0</volatile><command_file>0</command_file><software_summary>1</software_summary></file>
+<file><name>status.xml</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>1</read_only><volatile>1</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>status_q.xml</name><Content-Type>text/xml</Content-Type><brief>1</brief><read_only>1</read_only><volatile>1</volatile><command_file>0</command_file><software_summary>0</software_summary></file>
+<file><name>MISCELLANEOUS.XML</name><Content-Type>text/xml</Content-Type><brief>0</brief><read_only>1</read_only><volatile>0</volatile><command_file>0</command_file></file>
+</filelist></si_data>

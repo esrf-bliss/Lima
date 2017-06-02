@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT filename (#PCDATA)>
+<!ELEMENT filelist (filename+)>
+<!ELEMENT si_data (filelist)>
+]><si_data><filelist>
+<filename>command.xml</filename>
+<filename>control.xml</filename>
+<filename>factory.xml</filename>
+<filename>files.xml</filename>
+<filename>setup.xml</filename>
+<filename>status.xml</filename>
+</filelist></si_data>

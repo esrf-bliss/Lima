@@ -1,0 +1,130 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE si_data [
+<!ELEMENT display (#PCDATA)>
+<!ELEMENT mask (#PCDATA)>
+<!ELEMENT bit_field (mask, display)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT pull_down (value, display)>
+<!ELEMENT step (#PCDATA)>
+<!ELEMENT unit_type (#PCDATA)>
+<!ELEMENT units (#PCDATA)>
+<!ELEMENT max (#PCDATA)>
+<!ELEMENT min (#PCDATA)>
+<!ELEMENT post_name (#PCDATA)>
+<!ELEMENT parameter (post_name, display, value, min, max, unit_type, (units | step | bit_field | pull_down+)?)>
+<!ELEMENT read_only (#PCDATA)>
+<!ELEMENT list (display, read_only?, parameter+)>
+<!ELEMENT si_data (list+)>
+]><si_data><list><display>Control</display>
+<parameter><post_name>CONTROL 0</post_name><display>CCD Operation</display><value>1</value><min>0</min><max>2</max><unit_type>8</unit_type><pull_down><value>0</value><display>Full-Frame</display></pull_down><pull_down><value>1</value><display>Frame-Transfer</display></pull_down></parameter>
+<parameter><post_name>CONTROL 1</post_name><display>Bits Per Pixel</display><value>16</value><min>0</min><max>3</max><unit_type>9</unit_type><pull_down><value>16</value><display>16</display></pull_down><pull_down><value>24</value><display>18 with 24-bit transport</display></pull_down><pull_down><value>32</value><display>18 with 32-bit transport</display></pull_down></parameter>
+<parameter><post_name>CONTROL 2</post_name><display>DSI Sample Time</display><value>14</value><min>10</min><max>512</max><unit_type>16</unit_type><step>40</step></parameter>
+<parameter><post_name>CONTROL 3</post_name><display>Gain</display><value>0</value><min>0</min><max>2</max><unit_type>8</unit_type><pull_down><value>0</value><display>Normal</display></pull_down><pull_down><value>1</value><display>High</display></pull_down></parameter>
+<parameter><post_name>CONTROL 4</post_name><display>Port Select</display><value>65535</value><min>0</min><max>19</max><unit_type>9</unit_type><pull_down><value>1</value><display>Port 0</display></pull_down><pull_down><value>2</value><display>Port 1</display></pull_down><pull_down><value>4</value><display>Port 2</display></pull_down><pull_down><value>8</value><display>Port 3</display></pull_down><pull_down><value>16</value><display>Port 4</display></pull_down><pull_down><value>32</value><display>Port 5</display></pull_down><pull_down><value>64</value><display>Port 6</display></pull_down><pull_down><value>128</value><display>Port 7</display></pull_down><pull_down><value>256</value><display>Port 8</display></pull_down><pull_down><value>512</value><display>Port 9</display></pull_down><pull_down><value>1024</value><display>Port 10</display></pull_down><pull_down><value>2048</value><display>Port 11</display></pull_down><pull_down><value>4096</value><display>Port 12</display></pull_down><pull_down><value>8192</value><display>Port 13</display></pull_down><pull_down><value>16384</value><display>Port 14</display></pull_down><pull_down><value>32768</value><display>Port 15</display></pull_down><pull_down><value>255</value><display>SR0</display></pull_down><pull_down><value>65280</value><display>SR1</display></pull_down><pull_down><value>65535</value><display>All</display></pull_down></parameter>
+<parameter><post_name>CONTROL 5</post_name><display>Parallel Binning</display><value>1</value><min>1</min><max>10</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 6</post_name><display>Parallel Length</display><value>960</value><min>1</min><max>8191</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 7</post_name><display>Parallel Origin</display><value>0</value><min>0</min><max>1920</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 8</post_name><display>Parallel Phasing</display><value>2</value><min>0</min><max>3</max><unit_type>8</unit_type><pull_down><value>0</value><display>SR0</display></pull_down><pull_down><value>1</value><display>SR1</display></pull_down><pull_down><value>2</value><display>Split</display></pull_down></parameter>
+<parameter><post_name>CONTROL 9</post_name><display>Parallel Post Scan</display><value>0</value><min>0</min><max>8191</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 10</post_name><display>Serial Binning</display><value>1</value><min>1</min><max>10</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 11</post_name><display>Serial Length</display><value>240</value><min>1</min><max>320</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 12</post_name><display>Serial Origin</display><value>4</value><min>0</min><max>244</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 13</post_name><display>Serial Phasing</display><value>0</value><min>0</min><max>3</max><unit_type>8</unit_type><pull_down><value>0</value><display>Normal</display></pull_down><pull_down><value>1</value><display>Reverse</display></pull_down><pull_down><value>2</value><display>Split</display></pull_down></parameter>
+<parameter><post_name>CONTROL 14</post_name><display>Serial Post Scan</display><value>0</value><min>0</min><max>8191</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 15</post_name><display>CCD 0 Port 0 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 16</post_name><display>CCD 0 Port 0 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 17</post_name><display>CCD 0 Port 1 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 18</post_name><display>CCD 0 Port 1 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 19</post_name><display>CCD 0 Port 2 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 20</post_name><display>CCD 0 Port 2 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 21</post_name><display>CCD 0 Port 3 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 22</post_name><display>CCD 0 Port 3 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 23</post_name><display>CCD 0 Port 4 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 24</post_name><display>CCD 0 Port 4 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 25</post_name><display>CCD 0 Port 5 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 26</post_name><display>CCD 0 Port 5 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 27</post_name><display>CCD 0 Port 6 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 28</post_name><display>CCD 0 Port 6 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 29</post_name><display>CCD 0 Port 7 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 30</post_name><display>CCD 0 Port 7 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 31</post_name><display>CCD 0 Port 8 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 32</post_name><display>CCD 0 Port 8 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 33</post_name><display>CCD 0 Port 9 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 34</post_name><display>CCD 0 Port 9 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 35</post_name><display>CCD 0 Port 10 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 36</post_name><display>CCD 0 Port 10 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 37</post_name><display>CCD 0 Port 11 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 38</post_name><display>CCD 0 Port 11 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 39</post_name><display>CCD 0 Port 12 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 40</post_name><display>CCD 0 Port 12 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 41</post_name><display>CCD 0 Port 13 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 42</post_name><display>CCD 0 Port 13 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 43</post_name><display>CCD 0 Port 14 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 44</post_name><display>CCD 0 Port 14 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 45</post_name><display>CCD 0 Port 15 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 46</post_name><display>CCD 0 Port 15 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 47</post_name><display>CCD 1 Port 0 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 48</post_name><display>CCD 1 Port 0 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 49</post_name><display>CCD 1 Port 1 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 50</post_name><display>CCD 1 Port 1 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 51</post_name><display>CCD 1 Port 2 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 52</post_name><display>CCD 1 Port 2 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 53</post_name><display>CCD 1 Port 3 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 54</post_name><display>CCD 1 Port 3 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 55</post_name><display>CCD 1 Port 4 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 56</post_name><display>CCD 1 Port 4 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 57</post_name><display>CCD 1 Port 5 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 58</post_name><display>CCD 1 Port 5 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 59</post_name><display>CCD 1 Port 6 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 60</post_name><display>CCD 1 Port 6 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 61</post_name><display>CCD 1 Port 7 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 62</post_name><display>CCD 1 Port 7 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 63</post_name><display>CCD 1 Port 8 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 64</post_name><display>CCD 1 Port 8 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 65</post_name><display>CCD 1 Port 9 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 66</post_name><display>CCD 1 Port 9 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 67</post_name><display>CCD 1 Port 10 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 68</post_name><display>CCD 1 Port 10 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 69</post_name><display>CCD 1 Port 11 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 70</post_name><display>CCD 1 Port 11 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 71</post_name><display>CCD 1 Port 12 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 72</post_name><display>CCD 1 Port 12 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 73</post_name><display>CCD 1 Port 13 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 74</post_name><display>CCD 1 Port 13 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 75</post_name><display>CCD 1 Port 14 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 76</post_name><display>CCD 1 Port 14 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 77</post_name><display>CCD 1 Port 15 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 78</post_name><display>CCD 1 Port 15 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 79</post_name><display>CCD 2 Port 0 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 80</post_name><display>CCD 2 Port 0 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 81</post_name><display>CCD 2 Port 1 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 82</post_name><display>CCD 2 Port 1 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 83</post_name><display>CCD 2 Port 2 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 84</post_name><display>CCD 2 Port 2 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 85</post_name><display>CCD 2 Port 3 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 86</post_name><display>CCD 2 Port 3 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 87</post_name><display>CCD 2 Port 4 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 88</post_name><display>CCD 2 Port 4 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 89</post_name><display>CCD 2 Port 5 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 90</post_name><display>CCD 2 Port 5 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 91</post_name><display>CCD 2 Port 6 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 92</post_name><display>CCD 2 Port 6 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 93</post_name><display>CCD 2 Port 7 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 94</post_name><display>CCD 2 Port 7 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 95</post_name><display>CCD 2 Port 8 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 96</post_name><display>CCD 2 Port 8 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 97</post_name><display>CCD 2 Port 9 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 98</post_name><display>CCD 2 Port 9 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 99</post_name><display>CCD 2 Port 10 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 100</post_name><display>CCD 2 Port 10 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 101</post_name><display>CCD 2 Port 11 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 102</post_name><display>CCD 2 Port 11 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 103</post_name><display>CCD 2 Port 12 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 104</post_name><display>CCD 2 Port 12 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 105</post_name><display>CCD 2 Port 13 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 106</post_name><display>CCD 2 Port 13 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 107</post_name><display>CCD 2 Port 14 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 108</post_name><display>CCD 2 Port 14 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+<parameter><post_name>CONTROL 109</post_name><display>CCD 2 Port 15 ADC Offset</display><value>-1100</value><min>-1780</min><max>-720</max><unit_type>4</unit_type></parameter>
+<parameter><post_name>CONTROL 110</post_name><display>CCD 2 Port 15 Correlation Bias</display><value>1000</value><min>0</min><max>65535</max><unit_type>11</unit_type></parameter>
+</list></si_data>
