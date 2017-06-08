@@ -4,6 +4,7 @@ project (lima)
 
 SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
 SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
+SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 FIND_PACKAGE(PythonInterp 2.7)
 FIND_PACKAGE(PythonLibs 2.7)
