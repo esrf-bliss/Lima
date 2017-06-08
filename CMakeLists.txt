@@ -6,8 +6,8 @@ SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for sever
 SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
 SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-FIND_PACKAGE(PythonInterp 2.7)
-FIND_PACKAGE(PythonLibs 2.7)
+FIND_PACKAGE(PythonInterp 2.6)
+FIND_PACKAGE(PythonLibs 2.6)
 IF (${PYTHONINTERP_FOUND})
     # python site-packages folder
     execute_process(
@@ -19,11 +19,18 @@ INCLUDE(SIPMacros)
 
 SET(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
-IF (WIN32)
-    SET(NUMPY_INCLUDE_DIR "/usr/include" CACHE PATH "Path to NumPy include folder")
-    SET(NUMPY_LIB_DIR "/usr/include" CACHE PATH "Path to NumPy lib folder")
-    include_directories(${NUMPY_INCLUDE_DIR})
-    link_directories(${NUMPY_LIB_DIR})
+IF (WIN32) #Paths based on wid00limande and wid15perkin2
+	IF("${PYTHON_VERSION_MINOR}" STREQUAL "6")
+    	SET(NUMPY_INCLUDE_DIR "C:/Python26/Lib/site-packages/numpy/core/include" CACHE PATH "Path to NumPy include folder")
+    	SET(NUMPY_LIB_DIR "C:/Python26/Lib/site-packages/numpy/core/lib" CACHE PATH "Path to NumPy lib folder")
+    	include_directories(${NUMPY_INCLUDE_DIR})
+    	link_directories(${NUMPY_LIB_DIR})
+    ELSE() #assuming other version is 2.7
+    	SET(NUMPY_INCLUDE_DIR "C:/Python27/Lib/site-packages/numpy/core/include" CACHE PATH "Path to NumPy include folder")
+		SET(NUMPY_LIB_DIR "C:/Python27/Lib/site-packages/numpy/lib" CACHE PATH "Path to NumPy lib folder")
+		include_directories(${NUMPY_INCLUDE_DIR})
+		link_directories(${NUMPY_LIB_DIR})
+    ENDIF()
 ENDIF()
 
 find_package(Threads REQUIRED)
@@ -269,6 +276,14 @@ IF(WIN32)
 		set(COMPILE_PERKINELMER "$ENV{COMPILE_PERKINELMER}" CACHE BOOL "compile perkin elmer ?" FORCE)
 	ELSE()
 		set(COMPILE_PERKINELMER OFF CACHE BOOL "compile perkin elmer ?")
+	ENDIF()
+	####
+	
+	#PCO
+	IF(DEFINED ENV{COMPILE_PCO})
+		set(COMPILE_PCO "$ENV{COMPILE_PCO}" CACHE BOOL "compile pco?" FORCE)
+	ELSE()
+		set(COMPILE_PCO OFF CACHE BOOL "compile pco?")
 	ENDIF()
 	####
 ENDIF()
@@ -528,6 +543,11 @@ IF(WIN32)
 	if(COMPILE_PERKINELMER)
 		add_subdirectory(camera/perkinelmer)
 	endif(COMPILE_PERKINELMER)
+	###########
+	#PCO
+	if(COMPILE_PCO)
+		add_subdirectory(camera/pco)
+	endif(COMPILE_PCO)
 	###########
 ENDIF()
 
