@@ -2,12 +2,15 @@
 cmake_minimum_required(VERSION 2.8)
 project (lima)
 
-SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
-SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
-SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
+IF(UNIX)
+	SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
+	SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
+	SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
+ENDIF()
+
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-FIND_PACKAGE(PythonInterp 2.6)
-FIND_PACKAGE(PythonLibs 2.6)
+FIND_PACKAGE(PythonInterp 2.7)
+FIND_PACKAGE(PythonLibs 2.7)
 IF (${PYTHONINTERP_FOUND})
     # python site-packages folder
     execute_process(
@@ -78,7 +81,14 @@ ENDIF()
 IF(DEFINED ENV{COMPILE_ROPERSCIENTIFIC})
 	set(COMPILE_ROPERSCIENTIFIC "$ENV{COMPILE_ROPERSCIENTIFIC}" CACHE BOOL "compile roperscientific ?" FORCE)
 ELSE()
-	set(COMPILE_ROPERSCIENTIFIC ON CACHE BOOL "compile roperscientific?")
+	set(COMPILE_ROPERSCIENTIFIC OFF CACHE BOOL "compile roperscientific?")
+ENDIF()
+####
+#PCO
+IF(DEFINED ENV{COMPILE_PCO})
+	set(COMPILE_PCO "$ENV{COMPILE_PCO}" CACHE BOOL "compile pco?" FORCE)
+ELSE()
+	set(COMPILE_PCO OFF CACHE BOOL "compile pco?")
 ENDIF()
 ####
 
@@ -264,7 +274,7 @@ IF(UNIX)
 	IF(DEFINED ENV{COMPILE_MYTHEN3})
 		set(COMPILE_MYTHEN3 "$ENV{COMPILE_MYTHEN3}" CACHE BOOL "compile mythen3 ?" FORCE)
 	ELSE()
-		set(COMPILE_MYTHEN3 ON CACHE BOOL "compile mythen3 ?")
+		set(COMPILE_MYTHEN3 OFF CACHE BOOL "compile mythen3 ?")
 	ENDIF()
 	####
 ENDIF()
@@ -279,13 +289,6 @@ IF(WIN32)
 	ENDIF()
 	####
 	
-	#PCO
-	IF(DEFINED ENV{COMPILE_PCO})
-		set(COMPILE_PCO "$ENV{COMPILE_PCO}" CACHE BOOL "compile pco?" FORCE)
-	ELSE()
-		set(COMPILE_PCO OFF CACHE BOOL "compile pco?")
-	ENDIF()
-	####
 ENDIF()
 
 
@@ -422,6 +425,11 @@ if(COMPILE_ROPERSCIENTIFIC)
 	add_subdirectory(camera/roperscientific)
 endif(COMPILE_ROPERSCIENTIFIC)
 ###########
+#PCO
+if(COMPILE_PCO)
+	add_subdirectory(camera/pco)
+endif(COMPILE_PCO)
+###########
 
 #CAMERA ONLY WORKING UNDER LINUX
 IF(UNIX)
@@ -543,11 +551,6 @@ IF(WIN32)
 	if(COMPILE_PERKINELMER)
 		add_subdirectory(camera/perkinelmer)
 	endif(COMPILE_PERKINELMER)
-	###########
-	#PCO
-	if(COMPILE_PCO)
-		add_subdirectory(camera/pco)
-	endif(COMPILE_PCO)
 	###########
 ENDIF()
 
