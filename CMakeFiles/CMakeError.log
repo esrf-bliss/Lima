@@ -1,0 +1,57 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /users/aitor/Git/lima/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec4184420158/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec4184420158.dir/build.make CMakeFiles/cmTryCompileExec4184420158.dir/build
+make[1]: Entering directory '/users/aitor/Git/lima/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /users/aitor/Git/lima/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec4184420158.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec4184420158.dir/CheckSymbolExists.c.o   -c /users/aitor/Git/lima/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTryCompileExec4184420158
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec4184420158.dir/link.txt --verbose=1
+/usr/bin/cc       CMakeFiles/cmTryCompileExec4184420158.dir/CheckSymbolExists.c.o  -o cmTryCompileExec4184420158 -rdynamic 
+CMakeFiles/cmTryCompileExec4184420158.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTryCompileExec4184420158.dir/build.make:88: recipe for target 'cmTryCompileExec4184420158' failed
+make[1]: Leaving directory '/users/aitor/Git/lima/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec4184420158] Error 1
+Makefile:118: recipe for target 'cmTryCompileExec4184420158/fast' failed
+make: *** [cmTryCompileExec4184420158/fast] Error 2
+
+File /users/aitor/Git/lima/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /users/aitor/Git/lima/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec2885846507/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec2885846507.dir/build.make CMakeFiles/cmTryCompileExec2885846507.dir/build
+make[1]: Entering directory '/users/aitor/Git/lima/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /users/aitor/Git/lima/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec2885846507.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTryCompileExec2885846507.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.0/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec2885846507
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec2885846507.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTryCompileExec2885846507.dir/CheckFunctionExists.c.o  -o cmTryCompileExec2885846507 -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTryCompileExec2885846507.dir/build.make:88: recipe for target 'cmTryCompileExec2885846507' failed
+make[1]: Leaving directory '/users/aitor/Git/lima/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec2885846507] Error 1
+Makefile:118: recipe for target 'cmTryCompileExec2885846507/fast' failed
+make: *** [cmTryCompileExec2885846507/fast] Error 2
+
+
