@@ -1,9 +1,13 @@
-%Module lima%NAME 0
+%Module lima@NAME@ 0
 
-%ModuleHeaderCode
-extern "C" { void lima_import_array();}
+%ModuleCode
+#include <lima_init_numpy.cpp>
 %End
 
 %PostInitialisationCode
 lima_import_array();
 %End
+
+%Import limacore.sip
+
+@INCLUDES@

@@ -526,3 +526,4 @@ lima_import_array();
 %Import processlib.sip
 
 @INCLUDES@
+%Include HwFrameInfo.sip

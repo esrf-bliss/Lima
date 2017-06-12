@@ -38,7 +38,12 @@ IF (COMPILE_SIP)
 )
     ENDFOREACH()
 
-    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/limasimulator.sip)
+    IF(SIP_VERSION_STR VERSION_LESS "4.12")
+	    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/sip/limamodules_before_4_12.sip.in sip/limasimulator.sip)
+    ELSE()
+	    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/limasimulator.sip)
+    ENDIF()
+
     SET(SIP_CONCAT_PARTS 1)
     SET(SIP_INCLUDES ${SIP_INCLUDES}
         "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip"
