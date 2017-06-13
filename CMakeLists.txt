@@ -572,7 +572,15 @@ if(COMPILE_SIP)
 %Include ${sipfile}"
 )
     ENDFOREACH()
-
+    
+	if(SIP_VERSION_STR VERSION_LESS "4.12")
+			configure_file(sip/core/limacore_before_4_12.sip.in sip/core/limacore.sip)
+			configure_file(hardware/sip/HwFrameInfo.sip_before_4_12 sip/core/HwFrameInfo.sip)
+	else()
+			configure_file(sip/core/limacore.sip.in sip/core/limacore.sip)
+			configure_file(hardware/sip/HwFrameInfo.sip_after_4_12 sip/core/HwFrameInfo.sip)
+	endif()
+	
     configure_file(sip/core/limacore.sip.in sip/core/limacore.sip)
     set(SIP_CONCAT_PARTS 1)
     set(SIP_INCLUDES ${SIP_INCLUDES}
