@@ -1,6 +1,0 @@
-/users/aitor/Git/lima/camera/basler/CMakeFiles/limabasler.dir
-/users/aitor/Git/lima/CMakeFiles/limacore.dir
-/users/aitor/Git/lima/camera/prosilica/CMakeFiles/limaprosilica.dir
-/users/aitor/Git/lima/camera/simulator/CMakeFiles/limasimulator.dir
-/users/aitor/Git/lima/third-party/Processlib/CMakeFiles/processlib.dir
-/users/aitor/Git/lima/third-party/Processlib/CMakeFiles/python_module_processlib.dir
