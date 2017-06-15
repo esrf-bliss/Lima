@@ -32,11 +32,15 @@ IF (COMPILE_SIP)
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/sip"
          "${CMAKE_CURRENT_SOURCE_DIR}/sip/*.sip")
     FOREACH(sipfile ${sipfiles})
-        SET(INCLUDES
+	SET(INCLUDES
 "${INCLUDES}
 %Include ${sipfile}"
 )
     ENDFOREACH()
+
+    SET(IMPORTS
+"%Import limacore.sip"
+)
 
     IF(SIP_VERSION_STR VERSION_LESS "4.12")
 	    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/sip/limamodules_before_4_12.sip.in sip/limasimulator.sip)
