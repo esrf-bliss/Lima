@@ -1,5 +1,15 @@
 %Module lima@NAME@ 0
 
-%Import limacore.sip
+
+%UnitCode
+#include <lima_init_numpy.cpp>
+%End
+
+%PostInitialisationCode
+lima_import_array();
+%End
+
+
+@IMPORTS@
 
 @INCLUDES@

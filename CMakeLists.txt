@@ -78,7 +78,7 @@ ENDIF()
 IF(DEFINED ENV{COMPILE_ROPERSCIENTIFIC})
 	set(COMPILE_ROPERSCIENTIFIC "$ENV{COMPILE_ROPERSCIENTIFIC}" CACHE BOOL "compile roperscientific ?" FORCE)
 ELSE()
-	set(COMPILE_ROPERSCIENTIFIC ON CACHE BOOL "compile roperscientific?")
+	set(COMPILE_ROPERSCIENTIFIC OFF CACHE BOOL "compile roperscientific?")
 ENDIF()
 ####
 
@@ -129,6 +129,14 @@ IF(UNIX)
 		set(COMPILE_ESPIA "$ENV{COMPILE_ESPIA}" CACHE BOOL "compile espia?" FORCE)
 	ELSE()
 		set(COMPILE_ESPIA OFF CACHE BOOL "compile espia?")
+	ENDIF()
+	####
+
+	#MAXIPIX
+	IF(DEFINED ENV{COMPILE_MAXIPIX})
+		set(COMPILE_MAXIPIX "$ENV{COMPILE_MAXIPIX}" CACHE BOOL "compile maxipix?" FORCE)
+	ELSE()
+		set(COMPILE_MAXIPIX OFF CACHE BOOL "compile maxipix?")
 	ENDIF()
 	####
 
@@ -264,7 +272,7 @@ IF(UNIX)
 	IF(DEFINED ENV{COMPILE_MYTHEN3})
 		set(COMPILE_MYTHEN3 "$ENV{COMPILE_MYTHEN3}" CACHE BOOL "compile mythen3 ?" FORCE)
 	ELSE()
-		set(COMPILE_MYTHEN3 ON CACHE BOOL "compile mythen3 ?")
+		set(COMPILE_MYTHEN3 OFF CACHE BOOL "compile mythen3 ?")
 	ENDIF()
 	####
 ENDIF()
@@ -444,6 +452,16 @@ IF(UNIX)
 	if(COMPILE_AVIEX)
 		add_subdirectory(camera/aviex)
 	endif(COMPILE_AVIEX)
+	###########
+	#ESPIA
+	if(COMPILE_ESPIA)
+		add_subdirectory(camera/common/espia)
+	endif(COMPILE_ESPIA)
+	###########
+	#MAXIPIX
+	if(COMPILE_MAXIPIX)
+		add_subdirectory(camera/maxipix)
+	endif(COMPILE_MAXIPIX)
 	###########
 	#FRELON
 	if(COMPILE_FRELON)

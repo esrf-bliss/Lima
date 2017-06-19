@@ -1,5 +1,14 @@
 %Module(name=lima@NAME@,version=0)
 
-%Import limacore.sip
+
+%ModuleHeaderCode
+extern "C" { void lima_import_array();}
+%End
+
+%PostInitialisationCode
+lima_import_array();
+%End
+
+@IMPORTS@
 
 @INCLUDES@
