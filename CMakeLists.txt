@@ -123,6 +123,14 @@ IF(UNIX)
 		ENDIF()
 		####
 		
+		#AVIEX
+		IF(DEFINED ENV{COMPILE_AVIEX})
+			set(COMPILE_AVIEX "$ENV{COMPILE_AVIEX}" CACHE BOOL "compile aviex?" FORCE)
+		ELSE()
+			set(COMPILE_AVIEX OFF CACHE BOOL "compile aviex?")
+		ENDIF()
+		####
+		
 		#ANDOR3
 		IF(DEFINED ENV{COMPILE_ANDOR3})
 			set(COMPILE_ANDOR3 "$ENV{COMPILE_ANDOR3}" CACHE BOOL "compile andor3?" FORCE)
@@ -290,6 +298,14 @@ IF(UNIX)
 			set(COMPILE_MYTHEN3 OFF CACHE BOOL "compile mythen3 ?")
 		ENDIF()
 		####
+		
+		#HEXITEC
+		IF(DEFINED ENV{COMPILE_HEXITEC})
+			set(COMPILE_HEXITEC "$ENV{COMPILE_HEXITEC}" CACHE BOOL "compile hexitec ?" FORCE)
+		ELSE()
+			set(COMPILE_HEXITEC OFF CACHE BOOL "compile hexitec ?")
+		ENDIF()
+		####
 	ENDIF()
 
 #CAMERA ONLY WORKING UNDER WINDOWS
@@ -299,6 +315,22 @@ IF(WIN32)
 			set(COMPILE_PERKINELMER "$ENV{COMPILE_PERKINELMER}" CACHE BOOL "compile perkin elmer ?" FORCE)
 		ELSE()
 			set(COMPILE_PERKINELMER OFF CACHE BOOL "compile perkin elmer ?")
+		ENDIF()
+		####
+		
+		#HAMAMATSU
+		IF(DEFINED ENV{COMPILE_HAMAMATSU})
+			set(COMPILE_HAMAMATSU "$ENV{COMPILE_HAMAMATSU}" CACHE BOOL "compile hamamatsu ?" FORCE)
+		ELSE()
+			set(COMPILE_HAMAMATSU OFF CACHE BOOL "compile hamamatsu ?")
+		ENDIF()
+		####
+		
+		#PHOTONICSCIENCE
+		IF(DEFINED ENV{COMPILE_PHOTONICSCIENCE})
+			set(COMPILE_PHOTONICSCIENCE "$ENV{COMPILE_PHOTONICSCIENCE}" CACHE BOOL "compile photonicscience ?" FORCE)
+		ELSE()
+			set(COMPILE_PHOTONICSCIENCE OFF CACHE BOOL "compile photonicscience ?")
 		ENDIF()
 		####
 ENDIF()
@@ -555,6 +587,12 @@ IF(UNIX)
 		add_subdirectory(camera/mythen3)
 	endif(COMPILE_MYTHEN3)
 	###########
+	#HEXITEC
+	if(COMPILE_HEXITEC)
+		add_subdirectory(camera/hexitec)
+	endif(COMPILE_HEXITEC)
+	###########
+	
 ENDIF()
 
 #CAMERA ONLY WORKING UNDER WINDOWS
@@ -563,6 +601,16 @@ IF(WIN32)
 	if(COMPILE_PERKINELMER)
 		add_subdirectory(camera/perkinelmer)
 	endif(COMPILE_PERKINELMER)
+	###########
+	#HAMAMATSU
+	if(COMPILE_HAMAMATSU)
+		add_subdirectory(camera/hamamatsu)
+	endif(COMPILE_HAMAMATSU)
+	###########
+	#PHOTONICSCIENCE
+	if(COMPILE_PHOTONICSCIENCE)
+		add_subdirectory(camera/photonicscience)
+	endif(COMPILE_PHOTONICSCIENCE)
 	###########
 ENDIF()
 
