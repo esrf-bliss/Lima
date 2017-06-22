@@ -2,9 +2,11 @@
 cmake_minimum_required(VERSION 2.8)
 project (lima)
 
-SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
-SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
-SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
+if(UNIX)
+	SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
+	SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
+	SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
+endif()
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 FIND_PACKAGE(PythonInterp 2.6)
 FIND_PACKAGE(PythonLibs 2.6)
@@ -58,6 +60,13 @@ ELSE()
         set(COMPILE_SPS_IMAGE ON CACHE BOOL "compile sps_image?")
     ENDIF()
 ENDIF()
+
+#TEST COMPILATION
+if(DEFINED ENV{COMPILE_TEST})
+	set(COMPILE_TEST "$ENV{COMPILE_TEST}" CACHE BOOL "compile test directories ?" FORCE)
+else()
+	set(COMPILE_TEST OFF CACHE BOOL "compile test directories ?")
+endif()
 
 #CAMERA WORKING ON LINUX AND WINDOWS
 #BASLER
@@ -440,6 +449,11 @@ else()
     INSTALL(TARGETS limacore
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
+endif()
+
+#TESTs
+if(COMPILE_TEST)
+	enable_testing()
 endif()
 
 if(COMPILE_SIMULATOR)
