@@ -59,6 +59,13 @@ ELSE()
     ENDIF()
 ENDIF()
 
+#TEST COMPILATION
+if(DEFINED ENV{COMPILE_TEST})
+	set(COMPILE_TEST "$ENV{COMPILE_TEST}" CACHE BOOL "compile test directories ?" FORCE)
+else()
+	set(COMPILE_TEST OFF CACHE BOOL "compile test directories ?")
+endif()
+
 #CAMERA WORKING ON LINUX AND WINDOWS
 #BASLER
 IF(DEFINED ENV{COMPILE_BASLER})
@@ -440,6 +447,11 @@ else()
     INSTALL(TARGETS limacore
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
+endif()
+
+#TESTs
+if(COMPILE_TEST)
+	enable_testing()
 endif()
 
 if(COMPILE_SIMULATOR)
