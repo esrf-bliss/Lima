@@ -2,9 +2,11 @@
 cmake_minimum_required(VERSION 2.8)
 project (lima)
 
-SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
-SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
-SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
+if(UNIX)
+	SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
+	SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
+	SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
+endif()
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 FIND_PACKAGE(PythonInterp 2.6)
 FIND_PACKAGE(PythonLibs 2.6)
@@ -59,6 +61,13 @@ ELSE()
     ENDIF()
 ENDIF()
 
+#TEST COMPILATION
+if(DEFINED ENV{COMPILE_TEST})
+	set(COMPILE_TEST "$ENV{COMPILE_TEST}" CACHE BOOL "compile test directories ?" FORCE)
+else()
+	set(COMPILE_TEST OFF CACHE BOOL "compile test directories ?")
+endif()
+
 #CAMERA WORKING ON LINUX AND WINDOWS
 #BASLER
 IF(DEFINED ENV{COMPILE_BASLER})
@@ -89,6 +98,14 @@ IF(UNIX)
 		set(COMPILE_PROSILICA "$ENV{COMPILE_PROSILICA}" CACHE BOOL "compile prosilica?" FORCE)
 	ELSE()
 		set(COMPILE_PROSILICA OFF CACHE BOOL "compile prosilica?")
+	ENDIF()
+	####
+	
+	#AVIEX
+	IF(DEFINED ENV{COMPILE_AVIEX})
+		set(COMPILE_AVIEX "$ENV{COMPILE_AVIEX}" CACHE BOOL "compile aviex?" FORCE)
+	ELSE()
+		set(COMPILE_AVIEX OFF CACHE BOOL "compile aviex?")
 	ENDIF()
 	####
 	
@@ -275,6 +292,14 @@ IF(UNIX)
 		set(COMPILE_MYTHEN3 OFF CACHE BOOL "compile mythen3 ?")
 	ENDIF()
 	####
+	
+	#HEXITEC
+	IF(DEFINED ENV{COMPILE_HEXITEC})
+		set(COMPILE_HEXITEC "$ENV{COMPILE_HEXITEC}" CACHE BOOL "compile hexitec ?" FORCE)
+	ELSE()
+		set(COMPILE_HEXITEC OFF CACHE BOOL "compile hexitec ?")
+	ENDIF()
+	####
 ENDIF()
 
 #CAMERA ONLY WORKING UNDER WINDOWS
@@ -292,6 +317,22 @@ IF(WIN32)
 		set(COMPILE_PCO "$ENV{COMPILE_PCO}" CACHE BOOL "compile pco?" FORCE)
 	ELSE()
 		set(COMPILE_PCO OFF CACHE BOOL "compile pco?")
+	ENDIF()
+	####
+	
+	#HAMAMATSU
+	IF(DEFINED ENV{COMPILE_HAMAMATSU})
+		set(COMPILE_HAMAMATSU "$ENV{COMPILE_HAMAMATSU}" CACHE BOOL "compile hamamatsu ?" FORCE)
+	ELSE()
+		set(COMPILE_HAMAMATSU OFF CACHE BOOL "compile hamamatsu ?")
+	ENDIF()
+	####
+	
+	#PHOTONICSCIENCE
+	IF(DEFINED ENV{COMPILE_PHOTONICSCIENCE})
+		set(COMPILE_PHOTONICSCIENCE "$ENV{COMPILE_PHOTONICSCIENCE}" CACHE BOOL "compile photonicscience ?" FORCE)
+	ELSE()
+		set(COMPILE_PHOTONICSCIENCE OFF CACHE BOOL "compile photonicscience ?")
 	ENDIF()
 	####
 ENDIF()
@@ -408,6 +449,11 @@ else()
     INSTALL(TARGETS limacore
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
+endif()
+
+#TESTs
+if(COMPILE_TEST)
+	enable_testing()
 endif()
 
 if(COMPILE_SIMULATOR)
@@ -553,6 +599,11 @@ IF(UNIX)
 		add_subdirectory(camera/mythen3)
 	endif(COMPILE_MYTHEN3)
 	###########
+	#HEXITEC
+	if(COMPILE_HEXITEC)
+		add_subdirectory(camera/hexitec)
+	endif(COMPILE_HEXITEC)
+	###########
 ENDIF()
 
 #CAMERA ONLY WORKING UNDER WINDOWS
@@ -566,6 +617,16 @@ IF(WIN32)
 	if(COMPILE_PCO)
 		add_subdirectory(camera/pco)
 	endif(COMPILE_PCO)
+	###########
+	#HAMAMATSU
+	if(COMPILE_HAMAMATSU)
+		add_subdirectory(camera/hamamatsu)
+	endif(COMPILE_HAMAMATSU)
+	###########
+	#PHOTONICSCIENCE
+	if(COMPILE_PHOTONICSCIENCE)
+		add_subdirectory(camera/photonicscience)
+	endif(COMPILE_PHOTONICSCIENCE)
 	###########
 ENDIF()
 

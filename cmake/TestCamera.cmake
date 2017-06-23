@@ -1,7 +1,7 @@
 ############################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-# Copyright (C) : 2009-2011
+# Copyright (C) : 2009-2017
 # European Synchrotron Radiation Facility
 # BP 220, Grenoble 38043
 # FRANCE
@@ -19,37 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-LIMA_DIR := $(shell pwd)/../../..
 
-include $(LIMA_DIR)/config.inc
-include $(LIMA_DIR)/control/control.inc
-
-simu-objs = SimulatorFrameBuilder.o SimulatorCamera.o SimulatorInterface.o \
-	SimulatorSyncCtrlObj.o SimulatorDetInfoCtrlObj.o SimulatorShutterCtrlObj.o
-
-SRCS = $(simu-objs:.o=.cpp)
-
-CXX = g++
-CPPFLAGS = -I../include $(CT_CPPFLAGS)
-CXXFLAGS = $(CT_CXXFLAGS)
-
-all: 	Simu.o
-
-Simu.o:	$(simu-objs)
-	$(LD) -o $@ -r $+
-
-clean:
-	rm -f Simu.o *.P $(simu-objs)
-
-%.o : %.cpp
-	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
-	@cp $*.d $*.P; \
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
-	rm -f $*.d
-
--include $(SRCS:.cpp=.P)
-
-.PHONY: check-syntax
-check-syntax:
-	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+foreach(file ${test_src})
+	add_executable(${file} "${file}.cpp")
+	target_link_libraries(${file} limacore lima${NAME})
+	add_test(NAME ${file} COMMAND ${file})
+endforeach(file)
