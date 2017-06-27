@@ -31,5 +31,6 @@ ADD_SIP_PYTHON_MODULE(lima${NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/lima${NAME}.si
 TARGET_INCLUDE_DIRECTORIES(python_module_lima${NAME} PRIVATE
                           ${PYTHON_INCLUDE_DIRS}
                           "${CMAKE_SOURCE_DIR}/sip"
-                          "${CMAKE_SOURCE_DIR}/sip/core")
+                          "${CMAKE_SOURCE_DIR}/sip/core"
+                          "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip")
 TARGET_LINK_LIBRARIES(python_module_lima${NAME} lima${NAME})
