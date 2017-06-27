@@ -35,67 +35,67 @@
 # SIP_EXTRA_OPTIONS - Extra command line options which should be passed on to
 #     SIP.
 
-SET(SIP_INCLUDES)
-SET(SIP_TAGS)
-SET(SIP_CONCAT_PARTS 8)
-SET(SIP_DISABLE_FEATURES)
-SET(SIP_EXTRA_OPTIONS)
+set(SIP_INCLUDES)
+set(SIP_TAGS)
+set(SIP_CONCAT_PARTS 8)
+set(SIP_DISABLE_FEATURES)
+set(SIP_EXTRA_OPTIONS)
 
-MACRO(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
+macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
 
-    SET(EXTRA_LINK_LIBRARIES ${ARGN})
+    set(EXTRA_LINK_LIBRARIES ${ARGN})
 
-    STRING(REPLACE "." "/" _x ${MODULE_NAME})
-    GET_FILENAME_COMPONENT(_parent_module_path ${_x}  PATH)
-    GET_FILENAME_COMPONENT(_child_module_name ${_x} NAME)
+    string(REPLACE "." "/" _x ${MODULE_NAME})
+    get_filename_component(_parent_module_path ${_x}  PATH)
+    get_filename_component(_child_module_name ${_x} NAME)
 
-    GET_FILENAME_COMPONENT(_module_path ${MODULE_SIP} PATH)
-    GET_FILENAME_COMPONENT(_abs_module_sip ${MODULE_SIP} ABSOLUTE)
+    get_filename_component(_module_path ${MODULE_SIP} PATH)
+    get_filename_component(_abs_module_sip ${MODULE_SIP} ABSOLUTE)
 
     # We give this target a long logical target name.
     # (This is to avoid having the library name clash with any already
     # install library names. If that happens then cmake dependancy
     # tracking get confused.)
-    STRING(REPLACE "." "_" _logical_name ${MODULE_NAME})
-    SET(_logical_name "python_module_${_logical_name}")
+    string(REPLACE "." "_" _logical_name ${MODULE_NAME})
+    set(_logical_name "python_module_${_logical_name}")
 
-    FILE(MAKE_DIRECTORY ${_module_path})    # Output goes in this dir.
+    file(MAKE_DIRECTORY ${_module_path})    # Output goes in this dir.
 
-    SET(_sip_includes)
-    FOREACH (_inc ${SIP_INCLUDES})
-        GET_FILENAME_COMPONENT(_abs_inc ${_inc} ABSOLUTE)
-        LIST(APPEND _sip_includes -I ${_abs_inc})
-    ENDFOREACH (_inc )
+    set(_sip_includes)
+    foreach (_inc ${SIP_INCLUDES})
+        get_filename_component(_abs_inc ${_inc} ABSOLUTE)
+        list(APPEND _sip_includes -I ${_abs_inc})
+    endforeach (_inc )
 
-    SET(_sip_tags)
-    FOREACH (_tag ${SIP_TAGS})
-        LIST(APPEND _sip_tags -t ${_tag})
-    ENDFOREACH (_tag)
+    set(_sip_tags)
+    foreach (_tag ${SIP_TAGS})
+        list(APPEND _sip_tags -t ${_tag})
+    endforeach (_tag)
 
-    SET(_sip_x)
-    FOREACH (_x ${SIP_DISABLE_FEATURES})
-        LIST(APPEND _sip_x -x ${_x})
-    ENDFOREACH (_x ${SIP_DISABLE_FEATURES})
+    set(_sip_x)
+    foreach (_x ${SIP_DISABLE_FEATURES})
+        list(APPEND _sip_x -x ${_x})
+    endforeach (_x ${SIP_DISABLE_FEATURES})
 
-    SET(_message "-DMESSAGE=Generating CPP code for module ${MODULE_NAME}")
-    SET(_sip_output_files)
-    FOREACH(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
-        IF( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
-            SET(_sip_output_files ${_sip_output_files} ${_module_path}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
-        ENDIF( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
-    ENDFOREACH(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
+    set(_message "-DMESSAGE=Generating CPP code for module ${MODULE_NAME}")
+    set(_sip_output_files)
+    foreach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
+        if( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
+            set(_sip_output_files ${_sip_output_files} ${_module_path}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
+        endif( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
+    endforeach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
 
-    IF(NOT WIN32)
-        SET(TOUCH_COMMAND touch)
-    ELSE(NOT WIN32)
-        SET(TOUCH_COMMAND echo)
+    if(NOT WIN32)
+        set(TOUCH_COMMAND touch)
+    else(NOT WIN32)
+        set(TOUCH_COMMAND echo)
         # instead of a touch command, give out the name and append to the files
         # this is basically what the touch command does.
-        FOREACH(filename ${_sip_output_files})
-            FILE(APPEND filename "")
-        ENDFOREACH(filename ${_sip_output_files})
-    ENDIF(NOT WIN32)
-    ADD_CUSTOM_COMMAND(
+        foreach(filename ${_sip_output_files})
+            file(APPEND filename "")
+        endforeach(filename ${_sip_output_files})
+    endif(NOT WIN32)
+    add_custom_command(
         OUTPUT ${_sip_output_files} 
         COMMAND ${CMAKE_COMMAND} -E echo ${message}
         COMMAND ${TOUCH_COMMAND} ${_sip_output_files} 
@@ -104,20 +104,20 @@ MACRO(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
     )
     # not sure if type MODULE could be uses anywhere, limit to cygwin for now
-    IF (CYGWIN)
-        ADD_LIBRARY(${_logical_name} MODULE ${_sip_output_files} )
-    ELSE (CYGWIN)
-        ADD_LIBRARY(${_logical_name} SHARED ${_sip_output_files} )
-    ENDIF (CYGWIN)
-    TARGET_LINK_LIBRARIES(${_logical_name} ${PYTHON_LIBRARY})
-    TARGET_LINK_LIBRARIES(${_logical_name} ${EXTRA_LINK_LIBRARIES})
-    SET_TARGET_PROPERTIES(${_logical_name} PROPERTIES PREFIX "" OUTPUT_NAME ${_child_module_name})
+    if (CYGWIN)
+        add_library(${_logical_name} MODULE ${_sip_output_files} )
+    else (CYGWIN)
+        add_library(${_logical_name} SHARED ${_sip_output_files} )
+    endif (CYGWIN)
+    target_link_libraries(${_logical_name} ${PYTHON_LIBRARY})
+    target_link_libraries(${_logical_name} ${EXTRA_LINK_LIBRARIES})
+    set_target_properties(${_logical_name} PROPERTIES PREFIX "" OUTPUT_NAME ${_child_module_name})
     
-    IF (WIN32)
-      SET_TARGET_PROPERTIES(${_logical_name} PROPERTIES SUFFIX ".pyd")
-      SET_TARGET_PROPERTIES(${_logical_name} PROPERTIES IMPORT_SUFFIX ".dll")
-    ENDIF (WIN32)
+    if (WIN32)
+      set_target_properties(${_logical_name} PROPERTIES SUFFIX ".pyd")
+      set_target_properties(${_logical_name} PROPERTIES IMPORT_SUFFIX ".dll")
+    endif (WIN32)
 
-    INSTALL(TARGETS ${_logical_name} DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}")
+    install(TARGETS ${_logical_name} DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}")
 
-ENDMACRO(ADD_SIP_PYTHON_MODULE)
+endmacro(ADD_SIP_PYTHON_MODULE)
