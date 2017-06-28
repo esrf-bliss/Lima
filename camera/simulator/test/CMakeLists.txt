@@ -22,4 +22,4 @@
 
 set(test_src test_simulator_framebuilder test_simulator_hwbuffersave) #test_simulator_hwinterface (test not finishing)
 
-include(TestCamera)
+limatools_run_camera_tests("${test_src}" ${NAME})

@@ -134,8 +134,10 @@ using namespace lima;
 
     CtAcquisition* acquisition();
     CtSaving* saving();
+%If (WITH_SPS_IMAGE)    
 %If (POSIX_PLATFORM)
     CtSpsImage* display();
+%End
 %End
     CtImage* image();
     CtBuffer* buffer();
