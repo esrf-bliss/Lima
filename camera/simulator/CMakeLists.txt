@@ -19,36 +19,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-SET(simu_srcs src/SimulatorFrameBuilder.cpp src/SimulatorCamera.cpp src/SimulatorInterface.cpp
+set(simu_srcs src/SimulatorFrameBuilder.cpp src/SimulatorCamera.cpp src/SimulatorInterface.cpp
               src/SimulatorSyncCtrlObj.cpp src/SimulatorDetInfoCtrlObj.cpp src/SimulatorShutterCtrlObj.cpp)
 
-FILE(STRINGS "VERSION" simu_ver)
-ADD_LIBRARY(limasimulator SHARED ${simu_srcs})
+file(STRINGS "VERSION" simu_ver)
+add_library(limasimulator SHARED ${simu_srcs})
 
-TARGET_INCLUDE_DIRECTORIES(limasimulator PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../common/include")
-TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../hardware/include")
-TARGET_LINK_LIBRARIES(limasimulator limacore)
+target_include_directories(limasimulator PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../common/include")
+target_include_directories(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../hardware/include")
+target_link_libraries(limasimulator limacore)
 if(WIN32)
-	TARGET_COMPILE_DEFINITIONS(limasimulator PRIVATE LIBSIMULATOR_EXPORTS)
+	target_compile_definitions(limasimulator PRIVATE LIBSIMULATOR_EXPORTS)
 endif()
-SET_TARGET_PROPERTIES(limasimulator PROPERTIES VERSION ${simu_ver} SOVERSION "1")
+set_target_properties(limasimulator PROPERTIES VERSION ${simu_ver} SOVERSION "1")
 if(WIN32)
-    SET_TARGET_PROPERTIES(limasimulator PROPERTIES PREFIX "lib")
+    set_target_properties(limasimulator PROPERTIES PREFIX "lib")
 endif()
 if(WIN32)
-    INSTALL(TARGETS limasimulator
+    install(TARGETS limasimulator
             DESTINATION lib)
 else()
-    INSTALL(TARGETS limasimulator
+    install(TARGETS limasimulator
             LIBRARY DESTINATION lib)
 endif()
 
-IF (COMPILE_SIP)
-    SET(NAME "simulator")
+if (COMPILE_SIP)
+    set(NAME "simulator")
     include(CameraRunSIP)
-    INSTALL(FILES python/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Simulator")
-ENDIF()
+    install(FILES python/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Simulator")
+endif()
 
 if(COMPILE_TEST)
 	add_subdirectory(test/)

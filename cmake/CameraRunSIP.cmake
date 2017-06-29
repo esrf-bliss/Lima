@@ -1,22 +1,22 @@
-SET(INCLUDES)
-FILE(GLOB sipfiles RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/sip" "${CMAKE_CURRENT_SOURCE_DIR}/sip/*.sip")
-FOREACH(sipfile ${sipfiles})
-	SET(INCLUDES 
+set(INCLUDES)
+file(GLOB sipfiles RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/sip" "${CMAKE_CURRENT_SOURCE_DIR}/sip/*.sip")
+foreach(sipfile ${sipfiles})
+	set(INCLUDES 
 	"${INCLUDES}
 %Include ${sipfile}")
-ENDFOREACH()
+endforeach()
 
-SET(IMPORTS 
+set(IMPORTS 
 "${IMPORTS}
 %Import limacore.sip")
 
 if(SIP_VERSION_STR VERSION_LESS "4.12")
 	configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules_before_4_12.sip.in sip/lima${NAME}.sip)
 else()
-	CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/lima${NAME}.sip)
+	configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/lima${NAME}.sip)
 endif()
-SET(SIP_CONCAT_PARTS 1)
-SET(SIP_INCLUDES ${SIP_INCLUDES}
+set(SIP_CONCAT_PARTS 1)
+set(SIP_INCLUDES ${SIP_INCLUDES}
     "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip"
     "${CMAKE_BINARY_DIR}/sip/core"
     "${CMAKE_SOURCE_DIR}/third-party/Processlib/tasks/sip"
@@ -28,9 +28,9 @@ SET(SIP_INCLUDES ${SIP_INCLUDES}
 set(SIP_DISABLE_FEATURES WITH_CONFIG)
 set(SIP_CHECK_EXC ON)
 ADD_SIP_PYTHON_MODULE(lima${NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/lima${NAME}.sip)
-TARGET_INCLUDE_DIRECTORIES(python_module_lima${NAME} PRIVATE
+target_include_directories(python_module_lima${NAME} PRIVATE
                           ${PYTHON_INCLUDE_DIRS}
                           "${CMAKE_SOURCE_DIR}/sip"
                           "${CMAKE_SOURCE_DIR}/sip/core"
                           "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip")
-TARGET_LINK_LIBRARIES(python_module_lima${NAME} lima${NAME})
+target_link_libraries(python_module_lima${NAME} lima${NAME})
