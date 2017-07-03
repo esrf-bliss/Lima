@@ -25,7 +25,11 @@
 cmake_minimum_required(VERSION 2.8)
 project (lima)
 
+#--------------------------------------------------------------------------------
+# cmake/ directory contains tools 
+#--------------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+include(LimaTools)
 
 find_package(Threads REQUIRED)
 
@@ -34,27 +38,41 @@ if(UNIX)
 endif()
 
 
-if(DEFINED ENV{COMPILE_SPS_IMAGE})
+if(UNIX)
+#--------------------------------------------------------------------------------
+# Spec-like shared memory
+#--------------------------------------------------------------------------------
+  if(DEFINED ENV{COMPILE_SPS_IMAGE})
     set(LIMA_ENABLE_SPS_IMAGE "$ENV{COMPILE_SPS_IMAGE}" CACHE BOOL "compile sps_image?" FORCE)
-else()
-    if(WIN32)
-        set(LIMA_ENABLE_SPS_IMAGE ON CACHE BOOL "compile sps_image?")
-    else()
-        set(LIMA_ENABLE_SPS_IMAGE ON CACHE BOOL "compile sps_image?")
-    endif()
+  else()
+    option(LIMA_ENABLE_SPS_IMAGE "compile sps_image?" OFF)
+  endif()
+  
+# openGL real-time display
+  if(DEFINED ENV{COMPILE_GLDISPLAY})
+    set(LIMA_ENABLE_GLDISPLAY "$ENV{COMPILE_GLDISPLAY}" CACHE BOOL "compile gldisplay?" FORCE)
+  else()
+    option(LIMA_ENABLE_GLDISPLAY "compile sps_image?" OFF)
+  endif()
 endif()
 
+#--------------------------------------------------------------------------------
 #Compile tests
+#--------------------------------------------------------------------------------
 option(LIMA_ENABLE_TESTS "compile test directories ?" OFF)
 
+#--------------------------------------------------------------------------------
 # libconfig
+#--------------------------------------------------------------------------------
 if(DEFINED ENV{LIMA_ENABLE_CONFIG})
     set(LIMA_ENABLE_CONFIG "$ENV{LIMA_ENABLE_CONFIG}" CACHE BOOL "compile with libconfig code?" FORCE)
 else()
     option(LIMA_ENABLE_CONFIG "compile with libconfig?" OFF)
 endif()
       
-# Saving formats can be enabled using environment variables using config.inc file
+#--------------------------------------------------------------------------------
+# Saving formats can be enabled from environment variables using config.inc file
+#--------------------------------------------------------------------------------
 if(DEFINED ENV{LIMA_ENABLE_CBF})
     set(LIMA_ENABLE_CBF "$ENV{LIMA_ENABLE_CBF}" CACHE BOOL "compile CBF saving code?" FORCE)
 else()
@@ -98,7 +116,9 @@ else()
     option(LIMA_ENABLE_PYTHON "compile python modules?" OFF)
 endif()
 
+#--------------------------------------------------------------------------------
 # Enable python binding code compilation using sip generator
+#--------------------------------------------------------------------------------
 if(LIMA_ENABLE_PYTHON)
     find_package(PythonInterp 2.6)
     find_package(PythonLibs 2.6)
@@ -137,9 +157,18 @@ if(LIMA_ENABLE_PYTHON)
     set(SIP_EXTRA_OPTIONS -e -g)    
  endif()
 
+#--------------------------------------------------------------------------------
 #Processlib third-party is mandatory
+#--------------------------------------------------------------------------------
+set(PROCESSLIB_EXTERNALLY_CONFIGURED ON)
+if(LIMA_ENABLE_PYTHON)
+  set(PROCESSLIB_EXTERNALLY_ENABLE_PYTHON ON)
+endif()
 add_subdirectory(third-party/Processlib)
 
+#--------------------------------------------------------------------------------
+# Define source files
+#--------------------------------------------------------------------------------
 if(WIN32)
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/core/include/WindowSpecific")
 endif(WIN32)
@@ -169,11 +198,36 @@ set(control_srcs control/src/CtSaving.cpp control/src/CtControl.cpp control/src/
                  control/src/CtEvent.cpp)
 set(ct_srcs control/software_operation/src/SoftOpInternalMgr.cpp control/software_operation/src/SoftOpExternalMgr.cpp control/software_operation/src/SoftOpId.cpp)
 
+#--------------------------------------------------------------------------------
+# Option for libconfig++ support
+#--------------------------------------------------------------------------------
+set(extra_libs)
+if(LIMA_ENABLE_CONFIG)
+    add_definitions(-DWITH_CONFIG)
+    find_library(LIB_CONFIG config++)
+    set(extra_libs ${extra_libs} config++)
+    set(common_srcs ${common_srcs} common/src/ConfigUtils.cpp)
+    set(control_srcs ${control_srcs} control/src/CtConfig.cpp)
+endif()
+
+#--------------------------------------------------------------------------------
+# Option for Spec-like shared-memory (SPS)  support
+#--------------------------------------------------------------------------------
 if(LIMA_ENABLE_SPS_IMAGE)
     add_definitions(-DWITH_SPS_IMAGE)
     set(ct_srcs ${ct_srcs} control/src/CtSpsImage.cpp third-party/Sps/Src/sps.c)
 endif()
 
+#--------------------------------------------------------------------------------
+# Option for openGL real-time display  support
+#--------------------------------------------------------------------------------
+if(LIMA_ENABLE_GLDISPLAY)
+  add_subdirectory(third-party/gldisplay)
+endif()
+
+#--------------------------------------------------------------------------------
+# Option for extra saving formats edf.gz, edf.lz4, cbf, hdf5, tiff, fits ...
+#--------------------------------------------------------------------------------
 set(saving_libs)
 set(saving_includes)
 
@@ -204,16 +258,20 @@ if(LIMA_ENABLE_FITS)
     set(saving_libs ${saving_libs} ${LIB_CFITSIO} ${LIB_CCFITS})
 endif()
 
-if(SAVING_HDF5)
+if(LIMA_ENABLE_HDF5)
     add_definitions(-DWITH_HDF5_SAVING)
     set(ct_srcs ${ct_srcs} control/src/CtSaving_Hdf5.cpp)
-    set(HDF5_BUILD_CPP_LIB ON CACHE BOOL "" FORCE)
-    set(BUILD_SHARED_LIBS ON CACHE  BOOL "" FORCE)
-    add_subdirectory(third-party/hdf5)
-    set(saving_includes ${saving_includes} 
-    "${CMAKE_SOURCE_DIR}/third-party/hdf5/src"
-    "${CMAKE_SOURCE_DIR}/third-party/hdf5/c++/src")    
-    set(saving_libs ${saving_libs} hdf5 hdf5_cpp)    
+#    set(HDF5_EXTERNALLY_CONFIGURED 1)
+#    set(HDF5_BUILD_CPP_LIB ON CACHE BOOL "" FORCE)
+#    set(BUILD_SHARED_LIBS ON CACHE  BOOL "" FORCE)
+#    add_subdirectory(third-party/hdf5)
+#    set(saving_includes ${saving_includes} 
+#    "${CMAKE_SOURCE_DIR}/third-party/hdf5/src"
+#    "${CMAKE_SOURCE_DIR}/third-party/hdf5/c++/src")
+    find_library(LIB_HDF5_CPP hdf5_cpp)
+    find_library(LIB_HDF5 hdf5_serial)
+    set(saving_libs ${saving_libs} hdf5_serial hdf5_cpp)    
+    set(saving_includes ${saving_includes} "/usr/include/hdf5/serial")
 endif()
 
 if(LIMA_ENABLE_NXS)
@@ -228,13 +286,18 @@ if(LIMA_ENABLE_TIFF)
     set(saving_libs ${saving_libs} tiff)
 endif()
 
-file(STRINGS "common/VERSION" core_ver)
+#--------------------------------------------------------------------------------
+# Add the library limacore definition
+#--------------------------------------------------------------------------------
 add_library(limacore SHARED
     ${common_srcs}
     ${hw_srcs}
     ${control_srcs}
     ${ct_srcs}
 )
+
+limatools_set_library_soversion(limacore "common/VERSION")       
+  
 target_include_directories(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/common/include")
 target_include_directories(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/hardware/include")
 target_include_directories(limacore PUBLIC
@@ -252,18 +315,15 @@ if(THREADS_HAVE_PTHREAD_ARG)
     target_compile_options(PUBLIC limacore "-pthread")
 endif()
 if(CMAKE_THREAD_LIBS_INIT)
-    target_link_libraries(limacore "${CMAKE_THREAD_LIBS_INIT}")
+  target_link_libraries(limacore "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 if(UNIX)
     target_link_libraries(limacore "rt")
 endif()
 target_link_libraries(limacore processlib)
-target_link_libraries(limacore ${saving_libs})
+target_link_libraries(limacore ${saving_libs} ${extra_libs})
 if(WIN32)
-	target_compile_definitions(limacore PRIVATE LIMACORE_EXPORTS)
-endif()
-set_target_properties(limacore PROPERTIES VERSION ${core_ver} SOVERSION "1")
-if(WIN32)
+    target_compile_definitions(limacore PRIVATE LIMACORE_EXPORTS)
     set_target_properties(limacore PROPERTIES PREFIX "lib")
 endif()
 if(WIN32)
@@ -276,7 +336,9 @@ else()
             PUBLIC_HEADER DESTINATION include)
 endif()
 
-
+#--------------------------------------------------------------------------------
+# SIP generates binding code for python
+#--------------------------------------------------------------------------------
 if(LIMA_ENABLE_PYTHON)
     set(NAME "core")
     set(INCLUDES)
@@ -311,14 +373,16 @@ if(LIMA_ENABLE_PYTHON)
         "${CMAKE_CURRENT_SOURCE_DIR}/hardware/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip")
-    if (LIMA_ENABLE_CONFIG)
-      set(SIP_ENABLE_FEATURES WITH_CONFIG)
-    else()
-      set(SIP_DISABLE_FEATURES WITH_CONFIG)
+    if (NOT LIMA_ENABLE_CONFIG)
+      set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_CONFIG)
     endif()
-    set(SIP_CHECK_EXC ON)
+    if (NOT LIMA_ENABLE_SPS_IMAGE)
+      set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_SPS_IMAGE)
+    endif()
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip PROPERTIES OBJECT_DEPENDS ${sipfiles} sip/core/HwFrameInfo.sip)
+    # Run sip now !
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip)
+    
     target_include_directories(python_module_limacore PRIVATE
         ${PYTHON_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/sip
@@ -330,15 +394,21 @@ if(LIMA_ENABLE_PYTHON)
     install(FILES common/python/__init__.py common/python/Debug.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Core")
 endif()
 
+#--------------------------------------------------------------------------------
 #TESTS, run ctest or make test
+#--------------------------------------------------------------------------------
 if(LIMA_ENABLE_TESTS)
     enable_testing()
 endif()
 
-# CAMERAS
+#--------------------------------------------------------------------------------
+# CAMERA list is in cmake/CameraList.cmake file
+#--------------------------------------------------------------------------------
 include(CameraList)
 
-# PACKAGES, run cpack or make package
+#--------------------------------------------------------------------------------
+# PACKAGES debian at least, run cpack or make package
+#--------------------------------------------------------------------------------
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "ESRF/BLISS") #required
 set(CPACK_PACKAGE_CONTACT "lima@esrf.fr")

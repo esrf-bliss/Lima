@@ -24,6 +24,7 @@
 %Platforms {WIN32_PLATFORM WIN64_PLATFORM POSIX_PLATFORM}
 
 %Feature WITH_CONFIG
+%Feature WITH_SPS_IMAGE
 
 %ModuleHeaderCode
 #include "lima/SoftOpId.h"
