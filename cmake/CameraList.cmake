@@ -43,16 +43,6 @@ endif()
 if(LIMACAMERA_BASLER)
     add_subdirectory(camera/basler)
 endif(LIMACAMERA_BASLER)
-
-#DEXELA
-if(DEFINED ENV{LIMACAMERA_DEXELA})
-   set(LIMACAMERA_DEXELA "$ENV{LIMACAMERA_DEXELA}" CACHE BOOL "compile dexela ?" FORCE)
-else()
-   set(LIMACAMERA_DEXELA OFF CACHE BOOL "compile dexela ?")
-endif()
-if(LIMACAMERA_DEXELA)
-    add_subdirectory(camera/dexela)
-endif(LIMACAMERA_DEXELA)
 	
 #PCO
 if(DEFINED ENV{LIMACAMERA_PCO})
@@ -117,6 +107,16 @@ if(UNIX)
 	if(LIMACAMERA_ADSC)
 		add_subdirectory(camera/adsc)
 	endif(LIMACAMERA_ADSC)
+	
+	#DEXELA
+	if(DEFINED ENV{LIMACAMERA_DEXELA})
+	   set(LIMACAMERA_DEXELA "$ENV{LIMACAMERA_DEXELA}" CACHE BOOL "compile dexela ?" FORCE)
+	else()
+	   set(LIMACAMERA_DEXELA OFF CACHE BOOL "compile dexela ?")
+	endif()
+	if(LIMACAMERA_DEXELA)
+		add_subdirectory(camera/dexela)
+	endif(LIMACAMERA_DEXELA)
 
 	#ESPIA
 	if(DEFINED ENV{LIMACAMERA_ESPIA})
