@@ -159,7 +159,7 @@ long SaveContainerFits::_writeFile(void* f,Data &aData,
     }
 
     delete naxes;
-    return Data.size();		// @todo fix me (it's only use for statistics)
+    return aData.size();		// @todo fix me (it's only use for statistics)
 }
 
 void SaveContainerFits::writeHeader(std::auto_ptr<CCfits::FITS> &fitsFile, CtSaving::HeaderMap &header)

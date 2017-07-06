@@ -19,36 +19,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+LIMA_DIR := $(shell pwd)/../../..
 
-simu-objs = ../src/Simu.o
+include $(LIMA_DIR)/config.inc
+include $(LIMA_DIR)/control/control.inc
 
 test-objs = test.o
-test-ext-objs = $(simu-objs)
 
 testsimulator-objs = testsimulator.o
-testsimulator-ext-objs = $(simu-objs)
 
 testsimuhwinterface-objs = testsimuhwinterface.o
-testsimuhwinterface-ext-objs = $(simu-objs)
 
 SRCS = $(test-objs:.o=.cpp) $(testsimulator-objs:.o=.cpp) \
        $(testsimuhwinterface-objs:.o=.cpp)
 
-INC = -I../include -I../../../common/include -I../../../hardware/include -I../../../third-party/Processlib/core/include
-CXXFLAGS += $(INC) -Wall -pthread -g
-LDFLAGS = -L../../../third-party/Processlib/build -lprocesslib -L../../../build -llimacore -pthread -lrt
+CPPFLAGS = -I../include $(CT_CPPFLAGS)
+CXXFLAGS = $(CT_CXXFLAGS)
+DEPLIBS = $(CT_DEPLIBS) \
+	  $(LIMA_DIR)/build,limacore \
+	  $(LIMA_DIR)/build,limasimulator
+LDFLAGS = $(CT_LDFLAGS) $(call lib-depflags,$(DEPLIBS))
+LDLIBS = $(CT_LDLIBS) $(call lib-deplibs,$(DEPLIBS))
 
 all: test testsimulator testsimuhwinterface
 
-test:	$(test-objs) $(test-ext-objs)
-	$(CXX) -o $@ $+ $(LDFLAGS)
+test:	$(test-objs)
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
-testsimulator: $(testsimulator-objs) $(testsimulator-ext-objs) 
-	$(CXX) -o $@ $+ $(LDFLAGS)
+testsimulator: $(testsimulator-objs)
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
-testsimuhwinterface: $(testsimuhwinterface-objs) \
-		     $(testsimuhwinterface-ext-objs) 
-	$(CXX) -o $@ $+ $(LDFLAGS)
+testsimuhwinterface: $(testsimuhwinterface-objs)
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 clean: 
 	rm -f $(test-objs) test *.edf
@@ -57,7 +59,7 @@ clean:
 	rm -f *.P
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
