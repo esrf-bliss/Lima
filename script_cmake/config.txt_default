@@ -1,0 +1,67 @@
+###########################################################################
+# This file is part of LImA, a Library for Image Acquisition
+#
+#  Copyright (C) : 2009-2017
+#  European Synchrotron Radiation Facility
+#  BP 220, Grenoble 38043
+#  FRANCE
+# 
+#  Contact: lima@esrf.fr
+# 
+#  This is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+# 
+#  This software is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+# 
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, see <http://www.gnu.org/licenses/>.
+############################################################################
+
+LIMACAMERA_SIMULATOR=1
+LIMACAMERA_PILATUS=0
+LIMACAMERA_BASLER=0
+LIMACAMERA_PROSILICA=0
+LIMACAMERA_ADSC=0
+LIMACAMERA_MYTHEN3=0
+LIMACAMERA_UEYE=0
+LIMACAMERA_XH=0
+LIMACAMERA_XSPRESS3=0
+LIMACAMERA_ULTRA=0
+LIMACAMERA_XPAD=0
+LIMACAMERA_MYTHEN=0
+LIMACAMERA_ANDOR=0
+LIMACAMERA_ANDOR3=0
+LIMACAMERA_PCO=0
+LIMACAMERA_MARCCD=0
+LIMACAMERA_POINTGREY=0
+LIMACAMERA_IMXPAD=0
+LIMACAMERA_DEXELA=0
+LIMACAMERA_MERLIN=0
+LIMACAMERA_V4L2=0
+LIMACAMERA_EIGER=0
+LIMACAMERA_PIXIRAD=0
+LIMACAMERA_HEXITEC=0
+LIMACAMERA_AVIEX=0
+LIMACAMERA_ROPERSCIENTIFIC=0
+LIMACAMERA_RAYONIXHS=0
+LIMACAMERA_ESPIA=0
+LIMACAMERA_MAXIPIX=0
+LIMACAMERA_FRELON=0
+LIMA_ENABLE_CBF=0
+LIMA_ENABLE_NXS=0
+LIMA_ENABLE_FITS=0
+LIMA_ENABLE_EDFGZ=0
+LIMA_ENABLE_EDFLZ4=0
+LIMA_ENABLE_TIFF=0
+LIMA_ENABLE_HDF5=0
+LIMA_ENABLE_SPS_IMAGE=0
+LIMA_ENABLE_CONFIG=0
+LIMA_ENABLE_GLDISPLAY=0
+LIMA_ENABLE_PYTHON=0
+LIMA_ENABLE_TESTS=0
+#PYTHON_SITE_PACKAGES_DIR=/users/aitor/cmake-install/python
