@@ -906,6 +906,35 @@ $(call lib-full,$(hexitec-name),$(hexitec-ver)): $(hexitec-objs)
 build_targets	+= $(call lib-full,$(hexitec-name),$(hexitec-ver))
 endif
 
+###########################
+# LIMA - SLSDETECTOR
+############################
+ifneq ($(COMPILE_SLSDETECTOR),0)
+
+SLSDETECTOR_LDFLAGS  := -L$(SLS_DETECTORS_DIR)/bin
+SLSDETECTOR_LDLIBS   := -lSlsDetector -lSlsReceiver
+
+slsdetector-name     := slsdetector
+slsdetector-objs     := ../camera/slsdetector/src/SlsDetector.o
+slsdetector-ver      := ../camera/slsdetector/VERSION
+slsdetector-flags    := $(LDFLAGS) $(SLSDETECTOR_LDFLAGS)
+slsdetector-libs     := $(LDLIBS) $(SLSDETECTOR_LDLIBS)
+slsdetector-deps     := $(DEPLIBS)
+slsdetector-libdeps  := $(call lib-deps,$(slsdetector-deps))
+slsdetector-libfull  := $(call lib-full,$(slsdetector-name),$(slsdetector-ver))
+
+$(slsdetector-libfull): $(slsdetector-objs) $(slsdetector-libdeps)
+	$(call compile-lib,$(slsdetector-name),$(slsdetector-ver),\
+			   $(slsdetector-deps),\
+			   $(slsdetector-flags),$(slsdetector-libs),$@,\
+			   $(slsdetector-objs))
+	$(call create-links,$(slsdetector-name),$(slsdetector-ver))
+
+build_targets   += $(slsdetector-libfull)
+
+endif
+
+
 src:		$(build_targets)
 
 test:
