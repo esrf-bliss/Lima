@@ -1,3 +1,24 @@
+############################################################################
+# This file is part of LImA, a Library for Image Acquisition
+#
+# Copyright (C) : 2009-2017
+# European Synchrotron Radiation Facility
+# BP 220, Grenoble 38043
+# FRANCE
+#
+# This is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>.
+############################################################################
 
 cmake_minimum_required(VERSION 2.8)
 project (lima)
@@ -94,201 +115,192 @@ ENDIF()
 
 #CAMERA ONLY WORKING UNDER LINUX
 IF(UNIX)
-	#PROSILICA
-	IF(DEFINED ENV{COMPILE_PROSILICA})
-		set(COMPILE_PROSILICA "$ENV{COMPILE_PROSILICA}" CACHE BOOL "compile prosilica?" FORCE)
-	ELSE()
-		set(COMPILE_PROSILICA OFF CACHE BOOL "compile prosilica?")
-	ENDIF()
-	####
-	
-	#ANDOR3
-	IF(DEFINED ENV{COMPILE_ANDOR3})
-		set(COMPILE_ANDOR3 "$ENV{COMPILE_ANDOR3}" CACHE BOOL "compile andor3?" FORCE)
-	ELSE()
-		set(COMPILE_ANDOR3 OFF CACHE BOOL "compile andor3?")
-	ENDIF()
-	####
+		#PROSILICA
+		IF(DEFINED ENV{COMPILE_PROSILICA})
+			set(COMPILE_PROSILICA "$ENV{COMPILE_PROSILICA}" CACHE BOOL "compile prosilica?" FORCE)
+		ELSE()
+			set(COMPILE_PROSILICA OFF CACHE BOOL "compile prosilica?")
+		ENDIF()
+		####
+		
+		#ANDOR3
+		IF(DEFINED ENV{COMPILE_ANDOR3})
+			set(COMPILE_ANDOR3 "$ENV{COMPILE_ANDOR3}" CACHE BOOL "compile andor3?" FORCE)
+		ELSE()
+			set(COMPILE_ANDOR3 OFF CACHE BOOL "compile andor3?")
+		ENDIF()
+		####
 
-	#ADSC
-	IF(DEFINED ENV{COMPILE_ADSC})
-		set(COMPILE_ADSC "$ENV{COMPILE_ADSC}" CACHE BOOL "compile adsc?" FORCE)
-	ELSE()
-		set(COMPILE_ADSC OFF CACHE BOOL "compile adsc?")
-	ENDIF()
-	####
+		#ADSC
+		IF(DEFINED ENV{COMPILE_ADSC})
+			set(COMPILE_ADSC "$ENV{COMPILE_ADSC}" CACHE BOOL "compile adsc?" FORCE)
+		ELSE()
+			set(COMPILE_ADSC OFF CACHE BOOL "compile adsc?")
+		ENDIF()
+		####
 
-	#AVIEX
-	IF(DEFINED ENV{COMPILE_AVIEX})
-		set(COMPILE_AVIEX "$ENV{COMPILE_AVIEX}" CACHE BOOL "compile aviex?" FORCE)
-	ELSE()
-		set(COMPILE_AVIEX OFF CACHE BOOL "compile aviex?")
-	ENDIF()
-	####
+		#FRELON
+		IF(DEFINED ENV{COMPILE_FRELON})
+			set(COMPILE_FRELON "$ENV{COMPILE_FRELON}" CACHE BOOL "compile frelon?" FORCE)
+		ELSE()
+			set(COMPILE_FRELON OFF CACHE BOOL "compile frelon?")
+		ENDIF()
+		####
 
-	#FRELON
-	IF(DEFINED ENV{COMPILE_FRELON})
-		set(COMPILE_FRELON "$ENV{COMPILE_FRELON}" CACHE BOOL "compile frelon?" FORCE)
-	ELSE()
-		set(COMPILE_FRELON OFF CACHE BOOL "compile frelon?")
-	ENDIF()
-	####
+		#ESPIA
+		IF(DEFINED ENV{COMPILE_ESPIA})
+			set(COMPILE_ESPIA "$ENV{COMPILE_ESPIA}" CACHE BOOL "compile espia?" FORCE)
+		ELSE()
+			set(COMPILE_ESPIA OFF CACHE BOOL "compile espia?")
+		ENDIF()
+		####
 
-	#ESPIA
-	IF(DEFINED ENV{COMPILE_ESPIA})
-		set(COMPILE_ESPIA "$ENV{COMPILE_ESPIA}" CACHE BOOL "compile espia?" FORCE)
-	ELSE()
-		set(COMPILE_ESPIA OFF CACHE BOOL "compile espia?")
-	ENDIF()
-	####
+		#EIGER
+		IF(DEFINED ENV{COMPILE_EIGER})
+			set(COMPILE_EIGER "$ENV{COMPILE_EIGER}" CACHE BOOL "compile eiger?" FORCE)
+		ELSE()
+			set(COMPILE_EIGER OFF CACHE BOOL "compile eiger?")
+		ENDIF()
+		####
 
-	#EIGER
-	IF(DEFINED ENV{COMPILE_EIGER})
-		set(COMPILE_EIGER "$ENV{COMPILE_EIGER}" CACHE BOOL "compile eiger?" FORCE)
-	ELSE()
-		set(COMPILE_EIGER OFF CACHE BOOL "compile eiger?")
-	ENDIF()
-	####
+		#PILATUS
+		IF(DEFINED ENV{COMPILE_PILATUS})
+			set(COMPILE_PILATUS "$ENV{COMPILE_PILATUS}" CACHE BOOL "compile pilatus?" FORCE)
+		ELSE()
+			set(COMPILE_PILATUS OFF CACHE BOOL "compile pilatus?")
+		ENDIF()
+		####
 
-	#PILATUS
-	IF(DEFINED ENV{COMPILE_PILATUS})
-		set(COMPILE_PILATUS "$ENV{COMPILE_PILATUS}" CACHE BOOL "compile pilatus?" FORCE)
-	ELSE()
-		set(COMPILE_PILATUS OFF CACHE BOOL "compile pilatus?")
-	ENDIF()
-	####
+		#IMXPAD
+		IF(DEFINED ENV{COMPILE_IMXPAD})
+			set(COMPILE_IMXPAD "$ENV{COMPILE_IMXPAD}" CACHE BOOL "compile imxpad?" FORCE)
+		ELSE()
+			set(COMPILE_IMXPAD OFF CACHE BOOL "compile imxpad?")
+		ENDIF()
+		####
 
-	#IMXPAD
-	IF(DEFINED ENV{COMPILE_IMXPAD})
-		set(COMPILE_IMXPAD "$ENV{COMPILE_IMXPAD}" CACHE BOOL "compile imxpad?" FORCE)
-	ELSE()
-		set(COMPILE_IMXPAD OFF CACHE BOOL "compile imxpad?")
-	ENDIF()
-	####
+		#MERLIN
+		IF(DEFINED ENV{COMPILE_MERLIN})
+			set(COMPILE_MERLIN "$ENV{COMPILE_MERLIN}" CACHE BOOL "compile merlin?" FORCE)
+		ELSE()
+			set(COMPILE_MERLIN OFF CACHE BOOL "compile merlin?")
+		ENDIF()
+		####
 
-	#MERLIN
-	IF(DEFINED ENV{COMPILE_MERLIN})
-		set(COMPILE_MERLIN "$ENV{COMPILE_MERLIN}" CACHE BOOL "compile merlin?" FORCE)
-	ELSE()
-		set(COMPILE_MERLIN OFF CACHE BOOL "compile merlin?")
-	ENDIF()
-	####
+		#PIXIRAD
+		IF(DEFINED ENV{COMPILE_PIXIRAD})
+			set(COMPILE_PIXIRAD "$ENV{COMPILE_PIXIRAD}" CACHE BOOL "compile pixirad?" FORCE)
+		ELSE()
+			set(COMPILE_PIXIRAD OFF CACHE BOOL "compile pixirad?")
+		ENDIF()
+		####
 
-	#PIXIRAD
-	IF(DEFINED ENV{COMPILE_PIXIRAD})
-		set(COMPILE_PIXIRAD "$ENV{COMPILE_PIXIRAD}" CACHE BOOL "compile pixirad?" FORCE)
-	ELSE()
-		set(COMPILE_PIXIRAD OFF CACHE BOOL "compile pixirad?")
-	ENDIF()
-	####
+		#MARCCD
+		IF(DEFINED ENV{COMPILE_MARCCD})
+			set(COMPILE_MARCCD "$ENV{COMPILE_MARCCD}" CACHE BOOL "compile marccd?" FORCE)
+		ELSE()
+			set(COMPILE_MARCCD OFF CACHE BOOL "compile marccd?")
+		ENDIF()
+		####
 
-	#MARCCD
-	IF(DEFINED ENV{COMPILE_MARCCD})
-		set(COMPILE_MARCCD "$ENV{COMPILE_MARCCD}" CACHE BOOL "compile marccd?" FORCE)
-	ELSE()
-		set(COMPILE_MARCCD OFF CACHE BOOL "compile marccd?")
-	ENDIF()
-	####
+		#POINTGREY
+		IF(DEFINED ENV{COMPILE_POINTGREY})
+			set(COMPILE_POINTGREY "$ENV{COMPILE_POINTGREY}" CACHE BOOL "compile pointgrey?" FORCE)
+		ELSE()
+			set(COMPILE_POINTGREY OFF CACHE BOOL "compile pointgrey?")
+		ENDIF()
+		####
 
-	#POINTGREY
-	IF(DEFINED ENV{COMPILE_POINTGREY})
-		set(COMPILE_POINTGREY "$ENV{COMPILE_POINTGREY}" CACHE BOOL "compile pointgrey?" FORCE)
-	ELSE()
-		set(COMPILE_POINTGREY OFF CACHE BOOL "compile pointgrey?")
-	ENDIF()
-	####
+		#RAYONIX HS
+		IF(DEFINED ENV{COMPILE_RAYONIXHS})
+			set(COMPILE_RAYONIXHS "$ENV{COMPILE_RAYONIXHS}" CACHE BOOL "compile rayonix hs?" FORCE)
+		ELSE()
+			set(COMPILE_RAYONIXHS OFF CACHE BOOL "compile rayonix hs?")
+		ENDIF()
+		####COMPILE_UEYE
 
-	#RAYONIX HS
-	IF(DEFINED ENV{COMPILE_RAYONIXHS})
-		set(COMPILE_RAYONIXHS "$ENV{COMPILE_RAYONIXHS}" CACHE BOOL "compile rayonix hs?" FORCE)
-	ELSE()
-		set(COMPILE_RAYONIXHS OFF CACHE BOOL "compile rayonix hs?")
-	ENDIF()
-	####COMPILE_UEYE
+		#UEYE
+		IF(DEFINED ENV{COMPILE_UEYE})
+			set(COMPILE_UEYE "$ENV{COMPILE_UEYE}" CACHE BOOL "compile ueye ?" FORCE)
+		ELSE()
+			set(COMPILE_UEYE OFF CACHE BOOL "compile ueye ?")
+		ENDIF()
+		####
 
-	#UEYE
-	IF(DEFINED ENV{COMPILE_UEYE})
-		set(COMPILE_UEYE "$ENV{COMPILE_UEYE}" CACHE BOOL "compile ueye ?" FORCE)
-	ELSE()
-		set(COMPILE_UEYE OFF CACHE BOOL "compile ueye ?")
-	ENDIF()
-	####
+		#ULTRA
+		IF(DEFINED ENV{COMPILE_ULTRA})
+			set(COMPILE_ULTRA "$ENV{COMPILE_ULTRA}" CACHE BOOL "compile ultra ?" FORCE)
+		ELSE()
+			set(COMPILE_ULTRA OFF CACHE BOOL "compile ultra ?")
+		ENDIF()
+		####
 
-	#ULTRA
-	IF(DEFINED ENV{COMPILE_ULTRA})
-		set(COMPILE_ULTRA "$ENV{COMPILE_ULTRA}" CACHE BOOL "compile ultra ?" FORCE)
-	ELSE()
-		set(COMPILE_ULTRA OFF CACHE BOOL "compile ultra ?")
-	ENDIF()
-	####
+		#V4L2
+		IF(DEFINED ENV{COMPILE_V4L2})
+			set(COMPILE_V4L2 "$ENV{COMPILE_V4L2}" CACHE BOOL "compile v4l2 ?" FORCE)
+		ELSE()
+			set(COMPILE_V4L2 OFF CACHE BOOL "compile v4l2 ?")
+		ENDIF()
+		####
 
-	#V4L2
-	IF(DEFINED ENV{COMPILE_V4L2})
-		set(COMPILE_V4L2 "$ENV{COMPILE_V4L2}" CACHE BOOL "compile v4l2 ?" FORCE)
-	ELSE()
-		set(COMPILE_V4L2 OFF CACHE BOOL "compile v4l2 ?")
-	ENDIF()
-	####
+		#XPAD
+		IF(DEFINED ENV{COMPILE_XPAD})
+			set(COMPILE_XPAD "$ENV{COMPILE_XPAD}" CACHE BOOL "compile Xpad ?" FORCE)
+		ELSE()
+			set(COMPILE_XPAD OFF CACHE BOOL "compile Xpad ?")
+		ENDIF()
+		####
 
-	#XPAD
-	IF(DEFINED ENV{COMPILE_XPAD})
-		set(COMPILE_XPAD "$ENV{COMPILE_XPAD}" CACHE BOOL "compile Xpad ?" FORCE)
-	ELSE()
-		set(COMPILE_XPAD OFF CACHE BOOL "compile Xpad ?")
-	ENDIF()
-	####
+		#XSPRESS3
+		IF(DEFINED ENV{COMPILE_XSPRESS3})
+			set(COMPILE_XSPRESS3 "$ENV{COMPILE_XSPRESS3}" CACHE BOOL "compile xspress3 ?" FORCE)
+		ELSE()
+			set(COMPILE_XSPRESS3 OFF CACHE BOOL "compile xspress3 ?")
+		ENDIF()
+		####
 
-	#XSPRESS3
-	IF(DEFINED ENV{COMPILE_XSPRESS3})
-		set(COMPILE_XSPRESS3 "$ENV{COMPILE_XSPRESS3}" CACHE BOOL "compile xspress3 ?" FORCE)
-	ELSE()
-		set(COMPILE_XSPRESS3 OFF CACHE BOOL "compile xspress3 ?")
+		#XH
+		IF(DEFINED ENV{COMPILE_XH})
+			set(COMPILE_XH "$ENV{COMPILE_XH}" CACHE BOOL "compile xh ?" FORCE)
+		ELSE()
+			set(COMPILE_XH OFF CACHE BOOL "compile xh ?")
+		ENDIF()
+		####
+		
+		#DEXELA
+		IF(DEFINED ENV{COMPILE_DEXELA})
+			set(COMPILE_DEXELA "$ENV{COMPILE_DEXELA}" CACHE BOOL "compile dexela ?" FORCE)
+		ELSE()
+			set(COMPILE_DEXELA OFF CACHE BOOL "compile dexela ?")
+		ENDIF()
+		####
+		
+		#MYTHEN
+		IF(DEFINED ENV{COMPILE_MYTHEN})
+			set(COMPILE_MYTHEN "$ENV{COMPILE_MYTHEN}" CACHE BOOL "compile mythen ?" FORCE)
+		ELSE()
+			set(COMPILE_MYTHEN OFF CACHE BOOL "compile mythen ?")
+		ENDIF()
+		####
+		
+		#MYTHEN3
+		IF(DEFINED ENV{COMPILE_MYTHEN3})
+			set(COMPILE_MYTHEN3 "$ENV{COMPILE_MYTHEN3}" CACHE BOOL "compile mythen3 ?" FORCE)
+		ELSE()
+			set(COMPILE_MYTHEN3 OFF CACHE BOOL "compile mythen3 ?")
+		ENDIF()
+		####
 	ENDIF()
-	####
-
-	#XH
-	IF(DEFINED ENV{COMPILE_XH})
-		set(COMPILE_XH "$ENV{COMPILE_XH}" CACHE BOOL "compile xh ?" FORCE)
-	ELSE()
-		set(COMPILE_XH OFF CACHE BOOL "compile xh ?")
-	ENDIF()
-	####
-	
-	#DEXELA
-	IF(DEFINED ENV{COMPILE_DEXELA})
-		set(COMPILE_DEXELA "$ENV{COMPILE_DEXELA}" CACHE BOOL "compile dexela ?" FORCE)
-	ELSE()
-		set(COMPILE_DEXELA OFF CACHE BOOL "compile dexela ?")
-	ENDIF()
-	####
-	
-	#MYTHEN
-	IF(DEFINED ENV{COMPILE_MYTHEN})
-		set(COMPILE_MYTHEN "$ENV{COMPILE_MYTHEN}" CACHE BOOL "compile mythen ?" FORCE)
-	ELSE()
-		set(COMPILE_MYTHEN OFF CACHE BOOL "compile mythen ?")
-	ENDIF()
-	####
-	
-	#MYTHEN3
-	IF(DEFINED ENV{COMPILE_MYTHEN3})
-		set(COMPILE_MYTHEN3 "$ENV{COMPILE_MYTHEN3}" CACHE BOOL "compile mythen3 ?" FORCE)
-	ELSE()
-		set(COMPILE_MYTHEN3 OFF CACHE BOOL "compile mythen3 ?")
-	ENDIF()
-	####
-ENDIF()
 
 #CAMERA ONLY WORKING UNDER WINDOWS
 IF(WIN32)
-	#PERKIN ELMER
-	IF(DEFINED ENV{COMPILE_PERKINELMER})
-		set(COMPILE_PERKINELMER "$ENV{COMPILE_PERKINELMER}" CACHE BOOL "compile perkin elmer ?" FORCE)
-	ELSE()
-		set(COMPILE_PERKINELMER OFF CACHE BOOL "compile perkin elmer ?")
-	ENDIF()
-	####
-	
+		#PERKIN ELMER
+		IF(DEFINED ENV{COMPILE_PERKINELMER})
+			set(COMPILE_PERKINELMER "$ENV{COMPILE_PERKINELMER}" CACHE BOOL "compile perkin elmer ?" FORCE)
+		ELSE()
+			set(COMPILE_PERKINELMER OFF CACHE BOOL "compile perkin elmer ?")
+		ENDIF()
+		####
 ENDIF()
 
 
