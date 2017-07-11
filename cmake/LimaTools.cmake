@@ -33,9 +33,19 @@ function(limatools_set_library_soversion lib_name version_file)
 endfunction()
 
 
+function(limatools_run_camera_tests test_src cam_name)
+
+	foreach(file ${test_src})
+		add_executable(${file} "${file}.cpp")
+		target_link_libraries(${file} limacore lima${cam_name})
+		add_test(NAME ${file} COMMAND ${file})
+	endforeach(file)
+
+endfunction()
+
+
 function(limatools_run_sip_for_camera cam_name)
   
-  set(NAME ${cam_name})
   set(INCLUDES)
   file(GLOB sipfiles RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/sip" "${CMAKE_CURRENT_SOURCE_DIR}/sip/*.sip")
   foreach(sipfile ${sipfiles})
@@ -49,9 +59,9 @@ function(limatools_run_sip_for_camera cam_name)
 %Import limacore.sip")
 
   if(SIP_VERSION_STR VERSION_LESS "4.12")
-    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules_before_4_12.sip.in sip/lima${NAME}.sip)
+    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules_before_4_12.sip.in sip/lima${cam_name}.sip)
   else()
-    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/lima${NAME}.sip)
+    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/lima${cam_name}.sip)
   endif()
   set(SIP_CONCAT_PARTS 1)
   set(SIP_INCLUDES ${SIP_INCLUDES}
@@ -64,14 +74,11 @@ function(limatools_run_sip_for_camera cam_name)
     "${CMAKE_SOURCE_DIR}/control/software_operation/sip"
     "${CMAKE_CURRENT_SOURCE_DIR}/sip")
 
-  add_sip_python_module(lima${NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/lima${NAME}.sip)
-  target_include_directories(python_module_lima${NAME} PRIVATE
+  add_sip_python_module(lima${cam_name} ${CMAKE_CURRENT_BINARY_DIR}/sip/lima${cam_name}.sip)
+  target_include_directories(python_module_lima${cam_name} PRIVATE
     ${PYTHON_INCLUDE_DIRS}
     "${CMAKE_SOURCE_DIR}/sip"
     "${CMAKE_SOURCE_DIR}/sip/core"
     "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip")
-  target_link_libraries(python_module_lima${NAME} lima${NAME})
+  target_link_libraries(python_module_lima${cam_name} lima${cam_name})
 endfunction()
-  
-
-  
