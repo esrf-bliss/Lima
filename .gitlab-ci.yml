@@ -1,0 +1,27 @@
+# image : docker-registry.esrf.fr/bcu/lima-ci-debian8:latest
+#before_script :
+
+stages:
+  - build
+
+build :
+  stage: build
+  script:
+    - cd /root
+    - ./import_lima.sh
+    - cd Git/lima
+    - ./install.sh
+  only:
+    - cmake
+
+
+#test :
+#  stage: test
+#  dependencies:
+#    - build
+#  script:
+#    - cd
+#    - cd cmake-build/
+#    - ctest --timeout 10
+#  only:
+#    - cmake
