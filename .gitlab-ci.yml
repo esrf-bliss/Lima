@@ -1,6 +1,10 @@
 # image : docker-registry.esrf.fr/bcu/lima-ci-debian8:latest
 #before_script :
 
+stages:
+  - build
+  - test
+
 build :
   stage: build
    script:
