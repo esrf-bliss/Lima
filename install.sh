@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 ###########################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
@@ -22,4 +23,4 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-./script_cmake/config_cmake.sh
+./scripts/bootstrap.sh

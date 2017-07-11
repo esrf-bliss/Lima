@@ -26,4 +26,4 @@ install
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-script_cmake/config.txt
+scripts/config.txt

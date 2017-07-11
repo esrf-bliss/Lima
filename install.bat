@@ -1,39 +1,48 @@
-@echo off
-setlocal enabledelayedexpansion
+﻿rem ##########################################################################
+rem  This file is part of LImA, a Library for Image Acquisition
+rem
+rem   Copyright (C) : 2009-2017
+rem   European Synchrotron Radiation Facility
+rem   BP 220, Grenoble 38043
+rem   FRANCE
+rem  
+rem   Contact: lima@esrf.fr
+rem  
+rem   This is free software; you can redistribute it and/or modify
+rem   it under the terms of the GNU General Public License as published by
+rem   the Free Software Foundation; either version 3 of the License, or
+rem   (at your option) any later version.
+rem 
+rem   This software is distributed in the hope that it will be useful,
+rem   but WITHOUT ANY WARRANTY; without even the implied warranty of
+rem   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+rem   GNU General Public License for more details.
+rem 
+rem   You should have received a copy of the GNU General Public License
+rem   along with this program; if not, see <http://www.gnu.org/licenses/>.
+rem ###########################################################################
 
-rem variables d'environnement pour CMake
-call python set_win_cmake_env.py
+rem We create the install and build directory, if they already exist they are deleted.
+set sourcepath=%cd%
 
-rem repertoire courant du batch 
-if exist "_build" (
-    rmdir /S /Q _build
+cd ..\..
+if exist "cmake-build" (
+    rmdir /S /Q cmake-build
 )
-mkdir _build
-cd _build
-set CurrentPath=%cd%
+mkdir cmake-build
+cd cmake-build
+set buildpath=%cd%
 
-rem execution de cmake pour créer les fichiers projets et solution
-cmake -G "Visual Studio 9 2008" -D PYLON_ROOT="C:\Program Files\Basler\pylon 3.2\pylon" -D GSL_INCLUDE_DIR="C:\Program Files (x86)\GnuWin32\include" -D GSL_LIB_DIR="C:\Program Files (x86)\GnuWin32\lib" -D NUMPY_INCLUDE_DIR="C:\Anaconda2\Lib\site-packages\numpy\core\include" -D NUMPY_LIB_DIR="C:\Anaconda2\Lib\site-packages\numpy\core\lib" -D COMPILE_SIP=1 ..
-
-rem configuration des variables d'environnement visual c++ 2008 express edition
-cd /D %VS90COMNTOOLS%..\..\VC
-call vcvarsall.bat
-
-rem compilation
-cd /D %CurrentPath%
-msbuild.exe lima.sln /t:build /fl /flp:logfile=limaOutput.log /p:Configuration=Release;Plateform=Win32 /v:d
-
-rem execution du script python windowsInstall
 cd ..
-
-if exist "python_path.tmp" (
-    del python_path.tmp
+if exist "cmake-install" (
+    rmdir /S /Q cmake-install
 )
+mkdir cmake-install
+cd cmake-install
+mkdir python
+set installpath=%cd%
 
-call python python_path.py
-set /p python_path= < python_path.tmp
-call python windowsInstall.py --install_dir=%python_path%
+cd /D %sourcepath%\scripts
 
-if exist "python_path.tmp" (
-    del python_path.tmp
-)
+rem we call the main script, with paths as arguments.
+call bootstrap.bat %buildpath% %sourcepath% %installpath%
