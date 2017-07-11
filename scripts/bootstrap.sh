@@ -22,7 +22,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-script_path=$(pwd)/script_cmake
+script_path=$(pwd)/scripts
 source_path=$(pwd)
 
 #we create build and install directory in user's home
