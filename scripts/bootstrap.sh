@@ -70,10 +70,10 @@ cd $cmake_build_path
 #Launching CMake, building unix Makefiles, from the source in git_test/lima
 cmake -G"Unix Makefiles" $source_path -DCMAKE_INSTALL_PREFIX="$cmake_install_path" $compileoptions -DPYTHON_SITE_PACKAGES_DIR="$cmake_install_path/python"
 
-make -j5
-#Running test, if there isn't it will just write "no tests were found!!!"
-ctest --timeout 10
+#speed of compilation depend on number of processors.
+numberpr=$(nproc | bc)
+numberpr=$(($numberpr + 1))
+make -j$numberpr
 
 #Install libraries and everything in the directory selected by CMAKE_INSTALL_PREFIXE and PYTHON_SITE_PACKAGES_DIR for python modules.
-#Uncomment if you want to install directly
-#make install
+make install
