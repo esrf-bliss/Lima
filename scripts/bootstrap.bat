@@ -43,8 +43,12 @@ if exist "output_config" (
 
 rem we go in the build directory
 cd /D %~1
-rem calling cmake with arguments we need. Gsl directories might change from a computer to an other.
-cmake -G "Visual Studio 9 2008" -DCMAKE_INSTALL_PREFIX="%~3" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%~3\python" "%~2"
+rem calling cmake with arguments we need. Need to check for 64 or 32bits windows version. To do so just check if ProgramFiles(x86) exists.
+if defined ProgramFiles(x86) (
+	cmake -G "Visual Studio 9 2008 Win64" -DCMAKE_INSTALL_PREFIX="%~3" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%~3\python" "%~2"
+) else (
+	cmake -G "Visual Studio 9 2008" -DCMAKE_INSTALL_PREFIX="%~3" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%~3\python" "%~2"
+)
 
 rem configuration of env variables for visual c++ 2008 version.
 cd /D %VS90COMNTOOLS%..\..\VC
