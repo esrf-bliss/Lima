@@ -2,6 +2,9 @@
 cmake_minimum_required(VERSION 2.8)
 project (lima)
 
+SET(COMMON_PATH "/usr/local" CACHE PATH "path for lib and include used for several cameras")
+SET(YAT_ROOT "/usr/local/yat" CACHE PATH "temporary path for yat include and lib used by few cameras")
+SET(OPT_ROOT "/opt" CACHE PATH "path for /opt directory")
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 FIND_PACKAGE(PythonInterp 2.6)
 FIND_PACKAGE(PythonLibs 2.6)
@@ -16,11 +19,18 @@ INCLUDE(SIPMacros)
 
 SET(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
-IF (WIN32)
-    SET(NUMPY_INCLUDE_DIR "/usr/include" CACHE PATH "Path to NumPy include folder")
-    SET(NUMPY_LIB_DIR "/usr/include" CACHE PATH "Path to NumPy lib folder")
-    include_directories(${NUMPY_INCLUDE_DIR})
-    link_directories(${NUMPY_LIB_DIR})
+IF (WIN32) #Paths based on wid00limande and wid15perkin2
+	IF("${PYTHON_VERSION_MINOR}" STREQUAL "6")
+    	SET(NUMPY_INCLUDE_DIR "C:/Python26/Lib/site-packages/numpy/core/include" CACHE PATH "Path to NumPy include folder")
+    	SET(NUMPY_LIB_DIR "C:/Python26/Lib/site-packages/numpy/core/lib" CACHE PATH "Path to NumPy lib folder")
+    	include_directories(${NUMPY_INCLUDE_DIR})
+    	link_directories(${NUMPY_LIB_DIR})
+    ELSE() #assuming other version is 2.7
+    	SET(NUMPY_INCLUDE_DIR "C:/Python27/Lib/site-packages/numpy/core/include" CACHE PATH "Path to NumPy include folder")
+		SET(NUMPY_LIB_DIR "C:/Python27/Lib/site-packages/numpy/lib" CACHE PATH "Path to NumPy lib folder")
+		include_directories(${NUMPY_INCLUDE_DIR})
+		link_directories(${NUMPY_LIB_DIR})
+    ENDIF()
 ENDIF()
 
 find_package(Threads REQUIRED)
@@ -43,25 +53,251 @@ IF(DEFINED ENV{COMPILE_SPS_IMAGE})
     set(COMPILE_SPS_IMAGE "$ENV{COMPILE_SPS_IMAGE}" CACHE BOOL "compile sps_image?" FORCE)
 ELSE()
     IF (WIN32)
-        set(COMPILE_SPS_IMAGE OFF CACHE BOOL "compile sps_image?")
+        set(COMPILE_SPS_IMAGE ON CACHE BOOL "compile sps_image?")
     ELSE()
         set(COMPILE_SPS_IMAGE ON CACHE BOOL "compile sps_image?")
     ENDIF()
 ENDIF()
+
+#CAMERA WORKING ON LINUX AND WINDOWS
+#BASLER
 IF(DEFINED ENV{COMPILE_BASLER})
     set(COMPILE_BASLER "$ENV{COMPILE_BASLER}" CACHE BOOL "compile basler?" FORCE)
 ELSE()
-    set(COMPILE_BASLER ON CACHE BOOL "compile basler?")
+    set(COMPILE_BASLER OFF CACHE BOOL "compile basler?")
 ENDIF()
+####
+#ANDOR
+IF(DEFINED ENV{COMPILE_ANDOR})
+	set(COMPILE_ANDOR "$ENV{COMPILE_ANDOR}" CACHE BOOL "compile andor?" FORCE)
+ELSE()
+	set(COMPILE_ANDOR OFF CACHE BOOL "compile andor?")
+ENDIF()
+####
+#ROPERSCIENTIFIC
+IF(DEFINED ENV{COMPILE_ROPERSCIENTIFIC})
+	set(COMPILE_ROPERSCIENTIFIC "$ENV{COMPILE_ROPERSCIENTIFIC}" CACHE BOOL "compile roperscientific ?" FORCE)
+ELSE()
+	set(COMPILE_ROPERSCIENTIFIC ON CACHE BOOL "compile roperscientific?")
+ENDIF()
+####
+
+#CAMERA ONLY WORKING UNDER LINUX
+IF(UNIX)
+	#PROSILICA
+	IF(DEFINED ENV{COMPILE_PROSILICA})
+		set(COMPILE_PROSILICA "$ENV{COMPILE_PROSILICA}" CACHE BOOL "compile prosilica?" FORCE)
+	ELSE()
+		set(COMPILE_PROSILICA OFF CACHE BOOL "compile prosilica?")
+	ENDIF()
+	####
+	
+	#ANDOR3
+	IF(DEFINED ENV{COMPILE_ANDOR3})
+		set(COMPILE_ANDOR3 "$ENV{COMPILE_ANDOR3}" CACHE BOOL "compile andor3?" FORCE)
+	ELSE()
+		set(COMPILE_ANDOR3 OFF CACHE BOOL "compile andor3?")
+	ENDIF()
+	####
+
+	#ADSC
+	IF(DEFINED ENV{COMPILE_ADSC})
+		set(COMPILE_ADSC "$ENV{COMPILE_ADSC}" CACHE BOOL "compile adsc?" FORCE)
+	ELSE()
+		set(COMPILE_ADSC OFF CACHE BOOL "compile adsc?")
+	ENDIF()
+	####
+
+	#AVIEX
+	IF(DEFINED ENV{COMPILE_AVIEX})
+		set(COMPILE_AVIEX "$ENV{COMPILE_AVIEX}" CACHE BOOL "compile aviex?" FORCE)
+	ELSE()
+		set(COMPILE_AVIEX OFF CACHE BOOL "compile aviex?")
+	ENDIF()
+	####
+
+	#FRELON
+	IF(DEFINED ENV{COMPILE_FRELON})
+		set(COMPILE_FRELON "$ENV{COMPILE_FRELON}" CACHE BOOL "compile frelon?" FORCE)
+	ELSE()
+		set(COMPILE_FRELON OFF CACHE BOOL "compile frelon?")
+	ENDIF()
+	####
+
+	#ESPIA
+	IF(DEFINED ENV{COMPILE_ESPIA})
+		set(COMPILE_ESPIA "$ENV{COMPILE_ESPIA}" CACHE BOOL "compile espia?" FORCE)
+	ELSE()
+		set(COMPILE_ESPIA OFF CACHE BOOL "compile espia?")
+	ENDIF()
+	####
+
+	#EIGER
+	IF(DEFINED ENV{COMPILE_EIGER})
+		set(COMPILE_EIGER "$ENV{COMPILE_EIGER}" CACHE BOOL "compile eiger?" FORCE)
+	ELSE()
+		set(COMPILE_EIGER OFF CACHE BOOL "compile eiger?")
+	ENDIF()
+	####
+
+	#PILATUS
+	IF(DEFINED ENV{COMPILE_PILATUS})
+		set(COMPILE_PILATUS "$ENV{COMPILE_PILATUS}" CACHE BOOL "compile pilatus?" FORCE)
+	ELSE()
+		set(COMPILE_PILATUS OFF CACHE BOOL "compile pilatus?")
+	ENDIF()
+	####
+
+	#IMXPAD
+	IF(DEFINED ENV{COMPILE_IMXPAD})
+		set(COMPILE_IMXPAD "$ENV{COMPILE_IMXPAD}" CACHE BOOL "compile imxpad?" FORCE)
+	ELSE()
+		set(COMPILE_IMXPAD OFF CACHE BOOL "compile imxpad?")
+	ENDIF()
+	####
+
+	#MERLIN
+	IF(DEFINED ENV{COMPILE_MERLIN})
+		set(COMPILE_MERLIN "$ENV{COMPILE_MERLIN}" CACHE BOOL "compile merlin?" FORCE)
+	ELSE()
+		set(COMPILE_MERLIN OFF CACHE BOOL "compile merlin?")
+	ENDIF()
+	####
+
+	#PIXIRAD
+	IF(DEFINED ENV{COMPILE_PIXIRAD})
+		set(COMPILE_PIXIRAD "$ENV{COMPILE_PIXIRAD}" CACHE BOOL "compile pixirad?" FORCE)
+	ELSE()
+		set(COMPILE_PIXIRAD OFF CACHE BOOL "compile pixirad?")
+	ENDIF()
+	####
+
+	#MARCCD
+	IF(DEFINED ENV{COMPILE_MARCCD})
+		set(COMPILE_MARCCD "$ENV{COMPILE_MARCCD}" CACHE BOOL "compile marccd?" FORCE)
+	ELSE()
+		set(COMPILE_MARCCD OFF CACHE BOOL "compile marccd?")
+	ENDIF()
+	####
+
+	#POINTGREY
+	IF(DEFINED ENV{COMPILE_POINTGREY})
+		set(COMPILE_POINTGREY "$ENV{COMPILE_POINTGREY}" CACHE BOOL "compile pointgrey?" FORCE)
+	ELSE()
+		set(COMPILE_POINTGREY OFF CACHE BOOL "compile pointgrey?")
+	ENDIF()
+	####
+
+	#RAYONIX HS
+	IF(DEFINED ENV{COMPILE_RAYONIXHS})
+		set(COMPILE_RAYONIXHS "$ENV{COMPILE_RAYONIXHS}" CACHE BOOL "compile rayonix hs?" FORCE)
+	ELSE()
+		set(COMPILE_RAYONIXHS OFF CACHE BOOL "compile rayonix hs?")
+	ENDIF()
+	####COMPILE_UEYE
+
+	#UEYE
+	IF(DEFINED ENV{COMPILE_UEYE})
+		set(COMPILE_UEYE "$ENV{COMPILE_UEYE}" CACHE BOOL "compile ueye ?" FORCE)
+	ELSE()
+		set(COMPILE_UEYE OFF CACHE BOOL "compile ueye ?")
+	ENDIF()
+	####
+
+	#ULTRA
+	IF(DEFINED ENV{COMPILE_ULTRA})
+		set(COMPILE_ULTRA "$ENV{COMPILE_ULTRA}" CACHE BOOL "compile ultra ?" FORCE)
+	ELSE()
+		set(COMPILE_ULTRA OFF CACHE BOOL "compile ultra ?")
+	ENDIF()
+	####
+
+	#V4L2
+	IF(DEFINED ENV{COMPILE_V4L2})
+		set(COMPILE_V4L2 "$ENV{COMPILE_V4L2}" CACHE BOOL "compile v4l2 ?" FORCE)
+	ELSE()
+		set(COMPILE_V4L2 OFF CACHE BOOL "compile v4l2 ?")
+	ENDIF()
+	####
+
+	#XPAD
+	IF(DEFINED ENV{COMPILE_XPAD})
+		set(COMPILE_XPAD "$ENV{COMPILE_XPAD}" CACHE BOOL "compile Xpad ?" FORCE)
+	ELSE()
+		set(COMPILE_XPAD OFF CACHE BOOL "compile Xpad ?")
+	ENDIF()
+	####
+
+	#XSPRESS3
+	IF(DEFINED ENV{COMPILE_XSPRESS3})
+		set(COMPILE_XSPRESS3 "$ENV{COMPILE_XSPRESS3}" CACHE BOOL "compile xspress3 ?" FORCE)
+	ELSE()
+		set(COMPILE_XSPRESS3 OFF CACHE BOOL "compile xspress3 ?")
+	ENDIF()
+	####
+
+	#XH
+	IF(DEFINED ENV{COMPILE_XH})
+		set(COMPILE_XH "$ENV{COMPILE_XH}" CACHE BOOL "compile xh ?" FORCE)
+	ELSE()
+		set(COMPILE_XH OFF CACHE BOOL "compile xh ?")
+	ENDIF()
+	####
+	
+	#DEXELA
+	IF(DEFINED ENV{COMPILE_DEXELA})
+		set(COMPILE_DEXELA "$ENV{COMPILE_DEXELA}" CACHE BOOL "compile dexela ?" FORCE)
+	ELSE()
+		set(COMPILE_DEXELA OFF CACHE BOOL "compile dexela ?")
+	ENDIF()
+	####
+	
+	#MYTHEN
+	IF(DEFINED ENV{COMPILE_MYTHEN})
+		set(COMPILE_MYTHEN "$ENV{COMPILE_MYTHEN}" CACHE BOOL "compile mythen ?" FORCE)
+	ELSE()
+		set(COMPILE_MYTHEN OFF CACHE BOOL "compile mythen ?")
+	ENDIF()
+	####
+	
+	#MYTHEN3
+	IF(DEFINED ENV{COMPILE_MYTHEN3})
+		set(COMPILE_MYTHEN3 "$ENV{COMPILE_MYTHEN3}" CACHE BOOL "compile mythen3 ?" FORCE)
+	ELSE()
+		set(COMPILE_MYTHEN3 ON CACHE BOOL "compile mythen3 ?")
+	ENDIF()
+	####
+ENDIF()
+
+#CAMERA ONLY WORKING UNDER WINDOWS
+IF(WIN32)
+	#PERKIN ELMER
+	IF(DEFINED ENV{COMPILE_PERKINELMER})
+		set(COMPILE_PERKINELMER "$ENV{COMPILE_PERKINELMER}" CACHE BOOL "compile perkin elmer ?" FORCE)
+	ELSE()
+		set(COMPILE_PERKINELMER OFF CACHE BOOL "compile perkin elmer ?")
+	ENDIF()
+	####
+	
+	#PCO
+	IF(DEFINED ENV{COMPILE_PCO})
+		set(COMPILE_PCO "$ENV{COMPILE_PCO}" CACHE BOOL "compile pco?" FORCE)
+	ELSE()
+		set(COMPILE_PCO OFF CACHE BOOL "compile pco?")
+	ENDIF()
+	####
+ENDIF()
+
+
 IF(DEFINED ENV{COMPILE_SIP})
     set(COMPILE_SIP "$ENV{COMPILE_SIP}" CACHE BOOL "compile python modules?" FORCE)
 ELSE()
-    set(COMPILE_SIP OFF CACHE BOOL "compile python modules?")
+    set(COMPILE_SIP ON CACHE BOOL "compile python modules?")
 ENDIF()
 IF(DEFINED ENV{COMPILE_TIFF_SAVING})
     set(COMPILE_TIFF_SAVING "$ENV{COMPILE_TIFF_SAVING}" CACHE BOOL "compile tiff saving code?" FORCE)
 ELSE()
-    set(COMPILE_TIFF_SAVING OFF CACHE BOOL "compile tiff saving code?")
+    set(COMPILE_TIFF_SAVING ON CACHE BOOL "compile tiff saving code?")
 ENDIF()
 
 if(COMPILE_SIP)
@@ -169,9 +405,151 @@ endif()
 if(COMPILE_SIMULATOR)
     add_subdirectory(camera/simulator)
 endif(COMPILE_SIMULATOR)
+
+#CAMERA WORKING UNDER LINUX AND WINDOWS
+#BASLER
 if(COMPILE_BASLER)
     add_subdirectory(camera/basler)
 endif(COMPILE_BASLER)
+###########
+#ANDOR
+if(COMPILE_ANDOR)
+	add_subdirectory(camera/andor)
+endif(COMPILE_ANDOR)
+###########
+#ROPERSCIENTIFIC
+if(COMPILE_ROPERSCIENTIFIC)
+	add_subdirectory(camera/roperscientific)
+endif(COMPILE_ROPERSCIENTIFIC)
+###########
+
+#CAMERA ONLY WORKING UNDER LINUX
+IF(UNIX)
+	#PROSILICA
+	if(COMPILE_PROSILICA)
+		add_subdirectory(camera/prosilica)
+	endif(COMPILE_PROSILICA)
+	###########
+	#ANDOR3
+	if(COMPILE_ANDOR3)
+		add_subdirectory(camera/andor3)
+	endif(COMPILE_ANDOR3)
+	###########
+	#ADSC
+	if(COMPILE_ADSC)
+		add_subdirectory(camera/adsc)
+	endif(COMPILE_ADSC)
+	###########
+	#AVIEX
+	if(COMPILE_AVIEX)
+		add_subdirectory(camera/aviex)
+	endif(COMPILE_AVIEX)
+	###########
+	#FRELON
+	if(COMPILE_FRELON)
+		add_subdirectory(camera/frelon)
+	endif(COMPILE_FRELON)
+	###########
+	#EIGER
+	if(COMPILE_EIGER)
+		add_subdirectory(camera/eiger)
+	endif(COMPILE_EIGER)
+	###########
+	#PILATUS
+	if(COMPILE_PILATUS)
+		add_subdirectory(camera/pilatus)
+	endif(COMPILE_PILATUS)
+	###########
+	#IMXPAD
+	if(COMPILE_IMXPAD)
+		add_subdirectory(camera/imxpad)
+	endif(COMPILE_IMXPAD)
+	###########
+	#MERLIN
+	if(COMPILE_MERLIN)
+		add_subdirectory(camera/merlin)
+	endif(COMPILE_MERLIN)
+	###########
+	#PIXIRAD
+	if(COMPILE_PIXIRAD)
+		add_subdirectory(camera/pixirad)
+	endif(COMPILE_PIXIRAD)
+	###########
+	#MARCCD
+	if(COMPILE_MARCCD)
+		add_subdirectory(camera/marccd)
+	endif(COMPILE_MARCCD)
+	###########
+	#POINTGREY
+	if(COMPILE_POINTGREY)
+		add_subdirectory(camera/pointgrey)
+	endif(COMPILE_POINTGREY)
+	###########
+	#RAYONIX HS
+	if(COMPILE_RAYONIXHS)
+		add_subdirectory(camera/rayonixhs)
+	endif(COMPILE_RAYONIXHS)
+	###########
+	#UEYE
+	if(COMPILE_UEYE)
+		add_subdirectory(camera/ueye)
+	endif(COMPILE_UEYE)
+	###########
+	#ULTRA
+	if(COMPILE_ULTRA)
+		add_subdirectory(camera/ultra)
+	endif(COMPILE_ULTRA)
+	###########
+	#V4L2
+	if(COMPILE_V4L2)
+		add_subdirectory(camera/v4l2)
+	endif(COMPILE_V4L2)
+	###########
+	#XPAD
+	if(COMPILE_XPAD)
+		add_subdirectory(camera/xpad)
+	endif(COMPILE_XPAD)
+	###########
+	#XSPRESS3
+	if(COMPILE_XSPRESS3)
+		add_subdirectory(camera/xspress3)
+	endif(COMPILE_XSPRESS3)
+	###########
+	#XH
+	if(COMPILE_XH)
+		add_subdirectory(camera/xh)
+	endif(COMPILE_XH)
+	###########
+	#DEXELA
+	if(COMPILE_DEXELA)
+		add_subdirectory(camera/dexela)
+	endif(COMPILE_DEXELA)
+	###########
+	#MYTHEN
+	if(COMPILE_MYTHEN)
+		add_subdirectory(camera/mythen)
+	endif(COMPILE_MYTHEN)
+	###########
+	#MYTHEN3
+	if(COMPILE_MYTHEN3)
+		add_subdirectory(camera/mythen3)
+	endif(COMPILE_MYTHEN3)
+	###########
+ENDIF()
+
+#CAMERA ONLY WORKING UNDER WINDOWS
+IF(WIN32)
+	#PERKIN ELMER
+	if(COMPILE_PERKINELMER)
+		add_subdirectory(camera/perkinelmer)
+	endif(COMPILE_PERKINELMER)
+	###########
+	#PCO
+	if(COMPILE_PCO)
+		add_subdirectory(camera/pco)
+	endif(COMPILE_PCO)
+	###########
+ENDIF()
 
 if(COMPILE_SIP)
     set(NAME "core")
