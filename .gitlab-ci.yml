@@ -3,27 +3,25 @@
 
 stages:
   - build
-  - test
 
 build :
   stage: build
-   script:
+  script:
     - cd /root
-    - ./import_lima
+    - ./import_lima.sh
     - cd Git/lima
     - ./install.sh
-   only:
+  only:
     - cmake
 
 
-
-test :
-  stage: test
-   dependencies:
-    - build
-   script:
-    - cd
-    - cd cmake-build/
-    - ctest --timeout 10
-   only:
-    - cmake
+#test :
+#  stage: test
+#  dependencies:
+#    - build
+#  script:
+#    - cd
+#    - cd cmake-build/
+#    - ctest --timeout 10
+#  only:
+#    - cmake
