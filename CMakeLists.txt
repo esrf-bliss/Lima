@@ -249,6 +249,7 @@ endif()
 
 if(LIMA_ENABLE_CBF)
     add_definitions(-DWITH_CBF_SAVING)
+    add_definitions(-DPROTOTYPES)
     set(ct_srcs ${ct_srcs} control/src/CtSaving_Cbf.cpp)
     find_library(LIB_CBF cbf)
     set(saving_libs ${saving_libs} ${LIB_CBF} crypto)
