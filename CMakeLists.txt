@@ -53,6 +53,14 @@ IF(DEFINED ENV{COMPILE_BASLER})
 ELSE()
     set(COMPILE_BASLER ON CACHE BOOL "compile basler?")
 ENDIF()
+
+#TEST1
+IF(DEFINED ENV{COMPILE_PROSILICA})
+    set(COMPILE_PROSILICA "$ENV{COMPILE_PROSILICA}" CACHE BOOL "compile prosilica?" FORCE)
+ELSE()
+    set(COMPILE_PROSILICA ON CACHE BOOL "compile prosilica?")
+ENDIF()
+####
 IF(DEFINED ENV{COMPILE_SIP})
     set(COMPILE_SIP "$ENV{COMPILE_SIP}" CACHE BOOL "compile python modules?" FORCE)
 ELSE()
@@ -172,7 +180,11 @@ endif(COMPILE_SIMULATOR)
 if(COMPILE_BASLER)
     add_subdirectory(camera/basler)
 endif(COMPILE_BASLER)
-
+#TEST1
+if(COMPILE_PROSILICA)
+	add_subdirectory(camera/prosilica)
+endif(COMPILE_PROSILICA)
+###########
 if(COMPILE_SIP)
     set(NAME "core")
     set(INCLUDES)
