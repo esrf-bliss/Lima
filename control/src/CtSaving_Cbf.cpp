@@ -20,7 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include <ctype.h>
-#include <openssl/md5.h>
+//#include <openssl/md5.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 
@@ -242,10 +242,10 @@ public:
 
     //MD5
     MD5_CTX context;
-    MD5_Init(&context);
-    MD5_Update(&context,m_buffer,m_buffer_size);
-    unsigned char digest_str[MD5_DIGEST_LENGTH];
-    MD5_Final(digest_str,&context);
+    MD5Init(&context);
+    MD5Update(&context,(unsigned char*)m_buffer,m_buffer_size);
+    unsigned char digest_str[16];
+    MD5Final(digest_str,&context);
     //MD5 in base64
     BIO *base64_filter = BIO_new(BIO_f_base64());
     BIO_set_flags(base64_filter, BIO_FLAGS_BASE64_NO_NL);
