@@ -20,7 +20,7 @@ build :
     - ls -l
   artifacts:
     paths:
-    - cmake-build/
+    - cmake-build
   only:
     - cmake
 
