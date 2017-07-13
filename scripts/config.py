@@ -23,6 +23,7 @@
 ############################################################################
 import sys
 import subprocess
+import os
 
 configFile = 'scripts/config.txt'
 
@@ -31,12 +32,20 @@ def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
 	del options[0]
-	subprocess.call(["git", "submodule", "init", "third-party/Processlib"])
+	
+	"""os.system("git submodule --quiet init third-party/Processlib")
 	for arg in options:
-		subprocess.call(["git", "submodule", "init", str(arg)])
+		os.system("git submodule --quiet init " + str(arg))
+	os.system("git submodule --quiet update")
+	test="git submodule --quiet foreach './../../scripts/submodules ${path}'"
+	os.system(test)"""
+	
+	subprocess.call(["git", "submodule", "--quiet", "init", "third-party/Processlib"])
+	for arg in options:
+		subprocess.call(["git", "submodule", "--quiet", "init", str(arg)])
 		#print str(arg)
-	subprocess.call(["git", "submodule", "update"])
-	#subprocess.call(["git", "submodule", "--quiet", "foreach", "./../../scripts/submodules ${path}"])
+	subprocess.call(["git", "submodule", "--quiet", "update"])
+	subprocess.call(["git", "submodule", "--quiet", "foreach", "./../../scripts/submodules ${path}"])
 	for arg in options:
 		if "camera/" in str(arg):
 			optionName.append(str.upper(str(arg)[7:]))
