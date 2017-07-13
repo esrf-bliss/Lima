@@ -8,24 +8,29 @@ stages:
 build :
   stage: build
   script:
-    - cd /root
-    - ./import_lima.sh
-    - cd Git/lima
+    - git submodule init third-party/Processlib
+    - git submodule update
+    - cd third-party/Processlib
+    - git remote add gitlab git@gitlab.esrf.fr:limagroup/processlib.git
+    - git fetch gitlab
+    - git checkout gitlab/cmake
+    - cd ../..
     - ./install.sh
+    - cd
   artifacts:
     paths:
-    - /root/cmake-build/
+    - cmake-build/
   only:
     - cmake
 
 
-test :
-  stage: test
-  dependencies:
-    - build
-  script:
-    - cd
-    - cd cmake-build/
-    - ctest --timeout 10
-  only:
-    - cmake
+#test :
+#  stage: test
+#  dependencies:
+#    - build
+#  script:
+#    - cd
+#    - cd cmake-build/
+#    - ctest --timeout 10
+#  only:
+#    - cmake

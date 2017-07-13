@@ -32,7 +32,6 @@ if [ -d "cmake-build/" ]; then
 	#We test if the build directory is empty or not
 	empty_dir=$(ls -l)
 	if [ "$build_dir" != "total 0" ]; then
-		ls -l
 		rm -rf *
 	fi
 else
@@ -48,7 +47,6 @@ if [ -d "cmake-install/" ]; then
 	#We test if the install directory is empty or not
 	empty_dir=$(ls -l)
 	if [ "$build_dir" != "total 0" ]; then
-		ls -l
 		rm -rf *
 	fi
 else
