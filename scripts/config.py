@@ -23,7 +23,6 @@
 ############################################################################
 import sys
 import subprocess
-import os
 
 configFile = 'scripts/config.txt'
 
@@ -33,17 +32,9 @@ def ConfigGitandOptions(options):
 	config = []
 	del options[0]
 	
-	"""os.system("git submodule --quiet init third-party/Processlib")
-	for arg in options:
-		os.system("git submodule --quiet init " + str(arg))
-	os.system("git submodule --quiet update")
-	test="git submodule --quiet foreach './../../scripts/submodules ${path}'"
-	os.system(test)"""
-	
 	subprocess.call(["git", "submodule", "--quiet", "init", "third-party/Processlib"])
 	for arg in options:
 		subprocess.call(["git", "submodule", "--quiet", "init", str(arg)])
-		#print str(arg)
 	subprocess.call(["git", "submodule", "--quiet", "update"])
 	subprocess.call(["git", "submodule", "--quiet", "foreach", "./../../scripts/submodules ${path}"])
 	for arg in options:
@@ -54,15 +45,14 @@ def ConfigGitandOptions(options):
 	
 	with open(configFile) as f:
 		for line in f:
-			for fuck in optionName:
-				if fuck in line:
-					line=line[:-2]
+			line=line[:-1]
+			for option in optionName:
+				if option in line:
+					line=line[:-1]
 					line=line+str(1)
 			if line.startswith('LIMA'):
 				if line[len(line)-1]==str(1):
 					config.append("-D"+line)
-			elif line.startswith('CMAKE') or line.startswith('PYTHON'):
-				config.append("-D"+line)
         config= " ".join([str(cmd) for cmd in config])
         return config
 	f.close()

@@ -8,14 +8,7 @@ stages:
 build :
   stage: build
   script:
-    - git submodule init third-party/Processlib
-    - git submodule update
-    - cd third-party/Processlib
-    - git remote add gitlab git@gitlab.esrf.fr:limagroup/processlib.git
-    - git fetch gitlab
-    - git checkout gitlab/cmake
-    - cd ../..
-    - ./install.sh
+    - ./install.sh camera/ueye
     - cd
     - ls -l
   artifacts:
