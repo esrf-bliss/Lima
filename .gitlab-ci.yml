@@ -17,6 +17,7 @@ build :
     - cd ../..
     - ./install.sh
     - cd
+    - ls -l
   artifacts:
     paths:
     - cmake-build/
