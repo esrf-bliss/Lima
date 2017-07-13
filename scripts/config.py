@@ -21,9 +21,44 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+import sys
+import subprocess
 
-configFile = 'config.txt'
+configFile = 'scripts/config.txt'
 
+#### DEV ####
+def ConfigGitandOptions(options):
+	optionName=[]
+	config = []
+	del options[0]
+	subprocess.call(["git", "submodule", "init", "third-party/Processlib"])
+	for arg in options:
+		subprocess.call(["git", "submodule", "init", str(arg)])
+		#print str(arg)
+	subprocess.call(["git", "submodule", "update"])
+	#subprocess.call(["git", "submodule", "--quiet", "foreach", "./../../scripts/submodules ${path}"])
+	for arg in options:
+		if "camera/" in str(arg):
+			optionName.append(str.upper(str(arg)[7:]))
+		elif "third-party/" in str(arg):
+			optionName.append(str.upper(str(arg)[12:]))
+	
+	with open(configFile) as f:
+		for line in f:
+			for fuck in optionName:
+				if fuck in line:
+					line=line[:-2]
+					line=line+str(1)
+			if line.startswith('LIMA'):
+				if line[len(line)-1]==str(1):
+					config.append("-D"+line)
+			elif line.startswith('CMAKE') or line.startswith('PYTHON'):
+				config.append("-D"+line)
+        config= " ".join([str(cmd) for cmd in config])
+        return config
+	f.close()
+#### DEV ####
+"""
 def getModuleConfig():
     config = []
     try:
@@ -39,9 +74,10 @@ def getModuleConfig():
     except IOError:
         print 'Error'
         raise
-
+"""
 		
 if __name__ == '__main__':
-	config = getModuleConfig()
+	config = ConfigGitandOptions(sys.argv)
+	#config = getModuleConfig()
 	print config
 
