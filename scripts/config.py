@@ -42,7 +42,9 @@ def ConfigGitandOptions(options):
 			optionName.append(str.upper(str(arg)[7:]))
 		elif "third-party/" in str(arg):
 			optionName.append(str.upper(str(arg)[12:]))
-	
+		else:
+			#probably test or python options.
+			optionName.append(str.upper(str(arg)))
 	with open(configFile) as f:
 		for line in f:
 			line=line[:-1]
