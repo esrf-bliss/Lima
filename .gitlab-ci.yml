@@ -8,7 +8,7 @@ stages:
 build :
   stage: build
   script:
-    - ./install.sh camera/ueye
+    - ./install.sh camera/ultra
     - cd
     - ls -l
   artifacts:
