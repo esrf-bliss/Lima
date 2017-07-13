@@ -13,7 +13,7 @@ build :
     - cd Git/lima
     - ./install.sh
   artifacts:
-    path:
+    paths:
     - /root/cmake-build/
   only:
     - cmake
