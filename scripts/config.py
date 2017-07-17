@@ -37,9 +37,10 @@ def ConfigGitandOptions(options):
 			os.system("git submodule --quiet init "+str(subm))
 	os.system("git submodule --quiet update")
 	for subm in options:
-		os.chdir(os.getcwd()+"/"+str(subm))
-		os.system("./../../scripts/submodules "+str(subm))
-		os.chdir(os.getcwd()+"/../..")
+		if "/" in subm:
+			os.chdir(os.getcwd()+"/"+str(subm))
+			os.system("./../../scripts/submodules "+str(subm))
+			os.chdir(os.getcwd()+"/../..")
 	#### 
 	for arg in options:
 		if "camera/" in str(arg):
