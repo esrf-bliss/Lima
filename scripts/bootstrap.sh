@@ -26,7 +26,7 @@ script_path=$(pwd)/scripts
 source_path=$(pwd)
 
 #we create build and install directory in user's home
-cd
+
 if [ -d "cmake-build/" ]; then
 	cd cmake-build
 	#We test if the build directory is empty or not
