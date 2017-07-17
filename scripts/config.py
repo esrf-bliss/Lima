@@ -31,10 +31,10 @@ def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
 	del options[0]
-	
-	subprocess.call(["git", "submodule", "--quiet", "init", "third-party/Processlib"])
+	options.append('third-party/Processlib')
 	for arg in options:
-		subprocess.call(["git", "submodule", "--quiet", "init", str(arg)])
+		if "/" in arg:
+			subprocess.call(["git", "submodule", "--quiet", "init", str(arg)])
 	subprocess.call(["git", "submodule", "--quiet", "update"])
 	subprocess.call(["git", "submodule", "--quiet", "foreach", "./../../scripts/submodules ${path}"])
 	for arg in options:

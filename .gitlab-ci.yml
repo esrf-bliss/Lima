@@ -8,12 +8,12 @@ stages:
 build :
   stage: build
   script:
-    - ./install.sh camera/merlin python test
+    - ./install.sh camera/ultra python test
     - cd
     - ls -l
 #  artifacts:
 #    paths:
-#    - cmake-build
+#    - cmake-build/
   only:
     - cmake
 
