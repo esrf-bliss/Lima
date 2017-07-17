@@ -30,7 +30,14 @@ def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
 	del options[0]
-	
+	os.system("git submodule --quiet init third-party/Processlib")
+	os.system("git submodule --quiet update")
+	os.chdir(os.getcwd()+"/third-party/Processlib")
+	os.system("git remote rm gitlab")
+	os.system("git remote add gitlab git@gitlab.esrf.fr:limagroup/processlib.git")
+	os.system("git fetch gitlab")
+	os.system("git checkout gitlab/cmake")
+	os.chdir(os.getcwd()+"/../..")
 	for arg in options:
 		if "camera/" in str(arg):
 			optionName.append(str.upper(str(arg)[7:]))
