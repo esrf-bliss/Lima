@@ -21,22 +21,25 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-import sys
+import sys,os
 import subprocess
 
 configFile = 'scripts/config.txt'
 
-#### DEV ####
+#### ONLY LINUX ####
 def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
 	del options[0]
+	#### clone submodules passed as arguments
 	options.append('third-party/Processlib')
-	for arg in options:
-		if "/" in arg:
-			subprocess.call(["git", "submodule", "--quiet", "init", str(arg)])
+	for subm in options:
+		if "/" in subm:
+			subprocess.call(["git", "submodule", "--quiet", "init", str(subm)])
 	subprocess.call(["git", "submodule", "--quiet", "update"])
 	subprocess.call(["git", "submodule", "--quiet", "foreach", "./../../scripts/submodules ${path}"])
+	
+	#### 
 	for arg in options:
 		if "camera/" in str(arg):
 			optionName.append(str.upper(str(arg)[7:]))
@@ -58,7 +61,7 @@ def ConfigGitandOptions(options):
         config= " ".join([str(cmd) for cmd in config])
         return config
 	f.close()
-#### DEV ####
+#### ONLY LINUX ####
 """
 def getModuleConfig():
     config = []
