@@ -8,7 +8,7 @@ stages:
 build :
   stage: build
   script:
-    - ./install.sh camera/merlin python test
+    - ./install.sh python test
     - ls -l
   artifacts:
     paths:
