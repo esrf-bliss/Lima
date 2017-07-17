@@ -20,6 +20,6 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-set(test_src test_simulator_framebuilder test_simulator_hwbuffersave test_simulator_hwinterface)
+set(test_src test_simulator_framebuilder test_simulator_hwbuffersave)  #(test_simulator_hwinterface)
 
 limatools_run_camera_tests("${test_src}" ${NAME})

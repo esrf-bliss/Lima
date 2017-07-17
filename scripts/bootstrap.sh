@@ -25,7 +25,7 @@
 script_path=$(pwd)/scripts
 source_path=$(pwd)
 
-#we create build and install directory in user's home
+#we create build and install directory in lima/ directory
 
 if [ -d "cmake-build/" ]; then
 	cd cmake-build

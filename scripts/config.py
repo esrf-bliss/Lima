@@ -30,18 +30,7 @@ def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
 	del options[0]
-	#### clone submodules passed as arguments
-	options.append('third-party/Processlib')
-	for subm in options:
-		if "/" in subm:
-			os.system("git submodule --quiet init "+str(subm))
-	os.system("git submodule --quiet update")
-	for subm in options:
-		if "/" in subm:
-			os.chdir(os.getcwd()+"/"+str(subm))
-			os.system("./../../scripts/submodules "+str(subm))
-			os.chdir(os.getcwd()+"/../..")
-	#### 
+	
 	for arg in options:
 		if "camera/" in str(arg):
 			optionName.append(str.upper(str(arg)[7:]))
