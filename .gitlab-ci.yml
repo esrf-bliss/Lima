@@ -3,6 +3,7 @@
 
 stages:
   - build
+  - test
 
 build :
   stage: build
@@ -16,13 +17,12 @@ build :
     - cmake
 
 
-#test :
-#  stage: test
-#  dependencies:
-#    - build
-#  script:
-#    - cd
-#    - cd cmake-build/
-#    - ctest --timeout 10
-#  only:
-#    - cmake
+test :
+  stage: test
+  dependencies:
+    - build
+  script:
+    - cd cmake-build/
+    - ctest --timeout 10
+  only:
+    - cmake
