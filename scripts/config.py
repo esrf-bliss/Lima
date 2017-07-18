@@ -25,7 +25,6 @@ import os,sys
 
 configFile = 'scripts/config.txt'
 
-#### FOR CI : ONLY LINUX ####
 def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
@@ -51,10 +50,8 @@ def ConfigGitandOptions(options):
         config= " ".join([str(cmd) for cmd in config])
         return config
 	f.close()
-	#### ONLY LINUX ####
 	
 """
-#### WORKS UNDER UNIX & WINDOWS BUT CAN'T BE USED FOR CI ####
 def getModuleConfig():
     config = []
     try:
@@ -70,7 +67,6 @@ def getModuleConfig():
     except IOError:
         print 'Error'
         raise
-#### WORKS UNDER UNIX & WINDOWS BUT CAN'T BE USED FOR CI ####
 """
 		
 if __name__ == '__main__':
