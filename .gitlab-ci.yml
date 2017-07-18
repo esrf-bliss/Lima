@@ -8,7 +8,7 @@ stages:
 build :
   stage: build
   script:
-    - ./install.sh python test
+    - ./install.sh tests python 
     - ls -l
   artifacts:
     paths:
