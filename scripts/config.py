@@ -25,19 +25,10 @@ import os,sys
 
 configFile = 'scripts/config.txt'
 
-#### FOR CI : ONLY LINUX ####
 def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
 	del options[0]
-	os.system("git submodule --quiet init third-party/Processlib")
-	os.system("git submodule --quiet update")
-	os.chdir(os.getcwd()+"/third-party/Processlib")
-	os.system("git remote rm gitlab")
-	os.system("git remote add gitlab git@gitlab.esrf.fr:limagroup/processlib.git")
-	os.system("git fetch gitlab")
-	os.system("git checkout gitlab/cmake")
-	os.chdir(os.getcwd()+"/../..")
 	for arg in options:
 		if "camera/" in str(arg):
 			optionName.append(str.upper(str(arg)[7:]))
@@ -59,10 +50,8 @@ def ConfigGitandOptions(options):
         config= " ".join([str(cmd) for cmd in config])
         return config
 	f.close()
-	#### ONLY LINUX ####
 	
 """
-#### WORKS UNDER UNIX & WINDOWS BUT CAN'T BE USED FOR CI ####
 def getModuleConfig():
     config = []
     try:
@@ -78,7 +67,6 @@ def getModuleConfig():
     except IOError:
         print 'Error'
         raise
-#### WORKS UNDER UNIX & WINDOWS BUT CAN'T BE USED FOR CI ####
 """
 		
 if __name__ == '__main__':
