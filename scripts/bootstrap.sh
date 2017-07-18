@@ -26,7 +26,7 @@ script_path=$(pwd)/scripts
 source_path=$(pwd)
 
 #we create build and install directory in user's home
-cd
+
 if [ -d "cmake-build/" ]; then
 	cd cmake-build
 	#We test if the build directory is empty or not
@@ -61,9 +61,10 @@ if [ ! -f "config.txt" ]; then
 	cp config.txt_default config.txt
 fi
 
+cd $source_path
 #Python script getting compile options, return it -DOPTION=1, so in CMakeLists.txt every options need to be at OFF because otherwise it will still compile it.
-compileoptions=$(python config.py)
-
+compileoptions=$(python scripts/config.py $@)
+echo $compileoptions
 cd $cmake_build_path
 #Launching CMake, building unix Makefiles, from the source in git_test/lima
 cmake -G"Unix Makefiles" $source_path -DCMAKE_INSTALL_PREFIX="$cmake_install_path" $compileoptions -DPYTHON_SITE_PACKAGES_DIR="$cmake_install_path/python"
