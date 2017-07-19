@@ -2,15 +2,19 @@ sudo: required
 
 language: cpp
 
+git:
+  submodules: false
+
 services:
   - docker
   
 before_install:
-  - docker pull docker-registry.esrf.fr/bcu/lima-ci-debian8
-  - docker run -it docker-registry.esrf.fr/bcu/lima-ci-debian8 /bin/bash -c "cd /root; ./install_lima_submodule; cd lima/; ./install.sh python tests"
+  - docker pull esrfbliss/lima-ci-debian8
+  - docker run -it esrfbliss/lima-ci-debian8 /bin/bash -c "cd /root; ./install_lima_submodule; cd lima/; ./install.sh python tests"
   
 script:
-  - docker exec docker-registry.esrf.fr/bcu/lima-ci-debian8 /bin/bash "cd /root/lima/cmake-build/ && ctest"
+  - docker exec esrfbliss/lima-ci-debian8 /bin/bash "cd /root/lima/cmake-build/ && ctest"
+
 
 branches:
   only:
