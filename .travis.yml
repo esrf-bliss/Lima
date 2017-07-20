@@ -13,7 +13,7 @@ before_install:
   - docker run --name lima-ci-docker -dit esrfbliss/lima-ci-debian8
   
 script:
-  - docker exec lima-ci-docker /bin/sh -c 'cd /root && ./install_lima_submodule'
+  - docker exec lima-ci-docker /bin/sh -c 'unset https_proxy && unset http_proxy && cd /root && ./install_lima_submodule'
   - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/ && ./install.sh python tests'
   - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/cmake-build/ && ctest --timeout 10'
 
