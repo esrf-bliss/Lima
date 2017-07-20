@@ -21,7 +21,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-import os,sys
+import sys
 
 configFile = 'scripts/config.txt'
 
@@ -47,28 +47,11 @@ def ConfigGitandOptions(options):
 			if line.startswith('LIMA'):
 				if line[len(line)-1]==str(1):
 					config.append("-D"+line)
-        config= " ".join([str(cmd) for cmd in config])
-        return config
+		config= " ".join([str(cmd) for cmd in config])
+		return config
 	f.close()
+
 	
-"""
-def getModuleConfig():
-    config = []
-    try:
-        with open(configFile) as f:
-            for line in f:
-				if line.startswith('LIMA'):
-					if line[len(line)-2]==str(1):
-						config.append("-D"+line[:-1])
-				elif line.startswith('CMAKE') or line.startswith('PYTHON'):
-					config.append("-D"+line[:-1])
-        config= " ".join([str(cmd) for cmd in config])
-        return config
-    except IOError:
-        print 'Error'
-        raise
-"""
-		
 if __name__ == '__main__':
 	config = ConfigGitandOptions(sys.argv)
 	print config

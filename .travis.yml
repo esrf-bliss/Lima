@@ -10,11 +10,16 @@ services:
   
 before_install:
   - docker pull esrfbliss/lima-ci-debian8
-  - docker run --name lima-ci-docker -dit esrfbliss/lima-ci-debian8
+  - docker run --name lima-ci-docker -v $(pwd):/root/Lima -dit esrfbliss/lima-ci-debian8
   
 script:
-  - docker exec lima-ci-docker /bin/sh -c 'unset https_proxy && unset http_proxy && cd /root && ./install_lima_submodule'
+  - echo "Lima code in Lima/, cloning only processlib sbmodule"
+  - docker exec lima-ci-docker /bin/sh -c 'unset https_proxy && unset http_proxy && cd /root/Lima && git submodule init third-party/Processlib && git submodule update && git submodule foreach 'git fetch && git checkout cmake''
+  
+  - echo "Compilation of limacore with python and tests as options."
   - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/ && ./install.sh python tests'
+  
+  - echo "Executing tests in cmake-build repository"
   - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/cmake-build/ && ctest --timeout 10'
 
 after-script:
