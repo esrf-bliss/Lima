@@ -13,9 +13,9 @@ before_install:
   - docker run -it esrfbliss/lima-ci-debian8 /bin/bash 
   
 script:
-  - docker exec esrfbliss/lima-ci-debian8 /bin/bash "cd /root && ./install_lima_submodule"
-  - docker exec esrfbliss/lima-ci-debian8 /bin/bash "cd /root/Lima/ && ./install.sh python tests"
-  - docker exec esrfbliss/lima-ci-debian8 /bin/bash "cd /root/Lima/cmake-build/ && ctest --timeout 10"
+  - cd /root && ./install_lima_submodule
+  - Lima/ && ./install.sh python tests
+  - cmake-build/ && ctest --timeout 10
   
 branches:
   only:
