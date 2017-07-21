@@ -70,7 +70,7 @@ cd $cmake_build_path
 cmake -G"Unix Makefiles" $source_path -DCMAKE_INSTALL_PREFIX="$cmake_install_path" $compileoptions -DPYTHON_SITE_PACKAGES_DIR="$cmake_install_path/python"
 
 #speed of compilation depend on number of processors.
-numberpr=$(nproc | bc)
+numberpr=$(nproc)
 numberpr=$(($numberpr + 1))
 make -j$numberpr
 

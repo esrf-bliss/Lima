@@ -21,33 +21,56 @@ rem
 rem   You should have received a copy of the GNU General Public License
 rem   along with this program; if not, see <http://www.gnu.org/licenses/>.
 rem ###########################################################################
-@echo off
-setlocal enabledelayedexpansion
+rem @echo off
+rem setlocal enabledelayedexpansion
+
+rem We create the install and build directory, if they already exist they are deleted.
+
+set sourcepath=%cd%
+
+if exist "cmake-build" (
+    rmdir /S /Q cmake-build
+)
+mkdir cmake-build
+cd cmake-build
+set buildpath=%cd%
+
+cd ..
+if exist "cmake-install" (
+    rmdir /S /Q cmake-install
+)
+mkdir cmake-install
+cd cmake-install
+mkdir python
+set installpath=%cd%
+
+cd /D %sourcepath%
 
 rem we create the config.txt which will be used by python script. The one users will modify as they want.
-if not exist "config.txt" (
-    copy /y config.txt_default config.txt
+if not exist "scripts/config.txt" (
+    copy /y scripts/config.txt_default scripts/config.txt
 )
 
 rem deleting the output of python script if it exists
-if exist "output_config" (
-	del "output_config"
+if exist "scripts/output_config" (
+	del "scripts/output_config"
 )
+pause
 
-call config.py > output_config
-set /p cmake_configs=<output_config
+call python scripts/config.py %*> scripts/output_config
+set /p cmake_configs=<scripts/output_config
 
-if exist "output_config" (
-	del "output_config"
+if exist "scripts/output_config" (
+	del "scripts/output_config"
 )
 
 rem we go in the build directory
-cd /D %~1
+cd /D %buildpath%
 rem calling cmake with arguments we need. Need to check for 64 or 32bits windows version. To do so just check if ProgramFiles(x86) exists.
-if defined ProgramFiles(x86) (
-	cmake -G "Visual Studio 9 2008 Win64" -DCMAKE_INSTALL_PREFIX="%~3" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%~3\python" "%~2"
+ if defined ProgramFiles(x86) (
+ 	cmake -G "Visual Studio 9 2008 Win64" -DCMAKE_INSTALL_PREFIX="%installpath%" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%installpath%\python" "%~2"
 ) else (
-	cmake -G "Visual Studio 9 2008" -DCMAKE_INSTALL_PREFIX="%~3" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%~3\python" "%~2"
+ 	cmake -G "Visual Studio 9 2008" -DCMAKE_INSTALL_PREFIX="%~3" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%installpath%\python" "%sourcepath%"
 )
 
 rem configuration of env variables for visual c++ 2008 version.
@@ -55,9 +78,10 @@ cd /D %VS90COMNTOOLS%..\..\VC
 call vcvarsall.bat
 
 rem compilation and install using cmake.
-cd /D %~1
+cd /D %buildpath%
 cmake --build . --target install --config Release
 
+cd ..
 rem the following code might be use one day.
 rem cd %~2
 
