@@ -25,7 +25,7 @@ rem ###########################################################################
 rem We create the install and build directory, if they already exist they are deleted.
 set sourcepath=%cd%
 
-cd ..\..
+
 if exist "cmake-build" (
     rmdir /S /Q cmake-build
 )
