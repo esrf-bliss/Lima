@@ -22,27 +22,5 @@ rem   You should have received a copy of the GNU General Public License
 rem   along with this program; if not, see <http://www.gnu.org/licenses/>.
 rem ###########################################################################
 
-rem We create the install and build directory, if they already exist they are deleted.
-set sourcepath=%cd%
-
-cd ..\..
-if exist "cmake-build" (
-    rmdir /S /Q cmake-build
-)
-mkdir cmake-build
-cd cmake-build
-set buildpath=%cd%
-
-cd ..
-if exist "cmake-install" (
-    rmdir /S /Q cmake-install
-)
-mkdir cmake-install
-cd cmake-install
-mkdir python
-set installpath=%cd%
-
-cd /D %sourcepath%\scripts
-
-rem we call the main script, with paths as arguments.
-call bootstrap.bat %buildpath% %sourcepath% %installpath%
+rem we call the main script, with options as arguments.
+call scripts/bootstrap.bat %*
