@@ -22,37 +22,71 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 import sys
+import subprocess
+import os
 
 configFile = 'scripts/config.txt'
 
+#### DEV ####
 def ConfigGitandOptions(options):
 	optionName=[]
 	config = []
 	del options[0]
+	
+	"""os.system("git submodule --quiet init third-party/Processlib")
+	for arg in options:
+		os.system("git submodule --quiet init " + str(arg))
+	os.system("git submodule --quiet update")
+	test="git submodule --quiet foreach './../../scripts/submodules ${path}'"
+	os.system(test)"""
+	
+	subprocess.call(["git", "submodule", "--quiet", "init", "third-party/Processlib"])
+	for arg in options:
+		subprocess.call(["git", "submodule", "--quiet", "init", str(arg)])
+		#print str(arg)
+	subprocess.call(["git", "submodule", "--quiet", "update"])
+	subprocess.call(["git", "submodule", "--quiet", "foreach", "./../../scripts/submodules ${path}"])
 	for arg in options:
 		if "camera/" in str(arg):
 			optionName.append(str.upper(str(arg)[7:]))
 		elif "third-party/" in str(arg):
 			optionName.append(str.upper(str(arg)[12:]))
-		else:
-			#probably test or python options.
-			optionName.append(str.upper(str(arg)))
+	
 	with open(configFile) as f:
 		for line in f:
-			line=line[:-1]
-			for option in optionName:
-				if option in line:
-					line=line[:-1]
+			for fuck in optionName:
+				if fuck in line:
+					line=line[:-2]
 					line=line+str(1)
 			if line.startswith('LIMA'):
 				if line[len(line)-1]==str(1):
 					config.append("-D"+line)
-		config= " ".join([str(cmd) for cmd in config])
-		return config
+			elif line.startswith('CMAKE') or line.startswith('PYTHON'):
+				config.append("-D"+line)
+        config= " ".join([str(cmd) for cmd in config])
+        return config
 	f.close()
-
-	
+#### DEV ####
+"""
+def getModuleConfig():
+    config = []
+    try:
+        with open(configFile) as f:
+            for line in f:
+				if line.startswith('LIMA'):
+					if line[len(line)-2]==str(1):
+						config.append("-D"+line[:-1])
+				elif line.startswith('CMAKE') or line.startswith('PYTHON'):
+					config.append("-D"+line[:-1])
+        config= " ".join([str(cmd) for cmd in config])
+        return config
+    except IOError:
+        print 'Error'
+        raise
+"""
+		
 if __name__ == '__main__':
 	config = ConfigGitandOptions(sys.argv)
+	#config = getModuleConfig()
 	print config
 

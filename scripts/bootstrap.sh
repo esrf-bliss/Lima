@@ -56,6 +56,7 @@ fi
 mkdir python
 cmake_install_path=$(pwd)
 
+
 cd $script_path
 if [ ! -f "config.txt" ]; then
 	cp config.txt_default config.txt
@@ -70,7 +71,7 @@ cd $cmake_build_path
 cmake -G"Unix Makefiles" $source_path -DCMAKE_INSTALL_PREFIX="$cmake_install_path" $compileoptions -DPYTHON_SITE_PACKAGES_DIR="$cmake_install_path/python"
 
 #speed of compilation depend on number of processors.
-numberpr=$(nproc)
+numberpr=$(nproc | bc)
 numberpr=$(($numberpr + 1))
 make -j$numberpr
 
