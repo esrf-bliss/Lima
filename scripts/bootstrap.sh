@@ -97,11 +97,11 @@ else
 		fi
 		
 		if [[ "$arg" == --git ]]; then
-			notsubm=('--prefix', '--python-packages', '--git', 'python', 'tests', 'test', 'cbf', 'lz4', 'fits', 'gz', 'tiff', 'hdf5')
+			notsubm=('python', 'tests', 'test', 'cbf', 'lz4', 'fits', 'gz', 'tiff', 'hdf5')
 			git submodule init third-party/Processlib
 			for subm in "$@"
 			do
-				if [[ ! "${notsubm[@]}" == *"$subm"* ]]; then
+				if [[ ! "${notsubm[@]}" == *"$subm"* ]] && [[ ! "$subm" == --python-packages* ]] && [[ ! "$subm" == --prefix* ]] && [[ ! "$subm" == --git ]]; then
 					git submodule init $subm
 				fi
 			done
