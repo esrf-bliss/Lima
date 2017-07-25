@@ -68,9 +68,9 @@ rem we go in the build directory
 cd /D %buildpath%
 rem calling cmake with arguments we need. Need to check for 64 or 32bits windows version. To do so just check if ProgramFiles(x86) exists.
  if defined ProgramFiles(x86) (
- 	cmake -G "Visual Studio 9 2008 Win64" -DCMAKE_INSTALL_PREFIX="%installpath%" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%installpath%\python" "%~2"
+ 	cmake -G "Visual Studio 9 2008 Win64" -DCMAKE_INSTALL_PREFIX="%installpath%" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%installpath%\python" "%sourcepath%"
 ) else (
- 	cmake -G "Visual Studio 9 2008" -DCMAKE_INSTALL_PREFIX="%~3" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%installpath%\python" "%sourcepath%"
+ 	cmake -G "Visual Studio 9 2008" -DCMAKE_INSTALL_PREFIX="%installpath%" %cmake_configs% -DPYTHON_SITE_PACKAGES_DIR="%installpath%\python" "%sourcepath%"
 )
 
 rem configuration of env variables for visual c++ 2008 version.

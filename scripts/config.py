@@ -50,7 +50,8 @@ def ConfigGitandOptions(options):
 		config= " ".join([str(cmd) for cmd in config])
 		return config
 	f.close()
-
+	
+		
 if __name__ == '__main__':
 	config = ConfigGitandOptions(sys.argv)
 	print config
