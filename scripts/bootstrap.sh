@@ -83,19 +83,27 @@ else
 		cd build/
 	fi
 	build_path=$(pwd)
-	
+
+	#Checking every arguments. 
 	for arg in "$@"
 	do 
 		if [[ "$arg" == --prefix* ]];then
 			install_path=$(echo ${arg##*=})
 			
 		fi
-	done
-	
-	for arg in "$@"
-	do 
+
 		if [[ "$arg" == --python-packages* ]];then
 			install_python_path=$(echo ${arg##*=})
+		fi
+		
+		if [[ "$arg" == --git ]]; then
+			git submodule init third-party/Processlib
+			for subm in "$@"
+			do
+				git submodule init $subm
+			done
+			git submodule update
+			git submodule foreach 'git checkout cmake'
 		fi
 	done
 
