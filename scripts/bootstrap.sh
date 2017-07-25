@@ -66,7 +66,6 @@ EOTEXT
 if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "-help" ] || [ "$1" == "-?" ]; then
 	help
 else
-	
 	script_path=$(pwd)/scripts
 	source_path=$(pwd)
 
@@ -97,10 +96,13 @@ else
 		fi
 		
 		if [[ "$arg" == --git ]]; then
+			notsubm=('--prefix', '--python-packages', '--git', 'python', 'tests', 'test', 'cbf', 'lz4', 'fits', 'gz', 'tiff', 'hdf5')
 			git submodule init third-party/Processlib
 			for subm in "$@"
 			do
-				git submodule init $subm
+				if [[ ! "${notsubm[@]}" == *"$subm"* ]]; then
+					git submodule init $subm
+				fi
 			done
 			git submodule update
 			git submodule foreach 'git checkout cmake'
