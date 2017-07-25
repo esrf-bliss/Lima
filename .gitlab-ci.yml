@@ -8,7 +8,6 @@ stages:
 build :
   stage: build
   script:
-    - git submodule init third-party/Processlib
     - ./install.sh --git third-party/Processlib tests python 
     - ls -l
   artifacts:
