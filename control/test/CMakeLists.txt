@@ -1,7 +1,7 @@
 ############################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-# Copyright (C) : 2009-2011
+# Copyright (C) : 2009-2017
 # European Synchrotron Radiation Facility
 # BP 220, Grenoble 38043
 # FRANCE
@@ -19,34 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-LIMA_DIR := $(shell pwd)/../..
 
-include $(LIMA_DIR)/control/control.inc
+set(test_src roicountertest)
 
-SRCS = testregex.cpp
-
-CPPFLAGS = $(CT_CPPFLAGS)
-CXXFLAGS = $(CT_CXXFLAGS)
-DEPLIBS = $(CT_DEPLIBS) $(LIMA_DIR)/build,limacore
-LDFLAGS = $(CT_LDFLAGS) $(call lib-depflags,$(DEPLIBS))
-LDLIBS = $(CT_LDLIBS) $(call lib-deplibs,$(DEPLIBS))
-
-all: testregex
-
-testregex:	testregex.o 
-	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
-clean:
-	rm -f *.o testregex
-
-%.o : %.cpp
-	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
-	@cp $*.d $*.P; \
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
-	rm -f $*.d
-
--include $(SRCS:.cpp=.P)
-
-.PHONY: check-syntax
-check-syntax:
-	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+limatools_run_camera_tests("${test_src}" ${NAME})

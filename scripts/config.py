@@ -47,8 +47,8 @@ def ConfigGitandOptions(options):
 			if line.startswith('LIMA'):
 				if line[len(line)-1]==str(1):
 					config.append("-D"+line)
-        config= " ".join([str(cmd) for cmd in config])
-        return config
+		config= " ".join([str(cmd) for cmd in config])
+		return config
 	f.close()
 	
 		

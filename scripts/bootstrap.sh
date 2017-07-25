@@ -138,4 +138,3 @@ else
 	#Install libraries and everything in the directory selected by CMAKE_INSTALL_PREFIXE and PYTHON_SITE_PACKAGES_DIR for python modules.
 	make install
 fi
-

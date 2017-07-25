@@ -402,6 +402,11 @@ if(LIMA_ENABLE_TESTS)
     enable_testing()
 endif()
 
+if(LIMA_ENABLE_TESTS)
+        add_subdirectory(control/test)
+        add_subdirectory(common/test)
+endif()
+
 #--------------------------------------------------------------------------------
 # CAMERA list is in cmake/CameraList.cmake file
 #--------------------------------------------------------------------------------
