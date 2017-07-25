@@ -83,12 +83,13 @@ else
 	fi
 	build_path=$(pwd)
 
+	cd ..
+
 	#Checking every arguments. 
 	for arg in "$@"
 	do 
 		if [[ "$arg" == --prefix* ]];then
 			install_path=$(echo ${arg##*=})
-			
 		fi
 
 		if [[ "$arg" == --python-packages* ]];then
