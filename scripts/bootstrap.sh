@@ -66,7 +66,6 @@ EOTEXT
 if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "-help" ] || [ "$1" == "-?" ]; then
 	help
 else
-	
 	script_path=$(pwd)/scripts
 	source_path=$(pwd)
 
@@ -84,12 +83,13 @@ else
 	fi
 	build_path=$(pwd)
 
+	cd ..
+
 	#Checking every arguments. 
 	for arg in "$@"
 	do 
 		if [[ "$arg" == --prefix* ]];then
 			install_path=$(echo ${arg##*=})
-			
 		fi
 
 		if [[ "$arg" == --python-packages* ]];then
@@ -97,10 +97,13 @@ else
 		fi
 		
 		if [[ "$arg" == --git ]]; then
+			notsubm=('python', 'tests', 'test', 'cbf', 'lz4', 'fits', 'gz', 'tiff', 'hdf5')
 			git submodule init third-party/Processlib
 			for subm in "$@"
 			do
-				git submodule init $subm
+				if [[ ! "${notsubm[@]}" == *"$subm"* ]] && [[ ! "$subm" == --python-packages* ]] && [[ ! "$subm" == --prefix* ]] && [[ ! "$subm" == --git ]]; then
+					git submodule init $subm
+				fi
 			done
 			git submodule update
 			git submodule foreach 'git checkout cmake'
