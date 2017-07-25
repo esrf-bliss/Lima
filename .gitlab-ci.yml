@@ -19,7 +19,7 @@ build :
     - ls -l
   artifacts:
     paths:
-    - cmake-build/
+    - build/
   only:
     - cmake
 
@@ -29,7 +29,7 @@ test :
   dependencies:
     - build
   script:
-    - cd cmake-build/
+    - cd build/
     - ctest --timeout 10
   only:
     - cmake
