@@ -54,19 +54,6 @@ def GitCloneSubmodule(submodules):
 			os.system("git submodule init " +str(submodule))
 	os.system("git submodule update")
 	os.system("git submodule foreach 'git checkout cmake'")
-	"""if OS_TYPE=="Linux":
-		for submodule in submodules:
-			if submodule not in not_submodule:
-				if submodule in camera_list:
-					submodule="camera/"+str(submodule)
-				if submodule=="espia":
-					submodule="camera/common/espia"+str(submodule)
-				os.system("git submodule init " +str(submodule))
-		os.system("git submodule update")
-		os.system("git submodule foreach 'git checkout cmake'")
-#	elif OS_TYPE=="Windows":
-#		windows part done after.
-#"""
 
 def ConfigOptions(options):
 	configFile = 'scripts/config.txt'
@@ -146,8 +133,12 @@ if __name__ == '__main__':
 	available_options,options = check_options(sys.argv)
 	if available_options==0 and options==0:
 		exit
-	elif "git" in available_options:
-		GitCloneSubmodule(options)
+	
+	#No git option under windows for obvious reasons.
+	if OS_TYPE=="Linux":
+		if "git" in available_options:
+			GitCloneSubmodule(options)
+
 	cmake_config = ConfigOptions(options)
 	print cmake_config
 	for script_option in available_options:
