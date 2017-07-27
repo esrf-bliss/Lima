@@ -29,7 +29,7 @@ def check_options(options_pass):
 	script_options=[]
 	for arg in options_pass:
 		if arg=="--help" or arg=="-h" or arg=="-help" or arg=="-?":
-			with open("INSTALL.md", 'r') as f:
+			with open("INSTALL.txt", 'r') as f:
 				print f.read()
 			return [0],[0]
 			break
@@ -45,19 +45,16 @@ def check_options(options_pass):
 
 def GitCloneSubmodule(submodules):
 	submodules.append("third-party/Processlib")
-	if OS_TYPE=="Linux":
-		for submodule in submodules:
-			if submodule not in not_submodule:
-				if submodule in camera_list:
-					submodule="camera/"+str(submodule)
-				if submodule=="espia":
-					submodule="camera/common/espia"+str(submodule)
-				os.system("git submodule init " +str(submodule))
-		os.system("git submodule update")
-		os.system("git submodule foreach 'git checkout cmake'")
-#	elif OS_TYPE=="Windows":
-#		windows part done after.
-#
+	for submodule in submodules:
+		if submodule not in not_submodule:
+			if submodule in camera_list:
+				submodule="camera/"+str(submodule)
+			if submodule=="espia":
+				submodule="camera/common/espia"+str(submodule)
+			os.system("git submodule init " +str(submodule))
+	os.system("git submodule update")
+	os.system("git submodule foreach 'git checkout cmake'")
+
 def ConfigOptions(options):
 	configFile = 'scripts/config.txt'
 	optionName=[]
@@ -96,21 +93,31 @@ def Install_lima_linux():
 			os.system("cmake -G\"Unix Makefiles\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
 		else:
 			os.system("cmake -G\"Unix Makefiles\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-	os.system("make")
-	os.system("make install")
+	os.system("cmake --build . --target install")
 
 def Install_lima_windows():
 	os.chdir(os.getcwd()+"\build")
-	if install_path=="" and install_python_path=="":
-			os.system("cmake -G\"Unix Makefiles\" "+source_path+" "+cmake_config)
-	else:
-		if install_path!="" and install_python_path=="":
-			os.system("cmake -G\"Unix Makefiles\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
-		elif install_path=="" and install_python_path!="":
-			os.system("cmake -G\"Unix Makefiles\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+	if platform.machine()=="AMD64":
+		if install_path=="" and install_python_path=="":
+			os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" "+cmake_config)
 		else:
-			os.system("cmake -G\"Unix Makefiles\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-
+			if install_path!="" and install_python_path=="":
+				os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
+			elif install_path=="" and install_python_path!="":
+				os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+			else:
+				os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+	elif platform.machine()=="x86":
+		if install_path=="" and install_python_path=="":
+			os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" "+cmake_config)
+		else:
+			if install_path!="" and install_python_path=="":
+				os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
+			elif install_path=="" and install_python_path!="":
+				os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+			else:
+				os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+	os.system("cmake --build . --target install --config Release")
 
 if __name__ == '__main__':
 	OS_TYPE=platform.system()
@@ -126,8 +133,12 @@ if __name__ == '__main__':
 	available_options,options = check_options(sys.argv)
 	if available_options==0 and options==0:
 		exit
-	elif "git" in available_options:
-		GitCloneSubmodule(options)
+	
+	#No git option under windows for obvious reasons.
+	if OS_TYPE=="Linux":
+		if "git" in available_options:
+			GitCloneSubmodule(options)
+
 	cmake_config = ConfigOptions(options)
 	print cmake_config
 	for script_option in available_options:
