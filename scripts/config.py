@@ -23,7 +23,7 @@
 ############################################################################
 import sys
 
-configFile = 'scripts/config.txt'
+configFile = 'config.txt'
 
 def ConfigGitandOptions(options):
 	optionName=[]
