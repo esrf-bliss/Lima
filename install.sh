@@ -23,4 +23,17 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-./scripts/bootstrap.sh $@
+if [ -d "build/" ]; then
+	cd build/
+	#We test if the build directory is empty or not
+	empty_dir=$(ls -l)
+	if [ "$build_dir" != "total 0" ]; then
+		rm -rf *
+	fi
+else
+	mkdir build/
+	cd build/
+fi
+cd ..
+
+python scripts/bootstrap.py $@

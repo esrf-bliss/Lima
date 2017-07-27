@@ -8,7 +8,7 @@ stages:
 build :
   stage: build
   script:
-    - ./install.sh --git third-party/Processlib tests python 
+    - ./install.sh tests python 
     - ls -l
   artifacts:
     paths:
