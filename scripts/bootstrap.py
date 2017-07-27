@@ -59,7 +59,7 @@ def GitCloneSubmodule(submodules):
 #		windows part done after.
 #
 def ConfigOptions(options):
-	configFile = 'scripts/config.txt_default'
+	configFile = 'scripts/config.txt'
 	optionName=[]
 	config = []
 	#del options[0]
