@@ -1,8 +1,8 @@
 .. image:: http://lima.blissgarden.org/_static/lima-logo-2-40perc.png
 
- 
-
 Library for Image Acquisition
+
+|Build Status|
 
 Description
 -----------
@@ -16,21 +16,23 @@ Documentation:  http://lima.blissgarden.org
 Requirements
 ------------
 
-Lima_ is compatible with python 2 and 3
-
 Build dependencies:
 
 - gcc
 - cmake_ >= 3
 - gsl_
 
+The following requirements are optional.
+
 Python dependencies:
+
+Lima_ is compatible with python 2 and 3
 
 - numpy_ >= 1.1
 - sip_ >= 4.2
 
 
-Optional dependencies:
+Saving format dependencies:
 
 - tiff_
 - libz_
@@ -38,8 +40,9 @@ Optional dependencies:
 - hdf5_
 - ccfits_
 - lz4_
+- libconfig_
 
-Tango_ server dependencies:
+PyTango_ server dependencies:
 
 - PyTango_
 - libtango_
@@ -53,7 +56,7 @@ Using scripts
 ``````````````
 the **install** script will run cmake, compile and install. 
 
-It accepts input arguments (see below) but it also use the configuration file  **scripts/config.txt**. Feel free to update this file for setting a permanent configuration for your own installation.
+It accepts input arguments (see below) but it also uses a configuration file  **scripts/config.txt**. Feel free to update this file for setting a permanent configuration for your own installation.
 
 Linux::
 
@@ -66,12 +69,11 @@ Linux::
 Windows::
 
   install.bat
-  [--git]
   [--prefix=<desired installation path>]
   [--python-packages=<desired python installation path>]
   [options]
 
-The **--git** option will tell the script to clone the required submodules as a prerequisite. Otherwise you should install the submodules with git commands, for instance::
+The **--git** (Linux only) option will tell the script to clone the required submodules as a prerequisite. Otherwise you should install the submodules with git commands, for instance::
 
  $ git submodule init third-party/Processlib
  $ git submodule init camera/basler
@@ -88,7 +90,7 @@ Options are <camera-name> <saving-format> python pytango-server:
 
 - saving-format::
 
- cbf|nxs|fits|edfgz|edflz4|tiff|hdf5
+  cbf|nxs|fits|edfgz|edflz4|tiff|hdf5
 
 - python: to compile python module
 
@@ -113,11 +115,12 @@ Install first the project submodules::
 
 Run cmake in the build directory::
 
- $ mkdir build;
- $ cd build/;
+ $ mkdir build
+ $ cd build
  $ cmake ..
+     [-G "Visual Studio 9 2008 Win64" | -G "Visual Studio 9 2008" | -G "Unix Makefiles"] 
      [-DCMAKE_INSTALL_PREFIX=<desired installation path>]
-     [-DPYTHON_SITE_PACKAGES_DIR=<desired python installation path>]
+     [-DPYTHON_SITE_PACKAGES_DIR=<desired python installation path>]     
      -DLIMA_ENABLE_TIFF=true
      -DLIMACAMERA_BASLER=true
      -DLIMA_ENABLE_PYTANGO_SERVER=true
@@ -125,11 +128,15 @@ Run cmake in the build directory::
 
 Then compile and install::
 
- $ make
- $ sudo make install
+ $ cmake --build
+ $ sudo cmake --build --target install
 
 
 Lima Team contact: lima@esrf.fr
+
+.. |Build Status| image:: https://travis-ci.org/esrf-bliss/Lima.svg?branch=cmake
+                  :target: https://travis-ci.org/esrf-bliss/Lima
+                  :alt:
 
 .. _Python: http://python.org
 .. _Lima: http://lima.blissgarden.org
@@ -149,3 +156,4 @@ Lima Team contact: lima@esrf.fr
 .. _hdf5: https://support.hdfgroup.org/HDF5
 .. _ccfits: https://heasarc.gsfc.nasa.gov/fitsio/ccfits
 .. _lz4: https://lz4.github.io/lz4
+.. _libconfig: http://www.hyperrealm.com/libconfig
