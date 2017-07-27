@@ -36,10 +36,10 @@ else
 fi
 cd ..
 
-cd $script_path
+cd scripts/
 if [ ! -f "config.txt" ]; then
 	cp config.txt_default config.txt
 fi
-cd $source_path
+cd ..
 
 python scripts/bootstrap.py $@
