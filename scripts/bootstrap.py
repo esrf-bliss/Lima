@@ -22,8 +22,7 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 import sys, os
-import platform, psutil
-
+import platform
 	
 def check_options(options_pass):
 	classic_options=[]
@@ -97,7 +96,7 @@ def Install_lima_linux():
 			os.system("cmake -G\"Unix Makefiles\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
 		else:
 			os.system("cmake -G\"Unix Makefiles\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-	os.system("make -j"+str(psutil.cpu_count()+1))
+	os.system("make")
 	os.system("make install")
 
 def Install_lima_windows():
