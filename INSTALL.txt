@@ -1,0 +1,36 @@
+Description: 
+	This script will build and install lima project, with arguments pass as explained. 
+	the install directory can be change by adding as argument --prefix=path_you_want.
+	Same for the python install directory, add --python-packages=path_you_want.
+	
+	USING scripts/config.txt FILE :
+		once you have executed a first ./install.sh a config.txt file is created in scripts/ directory.
+		If you plan to compile with the same parameters a lot of time you can edit this file and select your options.
+		Then you just have to run ./install.sh and lima will compile with what you asked in config.txt. 
+		By default camera simulator is always compile. You can change that with editing config.txt file : "LIMACAMERA_SIMULATOR=0" instead of "LIMACAMERA_SIMULATOR=1"
+	
+execution : 
+	"./install.sh [--prefix=path] [--python-packages=path] [options]"
+			
+	[options] : can be any camera name or saving format.
+	saving format available : cbf, tiff, lz4, gz, hdf5, fits.
+	other otions are : _ python : Build python wrapping.
+	                   _ tests : compile unitest in build directory.
+	                   _ config, sps, gldisplay : for the fun !
+			                   
+examples : 
+	./install.sh basler python cbf
+		-> compile and install lima with camera basler with python wrapping and cbf saving format.
+		-> install directory for C library and python library will be in default directory. 
+		
+	this is equivalent to change config.txt with this options :
+		_ LIMACAMERA_BASLER=1
+		_ LIMA_ENABLE_CBF=1
+		_ LIMA_ENABLE_PYTHON=1
+
+	./install.sh --prefix=${HOME} tests
+		-> compile and install lima only with camera simulator, also compiling simulators tests.
+		-> the install directory is set in the home directory (${HOME})
+		install directory can't be put in the config.txt file for the moment.
+		
+	./install.sh
