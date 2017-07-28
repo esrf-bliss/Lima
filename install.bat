@@ -22,5 +22,16 @@ rem   You should have received a copy of the GNU General Public License
 rem   along with this program; if not, see <http://www.gnu.org/licenses/>.
 rem ###########################################################################
 
+if exist "build" (
+    rmdir /S /Q build
+)
+mkdir build
+
+cd scripts/
+if not exist config.txt (
+    copy /y config.txt_default config.txt
+)
+
+cd ..
 rem we call the main script, with options as arguments.
-call scripts/bootstrap.bat %*
+call python scripts/bootstrap.py %*
