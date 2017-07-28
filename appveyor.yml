@@ -1,4 +1,5 @@
 version: 1.0.{build}
+image: Visual Studio 2015
 environment:
   matrix:
   - COMPILER: "visual"
@@ -10,14 +11,33 @@ environment:
 
 install:
   - ECHO Installing %COMPILER% %PLATFORM% %CONFIGURATION%
-
+  - git submodule init third-party/Processlib
+  - git submodule update
+  - git submodule foreach "git checkout cmake_appveyor"
+  - MKDIR build
+  - cd build
+  - if [%PLATFORM%]==[x64] (
+      appveyor.exe DownloadFile  https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/oscats/gsl-1.15-dev-win64.zip &&
+      7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-dev-win64"
+   )
+  - if [%PLATFORM%]==[Win32] (
+      appveyor.exe DownloadFile https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/oscats/gsl-1.15-dev-win32.zip &&
+      7z.exe x gsl-1.15-dev-win32.zip -o"c:\Program Files\gsl-1.15-dev-win32"
+   )
+ 
 build_script:
   - ECHO *** &&
       ECHO Building %COMPILER% %PLATFORM% %CONFIGURATION% &&
       ECHO ***
-  - echo ----- &&
-      install.bat  &&
-      echo ----- &&
+  - if [%PLATFORM%]==[x64] (
+      cmake -G"Visual Studio 12 2013 Win64" -DLIMACAMERA_SIMULATOR=1 ..
+    )
+  - if [%PLATFORM%]==[Win32] (
+      cmake -G"Visual Studio 12 2013" -DLIMACAMERA_SIMULATOR=1 ..
+    )
+  - cmake --build . --config Release
+    
+    
 
 test_script:
   - ECHO *** &&
