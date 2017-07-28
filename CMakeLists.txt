@@ -154,7 +154,7 @@ if(LIMA_ENABLE_PYTHON)
     elseif(UNIX)
         set(SIP_TAGS POSIX_PLATFORM)
     endif(WIN32)
-    set(SIP_EXTRA_OPTIONS -e -g)    
+    set(SIP_EXTRA_OPTIONS -e -g)
  endif()
 
 #--------------------------------------------------------------------------------
