@@ -18,9 +18,9 @@ script:
   
   - echo "Compilation of limacore with python and tests as options."
   - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/ && ./install.sh python tests'
-  
+
   - echo "Executing tests in cmake-build repository"
-  - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/cmake-build/ && ctest --timeout 10'
+  - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/build/ && ctest --timeout 10'
 
 after-script:
   - docker stop lima-ci-docker
