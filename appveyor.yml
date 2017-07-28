@@ -1,0 +1,25 @@
+version: 1.0.{build}
+environment:
+  matrix:
+  - COMPILER: "visual"
+    CONFIGURATION: "Release"
+    PLATFORM: "x64"
+  - COMPILER: "visual"
+    CONFIGURATION: "Release"
+    PLATFORM: "Win32"
+
+install:
+  - ECHO Installing %COMPILER% %PLATFORM% %CONFIGURATION%
+
+build_script:
+  - ECHO *** &&
+      ECHO Building %COMPILER% %PLATFORM% %CONFIGURATION% &&
+      ECHO ***
+  - echo ----- &&
+      install.bat  &&
+      echo ----- &&
+
+test_script:
+  - ECHO *** &&
+      ECHO Testing %COMPILER% %PLATFORM% %CONFIGURATION% &&
+      ECHO ***
