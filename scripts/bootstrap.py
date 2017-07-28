@@ -51,6 +51,8 @@ def GitCloneSubmodule(submodules):
 				submodule="camera/"+str(submodule)
 			if submodule=="espia":
 				submodule="camera/common/espia"+str(submodule)
+			if submodule=="pytango-server":
+				submodule="applications/tango/python"
 			os.system("git submodule init " +str(submodule))
 	os.system("git submodule update")
 	os.system("git submodule foreach 'git checkout cmake'")
@@ -65,9 +67,12 @@ def ConfigOptions(options):
 			optionName.append(str.upper(str(arg)[7:]))
 		elif "third-party/" in str(arg):
 			optionName.append(str.upper(str(arg)[12:]))
+		elif arg=="pytango-server":
+			optionName.append("PYTANGO_SERVER")
 		else:
 			#probably test or python options.
 			optionName.append(str.upper(str(arg)))
+	#return option in config.txt pass as argument and also the ones with "=1" in config.txt
 	with open(configFile) as f:
 		for line in f:
 			line=line[:-1]
@@ -129,11 +134,10 @@ if __name__ == '__main__':
 	print "OS TYPE : ",OS_TYPE
 	source_path=os.getcwd()
 
-
 	available_options,options = check_options(sys.argv)
+
 	if available_options==0 and options==0:
 		exit
-	
 	#No git option under windows for obvious reasons.
 	if OS_TYPE=="Linux":
 		if "git" in available_options:
