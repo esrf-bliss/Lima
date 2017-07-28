@@ -1,7 +1,7 @@
 ############################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-# Copyright (C) : 2009-2011
+# Copyright (C) : 2009-2017
 # European Synchrotron Radiation Facility
 # BP 220, Grenoble 38043
 # FRANCE
@@ -19,47 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-.PHONY: src test clean
 
-ifneq ($(sub-dirs),)
-src-targets   += $(sub-dirs:%=%.src)
-test-targets  += $(sub-dirs:%=%.test)
-clean-targets += $(sub-dirs:%=%.clean)
+set(test_src testregex)
 
-$(src-targets):
-	$(MAKE) -C $(@:%.src=%)   src
-
-$(test-targets):
-	$(MAKE) -C $(@:%.test=%)  test 
-
-$(clean-targets):
-	$(MAKE) -C $(@:%.clean=%) clean
-
-else
-
-ifneq ($(src-dirs),)
-src-targets   += $(src-dirs:%=%.src)
-clean-targets += $(src-dirs:%=%.clean)
-endif
-
-ifneq ($(test-dirs),)
-test-targets  += $(test-dirs:%=%.test)
-clean-targets += $(test-dirs:%=%.clean)
-endif
-
-$(src-targets):
-	$(MAKE) -C $(@:%.src=%)
-
-$(test-targets):
-	$(MAKE) -C $(@:%.test=%)
-
-$(clean-targets):
-	$(MAKE) -C $(@:%.clean=%) clean
-
-endif
-
-src:	$(src-targets)
-
-test:	$(test-targets)
-
-clean:	$(clean-targets)
+limatools_run_camera_tests("${test_src}" ${NAME})

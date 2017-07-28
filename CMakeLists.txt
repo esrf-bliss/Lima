@@ -116,6 +116,12 @@ else()
     option(LIMA_ENABLE_PYTHON "compile python modules?" OFF)
 endif()
 
+# Python Tango server
+IF(DEFINED ENV{LIMA_ENABLE_PYTANGO_SERVER})
+    set(LIMA_ENABLE_PYTANGO_SERVER "$ENV{LIMA_ENABLE_PYTANGO_SEVER}" CACHE BOOL "install python tango server?" FORCE)
+else()
+    option(LIMA_ENABLE_PYTANGO_SERVER "install python tango server?" OFF)
+endif()
 #--------------------------------------------------------------------------------
 # Enable python binding code compilation using sip generator
 #--------------------------------------------------------------------------------
@@ -154,7 +160,7 @@ if(LIMA_ENABLE_PYTHON)
     elseif(UNIX)
         set(SIP_TAGS POSIX_PLATFORM)
     endif(WIN32)
-    set(SIP_EXTRA_OPTIONS -e -g)    
+    set(SIP_EXTRA_OPTIONS -e -g)
  endif()
 
 #--------------------------------------------------------------------------------
@@ -402,10 +408,22 @@ if(LIMA_ENABLE_TESTS)
     enable_testing()
 endif()
 
+if(LIMA_ENABLE_TESTS)
+        add_subdirectory(control/test)
+        add_subdirectory(common/test)
+endif()
+
 #--------------------------------------------------------------------------------
 # CAMERA list is in cmake/CameraList.cmake file
 #--------------------------------------------------------------------------------
 include(CameraList)
+
+#--------------------------------------------------------------------------------
+# Python Tango server
+#--------------------------------------------------------------------------------
+if(LIMA_ENABLE_PYTANGO_SERVER)
+    add_subdirectory(applications/tango/python)
+endif()
 
 #--------------------------------------------------------------------------------
 # PACKAGES debian at least, run cpack or make package
