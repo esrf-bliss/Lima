@@ -35,3 +35,7 @@ if not exist config.txt (
 cd ..
 rem we call the main script, with options as arguments.
 call python scripts/bootstrap.py %*
+if errorlevel 1 (
+	echo installation failed
+	exit 1
+)
