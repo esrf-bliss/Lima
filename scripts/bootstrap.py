@@ -173,10 +173,10 @@ if __name__ == '__main__':
 			install_path=script_option[9:]
 		if "--python-packages=" in script_option:
 			install_python_path=script_option[18:]
-	'''if OS_TYPE=="Linux":
+	if OS_TYPE=="Linux":
 		Install_lima_linux()
 		
 	elif OS_TYPE=="Windows":
 		Install_lima_windows()
-'''
+
 	
