@@ -43,3 +43,8 @@ fi
 cd ..
 
 python scripts/bootstrap.py $@
+ret=$?
+if [ $ret -ne 0 ];then
+    echo installation failed
+    exit 1
+fi
