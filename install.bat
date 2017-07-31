@@ -35,3 +35,6 @@ if not exist config.txt (
 cd ..
 rem we call the main script, with options as arguments.
 call python scripts/bootstrap.py %*
+
+exit %ERRORLEVEL%
+

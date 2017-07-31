@@ -43,3 +43,6 @@ fi
 cd ..
 
 python scripts/bootstrap.py $@
+
+exit $?
+

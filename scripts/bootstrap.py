@@ -63,9 +63,10 @@ def git_clone_submodule(submodules):
 	except Exception as inst:
 				print inst
 				if str(init_check)!="0":
-					sys.exit(init_check)
+					sys.exit("Problem with submodule init")
 				else:
-					sys.exit(checkout_check)
+					print str(checkout_check)
+					sys.exit("Problem with cmake branch")
 
 def config_cmake_options(options):
 	configFile = 'scripts/config.txt'
@@ -121,11 +122,11 @@ def install_lima_linux():
 	except Exception as inst:
 		print inst
 		if str(cmake_check)!="0":
-			sys.exit(cmake_check)
+			sys.exit("Problem in CMake configuration")
 		elif str(compilation_check)!="0":
-			sys.exit(compilation_check)
+			sys.exit("Problem in CMake compilation")
 		else:
-			sys.exit(install_check)
+			sys.exit("Problem in CMake installation")
 
 def install_lima_windows():
 	os.chdir(os.getcwd()+"/build")
@@ -159,9 +160,9 @@ def install_lima_windows():
 	except Exception as inst:
 		print inst
 		if str(cmake_check)!="0":
-			sys.exit(cmake_check)
+			sys.exit("Problem in CMake configuration")
 		else:
-			sys.exit(compilation_check)
+			sys.exit("Problem in CMake compilation or installation.")
 			
 
 
