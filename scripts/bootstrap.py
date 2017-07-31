@@ -22,27 +22,27 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 import sys, os
-import platform
+import platform, multiprocessing
 	
 def check_options(options_pass):
-	classic_options=[]
-	script_options=[]
+	options_lima=[]
+	options_script=[]
 	for arg in options_pass:
 		if arg=="--help" or arg=="-h" or arg=="-help" or arg=="-?":
 			with open("INSTALL.txt", 'r') as f:
 				print f.read()
 			sys.exit()
 		if "--prefix=" in arg:
-			script_options.append(arg)
+			options_script.append(arg)
 		elif arg=="-g" or arg=="--git":
-			script_options.append("git")
+			options_script.append("git")
 		elif "--python-packages=" in arg:
-			script_options.append(arg)
+			options_script.append(arg)
 		else:
-			classic_options.append(arg)
-	return(script_options,classic_options)
+			options_lima.append(arg)
+	return(options_script,options_lima)
 
-def GitCloneSubmodule(submodules):
+def git_clone_submodule(submodules):
 	submodules.append("third-party/Processlib")
 	try:
 		for submodule in submodules:
@@ -67,37 +67,36 @@ def GitCloneSubmodule(submodules):
 				else:
 					sys.exit(checkout_check)
 
-def ConfigOptions(options):
+def config_cmake_options(options):
 	configFile = 'scripts/config.txt'
-	optionName=[]
-	config = []
-	#del options[0]
+	option_name = []
+	config_cmake = []
 	for arg in options:
 		if "camera/" in str(arg):
-			optionName.append(str.upper(str(arg)[7:]))
+			option_name.append(str.upper(str(arg)[7:]))
 		elif "third-party/" in str(arg):
-			optionName.append(str.upper(str(arg)[12:]))
+			option_name.append(str.upper(str(arg)[12:]))
 		elif arg=="pytango-server":
-			optionName.append("PYTANGO_SERVER")
+			option_name.append("PYTANGO_SERVER")
 		else:
 			#probably test or python options.
-			optionName.append(str.upper(str(arg)))
+			option_name.append(str.upper(str(arg)))
 	#return option in config.txt pass as argument and also the ones with "=1" in config.txt
 	with open(configFile) as f:
 		for line in f:
 			line=line[:-1]
-			for option in optionName:
+			for option in option_name:
 				if option in line:
 					line=line[:-1]
 					line=line+str(1)
 			if line.startswith('LIMA'):
 				if line[len(line)-1]==str(1):
-					config.append("-D"+line)
-		config= " ".join([str(cmd) for cmd in config])
-		return config
+					config_cmake.append("-D"+line)
+		config_cmake= " ".join([str(cmd) for cmd in config_cmake])
+		return config_cmake
 	f.close()
 
-def Install_lima_linux():
+def install_lima_linux():
 	os.chdir(os.getcwd()+"/build")
 	try:
 		if install_path=="" and install_python_path=="":
@@ -112,17 +111,23 @@ def Install_lima_linux():
 		if str(cmake_check)!="0":
 			raise Exception("Something is wrong in your CMake environement. Make sure your configuration is good.")
 
-		compilation_check= os.system("cmake --build . --target install")
+		#compilation_check= os.system("cmake --build . --target install")
+		compilation_check = os.system("make -j"+str(multiprocessing.cpu_count()+1))
 		if str(compilation_check)!="0":
-			raise Exception("CMake couldn't build or install libraries. Contact claustre@esrf.fr for informations.")
+			raise Exception("CMake couldn't build Lima. Contact claustre@esrf.fr for informations.")
+		install_check = os.system("make install")
+		if str(install_check)!="0":
+			raise Exception("CMake couldn't install libraries. Make sure you have necessaries rights.")
 	except Exception as inst:
 		print inst
 		if str(cmake_check)!="0":
 			sys.exit(cmake_check)
-		else:
+		elif str(compilation_check)!="0":
 			sys.exit(compilation_check)
+		else:
+			sys.exit(install_check)
 
-def Install_lima_windows():
+def install_lima_windows():
 	os.chdir(os.getcwd()+"/build")
 	try :
 		if platform.machine()=="AMD64":
@@ -169,25 +174,24 @@ if __name__ == '__main__':
 	install_python_path=""
 	print "OS TYPE : ",OS_TYPE
 	source_path=os.getcwd()
-
-	available_options,options = check_options(sys.argv)
+	script_options, lima_options = check_options(sys.argv)
 
 	#No git option under windows for obvious reasons.
 	if OS_TYPE=="Linux":
-		if "git" in available_options:
-                        GitCloneSubmodule(options)
+		if "git" in script_options:
+                        git_clone_submodule(lima_options)
 
-	cmake_config = ConfigOptions(options)
+	cmake_config = config_cmake_options(lima_options)
 	print cmake_config
-	for script_option in available_options:
-		if "--prefix=" in script_option:
-			install_path=script_option[9:]
-		if "--python-packages=" in script_option:
-			install_python_path=script_option[18:]
+	for option in script_options:
+		if "--prefix=" in option:
+			install_path=option[9:]
+		if "--python-packages=" in option:
+			install_python_path=option[18:]
 	if OS_TYPE=="Linux":
-		Install_lima_linux()
+		install_lima_linux()
 		
 	elif OS_TYPE=="Windows":
-		Install_lima_windows()
+		install_lima_windows()
 
 	
