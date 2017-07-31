@@ -31,8 +31,7 @@ def check_options(options_pass):
 		if arg=="--help" or arg=="-h" or arg=="-help" or arg=="-?":
 			with open("INSTALL.txt", 'r') as f:
 				print f.read()
-			return [0],[0]
-			break
+			sys.exit()
 		if "--prefix=" in arg:
 			script_options.append(arg)
 		elif arg=="-g" or arg=="--git":
@@ -173,8 +172,6 @@ if __name__ == '__main__':
 
 	available_options,options = check_options(sys.argv)
 
-	if available_options==0 and options==0:
-		exit
 	#No git option under windows for obvious reasons.
 	if OS_TYPE=="Linux":
 		if "git" in available_options:
