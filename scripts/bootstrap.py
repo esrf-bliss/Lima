@@ -154,6 +154,11 @@ def Install_lima_windows():
 			raise Exception("CMake couldn't build or install libraries. Contact claustre@esrf.fr for informations.")
 	except Exception as inst:
 		print inst
+		if str(cmake_check)!="0":
+			sys.exit(cmake_check)
+		else:
+			sys.exit(compilation_check)
+			
 
 
 if __name__ == '__main__':
