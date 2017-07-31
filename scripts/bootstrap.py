@@ -121,11 +121,14 @@ def install_lima_linux():
 	except Exception as inst:
 		print inst
 		if str(cmake_check)!="0":
-			sys.exit(cmake_check)
+			os.system("exit "+str(cmake_check))
+			#sys.exit(cmake_check)
 		elif str(compilation_check)!="0":
-			sys.exit(compilation_check)
+			os.system("exit "+str(compilation_check))
+			#sys.exit(compilation_check)
 		else:
-			sys.exit(install_check)
+			os.system("exit "+str(install_check))
+			#sys.exit(install_check)
 
 def install_lima_windows():
 	os.chdir(os.getcwd()+"/build")
