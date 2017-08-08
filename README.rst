@@ -2,7 +2,8 @@
 
 Library for Image Acquisition
 
-|Build Status|
+|Linux Status|
+|Windows Status|
 
 Description
 -----------
@@ -134,9 +135,11 @@ Then compile and install::
 
 Lima Team contact: lima@esrf.fr
 
-.. |Build Status| image:: https://travis-ci.org/esrf-bliss/Lima.svg?branch=cmake
+.. |Linux Status| image:: https://travis-ci.org/esrf-bliss/Lima.svg?branch=cmake
                   :target: https://travis-ci.org/esrf-bliss/Lima
                   :alt:
+.. |Windows Status| image:: https://ci.appveyor.com/api/projects/status/rk0yqwem1jqxwubu?svg=true 
+                  :target: https://ci.appveyor.com/api/projects/status/rk0yqwem1jqxwubu/branch/cmake?svg=true
 
 .. _Python: http://python.org
 .. _Lima: http://lima.blissgarden.org
