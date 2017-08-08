@@ -30,10 +30,10 @@ build_script:
       ECHO Building %COMPILER% %PLATFORM% %CONFIGURATION% &&
       ECHO ***
   - if [%PLATFORM%]==[x64] (
-      cmake -G"Visual Studio 12 2013 Win64" -DLIMACAMERA_SIMULATOR=1 ..
+      cmake -G"Visual Studio 12 2013" -Ax64 -DLIMACAMERA_SIMULATOR=1 ..
     )
   - if [%PLATFORM%]==[Win32] (
-      cmake -G"Visual Studio 12 2013" -DLIMACAMERA_SIMULATOR=1 ..
+      cmake -G"Visual Studio 12 2013" -AARM -DLIMACAMERA_SIMULATOR=1 ..
     )
   - cmake --build . --config Release
     
