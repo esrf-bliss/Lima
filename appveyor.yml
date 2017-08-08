@@ -10,30 +10,27 @@ environment:
     PLATFORM: "Win32"
 
 install:
-  - ECHO Installing %COMPILER% %PLATFORM% %CONFIGURATION%
   - git submodule init third-party/Processlib
   - git submodule update
   - git submodule foreach "git checkout cmake_appveyor"
   - MKDIR build
   - cd build
   - if [%PLATFORM%]==[x64] (
-      appveyor.exe DownloadFile  https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/oscats/gsl-1.15-dev-win64.zip &&
-      7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-dev-win64"
+      appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-1.15-dev-win64.zip &&
+      7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-win64"
    )
   - if [%PLATFORM%]==[Win32] (
-      appveyor.exe DownloadFile https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/oscats/gsl-1.15-dev-win32.zip &&
-      7z.exe x gsl-1.15-dev-win32.zip -o"c:\Program Files\gsl-1.15-dev-win32"
+      appveyor.exe DownloadFile http://ftp.esrf.fr/pub/bliss/lima/gsl-1.8-lib.zip &&
+      7z.exe x gsl-1.8-lib.zip -o"c:\Program Files\gsl-1.8-win32"
    )
+  
  
 build_script:
-  - ECHO *** &&
-      ECHO Building %COMPILER% %PLATFORM% %CONFIGURATION% &&
-      ECHO ***
   - if [%PLATFORM%]==[x64] (
-      cmake -G"Visual Studio 12 2013" -Ax64 -DLIMACAMERA_SIMULATOR=1 ..
+      cmake -G"Visual Studio 12 2013 Win64" -DLIMACAMERA_SIMULATOR=1  -DLIMA_ENABLE_TESTS=1 ..
     )
   - if [%PLATFORM%]==[Win32] (
-      cmake -G"Visual Studio 12 2013" -AARM -DLIMACAMERA_SIMULATOR=1 ..
+      cmake -G"Visual Studio 12 2013" -DLIMACAMERA_SIMULATOR=1 -DLIMA_ENABLE_TESTS=1 ..
     )
   - cmake --build . --config Release
     
