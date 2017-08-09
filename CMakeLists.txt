@@ -25,6 +25,8 @@
 cmake_minimum_required(VERSION 2.8)
 project (lima)
 
+set(NAME "core")
+
 #--------------------------------------------------------------------------------
 # cmake/ directory contains tools 
 #--------------------------------------------------------------------------------
@@ -351,7 +353,6 @@ endif()
 # SIP generates binding code for python
 #--------------------------------------------------------------------------------
 if(LIMA_ENABLE_PYTHON)
-    set(NAME "core")
     set(INCLUDES)
     file(GLOB sipfiles
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/common/sip"
