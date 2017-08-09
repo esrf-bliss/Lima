@@ -415,7 +415,9 @@ endif()
 
 if(LIMA_ENABLE_TESTS)
         add_subdirectory(control/test)
-        add_subdirectory(common/test)
+	if (NOT WIN32)
+          add_subdirectory(common/test)
+	endif()
 endif()
 
 #--------------------------------------------------------------------------------

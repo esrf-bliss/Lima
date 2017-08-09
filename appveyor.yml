@@ -40,3 +40,4 @@ test_script:
   - ECHO *** &&
       ECHO Testing %COMPILER% %PLATFORM% %CONFIGURATION% &&
       ECHO ***
+  - ctest --timeout 10
