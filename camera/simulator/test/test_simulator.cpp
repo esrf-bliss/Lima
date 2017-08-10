@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         try {
                 simulator_test(expo, nframe);
         } catch (Exception e) {
-                cerr << "LIMA Exception:" << e << endl;
+	        cerr << "LIMA Exception:" << e.getErrMsg() << endl;
         }
 
         return 0;
