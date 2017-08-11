@@ -6,11 +6,21 @@ platform: x64
 
 configuration: Release
 
+branches:
+  only:
+    - cmake_test_appveyor
+    
 matrix:
   fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
 
 environment:
   matrix:
+# for further test with nmake
+#   - PLATFORM: x64
+#     BUILDER: "CMake"
+#     CONFIGURATION: "Release"
+#     GENERATOR: "NMake Makefiles"
+#     PYTHON: "C:\\Python27-x64"
    - PLATFORM: x64
      BUILDER: "CMake"
      CONFIGURATION: "Release"
@@ -26,8 +36,8 @@ init:
   - ps: 'Write-Host "Building LIMA branch: $env:APPVEYOR_REPO_BRANCH" -ForegroundColor Magenta'
   - if [%PLATFORM%]==[x64] "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
   - if [%PLATFORM%]==[x64] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86_amd64
-  - if [%PLATFORM%]==[x64] set PATH=C:\Python27-x64;%PATH% 
-  - if [%PLATFORM%]==[x86] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+  - if [%PlATFORM%]==[x86] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat"
+  - set PATH=%PYTHON%;%PATH% 
   
 install:
   - ps: 'Write-Host "Installing submodule third-party/Processlib :" -ForegroundColor Magenta'
@@ -67,4 +77,4 @@ build_script:
 
 test_script:
   - ps: 'Write-Host "Running tests :" -ForegroundColor Magenta'
-  - ctest -V --output-on-failure -C %CONFIGURATION% 
+#  - ctest -VV --debug --output-on-failure -C %CONFIGURATION% 
