@@ -1,20 +1,39 @@
 version: 1.0.{build}
-image: Visual Studio 2015
+
+os: Visual Studio 2015
+
+platform: x64
+
+configuration: Release
+
+matrix:
+  fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
+
 environment:
   matrix:
-  - COMPILER: "visual"
-    CONFIGURATION: "Release"
-    PLATFORM: "x64"
-#  - COMPILER: "visual"
-#    CONFIGURATION: "Release"
-#    PLATFORM: "Win32"
+   - PLATFORM: x64
+     BUILDER: CMake
+     CONFIGURATION: "Release"
+     GENERATOR: "Visual Studio 12 2013 Win64"
+     PYTHON: "C:\\Python27-x64"
+   - PLATFORM: x86
+     BUILDER: CMake
+     CONFIGURATION: "Release"
+     GENERATOR: "Visual Studio 12 2013"
+     PYTHON: "C:\\Python27"
 
+init:
+  - ps: 'Write-Host "Building LIMA branch: $env:APPVEYOR_REPO_BRANCH" -ForegroundColor Magenta'
+  - if [%PLATFORM%]==[x64] "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+  - if [%PLATFORM%]==[x64] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86_amd64
+  - if [%PLATFORM%]==[x64] set PATH=C:\Python27-x64;%PATH% 
+  - if [%PLATFORM%]==[x86] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+  
 install:
+  - ps: 'Write-Host "Installing submodules, GSL and SIP" -ForegroundColor Magenta'
   - git submodule init third-party/Processlib
   - git submodule update
   - git submodule foreach "git checkout cmake_appveyor"
-  - mkdir build
-  - cd build
   - if [%PLATFORM%]==[x64] (
       appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-1.15-dev-win64.zip &&
       7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-win64" &&
@@ -24,24 +43,27 @@ install:
       python.exe configure.py &&
       nmake &&
       nmake install &&
-      cd .. 
+      cd ..
    )
   - if [%PLATFORM%]==[Win32] (
       appveyor.exe DownloadFile http://ftp.esrf.fr/pub/bliss/lima/gsl-1.8-lib.zip &&
       7z.exe x gsl-1.8-lib.zip -o"c:\Program Files\gsl-1.8-win32"
    )
+  - "%PYTHON%/Scripts/pip.exe install numpy"
+   
   
  
+before_build:
+  - ps: 'Write-Host "Running $env:BUILDER with $env:GENERATOR" -ForegroundColor Magenta'
+  - mkdir build
+  - cd build
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DLIMACAMERA_SIMULATOR=1  -DLIMA_ENABLE_PYTHON=1 ..
+
 build_script:
-  - if [%PLATFORM%]==[x64] (
-      cmake -G"Visual Studio 12 2013 Win64" -DLIMACAMERA_SIMULATOR=1  -DLIMA_ENABLE_PYTHON=1 ..
-    )
-  - if [%PLATFORM%]==[Win32] (
-      cmake -G"Visual Studio 12 2013" -DLIMACAMERA_SIMULATOR=1 -DLIMA_ENABLE_TESTS=1 ..
-    )
-  - cmake --build . --config Release
-    
+  - ps: 'Write-Host "Running $env:BUILDER:" -ForegroundColor Magenta'
+  - cmake --build . --config %CONFIGURATION%
     
 
 test_script:
-  - ctest -C Release --output-on-failure 
+  - ps: 'Write-Host "Running tests:" -ForegroundColor Magenta'
+  - ctest -V --output-on-failure -C %CONFIGURATION% 
