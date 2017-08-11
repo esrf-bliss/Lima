@@ -12,12 +12,12 @@ matrix:
 environment:
   matrix:
    - PLATFORM: x64
-     BUILDER: CMake
+     BUILDER: "CMake"
      CONFIGURATION: "Release"
      GENERATOR: "Visual Studio 12 2013 Win64"
      PYTHON: "C:\\Python27-x64"
    - PLATFORM: x86
-     BUILDER: CMake
+     BUILDER: "CMake"
      CONFIGURATION: "Release"
      GENERATOR: "Visual Studio 12 2013"
      PYTHON: "C:\\Python27"
@@ -30,40 +30,41 @@ init:
   - if [%PLATFORM%]==[x86] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
   
 install:
-  - ps: 'Write-Host "Installing submodules, GSL and SIP" -ForegroundColor Magenta'
+  - ps: 'Write-Host "Installing submodule third-party/Processlib :" -ForegroundColor Magenta'
   - git submodule init third-party/Processlib
   - git submodule update
   - git submodule foreach "git checkout cmake_appveyor"
+  - ps: 'Write-Host "Installing GSL :" -ForegroundColor Magenta'
   - if [%PLATFORM%]==[x64] (
       appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-1.15-dev-win64.zip &&
-      7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-win64" &&
-      appveyor.exe DownloadFile https://sourceforge.net/projects/pyqt/files/sip/sip-4.19.3/sip-4.19.3.zip &&
-      7z.exe x sip-4.19.3.zip  &&
-      cd sip-4.19.3 &&
-      python.exe configure.py &&
-      nmake &&
-      nmake install &&
-      cd ..
+      7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-win64"
    )
-  - if [%PLATFORM%]==[Win32] (
+  - if [%PLATFORM%]==[x86] (
       appveyor.exe DownloadFile http://ftp.esrf.fr/pub/bliss/lima/gsl-1.8-lib.zip &&
       7z.exe x gsl-1.8-lib.zip -o"c:\Program Files\gsl-1.8-win32"
    )
+  - ps: 'Write-Host "Installing NUMPY :" -ForegroundColor Magenta'
   - "%PYTHON%/Scripts/pip.exe install numpy"
-   
-  
+  - ps: 'Write-Host "Installing SIP" -ForegroundColor Magenta'
+  - appveyor.exe DownloadFile https://sourceforge.net/projects/pyqt/files/sip/sip-4.18/sip-4.18.zip
+  - 7z.exe x sip-4.18.zip
+  - cd sip-4.18
+  - python.exe configure.py
+  - nmake
+  - nmake install
+  - cd ..
  
 before_build:
-  - ps: 'Write-Host "Running $env:BUILDER with $env:GENERATOR" -ForegroundColor Magenta'
+  - ps: 'Write-Host "Running $env:BUILDER with $env:GENERATOR :" -ForegroundColor Magenta'
   - mkdir build
   - cd build
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DLIMACAMERA_SIMULATOR=1  -DLIMA_ENABLE_PYTHON=1 ..
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DLIMACAMERA_SIMULATOR=1  -DLIMA_ENABLE_PYTHON=1 -DLIMA_ENABLE_TESTS=1 ..
 
 build_script:
-  - ps: 'Write-Host "Running $env:BUILDER:" -ForegroundColor Magenta'
+  - ps: 'Write-Host "Running $env:BUILDER :" -ForegroundColor Magenta'
   - cmake --build . --config %CONFIGURATION%
     
 
 test_script:
-  - ps: 'Write-Host "Running tests:" -ForegroundColor Magenta'
+  - ps: 'Write-Host "Running tests :" -ForegroundColor Magenta'
   - ctest -V --output-on-failure -C %CONFIGURATION% 
