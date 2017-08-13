@@ -25,8 +25,11 @@ include $(LIMA_DIR)/config.inc
 include $(LIMA_DIR)/control/control.inc
 
 simutest-objs = simutest.o
+testbufferalloc-objs = testbufferalloc.o
+roicountertest-objs = roicountertest.o
+all-objs = $(simutest-objs) $(testbufferalloc-objs) $(roicountertest-objs)
 
-SRCS = $(simutest-objs:.o=.cpp) 
+SRCS = $(all-objs:.o=.cpp) 
 
 CPPFLAGS = $(CT_CPPFLAGS) 
 CXXFLAGS = $(CT_CXXFLAGS)
@@ -39,7 +42,7 @@ COMPILE_SIMULATOR = 0
 endif
 
 ifneq ($(COMPILE_SIMULATOR),0)
-build_targets += simutest
+build_targets += simutest testbufferalloc
 CPPFLAGS += -I$(LIMA_DIR)/camera/simulator/include
 DEPLIBS += $(LIMA_DIR)/build,limasimulator
 endif
@@ -53,12 +56,14 @@ all:	$(build_targets)
 simutest: $(simutest-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
-roicountertest:		roicountertest.o
+testbufferalloc: $(testbufferalloc-objs)
+	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
+
+roicountertest:		$(roicountertest-objs)
 	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
 
 clean: 
-	rm -f $(simutest-objs) simutest \
-	      roicountertest roicountertest.o
+	rm -f $(all-objs) simutest testbufferalloc roicountertest
 
 %.o : %.cpp
 	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
