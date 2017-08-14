@@ -88,7 +88,7 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	
  private:
 	typedef std::vector<MemBuffer *> BufferList;
-	typedef BufferList::const_iterator BufferListCIt;
+	typedef BufferList::const_reverse_iterator BufferListCRIt;
 
 	FrameDim m_frame_dim;
 	BufferList m_buffer_list;
