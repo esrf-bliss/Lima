@@ -93,18 +93,29 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 
 	int curr_nb_buffers;
 	getNbBuffers(curr_nb_buffers);
-	if ((frame_dim == m_frame_dim) && (nb_buffers == curr_nb_buffers)) {
+	int to_alloc = (nb_buffers - curr_nb_buffers);
+	if (frame_dim != m_frame_dim) {
+		releaseBuffers();
+	} else if (to_alloc == 0) {
 		DEB_TRACE() << "Nothing to do";
 		return;
 	}
 
-	releaseBuffers();
-
 	try {
-		m_buffer_list.reserve(nb_buffers);
-		for (int i = 0; i < nb_buffers; ++i) {
-			MemBuffer *buffer = new MemBuffer(frame_size);
-			m_buffer_list.push_back(buffer);
+		BufferList& bl = m_buffer_list;
+		if (to_alloc > 0) {
+			bl.reserve(nb_buffers);
+			DEB_TRACE() << "Allocating " << to_alloc << " buffers";
+			while (int(bl.size()) != nb_buffers) {
+				MemBuffer *buffer = new MemBuffer(frame_size);
+				bl.push_back(buffer);
+			}
+		} else {
+			DEB_TRACE() << "Releasing " << -to_alloc << " buffers";
+			while (int(bl.size()) != nb_buffers) {
+				delete bl.back();
+				bl.pop_back();
+			}
 		}
 	} catch (...) {
 		DEB_ERROR() << "Error alloc. buffer #" << m_buffer_list.size();
@@ -120,7 +131,7 @@ void SoftBufferAllocMgr::releaseBuffers()
 	DEB_MEMBER_FUNCT();
 
 	BufferList& bl = m_buffer_list;
-	for (BufferListCIt it = bl.begin(); it != bl.end(); ++it)
+	for (BufferListCRIt it = bl.rbegin(); it != bl.rend(); ++it)
 		delete *it;
 	bl.clear();
 	m_frame_dim = FrameDim();
@@ -304,29 +315,26 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames,
 
 	int curr_nb_buffers;
 	getNbBuffers(curr_nb_buffers);
-	if ((nb_buffers == curr_nb_buffers) && (frame_dim == m_frame_dim) && 
-	    (nb_concat_frames == m_nb_concat_frames)) {
+	if ((frame_dim != m_frame_dim) || 
+	    (nb_concat_frames != m_nb_concat_frames)) {
+		releaseBuffers();
+	} else if (nb_buffers == curr_nb_buffers) {
 		DEB_TRACE() << "Nothing to do";
 		return;
 	}
-
-	releaseBuffers();
 
 	try {
 		FrameDim buffer_frame_dim;
 		getBufferFrameDim(frame_dim, nb_concat_frames, 
 				  buffer_frame_dim);
-
-		DEB_TRACE() << "Allocating buffers";
+		DEB_TRACE() << "(Re)allocating buffers";
 		m_alloc_mgr->allocBuffers(nb_buffers, buffer_frame_dim);
 		m_frame_dim = frame_dim;
 		m_nb_concat_frames = nb_concat_frames;
 
-		DEB_TRACE() << "Allocating frame info list";
+		DEB_TRACE() << "(Re)allocating frame info list";
 		int nb_frames = nb_buffers * nb_concat_frames;
-		m_info_list.reserve(nb_frames);
-		for (int i = 0; i < nb_frames; ++i)
-			m_info_list.push_back(HwFrameInfoType());
+		m_info_list.resize(nb_frames);
 	} catch (...) {
 		releaseBuffers();
 		throw;
@@ -552,13 +560,9 @@ void BufferCtrlMgr::setNbBuffers(int nb_buffers)
 	} else if (nb_buffers == 0)
 		nb_buffers = max_nb_buffers;
 
-	releaseBuffers();
-
-	int acq_nb_buffers = nb_buffers;
-	DEB_TRACE() << DEB_VAR1(acq_nb_buffers);
-
-	m_acq_buffer_mgr->allocBuffers(acq_nb_buffers, m_nb_concat_frames, 
-					m_frame_dim);
+	DEB_TRACE() << DEB_VAR1(nb_buffers);
+	m_acq_buffer_mgr->allocBuffers(nb_buffers, m_nb_concat_frames, 
+				       m_frame_dim);
 }
 
 void BufferCtrlMgr::getNbBuffers(int& nb_buffers)
