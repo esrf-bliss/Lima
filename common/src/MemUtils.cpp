@@ -122,11 +122,12 @@ MemBuffer::MemBuffer(int size)
               __m128i zero = _mm_setzero_si128();
 	      for(long i = 0;i < size;i += page_size,ptr+=page_size)
 		{
-		  if(size_t(size - page_size) > sizeof(__m128i))
+		  if(size_t(size - i) >= sizeof(__m128i))
 		    _mm_store_si128((__m128i*)ptr,zero);
 		  else
 		    *ptr = 0;
 		}
+	      _mm_empty();
           }
 	else
 	  {
@@ -150,9 +151,10 @@ MemBuffer::MemBuffer(const MemBuffer& buffer)
 
 MemBuffer::~MemBuffer()
 {
+	if (!m_size)
+		throw LIMA_COM_EXC(Error, "Deleting empty buffer");
 	release();
 }
-
 
 void MemBuffer::alloc(int size)
 {
@@ -183,7 +185,7 @@ void MemBuffer::copy(const MemBuffer& buffer)
 
 void MemBuffer::release()
 {
-	if (!m_size)
+	if (!m_size) 
 		return;
 
 #ifdef __unix

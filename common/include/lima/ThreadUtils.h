@@ -78,6 +78,7 @@ class LIMACORE_API Mutex
 
 
 typedef AutoLock<Mutex> AutoMutex;
+typedef AutoUnlock<Mutex> AutoMutexUnlock;
 
 class LIMACORE_API Cond
 {
