@@ -139,7 +139,7 @@ class LIMACORE_API BufferCbMgr : public HwFrameCallbackGen
 	virtual void getBufferFrameDim(const FrameDim& single_frame_dim,
 				       int nb_concat_frames, 
 				       FrameDim& buffer_frame_dim);
-	virtual void acqFrameNb2BufferNb(int acq_frame_nb,int& buffer_nb,
+	virtual void acqFrameNb2BufferNb(int acq_frame_nb, int& buffer_nb,
 					 int& concat_frame_nb);
 
  private:
