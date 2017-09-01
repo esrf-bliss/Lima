@@ -601,6 +601,8 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_OBJ_NAME(o) \
 	((o)->getDebObjName())
 
+#define DEB_CHECK_ANY(type)	deb.checkAny(type)
+
 #else //NO_LIMA_DEBUG
 
 #define DEB_GLOBAL_FUNCT() DebSink deb
@@ -630,6 +632,8 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_VAR7(v1, v2, v3, v4, v5, v6, v7)	""
 
 #define DEB_OBJ_NAME(o)
+
+#define DEB_CHECK_ANY(type)	0
 
 #endif //NO_LIMA_DEBUG
 } // namespace lima
