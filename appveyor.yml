@@ -8,7 +8,7 @@ configuration: Release
 
 branches:
   only:
-    - cmake_test_appveyor
+    - cmake
     
 matrix:
   fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
@@ -43,7 +43,7 @@ install:
   - ps: 'Write-Host "Installing submodule third-party/Processlib :" -ForegroundColor Magenta'
   - git submodule init third-party/Processlib
   - git submodule update
-  - git submodule foreach "git checkout cmake_appveyor"
+  - git submodule foreach "git checkout cmake"
   - ps: 'Write-Host "Installing GSL :" -ForegroundColor Magenta'
   - if [%PLATFORM%]==[x64] (
       appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-1.15-dev-win64.zip &&
