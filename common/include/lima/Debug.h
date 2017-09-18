@@ -561,6 +561,9 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 	DebObj deb(getDebParams(), false, __FUNCTION__,			\
 		   getDebObjName(), __FILE__, __LINE__)
 
+#define DEB_PTR()							\
+	(&deb)
+
 #define DEB_FROM_PTR(deb_ptr)						\
 	DebObj& deb = *(deb_ptr)
 
@@ -610,6 +613,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_DESTRUCTOR()  DebSink deb
 #define DEB_MEMBER_FUNCT() DebSink deb
 
+#define DEB_PTR()	NULL
 #define DEB_FROM_PTR(deb_ptr) DebSink deb
 #define DEB_STATIC_FUNCT() DEB_GLOBAL_FUNCT()
 #define DEB_SET_OBJ_NAME(n)
