@@ -93,18 +93,29 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 
 	int curr_nb_buffers;
 	getNbBuffers(curr_nb_buffers);
-	if ((frame_dim == m_frame_dim) && (nb_buffers == curr_nb_buffers)) {
+	int to_alloc = (nb_buffers - curr_nb_buffers);
+	if (frame_dim != m_frame_dim) {
+		releaseBuffers();
+	} else if (to_alloc == 0) {
 		DEB_TRACE() << "Nothing to do";
 		return;
 	}
 
-	releaseBuffers();
-
 	try {
-		m_buffer_list.reserve(nb_buffers);
-		for (int i = 0; i < nb_buffers; ++i) {
-			MemBuffer *buffer = new MemBuffer(frame_size);
-			m_buffer_list.push_back(buffer);
+		BufferList& bl = m_buffer_list;
+		if (to_alloc > 0) {
+			bl.reserve(nb_buffers);
+			DEB_TRACE() << "Allocating " << to_alloc << " buffers";
+			while (int(bl.size()) != nb_buffers) {
+				MemBuffer *buffer = new MemBuffer(frame_size);
+				bl.push_back(buffer);
+			}
+		} else {
+			DEB_TRACE() << "Releasing " << -to_alloc << " buffers";
+			while (int(bl.size()) != nb_buffers) {
+				delete bl.back();
+				bl.pop_back();
+			}
 		}
 	} catch (...) {
 		DEB_ERROR() << "Error alloc. buffer #" << m_buffer_list.size();
@@ -120,7 +131,7 @@ void SoftBufferAllocMgr::releaseBuffers()
 	DEB_MEMBER_FUNCT();
 
 	BufferList& bl = m_buffer_list;
-	for (BufferListCIt it = bl.begin(); it != bl.end(); ++it)
+	for (BufferListCRIt it = bl.rbegin(); it != bl.rend(); ++it)
 		delete *it;
 	bl.clear();
 	m_frame_dim = FrameDim();
@@ -229,16 +240,15 @@ void BufferCbMgr::acqFrameNb2BufferNb(int acq_frame_nb, int& buffer_nb,
 	getNbBuffers(nb_buffers);
 	getNbConcatFrames(nb_concat_frames);
 
-	if((nb_buffers<1) || (nb_concat_frames < 1)){
+	if ((nb_buffers < 1) || (nb_concat_frames < 1))
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
-					     << DEB_VAR2(nb_buffers, nb_concat_frames);
-	}
+					     << DEB_VAR2(nb_buffers, 
+							 nb_concat_frames);
 
 	buffer_nb = (acq_frame_nb / nb_concat_frames) % nb_buffers;
 	concat_frame_nb = acq_frame_nb % nb_concat_frames;
 
-	DEB_PARAM() << DEB_VAR2(buffer_nb, concat_frame_nb);
-	
+	DEB_RETURN() << DEB_VAR2(buffer_nb, concat_frame_nb);
 }
 
 BufferCbMgr::Cap lima::operator |(BufferCbMgr::Cap c1, BufferCbMgr::Cap c2)
@@ -294,39 +304,35 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames,
 	DEB_PARAM() << DEB_VAR3(nb_buffers, nb_concat_frames, frame_dim);
 
 	int frame_size = frame_dim.getMemSize();
-	if (frame_size <= 0) {
+	if (frame_size <= 0)
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
 					     << DEB_VAR1(frame_dim);
-	} else if (nb_concat_frames < 1) {
+	else if (nb_concat_frames < 1)
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
 					     << DEB_VAR1(nb_concat_frames);
-	}
 
 	int curr_nb_buffers;
 	getNbBuffers(curr_nb_buffers);
-	if ((nb_buffers == curr_nb_buffers) && (frame_dim == m_frame_dim) && 
-	    (nb_concat_frames == m_nb_concat_frames)) {
+	if ((frame_dim != m_frame_dim) || 
+	    (nb_concat_frames != m_nb_concat_frames)) {
+		releaseBuffers();
+	} else if (nb_buffers == curr_nb_buffers) {
 		DEB_TRACE() << "Nothing to do";
 		return;
 	}
-
-	releaseBuffers();
 
 	try {
 		FrameDim buffer_frame_dim;
 		getBufferFrameDim(frame_dim, nb_concat_frames, 
 				  buffer_frame_dim);
-
-		DEB_TRACE() << "Allocating buffers";
+		DEB_TRACE() << "(Re)allocating buffers";
 		m_alloc_mgr->allocBuffers(nb_buffers, buffer_frame_dim);
 		m_frame_dim = frame_dim;
 		m_nb_concat_frames = nb_concat_frames;
 
-		DEB_TRACE() << "Allocating frame info list";
+		DEB_TRACE() << "(Re)allocating frame info list";
 		int nb_frames = nb_buffers * nb_concat_frames;
-		m_info_list.reserve(nb_frames);
-		for (int i = 0; i < nb_frames; ++i)
-			m_info_list.push_back(HwFrameInfoType());
+		m_info_list.resize(nb_frames);
 	} catch (...) {
 		releaseBuffers();
 		throw;
@@ -364,21 +370,19 @@ bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 	acqFrameNb2BufferNb(frame_info.acq_frame_nb, buffer_nb,
 			    concat_frame_nb);
 	void *ptr = getBufferPtr(buffer_nb, concat_frame_nb);
-	if (!frame_info.frame_ptr) {
+	if (!frame_info.frame_ptr)
 		frame_info.frame_ptr = ptr;
-	} else if (frame_info.frame_ptr != ptr) {
-	  	DEB_ERROR() << "Invalid " << DEB_VAR1(frame_info.frame_ptr);
+	else if (frame_info.frame_ptr != ptr)
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
 					     << DEB_VAR1(frame_info.frame_ptr);
-	}
 
 	const FrameDim& frame_dim = getFrameDim();
-	if (!frame_info.frame_dim.isValid()) {
+	if (!frame_info.frame_dim.isValid())
 		frame_info.frame_dim = frame_dim;
-	} else if (frame_info.frame_dim != frame_dim) {
+	else if (frame_info.frame_dim != frame_dim)
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
 					     << DEB_VAR1(frame_info.frame_dim);
-	}
+
 	if (frame_info.valid_pixels == 0)
 		frame_info.valid_pixels = Point(frame_dim.getSize()).getArea();
 
@@ -426,9 +430,9 @@ void *StdBufferCbMgr::getBufferPtr(int buffer_nb, int concat_frame_nb)
 
 void* StdBufferCbMgr::getFrameBufferPtr(int frame_nb)
 {
-  int buffer_nb, concat_frame_nb;
-  acqFrameNb2BufferNb(frame_nb, buffer_nb,concat_frame_nb);
-  return getBufferPtr(buffer_nb,concat_frame_nb);
+	int buffer_nb, concat_frame_nb;
+	acqFrameNb2BufferNb(frame_nb, buffer_nb, concat_frame_nb);
+	return getBufferPtr(buffer_nb, concat_frame_nb);
 }
 
 void StdBufferCbMgr::clearBuffer(int buffer_nb)
@@ -546,19 +550,15 @@ void BufferCtrlMgr::setNbBuffers(int nb_buffers)
 
 	int max_nb_buffers;
 	getMaxNbBuffers(max_nb_buffers);
-	if ((nb_buffers > 0) && (nb_buffers > max_nb_buffers)) {
+	if ((nb_buffers > 0) && (nb_buffers > max_nb_buffers))
 		THROW_HW_ERROR(InvalidValue) << "Too many buffers:" 
 					     << DEB_VAR1(nb_buffers);
-	} else if (nb_buffers == 0)
+	else if (nb_buffers == 0)
 		nb_buffers = max_nb_buffers;
 
-	releaseBuffers();
-
-	int acq_nb_buffers = nb_buffers;
-	DEB_TRACE() << DEB_VAR1(acq_nb_buffers);
-
-	m_acq_buffer_mgr->allocBuffers(acq_nb_buffers, m_nb_concat_frames, 
-					m_frame_dim);
+	DEB_TRACE() << DEB_VAR1(nb_buffers);
+	m_acq_buffer_mgr->allocBuffers(nb_buffers, m_nb_concat_frames, 
+				       m_frame_dim);
 }
 
 void BufferCtrlMgr::getNbBuffers(int& nb_buffers)
@@ -650,11 +650,11 @@ BufferCtrlMgr::AcqMode BufferCtrlMgr::getAcqMode()
 
 bool BufferCtrlMgr::acqFrameReady(const HwFrameInfoType& acq_frame_info)
 {
-  DEB_MEMBER_FUNCT();
-  bool aReturnFlag = true;
-  if (m_frame_cb_act)
-    aReturnFlag = newFrameReady(acq_frame_info);
-  return aReturnFlag;
+	DEB_MEMBER_FUNCT();
+	bool aReturnFlag = true;
+	if (m_frame_cb_act)
+		aReturnFlag = newFrameReady(acq_frame_info);
+	return aReturnFlag;
 }
 
 /*******************************************************************
@@ -803,7 +803,7 @@ SoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
 	bool okFlag = m_cond.wait(timeout);
 	DEB_TRACE() << DEB_VAR1(okFlag);
 
-    it = m_buffer_in_use.find(framePtr);
+	it = m_buffer_in_use.find(framePtr);
 	if (it == m_buffer_in_use.end())
 		return AVAILABLE;
  	else
@@ -825,7 +825,8 @@ void SoftBufferCtrlObj::Sync::release(void *address)
 	AutoMutex aLock(m_cond.mutex());
 	BufferList::iterator it = m_buffer_in_use.find(address);
 	if (it == m_buffer_in_use.end())
-		THROW_HW_ERROR(Error) << "Internal error: releasing buffer not in used list";
+		THROW_HW_ERROR(Error) << "Internal error: " 
+				      << "releasing buffer not in used list";
 
 	m_buffer_in_use.erase(it++);
 	if (it == m_buffer_in_use.end() || *it != address)
