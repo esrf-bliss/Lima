@@ -148,7 +148,7 @@ private:
 				l = m.tryLock(); 
 			else
 				l++;
-			return l;
+			return !!l;
 		}
 
 		void leaveLocked()
