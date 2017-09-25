@@ -91,12 +91,13 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 		THROW_HW_ERROR(InvalidValue) << "Invalid " 
 					     << DEB_VAR1(nb_buffers);
 
+	if (frame_dim != m_frame_dim)
+		releaseBuffers();
+
 	int curr_nb_buffers;
 	getNbBuffers(curr_nb_buffers);
-	int to_alloc = (nb_buffers - curr_nb_buffers);
-	if (frame_dim != m_frame_dim) {
-		releaseBuffers();
-	} else if (to_alloc == 0) {
+	int to_alloc = nb_buffers - curr_nb_buffers;
+	if (to_alloc == 0) {
 		DEB_TRACE() << "Nothing to do";
 		return;
 	}
