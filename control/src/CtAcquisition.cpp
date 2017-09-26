@@ -21,6 +21,8 @@
 //###########################################################################
 
 #include "lima/CtAcquisition.h"
+#include "lima/CtSaving.h"
+
 #include "math.h"
 #include <algorithm>
 using std::max;
@@ -208,7 +210,7 @@ void CtAcquisition::_check_timing_ranges()
     m_inpars.accMaxExpoTime = m_valid_ranges.max_exp_time;
 }
 
-void CtAcquisition::apply(CtControl::ApplyPolicy policy)
+void CtAcquisition::apply(CtControl::ApplyPolicy policy, CtControl *control)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(policy);
@@ -242,6 +244,28 @@ void CtAcquisition::apply(CtControl::ApplyPolicy policy)
     _apply();
   }
   m_applied_once = true;
+
+  //Add acquisition parameters into internal header
+  if (control) {
+    CtSaving* saving = control->saving();
+    
+    Parameters pars; getPars(pars);
+    saving->addToInternalCommonHeader("acq_mode", pars.acqMode);
+    if (pars.acqMode == Accumulation) {
+      saving->addToInternalCommonHeader("acq_acc_max_expotime",pars.accMaxExpoTime);
+      saving->addToInternalCommonHeader("acq_acc_time_mode",pars.accTimeMode);
+    } else if (pars.acqMode == Concatenation) {
+      saving->addToInternalCommonHeader("acq_concat_nb_frames",pars.concatNbFrames);
+    }
+    
+    saving->addToInternalCommonHeader("acq_nb_frames",pars.acqNbFrames);
+
+    saving->addToInternalCommonHeader("acq_expo_time",pars.acqExpoTime);
+    saving->addToInternalCommonHeader("acq_latency_time",pars.latencyTime);
+    saving->addToInternalCommonHeader("acq_trigger_mode",pars.triggerMode);
+    saving->addToInternalCommonHeader("acq_autoexpo_mode",pars.autoExpoMode);    
+  }
+ 
 }
 
 void CtAcquisition::sync()

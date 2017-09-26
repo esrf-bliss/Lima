@@ -65,13 +65,13 @@ SaveContainerNxs::~SaveContainerNxs()
 bool SaveContainerNxs::_open(const std::string &filename, std::ios_base::openmode openFlags)
 {
 	DEB_MEMBER_FUNCT();
-	return true;
+	return (void*)true;
 }
 
 //--------------------------------------------------------------------------------------------------------------------
 //- Event rising by CtSaving when frame is saved
 //--------------------------------------------------------------------------------------------------------------------
-void SaveContainerNxs::_close()
+void SaveContainerNxs::_close(void*)
 {
 	DEB_MEMBER_FUNCT();
 }
@@ -99,7 +99,7 @@ void SaveContainerNxs::_clear()
 //- 	.End Acquisition
 //- 	.Finalize
 //--------------------------------------------------------------------------------------------------------------------
-void SaveContainerNxs::_writeFile(Data &aData,
+long SaveContainerNxs::_writeFile(void*,Data &aData,
 								  CtSaving::HeaderMap &aHeader,
 								  CtSaving::FileFormat aFormat)
 {
@@ -285,6 +285,7 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			m_writer = 0;
 			DEB_TRACE() << "Delete the DataStreamer : " << t.elapsed_msec() << " ms";
 		}
+		return aData.size(); // fix me
 	}
 	catch (std::bad_alloc& ex)
 	{

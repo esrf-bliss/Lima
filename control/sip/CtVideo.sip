@@ -147,7 +147,7 @@ using namespace lima;
     void unregisterImageCallback(CtVideo::ImageCallback &cb);
 
     // --- video mode
-    void getSupportedVideoMode(std::list<VideoMode> &modeList /Out/);
+    void getSupportedVideoMode(std::list<VideoMode> &modeList /Out/) const;
   };
 
 %MappedType CtVideo::AutoGainModeList

@@ -324,9 +324,9 @@ __int64 SaveContainerEdf::_OfStream::tellp() const
 }
 
 SaveContainerEdf::_OfStream& 
-SaveContainerEdf::_OfStream::write(const char* data,int size)
+SaveContainerEdf::_OfStream::write(const char* data,size_t size)
 {
-  int nbItemsWritten = fwrite(data,size,1,m_fout);
+  size_t nbItemsWritten = fwrite(data,size,1,m_fout);
   if(nbItemsWritten <= 0 &&
      (m_exc_flag & std::ios_base::badbit))
     throw std::ios_base::failure("Failed to write");
@@ -386,32 +386,45 @@ SaveContainerEdf::~SaveContainerEdf()
 #endif
 }
 
-bool SaveContainerEdf::_open(const std::string &filename,
-			     std::ios_base::openmode openFlags)
+void* SaveContainerEdf::_open(const std::string &filename,
+			      std::ios_base::openmode openFlags)
 {
   DEB_MEMBER_FUNCT();
-  m_fout.clear();
-  m_fout.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-  m_fout.open(filename.c_str(),openFlags);
-#ifdef __unix
-  m_fout.rdbuf()->pubsetbuf((char*)m_fout_buffer,WRITE_BUFFER_SIZE);
+#ifdef WIN32
+  _OfStream* fout = new _OfStream();
+#else
+  std::ofstream* fout = new std::ofstream();
 #endif
+  try
+    {
+      fout->exceptions(std::ios_base::failbit | std::ios_base::badbit);
+      fout->open(filename.c_str(),openFlags);
+#ifdef __unix
+      fout->rdbuf()->pubsetbuf((char*)m_fout_buffer,WRITE_BUFFER_SIZE);
+#endif
+    }
+  catch(...)
+    {
+      delete fout;
+      throw;
+    }
+
   m_current_filename = filename;
-  return true;
+	
+  return fout;
 }
 
-void SaveContainerEdf::_close()
+void SaveContainerEdf::_close(void* f)
 {
   DEB_MEMBER_FUNCT();
-  
-  if (!m_fout.is_open()) {
-    DEB_TRACE() << "Nothing to do";
-    return;
-  }
+#ifdef WIN32
+  _OfStream* fout = (_OfStream*)f;
+#else
+  std::ofstream* fout = (std::ofstream*)f;
+#endif
 
-  DEB_TRACE() << "Close current file";
+  delete fout;			// close file
 
-  m_fout.close();
 #ifdef __unix
   if(m_mmap_info.mmap_addr)
     {
@@ -421,10 +434,17 @@ void SaveContainerEdf::_close()
 #endif
 }
 
-void SaveContainerEdf::_writeFile(Data &aData,
+long SaveContainerEdf::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
+  long write_size = 0;
+#ifdef WIN32
+  _OfStream* fout = (_OfStream*)f;
+#else
+  std::ofstream* fout = (std::ofstream*)f;
+#endif
+
 #if defined(WITH_EDFGZ_SAVING) || defined(WITH_EDFLZ4_SAVING)
   if(aFormat == CtSaving::EDFGZ || aFormat == CtSaving::EDFLZ4)
     {
@@ -432,7 +452,8 @@ void SaveContainerEdf::_writeFile(Data &aData,
       for(ZBufferType::iterator i = buffers->begin();
 	  i != buffers->end();++i)
 	{
-	  m_fout.write((char*)(*i)->buffer,(*i)->used_size);
+	  fout->write((char*)(*i)->buffer,(*i)->used_size);
+	  write_size += (*i)->used_size;
 	  delete *i;
 	}
       delete buffers;
@@ -444,8 +465,9 @@ void SaveContainerEdf::_writeFile(Data &aData,
   if(aFormat == CtSaving::EDF)
     {
       const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
-      _writeEdfHeader(aData,aHeader,
-		      pars.framesPerFile,m_fout);
+      MmapInfo info = _writeEdfHeader(aData,aHeader,
+				      pars.framesPerFile,*fout);
+      write_size += info.header_size;
     }
 #ifdef __unix
   else if(aFormat == CtSaving::EDFConcat)
@@ -455,9 +477,10 @@ void SaveContainerEdf::_writeFile(Data &aData,
       if(!m_mmap_info.mmap_addr)	// Create header and mmap
 	{
 	  const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
-	  m_mmap_info = _writeEdfHeader(aData,aHeader,pars.framesPerFile,m_fout,8);
-	  m_fout.flush();
-	  long long header_position = m_fout.tellp();
+	  m_mmap_info = _writeEdfHeader(aData,aHeader,pars.framesPerFile,*fout,8);
+	  write_size += m_mmap_info.header_size;
+	  fout->flush();
+	  long long header_position = fout->tellp();
 	  header_position -= m_mmap_info.header_size;
           long sz = sysconf(_SC_PAGESIZE);
 	  long long mapping_offset = header_position / sz * sz;
@@ -486,12 +509,13 @@ void SaveContainerEdf::_writeFile(Data &aData,
 	}
     }
 #endif
-  m_fout.write((char*)aData.data(),aData.size());
-
+  fout->write((char*)aData.data(),aData.size());
+  write_size += aData.size();
 
 #ifdef WITH_EDFGZ_SAVING
     } // else
 #endif
+  return write_size;
 }
 
 template<class Stream>
@@ -597,7 +621,9 @@ SaveContainerEdf::_writeEdfHeader(Data &aData,
 
 SinkTaskBase* SaveContainerEdf::getCompressionTask(const CtSaving::HeaderMap& header)
 {
+#if defined(WITH_EDFGZ_SAVING) || defined(WITH_EDFLZ4_SAVING)
   const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
+#endif
 #ifdef WITH_EDFGZ_SAVING
   if(m_format == CtSaving::EDFGZ)
     return new Compression(*this,pars.framesPerFile,header);

@@ -66,6 +66,7 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('v4l2',             [os.path.join('camera','v4l2')]),
            ('eiger',            [os.path.join('camera','eiger')]),
            ('hexitec',          [os.path.join('camera','hexitec')]),
+           ('slsdetector',      [os.path.join('camera','slsdetector')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
@@ -209,6 +210,22 @@ def main():
             extraIncludes += ['../../camera/hexitec/sdk','/opt/pleora/ebus_sdk/CentOS-RHEL-7-x86_64/include']
             extra_cxxflags += ['-std=c++11']
             extra_cxxflags += ['-DSIPCOMPILATION']
+        elif (modName == 'slsdetector'):
+            SLS_DETECTORS_DIR = os.environ['SLS_DETECTORS_DIR']
+            SLS_DETECTORS_SW = os.path.join(SLS_DETECTORS_DIR, 
+                                            'slsDetectorSoftware')
+            SLS_DETECTORS_RECV = os.path.join(SLS_DETECTORS_DIR, 
+                                              'slsReceiverSoftware')
+            slsIncl = [os.path.join(SLS_DETECTORS_SW, 'include'),
+                       os.path.join(SLS_DETECTORS_SW, 'commonFiles'),
+                       os.path.join(SLS_DETECTORS_SW, 'slsDetector'),
+                       os.path.join(SLS_DETECTORS_SW, 'multiSlsDetector'),
+                       os.path.join(SLS_DETECTORS_SW, 'slsDetectorServer'),
+                       os.path.join(SLS_DETECTORS_SW, 'slsDetectorAnalysis'),
+                       os.path.join(SLS_DETECTORS_SW, 'slsReceiverInterface'),
+                       os.path.join(SLS_DETECTORS_RECV, 'include'),
+                       ]
+            extraIncludes += slsIncl
         extraIncludes += findModuleIncludes(modName)
         if (modName == 'roperscientific'):
             extraIncludes.remove('../../camera/roperscientific/sdk/msvc/include')
@@ -325,6 +342,17 @@ def main():
             if 'config' not in excludeMods:
                 makefile.extra_cxxflags.append('-DWITH_CONFIG')
             makefile.extra_lib_dirs = [rootName('build')]
+
+            if modName == 'slsdetector':
+                bad_flag = '-Werror=format-security'
+                good_flag = '-Wno-error=format-security'
+                for flags in [makefile.CFLAGS, makefile.CXXFLAGS]:
+                    for fg in flags.as_list():
+                        if bad_flag in fg:
+                            flags.remove(fg)
+                            fg = good_flag.join(fg.split(bad_flag))
+                            flags.extend([fg])
+
         makefile.extra_cxxflags.extend(['-I"%s"' % x for x in extraIncludes])
         
         # Add the library we are wrapping.  The name doesn't include any 

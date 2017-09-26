@@ -57,10 +57,10 @@ namespace lima {
     virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 
   protected:
-    virtual bool _open(const std::string &filename,
-		       std::ios_base::openmode flags);
-    virtual void _close();
-    virtual void _writeFile(Data &data,
+    virtual void* _open(const std::string &filename,
+			std::ios_base::openmode flags);
+    virtual void _close(void*);
+    virtual long _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
     virtual void _clear();
@@ -104,7 +104,7 @@ namespace lima {
       bool is_open() const;
       void close();
       _int64 tellp() const;
-      inline _OfStream& write(const char* data,int size);
+      inline _OfStream& write(const char* data,size_t size);
       inline _OfStream& operator<< (const char *data);
       inline _OfStream& operator<< (const std::string& data);
       inline _OfStream& operator<< (const int data);
@@ -113,10 +113,8 @@ namespace lima {
       FILE* m_fout;
       int m_exc_flag;
     };
-    _OfStream			 m_fout;
 #else
     void*                        m_fout_buffer;
-    std::ofstream                m_fout;
 #endif
     CtSaving::FileFormat	 m_format;
     dataId2ZBufferType		 m_buffers;

@@ -73,6 +73,7 @@ namespace lima {
 	HDF5,			///< HDF5 format
 	EDFConcat,		// < EDF format with frame concatenation mode
 	EDFLZ4,			// < EDF format with lz4 compression
+	CBFMiniHeader,		// < CBF mini header
       };
 
     enum SavingMode 
@@ -178,7 +179,6 @@ namespace lima {
     void removeAllFrameHeaders();
 
     void frameReady(Data&);
-    void resetLastFrameNb();
 
     void setEndCallback(TaskEventCallback *);
 
@@ -190,9 +190,14 @@ namespace lima {
 				     const T&);
     // --- statistic
 
-    void getWriteTimeStatistic(std::list<double>&, int stream_idx=0) const;
+    void getStatistic(std::list<double>&,
+		      std::list<double>&,std::list<double>&,
+		      std::list<double>&,
+		      int stream_idx=0) const;
+    void getStatisticCounters(double&,double&,double&,double&,
+			      int stream_idx=0) const;
     void setStatisticHistorySize(int aSize, int stream_idx=0);
-
+    int getStatisticHistorySize(int stream_idx=0) const;
     // --- misc
 
     void clear();
@@ -204,20 +209,81 @@ namespace lima {
     void setStreamActive(int stream_idx, bool  active);
     void getStreamActive(int stream_idx, bool& active) const;
 
+    // --- parallel writing
+    void getMaxConcurrentWritingTask(int&,int stream_idx = 0) const;
+    void setMaxConcurrentWritingTask(int,int stream_idx = 0);
+
     class Stream;
 
     class LIMACORE_API SaveContainer
     {
       DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
+      struct FrameParameters
+      {
+	FrameParameters() : 
+	  m_threadable(false),
+	  m_running(false)
+	{}
+	FrameParameters(const CtSaving::Parameters& pars) :
+	  m_pars(pars),
+	  m_threadable(false),
+	  m_running(false)
+	{}
+
+	CtSaving::Parameters	m_pars;
+	bool			m_threadable;
+	bool			m_running;
+      };
+      typedef std::map<long,FrameParameters> Frame2Params;
+      struct Handler
+      {
+	Handler() : m_handler(NULL) {}
+
+	void*			m_handler;
+	int			m_nb_frames;
+      };
+      struct cmpParameters
+      {
+	bool operator() (const CtSaving::Parameters &p1,
+			 const CtSaving::Parameters &p2) const
+	{
+	  return (p1.nextNumber < p2.nextNumber ||
+		  p1.prefix < p2.prefix ||
+		  p1.directory < p2.directory ||
+		  p1.suffix < p2.suffix);
+	}
+      };
+      typedef std::map<CtSaving::Parameters,Handler,cmpParameters> Params2Handler;
     public:
+      struct Stat
+      {
+	Stat() : received_time(Timestamp::now()),incoming_size(-1),write_size(-1) {}
+
+	Timestamp	received_time;
+	Timestamp	compression_start;
+	Timestamp	compression_end;
+	Timestamp	writing_start;
+	Timestamp	writing_end;
+	long		incoming_size;
+	long		write_size;
+      };
+      typedef std::map<long,Stat> StatisticsType;
+
       SaveContainer(Stream& stream);
       virtual ~SaveContainer();
       
-      void open(const CtSaving::Parameters&);
-      void close();
+      Params2Handler::value_type open(FrameParameters&);
+      void close(const CtSaving::Parameters* = NULL,	// if NULL mean all
+		 bool force_close = false);
       void writeFile(Data&,CtSaving::HeaderMap &);
       void setStatisticSize(int aSize);
-      void getStatistic(std::list<double>&) const;
+      int  getStatisticSize() const;
+      void getStatistic(std::list<double> &saving_speed,
+			std::list<double> &compression_speed,
+			std::list<double> &compression_ratio,
+			std::list<double> &incoming_speed) const;
+      void getRawStatistic(StatisticsType&) const;
+
       void getParameters(CtSaving::Parameters&) const;
       void clear();
       void prepare(CtControl&);
@@ -232,12 +298,20 @@ namespace lima {
        *  @see needParallelCompression
        */
       virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&) {return NULL;}
-
+      
+      virtual bool isReady(long frame_nr) const;
+      virtual void setReady(long frame_nr);
+      virtual void prepareWrittingFrame(long frame_nr);
+      void createStatistic(Data&);
+      void compressionStart(Data&);
+      void compressionFinished(Data&);
+      int getMaxConcurrentWritingTask() const;
+      void setMaxConcurrentWritingTask(int nb);
     protected:
-      virtual bool _open(const std::string &filename,
+      virtual void* _open(const std::string &filename,
 			 std::ios_base::openmode flags) = 0;
-      virtual void _close() = 0;
-      virtual void _writeFile(Data &data,
+      virtual void _close(void*) = 0;
+      virtual long _writeFile(void*,Data &data,
 			      CtSaving::HeaderMap &aHeader,
 			      FileFormat) = 0;
       virtual void _clear() {};
@@ -246,11 +320,15 @@ namespace lima {
       int			m_written_frames;
       Stream			&m_stream;
     private:
-      std::list<double>		m_statistic_list;
+      StatisticsType		m_statistic;
       int			m_statistic_size;
       mutable Cond		m_cond;
-      bool			m_file_opened;
       long			m_nb_frames_to_write;
+
+      Frame2Params		m_frame_params;
+      Params2Handler		m_params_handler;
+      int			m_max_writing_task; ///< number of maximum parallel write
+      int			m_running_writing_task; ///< number of concurrent write running
     };
     friend class SaveContainer;
 
@@ -290,8 +368,10 @@ namespace lima {
       void setSavingError(CtControl::ErrorCode error)
       { m_saving._setSavingError(error); }
 
-      SinkTaskBase *getTask(TaskType type, const HeaderMap& header);
+      SinkTaskBase *getTask(TaskType type, const HeaderMap& header, long frame_nr);
 
+      void compressionStart(Data& data)
+      { m_save_cnt->compressionStart(data); }
       void compressionFinished(Data& data);
       void saveFinished(Data& data);
       int getNextNumber() const;
@@ -307,14 +387,34 @@ namespace lima {
 	return pars.savingMode != Manual; 
       }
 
-      void getStatistic(std::list<double>& stat_list) const
-      { m_save_cnt->getStatistic(stat_list); }
+      void getStatistic(std::list<double> &saving_speed,
+			std::list<double> &compression_speed,
+			std::list<double> &compression_ratio,
+			std::list<double> &incoming_speed) const
+      { m_save_cnt->getStatistic(saving_speed,
+				 compression_speed,compression_ratio,
+				 incoming_speed); }
+
       void setStatisticSize(int size) 
       { m_save_cnt->setStatisticSize(size); }
+      int getStatisticSize() const
+      { return m_save_cnt->getStatisticSize(); }
+      void getMaxConcurrentWritingTask(int& nb_threads) const
+      { nb_threads = m_save_cnt->getMaxConcurrentWritingTask(); }
+      void setMaxConcurrentWritingTask(int nb_threads)
+      { m_save_cnt->setMaxConcurrentWritingTask(nb_threads); }
 
       void clear()
       { m_save_cnt->clear(); }
 
+      bool isReady(long frame_id) const
+      { return m_save_cnt->isReady(frame_id); }
+      void setReady(long frame_id)
+      { m_save_cnt->setReady(frame_id); }
+      void prepareWrittingFrame(long frame_nr)
+      { m_save_cnt->prepareWrittingFrame(frame_nr); }
+      void createStatistic(Data& data)
+      { m_save_cnt->createStatistic(data); }
     private:
       class _SaveCBK;
       class _SaveTask;
@@ -339,12 +439,15 @@ namespace lima {
     friend class _ManualBackgroundSaveTask;
     class	_NewFrameSaveCBK;
     friend class _NewFrameSaveCBK;
+    class	_SavingErrorHandler;
+    friend class _SavingErrorHandler;
     typedef std::vector<SinkTaskBase *> TaskList;
     typedef std::map<long, long>	FrameCbkCountMap;
     typedef std::map<long, HeaderMap>	FrameHeaderMap;
 
     void _validateFrameHeader(long frame_nr,
 			      AutoMutex&);
+    void _resetReadyFlag();
 
     CtControl& 			m_ctrl;
 
@@ -357,11 +460,8 @@ namespace lima {
     FrameMap			m_frame_datas;
 
     mutable Cond		m_cond;
-    bool			m_ready_flag;
-    long			m_last_frameid_saved;
     bool			m_need_compression;
-    FrameCbkCountMap		m_nb_compression_cbk;
-    int				m_nb_save_cbk;
+    FrameCbkCountMap		m_nb_cbk;
     TaskEventCallback	       *m_end_cbk;
     bool			m_has_hwsaving;
     HwSavingCtrlObj*		m_hwsaving;
@@ -369,6 +469,7 @@ namespace lima {
     ManagedMode			m_managed_mode;	///< two option either harware (manage by SDK,hardware) or software (Lima core)
     std::string			m_specific_hardware_format;
     bool			m_saving_stop;
+    _SavingErrorHandler*	m_saving_error_handler;
 
       Stream& getStream(int stream_idx)
 	{ bool stream_ok = (stream_idx >= 0) && (stream_idx < m_nb_stream);
@@ -404,11 +505,12 @@ namespace lima {
       void _stop(CtControl&);
       void _close();
       void _getCommonHeader(HeaderMap&);
+      void _createStatistic(Data&);
       void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		       bool keep_in_map);
       void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header, 
 			TaskList& task_list);
-      void _postTaskList(Data&, const TaskList&);
+      void _postTaskList(Data&, const TaskList&, int priority);
       void _compressionFinished(Data&, Stream&);
       void _saveFinished(Data&, Stream&);
       void _setSavingError(CtControl::ErrorCode);
@@ -418,7 +520,8 @@ namespace lima {
       bool _newFrameWrite(int);
       bool _checkHwFileFormat(const std::string&) const;
       void _ReadImage(Data&,int framenb);
-
+      bool _allStreamReady(long frame_nr);
+      void _waitWritingThreads();
 #ifdef WITH_CONFIG
       class _ConfigHandler;
       CtConfig::ModuleTypeCallback* _getConfigHandler();
@@ -448,6 +551,8 @@ namespace lima {
 	  aFileFormatHumanPt = "EDF Concat";break;
 	case CtSaving::EDFLZ4:
 	  aFileFormatHumanPt = "EDF lz4";break;
+	case CtSaving::CBFMiniHeader:
+	  aFileFormatHumanPt = "CBF mheader";break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -470,6 +575,7 @@ namespace lima {
       else if(buffer == "hdf5")		fileFormat = CtSaving::HDF5;
       else if(buffer == "edf concat")	fileFormat = CtSaving::EDFConcat;
       else if(buffer == "edf lz4") 	fileFormat = CtSaving::EDFLZ4;
+      else if(buffer == "cbf mheader")	fileFormat = CtSaving::CBFMiniHeader;
       else
 	{
 	  std::ostringstream msg;

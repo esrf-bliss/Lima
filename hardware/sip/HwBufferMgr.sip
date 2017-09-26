@@ -97,6 +97,12 @@ using namespace lima;
 	virtual void getStartTimestamp(Timestamp& start_ts /Out/);
 
 	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info /Out/) = 0;
+
+	virtual void getBufferFrameDim(const FrameDim& single_frame_dim,
+				       int nb_concat_frames, 
+				       FrameDim& buffer_frame_dim /Out/);
+	virtual void acqFrameNb2BufferNb(int acq_frame_nb, int& buffer_nb /Out/,
+					 int& concat_frame_nb /Out/);
 };
 
 class StdBufferCbMgr : BufferCbMgr

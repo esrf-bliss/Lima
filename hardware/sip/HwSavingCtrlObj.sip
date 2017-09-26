@@ -40,24 +40,30 @@ public:
   explicit HwSavingCtrlObj(int capabilities = 0);
   virtual ~HwSavingCtrlObj();
     
-  virtual void setActive(bool);
-  bool isActive() const;
+    virtual void setActive(bool, int stream_idx=0);
+  virtual bool isActive(int stream_idx=0) const;
 
-  void setDirectory(const std::string&);
-  void setPrefix(const std::string&);
-  void setSuffix(const std::string&);
-  void setNextNumber(long number);
-  void setIndexFormat(const std::string&);
+    virtual void setDirectory(const std::string&, int stream_idx=0);
+    virtual void setPrefix(const std::string&, int stream_idx=0);
+    virtual void setSuffix(const std::string&, int stream_idx=0);
+    virtual void setNextNumber(long number, int stream_idx=0);
+    virtual void setIndexFormat(const std::string&, int stream_idx=0);
+
+    virtual void setOverwritePolicy(const std::string &overwritePolicy, int stream_idx=0);
+    virtual void setSaveFormat(const std::string &format, int stream_idx=0);
+
+    virtual void setFramesPerFile(long, int stream_idx=0);
+    virtual void setOptions(const std::string&, int stream_idx=0);
+
   
-void setOverwritePolicy(const std::string&);
-  
-  void setSaveFormat(const std::string &format);
   virtual void getPossibleSaveFormat(std::list<std::string> &format_list) const = 0;
 
   int getCapabilities() const;
 
-  virtual void writeFrame(int frame_nr = -1,int nb_frames = 1);
-  virtual void readFrame(HwFrameInfoType&,int frame_nr);
+    virtual void writeFrame(HwFrameInfoType& info, int stream_idx=0);
+    virtual void writeFrame(int frame_nr = -1,int nb_frames = 1, int stream_idx=0);
+    virtual void readFrame(HwFrameInfoType&,int frame_nr, int stream_idx=0);
+
 
   //virtual void setCommonHeader(const std::map<std::string,std::string>&);
   virtual void resetCommonHeader();
@@ -79,9 +85,10 @@ protected:
   virtual void _setActive(bool, int stream=0);
   virtual void _prepare(int stream=0);
   virtual void _start(int stream=0);
+
   /** @brief return the full path of acquired image
    */
-  std::string _getFullPath(int image_number) const;
+  std::string _getFullPath(int image_number, int stream_idx=0) const;
 
 
 };

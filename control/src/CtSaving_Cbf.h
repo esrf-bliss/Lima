@@ -32,36 +32,46 @@ namespace lima {
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving CBF Container","Control");
     class Compression;
+    class MHCompression;
+    struct _File;
   public:
-    SaveContainerCbf(CtSaving::Stream& stream);
+    struct Handle
+    {
+      CtSaving::FileFormat	format;
+      cbf_handle		handle;
+      void*			data_buffer;
+      int			data_buffer_size;
+      void*			header_data;
+      int			header_data_size;
+    };
+    SaveContainerCbf(CtSaving::Stream& stream,
+		     CtSaving::FileFormat format);
     virtual ~SaveContainerCbf();
 
     virtual bool needParallelCompression() const {return true;}
     virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 
   protected:
-    virtual bool _open(const std::string &filename,
-		std::ios_base::openmode flags);
-    virtual void _close();
-    virtual void _writeFile(Data &data,
+    virtual void* _open(const std::string &filename,
+			std::ios_base::openmode flags);
+    virtual void _close(void*);
+    virtual long _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
     virtual void _clear();
   private:
     inline int _writeCbfHeader(Data&,CtSaving::HeaderMap&);
-    inline int _writeCbfData(Data&);
+    inline int _writeCbfData(_File*,Data&);
     
     
     
-    typedef std::map<int,cbf_handle> dataId2cbfHandle;
-    void _setHandle(int dataId,cbf_handle);
-    cbf_handle _takeHandle(int dataId);
+    typedef std::map<int,Handle> dataId2cbfHandle;
+    void _setHandle(int dataId,Handle&);
+    Handle _takeHandle(int dataId);
     
-    FILE* 		m_fout;
-    void*		m_fout_buffer;
-    dataId2cbfHandle 	m_cbfs;
-    cbf_handle  	m_current_cbf;
-    Mutex		m_lock;
+    dataId2cbfHandle		m_cbfs;
+    Mutex			m_lock;
+    CtSaving::FileFormat	m_format;
   };
 
 }

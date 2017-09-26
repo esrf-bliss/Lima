@@ -20,12 +20,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-include ../config.inc
-
-
 ############################
 # HELPER MACROS
 ############################
+
+this-dir	:= $(shell pwd)
+lima-dir	:= $(this-dir)/..
+third-party-dir	:= $(lima-dir)/third-party
+
+LIMA_DIR = $(lima-dir)
+include $(LIMA_DIR)/config.inc
+include $(LIMA_DIR)/control/control.inc
 
 full-version	= $(shell cat $(1))
 minor-version	= $(shell echo $(call full-version,$(1)) | cut -f1-2 -d.)
@@ -41,9 +46,10 @@ lib-minor       = $(call lib-base,$(1)).$(call minor-version,$(2))
 lib-link	= $(call lib-base,$(1)).$(call link-version,$(2))
 lib-flags	= -fPIC -Wl,-soname,$(call lib-link,$(1),$(2))
 
-# 1=name, 2=ver-file 3=flags 4=deps, 5=target, 6=objs
+# 1=name, 2=ver-file 3=deps 4=flags 5=libs, 6=target, 7=objs
 compile-lib	= \
-	$(CXX) -shared -o $(5) $(3) $(call lib-flags,$(1),$(2)) $(6) $(4)
+	$(CXX) -shared -o $(6) $(4) $(call lib-depflags,$(3)) \
+		$(call lib-flags,$(1),$(2)) $(7) $(5) $(call lib-deplibs,$(3))
 
 create-links	= \
 	rm -f $(call lib-minor,$(1),$(2)) && \
@@ -56,41 +62,12 @@ create-links	= \
 # LIMA - CORE
 ############################
 
-CORE_LDFLAGS	:= -L../third-party/Processlib/build -Wl,-rpath=$(shell pwd)/../third-party/Processlib/build
-CORE_LDLIBS	:= -lprocesslib -lrt
-
-ifneq ($(COMPILE_CBF_SAVING),0)
-CORE_LDFLAGS += -L../third-party/CBFLib/lib
-CORE_LDLIBS += -lcbf
-endif
-
-ifneq ($(COMPILE_FITS_SAVING),0)
-CORE_LDFLAGS += -L../third-party/cfitsio/lib -L../third-party/CCfits/.libs
-CORE_LDLIBS +=  -Wl,-rpath=$(shell pwd)/../third-party/CCfits/.libs  -lCCfits \
-                -Wl,-rpath=$(shell pwd)/../third-party/cfitsio/lib -lcfitsio
-endif
-
-ifneq ($(COMPILE_EDFGZ_SAVING),0)
-CORE_LDLIBS += -lz
-endif
-
-ifneq ($(COMPILE_EDFLZ4_SAVING),0)
-CORE_LDLIBS += -llz4
-endif
-
-ifneq ($(COMPILE_TIFF_SAVING),0)
-CORE_LDLIBS += -ltiff
-endif
+CORE_LDFLAGS	:= $(CT_LDFLAGS)
+CORE_LDLIBS	:= $(CT_LDLIBS)
+CORE_DEPLIBS	:= $(CT_DEPLIBS)
 
 ifneq ($(COMPILE_HDF5_SAVING),0)
 PROCESSOR_TYPE := $(shell uname -m)
-CORE_LDFLAGS += -L../third-party/hdf5/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/src/.libs
-CORE_LDFLAGS += -L../third-party/hdf5/c++/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/c++/src/.libs
-CORE_LDLIBS += -lhdf5_cpp -lhdf5
-endif
-
-ifneq ($(COMPILE_CONFIG),0)
-CORE_LDLIBS += -L../third-party/libconfig/lib/.libs -Wl,-rpath=$(shell pwd)/../third-party/libconfig/lib/.libs  -lconfig++
 endif
 
 ifneq ($(COMPILE_CORE),0)
@@ -101,19 +78,27 @@ core-objs	:= ../common/src/Common.o \
 		   ../control/src/Ct.o
 core-ver	:= ../common/VERSION
 core-flags	:= $(CORE_LDFLAGS)
-core-deps	:= $(CORE_LDLIBS)
+core-libs	:= $(CORE_LDLIBS)
+core-deps	:= $(CORE_DEPLIBS)
+core-libdeps	:= $(call lib-deps,$(core-deps))
+core-libfull	:= $(call lib-full,$(core-name),$(core-ver))
 
-$(call lib-full,$(core-name),$(core-ver)): $(core-objs)
-	$(call compile-lib,$(core-name),$(core-ver),\
-			   $(core-flags),$(core-deps),$@,$+)
+$(core-libfull):	$(core-objs) $(core-libdeps)
+	$(call compile-lib,$(core-name),$(core-ver),$(core-deps),\
+			   $(core-flags),$(core-libs),$@,$(core-objs))
 	$(call create-links,$(core-name),$(core-ver))
 
-build_targets	:= $(call lib-full,$(core-name),$(core-ver))
+build_targets	:= $(core-libfull)
 
 endif
 
-LDFLAGS		:= $(CORE_LDFLAGS) -L.
-LDLIBS		:= $(CORE_LDLIBS) -llimacore
+CORE_DEPDEF	:= $(this-dir),limacore
+
+$(call lib-deps,$(CORE_DEPDEF)):	$(core-libfull)
+
+LDFLAGS		:= $(CORE_LDFLAGS)
+LDLIBS		:= $(CORE_LDLIBS)
+DEPLIBS		:= $(CORE_DEPLIBS) $(CORE_DEPDEF)
 
 
 ############################
@@ -126,14 +111,17 @@ simu-name	:= simulator
 simu-objs	:= ../camera/simulator/src/Simu.o
 simu-ver	:= ../camera/simulator/VERSION
 simu-flags	:= $(LDFLAGS)
-simu-deps	:= $(LDLIBS)
+simu-libs	:= $(LDLIBS)
+simu-deps	:= $(DEPLIBS)
+simu-libdeps	:= $(call lib-deps,$(simu-deps))
+simu-libfull	:= $(call lib-full,$(simu-name),$(simu-ver))
 
-$(call lib-full,$(simu-name),$(simu-ver)): $(simu-objs)
-	$(call compile-lib,$(simu-name),$(simu-ver),\
-			   $(simu-flags),$(simu-deps),$@,$+)
+$(simu-libfull): $(simu-objs) $(simu-libdeps)
+	$(call compile-lib,$(simu-name),$(simu-ver),$(simu-deps),\
+			   $(simu-flags),$(simu-libs),$@,$(simu-objs))
 	$(call create-links,$(simu-name),$(simu-ver))
 
-build_targets	+= $(call lib-full,$(simu-name),$(simu-ver))
+build_targets	+= $(simu-libfull)
 
 endif
 
@@ -146,23 +134,29 @@ endif
 ifneq ($(COMPILE_ESPIA),0)
 
 include ../camera/common/espia/include/espia.inc
-ESPIA_LDFLAGS	:= $(LDFLAGS) -L$(ESPIA_DRV_LIB)
-ESPIA_LDLIBS	:= $(LDLIBS) -lespia
+ESPIA_DEPLIBS	:= $(ESPIA_DRV_LIB),espia
 
 espia-name	:= espia
 espia-objs	:= ../camera/common/espia/src/Espia.o
 espia-ver	:= ../camera/common/espia/VERSION
-espia-flags	:= $(ESPIA_LDFLAGS)
-espia-deps	:= $(ESPIA_LDLIBS)
+espia-flags	:= $(LDFLAGS)
+espia-libs	:= $(LDLIBS)
+espia-deps	:= $(DEPLIBS) $(ESPIA_DEPLIBS)
+espia-libdeps	:= $(call lib-deps,$(espia-deps))
+espia-libfull	:= $(call lib-full,$(espia-name),$(espia-ver))
 
-$(call lib-full,$(espia-name),$(espia-ver)): $(espia-objs)
-	$(call compile-lib,$(espia-name),$(espia-ver),\
-			   $(espia-flags),$(espia-deps),$@,$+)
+$(espia-libfull): $(espia-objs) $(espia-libdeps)
+	$(call compile-lib,$(espia-name),$(espia-ver),$(espia-deps),\
+			   $(espia-flags),$(espia-libs),$@,$(espia-objs))
 	$(call create-links,$(espia-name),$(espia-ver))
 
-build_targets	+= $(call lib-full,$(espia-name),$(espia-ver))
+build_targets	+= $(espia-libfull)
 
 endif
+
+ESPIA_DEPDEF	:= $(this-dir),limaespia
+
+$(call lib-deps,$(ESPIA_DEPDEF)):	$(espia-libfull)
 
 
 ############################
@@ -171,21 +165,23 @@ endif
 
 ifneq ($(COMPILE_FRELON),0)
 
-FRELON_LDFLAGS	:= $(ESPIA_LDFLAGS) -L.
-FRELON_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia
+FRELON_DEPLIBS	:= $(ESPIA_DEPDEF)
 
 frelon-name	:= frelon
 frelon-objs	:= ../camera/frelon/src/Frelon.o
 frelon-ver	:= ../camera/frelon/VERSION
-frelon-flags	:= $(FRELON_LDFLAGS)
-frelon-deps	:= $(FRELON_LDLIBS)
+frelon-flags	:= $(LDFLAGS)
+frelon-libs	:= $(LDLIBS)
+frelon-deps	:= $(DEPLIBS) $(ESPIA_DEPLIBS) $(FRELON_DEPLIBS)
+frelon-libdeps	:= $(call lib-deps,$(frelon-deps))
+frelon-libfull	:= $(call lib-full,$(frelon-name),$(frelon-ver))
 
-$(call lib-full,$(frelon-name),$(frelon-ver)): $(frelon-objs)
-	$(call compile-lib,$(frelon-name),$(frelon-ver),\
-			   $(frelon-flags),$(frelon-deps),$@,$+)
+$(frelon-libfull): $(frelon-objs) $(frelon-libdeps)
+	$(call compile-lib,$(frelon-name),$(frelon-ver),$(frelon-deps),\
+			   $(frelon-flags),$(frelon-libs),$@,$(frelon-objs))
 	$(call create-links,$(frelon-name),$(frelon-ver))
 
-build_targets	+= $(call lib-full,$(frelon-name),$(frelon-ver))
+build_targets	+= $(frelon-libfull)
 
 endif
 
@@ -196,21 +192,24 @@ endif
 
 ifneq ($(COMPILE_MAXIPIX),0)
 
-MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L. -g
-MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia 
+MAXIPIX_LDFLAGS	:= -g
+MAXIPIX_DEPLIBS	:= $(ESPIA_DEPDEF)
 
 maxipix-name	:= maxipix
 maxipix-objs	:= ../camera/maxipix/src/Maxipix.o
 maxipix-ver	:= ../camera/maxipix/VERSION
-maxipix-flags	:= $(MAXIPIX_LDFLAGS)
-maxipix-deps	:= $(MAXIPIX_LDLIBS)
+maxipix-flags	:= $(LDFLAGS) $(MAXIPIX_LDFLAGS)
+maxipix-libs	:= $(LDLIBS)
+maxipix-deps	:= $(DEPLIBS) $(ESPIA_DEPLIBS) $(MAXIPIX_DEPLIBS)
+maxipix-libdeps	:= $(call lib-deps,$(maxipix-deps))
+maxipix-libfull	:= $(call lib-full,$(maxipix-name),$(maxipix-ver))
 
-$(call lib-full,$(maxipix-name),$(maxipix-ver)): $(maxipix-objs)
-	$(call compile-lib,$(maxipix-name),$(maxipix-ver),\
-			   $(maxipix-flags),$(maxipix-deps),$@,$+)
+$(maxipix-libfull): $(maxipix-objs) $(maxipix-libdeps)
+	$(call compile-lib,$(maxipix-name),$(maxipix-ver),$(maxipix-deps),\
+			   $(maxipix-flags),$(maxipix-libs),$@,$(maxipix-objs))
 	$(call create-links,$(maxipix-name),$(maxipix-ver))
 
-build_targets	+= $(call lib-full,$(maxipix-name),$(maxipix-ver))
+build_targets	+= $(maxipix-libfull)
 
 endif
 
@@ -227,25 +226,28 @@ endif
 PYLON_CONFIG    := $(PYLON_ROOT)/bin/pylon-config
 
 ifeq ("$(wildcard $(PYLON_CONFIG))", "")
-BASLER_LDFLAGS	:= $(LDFLAGS) -L. -L$(PYLON_ROOT)/lib -L$(PYLON_ROOT)/lib64
-BASLER_LDLIBS	:= $(LDLIBS) -lpylonbase
+BASLER_LDFLAGS	:= -L. -L$(PYLON_ROOT)/lib -L$(PYLON_ROOT)/lib64
+BASLER_LDLIBS	:= -lpylonbase -lpylongigesupp
 else
-BASLER_LDFLAGS  := $(LDFLAGS) $(shell $(PYLON_CONFIG) --libs-only-L)
-BASLER_LDLIBS   := $(LDLIBS) $(shell $(PYLON_CONFIG) --libs-only-l)
+BASLER_LDFLAGS  := $(shell $(PYLON_CONFIG) --libs-only-L)
+BASLER_LDLIBS   := $(shell $(PYLON_CONFIG) --libs-only-l)
 endif
 
 basler-name	:= basler
 basler-objs	:= ../camera/basler/src/Basler.o
 basler-ver	:= ../camera/basler/VERSION
-basler-flags	:= $(BASLER_LDFLAGS)
-basler-deps	:= $(BASLER_LDLIBS)
+basler-flags	:= $(LDFLAGS) $(BASLER_LDFLAGS)
+basler-libs	:= $(LDLIBS) $(BASLER_LDLIBS)
+basler-deps	:= $(DEPLIBS)
+basler-libdeps	:= $(call lib-deps,$(basler-deps))
+basler-libfull	:= $(call lib-full,$(basler-name),$(basler-ver))
 
-$(call lib-full,$(basler-name),$(basler-ver)): $(basler-objs)
-	$(call compile-lib,$(basler-name),$(basler-ver),\
-			   $(basler-flags),$(basler-deps),$@,$+)
+$(basler-libfull): $(basler-objs) $(basler-libdeps)
+	$(call compile-lib,$(basler-name),$(basler-ver),$(basler-deps),\
+			   $(basler-flags),$(basler-libs),$@,$(basler-objs))
 	$(call create-links,$(basler-name),$(basler-ver))
 
-build_targets	+= $(call lib-full,$(basler-name),$(basler-ver))
+build_targets	+= $(basler-libfull)
 
 endif
 
@@ -255,21 +257,23 @@ endif
 
 ifneq ($(COMPILE_UEYE),0)
 
-UEYE_LDFLAGS	:= $(LDFLAGS)
-UEYE_LDLIBS	:= $(LDLIBS) -lueye_api
+UEYE_LDLIBS	:= -lueye_api
 
 ueye-name	:= ueye
 ueye-objs	:= ../camera/ueye/src/Ueye.o
 ueye-ver	:= ../camera/ueye/VERSION
-ueye-flags	:= $(UEYE_LDFLAGS)
-ueye-deps	:= $(UEYE_LDLIBS)
+ueye-flags	:= $(LDFLAGS)
+ueye-libs	:= $(LDLIBS) $(UEYE_LDLIBS)
+ueye-deps	:= $(DEPLIBS)
+ueye-libdeps	:= $(call lib-deps,$(ueye-deps))
+ueye-libfull	:= $(call lib-full,$(ueye-name),$(ueye-ver))
 
-$(call lib-full,$(ueye-name),$(ueye-ver)): $(ueye-objs)
-	$(call compile-lib,$(ueye-name),$(ueye-ver),\
-			   $(ueye-flags),$(ueye-deps),$@,$+)
+$(ueye-libfull): $(ueye-objs) $(ueye-libdeps)
+	$(call compile-lib,$(ueye-name),$(ueye-ver),$(ueye-deps),\
+			   $(ueye-flags),$(ueye-libs),$@,$(ueye-objs))
 	$(call create-links,$(ueye-name),$(ueye-ver))
 
-build_targets	+= $(call lib-full,$(ueye-name),$(ueye-ver))
+build_targets	+= $(ueye-libfull)
 
 endif
 
@@ -292,14 +296,19 @@ prosilica-name	:= prosilica
 prosilica-objs	:= ../camera/prosilica/src/Prosilica.o
 prosilica-ver	:= ../camera/prosilica/VERSION
 prosilica-flags	:= $(LDFLAGS) $(PROSILICA_LDFLAGS)
-prosilica-deps	:= $(LDLIBS) $(PROSILICA_LDLIBS)
+prosilica-libs	:= $(LDLIBS) $(PROSILICA_LDLIBS)
+prosilica-deps	:= $(DEPLIBS)
+prosilica-libdeps := $(call lib-deps,$(prosilica-deps))
+prosilica-libfull := $(call lib-full,$(prosilica-name),$(prosilica-ver))
 
-$(call lib-full,$(prosilica-name),$(prosilica-ver)): $(prosilica-objs)
+$(prosilica-libfull): $(prosilica-objs) $(prosilica-libdeps)
 	$(call compile-lib,$(prosilica-name),$(prosilica-ver),\
-			   $(prosilica-flags),$(prosilica-deps),$@,$+)
+			   $(prosilica-deps),\
+			   $(prosilica-flags),$(prosilica-libs),$@,\
+			   $(prosilica-objs))
 	$(call create-links,$(prosilica-name),$(prosilica-ver))
 
-build_targets	+= $(call lib-full,$(prosilica-name),$(prosilica-ver))
+build_targets	+= $(prosilica-libfull)
 
 endif
 
@@ -310,20 +319,24 @@ endif
 
 ifneq ($(COMPILE_ROPERSCIENTIFIC),0)
 
-ROPERSCIENTIFIC_LDLIBS	:= $(LDLIBS) -lpvcam -lraw1394
+ROPERSCIENTIFIC_LDLIBS	:= -lpvcam -lraw1394
 
 ropersci-name	:= roperscientific
 ropersci-objs	:= ../camera/roperscientific/src/RoperScientific.o
 ropersci-ver	:= ../camera/roperscientific/VERSION
 ropersci-flags	:= $(LDFLAGS)
-ropersci-deps	:= $(ROPERSCIENTIFIC_LDLIBS)
+ropersci-libs	:= $(LDLIBS) $(ROPERSCIENTIFIC_LDLIBS)
+ropersci-deps	:= $(DEPLIBS)
+ropersci-libdeps := $(call lib-deps,$(ropersci-deps))
+ropersci-libfull := $(call lib-full,$(ropersci-name),$(ropersci-ver))
 
-$(call lib-full,$(ropersci-name),$(ropersci-ver)): $(ropersci-objs)
-	$(call compile-lib,$(ropersci-name),$(ropersci-ver),\
-			   $(ropersci-flags),$(ropersci-deps),$@,$+)
+$(ropersci-libfull): $(ropersci-objs) $(ropersci-libdeps)
+	$(call compile-lib,$(ropersci-name),$(ropersci-ver),$(ropersci-deps),\
+			   $(ropersci-flags),$(ropersci-libs),$@,\
+			   $(ropersci-objs))
 	$(call create-links,$(ropersci-name),$(ropersci-ver))
 
-build_targets	+= $(call lib-full,$(ropersci-name),$(ropersci-ver))
+build_targets	+= $(ropersci-libfull)
 
 endif
 
@@ -334,21 +347,24 @@ endif
 
 ifneq ($(COMPILE_ADSC),0)
 
-ADSC_LDFLAGS	:= $(LDFLAGS) -L. -L../camera/adsc/sdk/adsc_sources/lib/linux
-ADSC_LDLIBS	:= $(LDLIBS) -lauxlib -ldetcon_th
+ADSC_LDFLAGS	:= -L. -L../camera/adsc/sdk/adsc_sources/lib/linux
+ADSC_LDLIBS	:= -lauxlib -ldetcon_th
 
 adsc-name	:= adsc
 adsc-objs	:= ../camera/adsc/src/Adsc.o
 adsc-ver	:= ../camera/adsc/VERSION
-adsc-flags	:= $(ADSC_LDFLAGS)
-adsc-deps	:= $(ADSC_LDLIBS)
+adsc-flags	:= $(LDFLAGS) $(ADSC_LDFLAGS)
+adsc-libs	:= $(LDLIBS) $(ADSC_LDLIBS)
+adsc-deps	:= $(DEPLIBS)
+adsc-libdeps	:= $(call lib-deps,$(adsc-deps))
+adsc-libfull	:= $(call lib-full,$(adsc-name),$(adsc-ver))
 
-$(call lib-full,$(adsc-name),$(adsc-ver)): $(adsc-objs)
-	$(call compile-lib,$(adsc-name),$(adsc-ver),\
-			   $(adsc-flags),$(adsc-deps),$@,$+)
+$(adsc-libfull): $(adsc-objs) $(adsc-libdeps)
+	$(call compile-lib,$(adsc-name),$(adsc-ver),$(adsc-deps),\
+			   $(adsc-flags),$(adsc-libs),$@,$(adsc-objs))
 	$(call create-links,$(adsc-name),$(adsc-ver))
 
-build_targets	+= $(call lib-full,$(adsc-name),$(adsc-ver))
+build_targets	+= $(adsc-libfull)
 
 endif
 
@@ -357,21 +373,21 @@ endif
 ############################
 ifneq ($(COMPILE_MERLIN),0)
 
-MERLIN_LDFLAGS	:= $(LDFLAGS)
-MERLIN_LDLIBS	:= $(LDLIBS)
-
 merlin-name	:= merlin
 merlin-objs	:= ../camera/merlin/src/Merlin.o
 merlin-ver	:= ../camera/merlin/VERSION
-merlin-flags	:= $(MERLIN_LDFLAGS)
-merlin-deps	:= $(MERLIN_LDLIBS)
+merlin-flags	:= $(LDFLAGS)
+merlin-libs	:= $(LDLIBS)
+merlin-deps	:= $(DEPLIBS)
+merlin-libdeps	:= $(call lib-deps,$(merlin-deps))
+merlin-libfull	:= $(call lib-full,$(merlin-name),$(merlin-ver))
 
-$(call lib-full,$(merlin-name),$(merlin-ver)): $(merlin-objs)
-	$(call compile-lib,$(merlin-name),$(merlin-ver),\
-			   $(merlin-flags),$(merlin-deps),$@,$+)
+$(merlin-libfull): $(merlin-objs) $(merlin-libdeps)
+	$(call compile-lib,$(merlin-name),$(merlin-ver),$(merlin-deps),\
+			   $(merlin-flags),$(merlin-libs),$@,$(merlin-objs))
 	$(call create-links,$(merlin-name),$(merlin-ver))
 
-build_targets	+= $(call lib-full,$(merlin-name),$(merlin-ver))
+build_targets	+= $(merlin-libfull)
 
 endif
 
@@ -381,20 +397,23 @@ endif
 
 ifneq ($(COMPILE_MYTHEN),0)
 
-MYTHEN_LDLIBS	:= $(LDLIBS) -lSlsDetector
+MYTHEN_LDLIBS	:= -lSlsDetector
 
 mythen-name	:= mythen
 mythen-objs	:= ../camera/mythen/src/Mythen.o
 mythen-ver	:= ../camera/mythen/VERSION
 mythen-flags	:= $(LDFLAGS)
-mythen-deps	:= $(MYTHEN_LDLIBS)
+mythen-libs	:= $(LDLIBS) $(MYTHEN_LDLIBS)
+mythen-deps	:= $(DEPLIBS)
+mythen-libdeps	:= $(call lib-deps,$(mythen-deps))
+mythen-libfull	:= $(call lib-full,$(mythen-name),$(mythen-ver))
 
-$(call lib-full,$(mythen-name),$(mythen-ver)): $(mythen-objs)
-	$(call compile-lib,$(mythen-name),$(mythen-ver),\
-			   $(mythen-flags),$(mythen-deps),$@,$+)
+$(mythen-libfull): $(mythen-objs) $(mythen-libdeps)
+	$(call compile-lib,$(mythen-name),$(mythen-ver),$(mythen-deps),\
+			   $(mythen-flags),$(mythen-libs),$@,$(mythen-objs))
 	$(call create-links,$(mythen-name),$(mythen-ver))
 
-build_targets	+= $(call lib-full,$(mythen-name),$(mythen-ver))
+build_targets	+= $(mythen-libfull)
 
 endif
 
@@ -404,20 +423,21 @@ endif
 
 ifneq ($(COMPILE_MYTHEN3),0)
 
-MYTHEN3_LDLIBS	:= $(LDLIBS)
-
 mythen3-name	:= mythen3
 mythen3-objs	:= ../camera/mythen3/src/Mythen3.o
 mythen3-ver	:= ../camera/mythen3/VERSION
 mythen3-flags	:= $(LDFLAGS)
-mythen3-deps	:= $(MYTHEN3_LDLIBS)
+mythen3-libs	:= $(LDLIBS)
+mythen3-deps	:= $(DEPLIBS)
+mythen3-libdeps	:= $(call lib-deps,$(mythen3-deps))
+mythen3-libfull	:= $(call lib-full,$(mythen3-name),$(mythen3-ver))
 
-$(call lib-full,$(mythen3-name),$(mythen3-ver)): $(mythen3-objs)
-	$(call compile-lib,$(mythen3-name),$(mythen3-ver),\
-			   $(mythen3-flags),$(mythen3-deps),$@,$+)
+$(mythen3-libfull): $(mythen3-objs) $(mythen3-libdeps)
+	$(call compile-lib,$(mythen3-name),$(mythen3-ver),$(mythen3-deps),\
+			   $(mythen3-flags),$(mythen3-libs),$@,$(mythen3-objs))
 	$(call create-links,$(mythen3-name),$(mythen3-ver))
 
-build_targets	+= $(call lib-full,$(mythen3-name),$(mythen3-ver))
+build_targets	+= $(mythen3-libfull)
 
 endif
 
@@ -427,21 +447,24 @@ endif
 
 ifneq ($(COMPILE_ANDOR),0)
 
-ANDOR_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
-ANDOR_LDLIBS	:= $(LDLIBS) -landor
+ANDOR_LDFLAGS	:= -L. -L/usr/local/lib
+ANDOR_LDLIBS	:= -landor
 
 andor-name	:= andor
 andor-objs	:= ../camera/andor/src/Andor.o
 andor-ver	:= ../camera/andor/VERSION
-andor-flags	:= $(ANDOR_LDFLAGS)
-andor-deps	:= $(ANDOR_LDLIBS)
+andor-flags	:= $(LDFLAGS) $(ANDOR_LDFLAGS)
+andor-libs	:= $(LDLIBS) $(ANDOR_LDLIBS)
+andor-deps	:= $(DEPLIBS)
+andor-libdeps	:= $(call lib-deps,$(andor-deps))
+andor-libfull	:= $(call lib-full,$(andor-name),$(andor-ver))
 
-$(call lib-full,$(andor-name),$(andor-ver)): $(andor-objs)
-	$(call compile-lib,$(andor-name),$(andor-ver),\
-			   $(andor-flags),$(andor-deps),$@,$+)
+$(andor-libfull): $(andor-objs) $(andor-libdeps)
+	$(call compile-lib,$(andor-name),$(andor-ver),$(andor-deps),\
+			   $(andor-flags),$(andor-libs),$@,$(andor-objs))
 	$(call create-links,$(andor-name),$(andor-ver))
 
-build_targets	+= $(call lib-full,$(andor-name),$(andor-ver))
+build_targets	+= $(andor-libfull)
 
 endif
 
@@ -451,21 +474,24 @@ endif
 
 ifneq ($(COMPILE_ANDOR3),0)
 
-ANDOR3_LDFLAGS	:= $(LDFLAGS) -L. -L/usr/local/lib
-ANDOR3_LDLIBS	:= $(LDLIBS) -latcore -latutility
+ANDOR3_LDFLAGS	:= -L. -L/usr/local/lib
+ANDOR3_LDLIBS	:= -latcore -latutility
 
 andor3-name	:= andor3
 andor3-objs	:= ../camera/andor3/src/Andor3.o
 andor3-ver	:= ../camera/andor3/VERSION
-andor3-flags	:= $(ANDOR3_LDFLAGS)
-andor3-deps	:= $(ANDOR3_LDLIBS)
+andor3-flags	:= $(LDFLAGS) $(ANDOR3_LDFLAGS)
+andor3-libs	:= $(LDLIBS) $(ANDOR3_LDLIBS)
+andor3-deps	:= $(DEPLIBS)
+andor3-libdeps	:= $(call lib-deps,$(andor3-deps))
+andor3-libfull	:= $(call lib-full,$(andor3-name),$(andor3-ver))
 
-$(call lib-full,$(andor3-name),$(andor3-ver)): $(andor3-objs)
-	$(call compile-lib,$(andor3-name),$(andor3-ver),\
-			   $(andor3-flags),$(andor3-deps),$@,$+)
+$(andor3-libfull): $(andor3-objs) $(andor3-libdeps)
+	$(call compile-lib,$(andor3-name),$(andor3-ver),$(andor3-deps),\
+			   $(andor3-flags),$(andor3-libs),$@,$(andor3-objs))
 	$(call create-links,$(andor3-name),$(andor3-ver))
 
-build_targets	+= $(call lib-full,$(andor3-name),$(andor3-ver))
+build_targets	+= $(andor3-libfull)
 
 endif
 
@@ -475,21 +501,24 @@ endif
 
 ifneq ($(COMPILE_MARCCD),0)
 
-MARCCD_LDFLAGS	:= $(LDFLAGS) -L. -L../third-party/yat/src/.libs
-MARCCD_LDLIBS	:= $(LDLIBS) -lyat -lrt
+MARCCD_LDLIBS	:= -lrt
+MARCCD_DEPLIBS	:= $(third-party-dir)/yat/src/.libs,yat
 
 marccd-name	:= marccd
 marccd-objs	:= ../camera/marccd/src/Marccd.o
 marccd-ver	:= ../camera/marccd/VERSION
-marccd-flags	:= $(MARCCD_LDFLAGS)
-marccd-deps	:= $(MARCCD_LDLIBS)
+marccd-flags	:= $(LDFLAGS)
+marccd-libs	:= $(LDLIBS) $(MARCCD_LDLIBS)
+marccd-deps	:= $(DEPLIBS) $(MARCCD_DEPLIBS)
+marccd-libdeps	:= $(call lib-deps,$(marccd-deps))
+marccd-libfull	:= $(call lib-full,$(marccd-name),$(marccd-ver))
 
-$(call lib-full,$(marccd-name),$(marccd-ver)): $(marccd-objs)
-	$(call compile-lib,$(marccd-name),$(marccd-ver),\
-			   $(marccd-flags),$(marccd-deps),$@,$+)
+$(marccd-libfull): $(marccd-objs) $(marccd-libdeps)
+	$(call compile-lib,$(marccd-name),$(marccd-ver),$(marccd-deps),\
+			   $(marccd-flags),$(marccd-libs),$@,$(marccd-objs))
 	$(call create-links,$(marccd-name),$(marccd-ver))
 
-build_targets	+= $(call lib-full,$(marccd-name),$(marccd-ver))
+build_targets	+= $(marccd-libfull)
 
 endif
 
@@ -500,20 +529,21 @@ endif
 
 ifneq ($(COMPILE_XH),0)
 
-XH_LDLIBS	:= 
-
-xh-name	:= xh
-xh-objs	:= ../camera/xh/src/Xh.o
-xh-ver	:= ../camera/xh/VERSION
+xh-name		:= xh
+xh-objs		:= ../camera/xh/src/Xh.o
+xh-ver		:= ../camera/xh/VERSION
 xh-flags	:= $(LDFLAGS)
-xh-deps	:= $(XH_LDLIBS)
+xh-libs		:= $(LDLIBS)
+xh-deps		:= $(DEPLIBS)
+xh-libdeps	:= $(call lib-deps,$(xh-deps))
+xh-libfull	:= $(call lib-full,$(xh-name),$(xh-ver))
 
-$(call lib-full,$(xh-name),$(xh-ver)): $(xh-objs)
-	$(call compile-lib,$(xh-name),$(xh-ver),\
-			   $(xh-flags),$(xh-deps),$@,$+)
+$(xh-libfull): $(xh-objs) $(xh-libdeps)
+	$(call compile-lib,$(xh-name),$(xh-ver),$(xh-deps),\
+			   $(xh-flags),$(xh-libs),$@,$(xh-objs))
 	$(call create-links,$(xh-name),$(xh-ver))
 
-build_targets	+= $(call lib-full,$(xh-name),$(xh-ver))
+build_targets	+= $(xh-libfull)
 
 endif
 
@@ -534,15 +564,19 @@ XSPRESS3_LDLIBS	:= -lxspress3 -limg_mod
 xspress3-name	:= xspress3
 xspress3-objs	:= ../camera/xspress3/src/Xspress3.o
 xspress3-ver	:= ../camera/xspress3/VERSION
-xspress3-flags	:= $(XSPRESS3_LDFLAGS) $(LDFLAGS)
-xspress3-deps	:= $(XSPRESS3_LDLIBS) $(LDLIBS) 
+xspress3-flags	:= $(LDFLAGS) $(XSPRESS3_LDFLAGS)
+xspress3-libs	:= $(LDLIBS) $(XSPRESS3_LDLIBS)
+xspress3-deps	:= $(DEPLIBS)
+xspress3-libdeps := $(call lib-deps,$(xspress3-deps))
+xspress3-libfull := $(call lib-full,$(xspress3-name),$(xspress3-ver))
 
-$(call lib-full,$(xspress3-name),$(xspress3-ver)): $(xspress3-objs)
-	$(call compile-lib,$(xspress3-name),$(xspress3-ver),\
-			   $(xspress3-flags),$(xspress3-deps),$@,$+)
+$(xspress3-libfull): $(xspress3-objs) $(xspress3-libdeps)
+	$(call compile-lib,$(xspress3-name),$(xspress3-ver),$(xspress3-deps),\
+			   $(xspress3-flags),$(xspress3-libs),$@,\
+			   $(xspress3-objs))
 	$(call create-links,$(xspress3-name),$(xspress3-ver))
 
-build_targets	+= $(call lib-full,$(xspress3-name),$(xspress3-ver))
+build_targets	+= $(xspress3-libfull)
 
 endif
 
@@ -552,29 +586,21 @@ endif
 
 ifneq ($(COMPILE_ULTRA),0)
 
-PROCESSOR_TYPE := $(shell uname -m)
-#ifeq ($(PROCESSOR_TYPE),x86_64)
-#ULTRA_LDFLAGS	:= -L../camera/ultra/sdk/libs/linux.x86_64
-#ULTRA_LDFLAGS	:= 
-#else
-#ULTRA_LDFLAGS	:= -L../camera/ultra/sdk/libs/linux.x86_64
-ULTRA_LDFLAGS	:= 
-#endif
-#ULTRA_LDLIBS	:= -lultra -limg_mod
-ULTRA_LDLIBS	:= 
-
 ultra-name	:= ultra
 ultra-objs	:= ../camera/ultra/src/Ultra.o
 ultra-ver	:= ../camera/ultra/VERSION
-ultra-flags	:= $(ULTRA_LDFLAGS) $(LDFLAGS)
-ultra-deps	:= $(ULTRA_LDLIBS) $(LDLIBS) 
+ultra-flags	:= $(LDFLAGS)
+ultra-libs	:= $(LDLIBS)
+ultra-deps	:= $(DEPLIBS)
+ultra-libdeps	:= $(call lib-deps,$(ultra-deps))
+ultra-libfull	:= $(call lib-full,$(ultra-name),$(ultra-ver))
 
-$(call lib-full,$(ultra-name),$(ultra-ver)): $(ultra-objs)
-	$(call compile-lib,$(ultra-name),$(ultra-ver),\
-			   $(ultra-flags),$(ultra-deps),$@,$+)
+$(ultra-libfull): $(ultra-objs) $(ultra-libdeps)
+	$(call compile-lib,$(ultra-name),$(ultra-ver),$(ultra-deps),\
+			   $(ultra-flags),$(ultra-libs),$@,$(ultra-objs))
 	$(call create-links,$(ultra-name),$(ultra-ver))
 
-build_targets	+= $(call lib-full,$(ultra-name),$(ultra-ver))
+build_targets	+= $(ultra-libfull)
 
 endif
 
@@ -584,21 +610,25 @@ endif
 
 ifneq ($(COMPILE_XPAD),0)
 
-XPAD_LDLIBS	:= $(LDLIBS) -L/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib \
-		   -lxpci_lib -L../third-party/yat/lib/i386/static -lyat
+XPAD_LDFLAGS	:= -L/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib 
+XPAD_LDLIBS	:= -lxpci_lib
+XPAD_DEPLIBS	:= $(third-party-dir)/yat/lib/i386/static,yat
 
 xpad-name	:= xpad
 xpad-objs	:= ../camera/xpad/src/Xpad.o
 xpad-ver	:= ../camera/xpad/VERSION
-xpad-flags	:= $(LDFLAGS)
-xpad-deps	:= $(XPAD_LDLIBS)
+xpad-flags	:= $(LDFLAGS) $(XPAD_LDFLAGS)
+xpad-libs	:= $(LDLIBS) $(XPAD_LDLIBS)
+xpad-deps	:= $(DEPLIBS) $(XPAD_DEPLIBS)
+xpad-libdeps	:= $(call lib-deps,$(xpad-deps))
+xpad-libfull	:= $(call lib-full,$(xpad-name),$(xpad-ver))
 
-$(call lib-full,$(xpad-name),$(xpad-ver)): $(xpad-objs)
-	$(call compile-lib,$(xpad-name),$(xpad-ver),\
-			   $(xpad-flags),$(xpad-deps),$@,$+)
+$(xpad-libfull): $(xpad-objs) $(xpad-libdeps)
+	$(call compile-lib,$(xpad-name),$(xpad-ver),$(xpad-deps),\
+			   $(xpad-flags),$(xpad-libs),$@,$(xpad-objs))
 	$(call create-links,$(xpad-name),$(xpad-ver))
 
-build_targets	+= $(call lib-full,$(xpad-name),$(xpad-ver))
+build_targets	+= $(xpad-libfull)
 
 endif
 
@@ -608,20 +638,21 @@ endif
 
 ifneq ($(COMPILE_PILATUS),0)
 
-PILATUS_LDLIBS	:= 
-
 pilatus-name	:= pilatus
 pilatus-objs	:= ../camera/pilatus/src/Pilatus.o
 pilatus-ver	:= ../camera/pilatus/VERSION
 pilatus-flags	:= $(LDFLAGS)
-pilatus-deps	:= $(PILATUS_LDLIBS)
+pilatus-libs	:= $(LDLIBS)
+pilatus-deps	:= $(DEPLIBS)
+pilatus-libdeps	:= $(call lib-deps,$(pilatus-deps))
+pilatus-libfull := $(call lib-full,$(pilatus-name),$(pilatus-ver))
 
-$(call lib-full,$(pilatus-name),$(pilatus-ver)): $(pilatus-objs)
-	$(call compile-lib,$(pilatus-name),$(pilatus-ver),\
-			   $(pilatus-flags),$(pilatus-deps),$@,$+)
+$(pilatus-libfull): $(pilatus-objs) $(pilatus-libdeps)
+	$(call compile-lib,$(pilatus-name),$(pilatus-ver),$(pilatus-deps),\
+			   $(pilatus-flags),$(pilatus-libs),$@,$(pilatus-objs))
 	$(call create-links,$(pilatus-name),$(pilatus-ver))
 
-build_targets	+= $(call lib-full,$(pilatus-name),$(pilatus-ver))
+build_targets	+= $(pilatus-libfull)
 
 endif
 
@@ -630,21 +661,26 @@ endif
 ############################
 ifneq ($(COMPILE_POINTGREY),0)
 
-POINTGREY_LDFLAGS	:= $(LDFLAGS) -L../camera/pointgrey/sdk/lib
-POINTGREY_LDLIBS	:= $(LDLIBS) -lflycapture
+POINTGREY_LDFLAGS := -L../camera/pointgrey/sdk/lib
+POINTGREY_LDLIBS  := -lflycapture
 
 pointgrey-name	:= pointgrey
 pointgrey-objs	:= ../camera/pointgrey/src/PointGrey.o
 pointgrey-ver	:= ../camera/pointgrey/VERSION
-pointgrey-flags	:= $(POINTGREY_LDFLAGS)
-pointgrey-deps	:= $(POINTGREY_LDLIBS)
+pointgrey-flags	:= $(LDFLAGS) $(POINTGREY_LDFLAGS)
+pointgrey-libs	:= $(LDLIBS) $(POINTGREY_LDLIBS)
+pointgrey-deps	:= $(DEPLIBS)
+pointgrey-libdeps := $(call lib-deps,$(pointgrey-deps))
+pointgrey-libfull := $(call lib-full,$(pointgrey-name),$(pointgrey-ver))
 
-$(call lib-full,$(pointgrey-name),$(pointgrey-ver)): $(pointgrey-objs)
+$(pointgrey-libfull): $(pointgrey-objs) $(pointgrey-libdeps)
 	$(call compile-lib,$(pointgrey-name),$(pointgrey-ver),\
-			   $(pointgrey-flags),$(pointgrey-deps),$@,$+)
+			   $(pointgrey-deps),\
+			   $(pointgrey-flags),$(pointgrey-libs),$@,\
+			   $(pointgrey-objs))
 	$(call create-links,$(pointgrey-name),$(pointgrey-ver))
 
-build_targets	+= $(call lib-full,$(pointgrey-name),$(pointgrey-ver))
+build_targets	+= $(pointgrey-libfull)
 
 endif
 
@@ -653,21 +689,21 @@ endif
 ############################
 ifneq ($(COMPILE_IMXPAD),0)
 
-IMXPAD_LDFLAGS	:= $(LDFLAGS)
-IMXPAD_LDLIBS	:= $(LDLIBS)
-
 imxpad-name	:= imxpad
 imxpad-objs	:= ../camera/imxpad/src/imXpad.o
 imxpad-ver	:= ../camera/imxpad/VERSION
-imxpad-flags	:= $(IMXPAD_LDFLAGS)
-imxpad-deps	:= $(IMXPAD_LDLIBS)
+imxpad-flags	:= $(LDFLAGS)
+imxpad-libs	:= $(LDLIBS)
+imxpad-deps	:= $(DEPLIBS)
+imxpad-libdeps	:= $(call lib-deps,$(imxpad-deps))
+imxpad-libfull	:= $(call lib-full,$(imxpad-name),$(imxpad-ver))
 
-$(call lib-full,$(imxpad-name),$(imxpad-ver)): $(imxpad-objs)
-	$(call compile-lib,$(imxpad-name),$(imxpad-ver),\
-			   $(imxpad-flags),$(imxpad-deps),$@,$+)
+$(imxpad-libfull): $(imxpad-objs) $(imxpad-libdeps)
+	$(call compile-lib,$(imxpad-name),$(imxpad-ver),$(imxpad-deps),\
+			   $(imxpad-flags),$(imxpad-libs),$@,$(imxpad-objs))
 	$(call create-links,$(imxpad-name),$(imxpad-ver))
 
-build_targets	+= $(call lib-full,$(imxpad-name),$(imxpad-ver))
+build_targets	+= $(imxpad-libfull)
 
 endif
 
@@ -676,44 +712,52 @@ endif
 ############################
 ifneq ($(COMPILE_RAYONIXHS),0)
 
-#RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L../camera/rayonixhs/sdk/lib64
-RAYONIXHS_LDFLAGS	:= $(LDFLAGS) -L/opt/rayonix/lib64
-RAYONIXHS_LDLIBS	:= $(LDLIBS) -lcraydl
+RAYONIXHS_LDFLAGS	:= -L/opt/rayonix/lib64
+RAYONIXHS_LDLIBS	:= -lcraydl
 
 rayonixhs-name	:= rayonixhs
 rayonixhs-objs	:= ../camera/rayonixhs/src/RayonixHs.o
 rayonixhs-ver	:= ../camera/rayonixhs/VERSION
-rayonixhs-flags	:= $(RAYONIXHS_LDFLAGS)
-rayonixhs-deps	:= $(RAYONIXHS_LDLIBS)
+rayonixhs-flags	:= $(LDFLAGS) $(RAYONIXHS_LDFLAGS)
+rayonixhs-libs	:= $(LDLIBS) $(RAYONIXHS_LDLIBS)
+rayonixhs-deps	:= $(DEPLIBS)
+rayonixhs-libdeps := $(call lib-deps,$(rayonixhs-deps))
+rayonixhs-libfull := $(call lib-full,$(rayonixhs-name),$(rayonixhs-ver))
 
-$(call lib-full,$(rayonixhs-name),$(rayonixhs-ver)): $(rayonixhs-objs)
+$(rayonixhs-libfull): $(rayonixhs-objs) $(rayonixhs-libdeps)
 	$(call compile-lib,$(rayonixhs-name),$(rayonixhs-ver),\
-			   $(rayonixhs-flags),$(rayonixhs-deps),$@,$+)
+			   $(rayonixhs-deps),\
+			   $(rayonixhs-flags),$(rayonixhs-libs),$@,\
+			   $(rayonixhs-objs))
 	$(call create-links,$(rayonixhs-name),$(rayonixhs-ver))
 
-build_targets	+= $(call lib-full,$(rayonixhs-name),$(rayonixhs-ver))
+build_targets	+= $(rayonixhs-libfull)
 
 endif
+
 ############################
 # LIMA - AVIEX
 ############################
 ifneq ($(COMPILE_AVIEX),0)
 
-AVIEX_LDFLAGS	:= $(LDFLAGS) -L../camera/aviex/sdk/linux/lib
-AVIEX_LDLIBS	:= $(LDLIBS) -lMx
+AVIEX_LDFLAGS	:= -L../camera/aviex/sdk/linux/lib
+AVIEX_LDLIBS	:= -lMx
 
 aviex-name	:= aviex
 aviex-objs	:= ../camera/aviex/src/Aviex.o
 aviex-ver	:= ../camera/aviex/VERSION
-aviex-flags	:= $(AVIEX_LDFLAGS)
-aviex-deps	:= $(AVIEX_LDLIBS)
+aviex-flags	:= $(LDFLAGS) $(AVIEX_LDFLAGS)
+aviex-libs	:= $(LDLIBS) $(AVIEX_LDLIBS)
+aviex-deps	:= $(DEPLIBS)
+aviex-libdeps	:= $(call lib-deps,$(aviex-deps))
+aviex-libfull	:= $(call lib-full,$(aviex-name),$(aviex-ver))
 
-$(call lib-full,$(aviex-name),$(aviex-ver)): $(aviex-objs)
-	$(call compile-lib,$(aviex-name),$(aviex-ver),\
-			   $(aviex-flags),$(aviex-deps),$@,$+)
+$(aviex-libfull): $(aviex-objs) $(aviex-libdeps)
+	$(call compile-lib,$(aviex-name),$(aviex-ver),$(aviex-deps),\
+			   $(aviex-flags),$(aviex-libs),$@,$(aviex-objs))
 	$(call create-links,$(aviex-name),$(aviex-ver))
 
-build_targets	+= $(call lib-full,$(aviex-name),$(aviex-ver))
+build_targets	+= $(aviex-libfull)
 
 endif
 
@@ -722,21 +766,22 @@ endif
 ############################
 ifneq ($(COMPILE_META),0)
 
-META_LDFLAGS	:= $(LDFLAGS)
-META_LDLIBS	:= $(LDLIBS)
-
 meta-name	:= meta
 meta-objs	:= ../camera/common/meta/src/Meta.o
 meta-ver	:= ../camera/common/meta/VERSION
-meta-flags	:= $(META_LDFLAGS)
-meta-deps	:= $(META_LDLIBS)
+meta-flags	:= $(LDFLAGS)
+meta-libs	:= $(LDLIBS)
+meta-deps	:= $(DEPLIBS)
+meta-libdeps	:= $(call lib-deps,$(meta-deps))
+meta-libfull	:= $(call lib-full,$(meta-name),$(meta-ver))
 
-$(call lib-full,$(meta-name),$(meta-ver)): $(meta-objs)
-	$(call compile-lib,$(meta-name),$(meta-ver),\
-			   $(meta-flags),$(meta-deps),$@,$+)
+$(meta-libfull): $(meta-objs) $(meta-libdeps)
+	$(call compile-lib,$(meta-name),$(meta-ver),$(meta-deps),\
+			   $(meta-flags),$(meta-libs),$@,$(meta-objs))
 	$(call create-links,$(meta-name),$(meta-ver))
 
-build_targets	+= $(call lib-full,$(meta-name),$(meta-ver))
+build_targets	+= $(meta-libfull)
+
 endif
 
 ############################
@@ -744,21 +789,24 @@ endif
 ############################
 ifneq ($(COMPILE_V4l2),0)
 
-V4l2_LDFLAGS	:= $(LDFLAGS)
-V4l2_LDLIBS	:= $(LDLIBS) -lv4l2
+V4l2_LDLIBS	:= -lv4l2
 
 v4l2-name	:= v4l2
 v4l2-objs	:= ../camera/v4l2/src/V4L2.o
 v4l2-ver	:= ../camera/v4l2/VERSION
-v4l2-flags	:= $(V4l2_LDFLAGS)
-v4l2-deps	:= $(V4l2_LDLIBS)
+v4l2-flags	:= $(LDFLAGS)
+v4l2-libs	:= $(LDLIBS) $(V4l2_LDLIBS)
+v4l2-deps	:= $(DEPLIBS)
+v4l2-libdeps	:= $(call lib-deps,$(v4l2-deps))
+v4l2-libfull	:= $(call lib-full,$(v4l2-name),$(v4l2-ver))
 
-$(call lib-full,$(v4l2-name),$(v4l2-ver)): $(v4l2-objs)
-	$(call compile-lib,$(v4l2-name),$(v4l2-ver),\
-			   $(v4l2-flags),$(v4l2-deps),$@,$+)
+$(v4l2-libfull): $(v4l2-objs) $(v4l2-libdeps)
+	$(call compile-lib,$(v4l2-name),$(v4l2-ver),$(v4l2-deps),\
+			   $(v4l2-flags),$(v4l2-libs),$@,$(v4l2-objs))
 	$(call create-links,$(v4l2-name),$(v4l2-ver))
 
-build_targets	+= $(call lib-full,$(v4l2-name),$(v4l2-ver))
+build_targets	+= $(v4l2-libfull)
+
 endif
 
 ############################
@@ -766,21 +814,23 @@ endif
 ############################
 ifneq ($(COMPILE_EIGER),0)
 
-EIGER_LDFLAGS	:= $(LDFLAGS) 
-EIGER_LDLIBS	:= $(LDLIBS) -ljsoncpp -lcurl -llz4 -lzmq
+EIGER_LDLIBS	:= -ljsoncpp -lcurl -llz4 -lzmq
 
 eiger-name	:= eiger
 eiger-objs	:= ../camera/eiger/src/Eiger.o
 eiger-ver	:= ../camera/eiger/VERSION
-eiger-flags	:= $(EIGER_LDFLAGS)
-eiger-deps	:= $(EIGER_LDLIBS)
+eiger-flags	:= $(LDFLAGS)
+eiger-libs	:= $(LDLIBS) $(EIGER_LDLIBS)
+eiger-deps	:= $(DEPLIBS)
+eiger-libdeps	:= $(call lib-deps,$(eiger-deps))
+eiger-libfull	:= $(call lib-full,$(eiger-name),$(eiger-ver))
 
-$(call lib-full,$(eiger-name),$(eiger-ver)): $(eiger-objs)
-	$(call compile-lib,$(eiger-name),$(eiger-ver),\
-			   $(eiger-flags),$(eiger-deps),$@,$+)
+$(eiger-libfull): $(eiger-objs) $(eiger-libdeps)
+	$(call compile-lib,$(eiger-name),$(eiger-ver),$(eiger-deps),\
+			   $(eiger-flags),$(eiger-libs),$@,$(eiger-objs))
 	$(call create-links,$(eiger-name),$(eiger-ver))
 
-build_targets	+= $(call lib-full,$(eiger-name),$(eiger-ver))
+build_targets	+= $(eiger-libfull)
 
 endif
 
@@ -789,21 +839,23 @@ endif
 ############################
 ifneq ($(COMPILE_DEXELA),0)
 
-DEXELA_LDFLAGS	:= $(LDFLAGS) 
-DEXELA_LDLIBS	:= $(LDLIBS) -ldexela
+DEXELA_LDLIBS	:= -ldexela
 
 dexela-name	:= dexela
 dexela-objs	:= ../camera/dexela/src/Dexela.o
 dexela-ver	:= ../camera/dexela/VERSION
-dexela-flags	:= $(DEXELA_LDFLAGS)
-dexela-deps	:= $(DEXELA_LDLIBS)
+dexela-flags	:= $(LDFLAGS)
+dexela-libs	:= $(LDLIBS) $(DEXELA_LDLIBS)
+dexela-deps	:= $(DEPLIBS)
+dexela-libdeps	:= $(call lib-deps,$(dexela-deps))
+dexela-libfull	:= $(call lib-full,$(dexela-name),$(dexela-ver))
 
-$(call lib-full,$(dexela-name),$(dexela-ver)): $(dexela-objs)
-	$(call compile-lib,$(dexela-name),$(dexela-ver),\
-			   $(dexela-flags),$(dexela-deps),$@,$+)
+$(dexela-libfull): $(dexela-objs) $(dexela-libdeps)
+	$(call compile-lib,$(dexela-name),$(dexela-ver),$(dexela-deps),\
+			   $(dexela-flags),$(dexela-libs),$@,$(dexela-objs))
 	$(call create-links,$(dexela-name),$(dexela-ver))
 
-build_targets	+= $(call lib-full,$(dexela-name),$(dexela-ver))
+build_targets	+= $(dexela-libfull)
 
 endif
 
@@ -814,21 +866,21 @@ endif
 ############################
 ifneq ($(COMPILE_PIXIRAD),0)
 
-PIXIRAD_LDFLAGS  := $(LDFLAGS)
-PIXIRAD_LDLIBS   := $(LDLIBS)
-
 pixirad-name     := pixirad
 pixirad-objs     := ../camera/pixirad/src/Pixirad.o
 pixirad-ver      := ../camera/pixirad/VERSION
-pixirad-flags    := $(PIXIRAD_LDFLAGS)
-pixirad-deps     := $(PIXIRAD_LDLIBS)
+pixirad-flags    := $(LDFLAGS)
+pixirad-libs     := $(LDLIBS)
+pixirad-deps     := $(DEPLIBS)
+pixirad-libdeps  := $(call lib-deps,$(pixirad-deps))
+pixirad-libfull  := $(call lib-full,$(pixirad-name),$(pixirad-ver))
 
-$(call lib-full,$(pixirad-name),$(pixirad-ver)): $(pixirad-objs)
-	$(call compile-lib,$(pixirad-name),$(pixirad-ver),\
-	$(pixirad-flags),$(pixirad-deps),$@,$+)
+$(pixirad-libfull): $(pixirad-objs) $(pixirad-libdeps)
+	$(call compile-lib,$(pixirad-name),$(pixirad-ver),$(pixirad-deps),\
+			   $(pixirad-flags),$(pixirad-libs),$@,$(pixirad-objs))
 	$(call create-links,$(pixirad-name),$(pixirad-ver))
 
-build_targets   += $(call lib-full,$(pixirad-name),$(pixirad-ver))
+build_targets   += $(pixirad-libfull)
 
 endif
 
@@ -838,15 +890,14 @@ endif
 
 ifneq ($(COMPILE_HEXITEC),0)
 
-HEXITEC_LDFLAGS	:= $(LDFLAGS) -L/opt/pleora/ebus_sdk/CentOS-RHEL-7-x86_64/lib
-HEXITEC_LDLIBS	:= $(LDLIBS) -lPvDevice -lPvStream -lPvBuffer -lPvGenICam -lPvBase -lPvSerial -lEbUtilsLib
-
+HEXITEC_LDFLAGS	:= -L/opt/pleora/ebus_sdk/CentOS-RHEL-7-x86_64/lib
+HEXITEC_LDLIBS	:= -lPvDevice -lPvStream -lPvBuffer -lPvGenICam -lPvBase -lPvSerial -lEbUtilsLib
 
 hexitec-name	:= hexitec
 hexitec-objs	:= ../camera/hexitec/src/Hexitec.o
 hexitec-ver		:= ../camera/hexitec/VERSION
-hexitec-flags	:= $(HEXITEC_LDFLAGS)
-hexitec-deps	:= $(HEXITEC_LDLIBS)
+hexitec-flags	:= $(LDFLAGS) $(HEXITEC_LDFLAGS)
+hexitec-deps	:= $(LDLIBS) $(HEXITEC_LDLIBS)
 
 $(call lib-full,$(hexitec-name),$(hexitec-ver)): $(hexitec-objs)
 	$(call compile-lib,$(hexitec-name),$(hexitec-ver),$(hexitec-flags),$(hexitec-deps),$@,$+)
@@ -854,6 +905,35 @@ $(call lib-full,$(hexitec-name),$(hexitec-ver)): $(hexitec-objs)
 
 build_targets	+= $(call lib-full,$(hexitec-name),$(hexitec-ver))
 endif
+
+###########################
+# LIMA - SLSDETECTOR
+############################
+ifneq ($(COMPILE_SLSDETECTOR),0)
+
+SLSDETECTOR_LDFLAGS  := -L$(SLS_DETECTORS_DIR)/bin
+SLSDETECTOR_LDLIBS   := -lSlsDetector -lSlsReceiver
+
+slsdetector-name     := slsdetector
+slsdetector-objs     := ../camera/slsdetector/src/SlsDetector.o
+slsdetector-ver      := ../camera/slsdetector/VERSION
+slsdetector-flags    := $(LDFLAGS) $(SLSDETECTOR_LDFLAGS)
+slsdetector-libs     := $(LDLIBS) $(SLSDETECTOR_LDLIBS)
+slsdetector-deps     := $(DEPLIBS)
+slsdetector-libdeps  := $(call lib-deps,$(slsdetector-deps))
+slsdetector-libfull  := $(call lib-full,$(slsdetector-name),$(slsdetector-ver))
+
+$(slsdetector-libfull): $(slsdetector-objs) $(slsdetector-libdeps)
+	$(call compile-lib,$(slsdetector-name),$(slsdetector-ver),\
+			   $(slsdetector-deps),\
+			   $(slsdetector-flags),$(slsdetector-libs),$@,\
+			   $(slsdetector-objs))
+	$(call create-links,$(slsdetector-name),$(slsdetector-ver))
+
+build_targets   += $(slsdetector-libfull)
+
+endif
+
 
 src:		$(build_targets)
 

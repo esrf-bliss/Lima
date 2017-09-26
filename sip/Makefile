@@ -153,6 +153,10 @@ ifneq ($(COMPILE_HEXITEC), 0)
 sip-modules += hexitec
 endif
 
+ifneq ($(COMPILE_SLSDETECTOR), 0)
+sip-modules += slsdetector
+endif
+
 
 all:	src
 

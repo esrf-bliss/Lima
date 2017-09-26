@@ -56,13 +56,13 @@ bool HwFileEventCallbackHelper::nextFileExpected(int file_number,
       bool continueAcq = m_cbk.newFrameReady(aNewFrameInfo);
       if(continueFlag) continueFlag = continueAcq;
       DatasPendingType::iterator i = m_pending_frame_infos.begin();
-      while(i != m_pending_frame_infos.end() && continueFlag)
+      while(i != m_pending_frame_infos.end())
 	{
 	  ++file_number;
 	  if(i->first == file_number)
 	    {
 	      next_file_number_expected = file_number + 1;
-	      continueFlag = m_cbk.newFrameReady(i->second);
+	      continueFlag = m_cbk.newFrameReady(i->second) && continueFlag;
 	      m_pending_frame_infos.erase(i);
 	    }
 	  else

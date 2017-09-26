@@ -19,6 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+
+.NOTPARALLEL:
+
 sub-dirs = common
 
 include ../config.inc
@@ -246,6 +249,14 @@ endif
 
 ifneq ($(COMPILE_HEXITEC),0)
 sub-dirs += hexitec
+endif
+
+ifndef COMPILE_SLSDETECTOR
+COMPILE_SLSDETECTOR = 0
+endif
+
+ifneq ($(COMPILE_SLSDETECTOR),0)
+sub-dirs += slsdetector
 endif
 
 include ../global.inc

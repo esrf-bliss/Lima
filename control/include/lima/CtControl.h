@@ -149,6 +149,7 @@ namespace lima
     void prepareAcq();
     void startAcq();
     void stopAcq();
+    void abortAcq();
 
     void abortAcq(AcqStatus acq_status, ErrorCode error_code, Data &data,
 		  bool ctrl_mutex_locked=false);
@@ -245,6 +246,7 @@ namespace lima
 
     class ImageStatusThread;
     typedef std::list<ImageStatusThread*>  ImageStatusThreadList;
+    typedef std::set<Data,ltData> SortedDataType;
 
     HwInterface		*m_hw;
     mutable Cond	m_cond;
@@ -272,8 +274,9 @@ namespace lima
     bool		m_op_ext_link_task_active;
     bool		m_op_ext_sink_task_active;
 
-    std::set<Data,ltData> m_base_images_ready;
-    std::set<Data,ltData> m_images_ready;
+    SortedDataType      m_base_images_ready;
+    SortedDataType      m_images_ready;
+    SortedDataType	m_images_saved;
 
     std::map<int,Data>    m_images_buffer;
     int			  m_images_buffer_size;
@@ -298,6 +301,8 @@ namespace lima
 		   bool baseImage);
     void readOneImageBuffer(Data&, long frameNumber, long readBlockLen,
 			    bool baseImage);
+    static inline long _increment_image_cnt(Data& aData,
+					    long image_cnt,SortedDataType& cnt);
   };
 
   inline std::ostream& operator<<(std::ostream &os,

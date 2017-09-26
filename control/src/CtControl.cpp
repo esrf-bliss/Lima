@@ -46,6 +46,8 @@
 
 using namespace lima;
 
+static const int ABORT_TASK_PRIORITY = 10;
+
 class CtControl::_LastBaseImageReadyCallback : public TaskEventCallback
 {
 public:
@@ -313,6 +315,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_op_ext_sink_task_active(false),
   m_base_images_ready(CtControl::ltData()),
   m_images_ready(CtControl::ltData()),
+  m_images_saved(CtControl::ltData()),
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
@@ -375,6 +378,7 @@ CtControl::CtControl(HwInterface *hw) :
       LinkTask* rec_task = reconstruction_obj->getReconstructionTask();
       setReconstructionTask(rec_task);
     }
+  m_op_int->setFirstProcessingInPlace(hw->firstProcessingInPlace());
 }
 
 CtControl::~CtControl()
@@ -457,8 +461,18 @@ void CtControl::prepareAcq()
   if(aStatus.AcquisitionStatus == AcqConfig)
     THROW_CTL_ERROR(Error) << "Configuration not finished";
 
+  //Abort previous acquisition tasks
+  PoolThreadMgr::get().abort();
+  m_ct_saving->_resetReadyFlag();
+
   resetStatus(false);
   
+  //Clear all re-ordered image counters
+  m_images_ready.clear();
+  m_base_images_ready.clear();
+  m_images_buffer.clear();
+  m_images_saved.clear();
+
   //Clear common header
   m_ct_saving->resetInternalCommonHeader();
 
@@ -469,7 +483,7 @@ void CtControl::prepareAcq()
   m_ct_buffer->setup(this);
 
   DEB_TRACE() << "Apply Acquisition Parameters";
-  m_ct_acq->apply(m_policy);
+  m_ct_acq->apply(m_policy, this);
 
   DEB_TRACE() << "Apply Shutter Parameters";
   m_ct_shutter->apply();
@@ -531,9 +545,6 @@ void CtControl::prepareAcq()
     m_ct_sps_image->prepare(dim);
   }
 #endif
-  m_images_ready.clear();
-  m_base_images_ready.clear();
-  m_images_buffer.clear();
   m_ct_video->_prepareAcq();
   m_ct_event->_prepareAcq();
 
@@ -597,6 +608,21 @@ void CtControl::stopAcq()
   _calcAcqStatus();
   m_ct_saving->_stop(*this);
 }
+/** @brief stop an acquisition and purge all pending tasks.
+ */
+void CtControl::abortAcq()
+{
+  DEB_MEMBER_FUNCT();
+
+  stopAcq();
+  PoolThreadMgr::get().abort();
+  
+  m_ct_saving->_resetReadyFlag();
+
+  AutoMutex aLock(m_cond.mutex());
+  m_status.AcquisitionStatus = AcqReady;
+}
+
 void CtControl::getStatus(Status& status) const
 {
   DEB_MEMBER_FUNCT();
@@ -644,7 +670,7 @@ void CtControl::abortAcq(AcqStatus acq_status, ErrorCode error_code,
   abort_task->setEventCallback(abort_cb);
   abort_cb->unref();
 
-  TaskMgr *mgr = new TaskMgr();
+  TaskMgr *mgr = new TaskMgr(ABORT_TASK_PRIORITY);
   mgr->setInputData(data);
   mgr->addSinkTask(0, abort_task);
   abort_task->unref();
@@ -852,6 +878,18 @@ void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber,
 	m_ct_saving->_ReadImage(aReturnData,frameNumber);
       } else {
 	m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
+	// if the processing is not in place,
+	// the processed buffer is lost.
+	// need to re-do the internal processing
+	if(!m_hw->firstProcessingInPlace())
+	  {
+	    TaskMgr mgr;
+	    mgr.setInputData(aReturnData);
+	    int stage = 0;
+	    m_op_int->addTo(mgr,stage,false);
+	    if(stage)
+	      aReturnData = mgr.syncProcess();
+	  }
 	FrameDim imgDim;
 	m_ct_image->getImageDim(imgDim);
 	aReturnData.dimensions[0] = imgDim.getSize().getWidth();
@@ -983,28 +1021,11 @@ void CtControl::newBaseImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
-  long expectedImageReady = m_status.ImageCounters.LastBaseImageReady + 1;
-  if(aData.frameNumber == expectedImageReady)
-    {
-      while(!m_base_images_ready.empty())
-	{
-	  std::set<Data,ltData>::iterator i = m_base_images_ready.begin();
-	  long nextExpectedImageReady = expectedImageReady + 1;
-	  if(nextExpectedImageReady == i->frameNumber)
-	    {
-	      expectedImageReady = nextExpectedImageReady;
-	      m_base_images_ready.erase(i);
-	    }
-	  else
-	    break;
-	}
-      ImageStatus &imgStatus = m_status.ImageCounters;
-      imgStatus.LastBaseImageReady = expectedImageReady;
-      if(!m_op_ext_link_task_active)
-	imgStatus.LastImageReady = expectedImageReady;
-    }
-  else
-    m_base_images_ready.insert(aData);
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  imgStatus.LastBaseImageReady = _increment_image_cnt(aData,imgStatus.LastBaseImageReady,
+						      m_base_images_ready);
+  if(!m_op_ext_link_task_active)
+    imgStatus.LastImageReady = imgStatus.LastBaseImageReady;
 
   aLock.unlock();
 
@@ -1033,25 +1054,10 @@ void CtControl::newImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
-  long expectedImageReady = m_status.ImageCounters.LastImageReady + 1;
-  if(aData.frameNumber == expectedImageReady)
-    {
-      while(!m_images_ready.empty())
-	{
-	  std::set<Data,ltData>::iterator i = m_images_ready.begin();
-	  long nextExpectedImageReady = expectedImageReady + 1;
-	  if(nextExpectedImageReady == i->frameNumber)
-	    {
-	      expectedImageReady = nextExpectedImageReady;
-	      m_images_ready.erase(i);
-	    }
-	  else
-	    break;
-	}
-      m_status.ImageCounters.LastImageReady = expectedImageReady;
-    }
-  else
-    m_images_ready.insert(aData);
+
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  imgStatus.LastImageReady = _increment_image_cnt(aData,imgStatus.LastImageReady,
+						  m_images_ready);
 
   m_images_buffer.insert(std::pair<int,Data>(aData.frameNumber,aData));
   //pop out the oldest Data
@@ -1081,6 +1087,29 @@ void CtControl::newCounterReady(Data&)
   aLock.unlock();
   _calcAcqStatus();
 }
+/** function to re-order image counters
+ */
+
+long CtControl::_increment_image_cnt(Data& aData,
+				     long image_cnt,SortedDataType& cnt)
+{
+  long expectedImageCnt = image_cnt + 1;
+  if(aData.frameNumber != expectedImageCnt)
+    {
+      cnt.insert(aData);
+      return image_cnt;
+    }
+
+  while(!cnt.empty())
+    {
+      SortedDataType::iterator i = cnt.begin();
+      if(i->frameNumber != expectedImageCnt + 1)
+	break;
+      expectedImageCnt = i->frameNumber;
+      cnt.erase(i);
+    }
+  return expectedImageCnt;
+}
 
 /** @brief inc the save counter.
  *  @warning due to sequential saving, no check with image number!!!
@@ -1092,7 +1121,10 @@ void CtControl::newImageSaved(Data &data)
   CtSaving::ManagedMode savingManagedMode;
   m_ct_saving->getManagedMode(savingManagedMode);
   AutoMutex aLock(m_cond.mutex());
-  m_status.ImageCounters.LastImageSaved = data.frameNumber;
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  imgStatus.LastImageSaved = _increment_image_cnt(data,imgStatus.LastImageSaved,
+						  m_images_saved);
+
   if(savingManagedMode == CtSaving::Hardware)
     {
       m_status.ImageCounters.LastImageAcquired = m_status.ImageCounters.LastImageSaved;

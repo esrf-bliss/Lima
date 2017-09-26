@@ -28,7 +28,8 @@ using namespace lima;
 #include "processlib/Rotation.h"
 
 SoftOpInternalMgr::SoftOpInternalMgr() :
-  m_reconstruction_task(NULL),m_end_callback(NULL)
+  m_reconstruction_task(NULL),m_end_callback(NULL),
+  m_first_processing_in_place(true)
 {
 }
 
@@ -99,8 +100,10 @@ bool SoftOpInternalMgr::hasReconstructionTask()
 }
 
 void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
-			      int &aLastStage) const
+			      int &aLastStage,
+			      bool registerCallback) const
 {
+  bool processingInPlace = m_first_processing_in_place;
   aLastStage = 0;
   if(m_reconstruction_task)
     {
@@ -112,6 +115,8 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
   if(m_bin.getX() > 1 || m_bin.getY() > 1)
     {
       aBinTaskPt = new Tasks::Binning();
+      aBinTaskPt->setProcessingInPlace(processingInPlace);
+      processingInPlace = true;
       if(m_rotation == Rotation_90 || m_rotation == Rotation_270)
 	{
 	  aBinTaskPt->mXFactor = m_bin.getY();
@@ -139,6 +144,9 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
 	aMode = Tasks::Flip::FLIP_Y;
       
       aFlipTaskPt = new Tasks::Flip();
+      aFlipTaskPt->setProcessingInPlace(processingInPlace);
+      processingInPlace = true;
+
       aFlipTaskPt->setFlip(aMode);
       aTaskMgr.setLinkTask(aLastStage,aFlipTaskPt);
       aFlipTaskPt->unref();
@@ -156,6 +164,9 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
 	default: aMode = Tasks::Rotation::R_90;break;
 	}
       aRotationTaskPt = new Tasks::Rotation();
+      aRotationTaskPt->setProcessingInPlace(processingInPlace);
+      processingInPlace = true;
+
       aRotationTaskPt->setType(aMode);
       aTaskMgr.setLinkTask(aLastStage,aRotationTaskPt);
       aRotationTaskPt->unref();
@@ -167,6 +178,9 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
       Point topl= m_roi.getTopLeft();
       Point botr= m_roi.getBottomRight();
       aSoftRoiTaskPt = new Tasks::SoftRoi();
+      aSoftRoiTaskPt->setProcessingInPlace(processingInPlace);
+      processingInPlace = true;
+
       aSoftRoiTaskPt->setRoi(topl.x, botr.x, topl.y, botr.y);
       aTaskMgr.setLinkTask(aLastStage,aSoftRoiTaskPt);
       aSoftRoiTaskPt->unref();
@@ -174,19 +188,22 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     }
   bool removeReconstructionTaskCallback = true;
   //Check now what is the last task to add a callback
-  if(aSoftRoiTaskPt)
-    aSoftRoiTaskPt->setEventCallback(m_end_callback);
-  else if(aRotationTaskPt)
-    aRotationTaskPt->setEventCallback(m_end_callback);
-  else if(aFlipTaskPt)
-    aFlipTaskPt->setEventCallback(m_end_callback);
-  else if(aBinTaskPt)
-    aBinTaskPt->setEventCallback(m_end_callback);
-  else if(m_reconstruction_task)
-    m_reconstruction_task->setEventCallback(m_end_callback),removeReconstructionTaskCallback = false;
+  if(registerCallback)
+    {
+      if(aSoftRoiTaskPt)
+	aSoftRoiTaskPt->setEventCallback(m_end_callback);
+      else if(aRotationTaskPt)
+	aRotationTaskPt->setEventCallback(m_end_callback);
+      else if(aFlipTaskPt)
+	aFlipTaskPt->setEventCallback(m_end_callback);
+      else if(aBinTaskPt)
+	aBinTaskPt->setEventCallback(m_end_callback);
+      else if(m_reconstruction_task)
+	m_reconstruction_task->setEventCallback(m_end_callback),removeReconstructionTaskCallback = false;
 
-  //Clear eventCallback for reconstruction task
-  if(m_reconstruction_task && removeReconstructionTaskCallback)
-    m_reconstruction_task->setEventCallback(NULL);
+      //Clear eventCallback for reconstruction task
+      if(m_reconstruction_task && removeReconstructionTaskCallback)
+	m_reconstruction_task->setEventCallback(NULL);
+    }
 }
 

@@ -65,7 +65,7 @@ using namespace lima;
 	void getPars(Parameters& pars /Out/) const;
 
 	void reset();
-	void apply(CtControl::ApplyPolicy policy);
+	void apply(CtControl::ApplyPolicy policy, CtControl *control=NULL);
 	void sync();
 
 	// --- acq modes

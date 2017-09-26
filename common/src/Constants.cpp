@@ -299,6 +299,9 @@ const char* lima::convert_2_string(VideoMode aVideoMode)
     case YUV411: 	aHumanReadablePt = "YUV411";		break;
     case YUV422: 	aHumanReadablePt = "YUV422";		break;
     case YUV444: 	aHumanReadablePt = "YUV444";		break;
+    case YUV411PACKED: 	aHumanReadablePt = "YUV411PACKED";	break;
+    case YUV422PACKED: 	aHumanReadablePt = "YUV422PACKED";	break;
+    case YUV444PACKED: 	aHumanReadablePt = "YUV444PACKED";	break;
     default: 		aHumanReadablePt = "Unknown";		break;
     }
   return aHumanReadablePt;
@@ -326,6 +329,9 @@ void lima::convert_from_string(const std::string& val,
   else if(buffer == "yuv411") 		video_mode = YUV411;
   else if(buffer == "yuv422") 		video_mode = YUV422;
   else if(buffer == "yuv444") 		video_mode = YUV444;
+  else if(buffer == "yuv411packed")     video_mode = YUV411PACKED;
+  else if(buffer == "yuv422packed") 	video_mode = YUV422PACKED;
+  else if(buffer == "yuv444packed") 	video_mode = YUV444PACKED;
   else
     {
       std::ostringstream msg;

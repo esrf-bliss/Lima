@@ -109,7 +109,9 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 		BGR24,BGR32,
 		BAYER_RG8,BAYER_RG16,
 		BAYER_BG8,BAYER_BG16,
-		I420,YUV411,YUV422,YUV444};
+		I420,YUV411,YUV422,YUV444,
+		YUV411PACKED,YUV422PACKED,YUV444PACKED,
+};
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os,VideoMode videoMode);
 LIMACORE_API const char* convert_2_string(VideoMode);

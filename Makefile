@@ -21,6 +21,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
+.NOTPARALLEL:
 
 sub-dirs = third-party common hardware control camera build
 
@@ -37,9 +38,9 @@ config.inc:
 	@false
 
 config:
-	make -C third-party prelima.config
+	$(MAKE) -C third-party prelima.config
 	$(MAKE) -C sip config
-	make -C third-party postlima.config
+	$(MAKE) -C third-party postlima.config
 
 include install.inc
 

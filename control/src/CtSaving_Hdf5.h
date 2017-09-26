@@ -47,13 +47,14 @@ public:
 
 protected:
 	virtual void _prepare(CtControl &control);
-	virtual bool _open(const std::string &filename, std::ios_base::openmode flags);
-	virtual void _close();
-	virtual void _writeFile(Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
+	virtual void* _open(const std::string &filename, std::ios_base::openmode flags);
+	virtual void _close(void*);
+	virtual long _writeFile(void*,Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
 	virtual void _clear();
 
 private:
-	int findLastEntry();
+	struct _File;
+	int findLastEntry(const _File&);
 
 	struct Parameters{
 	  string det_name;
@@ -88,18 +89,6 @@ private:
 	HwInterface *m_hw_int;
 	bool m_is_multiset;
 	int m_nbframes;
-	Mutex m_lock;
-	bool m_already_opened;
-	bool m_format_written;
-	bool m_in_append;
-	bool m_dataset_extended;
-	int m_prev_images_written;
-	DataSpace *m_image_dataspace;
-	DataSet *m_image_dataset;
-	H5File *m_file;
-	Group *m_entry, *m_measurement_detector, *m_instrument_detector, *m_measurement_detector_info, *m_measurement_detector_parameters;
-	int m_entry_index;
-	string m_entry_name;
 };
 
 }

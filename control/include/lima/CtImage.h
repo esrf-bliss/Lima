@@ -179,7 +179,8 @@ class LIMACORE_API CtImage {
 	void getRotation(RotationMode &rotation) const;
 
 	void reset();
-
+	void syncDim();
+	  
 	void applyHard();
 	bool applySoft(SoftOpInternalMgr *op);
 

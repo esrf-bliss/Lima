@@ -128,6 +128,7 @@ using namespace lima;
 	HDF5,
 	EDFConcat,
 	EDFLZ4,
+	CBFMiniHeader,
     };
 
     enum SavingMode {
@@ -225,15 +226,24 @@ using namespace lima;
     void removeAllFrameHeaders();
 
     void frameReady(Data &);
-    void resetLastFrameNb();
 
     void setEndCallback(TaskEventCallback *);
     // --- statistic
 
-    void getWriteTimeStatistic(std::list<double>& /Out/, 
-                               int stream_idx=0) const;
-    void setStatisticHistorySize(int aSize, int stream_idx=0);
+    void getStatistic(std::list<double>& /Out/,
+		      std::list<double>& /Out/, 
+		      std::list<double>& /Out/, 
+		      std::list<double>& /Out/, 
+		      int stream_idx=0) const;
 
+    void getStatisticCounters(double& /Out/,
+			      double& /Out/,
+			      double& /Out/,
+			      double& /Out/,
+			      int stream_idx=0) const;
+
+    void setStatisticHistorySize(int aSize, int stream_idx=0);
+    int getStatisticHistorySize(int stream_idx=0) const;
     // --- misc
 
     void clear();
@@ -243,4 +253,7 @@ using namespace lima;
 
     void setStreamActive(int stream_idx, bool  active);
     void getStreamActive(int stream_idx, bool& active /Out/) const;
+
+    void getMaxConcurrentWritingTask(int& nb_thread /Out/,int stream_idx = 0) const;
+    void setMaxConcurrentWritingTask(int,int stream_idx = 0);
  };

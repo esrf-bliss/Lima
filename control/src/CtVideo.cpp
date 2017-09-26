@@ -680,7 +680,14 @@ void CtVideo::setMode(VideoMode aMode)
 void CtVideo::getMode(VideoMode &aMode) const
 {
   AutoMutex aLock(m_cond.mutex());
-  aMode = m_pars.mode;
+  if(m_has_video)
+    aMode = m_pars.mode;
+  else
+    {
+      std::list<VideoMode> modeList;
+      getSupportedVideoMode(modeList);
+      aMode = modeList.front();
+    }
 }
 
 void CtVideo::setRoi(const Roi &aRoi)
@@ -769,7 +776,7 @@ void CtVideo::unregisterImageCallback(ImageCallback &cb)
 }
 
 // --- video mode
-void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList)
+void CtVideo::getSupportedVideoMode(std::list<VideoMode> &modeList) const
 {
   DEB_MEMBER_FUNCT();
 
@@ -897,7 +904,13 @@ void CtVideo::_apply_params(AutoMutex &aLock,bool aForceLiveFlag)
       if(m_has_video)
 	{
 	  if(m_pars_modify_mask & PARMODIFYMASK_MODE)
-	    m_video->setVideoMode(m_pars.mode);
+	    {
+	      m_video->setVideoMode(m_pars.mode);
+	      CtImage* image = m_ct.image();
+	      // change on video mode can change the image depth,so ask ctimage
+	      // to resynchronize with the camera
+	      image->syncDim();
+	    }
 	  if(m_pars_modify_mask & PARMODIFYMASK_AUTO_GAIN)
 	    m_video->setHwAutoGainMode(m_pars.auto_gain_mode == OFF ? 
 				       HwVideoCtrlObj::OFF : HwVideoCtrlObj::ON);

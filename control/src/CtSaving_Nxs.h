@@ -38,9 +38,9 @@ namespace lima
 	  SaveContainerNxs(CtSaving::Stream& stream);
 	  virtual ~SaveContainerNxs();
 	protected:
-	  virtual bool _open(const std::string &filename, std::ios_base::openmode flags);
-	  virtual void _close();
-	  virtual void _writeFile(Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
+	  virtual void* _open(const std::string &filename, std::ios_base::openmode flags);
+	  virtual void _close(void*);
+	  virtual long _writeFile(void*,Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
           virtual void _clear();
 		
 	private:

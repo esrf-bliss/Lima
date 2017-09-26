@@ -19,6 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+LIMA_DIR := $(shell pwd)/../..
+
+include $(LIMA_DIR)/config.inc
+include $(LIMA_DIR)/control/control.inc
+
 hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 	   HwFrameCallback.o HwBufferCtrlObj.o HwBufferMgr.o \
 	   HwShutterCtrlObj.o HwMaxImageSizeCallback.o HwDetInfoCtrlObj.o \
@@ -28,8 +33,8 @@ hw-objs := HwInterface.o HwCap.o HwSyncCtrlObj.o HwFrameInfo.o \
 
 SRCS = $(hw-objs:.o=.cpp)
 
-CXXFLAGS += -I../include -I../../common/include -I../../third-party/Processlib/core/include \
-	    -Wall -pthread -fPIC -g
+CPPFLAGS = $(CT_CPPFLAGS)
+CXXFLAGS = $(CT_CXXFLAGS)
 
 all:	Hw.o
 
@@ -40,7 +45,7 @@ clean:
 	rm -f Hw.o *.P $(hw-objs)
 
 %.o : %.cpp
-	$(COMPILE.cpp) -MD $(CXXFLAGS) -o $@ $<
+	$(COMPILE.cpp) $(CPPFLAGS) -MD $(CXXFLAGS) -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
@@ -50,4 +55,4 @@ clean:
 
 .PHONY: check-syntax
 check-syntax:
-	$(CXX) -Wall -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
+	$(CXX) $(CPPFLAGS) -Wextra -fsyntax-only $(CXXFLAGS) $(CHK_SOURCES)
