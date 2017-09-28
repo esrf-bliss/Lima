@@ -76,7 +76,7 @@ def checksipexc(ifname, inplace=False):
                     new_state = Out
 
         if InDefHandler not in [state, new_state] or had_exc_handler:
-            ofile.write(line)
+            ofile.write(line.encode())
         else:
             def_handler_code.append(line)
             if new_state == Out:
@@ -89,9 +89,9 @@ def checksipexc(ifname, inplace=False):
                         sep = '\n' + tok[0]
                         exc_line = sep.join(raise_exc)
                         handler_line = exc_line.join(tok)
-                    ofile.write(handler_line)
+                    ofile.write(handler_line.encode())
                 for handler_line in def_handler_code:
-                    ofile.write(handler_line)
+                    ofile.write(handler_line.encode())
                 modified = True
 
         if new_state != state:

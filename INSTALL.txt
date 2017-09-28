@@ -15,8 +15,9 @@ execution :
 	[options] : can be any camera name or saving format.
 	saving format available : cbf, tiff, lz4, gz, hdf5, fits.
 	other otions are : _ python : Build python wrapping.
+	                   _ pytango-server: install the PyTango server python code
 	                   _ tests : compile unitest in build directory.
-	                   (execute "ctest" in build/ to run them)
+	                             (execute "ctest" in build/ to run them)
 	                   _ config, sps, gldisplay : for the fun !
 			                   
 examples : 

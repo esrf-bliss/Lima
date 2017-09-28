@@ -2,7 +2,13 @@
 
 
 %ModuleHeaderCode
-extern "C" { void lima_import_array();}
+extern "C" {
+#if PY_VERSION_HEX >= 0x03000000
+int lima_import_array();
+#else
+void lima_import_array();
+#endif
+}
 %End
 
 %UnitCode

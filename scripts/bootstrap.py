@@ -30,8 +30,8 @@ def check_options(options_pass):
 	for arg in options_pass:
 		if arg=="--help" or arg=="-h" or arg=="-help" or arg=="-?":
 			with open("INSTALL.txt", 'r') as f:
-				print f.read()
-			sys.exit()
+			    print(f.read())
+			    sys.exit()
 		if "--prefix=" in arg:
 			options_script.append(arg)
 		elif arg=="-g" or arg=="--git":
@@ -61,11 +61,9 @@ def git_clone_submodule(submodules):
 		if str(checkout_check)!="0":
 			raise Exception("Make sure every submodule has a branch cmake.")
 	except Exception as inst:
-				print inst
 				if str(init_check)!="0":
 					sys.exit("Problem with submodule init")
 				else:
-					print str(checkout_check)
 					sys.exit("Problem with cmake branch")
 
 def config_cmake_options(options):
@@ -120,7 +118,6 @@ def install_lima_linux():
 		if str(install_check)!="0":
 			raise Exception("CMake couldn't install libraries. Make sure you have necessaries rights.")
 	except Exception as inst:
-		print inst
 		if str(cmake_check)!="0":
 			sys.exit("Problem in CMake configuration")
 		elif str(compilation_check)!="0":
@@ -129,28 +126,37 @@ def install_lima_linux():
 			sys.exit("Problem in CMake installation")
 
 def install_lima_windows():
+	# for windows check compat between installed python and mandatory vc++ compiler
+	# See, https://wiki.python.org/moin/WindowsCompilers
+	if sys.version_info < (2, 6):
+		sys.exit("Only python > 2.6 supported")
+	elif sys.version_info <= (3, 2):
+		win_compiler = "Visual Studio 9 2008"
+	elif sys.version_info <= (3, 4):
+		win_compiler = "Visual Studio 10 2010" 
+	else:
+		win_compiler = "Visual Studio 14 2015"
+	# now check architecture
+	if platform.architecture()[0] == '64bit': arch = ' Win64'
+	else: arch = ''
+	win_compiler+=arch
+	
+	print ('Found Python ', sys.version)
+	print ('Used compiler: ', win_compiler)
+	cmake_cmd = 'cmake -G"'+win_compiler+'" '
+	
 	os.chdir(os.getcwd()+"/build")
 	try :
-		if platform.machine()=="AMD64":
-			if install_path=="" and install_python_path=="":
-				cmake_check = os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" "+cmake_config)
+		if install_path=="" and install_python_path=="":
+			cmake_check = os.system(cmake_cmd+source_path+" "+cmake_config)
+		else:
+			if install_path!="" and install_python_path=="":
+				cmake_check = os.system(cmake_cmd+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
+			elif install_path=="" and install_python_path!="":
+				cmake_check = os.system(cmake_cmd+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
 			else:
-				if install_path!="" and install_python_path=="":
-					cmake_check = os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
-				elif install_path=="" and install_python_path!="":
-					cmake_check = os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-				else:
-					cmake_check = os.system("cmake -G\"Visual Studio 9 2008 Win64\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-		else:  #platform.machine()=="x86": should be 32bits.
-			if install_path=="" and install_python_path=="":
-				cmake_check = os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" "+cmake_config)
-			else:
-				if install_path!="" and install_python_path=="":
-					cmake_check = os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
-				elif install_path=="" and install_python_path!="":
-					cmake_check = os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-				else:
-					cmake_check = os.system("cmake -G\"Visual Studio 9 2008\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+				cmake_check = os.system(cmake_cmd+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+
 		if str(cmake_check)!="0":
 			raise Exception("Something went wrong in the CMake preparation. Make sure your configuration is good.")
 
@@ -158,7 +164,6 @@ def install_lima_windows():
 		if str(compilation_check)!="0":
 			raise Exception("CMake couldn't build or install libraries. Contact claustre@esrf.fr for informations.")
 	except Exception as inst:
-		print inst
 		if str(cmake_check)!="0":
 			sys.exit("Problem in CMake configuration")
 		else:
@@ -173,7 +178,6 @@ if __name__ == '__main__':
 	camera_list=('adsc', 'andor3', 'basler', 'dexela', 'frelon', 'hexitec', 'marccd', 'merlin', 'mythen3', 'perkinelmer', 'pilatus', 'pointgrey', 'rayonixhs', 'ultra', 'xh', 'xspress3', 'andor', 'aviex', 'eiger', 'hamamatsu', 'imxpad', 'maxipix', 'mythen', 'pco', 'photonicscience','pixirad', 'prosilica', 'roperscientific', 'ueye', 'v4l2', 'xpad')
 	install_path=""
 	install_python_path=""
-	print "OS TYPE : ",OS_TYPE
 	source_path=os.getcwd()
 	script_options, lima_options = check_options(sys.argv)
 
@@ -183,7 +187,7 @@ if __name__ == '__main__':
                         git_clone_submodule(lima_options)
 
 	cmake_config = config_cmake_options(lima_options)
-	print cmake_config
+	print (cmake_config)
 	for option in script_options:
 		if "--prefix=" in option:
 			install_path=option[9:]

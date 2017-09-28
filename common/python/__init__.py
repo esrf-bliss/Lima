@@ -22,4 +22,4 @@
 
 import processlib as Processlib
 from limacore import *
-from Debug import *
+from .Debug import *

@@ -133,7 +133,7 @@ if(LIMA_ENABLE_PYTHON)
     if(${PYTHONINTERP_FOUND})
       # python site-packages folder
       execute_process(
-	COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
+	      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
 	OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     endif()
     find_package(SIP)
