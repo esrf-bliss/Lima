@@ -260,7 +260,13 @@ void CtBuffer::setup(CtControl *ct)
   getMaxNumber(max_nbuffers);
   if (hwNbBuffer > max_nbuffers)
     hwNbBuffer = max_nbuffers;
-  m_hw_buffer->setNbBuffers(hwNbBuffer);
+
+  int nbBuff;
+  m_hw_buffer->getNbBuffers(nbBuff);
+  if (nbBuff > 1)
+    m_hw_buffer->setNbBuffers(nbBuff);
+  else
+	  m_hw_buffer->setNbBuffers(hwNbBuffer);
 
   if(nbuffers > max_nbuffers)
     nbuffers = max_nbuffers;

@@ -96,6 +96,7 @@ namespace lima
     virtual void _setActive(bool, int =0) {}
     virtual void _prepare(int =0) {}
     virtual void _start(int =0) {}
+
     /** @brief return the full path of acquired image
      */
     std::string _getFullPath(int image_number, int stream_idx=0) const;
