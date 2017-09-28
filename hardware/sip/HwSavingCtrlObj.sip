@@ -82,9 +82,10 @@ public:
   void unregisterCallback(Callback *cbk);
 
 protected:
-    virtual void _setActive(bool, int stream_idx=0) ;
-    virtual void _prepare(int stream_idx=0) ;
-    virtual void _start(int stream_idx=0) ;
+    virtual void _setActive(bool, int stream=0);
+    virtual void _prepare(int stream=0);
+    virtual void _start(int stream=0);
+
   /** @brief return the full path of acquired image
    */
   std::string _getFullPath(int image_number, int stream_idx=0) const;
