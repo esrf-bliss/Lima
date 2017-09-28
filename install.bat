@@ -1,4 +1,5 @@
-﻿rem ##########################################################################
+@echo off
+rem ##########################################################################
 rem  This file is part of LImA, a Library for Image Acquisition
 rem
 rem   Copyright (C) : 2009-2017
@@ -34,7 +35,7 @@ if not exist config.txt (
 
 cd ..
 rem we call the main script, with options as arguments.
+
 call python scripts/bootstrap.py %*
 
-exit %ERRORLEVEL%
-
+exit /b %ERRORLEVEL%
