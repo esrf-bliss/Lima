@@ -897,13 +897,20 @@ hexitec-name	:= hexitec
 hexitec-objs	:= ../camera/hexitec/src/Hexitec.o
 hexitec-ver		:= ../camera/hexitec/VERSION
 hexitec-flags	:= $(LDFLAGS) $(HEXITEC_LDFLAGS)
-hexitec-deps	:= $(LDLIBS) $(HEXITEC_LDLIBS)
+hexitec-libs	:= $(LDLIBS) $(HEXITEC_LDLIBS)
+hexitec-deps	:= $(DEPLIBS)
+hexitec-libdeps := $(call lib-deps,$(hexitec-deps))
+hexitec-libfull := $(call lib-full,$(hexitec-name),$(hexitec-ver))
 
-$(call lib-full,$(hexitec-name),$(hexitec-ver)): $(hexitec-objs)
-	$(call compile-lib,$(hexitec-name),$(hexitec-ver),$(hexitec-flags),$(hexitec-deps),$@,$+)
+$(hexitec-libfull): $(hexitec-objs) $(hexitec-libdeps)
+	$(call compile-lib,$(hexitec-name),$(hexitec-ver),\
+			   $(hexitec-deps),\
+			   $(hexitec-flags),$(hexitec-libs),$@,\
+			   $(hexitec-objs))
 	$(call create-links,$(hexitec-name),$(hexitec-ver))
 
-build_targets	+= $(call lib-full,$(hexitec-name),$(hexitec-ver))
+build_targets	+= $(hexitec-libfull)
+
 endif
 
 ###########################
