@@ -298,7 +298,7 @@ if(sipIsErr == NULL)
 {
  bool aReturnFlag = PyList_Check(sipPy);
  for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-  aReturnFlag = sipCanConvertToType(PyList_GET_ITEM(sipPy, i),
+  aReturnFlag = !!sipCanConvertToType(PyList_GET_ITEM(sipPy, i),
                                      sipType_Roi, SIP_NOT_NONE);
  return aReturnFlag;
 }

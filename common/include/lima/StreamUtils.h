@@ -31,6 +31,8 @@
 
 #include "lima/LimaCompatibility.h"
 
+template class LIMACORE_API std::allocator<char>;
+
 class LIMACORE_API NullStreamBuf : public std::stringbuf
 {
  protected:

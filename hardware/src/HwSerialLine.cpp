@@ -68,7 +68,7 @@ void HwSerialLine::readStr( string& buffer, int max_len,
 	DEB_MEMBER_FUNCT();
 
 	Timestamp start=Timestamp::now();
-	int match=0, n, term_len=term.length(), len=0;
+	int match=0, n, term_len=int(term.length()), len=0;
 	bool have_timeout=(timeout > 0), have_maxlen=(max_len > 0);
 	double tout=checkDefTimeout(timeout);
 	string buf;
@@ -78,7 +78,7 @@ void HwSerialLine::readStr( string& buffer, int max_len,
 	       ((!have_maxlen) || (len < max_len)) ) {
 		n = 1;
 		read( buf, n, tout );
-		n = buf.length();
+		n = int(buf.length());
 		if( 0 == n )
 			return;  // Or throw an exception?
 		buffer += buf;

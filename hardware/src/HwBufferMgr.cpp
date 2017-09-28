@@ -148,7 +148,7 @@ const FrameDim& SoftBufferAllocMgr::getFrameDim()
 void SoftBufferAllocMgr::getNbBuffers(int& nb_buffers)
 {
 	DEB_MEMBER_FUNCT();
-	nb_buffers = m_buffer_list.size();
+	nb_buffers = int(m_buffer_list.size());
 	DEB_RETURN() << DEB_VAR1(nb_buffers);
 }
 

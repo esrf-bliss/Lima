@@ -49,7 +49,7 @@ enum TrigMode {
     {
       bool aReturnFlag = PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-	aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
 					  sipType_TrigMode);
       return aReturnFlag;
     }
@@ -98,9 +98,9 @@ enum ShutterMode {
 %ConvertToTypeCode
   if(sipIsErr == NULL)
     {
-      bool aReturnFlag = PySequence_Check(sipPy);
+      bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-	aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
 					  sipType_ShutterMode);
       return aReturnFlag;
     }
@@ -166,9 +166,9 @@ enum VideoMode {Y8,Y16,Y32,Y64,
 %ConvertToTypeCode
   if(sipIsErr == NULL)
     {
-      bool aReturnFlag = PySequence_Check(sipPy);
+      bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-        aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+        aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
                                           sipType_VideoMode);
       return aReturnFlag;
     }
@@ -216,9 +216,9 @@ enum RotationMode {
 %ConvertToTypeCode
   if(sipIsErr == NULL)
     {
-      bool aReturnFlag = PySequence_Check(sipPy);
+      bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-        aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+        aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
                                           sipType_RotationMode);
       return aReturnFlag;
     }
