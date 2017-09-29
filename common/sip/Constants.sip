@@ -47,7 +47,7 @@ enum TrigMode {
 %ConvertToTypeCode
   if(sipIsErr == NULL)
     {
-      bool aReturnFlag = PySequence_Check(sipPy);
+      bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
 	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
 					  sipType_TrigMode);

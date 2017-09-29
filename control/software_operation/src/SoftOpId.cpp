@@ -597,14 +597,14 @@ void SoftOpRoi2Spectrum::createImage(std::string roi_name, int& from,
     return;
 
   from = firstResult.frameNumber;
-  Buffer *aBuffer = new Buffer(aSize * aResult.size());
+  Buffer *aBuffer = new Buffer(aSize * int(aResult.size()));
   char *dataPt = (char*)aBuffer->data;
   for(std::list<Tasks::Roi2SpectrumResult>::iterator k = aResult.begin();
       k != aResult.end();++k,dataPt += aSize)
     memcpy(dataPt,k->spectrum.data(),aSize);
   aData.type = firstResult.spectrum.type;
   aData.dimensions = firstResult.spectrum.dimensions;
-  aData.dimensions.push_back(aResult.size());
+  aData.dimensions.push_back(int(aResult.size()));
   aData.setBuffer(aBuffer);
   aBuffer->unref();
 }
