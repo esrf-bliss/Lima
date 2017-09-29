@@ -72,7 +72,7 @@ if(!sipErr)
   if(!sipErr)
   {
     ImageType image_type;
-    switch(tmpObject->descr->type_num)
+    switch(PyArray_TYPE(tmpObject))
     {
     case NPY_BYTE: 	image_type = Bpp8S; 	break;
     case NPY_UBYTE:  	image_type = Bpp8;  	break;
@@ -114,7 +114,7 @@ Py_DECREF(tmpObject);
   	  if(nbDim == 2)
 	  {
  	    ImageType image_type;
-    	    switch(tmpObject->descr->type_num)
+    	    switch(PyArray_TYPE(tmpObject))
     	    {
 	      case NPY_BYTE:	image_type = Bpp8S;  	break;
     	      case NPY_UBYTE:  	image_type = Bpp8;  	break;
@@ -130,7 +130,7 @@ Py_DECREF(tmpObject);
 				   PyArray_DIM(tmpObject,0),
 				   image_type);
               
-	      sipCpp = new HwFrameInfoType(a0, PyArray_DATA(a1),&tmpFrameDim, *a2, a3, a4);
+	      sipCpp = new HwFrameInfoType(a0, PyArray_DATA(tmpObject),&tmpFrameDim, *a2, a3, a4);
 	  }
 	clean:
 	  Py_DECREF(tmpObject);
