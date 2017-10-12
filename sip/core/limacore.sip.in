@@ -518,6 +518,7 @@ return aReturnListPt;
 
 %UnitCode
 #include <lima_init_numpy.cpp>
+#include <lima_repr_attr.cpp>
 %End
 
 %PostInitialisationCode

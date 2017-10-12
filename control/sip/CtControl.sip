@@ -45,12 +45,9 @@ using namespace lima;
       long	LastImageSaved;
       long	LastCounterReady;
 
-      const char* __repr__();
+      SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+      LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -100,17 +97,9 @@ using namespace lima;
       CtControl::CameraErrorCode CameraStatus;
       CtControl::ImageStatus	 ImageCounters;
 
-      SIP_PYOBJECT __repr__() const /TypeHint="str"/;
+      SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-
-	#if PY_MAJOR_VERSION >= 3
-		sipRes = PyUnicode_FromString(tmpString.c_str());
-	#else
-		sipRes = PyString_FromString(tmpString.c_str());
-	#endif
+      LIMA_REPR_CODE
 %End
 
 %PickleCode

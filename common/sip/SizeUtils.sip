@@ -53,13 +53,12 @@ class Point
 
 	void alignTo(const Point& p, AlignDir align_dir);
 	void swap();
-	const char* __repr__();
+
+        SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
+
 };
 
 enum XBorder {
@@ -92,12 +91,9 @@ using namespace lima;
 	Point getDir() const;
 
 	bool operator ==(const Corner& c);
-	const char* __repr__();
+        SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
 };
 
@@ -134,12 +130,10 @@ using namespace lima;
 	void alignTo(const Point& p, AlignDir align_dir);
 
 	Point getCornerCoords(const Point& p, const Corner& c);
-	const char* __repr__();
+
+        SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -174,12 +168,10 @@ using namespace lima;
 
 	Bin& operator /=(const Point& p);
 	void swap();
-	const char* __repr__();
+
+        SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -208,12 +200,10 @@ using namespace lima;
 
 	Flip& operator &=(const Flip& f);
 	void reset();
-	const char* __repr__();
+
+        SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -266,12 +256,10 @@ using namespace lima;
 
 	void alignSizeTo(const Point& p, AlignDir align_dir);
 	void alignCornersTo(const Point& p, AlignDir align_dir);
-	const char* __repr__();
+
+        SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -397,12 +385,10 @@ using namespace lima;
 	void checkValidPoint(const Point& point, bool for_div);
 	void checkValidRoi(const Roi& roi);
 	void swapDimensions();
-	const char* __repr__();
+
+        SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -436,12 +422,8 @@ public:
   void setAngles(double start,double end);
   void getAngles(double& start /Out/,double& end /Out/) const;
 
-  const char* __repr__();
+  SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+  LIMA_REPR_CODE
 %End
-
 };

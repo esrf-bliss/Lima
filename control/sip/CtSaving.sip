@@ -160,12 +160,9 @@ using namespace lima;
       Parameters();
       void checkValid() const;
 
-      const char* __repr__();
+      SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+      LIMA_REPR_CODE
 %End
     };
 

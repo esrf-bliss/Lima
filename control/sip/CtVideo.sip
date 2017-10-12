@@ -55,12 +55,9 @@ using namespace lima;
       VideoMode			mode;
       Roi			roi;
       Bin			bin;
-      const char* __repr__();
+      SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+      LIMA_REPR_CODE
 %End
 	};
 
@@ -89,12 +86,9 @@ using namespace lima;
       VideoMode 		mode() 		const;
       int			size()		const;
       long long			frameNumber()	const;
-      const char* __repr__();
+      SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+      LIMA_REPR_CODE
 %End  
     };
 
