@@ -13,6 +13,7 @@ void lima_import_array();
 
 %UnitCode
 #include <lima_init_numpy.cpp>
+#include <lima_repr_attr.cpp>
 %End
 
 %PostInitialisationCode
