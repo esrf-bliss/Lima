@@ -36,7 +36,7 @@
 	const std::string& tmpString = str.str(); \
 	sipRes = PyUnicode_FromString(tmpString.c_str());
 #else
-#define LIMA_REPR_CODE \ 
+#define LIMA_REPR_CODE \
 	std::ostringstream str; \
 	str << *sipCpp;	\
 	const std::string& tmpString = str.str(); \
