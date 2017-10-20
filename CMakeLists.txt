@@ -178,11 +178,6 @@ set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Tim
                 common/src/Exceptions.cpp common/src/MemUtils.cpp common/src/RegExUtils.cpp common/src/AcqState.cpp
                 common/src/Debug.cpp common/src/VideoUtils.cpp common/src/Event.cpp common/src/Timer.cpp
                 common/src/DirectoryEventUtils.cpp)
-if(LIMA_ENABLE_CONFIG)
-    find_library(LIB_CONFIG config++)
-    target_link_libraries(limacore ${LIB_CONFIG})
-    set(common_srcs ${common_srcs} common/src/ConfigUtils.cpp)
-endif()
 
 if(WIN32)
     list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp)

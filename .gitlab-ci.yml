@@ -24,9 +24,5 @@ test :
   script:
     - cd build/
     - ctest --timeout 10
-    - cd ../..
-    - pwd
-    - cd
-    - pwd
   only:
     - cmake
