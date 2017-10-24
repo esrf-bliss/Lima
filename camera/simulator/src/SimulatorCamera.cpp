@@ -75,7 +75,7 @@ void Camera::SimuThread::execStartAcq()
 	buffer_mgr.setStartTimestamp(Timestamp::now());
 
 	FrameBuilder& frame_builder = m_simu->m_frame_builder;
-	frame_builder.resetFrameNr();
+	frame_builder.resetFrameNr(m_acq_frame_nb);
 
 	int nb_frames = m_simu->m_trig_mode == IntTrig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
 	int& frame_nb = m_acq_frame_nb;
