@@ -284,8 +284,7 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  try{
 		    new_file.m_file = new H5File();
 		    is_hdf5 = new_file.m_file->isHdf5(filename);
-		  } catch (FileIException &error){
-		    //error.printError();
+		  } catch (FileIException){		    
 		    file_exists = false;
 		    
 		  }
@@ -316,7 +315,11 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		// create the next entry name and 
 		//fails if it already exists in the file
 		char strname[256];
-		sprintf(strname,"/entry_%04d", new_file.m_entry_index);			
+#ifdef WIN32
+		sprintf_s(strname,"/entry_%04d", new_file.m_entry_index);			
+#else
+		sprintf(strname, "/entry_%04d", new_file.m_entry_index);
+#endif
 		if (!new_file.m_format_written) {
 		  Group *group = NULL;
 		  if (new_file.m_in_append) {
@@ -431,6 +434,7 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  new_file.m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
 		}
 	} catch (FileIException &error) {
+		  error.printError();	
 	      THROW_CTL_ERROR(Error) << "File " << filename << " not opened successfully";
 	}
 
@@ -452,7 +456,13 @@ void SaveContainerHdf5::_close(void* f) {
 		time_t now;
 		time(&now);
 		char buf[sizeof("2011-10-08T07:07:09Z")];
+#ifdef WIN32
+		struct tm gmtime_now;
+		gmtime_s(&gmtime_now, &now);
+		strftime(buf, sizeof(buf), "%FT%TZ", &gmtime_now);
+#else
 		strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
+#endif
 		string etime = string(buf);
 		write_h5_dataset(*file->m_entry,"end_time",etime);
 	}
@@ -511,7 +521,13 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			        time_t now;
 				time(&now);
 				char buf[sizeof("2011-10-08T07:07:09Z")];
+#ifdef WIN32
+				struct tm gmtime_now;
+				gmtime_s(&gmtime_now, &now);
+				strftime(buf, sizeof(buf), "%FT%TZ", &gmtime_now);
+#else
 				strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
+#endif
 				string stime = string(buf);
 				write_h5_dataset(*file->m_entry,"start_time",stime);
 				// write header only once into "parameters" group 
@@ -586,11 +602,16 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			slab_dim[0] = 1;
 			DataSpace slabspace = DataSpace(RANK_THREE, slab_dim);
 			int image_nb = aData.frameNumber % m_nbframes;
-			hsize_t start[] = { file->m_prev_images_written + image_nb, 0, 0 };
-			hsize_t count[] = { 1, aData.dimensions[1], aData.dimensions[0] };
+			hsize_t start[] = { hsize_t(file->m_prev_images_written + image_nb), hsize_t(0), hsize_t(0)};
+			hsize_t count[] = { hsize_t(1), hsize_t(aData.dimensions[1]), hsize_t(aData.dimensions[0])};
 			file->m_image_dataspace->selectHyperslab(H5S_SELECT_SET, count, start);
-			file->m_image_dataset->write((u_int8_t*) aData.data(), data_type,
+#ifdef WIN32
+			file->m_image_dataset->write((uint8_t*) aData.data(), data_type,
 						     slabspace, *file->m_image_dataspace);
+#else
+			file->m_image_dataset->write((u_int8_t*)aData.data(), data_type,
+				slabspace, *file->m_image_dataspace);
+#endif
 
 		// catch failure caused by the DataSet operations
 		} catch (DataSetIException& error) {
@@ -626,11 +647,15 @@ int SaveContainerHdf5::findLastEntry(const _File &file) {
 	int index = -1; 
 	try { // determine the next group Entry index
 		do {
-			sprintf(entryName, "/entry_%04d", index+1);
+#ifdef WIN32
+			sprintf_s(entryName, "/entry_%04d", index+1);
+#else
+			sprintf(entryName, "/entry_%04d", index + 1);
+#endif
 			file.m_file->openGroup(entryName);
 			index++;
 		} while (1);
-	} catch (H5::Exception &no_group) {
+	} catch (H5::Exception) {
 		// ignore this indicates the last group
 	}
 	return index;
