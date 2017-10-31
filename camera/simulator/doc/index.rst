@@ -176,7 +176,7 @@ For a quick test one can use python, is this a short code example:
 
   # now ask for 2 sec. exposure and 10 frames
   acq.setAcqExpoTime(2)
-  acq.setNbImages(10) 
+  acq.setAcqNbFrames(10) 
   
   control.prepareAcq()
   control.startAcq()
