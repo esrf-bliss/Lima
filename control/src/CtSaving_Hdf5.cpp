@@ -606,7 +606,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			hsize_t count[] = { hsize_t(1), hsize_t(aData.dimensions[1]), hsize_t(aData.dimensions[0])};
 			file->m_image_dataspace->selectHyperslab(H5S_SELECT_SET, count, start);
 #ifdef WIN32
-			file->m_image_dataset->write((uint8_t*) aData.data(), data_type,
+			file->m_image_dataset->write((unsigned char*) aData.data(), data_type,
 						     slabspace, *file->m_image_dataspace);
 #else
 			file->m_image_dataset->write((u_int8_t*)aData.data(), data_type,
