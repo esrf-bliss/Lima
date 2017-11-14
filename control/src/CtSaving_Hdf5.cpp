@@ -39,6 +39,7 @@ const int RANK_THREE = 3;
 struct SaveContainerHdf5::_File
 {
   _File() : 
+	m_format_written(false),
     m_in_append(false),
     m_dataset_extended(false),
     m_image_dataspace(NULL),
