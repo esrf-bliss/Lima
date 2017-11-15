@@ -26,7 +26,7 @@ include $(LIMA_DIR)/control/control.inc
 
 common-objs := Constants.o SizeUtils.o Timestamp.o ThreadUtils.o Exceptions.o \
                MemUtils.o RegExUtils.o AcqState.o Debug.o VideoUtils.o Event.o \
-	       Timer.o DirectoryEventUtils.o
+	       Timer.o DirectoryEventUtils.o SimplePipe.o
 
 has_not_inotify = $(shell grep INOTIFY_USER /boot/config-$(shell uname -r) >/dev/null 2>&1; echo $$?)
 
