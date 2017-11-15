@@ -515,10 +515,14 @@ return aReturnListPt;
 %End
 };
 
-%ModuleHeaderCode
-extern "C" { void lima_import_array();}
+%UnitCode
+#include <lima_init_numpy.cpp>
 %End
 
 %PostInitialisationCode
 lima_import_array();
 %End
+
+%Import processlib.sip
+
+@INCLUDES@

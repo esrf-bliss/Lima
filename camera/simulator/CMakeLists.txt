@@ -1,0 +1,49 @@
+
+SET(simu_srcs src/SimulatorFrameBuilder.cpp src/SimulatorCamera.cpp src/SimulatorInterface.cpp
+              src/SimulatorSyncCtrlObj.cpp src/SimulatorDetInfoCtrlObj.cpp src/SimulatorShutterCtrlObj.cpp)
+
+FILE(STRINGS "VERSION" simu_ver)
+ADD_LIBRARY(limasimulator SHARED
+    ${simu_srcs}
+)
+TARGET_INCLUDE_DIRECTORIES(limasimulator PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../common/include")
+TARGET_INCLUDE_DIRECTORIES(limasimulator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../hardware/include")
+TARGET_LINK_LIBRARIES(limasimulator limacore)
+SET_TARGET_PROPERTIES(limasimulator PROPERTIES VERSION ${simu_ver} SOVERSION "1")
+INSTALL(TARGETS limasimulator
+        LIBRARY DESTINATION lib)
+
+IF (COMPILE_SIP)
+    SET(NAME "simulator")
+    SET(INCLUDES)
+    FILE(GLOB sipfiles
+         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/sip"
+         "${CMAKE_CURRENT_SOURCE_DIR}/sip/*.sip")
+    FOREACH(sipfile ${sipfiles})
+        SET(INCLUDES
+"${INCLUDES}
+%Include ${sipfile}"
+)
+    ENDFOREACH()
+
+    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/limasimulator.sip)
+    SET(SIP_INCLUDES ${SIP_INCLUDES}
+        "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip"
+        "${CMAKE_BINARY_DIR}/sip/core"
+        "${CMAKE_SOURCE_DIR}/third-party/Processlib/tasks/sip"
+        "${CMAKE_SOURCE_DIR}/common/sip"
+        "${CMAKE_SOURCE_DIR}/hardware/sip"
+        "${CMAKE_SOURCE_DIR}/control/sip"
+        "${CMAKE_SOURCE_DIR}/control/software_operation/sip"
+        "${CMAKE_CURRENT_SOURCE_DIR}/sip")
+    SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/sip/limasimulator.sip PROPERTIES OBJECT_DEPENDS ${sipfiles})
+    ADD_SIP_PYTHON_MODULE(limasimulator ${CMAKE_CURRENT_BINARY_DIR}/sip/limasimulator.sip)
+    TARGET_INCLUDE_DIRECTORIES(python_module_limasimulator PRIVATE
+                               ${PYTHON_INCLUDE_DIRS}
+                               "${CMAKE_SOURCE_DIR}/sip"
+                               "${CMAKE_SOURCE_DIR}/sip/core"
+                              )
+    TARGET_LINK_LIBRARIES(python_module_limasimulator limasimulator)
+    INSTALL(FILES python/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Simulator")
+ENDIF()
