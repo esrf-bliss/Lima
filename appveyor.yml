@@ -46,7 +46,8 @@ install:
   - git submodule update
   - git submodule foreach "git checkout cmake"
   - ps: 'Write-Host "Installing GSL :" -ForegroundColor Magenta'
-    appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-windows.zip && 7z.exe x gsl-windows.zip -o"c:\Program Files"
+    appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-windows.zip
+    7z.exe x gsl-windows.zip -o"c:\Program Files"
   - ps: 'Write-Host "Installing NUMPY :" -ForegroundColor Magenta'
   - "%PYTHON%/Scripts/pip.exe install numpy"
   - ps: 'Write-Host "Installing SIP" -ForegroundColor Magenta'
