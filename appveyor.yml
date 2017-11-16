@@ -9,6 +9,7 @@ configuration: Release
 branches:
   only:
     - cmake
+    - appveyor_improvements
     
 matrix:
   fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
@@ -45,14 +46,7 @@ install:
   - git submodule update
   - git submodule foreach "git checkout cmake"
   - ps: 'Write-Host "Installing GSL :" -ForegroundColor Magenta'
-  - if [%PLATFORM%]==[x64] (
-      appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-1.15-dev-win64.zip &&
-      7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-win64"
-   )
-  - if [%PLATFORM%]==[x86] (
-      appveyor.exe DownloadFile http://ftp.esrf.fr/pub/bliss/lima/gsl-1.8-lib.zip &&
-      7z.exe x gsl-1.8-lib.zip -o"c:\Program Files\gsl-1.8-win32"
-   )
+    appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-windows.zip && 7z.exe x gsl-windows.zip -o"c:\Program Files"
   - ps: 'Write-Host "Installing NUMPY :" -ForegroundColor Magenta'
   - "%PYTHON%/Scripts/pip.exe install numpy"
   - ps: 'Write-Host "Installing SIP" -ForegroundColor Magenta'
