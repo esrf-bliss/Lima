@@ -50,7 +50,7 @@ install:
   - 7z.exe x gsl-windows.zip -o"c:\Program Files"
   - ps: 'Write-Host "Installing NUMPY :" -ForegroundColor Magenta'
   - "%PYTHON%/Scripts/pip.exe install numpy"
-  - ps: 'Write-Host "Installing SIP" -ForegroundColor Magenta'
+  - ps: 'Write-Host "Installing SIP" -ForegroundColor Magenta '
   - appveyor.exe DownloadFile https://sourceforge.net/projects/pyqt/files/sip/sip-4.18/sip-4.18.zip
   - 7z.exe x sip-4.18.zip
   - cd sip-4.18
