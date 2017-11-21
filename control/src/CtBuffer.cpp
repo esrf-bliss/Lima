@@ -262,6 +262,13 @@ void CtBuffer::setup(CtControl *ct)
     hwNbBuffer = max_nbuffers;
   m_hw_buffer->setNbBuffers(hwNbBuffer);
 
+  int nbBuff;
+  m_hw_buffer->getNbBuffers(nbBuff);
+  if (nbBuff > 1)
+    m_hw_buffer->setNbBuffers(nbBuff);
+  else
+     m_hw_buffer->setNbBuffers(hwNbBuffer);
+
   if(nbuffers > max_nbuffers)
     nbuffers = max_nbuffers;
   m_pars.nbBuffers = nbuffers;
