@@ -187,7 +187,7 @@ endif(WIN32)
 set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Timestamp.cpp common/src/ThreadUtils.cpp
                 common/src/Exceptions.cpp common/src/MemUtils.cpp common/src/RegExUtils.cpp common/src/AcqState.cpp
                 common/src/Debug.cpp common/src/VideoUtils.cpp common/src/Event.cpp common/src/Timer.cpp
-                common/src/DirectoryEventUtils.cpp)
+                common/src/DirectoryEventUtils.cpp common/src/SimplePipe.cpp)
 
 if(WIN32)
     list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp)
