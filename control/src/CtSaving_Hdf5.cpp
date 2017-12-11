@@ -22,6 +22,7 @@
 #include <cmath>
 #include "CtSaving_Hdf5.h"
 #include "H5Cpp.h"
+#include "hdf5_hl.h"
 #include "lima/CtControl.h"
 #include "lima/CtImage.h"
 #include "lima/CtAcquisition.h"
@@ -554,9 +555,10 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				max_dims[0] = H5S_UNLIMITED;
 				// Create property list for the dataset and setup chunk size
 				DSetCreatPropList plist;
-				hsize_t chunk_dims[3];
-				// calculate a optimized chunking
-				calculate_chunck(data_dims, chunk_dims, aData.depth());
+				hsize_t chunk_dims[RANK_THREE];
+				// test direct chunk write, so chunk dims is 1 image size
+				chunk_dims[0] = 1; chunk_dims[1] = data_dims[1]; chunk_dims[2] = data_dims[2];
+				
 				plist.setChunk(RANK_THREE, chunk_dims);
 
 				// create new dspace
@@ -596,23 +598,21 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_dataset_extended = true;
 			}
 			// write the image data
-			hsize_t slab_dim[3];
-			slab_dim[2] = aData.dimensions[0];
-			slab_dim[1] = aData.dimensions[1];
-			slab_dim[0] = 1;
-			DataSpace slabspace = DataSpace(RANK_THREE, slab_dim);
 			int image_nb = aData.frameNumber % m_nbframes;
-			hsize_t start[] = { hsize_t(file->m_prev_images_written + image_nb), hsize_t(0), hsize_t(0)};
-			hsize_t count[] = { hsize_t(1), hsize_t(aData.dimensions[1]), hsize_t(aData.dimensions[0])};
-			file->m_image_dataspace->selectHyperslab(H5S_SELECT_SET, count, start);
-#ifdef WIN32
-			file->m_image_dataset->write((unsigned char*) aData.data(), data_type,
-						     slabspace, *file->m_image_dataspace);
-#else
-			file->m_image_dataset->write((u_int8_t*)aData.data(), data_type,
-				slabspace, *file->m_image_dataspace);
-#endif
 
+			// we test direct chunk write
+			hsize_t offset[RANK_THREE] = {image_nb, 0, 0};
+			uint32_t filter_mask = 0; // no compression
+			size_t buf_size = aData.size();
+			hid_t dataset = file->m_image_dataset->getId();
+			herr_t  status;
+
+			status = H5DOwrite_chunk(dataset, H5P_DEFAULT , filter_mask,
+						 offset, buf_size, aData.data());
+			if (status<0) {
+			  THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed";
+			}
+			
 		// catch failure caused by the DataSet operations
 		} catch (DataSetIException& error) {
 			THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
