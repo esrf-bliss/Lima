@@ -340,13 +340,13 @@ void CtSaving::Stream::createSaveContainer()
 #endif        
     goto common;
   case EDFGZ:
-#ifndef WITH_EDFGZ_SAVING
+#ifndef WITH_Z_COMPRESSION
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf gzip "
                                      "saving option, not managed"; 
 #endif
     goto common;
   case EDFLZ4:
-#ifndef WITH_EDFLZ4_SAVING
+#ifndef WITH_LZ4_COMPRESSION
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf lz4 "
                                      "saving option, not managed"; 
 #endif
@@ -360,6 +360,12 @@ void CtSaving::Stream::createSaveContainer()
   case HDF5:
 #ifndef WITH_HDF5_SAVING
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 "
+                                     "saving option, not managed";
+#endif
+    goto common;
+  case HDF5GZ:
+#if not defined  (WITH_HDF5_SAVING) && not defined (WITH_Z_COMPRESSION)
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 gzip"
                                      "saving option, not managed";
 #endif
     goto common;
@@ -420,6 +426,9 @@ void CtSaving::Stream::createSaveContainer()
 #endif
 #ifdef WITH_HDF5_SAVING
   case HDF5:
+    m_save_cnt = new SaveContainerHdf5(*this, m_pars.fileFormat);
+    break;
+ case HDF5GZ:
     m_save_cnt = new SaveContainerHdf5(*this, m_pars.fileFormat);
     break;
 #endif
@@ -2437,6 +2446,44 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 	}
     }
 }
+void CtSaving::SaveContainer::_setBuffer(int frameNumber,
+				  ZBufferType* buffers)
+{
+  AutoMutex aLock(m_lock);
+  std::pair<dataId2ZBufferType::iterator,bool> result = 
+    m_buffers.insert(std::pair<int,ZBufferType*>(frameNumber,buffers));
+  if(!result.second)
+    {
+      for(ZBufferType::iterator i = result.first->second->begin();
+	  i != result.first->second->end();++i)
+	delete *i;
+      delete result.first->second;
+      result.first->second = buffers;
+    }
+}
+
+ZBufferType* CtSaving::SaveContainer::_takeBuffer(int dataId)
+{
+  AutoMutex aLock(m_lock);
+  dataId2ZBufferType::iterator i = m_buffers.find(dataId);
+  ZBufferType* aReturnBufferPt = i->second;
+  m_buffers.erase(i);
+  return aReturnBufferPt;
+}
+
+void CtSaving::SaveContainer::_clear()
+{
+  AutoMutex aLock(m_lock);
+  for(dataId2ZBufferType::iterator i = m_buffers.begin();
+      i != m_buffers.end();++i)
+    {
+      for(ZBufferType::iterator k = i->second->begin();
+	  k != i->second->end();++k)
+	delete *k;
+      delete i->second;
+    }
+  m_buffers.clear();
+}
 
 /** @brief check if all file can be written
  */
@@ -2632,3 +2679,5 @@ void CtSaving::Stream::checkDirectoryAccess(const std::string& directory)
       THROW_CTL_ERROR(Error) << output;
     }
 }
+
+ 

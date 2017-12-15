@@ -205,7 +205,8 @@ if(WIN32)
 endif()
 
 set(control_srcs control/src/CtSaving.cpp control/src/CtControl.cpp control/src/CtAcquisition.cpp control/src/CtBuffer.cpp
-                 control/src/CtImage.cpp control/src/CtSaving_Edf.cpp control/src/CtShutter.cpp control/src/CtAccumulation.cpp control/src/CtVideo.cpp
+                 control/src/CtImage.cpp control/src/CtSaving_Compression.cpp control/src/CtSaving_Edf.cpp control/src/CtShutter.cpp
+                 control/src/CtAccumulation.cpp control/src/CtVideo.cpp
                  control/src/CtEvent.cpp)
 set(ct_srcs control/software_operation/src/SoftOpInternalMgr.cpp control/software_operation/src/SoftOpExternalMgr.cpp control/software_operation/src/SoftOpId.cpp)
 
@@ -292,7 +293,7 @@ if(LIMA_ENABLE_EDFGZ)
 	include(FindPackageHandleStandardArgs)
 	find_package_handle_standard_args(ZLIB DEFAULT_MSG LIB_ZLIB LIB_ZLIB_INCLUDE_DIR)
 	if(${ZLIB_FOUND})
-		add_definitions(-DWITH_EDFGZ_SAVING)
+		add_definitions(-DWITH_Z_COMPRESSION)
 		set(saving_libs ${saving_libs} ${LIB_ZLIB})
 		set(saving_includes ${saving_includes} ${LIB_ZLIB_INCLUDE_DIR})		
 	else()
@@ -307,7 +308,7 @@ if(LIMA_ENABLE_EDFLZ4)
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(LZ4 DEFAULT_MSG LIB_LZ4 LIB_LZ4_INCLUDE_DIR)
     if (LZ4_FOUND)
-        add_definitions(-DWITH_EDFLZ4_SAVING)
+        add_definitions(-DWITH_LZ4_COMPRESSION)
         set(saving_libs ${saving_libs} ${LIB_LZ4})
 	set(saving_includes ${saving_includes} ${LIB_LZ4_INCLUDE_DIR})		
     else()

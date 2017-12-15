@@ -38,8 +38,17 @@
 struct Data;
 class TaskEventCallback;
 class SinkTaskBase;
+class Lz4Compression;
 
 namespace lima {
+
+  struct _BufferHelper;
+  
+  typedef std::vector<_BufferHelper*> ZBufferType;
+  typedef std::map<int,ZBufferType*> dataId2ZBufferType;
+
+
+
   /** @brief Saving management
    *
    * With this class you manage the image saving in different format
@@ -74,6 +83,7 @@ namespace lima {
 	EDFConcat,		// < EDF format with frame concatenation mode
 	EDFLZ4,			// < EDF format with lz4 compression
 	CBFMiniHeader,		// < CBF mini header
+	HDF5GZ,
       };
 
     enum SavingMode 
@@ -213,11 +223,16 @@ namespace lima {
     void getMaxConcurrentWritingTask(int&,int stream_idx = 0) const;
     void setMaxConcurrentWritingTask(int,int stream_idx = 0);
 
-    class Stream;
 
+ 
+      class Stream;
+   
     class LIMACORE_API SaveContainer
     {
       DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
+      friend class ZCompression;
+      friend class Lz4Compression;
+      
       struct FrameParameters
       {
 	FrameParameters() : 
@@ -294,7 +309,7 @@ namespace lima {
        */
       virtual bool needParallelCompression() const {return false;}
       /** @brief get a new compression task at each call.
-       * this methode is not call if needParallelCompression return false
+       * this method is not call if needParallelCompression return false
        *  @see needParallelCompression
        */
       virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&) {return NULL;}
@@ -314,8 +329,11 @@ namespace lima {
       virtual long _writeFile(void*,Data &data,
 			      CtSaving::HeaderMap &aHeader,
 			      FileFormat) = 0;
-      virtual void _clear() {};
+      virtual void _clear();
       virtual void _prepare(CtControl&) {};
+      // @brief used from compression tasks if any
+      virtual void _setBuffer(int frameNumber,ZBufferType*);
+      virtual ZBufferType* _takeBuffer(int dataId);
 
       int			m_written_frames;
       Stream			&m_stream;
@@ -329,6 +347,9 @@ namespace lima {
       Params2Handler		m_params_handler;
       int			m_max_writing_task; ///< number of maximum parallel write
       int			m_running_writing_task; ///< number of concurrent write running
+      Mutex			 m_lock;
+      dataId2ZBufferType		 m_buffers;
+
     };
     friend class SaveContainer;
 

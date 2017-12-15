@@ -23,30 +23,16 @@
 #define CTSAVING_EDF_H
 
 #include "lima/CtSaving.h"
+#include "lima/CtSaving_Compression.h"
 
 namespace lima {
 
   class SaveContainerEdf : public CtSaving::SaveContainer
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving EDF Container","Control");
-    class Compression;
-    friend class Compression;
-    class Lz4Compression;
+    friend class ZCompression;
     friend class Lz4Compression;
   public:
-    struct _BufferHelper
-    {
-      DEB_CLASS_NAMESPC(DebModControl,"_BufferHelper","Control");
-
-      void _init(int buffer_size);
-    public:
-      static const int BUFFER_HELPER_SIZE;
-      _BufferHelper();
-      _BufferHelper(int buffer_size);
-      ~_BufferHelper();
-      int used_size;
-      void *buffer;
-    };
 
     SaveContainerEdf(CtSaving::Stream& stream,
 		     CtSaving::FileFormat format);
@@ -63,11 +49,8 @@ namespace lima {
     virtual long _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
-    virtual void _clear();
-  private:
-    typedef std::vector<_BufferHelper*> ZBufferType;
-    typedef std::map<int,ZBufferType*> dataId2ZBufferType;
-    struct MmapInfo
+   private:
+     struct MmapInfo
     {
       MmapInfo() :
 	header_size(0),
@@ -87,8 +70,6 @@ namespace lima {
       static MmapInfo _writeEdfHeader(Data&,CtSaving::HeaderMap&,
 				      int framesPerFile,Stream&,
 				      int nbCharReserved = 0);
-    void _setBuffer(int frameNumber,ZBufferType*);
-    ZBufferType* _takeBuffer(int dataId);
 #ifdef WIN32
     class _OfStream
     {
@@ -117,11 +98,110 @@ namespace lima {
     void*                        m_fout_buffer;
 #endif
     CtSaving::FileFormat	 m_format;
-    dataId2ZBufferType		 m_buffers;
-    Mutex			 m_lock;
     MmapInfo			 m_mmap_info;
     std::string			 m_current_filename;
   };
+
+  template<class Stream>
+    SaveContainerEdf::MmapInfo
+    SaveContainerEdf::_writeEdfHeader(Data &aData,
+				      CtSaving::HeaderMap &aHeader,
+				      int framesPerFile,
+				      Stream &sout,
+				      int nbCharReserved)
+    {
+      time_t ctime_now;
+      time(&ctime_now);
+      
+      struct timeval tod_now;
+      gettimeofday(&tod_now, NULL);
+      
+      char time_str[64];
+      ctime_r(&ctime_now, time_str);
+      time_str[strlen(time_str) - 1] = '\0';
+      
+      int image_nb = aData.frameNumber % framesPerFile;
+      
+      char aBuffer[2048];
+      long long aStartPosition = sout.tellp();
+      sout << "{\n";
+      
+      snprintf(aBuffer,sizeof(aBuffer),"HeaderID = EH:%06u:000000:000000 ;\n", image_nb + 1);
+      sout << aBuffer;
+      
+      sout << "ByteOrder = LowByteFirst ;\n";
+      const char *aStringType = NULL;
+      switch(aData.type)
+	{
+	case Data::UINT8:	aStringType = "UnsignedByte";break;
+	case Data::INT8:	aStringType = "SignedByte";break;
+	case Data::UINT16:	aStringType = "UnsignedShort";break;
+	case Data::INT16:	aStringType = "SignedShort";break;
+	case Data::UINT32:	aStringType = "UnsignedInteger";break;
+	case Data::INT32:	aStringType = "SignedInteger";break;
+	case Data::UINT64:	aStringType = "Unsigned64";break;
+	case Data::INT64:	aStringType = "Signed64";break;
+	case Data::FLOAT:	aStringType = "FloatValue";break;
+	case Data::DOUBLE:	aStringType = "DoubleValue";break;
+	default:
+	  break;		// @todo ERROR has to be manage
+	}
+      sout << "DataType = " << aStringType << " ;\n";
+      
+      SaveContainerEdf::MmapInfo offset;
+      sout << "Size = "; offset.size_offset = sout.tellp();
+      snprintf(aBuffer,sizeof(aBuffer),"%*s ;\n",nbCharReserved,"");
+      sout << aData.size() << aBuffer;
+      
+      sout << "Dim_1 = " << aData.dimensions[0] << " ;\n";
+      
+      sout << "Dim_2 = "; offset.height_offset = sout.tellp();
+      snprintf(aBuffer,sizeof(aBuffer),"%*s ;\n",nbCharReserved,"");
+      sout << aData.dimensions[1] << aBuffer;
+      
+      sout << "Image = " << image_nb << " ;\n";
+      
+      sout << "acq_frame_nb = " << aData.frameNumber << " ;\n";
+      sout << "time = " << time_str << " ;\n";
+      
+      snprintf(aBuffer,sizeof(aBuffer),"time_of_day = %ld.%06ld ;\n",tod_now.tv_sec, tod_now.tv_usec);
+      sout << aBuffer;
+      
+      snprintf(aBuffer,sizeof(aBuffer),"time_of_frame = %.6f ;\n",aData.timestamp);
+      sout << aBuffer;
+      
+      //@todo sout << "valid_pixels = " << aData.validPixels << " ;\n";
+      
+      
+      aData.header.lock();
+      Data::HeaderContainer::Header &aDataHeader = aData.header.header();
+      for(Data::HeaderContainer::Header::iterator i = aDataHeader.begin();i != aDataHeader.end();++i)
+	{
+	  if(!i->second.size())
+	    sout << i->first << " = " << ";\n";
+	  else
+	    sout << i->first << " = " << i->second << " ;\n";
+	}
+      aData.header.unlock();
+      
+      for(CtSaving::HeaderMap::iterator i = aHeader.begin(); i != aHeader.end();++i)
+	{
+	  if(!i->second.size())
+	    sout << i->first << " = " << ";\n";
+	  else
+	    sout << i->first << " = " << i->second << " ;\n";
+	}
+      
+      
+      long long aEndPosition = sout.tellp();
+      
+      long long lenght = aEndPosition - aStartPosition + 2;
+      long long finalHeaderLenght = (lenght + 1023) & ~1023; // 1024 alignment
+      snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght),"");
+      sout << aBuffer;
+      offset.header_size = finalHeaderLenght;
+      return offset;
+    }
 
 }
 #endif // CTSAVING_EDF_H

@@ -474,10 +474,11 @@ void SaveContainerHdf5::_close(void* f) {
 long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				   CtSaving::HeaderMap &aHeader,
 				   CtSaving::FileFormat aFormat) {
-	DEB_MEMBER_FUNCT();
-	_File* file = (_File*)f;
-	if (aFormat == CtSaving::HDF5) {
+	        DEB_MEMBER_FUNCT();
 
+	        _File* file = (_File*)f;
+		size_t buf_size = 0;
+		
 		// get the proper data type
 		PredType data_type(PredType::NATIVE_UINT8);
 		switch (aData.type) {
@@ -561,6 +562,10 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				
 				plist.setChunk(RANK_THREE, chunk_dims);
 
+#if defined(WITH_Z_COMPRESSION)
+				if (aFormat == CtSaving::HDF5GZ)
+				  plist.setDeflate(m_compression_level);
+#endif				
 				// create new dspace
 				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, max_dims);
 				file->m_image_dataset = 
@@ -602,19 +607,41 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 
 			// we test direct chunk write
 			hsize_t offset[RANK_THREE] = {image_nb, 0, 0};
-			uint32_t filter_mask = 0; // no compression
-			size_t buf_size = aData.size();
+			uint32_t filter_mask = 0; 
 			hid_t dataset = file->m_image_dataset->getId();
 			herr_t  status;
+			void * buf_data;
+			hid_t dxpl;
 
-			status = H5DOwrite_chunk(dataset, H5P_DEFAULT , filter_mask,
-						 offset, buf_size, aData.data());
+#if defined (WITH_Z_COMPRESSION)
+			if (aFormat == CtSaving::HDF5GZ)
+			  {
+			    ZBufferType* buffers = _takeBuffer(aData.frameNumber);
+			    for(ZBufferType::iterator i = buffers->begin();
+				i != buffers->end();++i)
+			      {
+				buf_data = (void *)(*i)->buffer;
+				buf_size += (*i)->used_size;
+				delete *i;
+			      }
+			    delete buffers;
+			  }			
+			else
+			  {
+#endif
+			    buf_data = aData.data();
+			    buf_size = aData.size();
+#if defined(WITH_Z_COMPRESSION)
+			  } // else
+#endif
+			dxpl = H5Pcreate(H5P_DATASET_XFER);
+			status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);
 			if (status<0) {
 			  THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed";
 			}
-			
+
 		// catch failure caused by the DataSet operations
-		} catch (DataSetIException& error) {
+		}catch (DataSetIException& error) {
 			THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
 			error.printError();
 		}
@@ -630,16 +657,9 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		catch (Exception &e) {
 			THROW_CTL_ERROR(Error) << e.getErrMsg();
 		}
-	}
-	DEB_RETURN();
-	return aData.size();	// fix me ;-o
-}
 
-
-void SaveContainerHdf5::_clear()
-{
-	// dont know what to do yet!
-	// Inheritance requires me.
+		DEB_RETURN();
+		return buf_size;
 }
 
 int SaveContainerHdf5::findLastEntry(const _File &file) {
@@ -661,3 +681,16 @@ int SaveContainerHdf5::findLastEntry(const _File &file) {
 	return index;
 }
 
+SinkTaskBase* SaveContainerHdf5::getCompressionTask(const CtSaving::HeaderMap& header)
+{
+#if defined(WITH_Z_COMPRESSION)
+  if(m_format == CtSaving::HDF5GZ)
+    {
+      m_compression_level = 6;
+      return new ZCompression(*this, m_compression_level);
+    }
+  else
+#endif
+    
+  return NULL;
+}
