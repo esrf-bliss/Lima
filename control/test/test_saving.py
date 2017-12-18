@@ -86,22 +86,22 @@ class TestSaving:
                 del self.cam_hw
                 
     @Core.DEB_MEMBER_FUNCT
-    def start(self, exp_time, nb_frames, directory, prefix, form, overwrite, framesperfile, threads, repeats):
+    def start(self, exp_time, nb_frames, directory, prefix, fmt, overwrite, framesperfile, threads, repeats):
         # TIFF does not support multiple frames per file
-        if  form == 'tiff' or form == 'cbf': fpf = 1
+        if  fmt == 'tiff' or fmt == 'cbf': fpf = 1
         else: fpf= framesperfile
-        print('[%d] Prepare acquistion: %2.4f sec. %d frames, %s/%s, <%s>, %d FramesPerFile (%s)'%(repeats, exp_time, nb_frames,directory,prefix,form.upper(),fpf, overwrite))
+        print('[%d] Prepare acquistion: %2.4f sec. %d frames, %s/%s, <%s>, %d FramesPerFile (overwrite-mode: %s)'%(repeats, exp_time, nb_frames,directory,prefix,fmt.upper(),fpf, overwrite))
         self.ct_acq.setAcqExpoTime(exp_time)
         self.ct_acq.setAcqNbFrames(nb_frames)
         self.ct_saving.setDirectory(directory)
         self.ct_saving.setPrefix(prefix)
-        lima_format=self.format2limaformat[form]
+        lima_format=self.format2limaformat[fmt]
         self.ct_saving.setFramesPerFile(fpf)
         self.ct_saving.setFormat(lima_format)
         self.ct_saving.setSuffix(self.limaformat2suffix[lima_format])        
         self.ct_saving.setOverwritePolicy(self.overwrite2limaoverwrite[overwrite])
         self.ct_saving.setSavingMode(self.ct_saving.AutoFrame)
-        self.ct_saving.setNextNumber(0)
+        #self.ct_saving.setNextNumber(0)
         self.ct_saving.setStatisticHistorySize(nb_frames)
 
         # Setting Pool thread can improve the performance on multi-core computer, e.g for compression purpose
