@@ -191,6 +191,7 @@ long SaveContainerEdf::_writeFile(void* f,Data &aData,
 				  CtSaving::HeaderMap &aHeader,
 				  CtSaving::FileFormat aFormat)
 {
+  DEB_MEMBER_FUNCT();
   long write_size = 0;
 #ifdef WIN32
   _OfStream* fout = (_OfStream*)f;

@@ -28,6 +28,7 @@
 #include "lima/CtAcquisition.h"
 #include "lima/HwInterface.h"
 #include "lima/HwCap.h"
+#include "lima/SizeUtils.h"
 
 using namespace lima;
 using namespace H5;
@@ -214,8 +215,25 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image = control.image();
 	m_ct_acq = control.acquisition();
 	m_hw_int = control.hwInterface();
-	
-
+	CtSaving::FileFormat format;
+	int buffer_size;
+	FrameDim image_dim;
+	control.saving()->getFormat(format);
+	m_ct_image->getHwImageDim(image_dim);
+	buffer_size = image_dim.getMemSize();
+ #if defined(WITH_Z_COMPRESSION)
+	if (format == CtSaving::HDF5GZ)
+	  {
+#ifdef __unix
+	    if(posix_memalign((void **)&m_compression_buffer,4*1024,buffer_size))
+#else
+  m_compression_buffer = _aligned_malloc(buffer_size,4*1024);
+  if(!buffer)
+#endif
+    THROW_CTL_ERROR(Error) << "Can't allocate buffer";
+	  }
+#endif
+  
 	// Get detector info 
 	HwDetInfoCtrlObj *det_info;
 	m_hw_int->getHwCtrlObj(det_info);
@@ -567,7 +585,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				  plist.setDeflate(m_compression_level);
 #endif				
 				// create new dspace
-				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, max_dims);
+				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, NULL);
 				file->m_image_dataset = 
 				  new DataSet(file->m_measurement_detector->createDataSet("data",
 											  data_type,
@@ -613,6 +631,8 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			void * buf_data;
 			hid_t dxpl;
 
+			dxpl = H5Pcreate(H5P_DATASET_XFER);
+
 #if defined (WITH_Z_COMPRESSION)
 			if (aFormat == CtSaving::HDF5GZ)
 			  {
@@ -620,22 +640,25 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			    for(ZBufferType::iterator i = buffers->begin();
 				i != buffers->end();++i)
 			      {
-				buf_data = (void *)(*i)->buffer;
+				memcpy(m_compression_buffer+buf_size, (*i)->buffer, (*i)->used_size);
 				buf_size += (*i)->used_size;
+				status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);
 				delete *i;
 			      }
 			    delete buffers;
+			    buf_data = (void *)m_compression_buffer;
 			  }			
 			else
 			  {
 #endif
 			    buf_data = aData.data();
 			    buf_size = aData.size();
+			    
 #if defined(WITH_Z_COMPRESSION)
 			  } // else
 #endif
-			dxpl = H5Pcreate(H5P_DATASET_XFER);
-			status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);
+			//DEB_ALWAYS() << "Image #"<< aData.frameNumber << " buf_size = "<< buf_size;
+			status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);			
 			if (status<0) {
 			  THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed";
 			}

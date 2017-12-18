@@ -111,12 +111,14 @@ ZCompression::ZCompression(CtSaving::SaveContainer &save_cnt,  int  level):
   m_compression_struct.zalloc = NULL;
   m_compression_struct.zfree = NULL;
 
+  // hdf5 do not set WindowBits but use InflateInit() where default is 15, so setting here WindowBits > 15 will make
+  // lib hdf5 api not able to decompress the images
   if(deflateInit(&m_compression_struct, m_compression_level) != Z_OK)
-  //  if(deflateInit2(&m_compression_struct, m_compression_level,
-  //		  Z_DEFLATED,
-  //		  31,
-  //		  8,
-  //		  Z_DEFAULT_STRATEGY) != Z_OK)
+    //if(deflateInit2(&m_compression_struct, m_compression_level,
+    //		  Z_DEFLATED,
+    //		  31,
+    //		  8,
+    //		  Z_DEFAULT_STRATEGY) != Z_OK)
     THROW_CTL_ERROR(Error) << "Can't init compression struct";
 };
 
