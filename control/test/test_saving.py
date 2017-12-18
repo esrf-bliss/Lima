@@ -33,15 +33,25 @@ from Lima import Simulator
 
 Core.DEB_GLOBAL(Core.DebModTest)
 
-class TestSaving :
+class TestSaving:
 
     Core.DEB_CLASS(Core.DebModTest, 'TestSaving')
 
     @Core.DEB_MEMBER_FUNCT
-    def __init__(self):
-        self.simu = Simulator.Camera()
-        self.simu_hw = Simulator.Interface(self.simu)
-        self.ct_control = Core.CtControl(self.simu_hw)        
+    def __init__(self, camera = 'simulator'):
+        if camera == 'maxipix':
+            try:
+                from Lima import Maxipix
+            except ImportError:
+                print ("Cannot use the Maxipix camera plugin, Maxipix python module is not installed")
+                sys.exit()
+            self.cam = Maxipix.Camera(1,'/users/blissadm/local/maxipix/tpxatl25', 'tpxatl25', True)
+            self.cam_hw = Maxipix.Interface(self.cam)
+        else:
+            self.cam = Simulator.Camera()
+            self.cam_hw = Simulator.Interface(self.cam)
+            
+        self.ct_control = Core.CtControl(self.cam_hw)        
         self.ct_saving =self.ct_control.saving()
         self.ct_acq =self.ct_control.acquisition()
 
@@ -53,6 +63,7 @@ class TestSaving :
                        self.ct_saving.EDFLZ4: '.edf.lz4',
                        self.ct_saving.FITS: '.fits',
                        self.ct_saving.HDF5: '.h5',
+                       self.ct_saving.HDF5GZ: '.h5',
                        self.ct_saving.RAW: '.raw',
                        self.ct_saving.TIFFFormat: '.tiff'}
         self.format2limaformat = {'cbf':self.ct_saving.CBFFormat,
@@ -62,6 +73,7 @@ class TestSaving :
                                   'edflz4': self.ct_saving.EDFLZ4,
                                   'fits': self.ct_saving.FITS,
                                   'hdf5': self.ct_saving.HDF5,
+                                  'hdf5gz': self.ct_saving.HDF5GZ,
                                   'raw': self.ct_saving.RAW,
                                   'tiff': self.ct_saving.TIFFFormat}
         self.overwrite2limaoverwrite={'abort': self.ct_saving.Abort,
@@ -71,10 +83,10 @@ class TestSaving :
     @Core.DEB_MEMBER_FUNCT               
     def __del__(self):
 		del self.ct_control
-                del self.simu_hw
+                del self.cam_hw
                 
     @Core.DEB_MEMBER_FUNCT
-    def start(self, exp_time, nb_frames, directory, prefix, form, overwrite,framesperfile,repeats):
+    def start(self, exp_time, nb_frames, directory, prefix, form, overwrite, framesperfile, threads, repeats):
         # TIFF does not support multiple frames per file
         if  form == 'tiff' or form == 'cbf': fpf = 1
         else: fpf= framesperfile
@@ -90,6 +102,12 @@ class TestSaving :
         self.ct_saving.setOverwritePolicy(self.overwrite2limaoverwrite[overwrite])
         self.ct_saving.setSavingMode(self.ct_saving.AutoFrame)
         self.ct_saving.setNextNumber(0)
+        self.ct_saving.setStatisticHistorySize(nb_frames)
+
+        # Setting Pool thread can improve the performance on multi-core computer, e.g for compression purpose
+        Core.Processlib.PoolThreadMgr.get().setNumberOfThread(threads)
+  
+
         self.repeats = repeats
         self.ct_control.prepareAcq()
         deb.Trace('[%d] PrepareAcq finished'%(repeats))
@@ -105,6 +123,9 @@ class TestSaving :
             sys.stdout.flush()
         print()
         deb.Trace('[%d] Acq. finished'%self.repeats)
+        mb=1024*1024
+        stat = self.ct_saving.getStatisticCounters()
+        print('[%d] statistics (MB/s) : incoming speed = %.2f, saving speed = %.2f, compression speed = %.2f, compression ratio = %.2f'%(self.repeats,stat[3]/mb, stat[0]/mb, stat[1]/mb, stat[2]))
 
 
 
@@ -115,8 +136,8 @@ def main(argv):
         parser.add_argument('-v', '--verbose', help='verbose mode, up to vvv', required=False, action='count')
         parser.add_argument('-e', '--exposure', type=float, help='exposure time in sec.', required=False,default=0.1)
         parser.add_argument('-n', '--nbframes', type=int, help='number of frames.', required=False, default=1)
-        if sys.platform == 'win32': format_list = ['all','cbf','edf','edfgz','hdf5','raw']
-        else: format_list = ['all','cbf','edf','edfgz','edflz4','fits','hdf5','tiff','raw']
+        if sys.platform == 'win32': format_list = ['all','cbf','edf','edfgz','hdf5','hdf5gz','raw']
+        else: format_list = ['all','cbf','edf','edfgz','edflz4','fits','hdf5','hdf5gz','tiff','raw']
         format_list.sort()
         parser.add_argument('-f', '--format', help='saving format', choices=format_list, required=False, default='all', nargs='+')
         parser.add_argument('-d', '--directory', help='saving directory', required=False, default='./data')
@@ -124,6 +145,9 @@ def main(argv):
         parser.add_argument('-o', '--overwrite', help='overwrite mode', choices=['abort','append','multiset','overwrite'], required=False, default='abort')        
         parser.add_argument('-F', '--framesperfile', help='number of frames per file', type=int, required=False, default=1)        
         parser.add_argument('-R', '--repeats', help='number of frames per file', type=int, required=False, default=1)        
+        parser.add_argument('-t', '--threads', help='number of Processlib pool threads', type=int, required=False, default=2)
+        camera_list = ['simulator', 'maxipix']
+        parser.add_argument('-c', '--camera', help='camera to test', choices=camera_list, required=False, default='simulator')        
         args = parser.parse_args()
 
         if args.verbose == 1:
@@ -137,7 +161,7 @@ def main(argv):
             Core.DebParams.setModuleFlags(Core.DebParams.AllFlags)
 	exp_time = 0.1
 
-	test_saving = TestSaving()
+	test_saving = TestSaving(args.camera)
 
         if args.format == ['all']:
             format_list=test_saving.format2limaformat.keys()
@@ -145,10 +169,18 @@ def main(argv):
             format_list = args.format
         format_list.sort()
         
-        for f in format_list:
-            for r in range(1,args.repeats+1):
+        for fmt in format_list:
+            for repeat in range(1,args.repeats+1):
                 try:
-                    test_saving.start(args.exposure, args.nbframes, args.directory, args.prefix, f, args.overwrite, args.framesperfile, r)
+                    test_saving.start(args.exposure,
+                                      args.nbframes,
+                                      args.directory,
+                                      args.prefix,
+                                      fmt,
+                                      args.overwrite,
+                                      args.framesperfile,
+                                      args.threads,
+                                      repeat)
                 except Core.Exception, e:
                     raise RuntimeError
                     
