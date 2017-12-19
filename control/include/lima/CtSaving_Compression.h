@@ -83,7 +83,7 @@ typedef std::map<int,ZBufferType*> dataId2ZBufferType;
 
 #ifdef WITH_LZ4_COMPRESSION
 #include <lz4frame.h>
-#include "processlib/SinkTask.h"
+
 static const int LZ4_HEADER_SIZE = 19;
 static const int LZ4_FOOTER_SIZE = 4;
 
@@ -110,6 +110,13 @@ static const LZ4F_preferences_t lz4_preferences = {
    void _compression(const char *src,int size,ZBufferType* return_buffers);   
  };
 #endif // WITH_LZ4_COMPRESSION
- 
+
+#ifdef WITH_BS_COMPRESSION
+#include "bshuf_h5filter.h"
+
+class BsCompression: public SinkTaskBase
+{
+}
+#endif // WITH_BS_COMPRESSION 
 };
 #endif // CTSAVING_COMPRESSION_H

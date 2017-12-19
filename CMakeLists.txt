@@ -114,6 +114,11 @@ if(DEFINED ENV{LIMA_ENABLE_HDF5})
 else()
     option(LIMA_ENABLE_HDF5 "compile HDF5 saving code?" OFF)
 endif()
+if(DEFINED ENV{LIMA_ENABLE_HDF5_BS})
+    set(LIMA_ENABLE_HDF5_BS "$ENV{LIMA_ENABLE_HDF5_BS}" CACHE BOOL "compile HDF5/BS saving code?" FORCE)
+else()
+    option(LIMA_ENABLE_HDF5_BS "compile HDF5/BS saving code?" OFF)
+endif()
 
 # Compile python wrapping code generated using SIP
 IF(DEFINED ENV{LIMA_ENABLE_PYTHON})
@@ -382,6 +387,11 @@ if(LIMA_ENABLE_HDF5)
 		set(saving_includes ${saving_includes} ${LIB_HDF5_INCLUDE_DIR})
     else()
 		message(FATAL_ERROR "hdf5_cpp library not found, please install or disable LIMA_ENABLE_HDF5")
+    endif()
+
+    if(LIMA_ENABLE_HDF5_BS)
+        find_library(LIB_HDF5_BS h5bshuf)
+        set(saving_libs ${saving_libs} ${LIB_HDF5_BS})
     endif()
 endif()
 
