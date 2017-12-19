@@ -203,9 +203,8 @@ void ZCompression::_end_compression(ZBufferType* return_buffers)
 #endif // WITH_Z_COMPRESSION
 
 
-
 #ifdef WITH_LZ4_COMPRESSION
-Lz4Compression::Lz4Compression(SaveContainer &save_cnt,
+Lz4Compression::Lz4Compression(CtSaving::SaveContainer &save_cnt,
 			       int framesPerFile,const CtSaving::HeaderMap &header) :
   m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header)
 {
@@ -214,7 +213,7 @@ Lz4Compression::Lz4Compression(SaveContainer &save_cnt,
   LZ4F_errorCode_t result = LZ4F_createCompressionContext(&m_ctx, LZ4F_VERSION);
   if(LZ4F_isError(result))
     THROW_CTL_ERROR(Error) << "LZ4 context init failed: " << DEB_VAR1(result);
-};
+}
 
 Lz4Compression::~Lz4Compression()
   {

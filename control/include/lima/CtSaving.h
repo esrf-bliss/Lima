@@ -38,7 +38,6 @@
 struct Data;
 class TaskEventCallback;
 class SinkTaskBase;
-class Lz4Compression;
 
 namespace lima {
 
