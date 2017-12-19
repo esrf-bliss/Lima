@@ -215,22 +215,24 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image = control.image();
 	m_ct_acq = control.acquisition();
 	m_hw_int = control.hwInterface();
-	CtSaving::FileFormat format;
-	int buffer_size;
-	FrameDim image_dim;
-	control.saving()->getFormat(format);
-	m_ct_image->getHwImageDim(image_dim);
-	buffer_size = image_dim.getMemSize();
+	m_compression_buffer = NULL;
+
  #if defined(WITH_Z_COMPRESSION)
+	CtSaving::FileFormat format;
+	control.saving()->getFormat(format);
 	if (format == CtSaving::HDF5GZ)
 	  {
+	    int buffer_size;
+	    FrameDim image_dim;
+	    m_ct_image->getHwImageDim(image_dim);
+	    buffer_size = image_dim.getMemSize();	    
 #ifdef __unix
 	    if(posix_memalign((void **)&m_compression_buffer,4*1024,buffer_size))
 #else
-  m_compression_buffer = _aligned_malloc(buffer_size,4*1024);
-  if(!buffer)
+	    m_compression_buffer = _aligned_malloc(buffer_size,4*1024);
+	    if(!m_compression_buffer)
 #endif
-    THROW_CTL_ERROR(Error) << "Can't allocate buffer";
+	      THROW_CTL_ERROR(Error) << "Can't allocate buffer";
 	  }
 #endif
   
@@ -268,7 +270,7 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image->getRotation(m_ct_parameters.image_rotation);
 	m_ct_image->getImageDim(m_ct_parameters.image_dim);
 
-	// Check if the overwrite policy if "MultiSet" is activated	
+	// Check if the overwrite policy  "MultiSet" is activated	
 	CtSaving::OverwritePolicy overwrite_policy;
 	control.saving()->getOverwritePolicy(overwrite_policy);
 	m_is_multiset = (overwrite_policy == CtSaving::MultiSet);
@@ -486,6 +488,8 @@ void SaveContainerHdf5::_close(void* f) {
 		write_h5_dataset(*file->m_entry,"end_time",etime);
 	}
 	delete file;
+	if (m_compression_buffer)
+	  free(m_compression_buffer);
 	DEB_TRACE() << "Close current file";
 }
 
@@ -642,7 +646,6 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			      {
 				memcpy(m_compression_buffer+buf_size, (*i)->buffer, (*i)->used_size);
 				buf_size += (*i)->used_size;
-				status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);
 				delete *i;
 			      }
 			    delete buffers;
