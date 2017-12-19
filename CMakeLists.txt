@@ -190,7 +190,7 @@ set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Tim
                 common/src/DirectoryEventUtils.cpp common/src/SimplePipe.cpp)
 
 if(WIN32)
-    list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp)
+    list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp common/src/SimplePipe.cpp)
 endif()
 
 set(hw_srcs hardware/src/HwInterface.cpp hardware/src/HwCap.cpp hardware/src/HwSyncCtrlObj.cpp hardware/src/HwFrameInfo.cpp
