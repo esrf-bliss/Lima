@@ -280,13 +280,13 @@ SinkTaskBase* SaveContainerEdf::getCompressionTask(const CtSaving::HeaderMap& he
 #endif
 #ifdef WITH_Z_COMPRESSION
   if(m_format == CtSaving::EDFGZ)
-    return new ZCompression(*this,pars.framesPerFile,header);
+    return new FileZCompression(*this,pars.framesPerFile,header);
   else
 #endif
     
 #ifdef WITH_LZ4_COMPRESSION
   if(m_format == CtSaving::EDFLZ4)
-    return new Lz4Compression(*this,pars.framesPerFile,header);
+    return new FileLz4Compression(*this,pars.framesPerFile,header);
   else
 #endif
   return NULL;

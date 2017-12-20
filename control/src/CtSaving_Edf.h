@@ -30,8 +30,8 @@ namespace lima {
   class SaveContainerEdf : public CtSaving::SaveContainer
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving EDF Container","Control");
-    friend class ZCompression;
-    friend class Lz4Compression;
+    friend class FileZCompression;
+    friend class FileLz4Compression;
   public:
 
     SaveContainerEdf(CtSaving::Stream& stream,

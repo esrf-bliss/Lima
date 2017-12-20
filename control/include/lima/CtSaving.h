@@ -229,8 +229,10 @@ namespace lima {
     class LIMACORE_API SaveContainer
     {
       DEB_CLASS_NAMESPC(DebModControl,"Saving Container","Control");
-      friend class ZCompression;
-      friend class Lz4Compression;
+      friend class FileZCompression;
+      friend class FileLz4Compression;
+      friend class ImageZCompression;
+      friend class BsCompression;
       
       struct FrameParameters
       {

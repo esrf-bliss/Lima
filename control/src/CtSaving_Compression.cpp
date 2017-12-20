@@ -69,10 +69,9 @@ _BufferHelper::~_BufferHelper()
 }
 
 #ifdef WITH_Z_COMPRESSION
-ZCompression::ZCompression(CtSaving::SaveContainer &save_cnt,
+FileZCompression::FileZCompression(CtSaving::SaveContainer &save_cnt,
 			   int framesPerFile,const CtSaving::HeaderMap &header) :
-  m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header),
-  m_no_header(false),  m_compression_level(Z_DEFAULT_COMPRESSION)
+  m_container(save_cnt),m_frame_per_file(framesPerFile)
 {
   DEB_CONSTRUCTOR();
   
@@ -87,7 +86,7 @@ ZCompression::ZCompression(CtSaving::SaveContainer &save_cnt,
   m_compression_struct.zalloc = NULL;
   m_compression_struct.zfree = NULL;
   
-  if(deflateInit2(&m_compression_struct, m_compression_level,
+  if(deflateInit2(&m_compression_struct, 8,
 		  Z_DEFLATED,
 		  31,
 		  8,
@@ -95,65 +94,25 @@ ZCompression::ZCompression(CtSaving::SaveContainer &save_cnt,
     THROW_CTL_ERROR(Error) << "Can't init compression struct";
 };
 
-ZCompression::ZCompression(CtSaving::SaveContainer &save_cnt,  int  level):
-  m_container(save_cnt), m_no_header(true), m_compression_level(level)
-{
-  DEB_CONSTRUCTOR();
-  
-  m_compression_struct.next_in = NULL;
-  m_compression_struct.avail_in = 0;
-  m_compression_struct.total_in = 0;
-  
-  m_compression_struct.next_out = NULL;
-  m_compression_struct.avail_out = 0;
-  m_compression_struct.total_out = 0;
-  
-  m_compression_struct.zalloc = NULL;
-  m_compression_struct.zfree = NULL;
-
-  // hdf5 do not set WindowBits but use InflateInit() where default is 15, so setting here WindowBits > 15 will make
-  // lib hdf5 api not able to decompress the images
-  if(deflateInit(&m_compression_struct, m_compression_level) != Z_OK)
-    //if(deflateInit2(&m_compression_struct, m_compression_level,
-    //		  Z_DEFLATED,
-    //		  31,
-    //		  8,
-    //		  Z_DEFAULT_STRATEGY) != Z_OK)
-    THROW_CTL_ERROR(Error) << "Can't init compression struct";
-};
-
-ZCompression::~ZCompression()
+FileZCompression::~FileZCompression()
 {
   deflateEnd(&m_compression_struct);
 }
 
-void ZCompression::process(Data &aData)
+void FileZCompression::process(Data &aData)
 {
   ZBufferType *aBufferListPt = new ZBufferType();
 
-  if (!m_no_header)
+  
+  std::ostringstream buffer;
+  try
     {
-      std::ostringstream buffer;
       SaveContainerEdf::_writeEdfHeader(aData,m_header,
 					m_frame_per_file,
 					buffer);
       const std::string& tmpBuffer = buffer.str();
-      try
-	{
-	  _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
-	}
-      catch(Exception&)
-	{
-	  for(ZBufferType::iterator i = aBufferListPt->begin();
-	      i != aBufferListPt->end();++i)
-	    delete *i;
-	  delete aBufferListPt;
-	  throw;
-	}
-    }
-  
-  try
-    {
+      _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
+
       _compression((char*)aData.data(),aData.size(),aBufferListPt);
       _end_compression(aBufferListPt);
     }
@@ -168,7 +127,7 @@ void ZCompression::process(Data &aData)
   m_container._setBuffer(aData.frameNumber,aBufferListPt);
 }
 
-void ZCompression::_compression(const char *buffer,int size,ZBufferType* return_buffers)
+void FileZCompression::_compression(const char *buffer,int size,ZBufferType* return_buffers)
 {
   DEB_MEMBER_FUNCT();
   
@@ -185,7 +144,7 @@ void ZCompression::_compression(const char *buffer,int size,ZBufferType* return_
 	m_compression_struct.avail_out;
     }
 }
-void ZCompression::_end_compression(ZBufferType* return_buffers)
+void FileZCompression::_end_compression(ZBufferType* return_buffers)
 {
   DEB_MEMBER_FUNCT();
   
@@ -204,7 +163,7 @@ void ZCompression::_end_compression(ZBufferType* return_buffers)
 
 
 #ifdef WITH_LZ4_COMPRESSION
-Lz4Compression::Lz4Compression(CtSaving::SaveContainer &save_cnt,
+FileLz4Compression::FileLz4Compression(CtSaving::SaveContainer &save_cnt,
 			       int framesPerFile,const CtSaving::HeaderMap &header) :
   m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header)
 {
@@ -215,12 +174,12 @@ Lz4Compression::Lz4Compression(CtSaving::SaveContainer &save_cnt,
     THROW_CTL_ERROR(Error) << "LZ4 context init failed: " << DEB_VAR1(result);
 }
 
-Lz4Compression::~Lz4Compression()
+FileLz4Compression::~FileLz4Compression()
   {
     LZ4F_freeCompressionContext(m_ctx);
   }
 
-void Lz4Compression::process(Data &aData)
+void FileLz4Compression::process(Data &aData)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
@@ -247,7 +206,7 @@ void Lz4Compression::process(Data &aData)
   m_container._setBuffer(aData.frameNumber,aBufferListPt);
 }
 
-void Lz4Compression::_compression(const char *src,int size,ZBufferType* return_buffers)
+void FileLz4Compression::_compression(const char *src,int size,ZBufferType* return_buffers)
 {
   DEB_MEMBER_FUNCT();
   
@@ -277,3 +236,53 @@ void Lz4Compression::_compression(const char *src,int size,ZBufferType* return_b
   newBuffer->used_size = offset;
 }
 #endif // WITH_LZ4_COMPRESSION
+
+
+#ifdef WITH_Z_COMPRESSION
+ImageZCompression::ImageZCompression(CtSaving::SaveContainer &save_cnt,  int  level):
+  m_container(save_cnt), m_compression_level(level)
+{
+  DEB_CONSTRUCTOR();
+};
+
+ImageZCompression::~ImageZCompression()
+{
+}
+
+void ImageZCompression::process(Data &aData)
+{
+  ZBufferType *aBufferListPt = new ZBufferType();
+  
+  try
+    {
+      _compression((char*)aData.data(),aData.size(),aBufferListPt);
+    }
+  catch(Exception&)
+    {
+      for(ZBufferType::iterator i = aBufferListPt->begin();
+	  i != aBufferListPt->end();++i)
+	delete *i;
+      delete aBufferListPt;
+      throw;
+    }
+  m_container._setBuffer(aData.frameNumber,aBufferListPt);
+}
+
+void ImageZCompression::_compression(const char *src,int size,ZBufferType* return_buffers)
+{
+  DEB_MEMBER_FUNCT();
+  uLong buffer_size;
+  int status;
+  // cannot know compression ratio in advance so allocate a buffer for full image size
+  buffer_size = compressBound(size);
+  _BufferHelper *newBuffer = new _BufferHelper(buffer_size);
+  return_buffers->push_back(newBuffer);
+  char* buffer = (char*)newBuffer->buffer;
+  
+  if ((status=compress2((Bytef*)buffer, &buffer_size, (Bytef*)src, size, m_compression_level)) < 0)
+    THROW_CTL_ERROR(Error) << "Compression failed: error code " << status;
+        
+  return_buffers->back()->used_size = buffer_size;
+}
+#endif // WITH_Z_COMPRESSION
+

@@ -92,7 +92,6 @@ private:
 	bool m_is_multiset;
 	int m_nbframes;
 	int m_compression_level;
-	char *m_compression_buffer;
 };
 
 }

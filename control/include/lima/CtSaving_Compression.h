@@ -57,24 +57,19 @@ typedef std::map<int,ZBufferType*> dataId2ZBufferType;
       return_buffers->push_back(newBuffer);				\
     }
 
-   class ZCompression: public SinkTaskBase
+   class FileZCompression: public SinkTaskBase
   {
-    DEB_CLASS_NAMESPC(DebModControl,"Z Compression Task","Control");
+    DEB_CLASS_NAMESPC(DebModControl,"File Z Compression Task","Control");
 
     CtSaving::SaveContainer& 	m_container;
     int 			m_frame_per_file;
     CtSaving::HeaderMap 	m_header;
     
     z_stream_s		m_compression_struct;
-    bool                          m_no_header;
-    int                              m_compression_level;
-  public:
-    ZCompression(CtSaving::SaveContainer &save_cnt,
+   public:
+    FileZCompression(CtSaving::SaveContainer &save_cnt,
 		 int framesPerFile,const CtSaving::HeaderMap &header);
-    ZCompression(CtSaving::SaveContainer &save_cnt,
-		 int level);
-    
-    ~ZCompression();
+     ~FileZCompression();
     virtual void process(Data &aData);
     void _compression(const char *buffer,int size,ZBufferType* return_buffers);
     void _end_compression(ZBufferType* return_buffers);
@@ -94,18 +89,18 @@ static const LZ4F_preferences_t lz4_preferences = {
   { 0, 0, 0, 0 },  /* reserved, must be set to 0 */
 };
 
- class Lz4Compression: public SinkTaskBase
+ class FileLz4Compression: public SinkTaskBase
  {
-   DEB_CLASS_NAMESPC(DebModControl,"Lz4 Compression Task","Control");
+   DEB_CLASS_NAMESPC(DebModControl,"File Lz4 Compression Task","Control");
    
    CtSaving::SaveContainer&		m_container;
    int				m_frame_per_file;
    CtSaving::HeaderMap		m_header;
    LZ4F_compressionContext_t	m_ctx;
  public:
-   Lz4Compression(CtSaving::SaveContainer &save_cnt,
+   FileLz4Compression(CtSaving::SaveContainer &save_cnt,
 		  int framesPerFile,const CtSaving::HeaderMap &header);
-   ~Lz4Compression();
+   ~FileLz4Compression();
    virtual void process(Data &aData);
    void _compression(const char *src,int size,ZBufferType* return_buffers);   
  };
@@ -118,5 +113,27 @@ class BsCompression: public SinkTaskBase
 {
 }
 #endif // WITH_BS_COMPRESSION 
+
+#ifdef WITH_Z_COMPRESSION 
+#include <zlib.h>
+
+class ImageZCompression: public SinkTaskBase
+{
+  DEB_CLASS_NAMESPC(DebModControl,"Image Z Compression Task","Control");
+  
+  CtSaving::SaveContainer& 	m_container;
+  int                              m_compression_level;
+ public:
+  ImageZCompression(CtSaving::SaveContainer &save_cnt,
+	       int level);
+  
+  ~ImageZCompression();
+  virtual void process(Data &aData);
+  void _compression(const char *buffer,int size,ZBufferType* return_buffers);
 };
+#endif // WITH_Z_COMPRESSION
+
+};
+
+
 #endif // CTSAVING_COMPRESSION_H
