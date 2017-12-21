@@ -46,6 +46,8 @@ using namespace lima;
 
 	void setNumber(long nb_buffers);
 	void getNumber(long& nb_buffers /Out/) const;
+ 
+        void getMaxNumber(long& nb_buffers /Out/) const;
 
 	void setMaxMemory(short max_memory);
 	void getMaxMemory(short& max_memory /Out/) const;
