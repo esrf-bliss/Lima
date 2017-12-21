@@ -68,6 +68,12 @@ _BufferHelper::~_BufferHelper()
 #endif
 }
 
+#define DELETE_BUFFER_LIST(buflist) \
+      for(ZBufferType::iterator i = buflist->begin(); \
+   	i != buflist->end();++i) \
+	  delete *i; \
+      delete buflist;
+
 #ifdef WITH_Z_COMPRESSION
 FileZCompression::FileZCompression(CtSaving::SaveContainer &save_cnt,
 			   int framesPerFile,const CtSaving::HeaderMap &header) :
@@ -118,10 +124,7 @@ void FileZCompression::process(Data &aData)
     }
   catch(Exception&)
     {
-      for(ZBufferType::iterator i = aBufferListPt->begin();
-	  i != aBufferListPt->end();++i)
-	delete *i;
-      delete aBufferListPt;
+      DELETE_BUFFER_LIST(aBufferListPt);
       throw;
     }
   m_container._setBuffer(aData.frameNumber,aBufferListPt);
@@ -197,10 +200,7 @@ void FileLz4Compression::process(Data &aData)
     }
   catch(Exception&)
     {
-      for(ZBufferType::iterator i = aBufferListPt->begin();
-	  i != aBufferListPt->end();++i)
-	delete *i;
-      delete aBufferListPt;
+      DELETE_BUFFER_LIST(aBufferListPt);
       throw;
     }
   m_container._setBuffer(aData.frameNumber,aBufferListPt);
@@ -237,6 +237,39 @@ void FileLz4Compression::_compression(const char *src,int size,ZBufferType* retu
 }
 #endif // WITH_LZ4_COMPRESSION
 
+#ifdef WITH_BS_COMPRESSION
+ImageBsCompression::ImageBsCompression(CtSaving::SaveContainer &save_cnt)
+  m_container(save_cnt)
+{
+  DEV_CONSTRUCTOR();
+};
+
+ImageBsCompression::~ImageBsCompression()
+{
+}
+
+void ImageBsCompression::process(Data &aData)
+{
+  ZBufferType *aBufferListPt = new ZBufferType;
+
+  try
+    {
+      _compression((char*)aData.data(), aData.size(), aBufferListPt);
+    }
+  catch(Exception&):
+    {
+      DELETE_BUFFER_LIST(aBufferListPt);
+      throw;
+    }
+  m_container._setBuffer(aData.frameNumber,aBufferListPt);
+}
+
+void ImageZCompression::_compression(const char *src,int size,ZBufferType* return_buffers)
+{
+
+}
+
+#endif // WITH_BS_COMPRESSION
 
 #ifdef WITH_Z_COMPRESSION
 ImageZCompression::ImageZCompression(CtSaving::SaveContainer &save_cnt,  int  level):
@@ -247,6 +280,7 @@ ImageZCompression::ImageZCompression(CtSaving::SaveContainer &save_cnt,  int  le
 
 ImageZCompression::~ImageZCompression()
 {
+  ZBufferType *aBufferListPt = new ZBufferType;
 }
 
 void ImageZCompression::process(Data &aData)
@@ -259,10 +293,7 @@ void ImageZCompression::process(Data &aData)
     }
   catch(Exception&)
     {
-      for(ZBufferType::iterator i = aBufferListPt->begin();
-	  i != aBufferListPt->end();++i)
-	delete *i;
-      delete aBufferListPt;
+      DELETE_BUFFER_LIST(aBufferListPt);
       throw;
     }
   m_container._setBuffer(aData.frameNumber,aBufferListPt);

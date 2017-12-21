@@ -93,7 +93,7 @@ static const LZ4F_preferences_t lz4_preferences = {
  {
    DEB_CLASS_NAMESPC(DebModControl,"File Lz4 Compression Task","Control");
    
-   CtSaving::SaveContainer&		m_container;
+   CtSaving::SaveContainer&	m_container;
    int				m_frame_per_file;
    CtSaving::HeaderMap		m_header;
    LZ4F_compressionContext_t	m_ctx;
@@ -109,9 +109,18 @@ static const LZ4F_preferences_t lz4_preferences = {
 #ifdef WITH_BS_COMPRESSION
 #include "bshuf_h5filter.h"
 
-class BsCompression: public SinkTaskBase
+class ImageBsCompression: public SinkTaskBase
 {
-}
+  DEB_CLASS_NAMESPC(DebModControl, "Image BS/LZ4 Compression Task", "Control");
+
+  CtSaving::SaveContainer&	m_container;
+
+ public:
+  ImageBsCompression(CtSaving::SaveContainer &save_cnt);
+  ~ImageBsCompression();
+  virtual void process(Data &aData);
+  void _compression(const char *buffer,int size,ZBufferType* return_buffers);
+};
 #endif // WITH_BS_COMPRESSION 
 
 #ifdef WITH_Z_COMPRESSION 
