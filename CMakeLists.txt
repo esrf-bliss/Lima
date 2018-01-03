@@ -27,6 +27,11 @@ project (lima)
 
 set(NAME "core")
 
+# in case of re-root like from conda build
+if(DEFINED CMAKE_FIND_ROOT_PATH)
+  message( "CMAKE_FIND_ROOT_PATH is ${CMAKE_FIND_ROOT_PATH}" )
+  link_directories("${CMAKE_FIND_ROOT_PATH}/lib")
+ endif()
 #--------------------------------------------------------------------------------
 # cmake/ directory contains tools 
 #--------------------------------------------------------------------------------
@@ -132,8 +137,8 @@ endif()
 # Enable python binding code compilation using sip generator
 #--------------------------------------------------------------------------------
 if(LIMA_ENABLE_PYTHON)
-    find_package(PythonInterp 2.6)
-    find_package(PythonLibs 2.6)
+    find_package(PythonInterp 2.7)
+    find_package(PythonLibs 2.7)
     if(${PYTHONINTERP_FOUND})
       # python site-packages folder
       execute_process(
@@ -365,9 +370,9 @@ if(LIMA_ENABLE_HDF5)
 		find_library(LIB_ZLIB libzlib ${LIB_HDF5_DIR})
 		find_library(LIB_SZIP libszip ${LIB_HDF5_DIR})
 	 else()
-		set(LIB_HDF5_INCLUDE_DIR "/usr/include/hdf5/serial")
+		#set(LIB_HDF5_INCLUDE_DIR "/usr/include/hdf5/serial")
 		find_library(LIB_HDF5_CPP hdf5_cpp)
-		find_library(LIB_HDF5 hdf5_serial)
+		find_library(LIB_HDF5 hdf5)
 	        find_path(LIB_HDF5_INCLUDE_DIR H5Cpp.h)
 
 	endif()	
@@ -463,6 +468,8 @@ else()
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
 endif()
+
+message ( "LINK_DIRECTORIES is ${LINK_DIRECTORIES}" )
 
 #--------------------------------------------------------------------------------
 # SIP generates binding code for python
