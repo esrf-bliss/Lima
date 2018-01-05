@@ -62,7 +62,7 @@ void Pipe::close(int which)
 
 void Pipe::write(string s)
 {
-	if (::write(m_fd[WriteFd], s.c_str(), s.size()) < 0) {
+	if (::write(m_fd[WriteFd], s.data(), s.size()) < 0) {
 		cerr << "Error writing to pipe" << endl;
 		throw exception();
 	}
