@@ -118,7 +118,7 @@ class ImageBsCompression: public SinkTaskBase
   ImageBsCompression(CtSaving::SaveContainer &save_cnt);
   ~ImageBsCompression();
   virtual void process(Data &aData);
-  void _compression(const char *buffer,int size,ZBufferType* return_buffers);
+  void _compression(const char *buffer,int size,int depth,ZBufferType* return_buffers);
 };
 #endif // WITH_BS_COMPRESSION 
 

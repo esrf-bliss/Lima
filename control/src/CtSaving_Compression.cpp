@@ -264,7 +264,7 @@ void ImageBsCompression::process(Data &aData)
 
   try
     {
-      _compression((char*)aData.data(), aData.size(), aBufferListPt);
+      _compression((char*)aData.data(), aData.size(), aData.depth(), aBufferListPt);
     }
   catch(Exception&)
     {
@@ -274,12 +274,12 @@ void ImageBsCompression::process(Data &aData)
   m_container._setBuffer(aData.frameNumber,aBufferListPt);
 }
 
-void ImageBsCompression::_compression(const char *src,int data_size,ZBufferType* return_buffers)
+void ImageBsCompression::_compression(const char *src,int data_size,int data_depth, ZBufferType* return_buffers)
 {
   DEB_MEMBER_FUNCT();
 
   unsigned int bs_block_size= 0;
-  unsigned int bs_in_size= (unsigned int)(data_size/sizeof(unsigned int));
+  unsigned int bs_in_size= (unsigned int)(data_size/data_depth);
   unsigned int bs_out_size;
 
   _BufferHelper *newBuffer = new _BufferHelper(data_size);
@@ -287,7 +287,7 @@ void ImageBsCompression::_compression(const char *src,int data_size,ZBufferType*
 
   bshuf_write_uint64_BE(bs_buffer, data_size);
   bshuf_write_uint32_BE(bs_buffer+8, bs_block_size);
-  bs_out_size = bshuf_compress_lz4(src, bs_buffer+12, bs_in_size, sizeof(unsigned int), bs_block_size);
+  bs_out_size = bshuf_compress_lz4(src, bs_buffer+12, bs_in_size, data_depth, bs_block_size);
   if (bs_out_size < 0)
     THROW_CTL_ERROR(Error) << "BS Compression failed: error code " << bs_out_size;
 
