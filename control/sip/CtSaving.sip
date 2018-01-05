@@ -130,6 +130,7 @@ using namespace lima;
 	EDFLZ4,
 	CBFMiniHeader,
 	HDF5GZ,
+	HDF5BS,
     };
 
     enum SavingMode {

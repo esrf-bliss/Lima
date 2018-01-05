@@ -64,6 +64,7 @@ class TestSaving:
                        self.ct_saving.FITS: '.fits',
                        self.ct_saving.HDF5: '.h5',
                        self.ct_saving.HDF5GZ: '.h5',
+                       self.ct_saving.HDF5BS: '.h5',
                        self.ct_saving.RAW: '.raw',
                        self.ct_saving.TIFFFormat: '.tiff'}
         self.format2limaformat = {'cbf':self.ct_saving.CBFFormat,
@@ -74,6 +75,7 @@ class TestSaving:
                                   'fits': self.ct_saving.FITS,
                                   'hdf5': self.ct_saving.HDF5,
                                   'hdf5gz': self.ct_saving.HDF5GZ,
+                                  'hdf5bs': self.ct_saving.HDF5BS,
                                   'raw': self.ct_saving.RAW,
                                   'tiff': self.ct_saving.TIFFFormat}
         self.overwrite2limaoverwrite={'abort': self.ct_saving.Abort,
@@ -136,8 +138,8 @@ def main(argv):
         parser.add_argument('-v', '--verbose', help='verbose mode, up to vvv', required=False, action='count')
         parser.add_argument('-e', '--exposure', type=float, help='exposure time in sec.', required=False,default=0.1)
         parser.add_argument('-n', '--nbframes', type=int, help='number of frames.', required=False, default=1)
-        if sys.platform == 'win32': format_list = ['all','cbf','edf','edfgz','hdf5','hdf5gz','raw']
-        else: format_list = ['all','cbf','edf','edfgz','edflz4','fits','hdf5','hdf5gz','tiff','raw']
+        if sys.platform == 'win32': format_list = ['all','cbf','edf','edfgz','hdf5','hdf5gz','hdf5bs','raw']
+        else: format_list = ['all','cbf','edf','edfgz','edflz4','fits','hdf5','hdf5gz','hdf5bs','tiff','raw']
         format_list.sort()
         parser.add_argument('-f', '--format', help='saving format', choices=format_list, required=False, default='all', nargs='+')
         parser.add_argument('-d', '--directory', help='saving directory', required=False, default='./data')

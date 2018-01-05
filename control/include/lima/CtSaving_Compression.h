@@ -107,7 +107,6 @@ static const LZ4F_preferences_t lz4_preferences = {
 #endif // WITH_LZ4_COMPRESSION
 
 #ifdef WITH_BS_COMPRESSION
-#include "bshuf_h5filter.h"
 
 class ImageBsCompression: public SinkTaskBase
 {

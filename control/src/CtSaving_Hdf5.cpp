@@ -21,8 +21,6 @@
 //###########################################################################
 #include <cmath>
 #include "CtSaving_Hdf5.h"
-#include "H5Cpp.h"
-#include "hdf5_hl.h"
 #include "lima/CtControl.h"
 #include "lima/CtImage.h"
 #include "lima/CtAcquisition.h"
@@ -565,7 +563,13 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 #if defined(WITH_Z_COMPRESSION)
 				if (aFormat == CtSaving::HDF5GZ)
 				  plist.setDeflate(m_compression_level);
-#endif				
+#endif
+#if defined(WITH_BS_COMPRESSION)
+				if (aFormat == CtSaving::HDF5BS) {
+				  unsigned int opt_vals[2]= {0, BSHUF_H5_COMPRESS_LZ4};
+				  plist.setFilter(BSHUF_H5FILTER, H5Z_FLAG_MANDATORY, 2, opt_vals);
+				}
+#endif
 				// create new dspace
 				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, NULL);
 				file->m_image_dataset = 
@@ -615,8 +619,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 
 			dxpl = H5Pcreate(H5P_DATASET_XFER);
 
-#if defined (WITH_Z_COMPRESSION)
-			if (aFormat == CtSaving::HDF5GZ)
+			if ((aFormat == CtSaving::HDF5GZ) || (aFormat == CtSaving::HDF5BS))
 			  {
 			    ZBufferType* buffers = _takeBuffer(aData.frameNumber);
 			    // with single chunk, only one buffer allocated
@@ -632,7 +635,6 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			  }
 			 else
 			   {
-#endif
 			    buf_data = aData.data();
 			    buf_size = aData.size();
 			    //DEB_ALWAYS() << "Image #"<< aData.frameNumber << " buf_size = "<< buf_size;
@@ -641,10 +643,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			      THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed";
 			    }
 
-			    
-#if defined(WITH_Z_COMPRESSION)
 			  } // else
-#endif
 		// catch failure caused by the DataSet operations
 		}catch (DataSetIException& error) {
 			THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
@@ -694,7 +693,12 @@ SinkTaskBase* SaveContainerHdf5::getCompressionTask(const CtSaving::HeaderMap& h
       m_compression_level = 6;
       return new ImageZCompression(*this, m_compression_level);
     }
-  else
+#endif
+#if defined(WITH_BS_COMPRESSION)
+  if(m_format == CtSaving::HDF5BS)
+    {
+      return new ImageBsCompression(*this);
+    }
 #endif
     
   return NULL;

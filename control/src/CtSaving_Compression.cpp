@@ -238,10 +238,20 @@ void FileLz4Compression::_compression(const char *src,int size,ZBufferType* retu
 #endif // WITH_LZ4_COMPRESSION
 
 #ifdef WITH_BS_COMPRESSION
-ImageBsCompression::ImageBsCompression(CtSaving::SaveContainer &save_cnt)
+
+#include "bitshuffle.h"
+#include "bitshuffle_internals.h"
+
+extern "C" {
+void bshuf_write_uint64_BE(void* buf, uint64_t num);
+extern void bshuf_write_uint32_BE(void* buf, uint32_t num);
+}
+
+
+ImageBsCompression::ImageBsCompression(CtSaving::SaveContainer &save_cnt):
   m_container(save_cnt)
 {
-  DEV_CONSTRUCTOR();
+  DEB_CONSTRUCTOR();
 };
 
 ImageBsCompression::~ImageBsCompression()
@@ -256,7 +266,7 @@ void ImageBsCompression::process(Data &aData)
     {
       _compression((char*)aData.data(), aData.size(), aBufferListPt);
     }
-  catch(Exception&):
+  catch(Exception&)
     {
       DELETE_BUFFER_LIST(aBufferListPt);
       throw;
@@ -264,9 +274,25 @@ void ImageBsCompression::process(Data &aData)
   m_container._setBuffer(aData.frameNumber,aBufferListPt);
 }
 
-void ImageZCompression::_compression(const char *src,int size,ZBufferType* return_buffers)
+void ImageBsCompression::_compression(const char *src,int data_size,ZBufferType* return_buffers)
 {
+  DEB_MEMBER_FUNCT();
 
+  unsigned int bs_block_size= 0;
+  unsigned int bs_in_size= (unsigned int)(data_size/sizeof(unsigned int));
+  unsigned int bs_out_size;
+
+  _BufferHelper *newBuffer = new _BufferHelper(data_size);
+  char* bs_buffer = (char*)newBuffer->buffer;
+
+  bshuf_write_uint64_BE(bs_buffer, data_size);
+  bshuf_write_uint32_BE(bs_buffer+8, bs_block_size);
+  bs_out_size = bshuf_compress_lz4(src, bs_buffer+12, bs_in_size, sizeof(unsigned int), bs_block_size);
+  if (bs_out_size < 0)
+    THROW_CTL_ERROR(Error) << "BS Compression failed: error code " << bs_out_size;
+
+  return_buffers->push_back(newBuffer);
+  return_buffers->back()->used_size = bs_out_size+12;
 }
 
 #endif // WITH_BS_COMPRESSION

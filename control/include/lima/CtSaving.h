@@ -83,6 +83,7 @@ namespace lima {
 	EDFLZ4,			// < EDF format with lz4 compression
 	CBFMiniHeader,		// < CBF mini header
 	HDF5GZ,
+        HDF5BS,
       };
 
     enum SavingMode 
@@ -232,7 +233,7 @@ namespace lima {
       friend class FileZCompression;
       friend class FileLz4Compression;
       friend class ImageZCompression;
-      friend class BsCompression;
+      friend class ImageBsCompression;
       
       struct FrameParameters
       {
@@ -575,6 +576,10 @@ namespace lima {
 	  aFileFormatHumanPt = "EDF lz4";break;
 	case CtSaving::CBFMiniHeader:
 	  aFileFormatHumanPt = "CBF mheader";break;
+        case CtSaving::HDF5GZ:
+          aFileFormatHumanPt = "HDF5 GZ"; break;
+        case CtSaving::HDF5BS:
+          aFileFormatHumanPt = "HDF5 BS"; break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -598,6 +603,8 @@ namespace lima {
       else if(buffer == "edf concat")	fileFormat = CtSaving::EDFConcat;
       else if(buffer == "edf lz4") 	fileFormat = CtSaving::EDFLZ4;
       else if(buffer == "cbf mheader")	fileFormat = CtSaving::CBFMiniHeader;
+      else if(buffer == "hdf5 gz")      fileFormat = CtSaving::HDF5GZ;
+      else if(buffer == "hdf5 bs")      fileFormat = CtSaving::HDF5BS;
       else
 	{
 	  std::ostringstream msg;

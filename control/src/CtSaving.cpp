@@ -369,6 +369,12 @@ void CtSaving::Stream::createSaveContainer()
                                      "saving option, not managed";
 #endif
     goto common;
+  case HDF5BS:
+#if not defined  (WITH_HDF5_SAVING) && not defined (WITH_BS_COMPRESSION)
+    THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 bs"
+                                     "saving option, not managed";
+#endif
+    goto common;
   case EDFConcat:
 #ifndef __unix
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf concat "
@@ -426,9 +432,8 @@ void CtSaving::Stream::createSaveContainer()
 #endif
 #ifdef WITH_HDF5_SAVING
   case HDF5:
-    m_save_cnt = new SaveContainerHdf5(*this, m_pars.fileFormat);
-    break;
- case HDF5GZ:
+  case HDF5GZ:
+  case HDF5BS:
     m_save_cnt = new SaveContainerHdf5(*this, m_pars.fileFormat);
     break;
 #endif
