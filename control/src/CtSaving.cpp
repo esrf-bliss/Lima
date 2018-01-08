@@ -622,6 +622,38 @@ CtSaving::CtSaving(CtControl &aCtrl) :
   m_has_hwsaving = false;
   m_new_frame_save_cbk = NULL;
 #endif
+
+  m_format_list.push_back(CtSaving::RAW);
+  m_format_list.push_back(CtSaving::EDF);
+  m_format_list.push_back(CtSaving::EDFConcat);
+#ifdef WITH_LZ4_COMPRESSION
+  m_format_list.push_back(CtSaving::EDFLZ4);
+#endif
+#ifdef WITH_Z_COMPRESSION
+  m_format_list.push_back(CtSaving::EDFGZ);
+#endif
+#ifdef WITH_CBF_SAVING
+  m_format_list.push_back(CtSaving::CBFFormat);
+  m_format_list.push_back(CtSaving::CBFMiniHeader);
+#endif
+#ifdef WITH_NXS_SAVING
+  m_format_list.push_back(CtSaving::NXS);
+#endif
+#ifdef WITH_FITS_SAVING
+  m_format_list.push_back(CtSaving::FITS);
+#endif
+#ifdef WITH_TIFF_SAVING
+  m_format_list.push_back(CtSaving::TIFFFormat);
+#endif
+#ifdef WITH_HDF5_SAVING
+  m_format_list.push_back(CtSaving::HDF5);
+#ifdef WITH_Z_COMPRESSION
+  m_format_list.push_back(CtSaving::HDF5GZ);
+#endif
+#ifdef WITH_BS_COMPRESSION
+  m_format_list.push_back(CtSaving::HDF5BS);
+#endif
+#endif
 }
 
 //@brief destructor
@@ -844,6 +876,80 @@ void CtSaving::getFormat(FileFormat& format, int stream_idx) const
 
   DEB_RETURN() << DEB_VAR1(format);
 }
+/** @brief set the saving format as string for a saving stream
+ */
+void CtSaving::setFormatAsString(const std::string &format, int stream_idx)
+{
+  DEB_MEMBER_FUNCT();
+  FileFormat file_format;
+  convert_from_string(format, file_format);
+  setFormat(file_format, stream_idx);
+}
+/** @brief get the saving format as string for a saving stream
+ */
+void CtSaving::getFormatAsString(std::string& format, int stream_idx) const
+{
+  DEB_MEMBER_FUNCT();
+  FileFormat file_format;
+  getFormat(file_format, stream_idx);
+  format= convert_2_string(file_format);
+}
+/** @brief get supported format list
+ */
+void CtSaving::getFormatList(std::list<FileFormat> &format_list) const
+{
+  DEB_MEMBER_FUNCT();
+  format_list= m_format_list;
+}
+
+/** @brief get supported format list as string
+ */
+void CtSaving::getFormatListAsString(std::list<std::string> &format_list) const
+{
+  DEB_MEMBER_FUNCT();
+  for(std::list<FileFormat>::const_iterator i = m_format_list.begin();
+      i != m_format_list.end(); ++i) {
+    format_list.push_back(convert_2_string(*i));
+  }
+}
+
+/** @brief force saving suffix to be the default format extension
+ */
+void CtSaving::setFormatSuffix(int stream_idx)
+{
+  DEB_MEMBER_FUNCT();
+  std::string ext;
+  FileFormat format;
+
+  AutoMutex aLock(m_cond.mutex());
+  Stream& stream = getStream(stream_idx);
+  Parameters pars = stream.getParameters(Auto);
+  format= pars.fileFormat;
+  pars.fileFormat = format;
+  stream.setParameters(pars);
+  switch (format)
+    {
+    case RAW : ext = std::string(".raw"); break;
+    case EDF : ext = std::string(".edf"); break;
+    case CBFFormat : ext = std::string(".cbf"); break;
+    case CBFMiniHeader : ext = std::string(".cbf"); break;
+    case NXS : ext = std::string(".nxs"); break;
+    case FITS : ext = std::string(".fits"); break;
+    case EDFGZ : ext = std::string(".edf.gz"); break;
+    case TIFFFormat : ext = std::string(".tiff"); break;
+    case EDFConcat : ext = std::string(".edf"); break;
+    case EDFLZ4 : ext = std::string(".edf.lz4"); break;
+    case HDF5 : ext = std::string(".h5"); break;
+    case HDF5GZ : ext = std::string(".h5"); break;
+    case HDF5BS : ext = std::string(".h5"); break;
+    default : ext = string(".dat");
+      break;
+    }
+
+  pars.suffix= ext;
+  stream.setParameters(pars);
+}
+
 /** @brief return a list of hardware possible saving format
  */
 void CtSaving::getHardwareFormatList(std::list<std::string> &format_list) const

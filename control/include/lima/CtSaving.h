@@ -79,11 +79,11 @@ namespace lima {
 	EDFGZ,			///< EDF format with gzip compression
 	TIFFFormat,		///< TIFF format
 	HDF5,			///< HDF5 format
-	EDFConcat,		// < EDF format with frame concatenation mode
-	EDFLZ4,			// < EDF format with lz4 compression
-	CBFMiniHeader,		// < CBF mini header
-	HDF5GZ,
-        HDF5BS,
+	EDFConcat,		///< EDF format with frame concatenation mode
+	EDFLZ4,			///< EDF format with lz4 compression
+	CBFMiniHeader,		///< CBF mini header
+	HDF5GZ,                 ///< HDF5 format with Z compression
+        HDF5BS,                 ///< HDF5 format with BitShuffle/LZ4 compression
       };
 
     enum SavingMode 
@@ -149,6 +149,14 @@ namespace lima {
     void setFormat(FileFormat format, int stream_idx=0);
     void getFormat(FileFormat& format, int stream_idx=0) const;
 
+    void setFormatAsString(const std::string &format, int stream_idx=0);
+    void getFormatAsString(std::string& format, int stream_idx=0) const;
+
+    void getFormatList(std::list<FileFormat> &format_list) const;
+    void getFormatListAsString(std::list<std::string> &format_list) const;
+
+    void setFormatSuffix(int stream_idx=0);
+ 
     void getHardwareFormatList(std::list<std::string> &format_list) const;
     void setHardwareFormat(const std::string &format);
     void getHardwareFormat(std::string &format) const;
@@ -477,6 +485,8 @@ namespace lima {
     int				m_nb_stream;
     Stream		      **m_stream;
 
+    std::list<FileFormat>	m_format_list;
+
     HeaderMap			m_common_header;
     HeaderMap			m_internal_common_header;
     FrameHeaderMap		m_frame_headers;
@@ -565,21 +575,21 @@ namespace lima {
 	case CtSaving::FITS:
 	  aFileFormatHumanPt = "FITS";break;
 	case CtSaving::EDFGZ:
-	  aFileFormatHumanPt = "EDF gzip";break;
+	  aFileFormatHumanPt = "EDFGZ";break;
 	case CtSaving::TIFFFormat:
 	  aFileFormatHumanPt = "TIFF";break;
 	case CtSaving::HDF5:
 	  aFileFormatHumanPt = "HDF5";break;
 	case CtSaving::EDFConcat:
-	  aFileFormatHumanPt = "EDF Concat";break;
+	  aFileFormatHumanPt = "EDFCONCAT";break;
 	case CtSaving::EDFLZ4:
-	  aFileFormatHumanPt = "EDF lz4";break;
+	  aFileFormatHumanPt = "EDFLZ4";break;
 	case CtSaving::CBFMiniHeader:
-	  aFileFormatHumanPt = "CBF mheader";break;
+	  aFileFormatHumanPt = "CBFMHEADER";break;
         case CtSaving::HDF5GZ:
-          aFileFormatHumanPt = "HDF5 GZ"; break;
+          aFileFormatHumanPt = "HDF5GZ"; break;
         case CtSaving::HDF5BS:
-          aFileFormatHumanPt = "HDF5 BS"; break;
+          aFileFormatHumanPt = "HDF5BS"; break;
 	default:
 	  aFileFormatHumanPt = "RAW";break;
 	}
@@ -592,19 +602,19 @@ namespace lima {
       std::transform(buffer.begin(),buffer.end(),
 		     buffer.begin(),::tolower);
 
-      if(buffer == "edf") 		fileFormat = CtSaving::EDF;
+      if(buffer == "raw")		fileFormat = CtSaving::RAW;
+      else if(buffer == "edf") 		fileFormat = CtSaving::EDF;
+      else if(buffer == "edfgz") 	fileFormat = CtSaving::EDFGZ;
+      else if(buffer == "edfconcat")	fileFormat = CtSaving::EDFConcat;
+      else if(buffer == "edflz4") 	fileFormat = CtSaving::EDFLZ4;
       else if(buffer == "cbf") 		fileFormat = CtSaving::CBFFormat;
+      else if(buffer == "cbfmheader")	fileFormat = CtSaving::CBFMiniHeader;
       else if(buffer == "nxs") 		fileFormat = CtSaving::NXS;
       else if(buffer == "fits")		fileFormat = CtSaving::FITS;
-      else if(buffer == "edf gzip") 	fileFormat = CtSaving::EDFGZ;
-      else if(buffer == "raw")		fileFormat = CtSaving::RAW;
       else if(buffer == "tiff")		fileFormat = CtSaving::TIFFFormat;
       else if(buffer == "hdf5")		fileFormat = CtSaving::HDF5;
-      else if(buffer == "edf concat")	fileFormat = CtSaving::EDFConcat;
-      else if(buffer == "edf lz4") 	fileFormat = CtSaving::EDFLZ4;
-      else if(buffer == "cbf mheader")	fileFormat = CtSaving::CBFMiniHeader;
-      else if(buffer == "hdf5 gz")      fileFormat = CtSaving::HDF5GZ;
-      else if(buffer == "hdf5 bs")      fileFormat = CtSaving::HDF5BS;
+      else if(buffer == "hdf5gz")      fileFormat = CtSaving::HDF5GZ;
+      else if(buffer == "hdf5bs")      fileFormat = CtSaving::HDF5BS;
       else
 	{
 	  std::ostringstream msg;

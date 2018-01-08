@@ -55,29 +55,8 @@ class TestSaving:
         self.ct_saving =self.ct_control.saving()
         self.ct_acq =self.ct_control.acquisition()
 
-        # exclude cbfminiheader, it does not support unsigned 32_int
-        self.limaformat2suffix = {self.ct_saving.CBFFormat: '.cbf',
- #                      self.ct_saving.CBFMiniHeader: '.cbf',
-                       self.ct_saving.EDF: '.edf',
-                       self.ct_saving.EDFGZ: '.edf.gz',
-                       self.ct_saving.EDFLZ4: '.edf.lz4',
-                       self.ct_saving.FITS: '.fits',
-                       self.ct_saving.HDF5: '.h5',
-                       self.ct_saving.HDF5GZ: '.h5',
-                       self.ct_saving.HDF5BS: '.h5',
-                       self.ct_saving.RAW: '.raw',
-                       self.ct_saving.TIFFFormat: '.tiff'}
-        self.format2limaformat = {'cbf':self.ct_saving.CBFFormat,
-#                                  'cbfminiheader': self.ct_saving.CBFMiniHeader,
-                                  'edf': self.ct_saving.EDF,
-                                  'edfgz': self.ct_saving.EDFGZ,
-                                  'edflz4': self.ct_saving.EDFLZ4,
-                                  'fits': self.ct_saving.FITS,
-                                  'hdf5': self.ct_saving.HDF5,
-                                  'hdf5gz': self.ct_saving.HDF5GZ,
-                                  'hdf5bs': self.ct_saving.HDF5BS,
-                                  'raw': self.ct_saving.RAW,
-                                  'tiff': self.ct_saving.TIFFFormat}
+        self.format_list= [ fmt.lower() for fmt in self.ct_saving.getFormatListAsString() ]
+
         self.overwrite2limaoverwrite={'abort': self.ct_saving.Abort,
                                       'append': self.ct_saving.Append,
                                       'multiset': self.ct_saving.MultiSet,
@@ -89,6 +68,9 @@ class TestSaving:
                 
     @Core.DEB_MEMBER_FUNCT
     def start(self, exp_time, nb_frames, directory, prefix, fmt, overwrite, framesperfile, threads, repeats):
+        if fmt.lower() not in self.format_list:
+            raise ValueError("Unsupported file format. Should be one of %s"%str(self.format_list))
+          
         # TIFF does not support multiple frames per file
         if  fmt == 'tiff' or fmt == 'cbf': fpf = 1
         else: fpf= framesperfile
@@ -97,10 +79,9 @@ class TestSaving:
         self.ct_acq.setAcqNbFrames(nb_frames)
         self.ct_saving.setDirectory(directory)
         self.ct_saving.setPrefix(prefix)
-        lima_format=self.format2limaformat[fmt]
+        self.ct_saving.setFormatAsString(fmt)
+        self.ct_saving.setFormatSuffix()
         self.ct_saving.setFramesPerFile(fpf)
-        self.ct_saving.setFormat(lima_format)
-        self.ct_saving.setSuffix(self.limaformat2suffix[lima_format])        
         self.ct_saving.setOverwritePolicy(self.overwrite2limaoverwrite[overwrite])
         self.ct_saving.setSavingMode(self.ct_saving.AutoFrame)
         #self.ct_saving.setNextNumber(0)
@@ -165,7 +146,7 @@ def main(argv):
 
 	test_saving = TestSaving(args.camera)
 
-        if args.format == ['all']:
+        if args.format == 'all':
             format_list=test_saving.format2limaformat.keys()
         else:
             format_list = args.format

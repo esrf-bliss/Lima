@@ -189,6 +189,14 @@ using namespace lima;
     void setFormat(FileFormat format, int stream_idx=0);
     void getFormat(FileFormat &format /Out/, int stream_idx=0) const;
 
+    void setFormatAsString(const std::string &format, int stream_idx=0);
+    void getFormatAsString(std::string& format /Out/, int stream_idx=0) const;
+
+    //void getFormatList(std::list<FileFormat> &format_list /Out/) const;
+    void getFormatListAsString(std::list<std::string> &format_list /Out/) const;
+
+    void setFormatSuffix(int stream_idx=0);
+
     // --- saving modes
 
     void setSavingMode(SavingMode mode);
@@ -204,6 +212,7 @@ using namespace lima;
 
     void setManagedMode(ManagedMode mode);
     void getManagedMode(ManagedMode &mode /Out/) const;
+
     // --- common headers
 
     void resetCommonHeader();
