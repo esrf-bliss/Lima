@@ -27,11 +27,10 @@ project (lima)
 
 set(NAME "core")
 
-# in case of re-root like from conda build
-if(DEFINED CMAKE_FIND_ROOT_PATH)
-  message( "CMAKE_FIND_ROOT_PATH is ${CMAKE_FIND_ROOT_PATH}" )
-  link_directories("${CMAKE_FIND_ROOT_PATH}/lib")
- endif()
+if(DEFINED ENV{PREFIX})
+  link_directories($ENV{PREFIX}/lib)
+endif()
+
 #--------------------------------------------------------------------------------
 # cmake/ directory contains tools 
 #--------------------------------------------------------------------------------
@@ -41,7 +40,7 @@ include(LimaTools)
 find_package(Threads REQUIRED)
 
 if(UNIX)
-    set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+    #set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 endif()
 
 
@@ -469,7 +468,6 @@ else()
             PUBLIC_HEADER DESTINATION include)
 endif()
 
-message ( "LINK_DIRECTORIES is ${LINK_DIRECTORIES}" )
 
 #--------------------------------------------------------------------------------
 # SIP generates binding code for python
