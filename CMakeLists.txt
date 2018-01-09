@@ -27,10 +27,6 @@ project (lima)
 
 set(NAME "core")
 
-if(DEFINED ENV{PREFIX})
-  link_directories($ENV{PREFIX}/lib)
-endif()
-
 #--------------------------------------------------------------------------------
 # cmake/ directory contains tools 
 #--------------------------------------------------------------------------------
@@ -38,10 +34,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
 find_package(Threads REQUIRED)
-
-if(UNIX)
-    #set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
-endif()
 
 
 if(UNIX)
