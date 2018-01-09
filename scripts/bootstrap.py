@@ -32,11 +32,13 @@ def check_options(options_pass):
 			with open("INSTALL.txt", 'r') as f:
 			    print(f.read())
 			    sys.exit()
-		if "--prefix=" in arg:
+		if "--install-prefix=" in arg:
 			options_script.append(arg)
 		elif arg=="-g" or arg=="--git":
 			options_script.append("git")
-		elif "--python-packages=" in arg:
+		elif "--install-python-prefix=" in arg:
+			options_script.append(arg)
+		elif "--find-root-path=" in arg:
 			options_script.append(arg)
 		else:
 			options_lima.append(arg)
@@ -97,35 +99,35 @@ def config_cmake_options(options):
 
 def install_lima_linux():
 	os.chdir(os.getcwd()+"/build")
-	try:
-		if install_path=="" and install_python_path=="":
-			cmake_check = os.system("cmake -G\"Unix Makefiles\" "+source_path+" "+cmake_config)
-		else:
-			if install_path!="" and install_python_path=="":
-				cmake_check = os.system("cmake -G\"Unix Makefiles\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
-			elif install_path=="" and install_python_path!="":
-				cmake_check = os.system("cmake -G\"Unix Makefiles\" "+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-			else:
-				cmake_check = os.system("cmake -G\"Unix Makefiles\" "+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-		if str(cmake_check)!="0":
-			raise Exception("Something is wrong in your CMake environement. Make sure your configuration is good.")
-
-		#compilation_check= os.system("cmake --build . --target install")
-		compilation_check = os.system("make -j"+str(multiprocessing.cpu_count()+1))
-		if str(compilation_check)!="0":
-			raise Exception("CMake couldn't build Lima. Contact claustre@esrf.fr for informations.")
-		install_check = os.system("make install")
-		if str(install_check)!="0":
-			raise Exception("CMake couldn't install libraries. Make sure you have necessaries rights.")
-	except Exception as inst:
-		if str(cmake_check)!="0":
-			sys.exit("Problem in CMake configuration")
-		elif str(compilation_check)!="0":
-			sys.exit("Problem in CMake compilation")
-		else:
-			sys.exit("Problem in CMake installation")
+        global install_path, install_python_path, find_root_path
+	#try:
+        print(install_path)
+        if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
+        if install_python_path != "": install_python_path =  " -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path)
+        print  ("find_root_path", find_root_path)
+        if find_root_path != "": find_root_path = " -DCMAKE_FIND_ROOT_PATH="+str(find_root_path)
+        print  ("find_root_path", find_root_path)
+        cmake_check = os.system("cmake -G\"Unix Makefiles\" "+source_path+" "+cmake_config+install_path+install_python_path+find_root_path)
+        if str(cmake_check)!="0":
+                raise Exception("Something is wrong in your CMake environement. Make sure your configuration is good.")
+        
+        #compilation_check= os.system("cmake --build . --target install")
+        compilation_check = os.system("make -j"+str(multiprocessing.cpu_count()+1))
+        if str(compilation_check)!="0":
+                raise Exception("CMake couldn't build Lima. Contact lima@esrf.fr for help.")
+        install_check = os.system("make install")
+        if str(install_check)!="0":
+                raise Exception("CMake couldn't install libraries. Make sure you have necessaries rights.")
+	#except Exception as inst:
+        if str(cmake_check)!="0":
+                sys.exit("Problem in CMake configuration")
+        elif str(compilation_check)!="0":
+                sys.exit("Problem in CMake compilation")
+        else:
+                sys.exit("Problem in CMake installation")
 
 def install_lima_windows():
+        global install_path, install_python_path, find_root_path
 	# for windows check compat between installed python and mandatory vc++ compiler
 	# See, https://wiki.python.org/moin/WindowsCompilers
 	if sys.version_info < (2, 6):
@@ -147,22 +149,18 @@ def install_lima_windows():
 	
 	os.chdir(os.getcwd()+"/build")
 	try :
-		if install_path=="" and install_python_path=="":
-			cmake_check = os.system(cmake_cmd+source_path+" "+cmake_config)
-		else:
-			if install_path!="" and install_python_path=="":
-				cmake_check = os.system(cmake_cmd+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config)
-			elif install_path=="" and install_python_path!="":
-				cmake_check = os.system(cmake_cmd+source_path+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
-			else:
-				cmake_check = os.system(cmake_cmd+source_path+" -DCMAKE_INSTALL_PREFIX="+str(install_path)+" "+cmake_config+" -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path))
+                if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
+                if install_python_path != "": install_python_path =  " -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path)
+                if find_root_path != "": find_root_path = " -DCMAKE_FIND_ROOT_PATH="+str(find_root_path)
+                
+                cmake_check = os.system(cmake_cmd+source_path+" "+cmake_config++install_path+install_python_path+find_root_path)
 
 		if str(cmake_check)!="0":
 			raise Exception("Something went wrong in the CMake preparation. Make sure your configuration is good.")
 
 		compilation_check = os.system("cmake --build . --target install --config Release")
 		if str(compilation_check)!="0":
-			raise Exception("CMake couldn't build or install libraries. Contact claustre@esrf.fr for informations.")
+			raise Exception("CMake couldn't build or install libraries. Contact lima@esrf.fr for help.")
 	except Exception as inst:
 		if str(cmake_check)!="0":
 			sys.exit("Problem in CMake configuration")
@@ -178,6 +176,7 @@ if __name__ == '__main__':
 	camera_list=('adsc', 'andor3', 'basler', 'dexela', 'frelon', 'hexitec', 'marccd', 'merlin', 'mythen3', 'perkinelmer', 'pilatus', 'pointgrey', 'rayonixhs', 'ultra', 'xh', 'xspress3', 'andor', 'aviex', 'eiger', 'hamamatsu', 'imxpad', 'maxipix', 'mythen', 'pco', 'photonicscience','pixirad', 'prosilica', 'roperscientific', 'ueye', 'v4l2', 'xpad')
 	install_path=""
 	install_python_path=""
+	find_root_path = ""
 	source_path=os.getcwd()
 	script_options, lima_options = check_options(sys.argv)
 
@@ -189,10 +188,13 @@ if __name__ == '__main__':
 	cmake_config = config_cmake_options(lima_options)
 	print (cmake_config)
 	for option in script_options:
-		if "--prefix=" in option:
-			install_path=option[9:]
-		if "--python-packages=" in option:
-			install_python_path=option[18:]
+		if "--install-prefix=" in option:
+			install_path=option[17:]
+		if "--install-python-prefix=" in option:
+			install_python_path=option[24:]
+		if "--find-root-path=" in option:
+                        print (option)
+			find_root_path=option[17:]
 	if OS_TYPE=="Linux":
 		install_lima_linux()
 		
