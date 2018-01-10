@@ -32,6 +32,9 @@
 #ifdef WITH_BS_COMPRESSION
 #define BSHUF_H5FILTER	32008
 #define BSHUF_H5_COMPRESS_LZ4	2
+extern "C" {
+  int bshuf_register_h5filter(void);
+}
 #endif
 
 using namespace H5;

@@ -240,7 +240,6 @@ void FileLz4Compression::_compression(const char *src,int size,ZBufferType* retu
 #ifdef WITH_BS_COMPRESSION
 
 #include "bitshuffle.h"
-#include "bitshuffle_internals.h"
 
 extern "C" {
 void bshuf_write_uint64_BE(void* buf, uint64_t num);
@@ -252,6 +251,7 @@ ImageBsCompression::ImageBsCompression(CtSaving::SaveContainer &save_cnt):
   m_container(save_cnt)
 {
   DEB_CONSTRUCTOR();
+  DEB_TRACE() << "BitShuffle using SSE2=" << bshuf_using_SSE2() << " AVX2=" << bshuf_using_AVX2();
 };
 
 ImageBsCompression::~ImageBsCompression()
@@ -289,7 +289,9 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
   bshuf_write_uint32_BE(bs_buffer+8, bs_block_size);
   bs_out_size = bshuf_compress_lz4(src, bs_buffer+12, bs_in_size, data_depth, bs_block_size);
   if (bs_out_size < 0)
-    THROW_CTL_ERROR(Error) << "BS Compression failed: error code " << bs_out_size;
+    THROW_CTL_ERROR(Error) << "BS Compression failed: error code [" << bs_out_size << "]";
+  else
+    DEB_TRACE() << "BitShuffle Compression IN[" << data_size << "] OUT[" << bs_out_size << "]";
 
   return_buffers->push_back(newBuffer);
   return_buffers->back()->used_size = bs_out_size+12;

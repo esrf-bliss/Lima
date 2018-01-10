@@ -201,6 +201,14 @@ static void calculate_chunck(hsize_t* data_size, hsize_t* chunck, int  depth)
 SaveContainerHdf5::SaveContainerHdf5(CtSaving::Stream& stream, CtSaving::FileFormat format) :
   CtSaving::SaveContainer(stream), m_format(format) {
 	DEB_CONSTRUCTOR();
+#if defined(WITH_BS_COMPRESSION)
+    if (format == CtSaving::HDF5BS) {
+        int ret= bshuf_register_h5filter();
+        if (ret < 0) {
+	    THROW_CTL_ERROR(Error) << "Cannot register H5BSHUF filter";
+        }
+    }
+#endif
 }
 
 SaveContainerHdf5::~SaveContainerHdf5() {
