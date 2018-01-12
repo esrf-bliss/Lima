@@ -942,7 +942,7 @@ void CtSaving::setFormatSuffix(int stream_idx)
     case HDF5 : ext = std::string(".h5"); break;
     case HDF5GZ : ext = std::string(".h5"); break;
     case HDF5BS : ext = std::string(".h5"); break;
-    default : ext = string(".dat");
+    default : ext = std::string(".dat");
       break;
     }
 
