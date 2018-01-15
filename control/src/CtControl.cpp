@@ -324,6 +324,9 @@ CtControl::CtControl(HwInterface *hw) :
 {
   DEB_CONSTRUCTOR();
 
+  // Forces initialisation of PoolThreadMgr (pthread_atfork)
+  PoolThreadMgr::get();
+
   m_ct_acq= new CtAcquisition(hw);
   m_ct_image= new CtImage(hw,*this);
   m_ct_buffer= new CtBuffer(hw);
