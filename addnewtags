@@ -138,6 +138,7 @@ mod_version_data = {
     'pointgrey': 'camera/pointgrey/VERSION',
     'pixirad': 'camera/pixirad/VERSION',
     'dexela': 'camera/dexela/VERSION',
+    'eiger': 'camera/eiger/VERSION',
     'meta': 'camera/common/meta/VERSION',
     'spec': 'applications/spec/VERSION',
     'taco/camera/frelon': 'applications/taco/VERSION',
@@ -161,6 +162,7 @@ mod_version_data = {
     'tango/camera/pointgrey': 'applications/tango/python/camera/PointGrey_VERSION',
     'tango/camera/pixirad': 'applications/tango/python/camera/Pixirad_VERSION',
     'tango/camera/dexela': 'applications/tango/python/camera/Dexela_VERSION',
+    'tango/camera/eiger': 'applications/tango/python/camera/Eiger_VERSION',
 }
 
 windows_plugins = ['perkinelmer']
