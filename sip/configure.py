@@ -212,7 +212,7 @@ def main():
             extra_cxxflags += ['-std=c++11']
             extra_cxxflags += ['-DSIPCOMPILATION']
         elif (modName == 'slsdetector'):
-            SLS_DETECTORS_DIR = os.environ['SLS_DETECTORS_DIR']
+            SLS_DETECTORS_DIR = '../../camera/slsdetector/slsDetectorPackage'
             SLS_DETECTORS_SW = os.path.join(SLS_DETECTORS_DIR, 
                                             'slsDetectorSoftware')
             SLS_DETECTORS_RECV = os.path.join(SLS_DETECTORS_DIR, 
