@@ -21,12 +21,12 @@
 //###########################################################################
 #include <cmath>
 #include "CtSaving_Hdf5.h"
-#include "H5Cpp.h"
 #include "lima/CtControl.h"
 #include "lima/CtImage.h"
 #include "lima/CtAcquisition.h"
 #include "lima/HwInterface.h"
 #include "lima/HwCap.h"
+#include "lima/SizeUtils.h"
 
 using namespace lima;
 using namespace H5;
@@ -201,6 +201,14 @@ static void calculate_chunck(hsize_t* data_size, hsize_t* chunck, int  depth)
 SaveContainerHdf5::SaveContainerHdf5(CtSaving::Stream& stream, CtSaving::FileFormat format) :
   CtSaving::SaveContainer(stream), m_format(format) {
 	DEB_CONSTRUCTOR();
+#if defined(WITH_BS_COMPRESSION)
+    if (format == CtSaving::HDF5BS) {
+        int ret= bshuf_register_h5filter();
+        if (ret < 0) {
+	    THROW_CTL_ERROR(Error) << "Cannot register H5BSHUF filter";
+        }
+    }
+#endif
 }
 
 SaveContainerHdf5::~SaveContainerHdf5() {
@@ -213,7 +221,6 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image = control.image();
 	m_ct_acq = control.acquisition();
 	m_hw_int = control.hwInterface();
-	
 
 	// Get detector info 
 	HwDetInfoCtrlObj *det_info;
@@ -249,7 +256,7 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image->getRotation(m_ct_parameters.image_rotation);
 	m_ct_image->getImageDim(m_ct_parameters.image_dim);
 
-	// Check if the overwrite policy if "MultiSet" is activated	
+	// Check if the overwrite policy  "MultiSet" is activated	
 	CtSaving::OverwritePolicy overwrite_policy;
 	control.saving()->getOverwritePolicy(overwrite_policy);
 	m_is_multiset = (overwrite_policy == CtSaving::MultiSet);
@@ -473,10 +480,11 @@ void SaveContainerHdf5::_close(void* f) {
 long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				   CtSaving::HeaderMap &aHeader,
 				   CtSaving::FileFormat aFormat) {
-	DEB_MEMBER_FUNCT();
-	_File* file = (_File*)f;
-	if (aFormat == CtSaving::HDF5) {
+	        DEB_MEMBER_FUNCT();
 
+	        _File* file = (_File*)f;
+		size_t buf_size = 0;
+		
 		// get the proper data type
 		PredType data_type(PredType::NATIVE_UINT8);
 		switch (aData.type) {
@@ -554,13 +562,24 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				max_dims[0] = H5S_UNLIMITED;
 				// Create property list for the dataset and setup chunk size
 				DSetCreatPropList plist;
-				hsize_t chunk_dims[3];
-				// calculate a optimized chunking
-				calculate_chunck(data_dims, chunk_dims, aData.depth());
+				hsize_t chunk_dims[RANK_THREE];
+				// test direct chunk write, so chunk dims is 1 image size
+				chunk_dims[0] = 1; chunk_dims[1] = data_dims[1]; chunk_dims[2] = data_dims[2];
+				
 				plist.setChunk(RANK_THREE, chunk_dims);
 
+#if defined(WITH_Z_COMPRESSION)
+				if (aFormat == CtSaving::HDF5GZ)
+				  plist.setDeflate(m_compression_level);
+#endif
+#if defined(WITH_BS_COMPRESSION)
+				if (aFormat == CtSaving::HDF5BS) {
+				  unsigned int opt_vals[2]= {0, BSHUF_H5_COMPRESS_LZ4};
+				  plist.setFilter(BSHUF_H5FILTER, H5Z_FLAG_MANDATORY, 2, opt_vals);
+				}
+#endif
 				// create new dspace
-				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, max_dims);
+				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, NULL);
 				file->m_image_dataset = 
 				  new DataSet(file->m_measurement_detector->createDataSet("data",
 											  data_type,
@@ -596,25 +615,45 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_dataset_extended = true;
 			}
 			// write the image data
-			hsize_t slab_dim[3];
-			slab_dim[2] = aData.dimensions[0];
-			slab_dim[1] = aData.dimensions[1];
-			slab_dim[0] = 1;
-			DataSpace slabspace = DataSpace(RANK_THREE, slab_dim);
 			int image_nb = aData.frameNumber % m_nbframes;
-			hsize_t start[] = { hsize_t(file->m_prev_images_written + image_nb), hsize_t(0), hsize_t(0)};
-			hsize_t count[] = { hsize_t(1), hsize_t(aData.dimensions[1]), hsize_t(aData.dimensions[0])};
-			file->m_image_dataspace->selectHyperslab(H5S_SELECT_SET, count, start);
-#ifdef WIN32
-			file->m_image_dataset->write((unsigned char*) aData.data(), data_type,
-						     slabspace, *file->m_image_dataspace);
-#else
-			file->m_image_dataset->write((u_int8_t*)aData.data(), data_type,
-				slabspace, *file->m_image_dataspace);
-#endif
 
+			// we test direct chunk write
+			hsize_t offset[RANK_THREE] = {image_nb, 0, 0};
+			uint32_t filter_mask = 0; 
+			hid_t dataset = file->m_image_dataset->getId();
+			herr_t  status;
+			void * buf_data;
+			hid_t dxpl;
+
+			dxpl = H5Pcreate(H5P_DATASET_XFER);
+
+			if ((aFormat == CtSaving::HDF5GZ) || (aFormat == CtSaving::HDF5BS))
+			  {
+			    ZBufferType* buffers = _takeBuffer(aData.frameNumber);
+			    // with single chunk, only one buffer allocated
+			    buf_size = buffers->front()->used_size;
+			    buf_data = buffers->front()->buffer;
+			    //DEB_ALWAYS() << "Image #"<< aData.frameNumber << " buf_size = "<< buf_size;
+			    status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);			
+			    if (status<0) {
+			      THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed";
+			    }
+			    delete  buffers->front();
+			    delete buffers;
+			  }
+			 else
+			   {
+			    buf_data = aData.data();
+			    buf_size = aData.size();
+			    //DEB_ALWAYS() << "Image #"<< aData.frameNumber << " buf_size = "<< buf_size;
+			    status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);			
+			    if (status<0) {
+			      THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed";
+			    }
+
+			  } // else
 		// catch failure caused by the DataSet operations
-		} catch (DataSetIException& error) {
+		}catch (DataSetIException& error) {
 			THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
 			error.printError();
 		}
@@ -630,16 +669,9 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		catch (Exception &e) {
 			THROW_CTL_ERROR(Error) << e.getErrMsg();
 		}
-	}
-	DEB_RETURN();
-	return aData.size();	// fix me ;-o
-}
 
-
-void SaveContainerHdf5::_clear()
-{
-	// dont know what to do yet!
-	// Inheritance requires me.
+		DEB_RETURN();
+		return buf_size;
 }
 
 int SaveContainerHdf5::findLastEntry(const _File &file) {
@@ -661,3 +693,21 @@ int SaveContainerHdf5::findLastEntry(const _File &file) {
 	return index;
 }
 
+SinkTaskBase* SaveContainerHdf5::getCompressionTask(const CtSaving::HeaderMap& header)
+{
+#if defined(WITH_Z_COMPRESSION)
+  if(m_format == CtSaving::HDF5GZ)
+    {
+      m_compression_level = 6;
+      return new ImageZCompression(*this, m_compression_level);
+    }
+#endif
+#if defined(WITH_BS_COMPRESSION)
+  if(m_format == CtSaving::HDF5BS)
+    {
+      return new ImageBsCompression(*this);
+    }
+#endif
+    
+  return NULL;
+}
