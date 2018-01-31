@@ -168,6 +168,16 @@ if(UNIX)
 		add_subdirectory(camera/imxpad)
 	endif(LIMACAMERA_IMXPAD)
 
+	#LAMBDA
+	if(DEFINED ENV{LIMACAMERA_LAMBDA})
+		set(LIMACAMERA_LAMBDA "$ENV{LIMACAMERA_LAMBDA}" CACHE BOOL "compile lambda?" FORCE)
+	else()
+		set(LIMACAMERA_LAMBDA OFF CACHE BOOL "compile lambda?")
+	endif()
+	if(LIMACAMERA_LAMBDA)
+		add_subdirectory(camera/lambda)
+	endif(LIMACAMERA_LAMBDA)
+
 	#MARCCD
 	if(DEFINED ENV{LIMACAMERA_MARCCD})
 		set(LIMACAMERA_MARCCD "$ENV{LIMACAMERA_MARCCD}" CACHE BOOL "compile marccd?" FORCE)
