@@ -139,3 +139,6 @@
 [submodule "camera/slsdetector"]
 	path = camera/slsdetector
 	url = git://github.com/esrf-bliss/Lima-camera-slsdetector.git
+[submodule "camera/lambda"]
+	path = camera/lambda
+	url = git://github.com/esrf-bliss/Lima-camera-lambda
