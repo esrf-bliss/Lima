@@ -124,3 +124,6 @@
 [submodule "third-party/bitshuffle"]
 	path = third-party/bitshuffle
 	url = git://github.com/kiyo-masui/bitshuffle
+[submodule "camera/lambda"]
+	path = camera/lambda
+	url = git://github.com/esrf-bliss/Lima-camera-lambda
