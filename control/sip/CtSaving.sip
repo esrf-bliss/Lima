@@ -252,6 +252,10 @@ using namespace lima;
 
     void setStatisticHistorySize(int aSize, int stream_idx=0);
     int getStatisticHistorySize(int stream_idx=0) const;
+
+    void setEnableLogStat(bool enable, int stream_idx=0);
+    void getEnableLogStat(bool &enable /Out/, int stream_idx=0) const;
+
     // --- misc
 
     void clear();

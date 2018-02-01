@@ -316,6 +316,7 @@ void CtSaving::Stream::createSaveContainer()
 
   int statistic_size = -1;
   int nb_writing_thread = -1;
+  bool enable_log_stat = false;
 
   switch (m_pars.fileFormat) {
   case CBFFormat :
@@ -389,6 +390,7 @@ void CtSaving::Stream::createSaveContainer()
     if (m_save_cnt) {
       statistic_size = m_save_cnt->getStatisticSize();
       nb_writing_thread = m_save_cnt->getMaxConcurrentWritingTask();
+      m_save_cnt->getEnableLogStat(enable_log_stat);
       m_save_cnt->close();
       delete m_save_cnt;
     }
@@ -444,6 +446,7 @@ void CtSaving::Stream::createSaveContainer()
     m_save_cnt->setStatisticSize(statistic_size);
   if(nb_writing_thread != -1)
     m_save_cnt->setMaxConcurrentWritingTask(nb_writing_thread);
+  m_save_cnt->setEnableLogStat(enable_log_stat);
 }
 
 void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
@@ -1651,6 +1654,21 @@ void CtSaving::setMaxConcurrentWritingTask(int nb_threads,int stream_idx)
   stream.setMaxConcurrentWritingTask(nb_threads);
 }
 
+void CtSaving::getEnableLogStat(bool& enable, int stream_idx) const
+{
+  DEB_MEMBER_FUNCT();
+  const Stream& stream = getStream(stream_idx);
+  stream.getEnableLogStat(enable);
+}
+
+void CtSaving::setEnableLogStat(bool enable, int stream_idx)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(enable, stream_idx);
+  Stream& stream = getStream(stream_idx);
+  stream.setEnableLogStat(enable);
+}
+  
 /** @brief clear everything.
     - all header
     - all waiting data to be saved
@@ -2016,8 +2034,8 @@ CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 
 CtSaving::SaveContainer::SaveContainer(Stream& stream) 
   : m_stream(stream), m_statistic_size(16),
-    m_max_writing_task(1),
-    m_running_writing_task(0)
+    m_max_writing_task(1), m_running_writing_task(0),
+    m_log_stat_enable(false)
 {
   DEB_CONSTRUCTOR();
 }
@@ -2032,8 +2050,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(aData,aHeader);
 
-  struct timeval start_write;
-  gettimeofday(&start_write, NULL);
+  Timestamp start_write = Timestamp::now();
 
   long frameId = aData.frameNumber;
 
@@ -2069,6 +2086,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
 		unsigned long  f_fsid;     // file system ID
 		unsigned long  f_flag;     //mount flags
 		unsigned long  f_namemax;  // maximum filename length 
+                }
       */
       //Check if disk full
       struct statvfs vfs;
@@ -2122,26 +2140,109 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
     }
   }
   
-  struct timeval end_write;
-  gettimeofday(&end_write, NULL);
+  Timestamp end_write = Timestamp::now();
 
-
-  double diff = (end_write.tv_sec - start_write.tv_sec) + 
-    (end_write.tv_usec - start_write.tv_usec) / 1e6;
-  
+  Timestamp diff = end_write - start_write;
   DEB_TRACE() << "Write took : " << diff << "s";
 
-  lock.lock();
+  writeFileStat(aData, start_write, end_write, write_size);
+}
+
+void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timestamp end, long wsize)
+{
+  long frameId = aData.frameNumber;
+
   if(long(m_statistic.size()) >= m_statistic_size)
     m_statistic.erase(m_statistic.begin());
 
   StatisticsType::iterator i = m_statistic.find(frameId);
   if(i != m_statistic.end())
     {
-      i->second.writing_start =  start_write.tv_sec + start_write.tv_usec * 1e-6;
-      i->second.writing_end = end_write.tv_sec + end_write.tv_usec * 1e-6;
-      i->second.write_size = write_size;
+      i->second.writing_start = start;
+      i->second.writing_end = end;
+      i->second.write_size = wsize;
+
+      if (m_log_stat_file) {
+          double comp_time=0., comp_rate=0., comp_ratio=0.;
+          double write_time, write_rate, total_time;
+
+          if (i->second.compression_end.isSet() && i->second.compression_start.isSet()) {
+              comp_time= i->second.compression_end - i->second.compression_start;
+              comp_rate= i->second.incoming_size / comp_time / 1024. / 1024.;
+              comp_ratio= i->second.incoming_size / i->second.write_size;
+          }
+
+          write_time= i->second.writing_end - i->second.writing_start;
+          write_rate= i->second.write_size / write_time / 1024. / 1024.;
+          total_time= i->second.writing_end - i->second.received_time;
+
+          fprintf(m_log_stat_file, "%d %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", \
+                  frameId, (double)i->second.received_time, \
+                  comp_time*1000.0, comp_rate, comp_ratio, \
+                  write_time*1000.0, write_rate, total_time*1000.0);
+      }
     }
+}
+
+void CtSaving::SaveContainer::setEnableLogStat(bool enable)
+{
+  m_log_stat_enable = enable;
+}
+
+void CtSaving::SaveContainer::getEnableLogStat(bool& enable) const
+{
+  enable = m_log_stat_enable;
+}
+
+void CtSaving::SaveContainer::prepareLogStat(const CtSaving::Parameters& pars)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_TRACE() << DEB_VAR1(m_log_stat_enable);
+
+  int stream_idx = m_stream.getIndex();
+
+  if (m_log_stat_enable) {
+      if (m_log_stat_directory.empty()) {
+          m_log_stat_directory = pars.directory;
+      } else {
+          m_stream.checkDirectoryAccess(m_log_stat_directory);
+      }
+
+      time_t rawtime;
+      struct tm * timeinfo;
+      char buffer[80];
+
+      time(&rawtime);
+      timeinfo = localtime(&rawtime);
+
+      strftime(buffer,sizeof(buffer),"%Y%m%d",timeinfo);
+      std::string log_name(buffer);
+      std::ostringstream stream_str;
+      std::string new_path;
+      stream_str << stream_idx;
+      log_name = log_name + "_" + stream_str.str() + ".log";
+      new_path = m_log_stat_directory + DIR_SEPARATOR + log_name;
+      
+      if (new_path != m_log_stat_filename) {
+          if (m_log_stat_file)
+              fclose(m_log_stat_file);
+          DEB_TRACE() << "Open Stat Log File : " << new_path;
+          m_log_stat_file = fopen(new_path.c_str(), "aw");
+          if (!m_log_stat_file) {
+              m_log_stat_filename = "";
+              DEB_ERROR() << "Cannot create log stat file";
+          } else {
+              m_log_stat_filename = new_path;
+          }
+      }
+      if (m_log_stat_file) {
+          std::ostringstream head_str;
+          head_str << pars;
+          strftime(buffer, sizeof(buffer), "%Y/%m/%d %H:%M:%S", timeinfo);
+          fprintf(m_log_stat_file, "\n# %s\n# %s\n", buffer, head_str.str().c_str());
+          fprintf(m_log_stat_file, "# frame frame_time(sec) comp_time(msec) comp_rate(MB/s) comp_ratio write_time(msec) write_rate(MB/s) total_time(msec)\n");
+      }
+  }
 }
 
 void CtSaving::SaveContainer::setStatisticSize(int aSize)
@@ -2314,6 +2415,7 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	}
     }
   m_running_writing_task = 0;
+  prepareLogStat(pars);
   lock.unlock();
   _prepare(ct);			// call inheritance if needed
 }

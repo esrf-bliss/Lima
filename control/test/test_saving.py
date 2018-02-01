@@ -67,7 +67,7 @@ class TestSaving:
                 del self.cam_hw
                 
     @Core.DEB_MEMBER_FUNCT
-    def start(self, exp_time, nb_frames, directory, prefix, fmt, overwrite, framesperfile, threads, repeats):
+    def start(self, exp_time, nb_frames, directory, prefix, fmt, overwrite, framesperfile, threads, repeats, log_stat):
         if fmt.lower() not in self.format_list:
             raise ValueError("Unsupported file format. Should be one of %s"%str(self.format_list))
           
@@ -86,6 +86,8 @@ class TestSaving:
         self.ct_saving.setSavingMode(self.ct_saving.AutoFrame)
         #self.ct_saving.setNextNumber(0)
         self.ct_saving.setStatisticHistorySize(nb_frames)
+
+        self.ct_saving.setEnableLogStat(log_stat)
 
         # Setting Pool thread can improve the performance on multi-core computer, e.g for compression purpose
         Core.Processlib.PoolThreadMgr.get().setNumberOfThread(threads)
@@ -131,6 +133,7 @@ def main(argv):
         parser.add_argument('-t', '--threads', help='number of Processlib pool threads', type=int, required=False, default=2)
         camera_list = ['simulator', 'maxipix']
         parser.add_argument('-c', '--camera', help='camera to test', choices=camera_list, required=False, default='simulator')        
+        parser.add_argument('-l', '--log-stat', help='log statistics', required=False, default=False, action='store_true')        
         args = parser.parse_args()
 
         if args.verbose == 1:
@@ -142,12 +145,13 @@ def main(argv):
         elif args.verbose >= 3:
             Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
             Core.DebParams.setModuleFlags(Core.DebParams.AllFlags)
+
 	exp_time = 0.1
 
 	test_saving = TestSaving(args.camera)
 
         if args.format == 'all':
-            format_list=test_saving.format2limaformat.keys()
+            format_list=test_saving.format_list
         else:
             format_list = args.format
         format_list.sort()
@@ -163,7 +167,8 @@ def main(argv):
                                       args.overwrite,
                                       args.framesperfile,
                                       args.threads,
-                                      repeat)
+                                      repeat,
+                                      args.log_stat)
                 except Core.Exception, e:
                     raise RuntimeError
                     
