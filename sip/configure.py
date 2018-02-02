@@ -67,6 +67,7 @@ modules = [('core',             ['common', 'hardware', 'control']),
            ('eiger',            [os.path.join('camera','eiger')]),
            ('hexitec',          [os.path.join('camera','hexitec')]),
            ('slsdetector',      [os.path.join('camera','slsdetector')]),
+           ('lambda',           [os.path.join('camera','lambda')]),
            ]
 
 espiaModules = ['espia', 'frelon', 'maxipix']
