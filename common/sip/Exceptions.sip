@@ -37,7 +37,7 @@ using namespace lima;
 %End
 %RaiseCode
 	const std::string& tmpString = sipExceptionRef.getErrMsg();
-        const char *detail = tmpString.c_str();
+	const char *detail = tmpString.c_str();
 	PyErr_SetString(sipException_Exception, detail);
 %End
 };

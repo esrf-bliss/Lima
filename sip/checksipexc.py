@@ -21,7 +21,23 @@
 ############################################################################
 import os, sys
 
+raise_exc = []
+
 def checksipexc(ifname,trace_output = None) :
+    global raise_exc
+    if not raise_exc:
+        bfile = open('../../common/sip/Exceptions.sip')
+        in_raise_code = False
+        for l in bfile.readlines():
+            l = l.strip()
+            if l == '%RaiseCode':
+                in_raise_code = True
+            elif l == '%End':
+                in_raise_code = False
+            elif in_raise_code:
+                raise_exc.append(l)
+        bfile.close()
+
     ifile = open(ifname, "rt")
 
     ofname = ifname + '.out'
@@ -38,8 +54,6 @@ def checksipexc(ifname,trace_output = None) :
     ellipsis = '...'
     exc_def = 'Exception &sipExceptionRef'
     raise_unknown = 'sipRaiseUnknownException();'
-    raise_exc = ['const char *detail = sipExceptionRef.getErrMsg().c_str();',
-                 'PyErr_SetString(sipException_Exception, detail);']
 
     for line in ifile.readlines():
         linenr += 1
