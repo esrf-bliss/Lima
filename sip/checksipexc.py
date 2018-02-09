@@ -21,17 +21,21 @@
 ############################################################################
 import os, sys
 
+raise_linenr = None
 raise_exc = []
 
 def checksipexc(ifname,trace_output = None) :
-    global raise_exc
+    global raise_linenr, raise_exc
+
+    sip_fname = '../../common/sip/Exceptions.sip'
     if not raise_exc:
-        bfile = open('../../common/sip/Exceptions.sip')
+        bfile = open(sip_fname)
         in_raise_code = False
-        for l in bfile.readlines():
+        for i, l in enumerate(bfile.readlines()):
             l = l.strip()
             if l == '%RaiseCode':
                 in_raise_code = True
+                raise_linenr = i + 2
             elif l == '%End':
                 in_raise_code = False
             elif in_raise_code:
@@ -49,6 +53,7 @@ def checksipexc(ifname,trace_output = None) :
     state = Out
     block = 0
     linenr = 0
+    olinenr = 1
     modified = False
 
     ellipsis = '...'
@@ -57,7 +62,7 @@ def checksipexc(ifname,trace_output = None) :
 
     for line in ifile.readlines():
         linenr += 1
-
+        
         new_state = state
 
         l = line.strip()
@@ -80,6 +85,7 @@ def checksipexc(ifname,trace_output = None) :
 
         if InDefHandler not in [state, new_state] or had_exc_handler:
             ofile.write(line)
+            olinenr += line.count('\n')
         else:
             def_handler_code.append(line)
             if new_state == Out:
@@ -91,10 +97,15 @@ def checksipexc(ifname,trace_output = None) :
                         tok = handler_line.split(raise_unknown)
                         sep = '\n' + tok[0]
                         exc_line = sep.join(raise_exc)
-                        handler_line = exc_line.join(tok)
+                        sip_head = '#line %d "%s"\n' % (raise_linenr, sip_fname)
+                        new_olinenr = olinenr + len(raise_exc) + 2
+                        sip_tail = '#line %d "./%s"\n\n' % (new_olinenr, ifname)
+                        handler_line = sip_head + exc_line.join(tok) + sip_tail
                     ofile.write(handler_line)
+                    olinenr += handler_line.count('\n')
                 for handler_line in def_handler_code:
                     ofile.write(handler_line)
+                    olinenr += handler_line.count('\n')
                 modified = True
 
         if new_state != state:
