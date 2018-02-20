@@ -157,6 +157,9 @@ ifneq ($(COMPILE_SLSDETECTOR), 0)
 sip-modules += slsdetector
 endif
 
+ifneq ($(COMPILE_LAMBDA), 0)
+sip-modules += lambda
+endif
 
 all:	src
 

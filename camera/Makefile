@@ -259,4 +259,12 @@ ifneq ($(COMPILE_SLSDETECTOR),0)
 sub-dirs += slsdetector
 endif
 
+ifndef COMPILE_LAMBDA
+COMPILE_LAMBDA = 0
+endif
+
+ifneq ($(COMPILE_LAMBDA),0)
+sub-dirs += lambda
+endif
+
 include ../global.inc

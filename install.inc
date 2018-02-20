@@ -259,6 +259,12 @@ SLSDETECTOR_FULL_VERSION = $(shell cat camera/slsdetector/VERSION)
 INSTALL_SLSDETECTOR_VDIR = $(INSTALL_SLSDETECTOR_DIR)/v$(SLSDETECTOR_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_LAMBDA), 0)
+INSTALL_LAMBDA_DIR = $(INSTALL_PLAT_DIR)/Lambda
+LAMBDA_FULL_VERSION = $(shell cat camera/lambda/VERSION)
+INSTALL_LAMBDA_VDIR = $(INSTALL_LAMBDA_DIR)/v$(LAMBDA_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_SPS_IMAGE),0)
 INSTALL_CONFIG_DEFINES += -DWITH_SPS_IMAGE
 endif
@@ -691,4 +697,14 @@ ifneq ($(COMPILE_SLSDETECTOR), 0)
 	cp -d build/liblimaslsdetector.so* $(INSTALL_LIB_DIR)
 	cp sip/slsdetector/limaslsdetector.so $(INSTALL_SLSDETECTOR_VDIR)
 	cp camera/slsdetector/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+
+ifneq ($(COMPILE_LAMBDA), 0)
+	mkdir -p $(INSTALL_LAMBDA_VDIR)
+	cp camera/lambda/python/__init__.py $(INSTALL_LAMBDA_DIR)
+	$(call install_core_dep,$(INSTALL_LAMBDA_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimalambda.so*
+	cp -d build/liblimalambda.so* $(INSTALL_LIB_DIR)
+	cp sip/lambda/limalambda.so $(INSTALL_LAMBDA_VDIR)
+	cp camera/lambda/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
