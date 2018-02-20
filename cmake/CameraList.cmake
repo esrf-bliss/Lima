@@ -280,6 +280,16 @@ if(UNIX)
 		add_subdirectory(camera/rayonixhs)
 	endif(LIMACAMERA_RAYONIXHS)
 
+	#SLSDETECTOR
+	if(DEFINED ENV{LIMACAMERA_SLSDETECTOR})
+		set(LIMACAMERA_SLSDETECTOR "$ENV{LIMACAMERA_SLSDETECTOR}" CACHE BOOL "compile slsdetector ?" FORCE)
+	else()
+		set(LIMACAMERA_SLSDETECTOR OFF CACHE BOOL "compile slsdetector ?")
+	endif()	
+	if(LIMACAMERA_SLSDETECTOR)
+		add_subdirectory(camera/slsdetector)
+	endif(LIMACAMERA_SLSDETECTOR)
+
 	#UEYE
 	if(DEFINED ENV{LIMACAMERA_UEYE})
 		set(LIMACAMERA_UEYE "$ENV{LIMACAMERA_UEYE}" CACHE BOOL "compile ueye ?" FORCE)
@@ -339,7 +349,6 @@ if(UNIX)
 	if(LIMACAMERA_XSPRESS3)
 		add_subdirectory(camera/xspress3)
 	endif(LIMACAMERA_XSPRESS3)
-
 endif()
 
 #CAMERA ONLY WORKING ON WINDOWS
