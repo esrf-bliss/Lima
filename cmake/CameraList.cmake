@@ -148,6 +148,16 @@ if(UNIX)
 		add_subdirectory(camera/frelon)
 	endif(LIMACAMERA_FRELON)
 
+	#FLI
+	if(DEFINED ENV{LIMACAMERA_FLI})
+		set(LIMACAMERA_FLI "$ENV{LIMACAMERA_FLI}" CACHE BOOL "compile Finger Lake Instrument camera?" FORCE)
+	else()
+		set(LIMACAMERA_FLI OFF CACHE BOOL "compile Finger Lake Instrument camera?")
+	endif()
+	if(LIMACAMERA_FLI)
+		add_subdirectory(camera/fli)
+	endif(LIMACAMERA_FLI)
+
 	#HEXITEC
 	if(DEFINED ENV{LIMACAMERA_HEXITEC})
 		set(LIMACAMERA_HEXITEC "$ENV{LIMACAMERA_HEXITEC}" CACHE BOOL "compile hexitec ?" FORCE)
