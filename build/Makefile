@@ -941,6 +941,34 @@ build_targets   += $(slsdetector-libfull)
 
 endif
 
+##########################
+# LIMA - LAMBDA
+############################
+ifneq ($(COMPILE_LAMBDA),0)
+
+LAMBDA_LDFLAGS  := -L$(LAMBDA_DIR)/sdk/bin
+LAMBDA_LDLIBS   := -llambda
+
+lambda-name     := lambda
+lambda-objs     := ../camera/lambda/src/Lambda.o
+lambda-ver      := ../camera/lambda/VERSION
+lambda-flags    := $(LDFLAGS) $(LAMBDA_LDFLAGS)
+lambda-libs     := $(LDLIBS) $(LAMBDA_LDLIBS)
+lambda-deps     := $(DEPLIBS)
+lambda-libdeps  := $(call lib-deps,$(lambda-deps))
+lambda-libfull  := $(call lib-full,$(lambda-name),$(lambda-ver))
+
+$(lambda-libfull): $(lambda-objs) $(lambda-libdeps)
+	$(call compile-lib,$(lambda-name),$(lambda-ver),\
+			   $(lambda-deps),\
+			   $(lambda-flags),$(lambda-libs),$@,\
+			   $(lambda-objs))
+	$(call create-links,$(lambda-name),$(lambda-ver))
+
+build_targets   += $(lambda-libfull)
+
+endif
+
 
 src:		$(build_targets)
 
