@@ -918,6 +918,7 @@ endif
 ############################
 ifneq ($(COMPILE_SLSDETECTOR),0)
 
+SLS_DETECTORS_DIR    := ../camera/slsdetector/slsDetectorPackage
 SLSDETECTOR_LDFLAGS  := -L$(SLS_DETECTORS_DIR)/bin
 SLSDETECTOR_LDLIBS   := -lSlsDetector -lSlsReceiver
 
