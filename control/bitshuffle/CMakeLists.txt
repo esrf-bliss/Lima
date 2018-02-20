@@ -54,6 +54,6 @@ target_include_directories(h5bshuf PRIVATE "${BITSHUFFLE_DIR}/lz4")
 target_include_directories(h5bshuf PRIVATE "${LIB_HDF5_INCLUDE_DIR}")
 
 target_link_libraries(h5bshuf ${LIB_HDF5})
-
-install(TARGETS h5bshuf LIBRARY DESTINATION lib)
+include(GNUInstallDirs)
+install(TARGETS h5bshuf LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR})
 

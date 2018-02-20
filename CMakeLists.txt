@@ -138,7 +138,7 @@ if(LIMA_ENABLE_PYTHON)
     if(${PYTHONINTERP_FOUND})
       # python site-packages folder
       execute_process(
-	      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
+	      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib(True))"
 	OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 	else()
 		message(FATAL_ERROR "No python found, please install or disable LIMA_ENABLE_PYTHON")
@@ -152,12 +152,11 @@ if(LIMA_ENABLE_PYTHON)
 
     set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
-    if(WIN32)
-        set(NUMPY_INCLUDE_DIR "${_PYTHON_SITE_PACKAGES_DIR}/numpy/core/include" CACHE PATH "Path to NumPy include folder")
-        set(NUMPY_LIB_DIR "${_PYTHON_SITE_PACKAGES_DIR}/numpy/core/lib" CACHE PATH "Path to NumPy lib folder")
-        include_directories(${NUMPY_INCLUDE_DIR})
-        link_directories(${NUMPY_LIB_DIR})
-    endif()
+    set(NUMPY_INCLUDE_DIR "${_PYTHON_SITE_PACKAGES_DIR}/numpy/core/include" CACHE PATH "Path to NumPy include folder")
+    set(NUMPY_LIB_DIR "${_PYTHON_SITE_PACKAGES_DIR}/numpy/core/lib" CACHE PATH "Path to NumPy lib folder")
+    include_directories(${NUMPY_INCLUDE_DIR})
+    link_directories(${NUMPY_LIB_DIR})
+
     if(!${SIP_FOUND})
         message(FATAL_ERROR "sip executable not found, cannot build python extensions")
     endif()
@@ -480,9 +479,10 @@ if(WIN32)
             DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
 else()
+    include(GNUInstallDirs)
     install(TARGETS limacore
-            LIBRARY DESTINATION lib
-            PUBLIC_HEADER DESTINATION include)
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 
 

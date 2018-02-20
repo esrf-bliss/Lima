@@ -43,8 +43,9 @@ if(WIN32)
     install(TARGETS lima${NAME}
             DESTINATION lib)
 else()
+    include(GNUInstallDirs)
     install(TARGETS lima${NAME}
-            LIBRARY DESTINATION lib)
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 
 if (LIMA_ENABLE_PYTHON)
