@@ -517,8 +517,18 @@ return aReturnListPt;
 };
 
 %UnitCode
-#include <lima_init_numpy.cpp>
 #include <lima_repr_attr.cpp>
+%End
+
+%ModuleCode
+extern "C"
+{
+#if PY_VERSION_HEX >= 0x03000000
+int lima_import_array();
+#else
+void lima_import_array();
+#endif
+}
 %End
 
 %PostInitialisationCode

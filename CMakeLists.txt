@@ -264,13 +264,6 @@ if(LIMA_ENABLE_SPS_IMAGE)
 endif()
 
 #--------------------------------------------------------------------------------
-# Option for openGL real-time display  support
-#--------------------------------------------------------------------------------
-if(LIMA_ENABLE_GLDISPLAY)
-  add_subdirectory(third-party/gldisplay)
-endif()
-
-#--------------------------------------------------------------------------------
 # Option for extra saving formats edf.gz, edf.lz4, cbf, hdf5, tiff, fits ...
 #--------------------------------------------------------------------------------
 set(saving_libs)
@@ -514,7 +507,6 @@ if(LIMA_ENABLE_PYTHON)
 	    configure_file(sip/core/limacore.sip.in sip/core/limacore.sip)
 	    configure_file(hardware/sip/HwFrameInfo.sip_after_4_12 sip/core/HwFrameInfo.sip)
     endif()
-    set(SIP_CONCAT_PARTS 1)
     set(SIP_INCLUDES ${SIP_INCLUDES}
         "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/sip"
@@ -541,6 +533,13 @@ if(LIMA_ENABLE_PYTHON)
 
     install(FILES python/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
     install(FILES common/python/__init__.py common/python/Debug.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Core")
+endif()
+
+#--------------------------------------------------------------------------------
+# Option for openGL real-time display  support
+#--------------------------------------------------------------------------------
+if(LIMA_ENABLE_GLDISPLAY)
+  add_subdirectory(third-party/gldisplay)
 endif()
 
 #--------------------------------------------------------------------------------

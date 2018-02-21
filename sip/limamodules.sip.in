@@ -1,7 +1,7 @@
 %Module(name=lima@NAME@,version=0)
 
 
-%ModuleHeaderCode
+%ModuleCode
 extern "C" {
 #if PY_VERSION_HEX >= 0x03000000
 int lima_import_array();
@@ -12,7 +12,6 @@ void lima_import_array();
 %End
 
 %UnitCode
-#include <lima_init_numpy.cpp>
 #include <lima_repr_attr.cpp>
 %End
 
