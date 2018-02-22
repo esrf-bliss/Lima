@@ -189,14 +189,13 @@ def main():
             extraIncludes += ['../../third-party/yat/include','/home/xpix_user/PCI_VALIDATED/trunk/sw/xpci_lib']
         elif(modName == 'xspress3'):
             extraIncludes += ['../../third-party/hdf5/c++/src']
-            extra_cxxflags += ['-DSIPCOMPILATION']
         elif(modName == 'pco'):
             extraIncludes += ['R:/bliss/projects/LIMA/package/WIN32/PCO/sdkPco/include']
         elif(modName == 'marccd'):
             extraIncludes += ['../../../include/DiffractionImage']
             extraIncludes += ['../../third-party/yat/include'] 
         elif(modName == 'pointgrey'):
-            extraIncludes += ['/usr/include/flycapture']
+            extraIncludes += ['../../camera/pointgrey/sdk/usr/include/flycapture']
         elif(modName == 'rayonixhs'):
             extraIncludes += ['/opt/rayonix/include/craydl','/opt/rayonix/include','/opt/rayonix/include/marccd']
             extra_cxxflags += ['-std=c++0x']
@@ -210,7 +209,6 @@ def main():
         elif (modName == 'hexitec'):
             extraIncludes += ['../../camera/hexitec/sdk','/opt/pleora/ebus_sdk/CentOS-RHEL-7-x86_64/include']
             extra_cxxflags += ['-std=c++11']
-            extra_cxxflags += ['-DSIPCOMPILATION']
         elif (modName == 'slsdetector'):
             SLS_DETECTORS_DIR = '../../camera/slsdetector/slsDetectorPackage'
             SLS_DETECTORS_SW = os.path.join(SLS_DETECTORS_DIR, 
