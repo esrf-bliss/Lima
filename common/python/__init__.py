@@ -21,5 +21,23 @@
 ############################################################################
 
 import processlib as Processlib
+import limacore
 from limacore import *
+
+_DebParams = DebParams
+
+
+def _to_bytes(arg):
+    if isinstance(arg, bytes):
+        return arg
+    return arg.encode()
+
+class DebParams(_DebParams):
+	def __init__(self, deb_mod, class_name, mod_name):
+		_DebParams.__init__(self, deb_mod, _to_bytes(class_name), _to_bytes(mod_name))
+		
+#def DebParams(deb_mod, class_name, mod_name):
+#    _DebParams(deb_mod, _to_bytes(class_name), _to_bytes(mod_name))
+
+limacore.DebParams = DebParams
 from .Debug import *
