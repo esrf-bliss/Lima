@@ -891,7 +891,7 @@ endif
 ifneq ($(COMPILE_HEXITEC),0)
 
 HEXITEC_LDFLAGS	:= -L/opt/pleora/ebus_sdk/CentOS-RHEL-7-x86_64/lib
-HEXITEC_LDLIBS	:= -lPvDevice -lPvStream -lPvBuffer -lPvGenICam -lPvBase -lPvSerial -lEbUtilsLib
+HEXITEC_LDLIBS	:= -lPvDevice -lPvStream -lPvBuffer -lPvGenICam -lPvBase -lPvSerial -lPvSystem -lEbUtilsLib
 
 hexitec-name	:= hexitec
 hexitec-objs	:= ../camera/hexitec/src/Hexitec.o
