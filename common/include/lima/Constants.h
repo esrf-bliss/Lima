@@ -41,7 +41,8 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os, AlignDir align_dir);
  */
 enum ImageType {
 	Bpp8, Bpp8S, Bpp10, Bpp10S, Bpp12, Bpp12S, Bpp14, Bpp14S, 
-	Bpp16, Bpp16S, Bpp32, Bpp32S, Bpp32F, Bpp1, Bpp4, Bpp6, Bpp24, Bpp24S
+	Bpp16, Bpp16S, Bpp32, Bpp32S, Bpp32F, Bpp1, Bpp4, Bpp6, Bpp24, Bpp24S,
+	Bpp64, Bpp64S
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, ImageType image_type);
