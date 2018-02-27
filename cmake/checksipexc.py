@@ -27,8 +27,33 @@ import shutil
 
 logger = logging.getLogger(__file__)
 
+raise_linenr = None
+raise_exc = []
 
 def checksipexc(ifname, inplace=False):
+    global raise_linenr, raise_exc
+
+    lfname = ifname
+    sip_fname = '../../../common/sip/Exceptions.sip'
+    if lfname.startswith('/'):
+        sip_fname = os.path.realpath(sip_fname)
+    else:
+        lfname = os.path.join(os.curdir, lfname)
+    
+    if not raise_exc:
+        bfile = open(sip_fname)
+        in_raise_code = False
+        for i, l in enumerate(bfile.readlines()):
+            l = l.strip()
+            if l == '%RaiseCode':
+                in_raise_code = True
+                raise_linenr = i + 2
+            elif l == '%End':
+                in_raise_code = False
+            elif in_raise_code:
+                raise_exc.append(l)
+        bfile.close()
+
     ifile = open(ifname, "rt")
 
     if inplace:
@@ -44,17 +69,16 @@ def checksipexc(ifname, inplace=False):
     state = Out
     block = 0
     linenr = 0
+    olinenr = 1
     modified = False
 
     ellipsis = '...'
     exc_def = 'Exception &sipExceptionRef'
     raise_unknown = 'sipRaiseUnknownException();'
-    raise_exc = ['const char *detail = sipExceptionRef.getErrMsg().c_str();',
-                 'PyErr_SetString(sipException_Exception, detail);']
 
     for line in ifile.readlines():
         linenr += 1
-
+        
         new_state = state
 
         l = line.strip()
@@ -77,6 +101,7 @@ def checksipexc(ifname, inplace=False):
 
         if InDefHandler not in [state, new_state] or had_exc_handler:
             ofile.write(line.encode())
+            olinenr += line.count('\n')
         else:
             def_handler_code.append(line)
             if new_state == Out:
@@ -88,10 +113,15 @@ def checksipexc(ifname, inplace=False):
                         tok = handler_line.split(raise_unknown)
                         sep = '\n' + tok[0]
                         exc_line = sep.join(raise_exc)
-                        handler_line = exc_line.join(tok)
+                        sip_head = '#line %d "%s"\n' % (raise_linenr, sip_fname)
+                        new_olinenr = olinenr + len(raise_exc) + 2
+                        sip_tail = '#line %d "%s"\n\n' % (new_olinenr, lfname)
+                        handler_line = sip_head + exc_line.join(tok) + sip_tail
                     ofile.write(handler_line.encode())
+                    olinenr += handler_line.count('\n')
                 for handler_line in def_handler_code:
                     ofile.write(handler_line.encode())
+                    olinenr += handler_line.count('\n')
                 modified = True
 
         if new_state != state:

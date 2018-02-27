@@ -37,7 +37,6 @@
 
 set(SIP_INCLUDES)
 set(SIP_TAGS)
-set(SIP_CONCAT_PARTS 8)
 set(SIP_DISABLE_FEATURES)
 set(SIP_EXTRA_OPTIONS)
 
@@ -78,12 +77,48 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
     endforeach (_x ${SIP_DISABLE_FEATURES})
 
     set(_message "-DMESSAGE=Generating CPP code for module ${MODULE_NAME}")
+	
+#    if(WIN32)
+#		set(COPY_COMMAND copy)
+#	else()
+#		set(COPY_COMMAND cp)	
+#    endif()
+	
+	set(_module_sbf ${_module_path}/${MODULE_NAME}.sbf)
+	execute_process(
+		COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
+	                              ${_sip_includes} -b ${_module_sbf} 
+								  ${_abs_module_sip}
+	)
+
+	set(_lima_init_numpy_cpp)
+    if(NOT (${MODULE_NAME} STREQUAL "processlib"))
+        set(_lima_init_numpy "lima_init_numpy.cpp")
+        set(_lima_init_numpy_cpp ${_module_path}/${_lima_init_numpy})
+#        add_custom_command(
+#            OUTPUT ${_lima_init_numpy_cpp}
+#	    COMMAND ${COPY_COMMAND} ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy} 
+#                    ${_module_path}
+#            DEPENDS ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy}
+#        )
+		configure_file(${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy} 
+                    ${_module_path}
+					COPYONLY
+		)
+    endif()
+
+    set(_sip_output_files_list)
+    execute_process(
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/readsipsbf.py 
+		                             ${_module_sbf} ${_module_path}
+	    OUTPUT_VARIABLE _sip_output_files_list
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+	
     set(_sip_output_files)
-    foreach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
-        if( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
-            set(_sip_output_files ${_sip_output_files} ${_module_path}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
-        endif( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
-    endforeach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
+    foreach(filename IN LISTS _sip_output_files_list)
+        set(_sip_output_files ${_sip_output_files} ${filename})
+    endforeach(filename)
 
     if(NOT WIN32)
         set(TOUCH_COMMAND touch)
@@ -95,29 +130,39 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
             file(APPEND filename "")
         endforeach(filename ${_sip_output_files})
     endif(NOT WIN32)
+
+    # TODO: add all SIP files with the %Include directive + Exceptions.sip
+
     add_custom_command(
         OUTPUT ${_sip_output_files} 
         COMMAND ${CMAKE_COMMAND} -E echo ${message}
         COMMAND ${TOUCH_COMMAND} ${_sip_output_files} 
-        COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS} -b ${MODULE_NAME}.sbf -c ${_module_path} ${_sip_includes} ${_abs_module_sip}
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py ${_sip_output_files}
+        COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
+	                          ${_sip_includes} -c ${_module_path} 
+				  ${_abs_module_sip}
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py 
+                                     ${_sip_output_files}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
     )
     # not sure if type MODULE could be uses anywhere, limit to cygwin for now
+    set(_sip_all_files ${_lima_init_numpy_cpp} ${_sip_output_files})
     if (CYGWIN)
-        add_library(${_logical_name} MODULE ${_sip_output_files} )
+        add_library(${_logical_name} MODULE ${_sip_all_files} )
     else (CYGWIN)
-        add_library(${_logical_name} SHARED ${_sip_output_files} )
+        add_library(${_logical_name} SHARED ${_sip_all_files} )
     endif (CYGWIN)
     target_link_libraries(${_logical_name} ${PYTHON_LIBRARY})
     target_link_libraries(${_logical_name} ${EXTRA_LINK_LIBRARIES})
-    set_target_properties(${_logical_name} PROPERTIES PREFIX "" OUTPUT_NAME ${_child_module_name})
+    set_target_properties(${_logical_name} PROPERTIES 
+                          PREFIX "" OUTPUT_NAME ${_child_module_name} 
+                          LINKER_LANGUAGE CXX)
     
     if (WIN32)
       set_target_properties(${_logical_name} PROPERTIES SUFFIX ".pyd")
       set_target_properties(${_logical_name} PROPERTIES IMPORT_SUFFIX ".dll")
     endif (WIN32)
 
-    install(TARGETS ${_logical_name} DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}")
+    install(TARGETS ${_logical_name} 
+            DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}")
 
 endmacro(ADD_SIP_PYTHON_MODULE)

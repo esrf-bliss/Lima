@@ -251,7 +251,7 @@ public:
 		return *this; 
 	}
 
-	AutoPtr& operator =(AutoPtr& o)
+	AutoPtr& operator =(const AutoPtr& o)
 	{
 		AutoPtrData *od = o.getData(); // protects against "a = a"
 		putData(); 
