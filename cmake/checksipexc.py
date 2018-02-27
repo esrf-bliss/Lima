@@ -38,7 +38,7 @@ def checksipexc(ifname, inplace=False):
     if lfname.startswith('/'):
         sip_fname = os.path.realpath(sip_fname)
     else:
-        lfname = os.path.join(os.curdir, lname)
+        lfname = os.path.join(os.curdir, lfname)
     
     if not raise_exc:
         bfile = open(sip_fname)

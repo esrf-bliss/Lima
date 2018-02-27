@@ -77,36 +77,44 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
     endforeach (_x ${SIP_DISABLE_FEATURES})
 
     set(_message "-DMESSAGE=Generating CPP code for module ${MODULE_NAME}")
-    set(_module_sbf ${_module_path}/${MODULE_NAME}.sbf)
-    execute_process(
-        COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
-	                          ${_sip_includes} -b ${_module_sbf} 
-				  ${_abs_module_sip}
-    )
-    
-    set(_lima_init_numpy_cpp)
+	
+#    if(WIN32)
+#		set(COPY_COMMAND copy)
+#	else()
+#		set(COPY_COMMAND cp)	
+#    endif()
+	
+	set(_module_sbf ${_module_path}/${MODULE_NAME}.sbf)
+	execute_process(
+		COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
+	                              ${_sip_includes} -b ${_module_sbf} 
+								  ${_abs_module_sip}
+	)
+
+	set(_lima_init_numpy_cpp)
     if(NOT (${MODULE_NAME} STREQUAL "processlib"))
         set(_lima_init_numpy "lima_init_numpy.cpp")
         set(_lima_init_numpy_cpp ${_module_path}/${_lima_init_numpy})
-        add_custom_command(
-            OUTPUT ${_lima_init_numpy_cpp}
-	    COMMAND cp ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy} 
+#        add_custom_command(
+#            OUTPUT ${_lima_init_numpy_cpp}
+#	    COMMAND ${COPY_COMMAND} ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy} 
+#                    ${_module_path}
+#            DEPENDS ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy}
+#        )
+		configure_file(${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy} 
                     ${_module_path}
-            DEPENDS ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy}
-        )
+					COPYONLY
+		)
     endif()
 
     set(_sip_output_files_list)
     execute_process(
-        COMMAND grep "^sources[ ]*=[ ]*" ${_module_sbf} 
-	COMMAND sed "s/^sources[ ]*=[ ]*//"
-	COMMAND bash -c "sed 's:\\([^ \\.]\\+\\.cpp\\):'$0'/\\1:g'" 
-	             ${_module_path}
-        COMMAND sed "s/ /;/g"
-        OUTPUT_VARIABLE _sip_output_files_list
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/readsipsbf.py 
+		                             ${_module_sbf} ${_module_path}
+	    OUTPUT_VARIABLE _sip_output_files_list
 	OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-
+	
     set(_sip_output_files)
     foreach(filename IN LISTS _sip_output_files_list)
         set(_sip_output_files ${_sip_output_files} ${filename})

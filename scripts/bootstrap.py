@@ -99,7 +99,7 @@ def config_cmake_options(options):
 
 def install_lima_linux():
 	os.chdir(os.getcwd()+"/build")
-        global install_path, install_python_path, find_root_path
+	global install_path, install_python_path, find_root_path
 	try:
                 if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
                 if install_python_path != "": install_python_path =  " -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path)
@@ -114,7 +114,7 @@ def install_lima_linux():
                 install_check = os.system("make install")
                 if str(install_check)!="0":
                         raise Exception("CMake couldn't install libraries. Make sure you have necessaries rights.")
-        except Exception as inst:
+	except Exception as inst:
                 if str(cmake_check)!="0":
                         sys.exit("Problem in CMake configuration")
                 elif str(compilation_check)!="0":
@@ -123,7 +123,7 @@ def install_lima_linux():
                         sys.exit("Problem in CMake installation")
 
 def install_lima_windows():
-        global install_path, install_python_path, find_root_path
+	global install_path, install_python_path, find_root_path
 	# for windows check compat between installed python and mandatory vc++ compiler
 	# See, https://wiki.python.org/moin/WindowsCompilers
 	if sys.version_info < (2, 6):
@@ -145,11 +145,11 @@ def install_lima_windows():
 	
 	os.chdir(os.getcwd()+"/build")
 	try :
-                if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
-                if install_python_path != "": install_python_path =  " -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path)
-                if find_root_path != "": find_root_path = " -DCMAKE_FIND_ROOT_PATH="+str(find_root_path)
+		if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
+		if install_python_path != "": install_python_path =  " -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path)
+		if find_root_path != "": find_root_path = " -DCMAKE_FIND_ROOT_PATH="+str(find_root_path)
                 
-                cmake_check = os.system(cmake_cmd+source_path+" "+cmake_config++install_path+install_python_path+find_root_path)
+		cmake_check = os.system(cmake_cmd+source_path+" "+cmake_config+install_path+install_python_path+find_root_path)
 
 		if str(cmake_check)!="0":
 			raise Exception("Something went wrong in the CMake preparation. Make sure your configuration is good.")
@@ -189,7 +189,7 @@ if __name__ == '__main__':
 		if "--install-python-prefix=" in option:
 			install_python_path=option[24:]
 		if "--find-root-path=" in option:
-                        print (option)
+			print (option)
 			find_root_path=option[17:]
 	if OS_TYPE=="Linux":
 		install_lima_linux()
