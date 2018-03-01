@@ -129,4 +129,4 @@
 	url = git://github.com/esrf-bliss/Lima-camera-lambda
 [submodule "camera/fli"]
 	path = camera/fli
-	url = git@gitlab.esrf.fr:limagroup/Lima-camera-fli
+	url = git://github.com/esrf-bliss/Lima-camera-fli
