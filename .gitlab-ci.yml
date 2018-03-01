@@ -1,0 +1,28 @@
+# image : docker-registry.esrf.fr/bcu/lima-ci-debian8:latest
+#before_script :
+
+stages:
+  - build
+  - test
+
+build :
+  stage: build
+  script:
+    - ./install.sh --git tests python 
+    - ls -l
+  artifacts:
+    paths:
+    - build/
+  only:
+    - cmake
+
+
+test :
+  stage: test
+  dependencies:
+    - build
+  script:
+    - cd build/
+    - ctest --timeout 10
+  only:
+    - cmake

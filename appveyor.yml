@@ -1,0 +1,80 @@
+version: 1.0.{build}
+
+os: Visual Studio 2015
+
+platform: x64
+
+configuration: Release
+
+branches:
+  only:
+    - cmake
+    
+matrix:
+  fast_finish: false # set this flag to immediately finish build once one of the jobs fails.
+
+environment:
+  matrix:
+# for further test with nmake
+#   - PLATFORM: x64
+#     BUILDER: "CMake"
+#     CONFIGURATION: "Release"
+#     GENERATOR: "NMake Makefiles"
+#     PYTHON: "C:\\Python27-x64"
+   - PLATFORM: x64
+     BUILDER: "CMake"
+     CONFIGURATION: "Release"
+     GENERATOR: "Visual Studio 12 2013 Win64"
+     PYTHON: "C:\\Python27-x64"
+   - PLATFORM: x86
+     BUILDER: "CMake"
+     CONFIGURATION: "Release"
+     GENERATOR: "Visual Studio 12 2013"
+     PYTHON: "C:\\Python27"
+
+init:
+  - ps: 'Write-Host "Building LIMA branch: $env:APPVEYOR_REPO_BRANCH" -ForegroundColor Magenta'
+  - if [%PLATFORM%]==[x64] "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+  - if [%PLATFORM%]==[x64] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86_amd64
+  - if [%PlATFORM%]==[x86] call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat"
+  - set PATH=%PYTHON%;%PATH% 
+  
+install:
+  - ps: 'Write-Host "Installing submodule third-party/Processlib :" -ForegroundColor Magenta'
+  - git submodule init third-party/Processlib
+  - git submodule update
+  - git submodule foreach "git checkout cmake"
+  - ps: 'Write-Host "Installing GSL :" -ForegroundColor Magenta'
+  - if [%PLATFORM%]==[x64] (
+      appveyor.exe DownloadFile  http://ftp.esrf.fr/pub/bliss/lima/gsl-1.15-dev-win64.zip &&
+      7z.exe x gsl-1.15-dev-win64.zip -o"c:\Program Files\gsl-1.15-win64"
+   )
+  - if [%PLATFORM%]==[x86] (
+      appveyor.exe DownloadFile http://ftp.esrf.fr/pub/bliss/lima/gsl-1.8-lib.zip &&
+      7z.exe x gsl-1.8-lib.zip -o"c:\Program Files\gsl-1.8-win32"
+   )
+  - ps: 'Write-Host "Installing NUMPY :" -ForegroundColor Magenta'
+  - "%PYTHON%/Scripts/pip.exe install numpy"
+  - ps: 'Write-Host "Installing SIP" -ForegroundColor Magenta'
+  - appveyor.exe DownloadFile https://sourceforge.net/projects/pyqt/files/sip/sip-4.18/sip-4.18.zip
+  - 7z.exe x sip-4.18.zip
+  - cd sip-4.18
+  - python.exe configure.py
+  - nmake
+  - nmake install
+  - cd ..
+ 
+before_build:
+  - ps: 'Write-Host "Running $env:BUILDER with $env:GENERATOR :" -ForegroundColor Magenta'
+  - mkdir build
+  - cd build
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DLIMACAMERA_SIMULATOR=1  -DLIMA_ENABLE_PYTHON=1 -DLIMA_ENABLE_TESTS=1 ..
+
+build_script:
+  - ps: 'Write-Host "Running $env:BUILDER :" -ForegroundColor Magenta'
+  - cmake --build . --config %CONFIGURATION%
+    
+
+test_script:
+  - ps: 'Write-Host "Running tests :" -ForegroundColor Magenta'
+#  - ctest -VV --debug --output-on-failure -C %CONFIGURATION% 

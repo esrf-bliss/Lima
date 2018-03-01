@@ -35,7 +35,7 @@ typedef std::vector<PeakType> PeakListType;
 		bool ok = PyList_Check(sipPy);
 		for (int i = 0; ok && (i < PyList_Size(sipPy)); ++i) {
 			PyObject *p = PyList_GET_ITEM(sipPy, i);
-			ok = sipCanConvertToType(p,
+			ok = !!sipCanConvertToType(p,
 					sipType_Simulator_GaussPeak, 
 					SIP_NOT_NONE);
 		}

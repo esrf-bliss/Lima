@@ -152,13 +152,13 @@ void HwBufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
                              double(finfo.frame_timestamp));
 	p += snprintf(p, sizeof(buffer) - (p - buffer), "valid_pixels = %d ;\n", finfo.valid_pixels);
 
-	int l = p - buffer;
-	int len = l;
-	int rem = len % EDF_HEADER_LEN;
+	long l = long(p - buffer);
+	long len = l;
+	long rem = len % EDF_HEADER_LEN;
 	if (rem > 0)
 		len += EDF_HEADER_LEN - rem;
 	p += snprintf(p, sizeof(buffer) - (p - buffer), "%*s}\n", len - (l + 2), "");
-	len = p - buffer;
+	len = long(p - buffer);
 
 	m_fout->write(buffer, len);
 }

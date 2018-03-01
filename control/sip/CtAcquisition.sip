@@ -1,4 +1,4 @@
-//###########################################################################
+///###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
 // Copyright (C) : 2009-2011
@@ -47,12 +47,9 @@ using namespace lima;
 		double	         		latencyTime;
 		TrigMode         		triggerMode;
 
-		const char* __repr__();
+		SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+	LIMA_REPR_CODE
 %End
 	};
 
@@ -120,9 +117,9 @@ using namespace lima;
 %ConvertToTypeCode
   if(sipIsErr == NULL)
     {
-      bool aReturnFlag = PySequence_Check(sipPy);
+      bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-	aReturnFlag = sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
+	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
 					  sipType_CtAcquisition_AutoExposureMode);
       return aReturnFlag;
     }

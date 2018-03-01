@@ -64,6 +64,14 @@ enum DebModule {
 
 typedef const char *ConstStr;
 
+%UnitCode
+#include <string>
+
+static const char *getConstStr(const std::string *s)
+{
+	return (!s || s->empty()) ? NULL : s->c_str();
+}
+%End
 
 /*------------------------------------------------------------------
  *  class DebParams 
@@ -78,11 +86,6 @@ using namespace lima;
 %End
 
 %TypeCode
-
-static ConstStr getConstStr(const std::string *s)
-{
-	return (!s || s->empty()) ? NULL : s->c_str();
-}
 
 class DebParamsData
 {
@@ -203,11 +206,6 @@ using namespace lima;
 %End
 
 %TypeCode
-
-static ConstStr getConstStr(const std::string *s)
-{
-	return (!s || s->empty()) ? NULL : s->c_str();
-}
 
 class DebObjData
 {

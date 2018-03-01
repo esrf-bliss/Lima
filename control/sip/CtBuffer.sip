@@ -32,12 +32,9 @@ using namespace lima;
 		long	nbBuffers;
 		short	maxMemory;
 
-		const char* __repr__();
+		SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+	LIMA_REPR_CODE
 %End
 	};
 
@@ -49,6 +46,8 @@ using namespace lima;
 
 	void setNumber(long nb_buffers);
 	void getNumber(long& nb_buffers /Out/) const;
+ 
+        void getMaxNumber(long& nb_buffers /Out/) const;
 
 	void setMaxMemory(short max_memory);
 	void getMaxMemory(short& max_memory /Out/) const;

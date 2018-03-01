@@ -410,7 +410,7 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 	DebParams::Flags& flags = DebParams::s_fmt_flags;
 	ConstStr m, sep = "";
 
-	int w = os.width();
+	int w = int(os.width());
 
 	if (DebHasFlag(flags, DebFmtDateTime)) {
 		struct timeval tod;
@@ -432,7 +432,7 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 	}
 
 	if (DebHasFlag(flags, DebFmtThread)) {
-		unsigned int thread_id = (unsigned int) pthread_self();
+		pthread_t thread_id = pthread_self();
 		os << sep << setw(8) << hex << thread_id << setw(w) << dec;
 		sep = " ";
 	}

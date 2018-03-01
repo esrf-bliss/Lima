@@ -45,12 +45,9 @@ using namespace lima;
       long	LastImageSaved;
       long	LastCounterReady;
 
-      const char* __repr__();
+      SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+      LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -100,12 +97,9 @@ using namespace lima;
       CtControl::CameraErrorCode CameraStatus;
       CtControl::ImageStatus	 ImageCounters;
 
-      const char* __repr__();
+      SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+      LIMA_REPR_CODE
 %End
 
 %PickleCode
@@ -134,8 +128,10 @@ using namespace lima;
 
     CtAcquisition* acquisition();
     CtSaving* saving();
+%If (WITH_SPS_IMAGE)    
 %If (POSIX_PLATFORM)
     CtSpsImage* display();
+%End
 %End
     CtImage* image();
     CtBuffer* buffer();

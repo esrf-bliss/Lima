@@ -205,7 +205,7 @@ void EventCallbackGen::unregisterEventCallback(EventCallback& cb)
 
 bool EventCallbackGen::hasRegisteredCallback()
 {
-	return m_cb;
+	return !!m_cb;
 }
 
 void EventCallbackGen::reportEvent(Event *event)

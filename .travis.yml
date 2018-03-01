@@ -1,0 +1,31 @@
+sudo: required
+
+language: cpp
+
+git:
+  submodules: false
+
+services:
+  - docker
+  
+before_install:
+  - docker pull esrfbliss/lima-ci-debian8
+  - docker run --name lima-ci-docker -v $(pwd):/root/Lima -dit esrfbliss/lima-ci-debian8
+  
+script:
+  - echo "Lima code in Lima/, cloning only processlib sbmodule"
+  - docker exec lima-ci-docker /bin/sh -c 'unset https_proxy && unset http_proxy && cd /root && ./install_lima_submodule'
+  
+  - echo "Compilation of limacore with python and tests as options."
+  - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/ && ./install.sh python tests'
+
+  - echo "Executing tests in cmake-build repository"
+  - docker exec lima-ci-docker /bin/sh -c 'cd /root/Lima/build/ && ctest --timeout 10'
+
+after-script:
+  - docker stop lima-ci-docker
+  - docker rm lima-ci-docker
+  
+branches:
+  only:
+  - cmake  

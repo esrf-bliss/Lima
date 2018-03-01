@@ -23,9 +23,19 @@
 #define CTSAVING_HDF5_H
 
 #include "H5Cpp.h"
+#include "hdf5_hl.h"
 #include "lima/CtSaving.h"
 #include "lima/CtAcquisition.h"
+#include "lima/CtSaving_Compression.h"
 #include <string>
+
+#ifdef WITH_BS_COMPRESSION
+#define BSHUF_H5FILTER	32008
+#define BSHUF_H5_COMPRESS_LZ4	2
+extern "C" {
+  int bshuf_register_h5filter(void);
+}
+#endif
 
 using namespace H5;
 using namespace std;
@@ -44,13 +54,14 @@ public:
 
 	SaveContainerHdf5(CtSaving::Stream& stream, CtSaving::FileFormat format);
 	virtual ~SaveContainerHdf5();
-
+	virtual bool needParallelCompression() const 
+	{return ((m_format == CtSaving::HDF5GZ)||(m_format == CtSaving::HDF5BS));}
+	virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 protected:
 	virtual void _prepare(CtControl &control);
 	virtual void* _open(const std::string &filename, std::ios_base::openmode flags);
 	virtual void _close(void*);
 	virtual long _writeFile(void*,Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
-	virtual void _clear();
 
 private:
 	struct _File;
@@ -89,6 +100,7 @@ private:
 	HwInterface *m_hw_int;
 	bool m_is_multiset;
 	int m_nbframes;
+	int m_compression_level;
 };
 
 }

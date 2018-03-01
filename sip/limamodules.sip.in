@@ -1,9 +1,32 @@
-%Module(name=lima%NAME,version=0)
+%Module(name=lima@NAME@,version=0)
+
+
+%ModuleCode
+extern "C" {
+#if PY_VERSION_HEX >= 0x03000000
+int lima_import_array();
+#else
+void lima_import_array();
+#endif
+}
+%End
 
 %ModuleHeaderCode
-extern "C" { void lima_import_array();}
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include "numpy/numpyconfig.h"
+#if (defined(NPY_API_VERSION) && NPY_API_VERSION >= 0x00000004 && PY_VERSION_HEX >= 0x03000000)
+#include "numpy/npy_3kcompat.h"
+#endif
+%End
+
+%UnitCode
+#include <lima_repr_attr.cpp>
 %End
 
 %PostInitialisationCode
 lima_import_array();
 %End
+
+@IMPORTS@
+
+@INCLUDES@

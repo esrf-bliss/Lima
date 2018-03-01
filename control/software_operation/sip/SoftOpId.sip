@@ -42,7 +42,7 @@ if(sipIsErr == NULL)
     {
       PyObject *aTmpList = PySequence_Fast_GET_ITEM(p,1);
       for(int k = 0;aReturnFlag && k < PyList_Size(aTmpList);++k)
-	aReturnFlag = sipCanConvertToType(PyList_GET_ITEM(aTmpList, k),
+	aReturnFlag = !!sipCanConvertToType(PyList_GET_ITEM(aTmpList, k),
 					  sipType_Tasks_RoiCounterResult, SIP_NOT_NONE);
     }
  }
@@ -429,7 +429,7 @@ if(sipIsErr == NULL)
     {
       PyObject *aTmpList = PySequence_Fast_GET_ITEM(p,1);
       for(int k = 0;aReturnFlag && k < PyList_Size(aTmpList);++k)
-	aReturnFlag = sipCanConvertToType(PyList_GET_ITEM(aTmpList, k),
+	aReturnFlag = !!sipCanConvertToType(PyList_GET_ITEM(aTmpList, k),
 					  sipType_Tasks_Roi2SpectrumResult, SIP_NOT_NONE);
     }
  }
