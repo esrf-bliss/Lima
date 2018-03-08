@@ -41,6 +41,10 @@ ifneq ($(COMPILE_MAXIPIX), 0)
 sip-modules += maxipix
 endif
 
+ifneq ($(COMPILE_PCO), 0)
+sip-modules += pco
+endif
+
 ifneq ($(COMPILE_BASLER), 0)
 ifndef PYLON_ROOT
 export PYLON_ROOT = /opt/pylon

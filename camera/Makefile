@@ -50,6 +50,14 @@ ifneq ($(COMPILE_MAXIPIX),0)
 sub-dirs += maxipix
 endif
 
+ifndef COMPILE_PCO
+COMPILE_PCO = 0
+endif
+
+ifneq ($(COMPILE_PCO),0)
+sub-dirs += pco
+endif
+
 ifndef COMPILE_BASLER
 COMPILE_BASLER = 0
 endif

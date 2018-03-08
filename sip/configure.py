@@ -114,6 +114,9 @@ def main():
     for modName, modDirs in modules:
     
         extra_cxxflags = []
+        extra_libs = []
+        extra_lib_dirs = []
+
         if modName in excludeMods:
             continue
     
@@ -188,8 +191,9 @@ def main():
         elif(modName == 'xspress3'):
             extraIncludes += ['../../third-party/hdf5/c++/src']
             extra_cxxflags += ['-DSIPCOMPILATION']
-        elif(modName == 'pco'):
-            extraIncludes += ['R:/bliss/projects/LIMA/package/WIN32/PCO/sdkPco/include']
+        elif(modName == 'pco') and platform.system() != 'Windows':
+            extra_lib_dirs = ["%s/lib" % os.environ['SISODIR5']]
+            extra_libs += ['fglib5' , 'clsersis' , 'haprt']
         elif(modName == 'marccd'):
             extraIncludes += ['../../../include/DiffractionImage']
             extraIncludes += ['../../third-party/yat/include'] 

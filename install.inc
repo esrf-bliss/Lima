@@ -96,6 +96,12 @@ MAXIPIX_FULL_VERSION = $(shell cat camera/maxipix/VERSION)
 INSTALL_MAXIPIX_VDIR = $(INSTALL_MAXIPIX_DIR)/v$(MAXIPIX_FULL_VERSION)
 endif
 
+ifneq ($(COMPILE_PCO), 0)
+INSTALL_PCO_DIR = $(INSTALL_PLAT_DIR)/Pco
+PCO_FULL_VERSION = $(shell cat camera/pco/VERSION)
+INSTALL_PCO_VDIR = $(INSTALL_PCO_DIR)/v$(PCO_FULL_VERSION)
+endif
+
 ifneq ($(COMPILE_PILATUS), 0)
 INSTALL_PILATUS_DIR = $(INSTALL_PLAT_DIR)/Pilatus
 PILATUS_FULL_VERSION = $(shell cat camera/pilatus/VERSION)
@@ -357,6 +363,16 @@ ifneq ($(COMPILE_SIMULATOR), 0)
 	cp -d build/liblimasimulator.so* $(INSTALL_LIB_DIR)
 	cp sip/simulator/limasimulator.so $(INSTALL_SIMU_VDIR)
 	cp camera/simulator/include/*.h $(INSTALL_INCLUDE_DIR)
+endif
+ifneq ($(COMPILE_PCO), 0)
+	mkdir -p $(INSTALL_PCO_VDIR)
+	cp camera/pco/python/__init__.py $(INSTALL_PCO_DIR)
+	$(call install_core_dep,$(INSTALL_PCO_VDIR))
+	rm -rf $(INSTALL_LIB_DIR)/liblimapco.so*
+	cp -d build/liblimapco.so* $(INSTALL_LIB_DIR)
+	cp sip/pco/limapco.so $(INSTALL_PCO_VDIR)
+	cp camera/pco/python/Pco.py $(INSTALL_PCO_VDIR)
+	cp camera/pco/include/*.h $(INSTALL_INCLUDE_DIR)
 endif
 ifneq ($(COMPILE_ESPIA), 0)
 	mkdir -p $(INSTALL_ESPIA_VDIR)

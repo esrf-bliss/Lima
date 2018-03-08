@@ -214,6 +214,37 @@ build_targets	+= $(maxipix-libfull)
 endif
 
 ############################
+# LIMA - PCO
+############################
+
+ifneq ($(COMPILE_PCO),0)
+
+PCO_LDFLAGS	:=  -L$(SISODIR5)/lib64 -L. -g
+PCO_LDLIBS	:=  -lfglib5 -lclsersis -lhaprt -lpthread
+
+pco-name	:= pco
+pco-objs	:= ../camera/pco/src/Pco.o
+pco-ver		:= ../camera/pco/VERSION
+pco-flags	:= $(PCO_LDFLAGS)
+pco-deps	:= $(DEPLIBS)
+pco-libs	:= $(PCO_LDLIBS)
+pco-libfull	:= $(call lib-full,$(pco-name),$(pco-ver))
+
+# OLD 1=name, 2=ver-file 3=flags 4=deps, 5=target, 6=objs
+#     1=name, 2=ver-file 3=deps 4=flags 5=libs, 6=target, 7=objs
+
+$(pco-libfull): $(pco-objs)
+	$(call compile-lib,$(pco-name),$(pco-ver),\
+			   $(pco-deps),$(pco-flags),$(pco-libs),$@,$(pco-objs))
+	$(call create-links,$(pco-name),$(pco-ver))
+
+build_targets	+= $(pco-libfull)
+
+
+endif
+
+
+############################
 # LIMA - BASLER
 ############################
 
