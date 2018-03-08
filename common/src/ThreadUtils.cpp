@@ -22,6 +22,7 @@
 #include "lima/ThreadUtils.h"
 #include "lima/Exceptions.h"
 #include <errno.h>
+#include <iomanip>
 #ifdef __unix
 #include <sys/time.h>
 #else
@@ -215,9 +216,19 @@ void Cond::broadcast()
     throw LIMA_COM_EXC(Error, "Error broadcast condition");
 }
 
+Thread::ExceptionCleanUp::ExceptionCleanUp(Thread& thread)
+	: m_thread(thread)
+{
+}
+
+Thread::ExceptionCleanUp::~ExceptionCleanUp()
+{
+	m_thread.m_exception_handled = true;
+}
+
 Thread::Thread()
 {
-	m_started = m_finished = false;
+	m_started = m_finished = m_exception_handled = false;
 	pthread_attr_init(&m_thread_attr);
 }
 
@@ -261,12 +272,22 @@ bool Thread::hasFinished()
 
 void *Thread::staticThreadFunction(void *data)
 {
+	using namespace std;
+
 	Thread *thread = (Thread *) data;
 
 	try {
 		thread->threadFunction();
 	} catch (...) {
-
+		if (!thread->m_exception_handled) {
+			ostream& os = cerr;
+			unsigned int thread_id = (unsigned int) pthread_self();
+			int w = os.width();
+			os << "***** Thread " 
+			   << setw(8) << hex << thread_id << setw(w) << dec
+			   << " function exited due to an exception "
+			   << "without clean-up! *****" << endl;
+		}
 	}
 	
 	thread->m_finished = true;
