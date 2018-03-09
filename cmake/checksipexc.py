@@ -34,7 +34,8 @@ def checksipexc(ifname, inplace=False):
     global raise_linenr, raise_exc
 
     lfname = ifname
-    sip_fname = os.path.dirname(os.path.realpath(__file__))+'/../common/sip/Exceptions.sip'
+    sip_fname = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../common/sip/Exceptions.sip'))
+    sip_fname = sip_fname.replace('\\', '/')
     if lfname.startswith('/'):
         sip_fname = os.path.realpath(sip_fname)
     else:
