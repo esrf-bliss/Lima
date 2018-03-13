@@ -480,9 +480,9 @@ void SaveContainerHdf5::_close(void* f) {
 long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				   CtSaving::HeaderMap &aHeader,
 				   CtSaving::FileFormat aFormat) {
-	        DEB_MEMBER_FUNCT();
+        DEB_MEMBER_FUNCT();
 
-	        _File* file = (_File*)f;
+        _File* file = (_File*)f;
 		size_t buf_size = 0;
 		
 		// get the proper data type
@@ -615,10 +615,10 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_dataset_extended = true;
 			}
 			// write the image data
-			int image_nb = aData.frameNumber % m_nbframes;
+			hsize_t image_nb = aData.frameNumber % m_nbframes;
 
 			// we test direct chunk write
-			hsize_t offset[RANK_THREE] = {image_nb, 0, 0};
+			hsize_t offset[RANK_THREE] = {image_nb, 0U, 0U};
 			uint32_t filter_mask = 0; 
 			hid_t dataset = file->m_image_dataset->getId();
 			herr_t  status;

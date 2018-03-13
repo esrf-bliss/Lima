@@ -364,13 +364,13 @@ void CtSaving::Stream::createSaveContainer()
 #endif
     goto common;
   case HDF5GZ:
-#if not defined  (WITH_HDF5_SAVING) && not defined (WITH_Z_COMPRESSION)
+#if !defined  (WITH_HDF5_SAVING) && !defined (WITH_Z_COMPRESSION)
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 gzip"
                                      "saving option, not managed";
 #endif
     goto common;
   case HDF5BS:
-#if not defined  (WITH_HDF5_SAVING) && not defined (WITH_BS_COMPRESSION)
+#if !defined  (WITH_HDF5_SAVING) && !defined (WITH_BS_COMPRESSION)
     THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 bs"
                                      "saving option, not managed";
 #endif
