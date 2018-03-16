@@ -1,132 +1,133 @@
 [submodule "third-party/Sps"]
 	path = third-party/Sps
-	url = git://github.com/esrf-bliss/Sps.git
+	url = git://github.com/esrf-bliss/Sps
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
-	url = git://github.com/esrf-bliss/Processlib.git
+	url = ../Processlib
 [submodule "camera/basler"]
 	path = camera/basler
-	url = git://github.com/esrf-bliss/Lima-camera-basler
+	url = ../Lima-camera-basler
 [submodule "applications/spec"]
 	path = applications/spec
-	url = git://github.com/esrf-bliss/Lima-spec
+	url = ../Lima-spec
 [submodule "camera/pco"]
 	path = camera/pco
-	url = git://github.com/esrf-bliss/Lima-camera-pco
+	url = ../Lima-camera-pco
 [submodule "camera/pilatus"]
 	path = camera/pilatus
-	url = git://github.com/esrf-bliss/Lima-camera-pilatus
+	url = ../Lima-camera-pilatus
 [submodule "camera/maxipix"]
 	path = camera/maxipix
-	url = git://github.com/esrf-bliss/Lima-camera-maxipix
-[submodule "documentation"]
-	path = documentation
-	url = git://github.com/esrf-bliss/Lima-documentation
+	url = ../Lima-camera-maxipix
+[submodule "docs"]
+	path = docs
+	url = ../lima-documentation
+	branch = improve-doc
 [submodule "camera/frelon"]
 	path = camera/frelon
-	url = git://github.com/esrf-bliss/Lima-camera-frelon
+	url = ../Lima-camera-frelon
 [submodule "camera/common/espia"]
 	path = camera/common/espia
-	url = git://github.com/esrf-bliss/Lima-camera-common-espia
+	url = ../Lima-camera-common-espia
 [submodule "third-party/yat"]
 	path = third-party/yat
 	url = git://git.epn-campus.eu/repositories/yat
 [submodule "camera/prosilica"]
 	path = camera/prosilica
-	url = git://github.com/esrf-bliss/Lima-camera-prosilica
+	url = ../Lima-camera-prosilica
 [submodule "camera/xpad"]
 	path = camera/xpad
-	url = git://github.com/esrf-bliss/Lima-camera-xpad
+	url = ../Lima-camera-xpad
 [submodule "camera/marccd"]
 	path = camera/marccd
-	url = git://github.com/esrf-bliss/Lima-camera-marccd
+	url = ../Lima-camera-marccd
 [submodule "camera/adsc"]
 	path = camera/adsc
-	url = git://github.com/esrf-bliss/Lima-camera-adsc
+	url = ../Lima-camera-adsc
 [submodule "camera/roperscientific"]
 	path = camera/roperscientific
-	url = git://github.com/esrf-bliss/Lima-camera-roperscientific
+	url = ../Lima-camera-roperscientific
 [submodule "camera/mythen"]
 	path = camera/mythen
-	url = git://github.com/esrf-bliss/Lima-camera-mythen
+	url = ../Lima-camera-mythen
 [submodule "camera/ueye"]
 	path = camera/ueye
-	url = git://github.com/esrf-bliss/Lima-camera-ueye
+	url = ../Lima-camera-ueye
 [submodule "camera/perkinelmer"]
 	path = camera/perkinelmer
-	url = git://github.com/esrf-bliss/Lima-camera-perkinelmer
+	url = ../Lima-camera-perkinelmer
 [submodule "camera/andor"]
 	path = camera/andor
-	url = git://github.com/esrf-bliss/Lima-camera-andor
+	url = ../Lima-camera-andor
 [submodule "camera/photonicscience"]
 	path = camera/photonicscience
-	url = git://github.com/esrf-bliss/Lima-camera-photonicscience
+	url = ../Lima-camera-photonicscience
 [submodule "camera/rayonixhs"]
 	path = camera/rayonixhs
-	url = git://github.com/esrf-bliss/Lima-camera-rayonixhs
+	url = ../Lima-camera-rayonixhs
 [submodule "camera/andor3"]
 	path = camera/andor3
-	url = git://github.com/esrf-bliss/Lima-camera-andor3.git
+	url = ../Lima-camera-andor3
 [submodule "camera/pointgrey"]
 	path = camera/pointgrey
-	url = git://github.com/esrf-bliss/Lima-camera-pointgrey.git
+	url = ../Lima-camera-pointgrey
 [submodule "camera/xh"]
 	path = camera/xh
-	url = git://github.com/esrf-bliss/Lima-camera-xh
+	url = ../Lima-camera-xh
 [submodule "camera/imxpad"]
 	path = camera/imxpad
-	url = git://github.com/esrf-bliss/Lima-camera-imxpad
+	url = ../Lima-camera-imxpad
 [submodule "camera/dexela"]
 	path = camera/dexela
-	url = git://github.com/esrf-bliss/Lima-camera-dexela.git
+	url = ../Lima-camera-dexela
 [submodule "camera/xspress3"]
 	path = camera/xspress3
-	url = git://github.com/esrf-bliss/Lima-camera-xspress3
+	url = ../Lima-camera-xspress3
 [submodule "camera/ultra"]
 	path = camera/ultra
-	url = git://github.com/esrf-bliss/Lima-camera-ultra
+	url = ../Lima-camera-ultra
 [submodule "third-party/gldisplay"]
 	path = third-party/gldisplay
-	url = git://github.com/esrf-bliss/gldisplay.git
+	url = ../gldisplay
 [submodule "camera/aviex"]
 	path = camera/aviex
-	url = git://github.com/esrf-bliss/Lima-camera-aviex.git
+	url = ../Lima-camera-aviex
 [submodule "camera/merlin"]
 	path = camera/merlin
-	url = git://github.com/esrf-bliss/Lima-camera-merlin
+	url = ../Lima-camera-merlin
 [submodule "camera/mythen3"]
 	path = camera/mythen3
-	url = git://github.com/esrf-bliss/Lima-camera-mythen3
+	url = ../Lima-camera-mythen3
 [submodule "camera/hamamatsu"]
 	path = camera/hamamatsu
-	url = git://github.com/esrf-bliss/Lima-camera-hamamatsu.git
+	url = ../Lima-camera-hamamatsu
 [submodule "camera/v4l2"]
 	path = camera/v4l2
-	url = git://github.com/esrf-bliss/Lima-camera-v4l2.git
+	url = ../Lima-camera-v4l2
 [submodule "applications/tango/python"]
 	path = applications/tango/python
-	url = git://github.com/esrf-bliss/Lima-tango-python
+	url = ../Lima-tango-python
 [submodule "applications/tango/cpp"]
 	path = applications/tango/cpp
 	url = git://github.com/esrf-bliss/Lima-tango-cpp
 [submodule "camera/eiger"]
 	path = camera/eiger
-	url = git://github.com/esrf-bliss/Lima-camera-eiger.git
+	url = ../Lima-camera-eiger
 [submodule "camera/pixirad"]
 	path = camera/pixirad
-	url = git://github.com/esrf-bliss/Lima-camera-pixirad.git
+	url = ../Lima-camera-pixirad
 [submodule "camera/hexitec"]
 	path = camera/hexitec
-	url = git://github.com/esrf-bliss/Lima-camera-hexitec
+	url = ../Lima-camera-hexitec
 [submodule "camera/slsdetector"]
 	path = camera/slsdetector
-	url = git://github.com/esrf-bliss/Lima-camera-slsdetector.git
+	url = ../Lima-camera-slsdetector
 [submodule "third-party/bitshuffle"]
 	path = third-party/bitshuffle
 	url = git://github.com/kiyo-masui/bitshuffle
 [submodule "camera/lambda"]
 	path = camera/lambda
-	url = git://github.com/esrf-bliss/Lima-camera-lambda
+	url = ../Lima-camera-lambda
 [submodule "camera/fli"]
 	path = camera/fli
-	url = git://github.com/esrf-bliss/Lima-camera-fli
+	url = ../Lima-camera-fli
