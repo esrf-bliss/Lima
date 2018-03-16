@@ -127,7 +127,7 @@
 	url = git://github.com/kiyo-masui/bitshuffle
 [submodule "camera/lambda"]
 	path = camera/lambda
-	url = ../Lima-camera-lambda
+	url = git://github.com/esrf-bliss/Lima-camera-lambda
 [submodule "camera/fli"]
 	path = camera/fli
 	url = ../Lima-camera-fli
