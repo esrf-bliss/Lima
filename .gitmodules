@@ -19,8 +19,8 @@
 [submodule "camera/maxipix"]
 	path = camera/maxipix
 	url = ../Lima-camera-maxipix
-[submodule "docs"]
-	path = docs
+[submodule "documentation"]
+	path = documentation
 	url = ../lima-documentation
 	branch = improve-doc
 [submodule "camera/frelon"]
