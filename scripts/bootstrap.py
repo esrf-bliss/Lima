@@ -80,20 +80,23 @@ def config_cmake_options(options):
 			if arg.startswith(prefix):
 				arg=arg[len(prefix):]
 		option_name.append(arg.upper())
-	#return option in config.txt pass as argument and also the ones with "=1" in config.txt
+	#return option in config.txt activated (=1) if passed as argument
+	#and also those not specified as empty (=) or disabled (=0) in file
 	with open(configFile) as f:
 		for line in f:
-			line=line[:-1]
+			line=line.strip()
+			if not line or line.startswith("#"):
+				continue
+			config_option,val=line.split("=")
+			if " " in val:
+				val='"%s"'%val
 			for option in option_name:
-				if option in line:
-					line=line[:-1]
-					line=line+str(1)
-			if line.startswith('LIMA'):
-				if line[len(line)-1]==str(1):
-					config_cmake.append("-D"+line)
-		config_cmake= " ".join([str(cmd) for cmd in config_cmake])
-		return config_cmake
-	f.close()
+				if option in config_option:
+					val=str(1)
+			if val and (val != str(0)):
+				config_cmake.append("-D%s=%s" % (config_option, val))
+		config_cmake = " ".join(config_cmake)
+	return config_cmake
 
 def install_lima_linux():
 	if not os.path.exists(build_path):
@@ -186,6 +189,7 @@ if __name__ == '__main__':
 
 	cmake_config = config_cmake_options(lima_options)
 	print (cmake_config)
+	sys.stdout.flush()
 	for option in script_options:
 		if "--install-prefix=" in option:
 			install_path=option[17:]
