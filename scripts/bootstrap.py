@@ -73,15 +73,13 @@ def config_cmake_options(options):
 	option_name = []
 	config_cmake = []
 	for arg in options:
-		if "camera/" in str(arg):
-			option_name.append(str.upper(str(arg)[7:]))
-		elif "third-party/" in str(arg):
-			option_name.append(str.upper(str(arg)[12:]))
-		elif arg=="pytango-server":
-			option_name.append("PYTANGO_SERVER")
-		else:
-			#probably test or python options.
-			option_name.append(str.upper(str(arg)))
+		if arg in ["pytango-server"]:
+			arg=arg.replace("-", "_")
+		for sub_dir in ["camera", "third_party"]:
+			prefix=sub_dir+"/"
+			if arg.startswith(prefix):
+				arg=arg[len(prefix):]
+		option_name.append(arg.upper())
 	#return option in config.txt pass as argument and also the ones with "=1" in config.txt
 	with open(configFile) as f:
 		for line in f:
