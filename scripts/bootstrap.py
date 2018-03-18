@@ -98,7 +98,9 @@ def config_cmake_options(options):
 	f.close()
 
 def install_lima_linux():
-	os.chdir(os.getcwd()+"/build")
+	if not os.path.exists(build_path):
+		os.mkdir(build_path)
+	os.chdir(build_path)
 	global install_path, install_python_path, find_root_path
 	try:
                 if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
@@ -143,7 +145,9 @@ def install_lima_windows():
 	print ('Used compiler: ', win_compiler)
 	cmake_cmd = 'cmake -G"'+win_compiler+'" '
 	
-	os.chdir(os.getcwd()+"/build")
+	if not os.path.exists(build_path):
+		os.mkdir(build_path)
+	os.chdir(build_path)
 	try :
 		if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
 		if install_python_path != "": install_python_path =  " -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path)
@@ -174,6 +178,7 @@ if __name__ == '__main__':
 	install_python_path=""
 	find_root_path = ""
 	source_path=os.getcwd()
+	build_path=os.path.join(source_path, "build")
 	script_options, lima_options = check_options(sys.argv)
 
 	#No git option under windows for obvious reasons.
