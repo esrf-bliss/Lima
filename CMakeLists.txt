@@ -22,10 +22,14 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 project (lima)
 
 set(NAME "core")
+
+# Enable C++11 and later
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #--------------------------------------------------------------------------------
 # cmake/ directory contains tools 
