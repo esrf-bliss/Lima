@@ -41,14 +41,16 @@ def DEB_FUNCT(fn, in_global=True, frame=1, deb_container=None):
     lineno = frame.f_lineno
     @functools.wraps(fn)
     def real_fn(*arg, **kw):
-        sys.exc_clear()
-        fn_globals = dict(fn.func_globals)
-        deb_obj = DebObj(deb_params, fn.func_name, '', filename, lineno)
+        # no longer exists on py3
+        if sys.version_info < (3, 0): 
+            sys.exc_clear()
+        fn_globals = dict(fn.__globals__)
+        deb_obj = DebObj(deb_params, fn.__name__.encode(), '', filename.encode(), lineno)
         fn_globals['deb'] = deb_obj
         if deb_container is not None:
             deb_container.add(deb_obj)
-        new_fn = types.FunctionType(fn.func_code, fn_globals, fn.func_name,
-                                    fn.func_defaults)
+        new_fn = types.FunctionType(fn.__code__, fn_globals, fn.__name__,
+                                    fn.__defaults__)
         return new_fn(*arg, **kw)
     return real_fn
         

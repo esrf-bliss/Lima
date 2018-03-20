@@ -30,25 +30,49 @@
 #include "lima/SoftOpId.h"
 %End
 
+// Creates the mapping for std::string
+// From: http://www.riverbankcomputing.com/pipermail/pyqt/2009-July/023533.html
+
 %MappedType std::string
 {
 %TypeHeaderCode
 #include <string>
 %End
 
-%ConvertToTypeCode
-if (sipIsErr == NULL)
-    return PyString_Check(sipPy);
-
-    *sipCppPtr = new std::string(PyString_AsString(sipPy), PyString_Size(sipPy));
-
-    return sipGetState(sipTransferObj);
-%End
-
 %ConvertFromTypeCode
-return PyString_FromStringAndSize(sipCpp->data(),sipCpp->length());
+    // convert an std::string to a Python (unicode) string
+    PyObject* newstring;
+    newstring = PyUnicode_DecodeUTF8(sipCpp->c_str(), sipCpp->length(), NULL);
+    if(newstring == NULL) {
+        PyErr_Clear();
+        newstring = PyString_FromString(sipCpp->c_str());
+    }
+    return newstring;
 %End
 
+%ConvertToTypeCode
+    // Allow a Python string (or a unicode string) whenever a string is
+    // expected.
+    // If argument is a Unicode string, just decode it to UTF-8
+    // If argument is a Python string, assume it's UTF-8
+    if (sipIsErr == NULL)
+        return (PyString_Check(sipPy) || PyUnicode_Check(sipPy));
+    if (sipPy == Py_None) {
+        *sipCppPtr = new std::string;
+        return 1;
+    }
+    if (PyUnicode_Check(sipPy)) {
+        PyObject* s = PyUnicode_AsEncodedString(sipPy, "UTF-8", "");
+        *sipCppPtr = new std::string(PyString_AS_STRING(s));
+        Py_DECREF(s);
+        return 1;
+    }
+    if (PyString_Check(sipPy)) {
+        *sipCppPtr = new std::string(PyString_AS_STRING(sipPy));
+        return 1;
+    }
+    return 0;
+%End
 };
 
 %MappedType std::vector<std::string>
@@ -59,27 +83,53 @@ return PyString_FromStringAndSize(sipCpp->data(),sipCpp->length());
 %End
 
 %ConvertToTypeCode
+// Allow a Python string list (or a unicode string list ) whenever a string is
+// expected.
+// If argument is a Unicode string, just decode it to UTF-8
+// If argument is a Python string, assume it's UTF-8
+// Suppose a mixed of unicode and string is possible !!
 if (sipIsErr == NULL)
 {	
-bool aReturnFlag = PyList_Check(sipPy);
-for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-	aReturnFlag = PyString_Check(PyList_GET_ITEM(sipPy,i));
-return aReturnFlag;
+  bool aReturnFlag = PyList_Check(sipPy);
+  for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
+	  aReturnFlag = (PyString_Check(PyList_GET_ITEM(sipPy,i)) || PyUnicode_Check(PyList_GET_ITEM(sipPy,i)));
+  return aReturnFlag;
 }
  
 *sipCppPtr = new std::vector<std::string>(PyList_Size(sipPy));
 for(int i = 0;i < PyList_Size(sipPy);++i)
-  (*sipCppPtr)->operator[](i) = PyString_AsString(PyList_GET_ITEM(sipPy,i));
-
-    return sipGetState(sipTransferObj);
+{
+  PyObject *aPyObj = PyList_GET_ITEM(sipPy, i);
+  if (aPyObj == Py_None) {
+    continue;
+  }
+  if (PyUnicode_Check(aPyObj)) {
+    PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");
+    (*sipCppPtr)->operator[](i) = PyString_AS_STRING(s);
+    Py_DECREF(s);
+    continue;
+  }
+  if (PyString_Check(aPyObj)) {
+    (*sipCppPtr)->operator[](i) = PyString_AS_STRING(aPyObj);
+  }
+}
+return sipGetState(sipTransferObj);
 %End
 
 %ConvertFromTypeCode
+// convert an std::vector<std::string> to a Python (unicode) string list
 PyObject* aReturnListPt = PyList_New(sipCpp->size());
 std::vector<std::string>::iterator vIter = sipCpp->begin();
 
-for(int i = 0;vIter != sipCpp->end();++vIter,++i)
-   PyList_SET_ITEM(aReturnListPt,i,PyString_FromStringAndSize(vIter->data(),vIter->length()));
+for(int i = 0;vIter != sipCpp->end();++vIter,++i) {
+  PyObject * newstring;
+  newstring = PyUnicode_DecodeUTF8(vIter->c_str(), vIter->length(), NULL);
+  if(newstring == NULL) {
+    PyErr_Clear();
+    newstring = PyString_FromString(vIter->c_str());
+  }  
+  PyList_SET_ITEM(aReturnListPt,i,newstring);
+}
 
 return aReturnListPt;
 %End
