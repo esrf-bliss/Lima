@@ -73,32 +73,35 @@ def config_cmake_options(options):
 	option_name = []
 	config_cmake = []
 	for arg in options:
-		if "camera/" in str(arg):
-			option_name.append(str.upper(str(arg)[7:]))
-		elif "third-party/" in str(arg):
-			option_name.append(str.upper(str(arg)[12:]))
-		elif arg=="pytango-server":
-			option_name.append("PYTANGO_SERVER")
-		else:
-			#probably test or python options.
-			option_name.append(str.upper(str(arg)))
-	#return option in config.txt pass as argument and also the ones with "=1" in config.txt
+		if arg in ["pytango-server"]:
+			arg=arg.replace("-", "_")
+		for sub_dir in ["camera", "third_party"]:
+			prefix=sub_dir+"/"
+			if arg.startswith(prefix):
+				arg=arg[len(prefix):]
+		option_name.append(arg.upper())
+	#return option in config.txt activated (=1) if passed as argument
+	#and also those not specified as empty (=) or disabled (=0) in file
 	with open(configFile) as f:
 		for line in f:
-			line=line[:-1]
+			line=line.strip()
+			if not line or line.startswith("#"):
+				continue
+			config_option,val=line.split("=")
+			if " " in val:
+				val='"%s"'%val
 			for option in option_name:
-				if option in line:
-					line=line[:-1]
-					line=line+str(1)
-			if line.startswith('LIMA'):
-				if line[len(line)-1]==str(1):
-					config_cmake.append("-D"+line)
-		config_cmake= " ".join([str(cmd) for cmd in config_cmake])
-		return config_cmake
-	f.close()
+				if option in config_option:
+					val=str(1)
+			if val and (val != str(0)):
+				config_cmake.append("-D%s=%s" % (config_option, val))
+		config_cmake = " ".join(config_cmake)
+	return config_cmake
 
 def install_lima_linux():
-	os.chdir(os.getcwd()+"/build")
+	if not os.path.exists(build_path):
+		os.mkdir(build_path)
+	os.chdir(build_path)
 	global install_path, install_python_path, find_root_path
 	try:
                 if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
@@ -143,7 +146,9 @@ def install_lima_windows():
 	print ('Used compiler: ', win_compiler)
 	cmake_cmd = 'cmake -G"'+win_compiler+'" '
 	
-	os.chdir(os.getcwd()+"/build")
+	if not os.path.exists(build_path):
+		os.mkdir(build_path)
+	os.chdir(build_path)
 	try :
 		if install_path != "": install_path = " -DCMAKE_INSTALL_PREFIX="+str(install_path)
 		if install_python_path != "": install_python_path =  " -DPYTHON_SITE_PACKAGES_DIR="+str(install_python_path)
@@ -174,6 +179,7 @@ if __name__ == '__main__':
 	install_python_path=""
 	find_root_path = ""
 	source_path=os.getcwd()
+	build_path=os.path.join(source_path, "build")
 	script_options, lima_options = check_options(sys.argv)
 
 	#No git option under windows for obvious reasons.
@@ -183,6 +189,7 @@ if __name__ == '__main__':
 
 	cmake_config = config_cmake_options(lima_options)
 	print (cmake_config)
+	sys.stdout.flush()
 	for option in script_options:
 		if "--install-prefix=" in option:
 			install_path=option[17:]
