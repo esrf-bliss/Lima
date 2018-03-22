@@ -73,12 +73,12 @@ def config_cmake_options(options):
 	option_name = []
 	config_cmake = []
 	for arg in options:
-		if arg in ["pytango-server"]:
-			arg=arg.replace("-", "_")
-		for sub_dir in ["camera", "third_party"]:
+		for config_prefix, sub_dir in [("limacamera", "camera"), 
+					       ("lima-enable", "third-party")]:
 			prefix=sub_dir+"/"
 			if arg.startswith(prefix):
-				arg=arg[len(prefix):]
+				arg=config_prefix+'-'+arg[len(prefix):]
+		arg=arg.replace("-", "_")
 		option_name.append(arg.upper())
 	#return option in config.txt activated (=1) if passed as argument
 	#and also those not specified as empty (=) or disabled (=0) in file
@@ -88,11 +88,18 @@ def config_cmake_options(options):
 			if not line or line.startswith("#"):
 				continue
 			config_option,val=line.split("=")
-			if " " in val:
+			if " " in val and not val.startswith('"'):
 				val='"%s"'%val
 			for option in option_name:
-				if option in config_option:
+				if option == config_option:
 					val=str(1)
+					break
+				#arg-passed option must match the end of config_option
+				#and must be preceeded by '_' separator
+				t = config_option.split(option)
+				if (len(t) == 2) and (t[0][-1] == '_') and not t[1]:
+					val=str(1)
+					break
 			if val and (val != str(0)):
 				config_cmake.append("-D%s=%s" % (config_option, val))
 		config_cmake = " ".join(config_cmake)
