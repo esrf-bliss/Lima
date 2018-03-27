@@ -112,15 +112,28 @@ class LIMACORE_API Thread
 	bool hasFinished();
 
  protected:
+	class LIMACORE_API ExceptionCleanUp
+	{
+	public:
+		ExceptionCleanUp(Thread& thread);
+		virtual ~ExceptionCleanUp();
+	protected:
+		Thread& m_thread;
+	};
+
 	virtual void threadFunction() = 0;
 
 	pthread_attr_t	m_thread_attr;
 	pthread_t m_thread;
+
  private:
+	friend class ExceptionCleanUp;
+
 	static void *staticThreadFunction(void *data);
 
 	bool m_started;
 	bool m_finished;
+	bool m_exception_handled;
 };
 
 
