@@ -31,7 +31,7 @@ Build dependencies:
 - Visual Studio 2008 Express for x86 only for Python 2.7.x 
 - Visual Studio 2015 for x86 and x64 for Python >= 3.5 
 - git_
-- cmake_ >= 3
+- CMake_ >= 3.1
 - gsl_: For windows, download the esrf binary package `gsl-windows`_ and install it under "c:\\program files\\" 
      
 
@@ -68,7 +68,7 @@ The LimaCCDs PyTango server only works for Python 2, it will be updated for Pyth
 .. _gsl-windows:  http://ftp.esrf.fr/pub/bliss/lima/gsl-windows.zip
 .. _zlib-windows:  http://ftp.esrf.fr/pub/bliss/lima/zlib-windows.zip
 .. _libconfig-windows:  http://ftp.esrf.fr/pub/bliss/lima/libconfig-windows.zip
-.. _cmake: https://cmake.org
+.. _CMake: https://cmake.org
 
 .. _Tango: http://tango-control.org
 .. _PyTango: http://github.com/tango-cs/pytango
