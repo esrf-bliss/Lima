@@ -13,9 +13,6 @@ build :
   artifacts:
     paths:
     - build/
-  only:
-    - cmake
-
 
 test :
   stage: test
@@ -24,5 +21,3 @@ test :
   script:
     - cd build/
     - ctest --timeout 10
-  only:
-    - cmake
