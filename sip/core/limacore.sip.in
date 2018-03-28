@@ -129,6 +129,7 @@ for(int i = 0;vIter != sipCpp->end();++vIter,++i) {
     newstring = PyString_FromString(vIter->c_str());
   }  
   PyList_SET_ITEM(aReturnListPt,i,newstring);
+  Py_DECREF(newstring);
 }
 
 return aReturnListPt;

@@ -36,7 +36,8 @@ if(sipIsErr == NULL)
   PyObject *p = PyList_GET_ITEM(sipPy, i);
   aReturnFlag = PySequence_Check(p) && 
                 PySequence_Size(p) == 2 &&
-    	        PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+    	          (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) || 
+                  PyString_Check(PySequence_Fast_GET_ITEM(p,0)) ) &&
                 PyList_Check(PySequence_Fast_GET_ITEM(p,1));
   if(aReturnFlag)
     {
@@ -55,7 +56,16 @@ std::list<SoftOpRoiCounter::RoiNameAndResults> *roiNameNResultPt =
 for(int i = 0;i < PyList_Size(sipPy);++i)
 {
  PyObject *p = PyList_GET_ITEM(sipPy, i);
- char* name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+ PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+ char* name;
+ if (PyUnicode_Check(aTmpName)) {
+   PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+   name = PyString_AsString(s);
+   Py_DECREF(s);
+ }
+ if (PyString_Check(aTmpName)) {
+   name = PyString_AsString(aTmpName);
+ }
  PyObject *aTmpList = PySequence_Fast_GET_ITEM(p,1);
  
  roiNameNResultPt->push_back(SoftOpRoiCounter::RoiNameAndResults(name,
@@ -122,7 +132,12 @@ return sipGetState(sipTransferObj);
      PyList_SET_ITEM(PyRoiResultList,m,wobj);
     }
 
-   PyObject *aNamePy = PyString_FromString((*j).first.c_str());
+   PyObject *aNamePy;
+   aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+   if (aNamePy == NULL){
+     PyErr_Clear();
+     aNamePy = PyString_FromString((*j).first.c_str());
+   }
    PyList_SET_ITEM(l, i, PyTuple_Pack(2,aNamePy,PyRoiResultList));
    Py_DECREF(aNamePy);Py_DECREF(PyRoiResultList);
   }
@@ -148,7 +163,8 @@ if(sipIsErr == NULL)
 	PyObject *p = PyList_GET_ITEM(sipPy,i);
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
-                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                       PyString_Check(PySequence_Fast_GET_ITEM(p,0)) ) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
 					  sipType_Roi,SIP_NOT_NONE);
       }
@@ -160,7 +176,17 @@ if(sipIsErr == NULL)
   for(int i = 0;i < PyList_Size(sipPy);++i)
     {
       PyObject *p = PyList_GET_ITEM(sipPy,i);
-      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+      char* name;
+      if (PyUnicode_Check(aTmpName)) {
+        PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+        name = PyString_AsString(s);
+        Py_DECREF(s);
+      }
+      if (PyString_Check(aTmpName)) {
+        name = PyString_AsString(aTmpName);
+      }      
+      
       int state;
       lima::Roi *roi =
 	reinterpret_cast<lima::Roi*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
@@ -198,7 +224,12 @@ if(sipIsErr == NULL)
 	  Py_DECREF(l);
 	  return NULL;
 	}
-      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+      PyObject *aNamePy;
+      aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+      if (aNamePy == NULL){
+        PyErr_Clear();
+        aNamePy = PyString_FromString((*j).first.c_str());
+      }
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,wobj));
       Py_DECREF(aNamePy);Py_DECREF(wobj);
     }
@@ -222,7 +253,8 @@ if(sipIsErr == NULL)
 	PyObject *p = PyList_GET_ITEM(sipPy,i);
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
-                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                       PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
 					  sipType_ArcRoi,SIP_NOT_NONE);
       }
@@ -234,7 +266,17 @@ if(sipIsErr == NULL)
   for(int i = 0;i < PyList_Size(sipPy);++i)
     {
       PyObject *p = PyList_GET_ITEM(sipPy,i);
-      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+      char* name;
+      if (PyUnicode_Check(aTmpName)) {
+        PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+        name = PyString_AsString(s);
+        Py_DECREF(s);
+      }
+      if (PyString_Check(aTmpName)) {
+        name = PyString_AsString(aTmpName);
+      }
+      
       int state;
       lima::ArcRoi *roi = 
 	reinterpret_cast<lima::ArcRoi*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
@@ -272,7 +314,12 @@ if(sipIsErr == NULL)
 	  Py_DECREF(l);
 	  return NULL;
 	}
-      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+      PyObject *aNamePy;
+      aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+      if (aNamePy == NULL){
+        PyErr_Clear();
+        aNamePy = PyString_FromString((*j).first.c_str());
+      }
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,wobj));
       Py_DECREF(aNamePy);Py_DECREF(wobj);
     }
@@ -296,7 +343,8 @@ if(sipIsErr == NULL)
 	PyObject *p = PyList_GET_ITEM(sipPy,i);
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
-                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                       PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                       PyInt_Check(PySequence_Fast_GET_ITEM(p,1));
       }
     return aReturnFlag;
@@ -306,7 +354,17 @@ if(sipIsErr == NULL)
   for(int i = 0;i < PyList_Size(sipPy);++i)
     {
       PyObject *p = PyList_GET_ITEM(sipPy,i);
-      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+      char* name;
+      if (PyUnicode_Check(aTmpName)) {
+        PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+        name = PyString_AsString(s);
+        Py_DECREF(s);
+      }
+      if (PyString_Check(aTmpName)) {
+        name = PyString_AsString(aTmpName);
+      }
+
       int roi_type = (int) PyInt_AsLong(PySequence_Fast_GET_ITEM(p,1));
       names_typesPt->push_back(SoftOpRoiCounter::RoiNameAndType(name,roi_type));
     }
@@ -324,7 +382,13 @@ if(sipIsErr == NULL)
   for(std::list<SoftOpRoiCounter::RoiNameAndType>::iterator j = sipCpp->begin();
       j != sipCpp->end();++j,++i)
     {
-      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+      PyObject *aNamePy;
+      aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+      if (aNamePy == NULL){
+        PyErr_Clear();
+        aNamePy = PyString_FromString((*j).first.c_str());
+      }
+
       PyObject *aTypePy = PyInt_FromLong(j->second);
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,aTypePy));
       Py_DECREF(aNamePy);Py_DECREF(aTypePy);
@@ -349,7 +413,8 @@ if(sipIsErr == NULL)
 	PyObject *p = PyList_GET_ITEM(sipPy,i);
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
-                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                       PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
 					  sipType_Tasks_RoiCounterTask,SIP_NOT_NONE);
       }
@@ -360,7 +425,17 @@ if(sipIsErr == NULL)
   for(int i = 0;i < PyList_Size(sipPy);++i)
     {
       PyObject *p = PyList_GET_ITEM(sipPy,i);
-      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+      char* name;
+      if (PyUnicode_Check(aTmpName)) {
+        PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+        name = PyString_AsString(s);
+        Py_DECREF(s);
+      }
+      if (PyString_Check(aTmpName)) {
+        name = PyString_AsString(aTmpName);
+      }
+      
       int state;
       Tasks::RoiCounterTask *task =
 	reinterpret_cast<Tasks::RoiCounterTask*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
@@ -398,7 +473,13 @@ if(sipIsErr == NULL)
 	  Py_DECREF(l);
 	  return NULL;
 	}
-      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+      PyObject *aNamePy;
+      aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+      if (aNamePy == NULL){
+        PyErr_Clear();
+        aNamePy = PyString_FromString((*j).first.c_str());
+      }
+
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,wobj));
       Py_DECREF(aNamePy);Py_DECREF(wobj);
     }
@@ -423,7 +504,8 @@ if(sipIsErr == NULL)
   PyObject *p = PyList_GET_ITEM(sipPy, i);
   aReturnFlag = PySequence_Check(p) && 
                 PySequence_Size(p) == 2 &&
-                PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                 PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                 PyList_Check(PySequence_Fast_GET_ITEM(p,1));
   if(aReturnFlag)
     {
@@ -442,7 +524,17 @@ std::list<SoftOpRoi2Spectrum::RoiNameAndResults> *roiNameNResultPt =
 for(int i = 0;i < PyList_Size(sipPy);++i)
 {
  PyObject *p = PyList_GET_ITEM(sipPy, i);
- char* name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+ PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+ char* name;
+ if (PyUnicode_Check(aTmpName)) {
+  PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+  name = PyString_AsString(s);
+  Py_DECREF(s);
+ }
+ if (PyString_Check(aTmpName)) {
+    name = PyString_AsString(aTmpName);
+  }
+
  PyObject *aTmpList = PySequence_Fast_GET_ITEM(p,1);
  
  roiNameNResultPt->push_back(SoftOpRoi2Spectrum::RoiNameAndResults(name,
@@ -509,7 +601,13 @@ return sipGetState(sipTransferObj);
      PyList_SET_ITEM(PyRoiResultList,m,wobj);
     }
 
-   PyObject *aNamePy = PyString_FromString((*j).first.c_str());
+    PyObject *aNamePy;
+    aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+    if (aNamePy == NULL){
+      PyErr_Clear();
+      aNamePy = PyString_FromString((*j).first.c_str());
+    }
+
    PyList_SET_ITEM(l, i, PyTuple_Pack(2,aNamePy,PyRoiResultList));
    Py_DECREF(aNamePy);Py_DECREF(PyRoiResultList);
   }
@@ -535,7 +633,8 @@ if(sipIsErr == NULL)
 	PyObject *p = PyList_GET_ITEM(sipPy,i);
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
-                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                       PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
 					  sipType_Roi,SIP_NOT_NONE);
       }
@@ -547,7 +646,17 @@ if(sipIsErr == NULL)
   for(int i = 0;i < PyList_Size(sipPy);++i)
     {
       PyObject *p = PyList_GET_ITEM(sipPy,i);
-      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+      char* name;
+      if (PyUnicode_Check(aTmpName)) {
+        PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+        name = PyString_AsString(s);
+        Py_DECREF(s);
+      }
+      if (PyString_Check(aTmpName)) {
+        name = PyString_AsString(aTmpName);
+      }
+
       int state;
       lima::Roi *roi =
 	reinterpret_cast<lima::Roi*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
@@ -585,7 +694,13 @@ if(sipIsErr == NULL)
 	  Py_DECREF(l);
 	  return NULL;
 	}
-      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+    PyObject *aNamePy;
+    aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+    if (aNamePy == NULL){
+      PyErr_Clear();
+      aNamePy = PyString_FromString((*j).first.c_str());
+    }
+
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,wobj));
       Py_DECREF(aNamePy);Py_DECREF(wobj);
     }
@@ -609,7 +724,8 @@ if(sipIsErr == NULL)
 	PyObject *p = PyList_GET_ITEM(sipPy,i);
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
-                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                       PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
 					  sipType_Tasks_Roi2SpectrumTask,SIP_NOT_NONE);
       }
@@ -620,7 +736,17 @@ if(sipIsErr == NULL)
   for(int i = 0;i < PyList_Size(sipPy);++i)
     {
       PyObject *p = PyList_GET_ITEM(sipPy,i);
-      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+      char* name;
+      if (PyUnicode_Check(aTmpName)) {
+        PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+        name = PyString_AsString(s);
+        Py_DECREF(s);
+      }
+      if (PyString_Check(aTmpName)) {
+        name = PyString_AsString(aTmpName);
+      }
+
       int state;
       Tasks::Roi2SpectrumTask *task =
 	reinterpret_cast<Tasks::Roi2SpectrumTask*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
@@ -658,7 +784,13 @@ if(sipIsErr == NULL)
 	  Py_DECREF(l);
 	  return NULL;
 	}
-      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+    PyObject *aNamePy;
+    aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+    if (aNamePy == NULL){
+      PyErr_Clear();
+      aNamePy = PyString_FromString((*j).first.c_str());
+    }
+
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,wobj));
       Py_DECREF(aNamePy);Py_DECREF(wobj);
     }
@@ -682,7 +814,8 @@ if(sipIsErr == NULL)
 	PyObject *p = PyList_GET_ITEM(sipPy,i);
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
-                      PyString_Check(PySequence_Fast_GET_ITEM(p,0)) &&
+                      (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
+                       PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                       PyInt_Check(PySequence_Fast_GET_ITEM(p,1));
       }
     return aReturnFlag;
@@ -692,7 +825,17 @@ if(sipIsErr == NULL)
   for(int i = 0;i < PyList_Size(sipPy);++i)
     {
       PyObject *p = PyList_GET_ITEM(sipPy,i);
-      char *name = PyString_AsString(PySequence_Fast_GET_ITEM(p,0));
+      PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
+      char* name;
+      if (PyUnicode_Check(aTmpName)) {
+        PyObject* s = PyUnicode_AsEncodedString(aTmpName, "UTF-8", "");
+        name = PyString_AsString(s);
+        Py_DECREF(s);
+      }
+      if (PyString_Check(aTmpName)) {
+        name = PyString_AsString(aTmpName);
+      }
+
       int roi_mode = (int) PyInt_AsLong(PySequence_Fast_GET_ITEM(p,1));
       names_modesPt->push_back(SoftOpRoi2Spectrum::RoiNameAndMode(name,roi_mode));
     }
@@ -710,7 +853,13 @@ if(sipIsErr == NULL)
   for(std::list<SoftOpRoi2Spectrum::RoiNameAndMode>::iterator j = sipCpp->begin();
       j != sipCpp->end();++j,++i)
     {
-      PyObject *aNamePy = PyString_FromString(j->first.c_str());
+      PyObject *aNamePy;
+      aNamePy = PyUnicode_DecodeUTF8((*j).first.c_str(),(*j).first.length(), NULL);
+      if (aNamePy == NULL){
+        PyErr_Clear();
+        aNamePy = PyString_FromString((*j).first.c_str());
+      }
+
       PyObject *aModePy = PyInt_FromLong(j->second);
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,aModePy));
       Py_DECREF(aNamePy);Py_DECREF(aModePy);
