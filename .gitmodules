@@ -25,9 +25,6 @@
 [submodule "camera/common/espia"]
 	path = camera/common/espia
 	url = ../Lima-camera-common-espia
-[submodule "third-party/yat"]
-	path = third-party/yat
-	url = git://git.epn-campus.eu/repositories/yat
 [submodule "camera/prosilica"]
 	path = camera/prosilica
 	url = ../Lima-camera-prosilica
