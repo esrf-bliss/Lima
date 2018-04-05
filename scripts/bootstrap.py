@@ -28,6 +28,13 @@ OS_TYPE = platform.system()
 if OS_TYPE not in ['Linux', 'Windows']:
 	sys.exit('Platform not supported: ' + OS_TYPE)
 
+def exec_cmd(cmd, exc_msg=''):
+	print('Executing:' + cmd)
+	sys.stdout.flush()
+	ret = os.system(cmd)
+	if ret != 0:
+		raise Exception(exc_msg)
+
 
 class Config:
 
@@ -126,9 +133,6 @@ class Config:
 		if self.config_opts is None:
 			self.read_config()
 		return self.config_opts
-
-	def get_cmake_options(self):
-		return CMakeOptions(self)
 
 	def is_install_required(self):
 		cmd_opts = self.get_cmd_options()
@@ -272,52 +276,47 @@ class GitHelper:
 	submodule_map = {
 		'espia': 'camera/common/espia',
 		'pytango-server': 'applications/tango/python',
+		'sps-image': 'Sps'
 	}
 
 	basic_submods = (
-		'third-party/Processlib',
+		'Processlib',
 	)
 
-	def __init__(self, opts):
-		self.opts = opts
+	def __init__(self, cfg):
+		self.cfg = cfg
+		self.opts = self.cfg.get_git_options()
 
 	def check_submodules(self, submodules=None):
 		if submodules is None:
 			submodules = self.opts
+		submodules = list(submodules)
+		for submod in self.basic_submods:
+			if submod not in submodules:
+				submodules.append(submod)
 
+		root = self.cfg.get('source-prefix')
 		submod_list = []
 		for submod in submodules:
 			if submod in self.not_submodules:
 				continue
 			if submod in self.submodule_map:
 				submod = self.submodule_map[submod]
-			if submod in camera_list:
+			if submod in self.camera_list:
 				submod = 'camera/' + submod
-			submod_list.append(s)
-		for submod in self.basic_submods:
-			if submod not in submod_list:
+			tp_submod = os.path.join(root, 'third-party', submod)
+			if os.path.isdir(tp_submod):
+				submod = tp_submod
+			if os.path.isdir(submod):
 				submod_list.append(submod)
-
 		try:
 			for submod in submod_list:
 				action = 'init ' + submod
-				ret = os.system('git submodule ' + action)
-				if ret != 0:
-					raise Exception('Could not init')
+				exec_cmd('git submodule ' + action)
 				action = 'update --recursive ' + submod
-				ret = os.system('git submodule ' + action)
-				if ret != 0:
-					raise Exception('Could not update')
+				exec_cmd('git submodule ' + action)
 		except Exception as e:
 			sys.exit('Problem with submodule %s: %s' % (action, e))
-
-
-def exec_cmd(cmd, exc_msg):
-	print('Executing: ' + cmd)
-	sys.stdout.flush()
-	ret = os.system(cmd)
-	if ret != 0:
-		raise Exception(exc_msg)
 
 
 def build_install_lima(cfg):
@@ -326,7 +325,7 @@ def build_install_lima(cfg):
 		os.mkdir(build_prefix)
 	os.chdir(build_prefix)
 
-	cmake_opts = cfg.get_cmake_options()
+	cmake_opts = CMakeOptions(cfg)
 	cmake_cmd = cmake_opts.get_configure_options()
 	exec_cmd(cmake_cmd, ('Something is wrong in CMake environment. ' +
 			     'Make sure your configuration is good.'))
@@ -348,8 +347,7 @@ def main():
 
 	# No git option under windows for obvious reasons.
 	if OS_TYPE == 'Linux' and cfg.get('git'):
-		git_opts = cfg.get_git_options()
-		git = GitHelper(git_opts)
+		git = GitHelper(cfg)
 		git.check_submodules()
 
 	try:
