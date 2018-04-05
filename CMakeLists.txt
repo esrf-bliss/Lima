@@ -198,6 +198,8 @@ if(WIN32)
     list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp common/src/SimplePipe.cpp)
 endif()
 
+file(GLOB_RECURSE common_incs "common/include/*.h")
+
 set(hw_srcs hardware/src/HwInterface.cpp hardware/src/HwCap.cpp hardware/src/HwSyncCtrlObj.cpp hardware/src/HwFrameInfo.cpp
             hardware/src/HwFrameCallback.cpp hardware/src/HwBufferCtrlObj.cpp hardware/src/HwBufferMgr.cpp
             hardware/src/HwShutterCtrlObj.cpp hardware/src/HwMaxImageSizeCallback.cpp hardware/src/HwDetInfoCtrlObj.cpp
@@ -209,11 +211,15 @@ if(WIN32)
     list(REMOVE_ITEM hw_srcs hardware/src/HwFileEventMgr.cpp)
 endif()
 
+file(GLOB_RECURSE hardware_incs "hardware/include/*.h")
+
 set(control_srcs control/src/CtSaving.cpp control/src/CtControl.cpp control/src/CtAcquisition.cpp control/src/CtBuffer.cpp
                  control/src/CtImage.cpp control/src/CtSaving_Compression.cpp control/src/CtSaving_Edf.cpp control/src/CtShutter.cpp
                  control/src/CtAccumulation.cpp control/src/CtVideo.cpp
                  control/src/CtEvent.cpp)
 set(ct_srcs control/software_operation/src/SoftOpInternalMgr.cpp control/software_operation/src/SoftOpExternalMgr.cpp control/software_operation/src/SoftOpId.cpp)
+
+file(GLOB_RECURSE control_incs "control/include/*.h")
 
 #--------------------------------------------------------------------------------
 # Option for libconfig++ support
@@ -441,6 +447,9 @@ add_library(limacore SHARED
     ${hw_srcs}
     ${control_srcs}
     ${ct_srcs}
+    ${common_incs}
+    ${hardware_incs}
+    ${control_incs}
 )
 
 limatools_set_library_soversion(limacore "common/VERSION")       
