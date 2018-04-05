@@ -118,6 +118,7 @@ Camera::Camera() :
 	init();
 
 	m_thread.start();
+	m_thread.waitStatus(SimuThread::Ready);
 }
 
 void Camera::init()
@@ -132,6 +133,7 @@ void Camera::init()
 Camera::~Camera()
 {
 	DEB_DESTRUCTOR();
+	stopAcq();
 }
 
 HwBufferCtrlObj* Camera::getBufferCtrlObj()
@@ -256,8 +258,10 @@ void Camera::stopAcq()
 {
 	DEB_MEMBER_FUNCT();
 
-	m_thread.sendCmd(SimuThread::StopAcq);
-	m_thread.waitStatus(SimuThread::Ready);
+	if (m_thread.getStatus() != SimuThread::Ready) {
+		m_thread.sendCmd(SimuThread::StopAcq);
+		m_thread.waitStatus(SimuThread::Ready);
+	}
 }
 
 int Camera::getNbAcquiredFrames()
