@@ -25,6 +25,7 @@
 #include "lima/LimaCompatibility.h"
 #include "lima/AutoObj.h"
 #include <pthread.h>
+#include <queue>
 
 namespace lima
 {
@@ -155,7 +156,7 @@ class LIMACORE_API CmdThread
 	virtual void abort();
 
 	void sendCmd(int cmd);
-	void sendCmdIf(int cmd,bool (*if_test)(int,int));
+	void sendCmdIf(int cmd, bool (*if_test)(int, int));
 	int getStatus() const;
 	int getNextCmd() const;
 	void waitStatus(int status);
@@ -183,9 +184,10 @@ class LIMACORE_API CmdThread
 	};
 	friend class AuxThread;
 	void cmdLoop();
+	void sendCmdWorker(int cmd);
 
-	volatile int m_status;
-	volatile int m_cmd;
+	std::queue<int> m_status;
+	std::queue<int> m_cmd;
 	mutable Cond m_cond;
 	AuxThread m_thread;
 };

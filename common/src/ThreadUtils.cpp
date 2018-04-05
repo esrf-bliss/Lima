@@ -312,14 +312,12 @@ void CmdThread::AuxThread::threadFunction()
 CmdThread::CmdThread()
 	: m_thread(*this)
 {
-	m_status = InInit;
-	m_cmd = None;
+	m_status.push(InInit);
 }
 
 CmdThread::~CmdThread()
 {
-	if(m_thread.hasStarted())
-	{
+	if (m_thread.hasStarted()) {
 		abort();
 		waitStatus(Finished);
 	}
@@ -327,76 +325,90 @@ CmdThread::~CmdThread()
 
 AutoMutex CmdThread::lock() const
 {
-  return AutoMutex(m_cond.mutex(), AutoMutex::Locked);
+	return AutoMutex(m_cond.mutex(), AutoMutex::Locked);
 }
 
 AutoMutex CmdThread::tryLock() const
 {
-  return AutoMutex(m_cond.mutex(), AutoMutex::TryLocked);
+	return AutoMutex(m_cond.mutex(), AutoMutex::TryLocked);
 }
 
 int CmdThread::getStatus() const
 {
 	AutoMutex l = lock();
-	return m_status;
+	return m_status.back();
 }
 
 int CmdThread::getNextCmd() const
 {
-  AutoMutex l = lock();
-  return m_cmd;
+	AutoMutex l = lock();
+	return m_cmd.empty() ? None : m_cmd.front();
 }
 
 void CmdThread::setStatus(int status)
 {
 	AutoMutex l = lock();
-	m_status = status;
+	m_status.push(status);
 	m_cond.signal();
 }
 
 void CmdThread::waitStatus(int status)
 {
 	AutoMutex l = lock();
-	while (m_status != status)
-		m_cond.wait();
+	int next_status = m_status.front();
+	while (next_status != status) {
+		m_status.pop();
+		while (m_status.empty())
+			m_cond.wait();
+		next_status = m_status.front();
+	}
 }
 
 int CmdThread::waitNotStatus(int status)
 {
 	AutoMutex l = lock();
-	while (m_status == status)
-		m_cond.wait();
-	return m_status;
+	int next_status = m_status.front();
+	while (next_status == status) {
+		m_status.pop();
+		while (m_status.empty())
+			m_cond.wait();
+		next_status = m_status.front();
+	}
+	return next_status;
 }
 
 void CmdThread::sendCmd(int cmd)
 {
 	AutoMutex l = lock();
-	m_cmd = cmd;
-	m_cond.signal();
+	sendCmdWorker(cmd);
 }
+
 /** @brief send a command only if the return of if_test is true.
  *  
  *  function if_test get as argument the command and status
  */
-void CmdThread::sendCmdIf(int cmd,bool (*if_test)(int,int))
+void CmdThread::sendCmdIf(int cmd, bool (*if_test)(int,int))
 {
-  AutoMutex l = lock();
-  bool sendFlag = true;
-  if(if_test)
-    sendFlag = if_test(m_cmd,m_status);
-  if(sendFlag)
-    {
-      m_cmd = cmd;
-      m_cond.signal();
-    }
+	AutoMutex l = lock();
+	if (if_test && if_test(cmd, m_status.back()))
+		sendCmdWorker(cmd);
 }
+
+void CmdThread::sendCmdWorker(int cmd)
+{
+	// flush status history, just leave curr. status
+	while (m_status.size() > 1)
+		m_status.pop();
+	m_cmd.push(cmd);
+	m_cond.signal();
+}
+
 void CmdThread::start()
 {
 	if (m_thread.hasStarted())
 		throw LIMA_COM_EXC(InvalidValue, "Thread already started");
 
-	m_cmd = Init;
+	m_cmd.push(Init);
 	m_thread.start();
 }
 
@@ -410,11 +422,11 @@ int CmdThread::waitNextCmd()
 {
 	AutoMutex l = lock();
 
-	while (m_cmd == None)
-	  m_cond.wait();
+	while (m_cmd.empty())
+		m_cond.wait();
 
-	int cmd = m_cmd;
-	m_cmd = None;
+	int cmd = m_cmd.front();
+	m_cmd.pop();
 	return cmd;
 }
 
