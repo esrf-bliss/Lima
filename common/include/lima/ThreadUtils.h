@@ -142,11 +142,11 @@ class LIMACORE_API CmdThread
 {
  public:
 	enum { // Status
-		InInit, Stopped, Finished, MaxThreadStatus,
+		InInit, Finished, MaxThreadStatus,
 	};
 
 	enum { // Cmd
-		None, Init, Stop, Abort, MaxThreadCmd,
+		None, Init, Abort, MaxThreadCmd,
 	};
 
 	CmdThread();

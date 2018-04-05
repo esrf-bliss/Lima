@@ -440,9 +440,6 @@ void CmdThread::cmdLoop()
 		case Init:
 			init();
 			break;
-		case Stop:
-			setStatus(Stopped);
-			break;
 		case Abort:
 			setStatus(Finished);
 			break;
