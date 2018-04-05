@@ -23,6 +23,8 @@
 ############################################################################
 import sys, os
 import platform, multiprocessing
+from subprocess import Popen, PIPE
+import contextlib
 
 OS_TYPE = platform.system()
 if OS_TYPE not in ['Linux', 'Windows']:
@@ -33,8 +35,15 @@ def exec_cmd(cmd, exc_msg=''):
 	sys.stdout.flush()
 	ret = os.system(cmd)
 	if ret != 0:
-		raise Exception(exc_msg)
+		raise Exception('%s [%s]' % (exc_msg, cmd))
 
+
+@contextlib.contextmanager
+def ch_dir(new_dir):
+	cur_dir = os.getcwd()
+	os.chdir(new_dir)
+	yield
+	os.chdir(cur_dir)
 
 class Config:
 
@@ -263,16 +272,6 @@ class GitHelper:
 		'tiff', 'hdf5'
 	)
 
-	camera_list = (
-		'adsc', 'andor3', 'basler', 'dexela', 'frelon', 'hexitec', 
-		'marccd', 'merlin', 'mythen3', 'perkinelmer', 'pilatus', 
-		'pointgrey', 'rayonixhs', 'ultra', 'xh', 'xspress3', 'andor', 
-		'aviex', 'eiger', 'hamamatsu', 'imxpad', 'maxipix', 'mythen', 
-		'pco', 'photonicscience','pixirad', 'prosilica', 
-		'roperscientific', 'ueye', 'v4l2', 'xpad', 'lambda', 
-		'slsdetector', 'fli'
-	)
-
 	submodule_map = {
 		'espia': 'camera/common/espia',
 		'pytango-server': 'applications/tango/python',
@@ -296,28 +295,39 @@ class GitHelper:
 				submodules.append(submod)
 
 		root = self.cfg.get('source-prefix')
-		submod_list = []
-		for submod in submodules:
-			if submod in self.not_submodules:
-				continue
-			if submod in self.submodule_map:
-				submod = self.submodule_map[submod]
-			if submod in self.camera_list:
-				submod = 'camera/' + submod
-			tp_submod = os.path.join(root, 'third-party', submod)
-			if os.path.isdir(tp_submod):
-				submod = tp_submod
-			if os.path.isdir(submod):
-				submod_list.append(submod)
-		try:
-			for submod in submod_list:
-				action = 'init ' + submod
-				exec_cmd('git submodule ' + action)
-				action = 'update --recursive ' + submod
-				exec_cmd('git submodule ' + action)
-		except Exception as e:
-			sys.exit('Problem with submodule %s: %s' % (action, e))
+		with ch_dir(root):
+			submod_list = []
+			for submod in submodules:
+				if submod in self.not_submodules:
+					continue
+				if submod in self.submodule_map:
+					submod = self.submodule_map[submod]
+				for sdir in ['third-party', 'camera']:
+					s = os.path.join(sdir, submod)
+					if os.path.isdir(s):
+						submod = s
+						break
+				if os.path.isdir(submod):
+					submod_list.append(submod)
 
+			for submod in submod_list:
+				self.update_submodule(submod)
+
+	def update_submodule(self, submod):
+		try:
+			action = 'init ' + submod
+			exec_cmd('git submodule ' + action)
+			action = 'update ' + submod
+			exec_cmd('git submodule ' + action)
+			with ch_dir(submod):
+				exec_cmd('git submodule init')
+				cmd = ['git', 'submodule']
+				p = Popen(cmd, stdout=PIPE)
+				for l in p.stdout.readlines():
+					tok = l.strip().split()
+					self.update_submodule(tok[1])
+		except Exception as e:
+			sys.exit('Problem with submodule %s: %s' % (submod, e))
 
 def build_install_lima(cfg):
 	build_prefix = cfg.get('build-prefix')
