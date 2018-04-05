@@ -19,9 +19,7 @@ There is no binary package for lima yet but Lima is a very active project and ma
 
 However you can find stable versions track through git branches and tags on github.com.
 
-The latest stable branch is **core-1.7** and the latest release tag is **core-1.7.2**.
-
-Please, feel free to fork/clone or download Lima at http://github.com/esrf-bliss/Lima .
+Please, feel free to fork/clone or download Lima at http://github.com/esrf-bliss/Lima.
 
 For latest changes, refers to the :download:`Release Notes <./ReleaseNotes.txt>` (Also available under the Git repository master branch as ReleaseNotes.txt text file).
 
