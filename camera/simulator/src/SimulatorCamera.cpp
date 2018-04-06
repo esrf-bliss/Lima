@@ -58,11 +58,15 @@ void Camera::SimuThread::execCmd(int cmd)
 
 	int status = getStatus();
 	switch (cmd) {
+	case PrepareAcq:
+		m_acq_frame_nb = 0;
+		setStatus(Prepare);
+		break;
 	case StartAcq:
-		if (status != Ready)
-			throw LIMA_HW_EXC(InvalidValue,
-					  "Not Ready to StartAcq");
 		execStartAcq();
+		break;
+	case StopAcq:
+		setStatus(Ready);
 		break;
 	}
 }
@@ -224,9 +228,12 @@ void Camera::reset()
 
 HwInterface::StatusType::Basic Camera::getStatus()
 {
+	DEB_MEMBER_FUNCT();
+
 	int thread_status = m_thread.getStatus();
 	switch (thread_status) {
 	case SimuThread::Ready:
+	case SimuThread::Prepare:
 		return HwInterface::StatusType::Ready;
 	case SimuThread::Exposure:
 		return HwInterface::StatusType::Exposure;
@@ -235,18 +242,28 @@ HwInterface::StatusType::Basic Camera::getStatus()
 	case SimuThread::Latency:
 		return HwInterface::StatusType::Latency;
 	default:
-		throw LIMA_HW_EXC(Error, "Invalid thread status");
+		THROW_HW_ERROR(Error) <<  "Invalid thread status";
 	}
 }
 
 void Camera::prepareAcq()
 {
-	m_thread.m_acq_frame_nb = 0;
+	DEB_MEMBER_FUNCT();
+
+	if (m_thread.getStatus() == SimuThread::Prepare)
+		return;
+	if (m_thread.getStatus() != SimuThread::Ready)
+		THROW_HW_ERROR(Error) << "Camera not Ready";
+	m_thread.sendCmd(SimuThread::PrepareAcq);
+	m_thread.waitStatus(SimuThread::Prepare);
 }
 
 void Camera::startAcq()
 {
 	DEB_MEMBER_FUNCT();
+
+	if (m_thread.getStatus() != SimuThread::Prepare)
+		THROW_HW_ERROR(Error) << "Camera not Prepared";
 
 	m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 

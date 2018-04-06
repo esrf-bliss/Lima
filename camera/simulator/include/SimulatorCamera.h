@@ -85,11 +85,17 @@ class LIBSIMULATOR_API Camera
         DEB_CLASS_NAMESPC(DebModCamera, "Camera", "SimuThread");
 	public:
 		enum { // Status
-			Ready = MaxThreadStatus, Exposure, Readout, Latency,
+			Ready = MaxThreadStatus,
+			Prepare,
+			Exposure,
+			Readout,
+			Latency,
 		};
 
 		enum { // Cmd 
-			StartAcq = MaxThreadCmd, StopAcq,
+			PrepareAcq = MaxThreadCmd,
+			StartAcq,
+			StopAcq,
 		};
 
 		SimuThread(Camera& simu);
