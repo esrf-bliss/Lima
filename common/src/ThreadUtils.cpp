@@ -317,9 +317,15 @@ CmdThread::CmdThread()
 
 CmdThread::~CmdThread()
 {
-	if (m_thread.hasStarted()) {
+	using namespace std;
+
+	if (!m_thread.hasStarted())
+		return;
+
+	if (getStatus() != Finished) {
+		cerr << "***** Error: CmdThread did not call abort "
+		     << "in the derived class destructor! *****";
 		abort();
-		waitStatus(Finished);
 	}
 }
 
@@ -396,6 +402,9 @@ void CmdThread::sendCmdIf(int cmd, bool (*if_test)(int,int))
 
 void CmdThread::sendCmdWorker(int cmd)
 {
+	if (m_status.back() == Finished)
+		throw LIMA_HW_EXC(Error, "Thread has Finished");
+
 	// flush status history, just leave curr. status
 	while (m_status.size() > 1)
 		m_status.pop();
@@ -414,8 +423,11 @@ void CmdThread::start()
 
 void CmdThread::abort()
 {
-	if (getStatus() != Finished)
-		sendCmd(Abort);
+	if (getStatus() == Finished)
+		return;
+
+	sendCmd(Abort);
+	waitStatus(Finished);
 }
 
 int CmdThread::waitNextCmd()
