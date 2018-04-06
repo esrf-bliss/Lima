@@ -99,6 +99,7 @@ class LIBSIMULATOR_API Camera
 		};
 
 		SimuThread(Camera& simu);
+		~SimuThread();
 
 		virtual void start();
 		

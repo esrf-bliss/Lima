@@ -37,6 +37,12 @@ Camera::SimuThread::SimuThread(Camera& simu)
 	m_acq_frame_nb = 0;
 }
 
+Camera::SimuThread::~SimuThread()
+{
+	DEB_DESTRUCTOR();
+	abort();
+}
+
 void Camera::SimuThread::start()
 {
 	DEB_MEMBER_FUNCT();
