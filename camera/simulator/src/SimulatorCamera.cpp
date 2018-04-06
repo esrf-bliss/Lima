@@ -56,7 +56,6 @@ void Camera::SimuThread::execCmd(int cmd)
 {
 	DEB_MEMBER_FUNCT();
 
-	int status = getStatus();
 	switch (cmd) {
 	case PrepareAcq:
 		m_acq_frame_nb = 0;
@@ -268,7 +267,7 @@ void Camera::startAcq()
 	m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
 	m_thread.sendCmd(SimuThread::StartAcq);
-	m_thread.waitNotStatus(SimuThread::Ready);
+	m_thread.waitNotStatus(SimuThread::Prepare);
 }
 
 void Camera::stopAcq()
