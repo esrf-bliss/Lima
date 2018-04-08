@@ -101,6 +101,9 @@ class LIMACORE_API Cond
 };
 
 
+pid_t GetThreadID();
+
+
 class LIMACORE_API Thread
 {
  public:
@@ -112,6 +115,8 @@ class LIMACORE_API Thread
 
 	bool hasStarted();
 	bool hasFinished();
+
+	pid_t getThreadID();
 
  protected:
 	class LIMACORE_API ExceptionCleanUp
@@ -127,6 +132,7 @@ class LIMACORE_API Thread
 
 	pthread_attr_t	m_thread_attr;
 	pthread_t m_thread;
+	pid_t m_tid;
 
  private:
 	friend class ExceptionCleanUp;

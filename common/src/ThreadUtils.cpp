@@ -28,6 +28,8 @@
 #else
 #include <time_compat.h>
 #endif
+#include <unistd.h>
+#include <sys/syscall.h>
 
 using namespace lima;
 
@@ -216,6 +218,10 @@ void Cond::broadcast()
     throw LIMA_COM_EXC(Error, "Error broadcast condition");
 }
 
+pid_t lima::GetThreadID() {
+	return syscall(SYS_gettid);
+}
+
 Thread::ExceptionCleanUp::ExceptionCleanUp(Thread& thread)
 	: m_thread(thread)
 {
@@ -229,6 +235,7 @@ Thread::ExceptionCleanUp::~ExceptionCleanUp()
 Thread::Thread()
 {
 	m_started = m_finished = m_exception_handled = false;
+	m_tid = 0;
 	pthread_attr_init(&m_thread_attr);
 }
 
@@ -270,11 +277,17 @@ bool Thread::hasFinished()
 	return m_finished;
 }
 
+pid_t Thread::getThreadID()
+{
+	return m_tid;
+}
+
 void *Thread::staticThreadFunction(void *data)
 {
 	using namespace std;
 
 	Thread *thread = (Thread *) data;
+	thread->m_tid = GetThreadID();
 
 	try {
 		thread->threadFunction();
@@ -293,7 +306,6 @@ void *Thread::staticThreadFunction(void *data)
 	thread->m_finished = true;
 	return NULL;
 }
-
 
 CmdThread::AuxThread::AuxThread(CmdThread& master)
 	: m_master(&master)
