@@ -39,7 +39,7 @@ const int RANK_THREE = 3;
 struct SaveContainerHdf5::_File
 {
   _File() : 
-	m_format_written(false),
+    m_format_written(false),
     m_in_append(false),
     m_dataset_extended(false),
     m_image_dataspace(NULL),
@@ -48,8 +48,7 @@ struct SaveContainerHdf5::_File
     m_entry(NULL),
     m_measurement_detector(NULL),
     m_instrument_detector(NULL),
-    m_measurement_detector_info(NULL),
-    m_measurement_detector_parameters(NULL),
+    m_instrument_detector_meta_data(NULL),
     m_entry_index(0)
   {}
   
@@ -59,7 +58,7 @@ struct SaveContainerHdf5::_File
     delete m_image_dataset;
     delete m_measurement_detector;
     delete m_instrument_detector;
-    delete m_measurement_detector_parameters;
+    delete m_instrument_detector_meta_data;
     delete m_entry;
     delete m_file;
   }
@@ -76,10 +75,10 @@ struct SaveContainerHdf5::_File
     m_entry = other.m_entry;
     m_measurement_detector = other.m_measurement_detector;
     m_instrument_detector = other.m_instrument_detector;
-    m_measurement_detector_info = other.m_measurement_detector_info;
-    m_measurement_detector_parameters = other.m_measurement_detector_parameters;
+    m_instrument_detector_meta_data = other.m_instrument_detector_meta_data;
     m_entry_index = other.m_entry_index;
     m_entry_name = other.m_entry_name;
+    m_data_name = other.m_data_name;
 
     //transfer pointer to the new structure
     other.m_image_dataspace = NULL;
@@ -88,8 +87,7 @@ struct SaveContainerHdf5::_File
     other.m_entry = NULL;
     other.m_measurement_detector = NULL;
     other.m_instrument_detector = NULL;
-    other.m_measurement_detector_info = NULL;
-    other.m_measurement_detector_parameters = NULL;
+    other.m_instrument_detector_meta_data = NULL;
   }
 
   bool m_format_written;
@@ -102,10 +100,11 @@ struct SaveContainerHdf5::_File
   Group *m_entry;
   Group *m_measurement_detector;
   Group *m_instrument_detector;
-  Group *m_measurement_detector_info;
-  Group *m_measurement_detector_parameters;
+  Group *m_instrument_detector_meta_data;
   int m_entry_index;
   string m_entry_name;
+  string m_data_name;
+
 };
 /* Static function helper*/
 DataType get_h5_type(unsigned char)		{return PredType(PredType::NATIVE_UINT8);}
@@ -348,7 +347,10 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  write_h5_attribute(*new_file.m_entry, "NX_class", nxentry);
 		  string title = "Lima 2D detector acquisition";
 		  write_h5_dataset(*new_file.m_entry, "title", title);
-		  
+
+		  // Add an attribute "default"  for default entry path
+		  write_h5_attribute(*new_file.m_file, "default", new_file.m_entry_name);
+
 		  // could be the beamline/instrument name instead
 		  Group instrument = Group(new_file.m_entry->createGroup(m_ct_parameters.instrument_name));
 		  string nxinstrument = "NXinstrument";
@@ -363,10 +365,19 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  write_h5_attribute(measurement, "NX_class", nxcollection);
 		  
 		  new_file.m_measurement_detector = new Group(measurement.createGroup(m_ct_parameters.det_name));
-		  write_h5_attribute(*new_file.m_measurement_detector, "NX_class", nxdetector);
+		  string nxdata = "NXdata";
+		  write_h5_attribute(*new_file.m_measurement_detector, "NX_class", nxdata);
 		  
-		  new_file.m_measurement_detector_parameters = 
-		    new Group(new_file.m_measurement_detector->createGroup("parameters"));
+		  // Add attribute "default" for path to the NXdata
+		  new_file.m_data_name = "image_data";
+		  string path_to_nxdata = new_file.m_entry_name + "/measurement/" + m_ct_parameters.det_name;
+		  write_h5_attribute(*new_file.m_entry, "default", path_to_nxdata);
+
+		  // Add attribute "signal" for final data path
+		  write_h5_attribute(*new_file.m_measurement_detector, "signal", new_file.m_data_name);
+		  
+		  new_file.m_instrument_detector_meta_data = 
+		    new Group(new_file.m_instrument_detector->createGroup("meta_data"));
 		  
 		  // write the control parameters (detinfo, acq and image)
 		  
@@ -454,11 +465,14 @@ void SaveContainerHdf5::_close(void* f) {
 
 	_File *file = (_File*)f;
 	if (!file->m_in_append || m_is_multiset) {
-		// Create hard link to the Data group.
-		string img_path = file->m_entry_name;
-		img_path += "/measurement/" + m_ct_parameters.det_name+"/data";
-		file->m_instrument_detector->link(H5L_TYPE_HARD, img_path, "data");
-
+		// Create soft link to the Data and NXdetector groups
+		string path = file->m_entry_name;
+		path += "/instrument/" + m_ct_parameters.det_name + "/" + file->m_data_name;
+		file->m_measurement_detector->link(H5L_TYPE_SOFT, path, file->m_data_name);
+		path = file->m_entry_name;
+		path += "/instrument/" + m_ct_parameters.det_name;
+		file->m_measurement_detector->link(H5L_TYPE_SOFT, path, "information");
+		
 		// ISO 8601 Time format
 		time_t now;
 		time(&now);
@@ -545,12 +559,12 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 
 						string key = it->first;
 						string value = it->second;
-						write_h5_dataset(*file->m_measurement_detector_parameters,
+						write_h5_dataset(*file->m_instrument_detector_meta_data,
 								 key.c_str(),value);
 					}
 				}
-				delete file->m_measurement_detector_parameters;
-				file->m_measurement_detector_parameters = NULL;
+				delete file->m_instrument_detector_meta_data;
+				file->m_instrument_detector_meta_data = NULL;
 					
 				// create the image data structure in the file
 				hsize_t data_dims[3], max_dims[3];
@@ -581,20 +595,18 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				// create new dspace
 				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, NULL);
 				file->m_image_dataset = 
-				  new DataSet(file->m_measurement_detector->createDataSet("data",
+				  new DataSet(file->m_instrument_detector->createDataSet(file->m_data_name,
 											  data_type,
 											  *file->m_image_dataspace,
 											  plist));
-				string nxdata = "NXdata";
-				write_h5_attribute(*file->m_image_dataset, "NX_class", nxdata);
-				string image = "image"; 
+				string image = "image";
 				write_h5_attribute(*file->m_image_dataset, "interpretation", image);
 				file->m_prev_images_written = 0;
 				file->m_format_written = true;
 			} else if (file->m_in_append && !m_is_multiset && !file->m_dataset_extended) {
 				hsize_t allocated_dims[3];
-				file->m_image_dataset = new DataSet(file->m_measurement_detector->
-								    openDataSet("data"));
+				file->m_image_dataset = new DataSet(file->m_instrument_detector->
+								    openDataSet(file->m_data_name));
 				file->m_image_dataspace = new DataSpace(file->m_image_dataset->getSpace());
 				file->m_image_dataspace->getSimpleExtentDims(allocated_dims);
 
