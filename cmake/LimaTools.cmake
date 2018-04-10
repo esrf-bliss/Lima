@@ -42,6 +42,11 @@ function(limatools_run_camera_tests test_src cam_name)
 		add_executable(${file} "${file}.cpp")
 		target_link_libraries(${file} limacore lima${cam_name})
 		add_test(NAME ${file} COMMAND ${file} ${test_arg})
+		if(WIN32)
+			# Add the dlls to the %PATH%
+			string(REPLACE ";" "\;" ESCAPED_PATH "$ENV{PATH}")
+			set_tests_properties(${file} PROPERTIES ENVIRONMENT "PATH=${ESCAPED_PATH}\;$<SHELL_PATH:$<TARGET_FILE_DIR:limacore>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:processlib>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:lima${cam_name}>>")
+		endif()
 	endforeach(file)
 
 endfunction()
