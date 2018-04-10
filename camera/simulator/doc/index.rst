@@ -7,6 +7,7 @@ Simulator
 
 Introduction
 ````````````
+
 This is the official Lima camera simulator. It has been made to help you getting started with Lima and to test/play Lima without any hardware.
 
 The simulator provides two modes of operations:
@@ -18,27 +19,24 @@ Both modes have a preteched variant, where the frames are preteched in memory be
 
 Prerequisite
 ````````````
+
 There is no special prerequisite, the simulator can be compiled and tested on both Linux and Windows platforms.
 
 Installation & Module configuration
 ````````````````````````````````````
 
-According to the target platform, follow the instruction in :ref:`linux_installation` or :ref:`windows_installation`.
-
-The minimum CMake configuration is :
+Follow the generic instructions in :ref:`build_installation`. If using CMake directly, add the following flag:
 
 .. code-block:: sh
 
- COMPILE_CORE=1
- COMPILE_SIMULATOR=1
+  -DLIMACAMERA_SIMULATOR=true
 
--  start the compilation :ref:`linux_compilation`
-
--  finally for the Tango server installation :ref:`tango_installation`
+For the Tango server installation, refers to :ref:`tango_installation`.
 
 Initialisation and Capabilities
 ```````````````````````````````
-In order to help people understand how a camera plugin is being implemented in LImA, this section provides some important information about the developer's choices.
+
+Implementing a new plugin for new detector is driven by the LIMA framework but the developer has some freedoms to choose which standard and specific features will be made available. This section is supposed to give you the correct information regarding how the camera is exported within the LIMA framework.
 
 Camera initialisation
 .....................
@@ -47,7 +45,7 @@ Camera initialisation
 
 The camera will be initialized within the :cpp:class:`Camera` object. The :cpp:func:`Camera` constructor takes an optional mode parameter.
 
-This simulator plugin architecture is based on the :cpp:class:`FrameGetter` interface that have different implementations.
+This simulator plugin architecture is based on the :cpp:class:`FrameGetter` interface that have multiple implementations.
 
 .. image:: https://yuml.me/diagram/scruffy/class/edit/Simulator%20Class%20Diagram,%20[FrameGetter%7CgetNextFrame()],%20[FrameGetter]%5E-[FrameBuilder],%20[FrameGetter]%5E-[FrameLoader]
 
@@ -77,7 +75,7 @@ The class :cpp:class:`FrameLoader` can be parametrized with:
 
  - :cpp:func:`setFilePattern()`: set the file pattern used to load the frames than may include globing pattern, i.e. ``input/test_*.edf``
 
-The :cpp:class:`FramePrefetcher<>` variants have an addition parameter:
+The :cpp:class:`template <typename FrameGetterImpl> FramePrefetcher` variants have an addition parameter:
 
  - :cpp:func:`setNbPrefetchedFrames()`: set the number of frames to prefetch in memory
 
@@ -86,7 +84,7 @@ The :cpp:class:`FramePrefetcher<>` variants have an addition parameter:
 Standard capabilities
 .....................
 
-This plugin has been implement with respect to the standard capabilites of a camera plugin but with some limitations according to some programmer's choices. We only provide here extra information for a better understanding of the capabilities for the simulator camera.
+This plugin has been implemented in respect of the standard capabilites of a camera plugin but with some limitations according to some programmer's choices. We only provide here extra information for a better understanding of the capabilities for the simulator camera.
 
  - :cpp:class:`HwDetInfo`: The default (and max.) frame size if about 1024x1024-Bpp32, but one can only change the image type by calling :cpp:func:`DetInfoCtrlObj::setCurrImageType()`.
  - :cpp:class:`HwSync`: Only IntTrig trigger mode is supported. For both exposure time and latency time min. is 10e-9 and max. is 10e6.
