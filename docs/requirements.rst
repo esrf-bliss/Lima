@@ -4,7 +4,7 @@
 Requirements
 ------------
 
-You need to install some tools and libraries for building Lima for both Windows and Linux.
+Some tools and libraries are required to build Lima for either Windows and Linux.
 
 Build dependencies
 ~~~~~~~~~~~~~~~~~~
@@ -14,8 +14,9 @@ Build dependencies
   - Visual Studio 2008 for x86 or x64 for python2.7.x
   - Visual Studio 2008 Express for x86 only for python2.7.x
   - Visual Studio 2015 for x86 and x64 for python >= 3.5
+  - Visual Studio 2017
 
-- CMake_ >= 3
+- CMake_ >= 3.1
 - The GSL_ library. For Windows, download the ESRF binary package `gsl-windows`_ and install it under ``C:\Program Files``.
 
 Python dependencies
@@ -24,7 +25,7 @@ Python dependencies
 Lima_ is compatible with python 2 and 3 (Linux only).
 
 - numpy_ >= 1.1
-- sip_   <= 4.18
+- sip_ <= 4.18. Version 4.19 is known not to work.
 
 Optional dependencies
 ~~~~~~~~~~~~~~~~~~~~~
