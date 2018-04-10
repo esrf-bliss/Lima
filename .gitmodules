@@ -19,19 +19,12 @@
 [submodule "camera/maxipix"]
 	path = camera/maxipix
 	url = ../Lima-camera-maxipix
-[submodule "documentation"]
-	path = documentation
-	url = ../lima-documentation
-	branch = improve-doc
 [submodule "camera/frelon"]
 	path = camera/frelon
 	url = ../Lima-camera-frelon
 [submodule "camera/common/espia"]
 	path = camera/common/espia
 	url = ../Lima-camera-common-espia
-[submodule "third-party/yat"]
-	path = third-party/yat
-	url = git://git.epn-campus.eu/repositories/yat
 [submodule "camera/prosilica"]
 	path = camera/prosilica
 	url = ../Lima-camera-prosilica
