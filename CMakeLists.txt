@@ -137,8 +137,8 @@ endif()
 # Enable python binding code compilation using sip generator
 #--------------------------------------------------------------------------------
 if(LIMA_ENABLE_PYTHON)
-    find_package(PythonInterp 2.7)
-    find_package(PythonLibs 2.7)
+    find_package(PythonInterp)
+    find_package(PythonLibs)
     if(${PYTHONINTERP_FOUND})
       # python site-packages folder
       execute_process(
