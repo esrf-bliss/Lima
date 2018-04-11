@@ -5,19 +5,40 @@ stages:
   - build
   - test
 
-build :
+build-python2 :
   stage: build
   script:
-    - ./install.sh --git tests python 
+    - update-alternatives --set python /usr/bin/python2.7
+    - ./install.sh --git tests python
     - ls -l
   artifacts:
     paths:
     - build/
 
-test :
+build-python3 :
+  stage: build
+  script:
+    - update-alternatives --set python /usr/bin/python3.4
+    - ./install.sh --git tests python
+    - ls -l
+  artifacts:
+    paths:
+    - build/
+
+test-python2 :
   stage: test
   dependencies:
-    - build
+    - build-python2
   script:
+    - update-alternatives --set python /usr/bin/python2.7
+    - cd build/
+    - ctest --timeout 10
+
+test-python3 :
+  stage: test
+  dependencies:
+    - build-python3
+  script:
+    - update-alternatives --set python /usr/bin/python3.4
     - cd build/
     - ctest --timeout 10

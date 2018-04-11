@@ -351,7 +351,7 @@ if(sipIsErr == NULL)
 
   pos = 0;
   while(aReturnFlag && PyDict_Next(sipPy, &pos, &key, &value))
-     aReturnFlag = PyInt_Check(key) && PyString_Check(value);
+     aReturnFlag = PyInt_Check(key) && (PyString_Check(value) || PyUnicode_Check(value));
 
   return aReturnFlag;
 }
@@ -361,7 +361,15 @@ pos = 0;
 while(PyDict_Next(sipPy, &pos, &key, &value))
 {
   int anIndex = PyInt_AS_LONG(key);
-  char *s = PyString_AsString(value);
+  char *s;
+  if(PyUnicode_Check(value)) {
+    PyObject* aPyObj = PyUnicode_AsEncodedString(value, "UTF-8", "");
+    s = PyString_AS_STRING(aPyObj);
+    Py_DECREF(aPyObj);
+  }
+  else {
+    s = PyString_AS_STRING(value);
+  }
   std::pair<int,std::string> item(anIndex,s);
   (*sipCppPtr)->insert(item);
 }
@@ -376,7 +384,11 @@ for(mIter = sipCpp->begin(); mIter != mEnd; ++mIter)
    {
     PyObject *aKeyPt = PyInt_FromLong(mIter->first);
     std::string *sPt = &mIter->second;
-    PyObject *aValuePt = PyString_FromStringAndSize(sPt->data(),sPt->length());
+    PyObject *aValuePt = PyUnicode_DecodeUTF8(sPt->data(), sPt->length(), NULL);
+    if(aValuePt == NULL) {
+      PyErr_Clear();
+      PyObject *aValuePt = PyString_FromStringAndSize(sPt->data(),sPt->length());
+    }
     PyDict_SetItem(aReturnDictPt,aKeyPt,aValuePt);
     Py_DECREF(aKeyPt);Py_DECREF(aValuePt);
    }
@@ -405,7 +417,7 @@ if(sipIsErr == NULL)
    {
      aReturnFlag = PyInt_Check(key) && PyList_Check(value);
      for(int i = 0;aReturnFlag && i < PyList_Size(value);++i)
-	aReturnFlag = PyString_Check(PyList_GET_ITEM(value,i));
+	aReturnFlag = PyString_Check(PyList_GET_ITEM(value,i)) || PyUnicode_Check(PyList_GET_ITEM(value,i));
    }
   return aReturnFlag;
 }
@@ -420,8 +432,19 @@ while(PyDict_Next(sipPy, &pos, &key, &value))
   
   for(int i = 0;i < PyList_Size(value);++i)
   {
-    char *s = PyString_AsString(PyList_GET_ITEM(value,i));
-    aResult.first->second.push_back(s);
+    PyObject *aPyObj = PyList_GET_ITEM(value, i);
+    if (aPyObj == Py_None) {
+      continue;
+    }
+    if (PyUnicode_Check(aPyObj)) {
+      PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");    
+      aResult.first->second.push_back(PyString_AS_STRING(s));
+      Py_DECREF(s);
+      continue;
+    }
+    if (PyString_Check(aPyObj)) {
+      aResult.first->second.push_back(PyString_AS_STRING(aPyObj));
+    }
   }
 }
 return sipGetState(sipTransferObj);
@@ -439,8 +462,15 @@ for(std::map<int,std::list<std::string> >::iterator mIter = sipCpp->begin();
     PyDict_SetItem(aReturnDictPt,aKeyPt,aValuePt);
     Py_DECREF(aKeyPt);Py_DECREF(aValuePt);
     std::list<std::string>::iterator sPt = mIter->second.begin();
-    for(int i = 0;sPt != mIter->second.end();++i,++sPt)
-      PyList_SET_ITEM(aValuePt,i,PyString_FromStringAndSize(sPt->data(),sPt->length()));
+    for(int i = 0;sPt != mIter->second.end();++i,++sPt) {
+      PyObject * newstring;
+      newstring = PyUnicode_DecodeUTF8(sPt->data(), sPt->length(), NULL);
+      if (newstring == NULL) {
+        PyErr_Clear();
+	newstring = PyString_FromStringAndSize(sPt->data(),sPt->length());
+      }
+      PyList_SET_ITEM(aValuePt,i,newstring);
+    }
    }
 return aReturnDictPt;
 %End
@@ -458,15 +488,27 @@ if(sipIsErr == NULL)
 {
 bool aReturnFlag = PyList_Check(sipPy);
 for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-  aReturnFlag = PyString_Check(PyList_GET_ITEM(sipPy,i));
+  aReturnFlag = (PyString_Check(PyList_GET_ITEM(sipPy,i))  || PyUnicode_Check(PyList_GET_ITEM(sipPy,i))) ;
 return aReturnFlag;
 }
 
-
 *sipCppPtr = new std::list<std::string>();
 for(int i = 0;i < PyList_Size(sipPy);++i)
-  (*sipCppPtr)->push_back(PyString_AsString(PyList_GET_ITEM(sipPy,i)));
-
+{
+  PyObject *aPyObj = PyList_GET_ITEM(sipPy, i);
+  if (aPyObj == Py_None) {
+    continue;
+  }
+  if (PyUnicode_Check(aPyObj)) {
+    PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");    
+    (*sipCppPtr)->push_back(PyString_AS_STRING(s));
+    Py_DECREF(s);
+    continue;
+  }
+  if (PyString_Check(aPyObj)) {
+    (*sipCppPtr)->push_back(PyString_AS_STRING(aPyObj));
+  }
+}
 return sipGetState(sipTransferObj);
 %End
 
@@ -474,11 +516,18 @@ return sipGetState(sipTransferObj);
 PyObject* aReturnListPt = PyList_New(sipCpp->size());
 std::list<std::string>::iterator vIter = sipCpp->begin();
 
-for(int i = 0;vIter != sipCpp->end();++vIter,++i)
-   PyList_SET_ITEM(aReturnListPt,i,PyString_FromStringAndSize(vIter->data(),vIter->length()));
-
+for(int i = 0;vIter != sipCpp->end();++vIter,++i) {
+    PyObject * newstring;
+    newstring = PyUnicode_DecodeUTF8(vIter->c_str(), vIter->length(), NULL);
+    if(newstring == NULL) {
+      PyErr_Clear();
+      newstring = PyString_FromString(vIter->c_str());
+    }  
+    PyList_SET_ITEM(aReturnListPt,i,newstring);
+}
 return aReturnListPt;
 %End
+
 };
 
 %MappedType std::list<const char*>
@@ -492,15 +541,27 @@ if(sipIsErr == NULL)
 {
 bool aReturnFlag = PyList_Check(sipPy);
 for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-  aReturnFlag = PyString_Check(PyList_GET_ITEM(sipPy,i));
+  aReturnFlag = (PyString_Check(PyList_GET_ITEM(sipPy,i))  || PyUnicode_Check(PyList_GET_ITEM(sipPy,i))) ;
 return aReturnFlag;
 }
 
-
 *sipCppPtr = new std::list<const char*>();
 for(int i = 0;i < PyList_Size(sipPy);++i)
-  (*sipCppPtr)->push_back(PyString_AsString(PyList_GET_ITEM(sipPy,i)));
-
+{
+  PyObject *aPyObj = PyList_GET_ITEM(sipPy, i);
+  if (aPyObj == Py_None) {
+    continue;
+  }
+  if (PyUnicode_Check(aPyObj)) {
+    PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");    
+    (*sipCppPtr)->push_back(PyString_AS_STRING(s));
+    Py_DECREF(s);
+    continue;
+  }
+  if (PyString_Check(aPyObj)) {
+    (*sipCppPtr)->push_back(PyString_AS_STRING(aPyObj));
+  }
+}
 return sipGetState(sipTransferObj);
 %End
 
@@ -508,11 +569,18 @@ return sipGetState(sipTransferObj);
 PyObject* aReturnListPt = PyList_New(sipCpp->size());
 std::list<const char*>::iterator vIter = sipCpp->begin();
 
-for(int i = 0;vIter != sipCpp->end();++vIter,++i)
-   PyList_SET_ITEM(aReturnListPt,i,PyString_FromString(*vIter));
-
+for(int i = 0;vIter != sipCpp->end();++vIter,++i) {
+    PyObject * newstring;
+    newstring = PyUnicode_DecodeUTF8(*vIter, strlen(*vIter), NULL);
+    if(newstring == NULL) {
+      PyErr_Clear();
+      newstring = PyString_FromString(*vIter);
+    }  
+    PyList_SET_ITEM(aReturnListPt,i,newstring);
+}
 return aReturnListPt;
 %End
+
 };
 
 %MappedType std::list<std::list<long long>>
