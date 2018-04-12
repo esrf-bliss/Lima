@@ -184,10 +184,10 @@ class LIMACORE_API CmdThread
 	friend class AuxThread;
 	void cmdLoop();
 
-	AuxThread m_thread;
-	mutable Cond m_cond;
 	volatile int m_status;
 	volatile int m_cmd;
+    mutable Cond m_cond;
+    AuxThread m_thread;
 };
 
 #define EXEC_ONCE(statement)						\
