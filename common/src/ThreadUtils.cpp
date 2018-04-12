@@ -281,8 +281,8 @@ void *Thread::staticThreadFunction(void *data)
 	} catch (...) {
 		if (!thread->m_exception_handled) {
 			ostream& os = cerr;
-			unsigned int thread_id = (unsigned int) pthread_self();
-			int w = os.width();
+			long long thread_id = (long long) pthread_self();
+			std::streamsize w = os.width();
 			os << "***** Thread " 
 			   << setw(8) << hex << thread_id << setw(w) << dec
 			   << " function exited due to an exception "
@@ -312,7 +312,8 @@ void CmdThread::AuxThread::threadFunction()
 CmdThread::CmdThread()
 	: m_thread(*this)
 {
-	m_status.push(InInit);
+	m_status = InInit;
+	m_status_history.set(InInit);
 }
 
 CmdThread::~CmdThread()
@@ -341,8 +342,7 @@ AutoMutex CmdThread::tryLock() const
 
 int CmdThread::getStatus() const
 {
-	AutoMutex l = lock();
-	return m_status.back();
+	return m_status;
 }
 
 int CmdThread::getNextCmd() const
@@ -354,39 +354,35 @@ int CmdThread::getNextCmd() const
 void CmdThread::setStatus(int status)
 {
 	AutoMutex l = lock();
-	m_status.push(status);
+	m_status = status;
+	m_status_history.set(status);
 	m_cond.signal();
 }
 
 void CmdThread::waitStatus(int status)
 {
 	AutoMutex l = lock();
-	int next_status = m_status.front();
-	while (next_status != status) {
-		m_status.pop();
-		while (m_status.empty())
-			m_cond.wait();
-		next_status = m_status.front();
+	while (m_status_history.test(status) == true) {
+		m_cond.wait();
 	}
 }
 
 int CmdThread::waitNotStatus(int status)
 {
 	AutoMutex l = lock();
-	int next_status = m_status.front();
-	while (next_status == status) {
-		m_status.pop();
-		while (m_status.empty())
-			m_cond.wait();
-		next_status = m_status.front();
+	std::bitset<16> mask(0xFFFF);
+	mask.set(status, 0);
+
+	while ((m_status_history & mask).any() == false) {
+		m_cond.wait();
 	}
-	return next_status;
+	return m_status;
 }
 
 void CmdThread::sendCmd(int cmd)
 {
 	AutoMutex l = lock();
-	sendCmdWorker(cmd);
+	doSendCmd(cmd);
 }
 
 /** @brief send a command only if the return of if_test is true.
@@ -396,18 +392,19 @@ void CmdThread::sendCmd(int cmd)
 void CmdThread::sendCmdIf(int cmd, bool (*if_test)(int,int))
 {
 	AutoMutex l = lock();
-	if (if_test && if_test(cmd, m_status.back()))
-		sendCmdWorker(cmd);
+
+	if (if_test && if_test(cmd, m_status))
+		doSendCmd(cmd);
 }
 
-void CmdThread::sendCmdWorker(int cmd)
+void CmdThread::doSendCmd(int cmd)
 {
-	if (m_status.back() == Finished)
+	if (m_status == Finished)
 		throw LIMA_HW_EXC(Error, "Thread has Finished");
 
-	// flush status history, just leave curr. status
-	while (m_status.size() > 1)
-		m_status.pop();
+	// Assume that we will have a call to waitStatus somewhere after the new command
+	m_status_history.reset();
+
 	m_cmd.push(cmd);
 	m_cond.signal();
 }
