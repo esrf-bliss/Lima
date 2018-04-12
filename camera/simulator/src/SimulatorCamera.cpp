@@ -35,7 +35,6 @@ Camera::SimuThread::SimuThread(Camera& simu)
     DEB_CONSTRUCTOR();
 
 	m_acq_frame_nb = 0;
-	m_force_stop = false;
 }
 
 void Camera::SimuThread::start()
@@ -77,20 +76,17 @@ void Camera::SimuThread::execStartAcq()
 	FrameBuilder& frame_builder = m_simu->m_frame_builder;
 	frame_builder.resetFrameNr(m_acq_frame_nb);
 
-	int nb_frames = m_simu->m_trig_mode == IntTrig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
+	bool int_trig = m_simu->m_trig_mode == IntTrig;
+	int nb_frames = int_trig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
 	int& frame_nb = m_acq_frame_nb;
-	for (;(frame_nb < nb_frames)||(nb_frames==0); frame_nb++) {
+	for (; (nb_frames==0) || (frame_nb < nb_frames); frame_nb++) {
+		if (getNextCmd() == StopAcq)
+			break;
 		double req_time;
-		if(m_force_stop)
-		{
-			m_force_stop = false;
-			setStatus(Ready);
-			return;
-		}
 		req_time = m_simu->m_exp_time;
 		if (req_time > 0) {	
 			setStatus(Exposure);
-			usleep(long(req_time * 1e6));
+			Sleep(req_time);
 		}
 
 		setStatus(Readout);
@@ -105,7 +101,7 @@ void Camera::SimuThread::execStartAcq()
 		req_time = m_simu->m_lat_time;
 		if (req_time > 0) {
 			setStatus(Latency);
-			usleep(long(req_time * 1e6));
+			Sleep(req_time);
 		}
 	}
 	setStatus(Ready);
@@ -246,7 +242,6 @@ void Camera::startAcq()
 {
     DEB_MEMBER_FUNCT();
 
-	m_thread.m_force_stop = false;//uggly but work	
 	m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
 	m_thread.sendCmd(SimuThread::StartAcq);
@@ -257,7 +252,6 @@ void Camera::stopAcq()
 {
     DEB_MEMBER_FUNCT();
 
-	m_thread.m_force_stop = true;//uggly but work
 	m_thread.sendCmd(SimuThread::StopAcq);
 	m_thread.waitStatus(SimuThread::Ready);
 }

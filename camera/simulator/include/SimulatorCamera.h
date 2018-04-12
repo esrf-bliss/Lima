@@ -96,7 +96,6 @@ class LIBSIMULATOR_API Camera
 
 		virtual void start();
 		
-		bool m_force_stop;
 		int m_acq_frame_nb;
 	protected:
 		virtual void init();
