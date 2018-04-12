@@ -85,7 +85,7 @@ class LIMACORE_API Cond
  public:
 	Cond();
 	~Cond();
-	
+
 	void acquire();
 	void release();
 	Mutex& mutex() {return m_mutex;}
@@ -160,7 +160,7 @@ class LIMACORE_API CmdThread
 	int getNextCmd() const;
 	void waitStatus(int status);
 	int waitNotStatus(int status);
-	
+
  protected:
 	virtual void init() = 0;
 	virtual void execCmd(int cmd) = 0;
@@ -184,10 +184,10 @@ class LIMACORE_API CmdThread
 	friend class AuxThread;
 	void cmdLoop();
 
-	AuxThread m_thread;
-	mutable Cond m_cond;
 	volatile int m_status;
 	volatile int m_cmd;
+	mutable Cond m_cond;
+	AuxThread m_thread;
 };
 
 #define EXEC_ONCE(statement)						\
