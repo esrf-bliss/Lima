@@ -2326,7 +2326,7 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
   // mean all writing task
   if(frame_nr < 0)
     {
-      bool ready = true;
+      bool ready = m_frame_params.empty();
       for(Frame2Params::const_iterator i = m_frame_params.begin();
 	  ready && i != m_frame_params.end();++i)
 	ready = !i->second.m_running;
