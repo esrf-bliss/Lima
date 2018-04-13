@@ -81,8 +81,10 @@ void Camera::SimuThread::execStartAcq()
 	int nb_frames = int_trig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
 	int& frame_nb = m_acq_frame_nb;
 	for (; (nb_frames==0) || (frame_nb < nb_frames); frame_nb++) {
-		if (getNextCmd() == StopAcq)
+		if (getNextCmd() == StopAcq) {
+			waitNextCmd();
 			break;
+		}
 		double req_time;
 		req_time = m_simu->m_exp_time;
 		if (req_time > 0) {	
