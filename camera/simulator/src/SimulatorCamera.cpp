@@ -32,14 +32,14 @@ using namespace std;
 Camera::SimuThread::SimuThread(Camera& simu)
 	: m_simu(&simu)
 {
-    DEB_CONSTRUCTOR();
+	DEB_CONSTRUCTOR();
 
 	m_acq_frame_nb = 0;
 }
 
 void Camera::SimuThread::start()
 {
-    DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	CmdThread::start();
 	waitStatus(Ready);
@@ -47,20 +47,21 @@ void Camera::SimuThread::start()
 
 void Camera::SimuThread::init()
 {
-    DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	setStatus(Ready);
 }
 
 void Camera::SimuThread::execCmd(int cmd)
 {
-    DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	int status = getStatus();
 	switch (cmd) {
 	case StartAcq:
 		if (status != Ready)
-			throw LIMA_HW_EXC(InvalidValue,  "Not Ready to StartAcq");
+			throw LIMA_HW_EXC(InvalidValue,
+					  "Not Ready to StartAcq");
 		execStartAcq();
 		break;
 	}
@@ -68,7 +69,7 @@ void Camera::SimuThread::execCmd(int cmd)
 
 void Camera::SimuThread::execStartAcq()
 {
-    DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
 	buffer_mgr.setStartTimestamp(Timestamp::now());
@@ -108,9 +109,9 @@ void Camera::SimuThread::execStartAcq()
 }
 
 Camera::Camera() : 
-  m_thread(*this)
+	m_thread(*this)
 {
-    DEB_CONSTRUCTOR();
+	DEB_CONSTRUCTOR();
 
 	init();
 
@@ -119,7 +120,7 @@ Camera::Camera() :
 
 void Camera::init()
 {
-    DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	m_exp_time = 1.0;
 	m_lat_time = 0.0;
@@ -128,7 +129,7 @@ void Camera::init()
 
 Camera::~Camera()
 {
-    DEB_DESTRUCTOR();
+	DEB_DESTRUCTOR();
 }
 
 HwBufferCtrlObj* Camera::getBufferCtrlObj()
@@ -233,14 +234,15 @@ HwInterface::StatusType::Basic Camera::getStatus()
 		throw LIMA_HW_EXC(Error, "Invalid thread status");
 	}
 }
+
 void Camera::prepareAcq()
 {
-  m_thread.m_acq_frame_nb = 0;
+	m_thread.m_acq_frame_nb = 0;
 }
 
 void Camera::startAcq()
 {
-    DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
@@ -250,7 +252,7 @@ void Camera::startAcq()
 
 void Camera::stopAcq()
 {
-    DEB_MEMBER_FUNCT();
+	DEB_MEMBER_FUNCT();
 
 	m_thread.sendCmd(SimuThread::StopAcq);
 	m_thread.waitStatus(SimuThread::Ready);
@@ -258,7 +260,7 @@ void Camera::stopAcq()
 
 int Camera::getNbAcquiredFrames()
 {
-  return m_thread.m_acq_frame_nb;
+	return m_thread.m_acq_frame_nb;
 }
 
 ostream& lima::Simulator::operator <<(ostream& os, Camera& simu)

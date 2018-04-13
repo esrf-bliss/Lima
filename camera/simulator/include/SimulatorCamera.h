@@ -37,7 +37,7 @@ namespace Simulator
 
 class LIBSIMULATOR_API Camera
 {
-    DEB_CLASS_NAMESPC(DebModCamera, "Camera", "Simulator");
+	DEB_CLASS_NAMESPC(DebModCamera, "Camera", "Simulator");
  public:
 	Camera();
 	~Camera();
@@ -74,9 +74,9 @@ class LIBSIMULATOR_API Camera
 
 	void reset();
 
-    enum SimuShutterMode {
-		    FRAME,
-		    MANUAL
+	enum SimuShutterMode {
+		FRAME,
+		MANUAL
 	};
 
  private:
