@@ -87,7 +87,7 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	virtual void *getBufferPtr(int buffer_nb);
 	
  private:
-	typedef std::vector<MemBuffer *> BufferList;
+	typedef std::vector<MemBuffer> BufferList;
 	typedef BufferList::const_reverse_iterator BufferListCRIt;
 
 	FrameDim m_frame_dim;

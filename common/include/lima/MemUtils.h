@@ -47,11 +47,10 @@ class LIMACORE_API MemBuffer
 
 	MemBuffer();
 	MemBuffer(int size);
-	MemBuffer(const MemBuffer& buffer);
 	~MemBuffer();
 
 	void alloc(int size);
-	void copy(const MemBuffer& buffer);
+	void deepCopy(const MemBuffer& buffer);
 	void release();
 
 	int getSize() const;
@@ -62,8 +61,6 @@ class LIMACORE_API MemBuffer
 
 	operator void*();
 	operator const void*() const;
-
-	MemBuffer& operator =(const MemBuffer& buffer);
 
  private:
 	int m_size;

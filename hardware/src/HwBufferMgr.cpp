@@ -105,18 +105,12 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 	try {
 		BufferList& bl = m_buffer_list;
 		if (to_alloc > 0) {
-			bl.reserve(nb_buffers);
+			bl.resize(nb_buffers);
 			DEB_TRACE() << "Allocating " << to_alloc << " buffers";
-			while (int(bl.size()) != nb_buffers) {
-				MemBuffer *buffer = new MemBuffer(frame_size);
-				bl.push_back(buffer);
-			}
+			for (int i = 0; i < nb_buffers; i++)
+				bl[i].alloc(frame_size);
 		} else {
 			DEB_TRACE() << "Releasing " << -to_alloc << " buffers";
-			while (int(bl.size()) != nb_buffers) {
-				delete bl.back();
-				bl.pop_back();
-			}
 		}
 	} catch (...) {
 		DEB_ERROR() << "Error alloc. buffer #" << m_buffer_list.size();
@@ -132,8 +126,6 @@ void SoftBufferAllocMgr::releaseBuffers()
 	DEB_MEMBER_FUNCT();
 
 	BufferList& bl = m_buffer_list;
-	for (BufferListCRIt it = bl.rbegin(); it != bl.rend(); ++it)
-		delete *it;
 	bl.clear();
 	m_frame_dim = FrameDim();
 }
@@ -155,7 +147,7 @@ void SoftBufferAllocMgr::getNbBuffers(int& nb_buffers)
 void *SoftBufferAllocMgr::getBufferPtr(int buffer_nb)
 {
 	DEB_MEMBER_FUNCT();
-	void *ptr = m_buffer_list[buffer_nb]->getPtr();
+	void *ptr = m_buffer_list[buffer_nb].getPtr();
 	DEB_RETURN() << DEB_VAR1(ptr);
 	return ptr;
 }
