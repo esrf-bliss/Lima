@@ -25,6 +25,8 @@
 #include "lima/LimaCompatibility.h"
 #include "lima/AutoObj.h"
 #include <pthread.h>
+#include <bitset>
+#include <queue>
 
 namespace lima
 {
@@ -141,11 +143,11 @@ class LIMACORE_API CmdThread
 {
  public:
 	enum { // Status
-		InInit, Stopped, Finished, MaxThreadStatus,
+		InInit = 0, Finished, MaxThreadStatus,
 	};
 
 	enum { // Cmd
-		None, Init, Stop, Abort, MaxThreadCmd,
+		None, Init, Abort, MaxThreadCmd,
 	};
 
 	CmdThread();
@@ -155,7 +157,7 @@ class LIMACORE_API CmdThread
 	virtual void abort();
 
 	void sendCmd(int cmd);
-	void sendCmdIf(int cmd,bool (*if_test)(int,int));
+	void sendCmdIf(int cmd, bool (*if_test)(int, int));
 	int getStatus() const;
 	int getNextCmd() const;
 	void waitStatus(int status);
@@ -183,9 +185,17 @@ class LIMACORE_API CmdThread
 	};
 	friend class AuxThread;
 	void cmdLoop();
+	void doSendCmd(int cmd);
 
-	volatile int m_status;
-	volatile int m_cmd;
+	int m_status;
+
+	//No need to have dll-interface for private variables
+#pragma warning( push )  
+#pragma warning( disable : 4251 ) 
+	std::bitset<16> m_status_history;
+	std::queue<int> m_cmd;
+#pragma warning( pop ) 
+
 	mutable Cond m_cond;
 	AuxThread m_thread;
 };
