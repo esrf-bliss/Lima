@@ -29,7 +29,10 @@
 #include <time_compat.h>
 #endif
 #include <unistd.h>
+
+#if !defined(_WIN32)
 #include <sys/syscall.h>
+#endif
 
 using namespace lima;
 
@@ -219,7 +222,13 @@ void Cond::broadcast()
 }
 
 pid_t lima::GetThreadID() {
+
+#if defined(_WIN32)
+	return GetCurrentThreadId();
+#else
 	return syscall(SYS_gettid);
+#endif
+	
 }
 
 Thread::ExceptionCleanUp::ExceptionCleanUp(Thread& thread)

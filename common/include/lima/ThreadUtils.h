@@ -28,6 +28,11 @@
 #include <bitset>
 #include <queue>
 
+#if defined(_WIN32)
+#include <WinBase.h>
+#define pid_t DWORD
+#endif
+
 namespace lima
 {
 
