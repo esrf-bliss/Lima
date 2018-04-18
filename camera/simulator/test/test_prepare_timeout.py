@@ -98,7 +98,7 @@ class TestControl:
 		image = self.ct_control.ReadImage(last_img_ready)
 		time.sleep(self.sleep_time)
 		deb.Always('Forcing read frame %d memory' % last_img_ready)
-		data = ' ' + image.buffer.tostring()
+		data = b' ' + image.buffer.tostring()
 
 
 class TestControlAutoSync:
