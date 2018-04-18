@@ -32,7 +32,7 @@ test-python2 :
   script:
     - update-alternatives --set python /usr/bin/python2.7
     - cd build/
-    - ctest --timeout 10
+    - ctest --timeout 10 --output-on-failure
 
 test-python3 :
   stage: test
@@ -41,4 +41,4 @@ test-python3 :
   script:
     - update-alternatives --set python /usr/bin/python3.4
     - cd build/
-    - ctest --timeout 10
+    - ctest --timeout 10 --output-on-failure
