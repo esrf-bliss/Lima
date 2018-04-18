@@ -342,6 +342,7 @@ AutoMutex CmdThread::tryLock() const
 
 int CmdThread::getStatus() const
 {
+	AutoMutex l = lock();
 	return m_status;
 }
 
@@ -362,20 +363,18 @@ void CmdThread::setStatus(int status)
 void CmdThread::waitStatus(int status)
 {
 	AutoMutex l = lock();
-	while (m_status_history.test(status) == true) {
+	while (!m_status_history.test(status))
 		m_cond.wait();
-	}
 }
 
 int CmdThread::waitNotStatus(int status)
 {
-	AutoMutex l = lock();
-	std::bitset<16> mask(0xFFFF);
-	mask.set(status, 0);
+	std::bitset<16> mask(0xffff);
+	mask.reset(status);
 
-	while ((m_status_history & mask).any() == false) {
+	AutoMutex l = lock();
+	while ((m_status_history & mask).none())
 		m_cond.wait();
-	}
 	return m_status;
 }
 
