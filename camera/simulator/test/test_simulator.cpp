@@ -35,8 +35,8 @@ using namespace std;
 void simulator_test(double expo, long nframe)
 {
 	Camera simu;
-	HwInterface *hw;
-	CtControl *ct;
+	AutoPtr<HwInterface> hw;
+	AutoPtr<CtControl> ct;
 	CtAcquisition *acq;
 	CtSaving *save;
 	CtImage *image;
@@ -53,6 +53,7 @@ void simulator_test(double expo, long nframe)
 	save->setNextNumber(100);
 	save->setFormat(CtSaving::EDF);
 	save->setSavingMode(CtSaving::AutoFrame);
+	save->setOverwritePolicy(CtSaving::Overwrite);
 	save->setFramesPerFile(100);
 
 	Bin bin(2,2);

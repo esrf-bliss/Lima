@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 	buffer_ctrl_obj->registerFrameCallback(cb);
 
 	cout << "simu=" << simu << endl;
+	simu.prepareAcq();
 	simu.startAcq();
 	cout << "simu=" << simu << endl;
 	simu.stopAcq();
@@ -78,6 +79,7 @@ int main(int argc, char *argv[])
 	simu.setExpTime(5);
 
 	cout << "simu=" << simu << endl;
+	simu.prepareAcq();
 	simu.startAcq();
 	cout << "simu=" << simu << endl;
 	simu.stopAcq();
@@ -87,6 +89,7 @@ int main(int argc, char *argv[])
 	simu.setNbFrames(3);
 
 	cout << "simu=" << simu << endl;
+	simu.prepareAcq();
 	simu.startAcq();
 	cout << "simu=" << simu << endl;
 	simu.stopAcq();

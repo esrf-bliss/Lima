@@ -35,10 +35,13 @@ endfunction()
 
 function(limatools_run_camera_tests test_src cam_name)
 
+	if(${ARGC} GREATER 2)
+		set(test_arg ${ARGV2} ${ARGV3} ${ARGV4} ${ARGV5} ${ARGV6})
+	endif()
 	foreach(file ${test_src})
 		add_executable(${file} "${file}.cpp")
 		target_link_libraries(${file} limacore lima${cam_name})
-		add_test(NAME ${file} COMMAND ${file})
+		add_test(NAME ${file} COMMAND ${file} ${test_arg})
 	endforeach(file)
 
 endfunction()
