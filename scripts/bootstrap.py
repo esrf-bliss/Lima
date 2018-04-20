@@ -303,7 +303,7 @@ class CMakeOptions:
 			elif sys.version_info <= (3, 4):
 				win_compiler = "Visual Studio 10 2010" 
 			else:
-				win_compiler = "Visual Studio 14 2015"
+				win_compiler = "Visual Studio 15 2017"
 			# now check architecture
 			if platform.architecture()[0] == '64bit':
 				win_compiler += ' Win64' 
