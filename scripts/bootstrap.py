@@ -28,6 +28,65 @@ import contextlib
 import argparse
 
 prog_description = 'Lima build and install tool'
+prog_instructions = '''
+Description:
+    This script will build and eventually install Lima project.
+
+    The build and install process default configuration is determined by
+    the scripts/config.txt file, which is created the very first time from
+    the scripts/config.txt_default template. The file contains the list of
+    variables that are passed to CMake. By default, only Lima-related
+    variables are included, but any other can be added. If you plan to
+    execute the process several times with the same parameters, you can
+    edit this configuration file and fix your options there. By default
+    the simulator camera plugin is compiled. You can change that by
+    setting the corresponding "LIMACAMERA_SIMULATOR=0" option in
+    config.txt.
+
+    Running ./install.sh with no parameter will just build Lima with the
+    options in config.txt. No installation will be performed. If at least
+    one of --install-prefix or --install-python-prefix option is specified
+    the --install=yes option is assumed (unless --install=no is explicitly
+    specified)
+
+    If not absolute paths, the --config-file option will be assumed to be
+    relative to the source-prefix, and --build-prefix relative to the CWD.
+
+Module/option description:
+    It can be any camera name or saving format.
+    Available saving formats: edf, cbf, tiff, lz4, gz, hdf5, fits.
+    Other otions are:
+     + python: Build Python wrapping.
+     + pytango-server: install the PyTango server Python code
+     + tests: build tests (in order to run them execute "ctest" in <build>)
+     + config, sps-image, gldisplay: for the fun!
+
+Examples:
+    ./install.[bat | sh] --install=yes basler python cbf
+        -> compile and install Lima with cameras simulator and basler with
+           Python wrapping and cbf saving format.
+        -> install directory for C library and Python library will be in
+           default directory.
+
+        This is equivalent to adding the following options in config.txt:
+           + LIMACAMERA_BASLER=1
+           + LIMA_ENABLE_CBF=1
+           + LIMA_ENABLE_PYTHON=1
+
+    ./install.[bat | sh] --install-prefix=${HOME} tests
+        -> compile and install Lima with camera simulator, also compiling
+           simulator tests.
+        -> the install directory is set in the home directory (${HOME})
+
+        This is equivalent to adding the following options in config.txt:
+           + LIMA_ENABLE_TESTS=1
+           + CMAKE_INSTALL_PREFIX=<path_to_home>
+
+    ONLY ON LINUX:
+    ./install.sh --git [options]
+        -> clone and update (checkout) on every (sub)module in [options]
+'''
+
 
 OS_TYPE = platform.system()
 if OS_TYPE not in ['Linux', 'Windows']:
@@ -47,6 +106,7 @@ def ch_dir(new_dir):
 	os.chdir(new_dir)
 	yield
 	os.chdir(cur_dir)
+
 
 class Config:
 
@@ -84,13 +144,17 @@ class Config:
 		build_type = ('RelWithDebInfo' if OS_TYPE == 'Linux' 
 			      else 'Release')
 		cwd = os.getcwd()
-
-		parser = argparse.ArgumentParser(description=prog_description)
+		src = os.path.realpath(os.path.join(os.path.dirname(argv[0]), 
+						    os.path.pardir))
+		formatter = argparse.RawDescriptionHelpFormatter
+		parser = argparse.ArgumentParser(formatter_class=formatter,
+						 description=prog_description,
+						 epilog=prog_instructions)
 		parser.add_argument('--git', action='store_true',
 				    help='init/update Git submodules')
 		parser.add_argument('--find-root-path',
 				    help='CMake find_package/library root path')
-		parser.add_argument('--source-prefix', default=cwd,
+		parser.add_argument('--source-prefix', default=src,
 				    help='path to the Lima sources')
 		parser.add_argument('--config-file', 
 				    default='scripts/config.txt',
@@ -108,7 +172,7 @@ class Config:
 				    help='install directory for Python code')
 		parser.add_argument('mod_opts', metavar='mod_opt', nargs='+',
 				    help='module/option to process')
-		self.cmd_opts = parser.parse_args(argv)
+		self.cmd_opts = parser.parse_args(argv[1:])
 
 		# do install if not explicitly specified and user
 		# included install-[python-]prefix
@@ -118,11 +182,15 @@ class Config:
 		install = True if not explicit and install_prefix else install
 		self.set_cmd('install', install)
 
-		# if config-file or build-prefix are relative, make them abs
-		for opt in ['config-file', 'build-prefix']:
-			p = self.get(opt)
-			if p and not os.path.isabs(p):
-				self.set_cmd(opt, os.path.join(cwd, p))
+		# if option paths are relative, make them absolute:
+		# config-file is rel. to src, build-prefix is rel. to cwd
+		src = self.get('source-prefix')
+		rel_opt_map = [(src, ['config-file']), (cwd, ['build-prefix'])]
+		for base, opt_list in rel_opt_map:
+			for opt in opt_list:
+				p = self.get(opt)
+				if p and not os.path.isabs(p):
+					self.set_cmd(opt, os.path.join(base, p))
 
 	def set_cmd(self, x, v):
 		setattr(self.cmd_opts, self.to_underscore(x), v)
@@ -167,12 +235,6 @@ class Config:
 		cmd_opts = self.get_cmd_options()
 		install_prefix = cmd_opts.get('install-prefix', '')
 		return cmd_opts.get('install', install_prefix != '')
-
-	@staticmethod
-	def print_help():
-		with open("INSTALL.txt") as f:
-			print(f.read())
-			sys.exit()
 
 	@staticmethod
 	def to_underscore(x):
@@ -373,7 +435,7 @@ def build_install_lima(cfg):
 
 
 def main():
-	cfg = Config(sys.argv[1:])
+	cfg = Config(sys.argv)
 
 	# No git option under windows for obvious reasons.
 	if OS_TYPE == 'Linux' and cfg.get('git'):
