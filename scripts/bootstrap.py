@@ -25,6 +25,9 @@ import sys, os
 import platform, multiprocessing
 from subprocess import Popen, PIPE
 import contextlib
+import argparse
+
+prog_description = 'Lima build and install tool'
 
 OS_TYPE = platform.system()
 if OS_TYPE not in ['Linux', 'Windows']:
@@ -47,22 +50,29 @@ def ch_dir(new_dir):
 
 class Config:
 
-	defaults = {
-		'git': False,
-		'find-root-path': '',
-		'source-prefix': '',
-		'config-file': 'scripts/config.txt',
-		'build-prefix': 'build',
-		'build-type': ('RelWithDebInfo' if OS_TYPE == 'Linux' 
-			       else 'Release'),
-		'install': False,
-		'install-prefix': '',
-		'install-python-prefix': '',
-	}
+	bool_map = {'yes': True, 'no': False}
 
+	@classmethod
+	def get_bool_opt_default(klass, val):
+		for o, v in klass.bool_map.items():
+			if val == v:
+				return '__%s__' % o
+		raise ValueError('Invalid value: ' + val)
+
+	# return (val, explicit), where explicit is True if val was
+	# specified as argument, or False if val is the default option value
+	@classmethod
+	def get_bool_opt(klass, val):
+		val = val.lower()
+		for o, v in klass.bool_map.items():
+			if val == o:
+				return v, True
+			if val == '__%s__' % o:
+				return v, False
+		raise ValueError('Invalid value: ' + val)
+		
 	def __init__(self, argv=None):
-		self.cmd_opts = {}
-		self.extra_opts = []
+		self.cmd_opts = None
 		self.config_opts = None
 		self.cmake_opts = None
 		self.git = None
@@ -71,52 +81,62 @@ class Config:
 			self.decode_args(argv)
 
 	def decode_args(self, argv):
-		for arg in argv:
-			if arg in ['--help', '-help', '-h', '-?']:
-				print_help()
-			for opt in self.defaults:
-				if arg == '--no-%s' % opt:
-					arg = '--%s=no' % opt
-				prefix = '--%s' % opt
-				if arg == prefix:
-					self.set_cmd(opt, True)
-					break
-				prefix += '='
-				if arg.startswith(prefix):
-					val = arg[len(prefix):]
-					val_map = {'yes': True, 'no': False}
-					val = val_map.get(val.lower(), val)
-					self.set_cmd(opt, val)
-					break
-			else:
-				self.add_extra(arg)
-
+		build_type = ('RelWithDebInfo' if OS_TYPE == 'Linux' 
+			      else 'Release')
 		cwd = os.getcwd()
-		if not self.get('source-prefix'):
-			self.set_cmd('source-prefix', cwd)
+
+		parser = argparse.ArgumentParser(description=prog_description)
+		parser.add_argument('--git', action='store_true',
+				    help='init/update Git submodules')
+		parser.add_argument('--find-root-path',
+				    help='CMake find_package/library root path')
+		parser.add_argument('--source-prefix', default=cwd,
+				    help='path to the Lima sources')
+		parser.add_argument('--config-file', 
+				    default='scripts/config.txt',
+				    help='file with configuration options')
+		parser.add_argument('--build-prefix', default='build',
+				    help='directory where binaries are built')
+		parser.add_argument('--build-type', default=build_type,
+				    help='CMake build target')
+		parser.add_argument('--install', 
+				    default=self.get_bool_opt_default(False),
+				    help='perform installation [yes, no]')
+		parser.add_argument('--install-prefix',
+				    help='directory where Lima is installed')
+		parser.add_argument('--install-python-prefix',
+				    help='install directory for Python code')
+		parser.add_argument('mod_opts', metavar='mod_opt', nargs='+',
+				    help='module/option to process')
+		self.cmd_opts = parser.parse_args(argv)
+
+		# do install if not explicitly specified and user
+		# included install-[python-]prefix
+		install, explicit = self.get_bool_opt(self.get('install'))
+		install_prefix = (self.get('install-prefix') or 
+				  self.get('install-python-prefix'))
+		install = True if not explicit and install_prefix else install
+		self.set_cmd('install', install)
+
+		# if config-file or build-prefix are relative, make them abs
 		for opt in ['config-file', 'build-prefix']:
 			p = self.get(opt)
 			if p and not os.path.isabs(p):
 				self.set_cmd(opt, os.path.join(cwd, p))
 
 	def set_cmd(self, x, v):
-		self.cmd_opts[x] = v
+		setattr(self.cmd_opts, self.to_underscore(x), v)
 
-	def get(self, x, check_defaults=True):
-		if x in self.cmd_opts:
-			return self.cmd_opts[x]
-		return self.defaults[x] if check_defaults else ''
-
-	def add_extra(self, x):
-		self.extra_opts.append(x)
+	def get(self, x):
+		return getattr(self.cmd_opts, self.to_underscore(x))
 
 	def get_git_options(self):
-		return self.extra_opts
+		return self.get('mod-opts')
 
-	def get_cmd_options(self, check_defaults=False):
-		opts = dict(self.defaults) if check_defaults else {}
-		opts.update(self.cmd_opts)
-		for arg in self.extra_opts:
+	def get_cmd_options(self):
+		opts = dict([(self.from_underscore(k), v)
+			     for k, v in self.cmd_opts._get_kwargs()])
+		for arg in opts.pop('mod-opts'):
 			for oprefix, sdir in [("limacamera", "camera"), 
 					      ("lima-enable", "third-party")]:
 				sdir += '/'
