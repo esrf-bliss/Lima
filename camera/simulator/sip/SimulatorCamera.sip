@@ -19,23 +19,56 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
 namespace Simulator
 {
 class Camera
 {
 %TypeHeaderCode
-#include "SimulatorCamera.h"
 #include <string>
 #include <time.h>
 #include <cmath>
+
+#include "SimulatorCamera.h"
 %End
 
- public:
-	Camera();
+public:
+    enum Mode {
+       MODE_GENERATOR,
+       MODE_GENERATOR_PREFETCH,
+       MODE_LOADER,
+       MODE_LOADER_PREFETCH
+    };
+
+	Camera(const Mode& mode);
 	~Camera();
 
 	HwBufferCtrlObj* getBufferCtrlObj();
-	Simulator::FrameBuilder* getFrameBuilder();
+
+    void setMode(const Mode& mode);
+    void getMode(Mode& mode) const;
+    
+    SIP_PYOBJECT getFrameGetter();
+
+%MethodCode
+    Simulator::Camera::Mode mode;
+    sipCpp->getMode(mode);
+    switch(mode)
+	{
+	case(Simulator::Camera::MODE_GENERATOR):
+	  sipRes = sipConvertFromType(sipCpp->getFrameGetter(), sipType_Simulator_FrameBuilder, NULL); 
+      break;
+	case(Simulator::Camera::MODE_GENERATOR_PREFETCH):
+	  sipRes = sipConvertFromType(sipCpp->getFrameGetter(), sipType_Simulator_FrameBuilderPrefetched, NULL);
+      break;
+	case(Simulator::Camera::MODE_LOADER):
+	  sipRes = sipConvertFromType(sipCpp->getFrameGetter(), sipType_Simulator_FrameLoader, NULL);
+      break;
+	case(Simulator::Camera::MODE_LOADER_PREFETCH):
+	  sipRes = sipConvertFromType(sipCpp->getFrameGetter(), sipType_Simulator_FrameLoaderPrefetched, NULL);
+      break;
+	}
+%End
 	
 	void startAcq();
 	void stopAcq();
@@ -48,10 +81,6 @@ class Camera
 
 	void setLatTime(double  lat_time);
 	void getLatTime(double& lat_time /Out/);
-
-	void setBin(const Bin& bin);
-	void getBin(Bin& bin /Out/);
-	void checkBin(Bin& bin /In,Out/);
 
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(FrameDim& frame_dim /Out/);

@@ -22,12 +22,14 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include <ostream>
+
 #include "lima/HwInterface.h"
 #include "lima/HwBufferMgr.h"
-#include "SimulatorFrameBuilder.h"
 #include "lima/ThreadUtils.h"
 #include "lima/SizeUtils.h"
-#include <ostream>
+
+#include "SimulatorCompatibility.h"
 
 namespace lima
 {
@@ -35,19 +37,52 @@ namespace lima
 namespace Simulator
 {
 
+// Forward definitions
+struct FrameGetter;
+class FrameBuilder;
+class FrameLoader;
+template <typename FrameGetter>
+class FramePrefetcher;
+
 class LIBSIMULATOR_API Camera
 {
-	DEB_CLASS_NAMESPC(DebModCamera, "Camera", "Simulator");
+    DEB_CLASS_NAMESPC(DebModCamera, "Camera", "Simulator");
  public:
-	Camera();
+     enum Mode {
+         MODE_GENERATOR,            //<! Generate frames using a super smart multi-gaussian algorithm in realtime (default)
+         MODE_GENERATOR_PREFETCH,   //<! Prebuild frames using a super smart multi-gaussian algorithm
+         MODE_LOADER,               //<! Load frames from files in realtime
+         MODE_LOADER_PREFETCH,      //<! Preload frames from files
+     };
+
+     enum SimuShutterMode {
+         FRAME,
+         MANUAL
+     };
+
+     static const char* DetectorModel[4];
+
+	Camera(const Mode& mode = Mode::MODE_GENERATOR);
 	~Camera();
 
-	HwBufferCtrlObj *getBufferCtrlObj();
-	FrameBuilder *getFrameBuilder();
+	HwBufferCtrlObj *getBufferCtrlObj() { return &m_buffer_ctrl_obj; }
+	
+    FrameGetter* getFrameGetter() { return m_frame_getter; }
+    
+    FrameBuilder* getFrameBuilder();
+    FramePrefetcher<FrameBuilder>* getFrameBuilderPrefetched();
+    FrameLoader* getFrameLoader();
+    FramePrefetcher<FrameLoader>* getFrameLoaderPrefetched();
+
+    /// Returns the detectof model (according to the current mode) 
+    void getDetectorModel(std::string& det_model) const;
 
 	void prepareAcq();
 	void startAcq();
 	void stopAcq();
+
+    void setMode(const Mode& mode);
+    void getMode(Mode& mode) const { mode = m_mode; }
 
 	void setNbFrames(int  nb_frames);
 	void getNbFrames(int& nb_frames);
@@ -60,24 +95,16 @@ class LIBSIMULATOR_API Camera
 
 	void setTrigMode(TrigMode trig_mode) {m_trig_mode = trig_mode;};
 	void getTrigMode(TrigMode& trig_mode) {trig_mode = m_trig_mode;};
-	void setBin(const Bin& bin);
-	void getBin(Bin& bin);
-	void checkBin(Bin& bin);
-
-	void setFrameDim(const FrameDim& frame_dim);
-	void getFrameDim(FrameDim& frame_dim);
 	
+    void setFrameDim(const FrameDim& frame_dim);
+    void getFrameDim(FrameDim& frame_dim);
+
+    void getMaxImageSize(Size& max_image_size) const;
+
 	HwInterface::StatusType::Basic getStatus();
 	int getNbAcquiredFrames();
 
-	void getMaxImageSize(Size& max_image_size);
-
 	void reset();
-
-	enum SimuShutterMode {
-		FRAME,
-		MANUAL
-	};
 
  private:
 	class SimuThread : public CmdThread
@@ -108,20 +135,32 @@ class LIBSIMULATOR_API Camera
 		virtual void init();
 		virtual void execCmd(int cmd);
 	private:
+		void execPrepareAcq();
 		void execStartAcq();
 		Camera* m_simu;
 	};
 	friend class SimuThread;
 
-	void init();
 
-	SoftBufferCtrlObj m_buffer_ctrl_obj;
-	FrameBuilder m_frame_builder;
+    void setDefaultProperties();
+    void constructFrameGetter();
+
 	double m_exp_time;
 	double m_lat_time;
 	int m_nb_frames;
-	TrigMode m_trig_mode;
-	SimuThread m_thread;
+	
+    TrigMode m_trig_mode;
+	
+    SoftBufferCtrlObj m_buffer_ctrl_obj;
+    SimuThread m_thread;
+
+	Mode m_mode;                        //<! The current mode of the simulateur
+    FrameGetter *m_frame_getter;        //<! The current frame getter (according to the mode)
+
+    //unsigned int m_nb_prebuilt_frames;  //<! In MODE_GENERATOR_PREBUILT mode, the number of frame to prebuilt
+    //std::string m_file_pattern;         //<! In MODE_LOADER mode, the file pattern use to load the frames
+
+	//bool m_mis_cb_act;	//<! Used by setMaxImageSizeCallbackActive	
 };
 
 LIBSIMULATOR_API std::ostream& operator <<(std::ostream& os, Camera& simu);

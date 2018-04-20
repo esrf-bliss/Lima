@@ -24,20 +24,38 @@
 
 set(NAME "simulator")
 
-set(simu_srcs src/SimulatorFrameBuilder.cpp src/SimulatorCamera.cpp src/SimulatorInterface.cpp
-              src/SimulatorSyncCtrlObj.cpp src/SimulatorDetInfoCtrlObj.cpp src/SimulatorShutterCtrlObj.cpp)
+set(SIMU_SRCS
+    src/SimulatorFrameBuilder.cpp
+    src/SimulatorFrameLoader.cpp
+    src/SimulatorFramePrefetcher.cpp
+    src/SimulatorCamera.cpp
+    src/SimulatorInterface.cpp
+    src/SimulatorSyncCtrlObj.cpp
+    src/SimulatorDetInfoCtrlObj.cpp
+    src/SimulatorShutterCtrlObj.cpp
+    src/SimulatorBinCtrlObj.cpp
+)
 
-add_library(lima${NAME} SHARED ${simu_srcs})
+file(GLOB_RECURSE SIMU_INCS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+
+add_library(lima${NAME} SHARED ${SIMU_SRCS} ${SIMU_INCS})
 limatools_set_library_soversion(lima${NAME} "VERSION")
 
 target_include_directories(lima${NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 target_link_libraries(lima${NAME} limacore)
 if(WIN32)
-	target_compile_definitions(lima${NAME} PRIVATE LIBSIMULATOR_EXPORTS)
+    target_compile_definitions(lima${NAME} PRIVATE LIBSIMULATOR_EXPORTS)
 endif()
 
 limatools_set_install_libdir(lima${NAME})
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 if (LIMA_ENABLE_PYTHON)
     limatools_run_sip_for_camera(${NAME})
@@ -46,5 +64,5 @@ if (LIMA_ENABLE_PYTHON)
 endif()
 
 if(LIMA_ENABLE_TESTS)
-	add_subdirectory(test)
+    add_subdirectory(test)
 endif()

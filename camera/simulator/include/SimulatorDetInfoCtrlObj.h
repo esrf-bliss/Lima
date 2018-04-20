@@ -19,8 +19,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
 #ifndef SIMULATORDETINFOCTRLOBJ_H
 #define SIMULATORDETINFOCTRLOBJ_H
+
 #include "SimulatorCompatibility.h"
 #include "SimulatorCamera.h"
 
@@ -28,16 +30,12 @@ namespace lima
 {
 namespace Simulator
 {
-/*******************************************************************
- * \class DetInfoCtrlObj
- * \brief Control object providing simulator detector info interface
- *******************************************************************/
 
+/// Control object providing simulator detector info interface
 class LIBSIMULATOR_API DetInfoCtrlObj : public HwDetInfoCtrlObj
 {
  public:
-	DetInfoCtrlObj(Camera& simu);
-	virtual ~DetInfoCtrlObj();
+	DetInfoCtrlObj(Camera& simu) : m_simu(simu) {}
 
 	virtual void getMaxImageSize(Size& max_image_size);
 	virtual void getDetectorImageSize(Size& det_image_size);
@@ -56,15 +54,11 @@ class LIBSIMULATOR_API DetInfoCtrlObj : public HwDetInfoCtrlObj
 					HwMaxImageSizeCallback& cb);
 
  private:
-	class MaxImageSizeCallbackGen: public HwMaxImageSizeCallbackGen
-	{
-	protected:
-		virtual void setMaxImageSizeCallbackActive(bool cb_active);
-	};
-
-	Camera& 		m_simu;
-	MaxImageSizeCallbackGen m_mis_cb_gen;
+	Camera& m_simu;
 };
-}
-}
-#endif
+
+} //namespace Simulator
+
+} //namespace lima
+
+#endif //SIMULATORDETINFOCTRLOBJ_H

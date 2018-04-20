@@ -19,70 +19,139 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SimulatorInterface.h"
+
+#include <iostream>
+#include <numeric>
+#include <chrono>
+#include <unistd.h>
+
+#include "processlib/PoolThreadMgr.h"
+
 #include "lima/CtControl.h"
 #include "lima/CtAcquisition.h"
 #include "lima/CtSaving.h"
 #include "lima/CtImage.h"
 
-#include <iostream>
-#include <unistd.h>
+#include "SimulatorInterface.h"
+#include "SimulatorFrameBuilder.h"
+#include "SimulatorFrameLoader.h"
+#include "SimulatorFramePrefetcher.h"
 
 using namespace lima;
-using namespace lima::Simulator;
-using namespace std;
+
+
+void config_loader(Simulator::Camera& simu)
+{
+    simu.setMode(Simulator::Camera::Mode::MODE_LOADER);
+    simu.getFrameLoader()->setFilePattern("input\\test_*.edf");
+}
+
+void config_loader_prefetched(Simulator::Camera& simu)
+{
+    simu.setMode(Simulator::Camera::MODE_LOADER_PREFETCH);    
+    simu.getFrameLoaderPrefetched()->setNbPrefetchedFrames(20);
+    simu.getFrameLoaderPrefetched()->setFilePattern("input\\test_*.edf");
+}
+
+void config_generator(Simulator::Camera& simu)
+{
+    simu.setMode(Simulator::Camera::MODE_GENERATOR);
+    //simu.getFrameBuilder()->
+}
+
+void config_generator_prefetched(Simulator::Camera& simu)
+{
+    simu.setMode(Simulator::Camera::MODE_GENERATOR_PREFETCH);
+    simu.getFrameBuilderPrefetched()->setNbPrefetchedFrames(20);    
+}
 
 void simulator_test(double expo, long nframe)
 {
-	Camera simu;
-	AutoPtr<HwInterface> hw;
-	AutoPtr<CtControl> ct;
-	CtAcquisition *acq;
-	CtSaving *save;
-	CtImage *image;
-	CtControl::ImageStatus img_status;
-	long frame= -1;
+    PoolThreadMgr::get().setNumberOfThread(1);
+    
+    const int nb_prebuilt_frames = 10;
 
-	hw= new Interface(simu);
-	ct= new CtControl(hw);
+	//DebParams::setTypeFlags(DebParams::AllFlags);
 
-	save= ct->saving();
+	Simulator::Camera simu;
+
+    //config_loader(simu);
+    config_loader_prefetched(simu);
+    //config_generator(simu);
+    //config_generator_prefetched(simu);
+
+	Simulator::Interface hw(simu);
+	CtControl ct = CtControl(&hw);
+
+	CtSaving *save = ct.saving();
 	save->setDirectory("./data");
- 	save->setPrefix("test_");
+	save->setPrefix("test_");
+	//save->setSuffix(".h5");
 	save->setSuffix(".edf");
 	save->setNextNumber(100);
+	//save->setFormat(CtSaving::HDF5);
 	save->setFormat(CtSaving::EDF);
 	save->setSavingMode(CtSaving::AutoFrame);
-	save->setOverwritePolicy(CtSaving::Overwrite);
+    //save->setOverwritePolicy(CtSaving::Overwrite);
 	save->setFramesPerFile(100);
 
-	Bin bin(2,2);
-	image= ct->image();
+	save->setStatisticHistorySize(nframe);
+
+	Bin bin(2, 2);
+	CtImage *image = ct.image();
 	image->setBin(bin);
 
-	cout << "SIMUTEST: " << expo <<" sec / " << nframe << " frames" << endl;
+	std::cout << "SIMUTEST: " << expo << " sec / " << nframe << " frames" << std::endl;
 
-	acq= ct->acquisition();
+	CtAcquisition *acq = ct.acquisition();
 	acq->setAcqMode(Single);
 	acq->setAcqExpoTime(expo);
 	acq->setAcqNbFrames(nframe);
 
-	ct->prepareAcq();
-   	ct->startAcq();
-	cout << "SIMUTEST: acq started" << endl;
+	ct.prepareAcq();
 
-	while (frame < (nframe-1)) {
-	    usleep(100000);
-	    ct->getImageStatus(img_status);
-	    if (frame!=img_status.LastImageAcquired) {
-		frame= img_status.LastImageAcquired;
-	    	cout << "SIMUTEST: frame nr " << frame << endl;
-	    }
+	ct.startAcq();
+	std::cout << "SIMUTEST: acq started" << std::endl;
+
+	long frame = -1;
+	while (frame < (nframe - 1))
+    {
+		using namespace std::chrono;
+
+		high_resolution_clock::time_point begin = high_resolution_clock::now();
+
+		usleep(100000);
+		
+		CtControl::ImageStatus img_status;
+		ct.getImageStatus(img_status);
+
+		high_resolution_clock::time_point end = high_resolution_clock::now();
+
+		auto duration = duration_cast<microseconds>(end - begin).count();
+
+		std::cout << "SIMUTEST: acq frame nr " << img_status.LastImageAcquired
+			<< " - saving frame nr " << img_status.LastImageSaved << std::endl;
+
+		if (frame != img_status.LastImageAcquired) {
+			unsigned int nb_frames = img_status.LastImageAcquired - frame;
+
+			std::cout << "  " << duration << " usec for " << nb_frames << " frames\n";
+			std::cout << "  " << 1e6 * nb_frames / duration << " fps" << std::endl;
+
+			frame = img_status.LastImageAcquired;			
+		}
 	}
-	cout << "SIMUTEST: acq finished" << endl;
-	
-	ct->stopAcq();
-	cout << "SIMUTEST: acq stopped" << endl;
+	std::cout << "SIMUTEST: acq finished" << std::endl;
+
+	//Get statistics
+	double saving_speed;
+	double compression_speed;
+	double compression_ratio;
+	double incoming_speed;
+	save->getStatisticCounters(saving_speed, compression_speed, compression_ratio, incoming_speed);
+
+	ct.stopAcq();
+	std::cout << "SIMUTEST: acq stopped" << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -91,18 +160,21 @@ int main(int argc, char *argv[])
 	long nframe;
 
 	if (argc != 3) {
-		expo= 0.5;
-		nframe= 5;
-	} else {
-		expo= atof(argv[1]);
-		nframe= atoi(argv[2]);
+		expo = 0.5;
+		nframe = 5;
 	}
-        try {
-                simulator_test(expo, nframe);
-        } catch (Exception e) {
-	        cerr << "LIMA Exception:" << e.getErrMsg() << endl;
-        }
+	else {
+		expo = atof(argv[1]);
+		nframe = atoi(argv[2]);
+	}
 
-        return 0;
+	try {
+		simulator_test(expo, nframe);
+	}
+	catch (Exception e) {
+		std::cerr << "LIMA Exception:" << e.getErrMsg() << std::endl;
+	}
+
+	return 0;
 }
 

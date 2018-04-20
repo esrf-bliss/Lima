@@ -20,45 +20,45 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#ifndef SIMULATORSYNCCTRLOBJ_H
-#define SIMULATORSYNCCTRLOBJ_H
+#ifndef FRAMEGETTER_H
+#define FRAMEGETTER_H
 
-#include "SimulatorCompatibility.h"
+
+#include <lima/SizeUtils.h>
+
 #include "SimulatorCamera.h"
 
-namespace lima
-{
-namespace Simulator
-{
 
-/// Control object providing simulator synchronization interface
-class LIBSIMULATOR_API SyncCtrlObj : public HwSyncCtrlObj
-{
- public:
-	SyncCtrlObj(Camera& simu);
-	virtual ~SyncCtrlObj();
+namespace lima {
 
-	virtual bool checkTrigMode(TrigMode trig_mode);
-	virtual void setTrigMode(TrigMode  trig_mode);
-	virtual void getTrigMode(TrigMode& trig_mode);
+// Forward definitions
+class FrameDim;
+class Exception;
 
-	virtual void setExpTime(double  exp_time);
-	virtual void getExpTime(double& exp_time);
+namespace Simulator {
 
-	virtual void setLatTime(double  lat_time);
-	virtual void getLatTime(double& lat_time);
 
-	virtual void setNbHwFrames(int  nb_frames);
-	virtual void getNbHwFrames(int& nb_frames);
+/// This interface describes a way to get the next frame buffer
+struct FrameGetter {
 
-	virtual void getValidRanges(ValidRangesType& valid_ranges);
+    virtual Camera::Mode getMode() const = 0;
 
- private:
-	Camera& m_simu;
+    virtual void prepareAcq() = 0;
+
+    virtual bool getNextFrame(unsigned char *ptr) throw (Exception) = 0;
+
+    virtual unsigned long getFrameNr() const = 0;
+    virtual void resetFrameNr(unsigned long frame_nr = 0) = 0;
+
+    virtual void setFrameDim(const FrameDim& frame_dim) = 0;
+    virtual void getFrameDim(FrameDim& frame_dim) const = 0;
+
+    virtual void getMaxImageSize(Size& max_image_size) const = 0;
+
 };
 
-} // namespace Simulator
+} //namespace Simulator
 
-} // namespace lima
+} //namespace lima
 
-#endif //SIMULATORSYNCCTRLOBJ_H
+#endif /* FRAMEGETTER_H */

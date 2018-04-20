@@ -20,45 +20,13 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#ifndef SIMULATORSYNCCTRLOBJ_H
-#define SIMULATORSYNCCTRLOBJ_H
+#include "SimulatorFramePrefetcher.h"
+#include "SimulatorFrameBuilder.h"
+#include "SimulatorFrameLoader.h"
 
-#include "SimulatorCompatibility.h"
-#include "SimulatorCamera.h"
+using namespace lima;
+using namespace lima::Simulator;
 
-namespace lima
-{
-namespace Simulator
-{
-
-/// Control object providing simulator synchronization interface
-class LIBSIMULATOR_API SyncCtrlObj : public HwSyncCtrlObj
-{
- public:
-	SyncCtrlObj(Camera& simu);
-	virtual ~SyncCtrlObj();
-
-	virtual bool checkTrigMode(TrigMode trig_mode);
-	virtual void setTrigMode(TrigMode  trig_mode);
-	virtual void getTrigMode(TrigMode& trig_mode);
-
-	virtual void setExpTime(double  exp_time);
-	virtual void getExpTime(double& exp_time);
-
-	virtual void setLatTime(double  lat_time);
-	virtual void getLatTime(double& lat_time);
-
-	virtual void setNbHwFrames(int  nb_frames);
-	virtual void getNbHwFrames(int& nb_frames);
-
-	virtual void getValidRanges(ValidRangesType& valid_ranges);
-
- private:
-	Camera& m_simu;
-};
-
-} // namespace Simulator
-
-} // namespace lima
-
-#endif //SIMULATORSYNCCTRLOBJ_H
+// Export the template instantiations
+template class LIBSIMULATOR_API FramePrefetcher<FrameBuilder>;
+template class LIBSIMULATOR_API FramePrefetcher<FrameLoader>;
