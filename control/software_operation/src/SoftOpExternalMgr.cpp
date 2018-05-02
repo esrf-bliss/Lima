@@ -321,20 +321,23 @@ void SoftOpExternalMgr::isTaskActive(bool &linkTaskFlag,bool &sinkTaskFlag) cons
 {
   DEB_MEMBER_FUNCT();
 
-  AutoMutex aLock(m_cond.mutex());
-  linkTaskFlag = sinkTaskFlag = false;
-  for(Stage2Instance::const_iterator i = m_stage2instance.begin();
-      i != m_stage2instance.end() && (!linkTaskFlag || !sinkTaskFlag);++i)
-    {
-      for(std::list<SoftOpInstance>::const_iterator k = i->second.begin();
-	  k != i->second.end() && (!linkTaskFlag || !sinkTaskFlag);++k)
+	AutoMutex aLock(m_cond.mutex());
+	linkTaskFlag = sinkTaskFlag = false;
+	for (Stage2Instance::const_iterator i = m_stage2instance.begin();
+		i != m_stage2instance.end() && (!linkTaskFlag || !sinkTaskFlag); ++i)
 	{
-	 if(k->m_linkable)
-	    linkTaskFlag = true;
-	  else
-	    sinkTaskFlag = true;
+		for (std::list<SoftOpInstance>::const_iterator k = i->second.begin();
+			k != i->second.end() && (!linkTaskFlag || !sinkTaskFlag); ++k)
+		{
+			if (k->isActive())
+			{
+				if (k->m_linkable)
+					linkTaskFlag = true;
+				else
+					sinkTaskFlag = true;
+			}
+		}
 	}
-    }
   DEB_RETURN() << DEB_VAR2(linkTaskFlag,sinkTaskFlag);
 }
 
