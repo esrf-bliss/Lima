@@ -10,20 +10,13 @@ Lima ( **L** ibrary for **Im** age **A** cquisition) is a project for the unifie
 
 Lima is a C++ library  which can be used for  many different cameras. The library is also available for Python_ and it provides a PyTango_  server for remote control.
 
-The documentation is also available in `pdf`_ format.
+The documentation is also available in `pdf`_ and `epub`_ format.
 
-If you want to be in touch with LIMA community, please send email to lima@esrf.fr. You can also subscribe to the mailing-list by sending
-a message to sympa@esrf.fr with as subject *subscribe lima*.
+If you want to be in touch with the LIMA community, please send an email to lima@esrf.fr. You may also want to subscribe to our mailing list by sending a message to sympa@esrf.fr with `subscribe lima` as subject.
 
-There is no binary package for lima yet but Lima is a very active project and many developments are ongoing and available from `Github <github.com/esrf-bliss/Lima>`_.
+There is no binary package for lima yet but Lima is a very active project and many developments are ongoing and available from `GitHub <https://github.com/esrf-bliss/Lima>`_. However you can find stable version releases through git branches and tags on `Github releases <https://github.com/esrf-bliss/Lima/releases>`_.
 
-However you can find stable versions track through git branches and tags on github.com.
-
-The latest stable branch is **core-1.7** and the latest release tag is **core-1.7.2**.
-
-Please, feel free to fork/clone or download Lima at http://github.com/esrf-bliss/Lima .
-
-For latest changes, refers to the :download:`Release Notes <./ReleaseNotes.txt>` (Also available under the Git repository master branch as ReleaseNotes.txt text file).
+For the latest changes, refers to the :download:`Release Notes <../ReleaseNotes.txt>` (Also available under the Git repository master branch as ReleaseNotes.txt text file).
 
 .. _compilation:
 
@@ -75,7 +68,8 @@ You may also want to check out the `doxygen documentation`_ extracted from the s
 
 .. _`doxygen documentation`: doxygen/html/index.html
 
-.. _pdf: ../latex/Lima.pdf
+.. _pdf: http://readthedocs.org/projects/lima-doc/downloads/pdf/latest/
+.. _epub: http://readthedocs.org/projects/lima-doc/downloads/epub/latest/
 .. _release notes: ./ReleaseNotes.txt
 
 .. _Python: http://python.org

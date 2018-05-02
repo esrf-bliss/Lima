@@ -1,4 +1,5 @@
 .build
 .doxygen
+Thumbs.db
 *~
 *.bck

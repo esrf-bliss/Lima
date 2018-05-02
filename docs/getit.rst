@@ -7,17 +7,21 @@ As Lima is not packaged yet, the only way for now is to retrieve the source from
 For both Linux and Windows we recommend to use the git tools:
 
 - For Linux, install Git_ package if your linux distribution did not.
-- For Windows, get and install Git_ first for the download section. Then use the git-bash tool with linux-like command line commands.
+- For Windows, get and install Git_ first from the download section. Then use the git-bash tool with linux-like commands.
 
-Command to get all sources
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+All cameras
+^^^^^^^^^^^
+
+Here is the command to get the sources for all cameras:
 
 .. code-block:: bash
 
   git clone --recursive git://github.com/esrf-bliss/Lima.git
 
-Commands for a minimum checkout to get all source needed for a particular camera
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For a specific camera
+^^^^^^^^^^^^^^^^^^^^^
+
+Here are the commands for a minimum checkout to get all source needed for a specific camera:
 
 .. code-block:: bash
 
@@ -29,7 +33,7 @@ Commands for a minimum checkout to get all source needed for a particular camera
 
 In addition (but optional) you can get the **TANGO** python device servers, so update your git clone again:
 
- .. code-block:: bash
+.. code-block:: bash
 
   git submodule init application/tango/python
   git submodule update

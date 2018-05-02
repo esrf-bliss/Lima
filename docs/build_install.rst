@@ -3,6 +3,8 @@
 Build and Install
 -----------------
 
+Two methods are provided to build Lima from source.
+
 Using scripts
 ^^^^^^^^^^^^^
 The ``install`` scripts will run cmake, compile and install.
@@ -91,11 +93,10 @@ Then compile and install:
  cmake --build
  sudo cmake --build --target install
 
-May you need to update your environment?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Environment Setup
+^^^^^^^^^^^^^^^^^
 
-If you have changed the default destination path for both libraries and python modules you should update
-your environment variables.
+If you have changed the default destination path for both libraries and python modules you should update your environment variables.
 
 For Linux:
 
@@ -111,7 +112,7 @@ For Windows:
   set PATH=%PATH%;<my-new-install-dir>\Lima\lib
   set PYTHONPATH=%PYTHONPATH%;<my-new-install-dir>
 
-or update the system wide variables PATH for the libraries and PYTHONPATH for python.
+or update the system wide variables ``PATH`` for the libraries and ``PYTHONPATH`` for python.
 
 
 .. _PyTango: http://github.com/tango-cs/pytango

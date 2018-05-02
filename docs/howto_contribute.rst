@@ -6,7 +6,7 @@ For collaborative development, we use the "Fork & Pull" model from Github. So an
 .. note:: If you want to contribute with a new camera plug-in you should first request us (by email @ lima@esrf.fr) to get the new plug-in camera sub-module created. We will provide:
 
  - a default structure of directories (<mycamera>/src /include sip/ doc/ python/ test/)
- - the Makefile files (<mycamera>/Makefile, <mycamera>/src/Makefile, <mycamera>/test/Makefile)
+ - the build system file (<mycamera>/CMakeLists.txt)
  - templates files (src and include) for the mandatory classes:
 
   - <MyCamera>Interface
@@ -15,14 +15,6 @@ For collaborative development, we use the "Fork & Pull" model from Github. So an
 
  - a standard .gitignore file
  - a template index.rst for the documentation
-
- In addition we will update with new entries other files needed to compile the plugin library and the python module:
-
- - Lima/config.inc_default
- - Lima/camera/Makefile
- - build/Makefile
- - sip/Makefile
- - sip/configure.py
 
 As above do not forget to fork the new sub-module project.
 
