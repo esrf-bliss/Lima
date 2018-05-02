@@ -108,9 +108,9 @@ Exception& Exception::operator <<(const T& o)
 }
 
 
-std::ostream& operator <<(std::ostream& os, Layer layer);
-std::ostream& operator <<(std::ostream& os, ErrorType err_type);
-std::ostream& operator <<(std::ostream& os, const Exception& e);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, Layer layer);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, ErrorType err_type);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const Exception& e);
 
 #define LIMA_EXC(layer, err_type, err_desc) \
 	Exception(layer, err_type, err_desc, __FILE__, __FUNCTION__, __LINE__,\
