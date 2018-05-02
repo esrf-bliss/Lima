@@ -98,7 +98,7 @@ class TestControl:
 		image = self.ct_control.ReadImage(last_img_ready)
 		time.sleep(self.sleep_time)
 		deb.Always('Forcing read frame %d memory' % last_img_ready)
-		data = ' ' + image.buffer.tostring()
+		data = b' ' + image.buffer.tostring()
 
 
 class TestControlAutoSync:
@@ -160,12 +160,12 @@ def main(argv):
 	try:
 		test_control.start(exp_time, nb_frames, prepare_timeout,
 				   sleep_time)
-	except Core.Exception, e:
+	except Core.Exception as e:
 		if err in e.args[0]:
 			ok = True
 			deb.Always('Got good exception: %s' % e)
 	if not ok:
-		raise RuntimeError, 'Expected exception: %s' % err
+		raise RuntimeError('Expected exception: %s' % err)
 
 if __name__ == '__main__':
 	main(sys.argv)

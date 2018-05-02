@@ -553,8 +553,8 @@ if(LIMA_ENABLE_PYTHON)
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip)
     target_link_libraries(python_module_limacore limacore)
 
-    install(FILES python/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
-    install(FILES common/python/__init__.py common/python/Debug.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Core")
+    add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python/Lima ${CMAKE_BINARY_DIR}/python/Lima)
+    install(DIRECTORY python/Lima/ DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
 endif()
 
 #--------------------------------------------------------------------------------

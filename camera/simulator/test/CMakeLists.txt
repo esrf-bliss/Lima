@@ -25,3 +25,6 @@ if (NOT WIN32)
   set(test_src ${test_src} test_simulator_hwbuffersave test_simulator_framebuilder)
 endif()
 limatools_run_camera_tests("${test_src}" ${NAME})
+
+set(python_test_src test_prepare_timeout)
+limatools_run_camera_python_tests("${python_test_src}" ${NAME})

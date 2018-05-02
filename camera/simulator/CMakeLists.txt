@@ -49,6 +49,7 @@ endif()
 
 if (LIMA_ENABLE_PYTHON)
     limatools_run_sip_for_camera(${NAME})
+    add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python ${CMAKE_BINARY_DIR}/python/Lima/Simulator)
     install(FILES python/__init__.py DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Simulator")
 endif()
 
