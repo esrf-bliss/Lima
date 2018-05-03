@@ -22,7 +22,7 @@
 #ifndef CTSAVING_CBF_H
 #define CTSAVING_CBF_H
 
-#include <cbf/cbf.h>
+#include <cbflib/cbf.h>
 
 #include "lima/CtSaving.h"
 

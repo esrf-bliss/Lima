@@ -5,19 +5,19 @@
 #  European Synchrotron Radiation Facility
 #  BP 220, Grenoble 38043
 #  FRANCE
-# 
+#
 #  Contact: lima@esrf.fr
-# 
+#
 #  This is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
-# 
+#
 #  This software is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-# 
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
@@ -32,13 +32,18 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #--------------------------------------------------------------------------------
-# cmake/ directory contains tools 
+# cmake/ directory contains tools
 #--------------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
 find_package(Threads REQUIRED)
 
+if(MSVC AND MSVC_VERSION GREATER 1500)
+  # Compiler specific (parallel build)
+  set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} /MP")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
 
 if(UNIX)
 #--------------------------------------------------------------------------------
@@ -49,7 +54,7 @@ if(UNIX)
   else()
     option(LIMA_ENABLE_SPS_IMAGE "compile sps_image?" OFF)
   endif()
-  
+
 # openGL real-time display
   if(DEFINED ENV{COMPILE_GLDISPLAY})
     set(LIMA_ENABLE_GLDISPLAY "$ENV{COMPILE_GLDISPLAY}" CACHE BOOL "compile gldisplay?" FORCE)
@@ -71,7 +76,7 @@ if(DEFINED ENV{LIMA_ENABLE_CONFIG})
 else()
     option(LIMA_ENABLE_CONFIG "compile with libconfig?" OFF)
 endif()
-      
+
 #--------------------------------------------------------------------------------
 # Saving formats can be enabled from environment variables using config.inc file
 #--------------------------------------------------------------------------------
@@ -95,7 +100,7 @@ if(UNIX)
 	if(DEFINED ENV{LIMA_ENABLE_NXS})
 		set(LIMA_ENABLE_NXS "$ENV{LIMA_ENABLE_NXS}" CACHE BOOL "compile Nexus saving code?" FORCE)
 	else()
-		option(LIMA_ENABLE_NXS "compile Nexus saving code?" OFF) 
+		option(LIMA_ENABLE_NXS "compile Nexus saving code?" OFF)
 	endif()
 	if(DEFINED ENV{LIMA_ENABLE_TIFF})
 		set(LIMA_ENABLE_TIFF "$ENV{LIMA_ENABLE_TIFF}" CACHE BOOL "compile TIFF saving code?" FORCE)
@@ -142,26 +147,28 @@ if(LIMA_ENABLE_PYTHON)
     if(${PYTHONINTERP_FOUND})
       # python site-packages folder
       execute_process(
-	      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
-	OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-	else()
-		message(FATAL_ERROR "No python found, please install or disable LIMA_ENABLE_PYTHON")
+        COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
+        OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+  	else()
+  		message(FATAL_ERROR "No python found, please install or disable LIMA_ENABLE_PYTHON")
     endif()
-    find_package(SIP)
-	if(${SIP_FOUND})
-		include(SIPMacros)
-	else()
-		message(FATAL_ERROR "python SIP not installed, please install or disable LIMA_ENABLE_PYTHON")
-	endif()
 
     set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
-    set(NUMPY_INCLUDE_DIR "${_PYTHON_SITE_PACKAGES_DIR}/numpy/core/include" CACHE PATH "Path to NumPy include folder")
-    set(NUMPY_LIB_DIR "${_PYTHON_SITE_PACKAGES_DIR}/numpy/core/lib" CACHE PATH "Path to NumPy lib folder")
-    include_directories(${NUMPY_INCLUDE_DIR})
-    link_directories(${NUMPY_LIB_DIR})
-    if(!${SIP_FOUND})
-        message(FATAL_ERROR "sip executable not found, cannot build python extensions")
+    find_package(SIP)
+  	if(${SIP_FOUND})
+  		include(SIPMacros)
+  	else()
+  		message(FATAL_ERROR "python SIP not installed, please install or disable LIMA_ENABLE_PYTHON")
+  	endif()
+
+    find_package(NumPy)
+    if(${NUMPY_FOUND})
+      include_directories(${NUMPY_INCLUDE_DIRS})
+      link_directories(${NUMPY_LIBRARIES})
+    else()
+        message(FATAL_ERROR "NumPy not found, cannot build python extensions")
     endif()
     if(WIN32)
         set(SIP_TAGS WIN32_PLATFORM)
@@ -240,7 +247,7 @@ if(LIMA_ENABLE_CONFIG)
 			endif()
 		else()
 			message(FATAL_ERROR "This compiler is not supported: " ${CMAKE_GENERATOR})
-		endif()		
+		endif()
 		set(LIB_CONFIG_INCLUDE_DIR "C:/Program Files/LIBCONFIG-windows/${CONFIG_VERSION}/include" CACHE PATH "Path to LIBCONFIG++ includes")
 		set(LIB_CONFIG_DIR "C:/Program Files/LIBCONFIG-windows/${CONFIG_VERSION}/lib" CACHE PATH "Path to LIBCONFIG++ lib folder")
 		find_library(LIB_CONFIG libconfig++ ${LIB_CONFIG_DIR})
@@ -248,7 +255,7 @@ if(LIMA_ENABLE_CONFIG)
 		find_library(LIB_CONFIG config++)
 	endif()
 	find_path(LIB_CONFIG_INCLUDE_DIR libconfig.h++)
-	
+
 	include(FindPackageHandleStandardArgs)
 	find_package_handle_standard_args(config DEFAULT_MSG LIB_CONFIG LIB_CONFIG_INCLUDE_DIR)
 	if(${CONFIG_FOUND})
@@ -280,150 +287,103 @@ endif()
 set(saving_libs)
 set(saving_includes)
 if(LIMA_ENABLE_EDFGZ)
-	if(WIN32)
-		if (${CMAKE_GENERATOR} MATCHES "Win64$")
-			set(ZLIB_ARCH "win64")
-		else()
-			set(ZLIB_ARCH "win32")
-		endif()	
-		set(LIB_ZLIB_INCLUDE_DIR "C:/Program Files/zlib-windows/${ZLIB_ARCH}/include" CACHE PATH "Path to zlib includes")
-		set(LIB_ZLIB_DIR "C:/Program Files/zlib-windows/${ZLIB_ARCH}/lib" CACHE PATH "Path to zlib libs")
-		link_directories(${LIB_ZLIB_DIR})
-		find_library(LIB_ZLIB zlibstatic ${LIB_ZLIB_DIR})
-		add_definitions(-DZLIB_WINAPI)
-	else()
-	    find_library(LIB_ZLIB z)
-	endif()	
-	find_path(LIB_ZLIB_INCLUDE_DIR zlib.h)
-	include(FindPackageHandleStandardArgs)
-	find_package_handle_standard_args(ZLIB DEFAULT_MSG LIB_ZLIB LIB_ZLIB_INCLUDE_DIR)
+  find_package(ZLIB)
 	if(${ZLIB_FOUND})
 		add_definitions(-DWITH_Z_COMPRESSION)
-		set(saving_libs ${saving_libs} ${LIB_ZLIB})
-		set(saving_includes ${saving_includes} ${LIB_ZLIB_INCLUDE_DIR})		
+		set(saving_libs ${saving_libs} ${ZLIB_LIBRARIES})
+		set(saving_includes ${saving_includes} ${ZLIB_INCLUDE_DIRS})
 	else()
 		message(FATAL_ERROR "ZLIB library not found, please install or disable LIMA_ENABLE_EDFGZ")
-	endif()	
+	endif()
 endif()
 
 if(LIMA_ENABLE_EDFLZ4)
-    # look for a lz4  1.7 where lz4frame.h was added
-    find_path(LIB_LZ4_INCLUDE_DIR lz4frame.h)
-    find_library(LIB_LZ4 NAMES lz4)
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(LZ4 DEFAULT_MSG LIB_LZ4 LIB_LZ4_INCLUDE_DIR)
-    if (LZ4_FOUND)
+    find_package(LZ4)
+    if (${LZ4_FOUND})
         add_definitions(-DWITH_LZ4_COMPRESSION)
-        set(saving_libs ${saving_libs} ${LIB_LZ4})
-	set(saving_includes ${saving_includes} ${LIB_LZ4_INCLUDE_DIR})		
+        set(saving_libs ${saving_libs} ${LZ4_LIBRARIES})
+      	set(saving_includes ${saving_includes} ${LZ4_INCLUDE_DIRS})
     else()
-        message(FATAL_ERROR "LZ4 library: required version = 1.7.x, please update or switch off LIMA_ENABLE_EDFLZ4")
+        message(FATAL_ERROR "LZ4 library: required version = 1.8.2, please update or switch off LIMA_ENABLE_EDFLZ4")
     endif()
 endif()
 
 if(LIMA_ENABLE_CBF)
-	find_path(LIB_CBF_INCLUDE_DIR cbf/cbf.h)
-    find_library(LIB_CBF cbf)
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(CBF DEFAULT_MSG LIB_CBF LIB_CBF_INCLUDE_DIR)
+  find_package(CBF)
 	if (${CBF_FOUND})
 		add_definitions(-DWITH_CBF_SAVING)
 		add_definitions(-DPROTOTYPES)
 		set(ct_srcs ${ct_srcs} control/src/CtSaving_Cbf.cpp)
-		set(saving_libs ${saving_libs} ${LIB_CBF} crypto)
-		set(saving_includes ${saving_includes} ${LIB_CBF_INCLUDE_DIR})		
+		set(saving_libs ${saving_libs} ${CBF_LIBRARIES} crypto)
+		set(saving_includes ${saving_includes} ${CBF_INCLUDE_DIRS})
 	else()
 		message(FATAL_ERROR "CBF library not found, please install or disable LIMA_ENABLE_CBF")
-	endif()		
+	endif()
 endif()
 
 if(LIMA_ENABLE_FITS)
-    find_path(LIB_FITS_INCLUDE_DIR CCfits/CCfits.h)
-    find_library(LIB_CFITSIO cfitsio)
-    find_library(LIB_CCFITS CCfits)
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(FITS DEFAULT_MSG LIB_CCFITS LIB_FITS_INCLUDE_DIR)
-	if(${FITS_FOUND})
+  find_package(CCFits)
+	if(${CCFITS_FOUND})
 		add_definitions(-DWITH_FITS_SAVING)
 		set(ct_srcs ${ct_srcs} control/src/CtSaving_Fits.cpp)
-		set(saving_libs ${saving_libs} ${LIB_CFITSIO} ${LIB_CCFITS})
-		set(saving_includes ${saving_includes} ${LIB_FITS_INCLUDE_DIR})		
+		set(saving_libs ${saving_libs} ${CFITSIO_LIBRARY} ${CCFITS_LIBRARY})
+		set(saving_includes ${saving_includes} ${CFITSIO_INCLUDE_DIR})
 	else()
-		message(FATAL_ERROR "CFITSIO and/or CCFITS library not found, please install or disable LIMA_ENABLE_FITS")	
+		message(FATAL_ERROR "CFITSIO and/or CCFITS library not found, please install or disable LIMA_ENABLE_FITS")
 	endif()
 endif()
 
 if(LIMA_ENABLE_HDF5)
-	if(WIN32)
-		if (${CMAKE_GENERATOR} MATCHES "2008")
-			set(HDF5_VERSION "1.8.13")
-		elseif (${CMAKE_GENERATOR} MATCHES "2015|2017")
-			set(HDF5_VERSION "1.8.20")
-		else()
-			message(FATAL_ERROR "Unsupported VS version for HDF5 saving format, only vs2008 or vs2015 are supported respectively for hdf5 1.8.13 and 1.8.16")
-		endif()
-		set(LIB_HDF5_INCLUDE_DIR "C:/Program Files/HDF_Group/HDF5/${HDF5_VERSION}/include" CACHE PATH "Path to HDF5 includes")
-		set(LIB_HDF5_DIR "C:/Program Files/HDF_Group/HDF5/${HDF5_VERSION}/lib" CACHE PATH "Path to HDF5 libs")
-		link_directories(${LIB_HDF5_DIR})
-		# we use static libs libhdf5.lib and libhdf5_cpp.lib
-		find_library(LIB_HDF5_CPP libhdf5_cpp ${LIB_HDF5_DIR})
-		find_library(LIB_HDF5 libhdf5 ${LIB_HDF5_DIR})
-		find_library(LIB_HDF5_HL libhdf5_hl ${LIB_HDF5_DIR})
-		find_library(LIB_ZLIB libzlib ${LIB_HDF5_DIR})
-		find_library(LIB_SZIP libszip ${LIB_HDF5_DIR})
-     else()
-        find_package(HDF5 REQUIRED COMPONENTS C CXX HL )
-	endif()	    
-    if(${HDF5_FOUND})        
-		add_definitions(-DWITH_HDF5_SAVING)
-		set(ct_srcs ${ct_srcs} control/src/CtSaving_Hdf5.cpp)	
-		set(saving_libs ${saving_libs} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${LIB_SZIP} ${LIB_ZLIB})
-		set(saving_includes ${saving_includes} ${HDF5_INCLUDE_DIRS})
-    else()
-		message(FATAL_ERROR "HDF5 libraries not found, please install or disable LIMA_ENABLE_HDF5")
-    endif()
+  #set (HDF5_USE_STATIC_LIBRARIES ON)
+  find_package(HDF5 COMPONENTS CXX HL)
+  if(${HDF5_FOUND})
+    add_definitions(-DWITH_HDF5_SAVING)
+    set(ct_srcs ${ct_srcs} control/src/CtSaving_Hdf5.cpp)	
+    set(saving_libs ${saving_libs} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${LIB_SZIP} ${LIB_ZLIB})
+    set(saving_includes ${saving_includes} ${HDF5_INCLUDE_DIRS})
+    set(saving_definitions ${saving_definitions} ${HDF5_DEFINITIONS})
+  else()
+    message(FATAL_ERROR "HDF5 library not found, please install or disable LIMA_ENABLE_HDF5")
+  endif()
 
-    if(LIMA_ENABLE_HDF5_BS)
-        set(BITSHUFFLE_EXTERNALLY_CONFIGURED ON)
-        add_subdirectory(control/bitshuffle)
+  if(LIMA_ENABLE_HDF5_BS)
+      set(BITSHUFFLE_EXTERNALLY_CONFIGURED ON)
+      add_subdirectory(control/bitshuffle)
 
-	add_definitions(-DWITH_BS_COMPRESSION)
-        set(saving_includes ${saving_includes} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/bitshuffle/src)
-        set(saving_libs ${saving_libs} h5bshuf)
+      add_definitions(-DWITH_BS_COMPRESSION)
+      set(saving_includes ${saving_includes} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/bitshuffle/src)
+      set(saving_libs ${saving_libs} h5bshuf)
 
-        # set(LIB_BS_INCLUDE_DIR "/usr/local/include/" CACHE PATH "Path to BitShuffle include files")
-        # link_directories(${LIB_HDF5_PLUGIN})
-        # find_library(LIB_HDF5_BS h5bshuf ${LIB_HDF5_PLUGIN})
-        # find_path(LIB_BS_INCLUDE_DIR bitshuffle.h)
-        # set(saving_libs ${saving_libs} ${LIB_HDF5_BS})
-        # set(saving_includes ${saving_includes} ${LIB_BS_INCLUDE_DIR})
-    endif()
+      # set(LIB_BS_INCLUDE_DIR "/usr/local/include/" CACHE PATH "Path to BitShuffle include files")
+      # link_directories(${LIB_HDF5_PLUGIN})
+      # find_library(LIB_HDF5_BS h5bshuf ${LIB_HDF5_PLUGIN})
+      # find_path(LIB_BS_INCLUDE_DIR bitshuffle.h)
+      # set(saving_libs ${saving_libs} ${LIB_HDF5_BS})
+      # set(saving_includes ${saving_includes} ${LIB_BS_INCLUDE_DIR})
+  endif()
 endif()
 
 if(LIMA_ENABLE_NXS)
-    find_path(LIB_NXS_INCLUDE_DIR nexuscpp/nexuscpp.h)
-    find_library(LIB_NXS nexuscpp)
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(NXS DEFAULT_MSG LIB_NXS LIB_NXS_INCLUDE_DIR)		
+  find_path(LIB_NXS_INCLUDE_DIR nexuscpp/nexuscpp.h)
+  find_library(LIB_NXS nexuscpp)
+  include(FindPackageHandleStandardArgs)
+  find_package_handle_standard_args(NXS DEFAULT_MSG LIB_NXS LIB_NXS_INCLUDE_DIR)
 	if(${NXS_FOUND})
-		add_definitions(-DWITH_NXS_SAVING)    
+		add_definitions(-DWITH_NXS_SAVING)
 		set(ct_srcs ${ct_srcs} control/src/CtSaving_NXS.cpp)
-		set(saving_includes ${saving_includes} ${LIB_NXS_INCLUDE_DIR})		
+		set(saving_includes ${saving_includes} ${LIB_NXS_INCLUDE_DIR})
 	else()
 		message(FATAL_ERROR "NEXUS cpp library not installed, please install or disable LIMA_ENABLE_NXS")
 	endif()
 endif()
 
 if(LIMA_ENABLE_TIFF)
-    find_path(LIB_TIFF_INCLUDE_DIR tiffio.h)
-    find_library(LIB_TIFF tiff)
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(TIFF DEFAULT_MSG LIB_TIFF LIB_TIFF_INCLUDE_DIR)	
+  find_package(TIFF)
 	if(${TIFF_FOUND})
 		add_definitions(-DWITH_TIFF_SAVING)
 		set(ct_srcs ${ct_srcs} control/src/CtSaving_Tiff.cpp)
-		set(saving_libs ${saving_libs} tiff)
-		set(saving_includes ${saving_includes} ${LIB_TIFF_INCLUDE_DIR})		
+		set(saving_libs ${saving_libs} ${TIFF_LIBRARIES})
+		set(saving_includes ${saving_includes} ${TIFF_INCLUDE_DIRS})
 	else()
 		message(FATAL_ERROR "TIFF library not found, please install or disable LIMA_ENABLE_TIFF")
 	endif()
@@ -442,8 +402,8 @@ add_library(limacore SHARED
     ${control_incs}
 )
 
-limatools_set_library_soversion(limacore "common/VERSION")       
-  
+limatools_set_library_soversion(limacore "common/VERSION")
+
 target_include_directories(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/common/include")
 target_include_directories(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/hardware/include")
 target_include_directories(limacore PUBLIC
@@ -458,6 +418,9 @@ endif()
 
 # add all include paths coming from saving format options
 target_include_directories(limacore PRIVATE ${extra_includes} ${saving_includes})
+
+# add compiler definitions required by saving libraries
+target_compile_definitions(limacore PRIVATE ${saving_definitions})
 
 if(THREADS_HAVE_PTHREAD_ARG)
     target_compile_options(PUBLIC limacore "-pthread")
@@ -482,12 +445,14 @@ if(WIN32)
 endif()
 if(WIN32)
     install(TARGETS limacore
-            DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin
             PUBLIC_HEADER DESTINATION include)
 else()
+    include(GNUInstallDirs)
     install(TARGETS limacore
-            LIBRARY DESTINATION lib
-            PUBLIC_HEADER DESTINATION include)
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 
 
@@ -535,7 +500,7 @@ if(LIMA_ENABLE_PYTHON)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip PROPERTIES OBJECT_DEPENDS ${sipfiles} sip/core/HwFrameInfo.sip)
     # Run sip now !
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip)
-    
+
     target_include_directories(python_module_limacore PRIVATE
         ${PYTHON_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/sip

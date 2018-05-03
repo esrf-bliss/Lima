@@ -38,7 +38,7 @@ Saving format dependencies
 - CBF_, a library for accessing Crystallographic Binary Files (CBF files) and Image-supporting CIF (imgCIF) files ;
 - HDF5_, a data model, library, and file format for storing and managing data ;
 - CCfits_, CFITSIO_, a library for reading and writing data files in FITS (Flexible Image Transport System) data format ;
-- LZ4_ = 1.7.x, a lossless compression algorithm ;
+- LZ4_ >= 1.8.2, a lossless compression algorithm ;
 - libconfig_, a libraryfor processing structured configuration files. For Windows, you can download the ESRF binary package `libconfig-windows`_ and install it under ``C:\Program Files``.
 
 PyTango_ server dependencies

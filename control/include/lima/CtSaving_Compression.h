@@ -83,10 +83,19 @@ static const int LZ4_HEADER_SIZE = 19;
 static const int LZ4_FOOTER_SIZE = 4;
 
 static const LZ4F_preferences_t lz4_preferences = {
-  { LZ4F_max256KB, LZ4F_blockLinked, LZ4F_noContentChecksum, LZ4F_frame, 0, { 0, 0 } },
-  0,   /* compression level */
-  1,   /* autoflush */
-  { 0, 0, 0, 0 },  /* reserved, must be set to 0 */
+  {
+    LZ4F_max256KB,            /* blockSizeID */
+    LZ4F_blockLinked,         /* blockMode */
+    LZ4F_noContentChecksum,   /* contentChecksumFlag */
+    LZ4F_frame,               /* frameType */
+    0,                        /* contentSize */
+    0,                        /* dictID */
+    LZ4F_noBlockChecksum      /* blockChecksumFlag */
+  },
+  0,   /* compressionLevel */
+  1,   /* autoFlush */
+  0,   /* favorDecSpeed */
+  { 0, 0, 0 },  /* reserved, must be set to 0 */
 };
 
  class FileLz4Compression: public SinkTaskBase
