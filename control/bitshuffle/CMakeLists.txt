@@ -23,11 +23,8 @@
 ############################################################################
 
 if (NOT BITSHUFFLE_EXTERNALLY_CONFIGURED)
-  cmake_minimum_required(VERSION 2.8)
-
-  find_library(LIB_HDF5 hdf5)
-  find_path(LIB_HDF5_INCLUDE_DIR hdf5.h)
-
+  cmake_minimum_required(VERSION 3.1)
+  find_package(HDF5 REQUIRED)
 endif (NOT BITSHUFFLE_EXTERNALLY_CONFIGURED)
 
 set(BS_VERSION_MAJOR "0")
@@ -51,9 +48,9 @@ add_library(h5bshuf SHARED ${bitshuffle_src})
 
 target_include_directories(h5bshuf PRIVATE "${BITSHUFFLE_DIR}/src")
 target_include_directories(h5bshuf PRIVATE "${BITSHUFFLE_DIR}/lz4")
-target_include_directories(h5bshuf PRIVATE "${LIB_HDF5_INCLUDE_DIR}")
+target_include_directories(h5bshuf PRIVATE "${HDF5_INCLUDE_DIRS}")
 
-target_link_libraries(h5bshuf ${LIB_HDF5})
+target_link_libraries(h5bshuf ${HDF5_LIBRARIES})
 
 install(TARGETS h5bshuf LIBRARY DESTINATION lib)
 
