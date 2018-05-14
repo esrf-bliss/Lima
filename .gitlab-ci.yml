@@ -14,6 +14,8 @@ build-python2 :
   artifacts:
     paths:
     - build/
+  tags:
+    - lima
 
 build-python3 :
   stage: build
@@ -24,6 +26,9 @@ build-python3 :
   artifacts:
     paths:
     - build/
+  tags:
+    - lima
+
 
 test-python2 :
   stage: test
@@ -32,7 +37,10 @@ test-python2 :
   script:
     - update-alternatives --set python /usr/bin/python2.7
     - cd build/
-    - ctest --timeout 10
+    - ctest --timeout 10 --output-on-failure
+  tags:
+    - lima
+
 
 test-python3 :
   stage: test
@@ -41,4 +49,6 @@ test-python3 :
   script:
     - update-alternatives --set python /usr/bin/python3.4
     - cd build/
-    - ctest --timeout 10
+    - ctest --timeout 10 --output-on-failure
+  tags:
+    - lima
