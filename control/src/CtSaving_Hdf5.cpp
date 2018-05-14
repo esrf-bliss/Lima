@@ -466,12 +466,12 @@ void SaveContainerHdf5::_close(void* f) {
 	_File *file = (_File*)f;
 	if (!file->m_in_append || m_is_multiset) {
 		// Create soft link to the Data and NXdetector groups
-		string path = file->m_entry_name;
-		path += "/instrument/" + m_ct_parameters.det_name + "/" + file->m_data_name;
-		file->m_measurement_detector->link(H5L_TYPE_SOFT, path, file->m_data_name);
-		path = file->m_entry_name;
-		path += "/instrument/" + m_ct_parameters.det_name;
+		string root_path = file->m_entry_name + "/" + m_ct_parameters.instrument_name+ "/";
+		string path = root_path + m_ct_parameters.det_name;
 		file->m_measurement_detector->link(H5L_TYPE_SOFT, path, "information");
+		path += "/" + file->m_data_name;
+		file->m_measurement_detector->link(H5L_TYPE_SOFT, path, file->m_data_name);
+		
 		
 		// ISO 8601 Time format
 		time_t now;
