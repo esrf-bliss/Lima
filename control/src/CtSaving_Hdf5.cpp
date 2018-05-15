@@ -452,7 +452,7 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  new_file.m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
 		}
 	} catch (FileIException &error) {
-		  error.printError();	
+		  error.printErrorStack();
 	      THROW_CTL_ERROR(Error) << "File " << filename << " not opened successfully";
 	}
 
@@ -667,7 +667,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		// catch failure caused by the DataSet operations
 		}catch (DataSetIException& error) {
 			THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
-			error.printError();
+			error.printErrorStack();
 		}
 		// catch failure caused by the DataSpace operations
 		catch (DataSpaceIException& error) {
