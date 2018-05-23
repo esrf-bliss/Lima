@@ -23,7 +23,7 @@ if platform.machine() == 'AMD64':
                  ('camera/pco/sdkPco/bin64/sc2_clhs.dll','Lima'),
                  ('camera/pco/sdkPco/bin64/sc2_clhs_v1.3.32.dll','Lima'),
                  (sip.__file__,''),
-                 ('applications/tango/python/camera/Pco.py','camera'),
+                 ('applications/tango/python/camera/Pco.py','Lima/Server/camera'),
                  ('sip/pco/limapco.pyd','Lima')],
 	'dexela' : [('camera/dexela/python/Dexela.py','Lima'),
 		    ('camera/dexela/src/DexelaConfig.cfg','Lima'),
@@ -62,12 +62,13 @@ else:
 	}
 #Add Src 
 module2Installfiles.update({
-    'tango-core' : [('applications/tango/python/LimaCCDs.py',''),
-		    ('applications/tango/python/AttrHelper.py',''),
-                    ('applications/tango/python/EnvHelper.py',''),
-                    ('applications/tango/python/camera/__init__.py','camera'),
-		    ('applications/tango/python/plugins','')],
-    'tango-simulator' : [('applications/tango/python/camera/Simulator.py','camera')],
+    'tango-core' : [('applications/tango/python/LimaCCDs.py','Lima/Server'),
+		    ('applications/tango/python/AttrHelper.py','Lima/Server'),
+                    ('applications/tango/python/EnvHelper.py','Lima/Server'),
+                    ('applications/tango/python/camera/__init__.py','Lima/Server/camera'),
+                    ('applications/tango/python/camera/__init__.py','Lima/Server'),
+		    ('applications/tango/python/plugins','Lima/Server')],
+    'tango-simulator' : [('applications/tango/python/camera/Simulator.py','Lima/Server/camera')],
     'tango-perkinelmer' : [('applications/tango/python/camera/PerkinElmer.py','camera')],
     'tango-dexela' : [('applications/tango/python/camera/Dexela.py','camera')],
     }
