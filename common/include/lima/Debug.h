@@ -509,21 +509,22 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_GLOBAL_NAMESPC(mod, name_space)				\
 	inline lima::DebParams& getDebParams()				\
 	{								\
-		static lima::DebParams *deb_params = NULL;			\
-		EXEC_ONCE(deb_params = new lima::DebParams(lima::mod, NULL,		\
-						     name_space));	\
+		static lima::DebParams *deb_params = NULL;		\
+		EXEC_ONCE(deb_params = new lima::DebParams(lima::mod, NULL,\
+							   name_space)); \
 		return *deb_params;					\
 	}
 
 #define DEB_GLOBAL(mod)							\
 	DEB_GLOBAL_NAMESPC(mod, NULL)
 
-#define DEB_STRUCT_NAMESPC(mod, struct_name, name_space)			\
+#define DEB_STRUCT_NAMESPC(mod, struct_name, name_space)		\
 	static lima::DebParams& getDebParams()				\
 	{								\
-		static lima::DebParams *deb_params = NULL;			\
-		EXEC_ONCE(deb_params = new lima::DebParams(lima::mod, struct_name,	\
-						     name_space));	\
+		static lima::DebParams *deb_params = NULL;		\
+		EXEC_ONCE(deb_params = new lima::DebParams(lima::mod,	\
+							   struct_name, \
+							   name_space)); \
 		return *deb_params;					\
 	}								\
 									\
@@ -532,7 +533,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 		m_deb_obj_name = obj_name;				\
 	}								\
 									\
-	lima::ConstStr getDebObjName() const					\
+	lima::ConstStr getDebObjName() const				\
 	{								\
 		if (m_deb_obj_name.empty())				\
 			return NULL;					\
@@ -551,18 +552,18 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #ifndef NO_LIMA_DEBUG
 
 #define DEB_GLOBAL_FUNCT()						\
-	lima::DebObj deb(getDebParams(), false, __FUNCTION__,			\
+	lima::DebObj deb(getDebParams(), false, __FUNCTION__,		\
 		   NULL, __FILE__, __LINE__)
 
 #define DEB_CONSTRUCTOR()						\
 	DEB_MEMBER_FUNCT()
 
 #define DEB_DESTRUCTOR()						\
-	lima::DebObj deb(getDebParams(), true, __FUNCTION__,			\
+	lima::DebObj deb(getDebParams(), true, __FUNCTION__,		\
 		   getDebObjName(), __FILE__, __LINE__)
 
 #define DEB_MEMBER_FUNCT()						\
-	lima::DebObj deb(getDebParams(), false, __FUNCTION__,			\
+	lima::DebObj deb(getDebParams(), false, __FUNCTION__,		\
 		   getDebObjName(), __FILE__, __LINE__)
 
 #define DEB_PTR()							\
