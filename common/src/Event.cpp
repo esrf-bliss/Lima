@@ -100,10 +100,9 @@ string Event::getMsgStr()
 	return os.str();
 }
 
-DebProxy Event::getDebug(DebObj& deb_obj) const
+DebProxy Event::getDebug(DebObj *deb_obj) const
 {
-#ifndef NO_LIMA_DEBUG
-	DEB_FROM_PTR(&deb_obj);
+	DEB_FROM_PTR(deb_obj);
 
 	switch (severity) {
 	case Event::Fatal:
@@ -115,9 +114,6 @@ DebProxy Event::getDebug(DebObj& deb_obj) const
 	default:
 		return DEB_TRACE();
 	}
-#else
-	return DebProxy();
-#endif
 }
 
 ostream& lima::operator <<(ostream& os, const Event& event)

@@ -60,6 +60,11 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
+# Logging, disable trace in Release builds
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_definitions(-DNO_LIMA_DEBUG)
+endif()
+
 # Import pthread
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)

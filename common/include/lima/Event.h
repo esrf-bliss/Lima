@@ -62,14 +62,10 @@ class LIMACORE_API Event
 
 	virtual std::string getMsgStr();
 
-	DebProxy getDebug(DebObj& deb) const;
+	DebProxy getDebug(DebObj *deb) const;
 };
 
-#ifndef NO_LIMA_DEBUG
-#define DEB_EVENT(event)	(event).getDebug(deb)
-#else
-#define DEB_EVENT(event) deb
-#endif
+#define DEB_EVENT(event)	(event).getDebug(DEB_PTR())
 
 std::ostream& operator <<(std::ostream& os, const Event& event);
 
