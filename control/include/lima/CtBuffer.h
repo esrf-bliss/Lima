@@ -57,6 +57,7 @@ namespace lima {
     public:
       Parameters();
       void reset();
+      void resetNonPersistent();
       BufferMode mode;
       long	nbBuffers;
       short	maxMemory;

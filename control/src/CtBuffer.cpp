@@ -205,7 +205,7 @@ void CtBuffer::reset()
 {
   DEB_MEMBER_FUNCT();
 
-  m_pars.reset();
+  m_pars.resetNonPersistent();
 }
 
 void CtBuffer::setup(CtControl *ct)
@@ -361,9 +361,16 @@ void CtBuffer::Parameters::reset()
 {
   DEB_MEMBER_FUNCT();
 
+  maxMemory= 70;
+  resetNonPersistent();
+}
+
+void CtBuffer::Parameters::resetNonPersistent()
+{
+  DEB_MEMBER_FUNCT();
+
   mode= Linear;
   nbBuffers= 1;
-  maxMemory= 70;
 
   DEB_TRACE() << *this;
 }
