@@ -32,7 +32,97 @@
 using namespace std;
 
 //-------------------------------------------------------------
-// SimpePipe
+// Pipe::Stream
+//-------------------------------------------------------------
+
+Pipe::Stream::Stream()
+	: m_fd(-1)
+{
+}
+
+Pipe::Stream::~Stream()
+{
+	while (!m_dup_list.empty())
+		restoreDup();
+	if (m_fd >= 0)
+		close();
+}
+
+void Pipe::Stream::setFd(int fd)
+{
+	if (fd < 0) {
+		cerr << "Error: invalid Pipe::Stream FD" << endl;
+		throw exception();
+	} else if (m_fd >= 0) {
+		cerr << "Error: Pipe::Stream FD already set" << endl;
+		throw exception();
+	}
+	m_fd = fd;
+}
+
+int Pipe::Stream::getFd()
+{
+	return m_fd;
+}
+
+void Pipe::Stream::dupInto(int target_fd)
+{
+	if (target_fd < 0) {
+		cerr << "Error: invalid Pipe::Stream target FD" << endl;
+		throw exception();
+	} else if (m_fd < 0) {
+		cerr << "Error: Pipe::Stream FD not set" << endl;
+		throw exception();
+	} else if (target_fd == m_fd) {
+		cerr << "Error: dup Pipe::Stream on same FD" << endl;
+		throw exception();
+	}
+	int copy_fd = dup(target_fd);
+	if (copy_fd < 0) {
+		cerr << "Error: cannot dup Pipe::Stream new FD" << endl;
+		throw exception();
+	}
+	if (dup2(m_fd, target_fd) != target_fd) {
+		::close(copy_fd);
+		cerr << "Error: cannot dup Pipe::Stream current FD" << endl;
+		throw exception();
+	}
+	m_dup_list.push_back(DupData(m_fd, target_fd, copy_fd));
+	m_fd = target_fd;
+}
+
+void Pipe::Stream::restoreDup()
+{
+	if (m_dup_list.empty()) {
+		cerr << "Error: no Pipe::Stream dup info" << endl;
+		throw exception();
+	}
+	DupData dup_data = m_dup_list.back();
+	if (m_fd != dup_data.target) {
+		cerr << "Error: Pipe::Stream dup FD mismatch" << endl;
+		throw exception();
+	}
+	if (dup2(dup_data.copy, dup_data.target) != dup_data.target) {
+		cerr << "Error: cannot restore Pipe::Stream dup FD" << endl;
+		throw exception();
+	}
+	m_dup_list.pop_back();
+	::close(dup_data.copy);
+	m_fd = dup_data.prev;
+}
+
+void Pipe::Stream::close()
+{
+	if (m_fd < 0) {
+		cerr << "Error: no Pipe::Stream open FD" << endl;
+		throw exception();
+	}
+	::close(m_fd);
+	m_fd = -1;
+}
+
+//-------------------------------------------------------------
+// Pipe
 //-------------------------------------------------------------
 
 const int Pipe::DefBuffSize = 4096;
@@ -40,29 +130,41 @@ const int Pipe::DefBuffSize = 4096;
 Pipe::Pipe(int buff_size)
 	: m_buff_size(buff_size ? buff_size : DefBuffSize)
 {
-	if (::pipe(m_fd) < 0) {
+	int fd[NbPipes];
+	if (::pipe(fd) < 0) {
 		cerr << "Error creating pipe" << endl;
 		throw exception();
 	}
+	m_stream[ReadFd].setFd(fd[ReadFd]);
+	m_stream[WriteFd].setFd(fd[WriteFd]);
 }
 
-Pipe::~Pipe()
+int Pipe::checkWhich(int which) const
 {
-	close(ReadFd);
-	close(WriteFd);
+	if ((which != ReadFd) && (which != WriteFd))
+		throw exception();
+	return which;
+}
+
+void Pipe::dupInto(int which, int target_fd)
+{
+	m_stream[checkWhich(which)].dupInto(target_fd);
+}
+
+void Pipe::restoreDup(int which)
+{
+	m_stream[checkWhich(which)].restoreDup();
 }
 
 void Pipe::close(int which)
 {
-	int& fd = m_fd[which];
-	if (fd)
-		::close(fd);
-	fd = 0;
+	m_stream[checkWhich(which)].close();
 }
 
 void Pipe::write(string s)
 {
-	if (::write(m_fd[WriteFd], s.data(), s.size()) < 0) {
+	int fd = m_stream[WriteFd].getFd();
+	if (::write(fd, s.data(), s.size()) < 0) {
 		cerr << "Error writing to pipe" << endl;
 		throw exception();
 	}
@@ -80,7 +182,8 @@ string Pipe::read(int len, double timeout)
 		ssize_t req_read = len - s.size();
 		if (req_read > m_buff_size)
 			req_read = m_buff_size;
-		ssize_t read_bytes = ::read(m_fd[ReadFd], buffer, req_read);
+		int fd = m_stream[ReadFd].getFd();
+		ssize_t read_bytes = ::read(fd, buffer, req_read);
 		if (read_bytes < 0) {
 			cerr << "Error reading from pipe" << endl;
 			throw exception();
@@ -110,7 +213,7 @@ std::string Pipe::readLine(int len, string term, double timeout)
 
 bool Pipe::waitForInput(double timeout)
 {
-	int fd = m_fd[ReadFd];
+	int fd = m_stream[ReadFd].getFd();
 	fd_set rfds;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);

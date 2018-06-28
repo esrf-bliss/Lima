@@ -23,27 +23,59 @@
 #define SIMPLEPIPE_H
 
 #include <string>
+#include <vector>
 
 class Pipe
 {
  public:
 	enum {
-		ReadFd = 0, WriteFd = 1,
+		ReadFd, WriteFd, NbPipes,
 	};
 
 	Pipe(int buff_size = 0);
-	~Pipe();
 
 	void write(std::string s);
 	std::string read(int len, double timeout = -1);
 	std::string readLine(int len, std::string term, double timeout = -1);
 
+	void dupInto(int which, int target_fd);
+	void restoreDup(int which);
+
 	void close(int which);
 
  private:
+	class Stream {
+	public:
+		Stream();
+		~Stream();
+
+		void setFd(int fd);
+		int getFd();
+		void dupInto(int target_fd);
+		void restoreDup();
+		void close();
+
+	private:
+		struct DupData {
+			int prev;
+			int target;
+			int copy;
+			DupData()
+			: prev(-1), target(-1), copy(-1) {}
+			DupData(int p, int t, int c)
+			: prev(p), target(t), copy(c) {}
+		};
+		typedef std::vector<DupData> DupDataList;
+
+		int m_fd;
+		DupDataList m_dup_list;
+	};
+
+	int checkWhich(int which) const;
+
 	bool waitForInput(double timeout);
 
-	int m_fd[2];
+	Stream m_stream[NbPipes];
 	int m_buff_size;
 
 	static const int DefBuffSize;
