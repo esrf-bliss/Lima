@@ -399,6 +399,10 @@ inline DebProxy::DebProxy()
 inline DebProxy::DebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
 			  ConstStr file_name, int line_nr)
 {
+#ifdef NO_LIMA_DEBUG
+	DebParams::checkInit();
+#endif
+
 	AutoMutex lock(*DebParams::s_mutex);
 
 	DebObj::heading(type, funct_name, file_name, line_nr, deb_obj);
