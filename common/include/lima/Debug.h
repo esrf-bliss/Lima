@@ -647,14 +647,17 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
  *  DebParams checkTypeFlags
  *------------------------------------------------------------------*/
 
+#ifdef NO_LIMA_DEBUG
 inline void lima::DebParams::checkTypeFlags(Flags& type_flags)
 {
-#ifdef NO_LIMA_DEBUG
 	if (type_flags & DEB_IGNORED_TYPE_FLAGS) {
 		DEB_WARNING() << "Ignored type flags: Trace|Funct|Param|Return";
 		type_flags &= ~DEB_IGNORED_TYPE_FLAGS;
 	}
-#endif
 }
+#else
+inline void lima::DebParams::checkTypeFlags(Flags&)
+{}
+#endif
 
 #endif // DEBUG_H
