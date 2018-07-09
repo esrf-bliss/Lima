@@ -40,6 +40,9 @@ using namespace lima;
 
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
+
+ private:
+	BufferAllocMgr(const BufferAllocMgr&);
 };
 
 class SoftBufferAllocMgr : BufferAllocMgr
