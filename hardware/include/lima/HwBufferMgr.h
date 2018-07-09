@@ -48,6 +48,10 @@ class LIMACORE_API BufferAllocMgr
 	BufferAllocMgr();
 	virtual ~BufferAllocMgr();
 
+	// BufferAllocMgr are **not** copy-constructible nor copy-assignable.
+	BufferAllocMgr(const BufferAllocMgr&) = delete;
+	BufferAllocMgr& operator=(const BufferAllocMgr&) = delete;
+
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
 	virtual void allocBuffers(int nb_buffers, 
 				  const FrameDim& frame_dim) = 0;
