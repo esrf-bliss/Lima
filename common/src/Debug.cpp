@@ -250,7 +250,7 @@ void DebParams::setTypeFlagsNameList(const NameList& type_name_list)
 	Flags type_flags = 0;
 	setFlagsNameList(type_flags, *s_type_name_map, type_name_list);
 	checkTypeFlags(type_flags);
-	s_type_flags |= type_flags;
+	s_type_flags = type_flags;
 }
 
 DebParams::NameList DebParams::getTypeFlagsNameList()
