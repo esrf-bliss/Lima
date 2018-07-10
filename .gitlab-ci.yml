@@ -1,54 +1,43 @@
-# image : docker-registry.esrf.fr/bcu/lima-ci-debian8:latest
-#before_script :
-
 stages:
   - build
-  - test
+  - deploy
 
-build-python2 :
+build-conda-linux:
   stage: build
   script:
-    - update-alternatives --set python /usr/bin/python2.7
-    - ./install.sh --git tests python
-    - ls -l
+    - conda build ./conda --prefix-length=80 --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
   artifacts:
     paths:
-    - build/
+      - dist/
   tags:
-    - lima
+    - conda
+    - linux
 
-build-python3 :
+build-conda-win:
   stage: build
   script:
-    - update-alternatives --set python /usr/bin/python3.4
-    - ./install.sh --git tests python
-    - ls -l
+    #- conda build ./conda --prefix-length=80 --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
+    - docker run --mount type=bind,source="%CD%",target="C:\sources" docker-registry.esrf.fr/bcu/conda-builder-win cmd /K cd C:\sources ^& conda build ./conda --prefix-length=80 --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
   artifacts:
     paths:
-    - build/
+      - dist/
   tags:
-    - lima
+    - conda
+    - win
+    - shell
 
-
-test-python2 :
-  stage: test
+deploy:
+  stage: deploy
+  environment:
+    name: production
+    url: http://bcu-ci.esrf.fr/stable
   dependencies:
-    - build-python2
+    - build-conda-linux
+    - build-conda-win
   script:
-    - update-alternatives --set python /usr/bin/python2.7
-    - cd build/
-    - ctest --timeout 10 --output-on-failure
+    - mv -Rf dist/* /conda/
+    - conda index /conda/
   tags:
-    - lima
-
-
-test-python3 :
-  stage: test
-  dependencies:
-    - build-python3
-  script:
-    - update-alternatives --set python /usr/bin/python3.4
-    - cd build/
-    - ctest --timeout 10 --output-on-failure
-  tags:
-    - lima
+    - conda
+    - linux
+  when: manual

@@ -3,33 +3,33 @@
 #
 #  Copyright (C) : 2009-2017
 #  European Synchrotron Radiation Facility
-#  CS40220 38043 Grenoble Cedex 9 
+#  CS40220 38043 Grenoble Cedex 9
 #  FRANCE
-# 
+#
 #  Contact: lima@esrf.fr
-# 
+#
 #  This is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
-# 
+#
 #  This software is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-# 
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
 function(limatools_set_library_soversion lib_name version_file)
-  
+
     file(STRINGS ${version_file}  version)
     # for lib version as 1.2.3 soverion is fixed to 1.2
     string(REGEX MATCH "^([0-9]+)\\.([0-9]+)" soversion "${version}")
-  
+
     set_target_properties(${lib_name} PROPERTIES VERSION "${version}" SOVERSION "${soversion}")
-  
+
 endfunction()
 
 
@@ -70,16 +70,16 @@ endfunction()
 
 
 function(limatools_run_sip_for_camera cam_name)
-  
+
   set(INCLUDES)
   file(GLOB sipfiles RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/sip" "${CMAKE_CURRENT_SOURCE_DIR}/sip/*.sip")
   foreach(sipfile ${sipfiles})
-    set(INCLUDES 
+    set(INCLUDES
       "${INCLUDES}
 %Include ${sipfile}")
   endforeach()
 
-  set(IMPORTS 
+  set(IMPORTS
     "${IMPORTS}
 %Import limacore.sip")
 
@@ -112,9 +112,12 @@ endfunction()
 function(limatools_set_install_libdir lib_name)
   if(WIN32)
     set_target_properties(${lib_name} PROPERTIES PREFIX "lib")
-    install(TARGETS ${lib_name} DESTINATION lib)
+    install(TARGETS ${lib_name}
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin)
   else()
     include(GNUInstallDirs)
-    install(TARGETS ${lib_name} LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR})
+    install(TARGETS ${lib_name}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
   endif()
 endfunction()

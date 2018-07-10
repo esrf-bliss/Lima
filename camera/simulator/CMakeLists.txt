@@ -5,19 +5,19 @@
 #  European Synchrotron Radiation Facility
 #  BP 220, Grenoble 38043
 #  FRANCE
-# 
+#
 #  Contact: lima@esrf.fr
-# 
+#
 #  This is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
-# 
+#
 #  This software is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-# 
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
@@ -36,16 +36,8 @@ target_link_libraries(lima${NAME} limacore)
 if(WIN32)
 	target_compile_definitions(lima${NAME} PRIVATE LIBSIMULATOR_EXPORTS)
 endif()
-if(WIN32)
-    set_target_properties(lima${NAME} PROPERTIES PREFIX "lib")
-endif()
-if(WIN32)
-    install(TARGETS lima${NAME}
-            DESTINATION lib)
-else()
-    install(TARGETS lima${NAME}
-            LIBRARY DESTINATION lib)
-endif()
+
+limatools_set_install_libdir(lima${NAME})
 
 if (LIMA_ENABLE_PYTHON)
     limatools_run_sip_for_camera(${NAME})

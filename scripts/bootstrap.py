@@ -327,7 +327,9 @@ class CMakeOptions:
 		return self.get_cmd_line_from_options(opts)
 
 	def get_install_options(self):
-		opts = ['--build .', '--target install'] 
+		opts = ['--build .', '--target install']
+		if OS_TYPE == 'Windows':
+			opts += ['--config %s' %  self.cfg.get('build-type')]
 		return self.get_cmd_line_from_options(opts)
 
 	@staticmethod

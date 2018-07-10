@@ -500,16 +500,17 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 		return DebProxy();
 }
 
+} // namespace lima
 
 /*------------------------------------------------------------------
  *  debug macros
  *------------------------------------------------------------------*/
 
 #define DEB_GLOBAL_NAMESPC(mod, name_space)				\
-	inline DebParams& getDebParams()				\
+	inline lima::DebParams& getDebParams()				\
 	{								\
-		static DebParams *deb_params = NULL;			\
-		EXEC_ONCE(deb_params = new DebParams(mod, NULL,		\
+		static lima::DebParams *deb_params = NULL;			\
+		EXEC_ONCE(deb_params = new lima::DebParams(lima::mod, NULL,		\
 						     name_space));	\
 		return *deb_params;					\
 	}
@@ -517,12 +518,11 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_GLOBAL(mod)							\
 	DEB_GLOBAL_NAMESPC(mod, NULL)
 
-#define DEB_CLASS_NAMESPC(mod, class_name, name_space)			\
-  private:								\
-	static DebParams& getDebParams()				\
+#define DEB_STRUCT_NAMESPC(mod, struct_name, name_space)			\
+	static lima::DebParams& getDebParams()				\
 	{								\
-		static DebParams *deb_params = NULL;			\
-		EXEC_ONCE(deb_params = new DebParams(mod, class_name,	\
+		static lima::DebParams *deb_params = NULL;			\
+		EXEC_ONCE(deb_params = new lima::DebParams(lima::mod, struct_name,	\
 						     name_space));	\
 		return *deb_params;					\
 	}								\
@@ -532,7 +532,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 		m_deb_obj_name = obj_name;				\
 	}								\
 									\
-	ConstStr getDebObjName() const					\
+	lima::ConstStr getDebObjName() const					\
 	{								\
 		if (m_deb_obj_name.empty())				\
 			return NULL;					\
@@ -541,31 +541,35 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 									\
 	std::string m_deb_obj_name
 
+#define DEB_CLASS_NAMESPC(mod, class_name, name_space)			\
+  private:								\
+	DEB_STRUCT_NAMESPC(mod, class_name, name_space)
+
 #define DEB_CLASS(mod, class_name)					\
 	DEB_CLASS_NAMESPC(mod, class_name, NULL)
 
 #ifndef NO_LIMA_DEBUG
 
 #define DEB_GLOBAL_FUNCT()						\
-	DebObj deb(getDebParams(), false, __FUNCTION__,			\
+	lima::DebObj deb(getDebParams(), false, __FUNCTION__,			\
 		   NULL, __FILE__, __LINE__)
 
 #define DEB_CONSTRUCTOR()						\
 	DEB_MEMBER_FUNCT()
 
 #define DEB_DESTRUCTOR()						\
-	DebObj deb(getDebParams(), true, __FUNCTION__,			\
+	lima::DebObj deb(getDebParams(), true, __FUNCTION__,			\
 		   getDebObjName(), __FILE__, __LINE__)
 
 #define DEB_MEMBER_FUNCT()						\
-	DebObj deb(getDebParams(), false, __FUNCTION__,			\
+	lima::DebObj deb(getDebParams(), false, __FUNCTION__,			\
 		   getDebObjName(), __FILE__, __LINE__)
 
 #define DEB_PTR()							\
 	(&deb)
 
 #define DEB_FROM_PTR(deb_ptr)						\
-	DebObj& deb = *(deb_ptr)
+	lima::DebObj& deb = *(deb_ptr)
 
 #define DEB_STATIC_FUNCT()						\
 	DEB_GLOBAL_FUNCT()
@@ -576,13 +580,13 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 #define DEB_MSG(type)	deb.write(type, __FILE__, __LINE__)
 
-#define DEB_FATAL()	DEB_MSG(DebTypeFatal)
-#define DEB_ERROR()	DEB_MSG(DebTypeError)
-#define DEB_WARNING()	DEB_MSG(DebTypeWarning)
-#define DEB_TRACE()	DEB_MSG(DebTypeTrace)
-#define DEB_PARAM()	DEB_MSG(DebTypeParam)
-#define DEB_RETURN()	DEB_MSG(DebTypeReturn)
-#define DEB_ALWAYS()	DEB_MSG(DebTypeAlways)
+#define DEB_FATAL()	DEB_MSG(lima::DebTypeFatal)
+#define DEB_ERROR()	DEB_MSG(lima::DebTypeError)
+#define DEB_WARNING()	DEB_MSG(lima::DebTypeWarning)
+#define DEB_TRACE()	DEB_MSG(lima::DebTypeTrace)
+#define DEB_PARAM()	DEB_MSG(lima::DebTypeParam)
+#define DEB_RETURN()	DEB_MSG(lima::DebTypeReturn)
+#define DEB_ALWAYS()	DEB_MSG(lima::DebTypeAlways)
 
 #define DEB_HEX(x)	DebHex(x)
 
@@ -608,13 +612,13 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 #else //NO_LIMA_DEBUG
 
-#define DEB_GLOBAL_FUNCT() DebSink deb
-#define DEB_CONSTRUCTOR() DebSink deb
-#define DEB_DESTRUCTOR()  DebSink deb
-#define DEB_MEMBER_FUNCT() DebSink deb
+#define DEB_GLOBAL_FUNCT() lima::DebSink deb
+#define DEB_CONSTRUCTOR() lima::DebSink deb
+#define DEB_DESTRUCTOR()  lima::DebSink deb
+#define DEB_MEMBER_FUNCT() lima::DebSink deb
 
 #define DEB_PTR()	NULL
-#define DEB_FROM_PTR(deb_ptr) DebSink deb
+#define DEB_FROM_PTR(deb_ptr) lima::DebSink deb
 #define DEB_STATIC_FUNCT() DEB_GLOBAL_FUNCT()
 #define DEB_SET_OBJ_NAME(n)
 
@@ -640,6 +644,5 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_CHECK_ANY(type)	0
 
 #endif //NO_LIMA_DEBUG
-} // namespace lima
 
 #endif // DEBUG_H
