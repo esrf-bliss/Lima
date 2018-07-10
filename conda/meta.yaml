@@ -19,7 +19,6 @@ package:
 
 source:
   git_url: https://gitlab.esrf.fr/limagroup/lima.git
-  git_branch: 16-generate-conda-packages
 
 build:
   number: 2
