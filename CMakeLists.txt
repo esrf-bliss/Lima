@@ -443,18 +443,29 @@ if(WIN32)
     target_compile_definitions(limacore PRIVATE LIMACORE_EXPORTS)
     set_target_properties(limacore PROPERTIES PREFIX "lib")
 endif()
-if(WIN32)
-    install(TARGETS limacore
-            LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin
-            PUBLIC_HEADER DESTINATION include)
-else()
-    include(GNUInstallDirs)
-    install(TARGETS limacore
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-endif()
 
+include(GNUInstallDirs)
+install(
+    TARGETS limacore
+    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/common/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h")
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/hardware/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h")
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/control/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h")
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/control/software_operation/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h")
 
 #--------------------------------------------------------------------------------
 # SIP generates binding code for python
