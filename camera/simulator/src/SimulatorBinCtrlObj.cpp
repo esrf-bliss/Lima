@@ -20,45 +20,36 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#ifndef SIMULATORSYNCCTRLOBJ_H
-#define SIMULATORSYNCCTRLOBJ_H
 
-#include "SimulatorCompatibility.h"
+#include "SimulatorBinCtrlObj.h"
 #include "SimulatorCamera.h"
+#include "SimulatorFrameBuilder.h"
 
-namespace lima
+using namespace lima;
+using namespace lima::Simulator;
+using namespace std;
+
+
+void BinCtrlObj::setBin(const Bin& bin)
 {
-namespace Simulator
+    FrameBuilder *builder = m_simu.getFrameBuilder();
+    if (builder)
+        builder->setBin(bin);
+}
+
+void BinCtrlObj::getBin(Bin& bin)
 {
+    FrameBuilder *builder = m_simu.getFrameBuilder();
+    if (builder)
+        builder->getBin(bin);
 
-/// Control object providing simulator synchronization interface
-class LIBSIMULATOR_API SyncCtrlObj : public HwSyncCtrlObj
+}
+
+void BinCtrlObj::checkBin(Bin& bin)
 {
- public:
-	SyncCtrlObj(Camera& simu);
-	virtual ~SyncCtrlObj();
-
-	virtual bool checkTrigMode(TrigMode trig_mode);
-	virtual void setTrigMode(TrigMode  trig_mode);
-	virtual void getTrigMode(TrigMode& trig_mode);
-
-	virtual void setExpTime(double  exp_time);
-	virtual void getExpTime(double& exp_time);
-
-	virtual void setLatTime(double  lat_time);
-	virtual void getLatTime(double& lat_time);
-
-	virtual void setNbHwFrames(int  nb_frames);
-	virtual void getNbHwFrames(int& nb_frames);
-
-	virtual void getValidRanges(ValidRangesType& valid_ranges);
-
- private:
-	Camera& m_simu;
-};
-
-} // namespace Simulator
-
-} // namespace lima
-
-#endif //SIMULATORSYNCCTRLOBJ_H
+    FrameBuilder *builder = m_simu.getFrameBuilder();
+    if (builder)
+        builder->checkBin(bin);
+    else
+        bin = Bin(1, 1);
+}

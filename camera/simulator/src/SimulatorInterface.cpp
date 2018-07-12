@@ -19,40 +19,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
 #include "SimulatorInterface.h"
 
 using namespace lima;
 using namespace lima::Simulator;
 using namespace std;
-
-
-/*******************************************************************
- * \brief BinCtrlObj constructor
- *******************************************************************/
-
-BinCtrlObj::BinCtrlObj(Camera& simu)
-	: m_simu(simu)
-{
-}
-
-BinCtrlObj::~BinCtrlObj()
-{
-}
-
-void BinCtrlObj::setBin(const Bin& bin)
-{
-	m_simu.setBin(bin);
-}
-
-void BinCtrlObj::getBin(Bin& bin)
-{
-	m_simu.getBin(bin);
-}
-
-void BinCtrlObj::checkBin(Bin& bin)
-{
-	m_simu.checkBin(bin);
-}
 
 
 /*******************************************************************
@@ -77,10 +49,6 @@ Interface::Interface(Camera& simu)
 
     HwShutterCtrlObj *shutter = &m_shutter;
 	m_cap_list.push_back(HwCap(shutter));
-}
-
-Interface::~Interface()
-{
 }
 
 void Interface::getCapList(HwInterface::CapList &aReturnCapList) const

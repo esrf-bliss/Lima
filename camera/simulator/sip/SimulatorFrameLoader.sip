@@ -20,45 +20,29 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#ifndef SIMULATORSYNCCTRLOBJ_H
-#define SIMULATORSYNCCTRLOBJ_H
-
-#include "SimulatorCompatibility.h"
-#include "SimulatorCamera.h"
-
-namespace lima
-{
 namespace Simulator
 {
 
-/// Control object providing simulator synchronization interface
-class LIBSIMULATOR_API SyncCtrlObj : public HwSyncCtrlObj
+class FrameLoader
 {
- public:
-	SyncCtrlObj(Camera& simu);
-	virtual ~SyncCtrlObj();
+%TypeHeaderCode
+#include "SimulatorFrameLoader.h"
+%End
 
-	virtual bool checkTrigMode(TrigMode trig_mode);
-	virtual void setTrigMode(TrigMode  trig_mode);
-	virtual void getTrigMode(TrigMode& trig_mode);
+public:
+    FrameLoader();
 
-	virtual void setExpTime(double  exp_time);
-	virtual void getExpTime(double& exp_time);
+    unsigned long getFrameNr() const;
+    void resetFrameNr(unsigned long frame_nr = 0);
 
-	virtual void setLatTime(double  lat_time);
-	virtual void getLatTime(double& lat_time);
+    void setFrameDim(const FrameDim& frame_dim);
+    void getFrameDim(FrameDim& frame_dim /Out/) const;
 
-	virtual void setNbHwFrames(int  nb_frames);
-	virtual void getNbHwFrames(int& nb_frames);
+    void getMaxImageSize(Size& max_image_size /Out/) const;
 
-	virtual void getValidRanges(ValidRangesType& valid_ranges);
-
- private:
-	Camera& m_simu;
+    void setFilePattern(const std::string& file_pattern);
+    void getFilePattern(std::string& file_pattern /Out/);
 };
 
-} // namespace Simulator
+};
 
-} // namespace lima
-
-#endif //SIMULATORSYNCCTRLOBJ_H

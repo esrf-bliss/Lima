@@ -31,39 +31,41 @@
 #define FRAMEBUILDER_H
 
 #include <vector>
-#include "SimulatorCompatibility.h"
+
 #include "lima/SizeUtils.h"
 #include "lima/Exceptions.h"
+
+#include "SimulatorCompatibility.h"
+#include "SimulatorFrameGetter.h"
 
 namespace lima {
 
 namespace Simulator {
 
-struct LIBSIMULATOR_API GaussPeak {
-	double x0, y0;     /// The center of the peak
-	double fwhm;       /// Full Width at Half Maximum
-	double max;        /// The maximum value
-	GaussPeak() 
-		: x0(0), y0(0), fwhm(0)
-	{max = 0;}
-	GaussPeak(const GaussPeak& o) 
-		: x0(o.x0), y0(o.y0), fwhm(o.fwhm)
-	{max = o.max;}
-	GaussPeak(double x, double y, double w, double m) 
-		: x0(x), y0(y), fwhm(w)
-	{max = m;}
+
+struct LIBSIMULATOR_API GaussPeak
+{
+    double x0, y0;     //<! The center of the peak
+    double fwhm;       //<! Full Width at Half Maximum
+    double max;        //<! The maximum value
+
+    GaussPeak() : x0(0), y0(0), fwhm(0), max(0) {}
+    GaussPeak(const GaussPeak& o) : x0(o.x0), y0(o.y0), fwhm(o.fwhm), max(o.max) {}
+    GaussPeak(double x, double y, double w, double m) : x0(x), y0(y), fwhm(w), max(m) {}
 };
 
 
-/***************************************************************//**
- * @class FrameBuilder
- *
- * @brief This class configures and generates frames for the Simulator
- *
- *******************************************************************/
-class LIBSIMULATOR_API FrameBuilder {
+/// This class configures and generates frames for the Simulator
+class LIBSIMULATOR_API FrameBuilder : public FrameGetter
+{
 
-  public:
+    DEB_CLASS_NAMESPC(DebModCamera, "FrameBuilder", "Simulator");
+
+public:
+    static const bool is_thread_safe = true;
+
+    static const int max_dim = 1024;
+
 	enum FillType { 
 		Gauss, Diffraction,
 	};
@@ -77,6 +79,8 @@ class LIBSIMULATOR_API FrameBuilder {
 	FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
 	              const PeakList &peaks, double grow_factor );
 	~FrameBuilder();
+
+    Camera::Mode getMode() const { return Camera::MODE_GENERATOR; }
 
 	void getFrameDim( FrameDim &dim ) const;
 	void setFrameDim( const FrameDim &dim );
@@ -116,11 +120,15 @@ class LIBSIMULATOR_API FrameBuilder {
 	void getDiffractionSpeed( double &sx, double &sy ) const;
 	void setDiffractionSpeed( const double &sx, const double &sy );
 
-	void getNextFrame( unsigned char *ptr ) throw (Exception);
-	unsigned long getFrameNr();
-	void resetFrameNr( int frame_nr=0 );
+	bool getNextFrame( unsigned char *ptr ) throw (Exception);
+    void prepareAcq() {}
 
-	void getMaxImageSize(Size& max_size);
+    unsigned long getFrameNr() const;
+	void resetFrameNr(unsigned long frame_nr=0 );
+   
+
+    /// Gets the maximum "hardware" image size
+    void getMaxImageSize(Size& max_size) const { max_size = Size(max_dim, max_dim); }
 	
   private:
 	FrameDim m_frame_dim;                   /// Generated frame dimensions
@@ -147,8 +155,8 @@ class LIBSIMULATOR_API FrameBuilder {
 	void checkValid( const FrameDim &frame_dim, const Bin &bin, 
 	                 const Roi &roi ) throw(Exception);
 	void checkPeaks( PeakList const &peaks );
-	double dataXY( const PeakList &peaks, int x, int y );
-	double dataDiffract( double x, double y );
+	double dataXY( const PeakList &peaks, int x, int y ) const;
+	double dataDiffract( double x, double y ) const;
 	template <class depth> void fillData( unsigned char *ptr );
 
 	PeakList getGaussPeaksFrom3d(double angle);
@@ -157,9 +165,8 @@ class LIBSIMULATOR_API FrameBuilder {
 	
 };
 
+} //namespace Simulator
 
-}
-
-}
+} //namespace lima
 
 #endif /* FRAMEBUILDER_H */

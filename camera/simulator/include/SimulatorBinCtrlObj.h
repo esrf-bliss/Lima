@@ -20,45 +20,41 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#ifndef SIMULATORSYNCCTRLOBJ_H
-#define SIMULATORSYNCCTRLOBJ_H
+#ifndef SIMUBINCTRLOBJ_H
+#define SIMUBINCTRLOBJ_H
+
+#include "lima/HwInterface.h"
 
 #include "SimulatorCompatibility.h"
-#include "SimulatorCamera.h"
 
 namespace lima
 {
+
+// Forward definitions
+class HwInterface;
+
 namespace Simulator
 {
 
-/// Control object providing simulator synchronization interface
-class LIBSIMULATOR_API SyncCtrlObj : public HwSyncCtrlObj
+class Camera;
+
+/// Control object providing simulator binning interface
+class LIBSIMULATOR_API BinCtrlObj : public HwBinCtrlObj
 {
  public:
-	SyncCtrlObj(Camera& simu);
-	virtual ~SyncCtrlObj();
+	BinCtrlObj(Camera& simu) : m_simu(simu) {}
 
-	virtual bool checkTrigMode(TrigMode trig_mode);
-	virtual void setTrigMode(TrigMode  trig_mode);
-	virtual void getTrigMode(TrigMode& trig_mode);
-
-	virtual void setExpTime(double  exp_time);
-	virtual void getExpTime(double& exp_time);
-
-	virtual void setLatTime(double  lat_time);
-	virtual void getLatTime(double& lat_time);
-
-	virtual void setNbHwFrames(int  nb_frames);
-	virtual void getNbHwFrames(int& nb_frames);
-
-	virtual void getValidRanges(ValidRangesType& valid_ranges);
+	virtual void setBin(const Bin& bin);
+	virtual void getBin(Bin& bin);
+	virtual void checkBin(Bin& bin);
 
  private:
 	Camera& m_simu;
 };
 
-} // namespace Simulator
 
-} // namespace lima
+} //namespace Simulator
 
-#endif //SIMULATORSYNCCTRLOBJ_H
+} //namespace lima
+
+#endif // SIMUBINCTRLOBJ_H

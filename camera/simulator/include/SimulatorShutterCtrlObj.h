@@ -27,45 +27,42 @@
 
 namespace lima
 {
-    namespace Simulator
-    {
+namespace Simulator
+{
 
-/*******************************************************************
- * \class ShutterCtrlObj
- * \brief Control object providing Simulator shutter interface
- *******************************************************************/
+/// Control object providing Simulator shutter interface
+class ShutterCtrlObj : public HwShutterCtrlObj
+{
+    DEB_CLASS_NAMESPC(DebModCamera, "ShutterCtrlObj", "Simulator");
 
-	class ShutterCtrlObj : public HwShutterCtrlObj
-	{
-	    DEB_CLASS_NAMESPC(DebModCamera, "ShutterCtrlObj", "Simulator");
+public:
+    ShutterCtrlObj(Camera& cam);
+    virtual ~ShutterCtrlObj();
 
-	public:
-	    ShutterCtrlObj(Camera& cam);
-	    virtual ~ShutterCtrlObj();
-    
-	    virtual bool checkMode(ShutterMode shut_mode) const;
-	    virtual void getModeList(ShutterModeList&  mode_list) const;
-	    virtual void setMode(ShutterMode  shut_mode);
-	    virtual void getMode(ShutterMode& shut_mode) const;
+    virtual bool checkMode(ShutterMode shut_mode) const;
+    virtual void getModeList(ShutterModeList&  mode_list) const;
+    virtual void setMode(ShutterMode  shut_mode);
+    virtual void getMode(ShutterMode& shut_mode) const;
 
-	    virtual void setState(bool  shut_open);
-	    virtual void getState(bool& shut_open) const;
+    virtual void setState(bool  shut_open);
+    virtual void getState(bool& shut_open) const;
 
-	    virtual void setOpenTime (double  shut_open_time);
-	    virtual void getOpenTime (double& shut_open_time) const;
-	    virtual void setCloseTime(double  shut_close_time);
-	    virtual void getCloseTime(double& shut_close_time) const;
+    virtual void setOpenTime(double  shut_open_time);
+    virtual void getOpenTime(double& shut_open_time) const;
+    virtual void setCloseTime(double  shut_close_time);
+    virtual void getCloseTime(double& shut_close_time) const;
 
-	private:
-	    Camera& m_cam;
-        Camera::SimuShutterMode m_simu_shutter_mode;
-        bool m_manual_state;
-        double m_open_time;
-        double m_close_time;
+private:
+    Camera & m_cam;
+    Camera::SimuShutterMode m_simu_shutter_mode;
+    bool m_manual_state;
+    double m_open_time;
+    double m_close_time;
 
-	};
+};
 
-    } // namespace Simulator
+} // namespace Simulator
+
 } // namespace lima
 
 #endif // SIMULATORSHUTTERCTRLOBJ_H

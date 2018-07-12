@@ -19,20 +19,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SimulatorCamera.h"
 
-#include <string>
 #include <unistd.h>
-#include <cmath>
+
+#include "SimulatorCamera.h"
+#include "SimulatorFrameGetter.h"
+#include "SimulatorFrameBuilder.h"
+#include "SimulatorFrameLoader.h"
+#include "SimulatorFramePrefetcher.h"
+
 
 using namespace lima;
 using namespace lima::Simulator;
-using namespace std;
+
 
 Camera::SimuThread::SimuThread(Camera& simu)
 	: m_simu(&simu)
 {
-	DEB_CONSTRUCTOR();
+    DEB_CONSTRUCTOR();
 
 	m_acq_frame_nb = 0;
 }
@@ -45,7 +49,7 @@ Camera::SimuThread::~SimuThread()
 
 void Camera::SimuThread::start()
 {
-	DEB_MEMBER_FUNCT();
+    DEB_MEMBER_FUNCT();
 
 	CmdThread::start();
 	waitStatus(Ready);
@@ -53,19 +57,18 @@ void Camera::SimuThread::start()
 
 void Camera::SimuThread::init()
 {
-	DEB_MEMBER_FUNCT();
+    DEB_MEMBER_FUNCT();
 
 	setStatus(Ready);
 }
 
 void Camera::SimuThread::execCmd(int cmd)
 {
-	DEB_MEMBER_FUNCT();
+    DEB_MEMBER_FUNCT();
 
 	switch (cmd) {
 	case PrepareAcq:
-		m_acq_frame_nb = 0;
-		setStatus(Prepare);
+		execPrepareAcq();
 		break;
 	case StartAcq:
 		execStartAcq();
@@ -76,18 +79,28 @@ void Camera::SimuThread::execCmd(int cmd)
 	}
 }
 
-void Camera::SimuThread::execStartAcq()
+void Camera::SimuThread::execPrepareAcq()
 {
 	DEB_MEMBER_FUNCT();
+
+	m_acq_frame_nb = 0;
+	setStatus(Prepare);
+
+	// Delegate to the frame getter that may need some preparation
+	m_simu->m_frame_getter->prepareAcq();
+}
+
+void Camera::SimuThread::execStartAcq()
+{
+    DEB_MEMBER_FUNCT();
 
 	StdBufferCbMgr& buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
 	buffer_mgr.setStartTimestamp(Timestamp::now());
 
-	FrameBuilder& frame_builder = m_simu->m_frame_builder;
-	frame_builder.resetFrameNr(m_acq_frame_nb);
+	FrameGetter* frame_getter = m_simu->m_frame_getter;
+    frame_getter->resetFrameNr(m_acq_frame_nb);
 
-	bool int_trig = m_simu->m_trig_mode == IntTrig;
-	int nb_frames = int_trig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
+	int nb_frames = m_simu->m_trig_mode == IntTrig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
 	int& frame_nb = m_acq_frame_nb;
 	for (; (nb_frames==0) || (frame_nb < nb_frames); frame_nb++) {
 		if (getNextCmd() == StopAcq) {
@@ -96,68 +109,146 @@ void Camera::SimuThread::execStartAcq()
 		}
 		double req_time;
 		req_time = m_simu->m_exp_time;
-		if (req_time > 0) {	
+		if (req_time > 1e-6) {
 			setStatus(Exposure);
-			Sleep(req_time);
+			usleep(long(req_time * 1e6));
 		}
 
 		setStatus(Readout);
-		void *ptr = buffer_mgr.getFrameBufferPtr(frame_nb);
-		typedef unsigned char *BufferPtr;
-		frame_builder.getNextFrame(BufferPtr(ptr));
+        unsigned char *ptr = reinterpret_cast<unsigned char *>(buffer_mgr.getFrameBufferPtr(frame_nb));
+
+		// Get the next frame
+        bool res = frame_getter->getNextFrame(ptr);
+        if (!res)
+            throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
 
 		HwFrameInfoType frame_info;
 		frame_info.acq_frame_nb = frame_nb;
 		buffer_mgr.newFrameReady(frame_info);
 
 		req_time = m_simu->m_lat_time;
-		if (req_time > 0) {
+		if (req_time > 1e-6) {
 			setStatus(Latency);
-			Sleep(req_time);
+			usleep(long(req_time * 1e6));
 		}
 	}
 	setStatus(Ready);
 }
 
-Camera::Camera() : 
-	m_thread(*this)
-{
-	DEB_CONSTRUCTOR();
 
-	init();
+const char* Camera::DetectorModel[] = {
+    "Generator",
+    "Generator Prefetched"
+    "Loader",
+    "Loader Prefetched"
+};
+
+
+Camera::Camera(const Mode& mode) :
+    m_mode(mode),
+    m_frame_getter(NULL),
+    m_thread(*this)
+{
+    DEB_CONSTRUCTOR();
+
+	setDefaultProperties();
+
+    constructFrameGetter();
 
 	m_thread.start();
 	m_thread.waitStatus(SimuThread::Ready);
 }
 
-void Camera::init()
+void Camera::setDefaultProperties()
 {
-	DEB_MEMBER_FUNCT();
+    DEB_MEMBER_FUNCT();
 
 	m_exp_time = 1.0;
 	m_lat_time = 0.0;
 	m_nb_frames = 1;
 }
 
-Camera::~Camera()
+
+void Camera::constructFrameGetter()
 {
-	DEB_DESTRUCTOR();
-	stopAcq();
+    switch (m_mode)
+    {
+    case Mode::MODE_GENERATOR:
+        m_frame_getter = new FrameBuilder();
+        break;
+
+    case Mode::MODE_GENERATOR_PREFETCH:
+        m_frame_getter = new FramePrefetcher<FrameBuilder>();
+        break;
+
+    case Mode::MODE_LOADER:
+        m_frame_getter = new FrameLoader();
+        break;
+
+    case Mode::MODE_LOADER_PREFETCH:
+        m_frame_getter = new FramePrefetcher<FrameLoader>();
+        break;
+    }
 }
 
-HwBufferCtrlObj* Camera::getBufferCtrlObj()
+
+Camera::~Camera()
 {
-	return &m_buffer_ctrl_obj;
+    DEB_DESTRUCTOR();
+
+    delete m_frame_getter;
+}
+
+
+void Camera::setMode(const Mode& mode)
+{
+    if (mode != m_mode)
+    {
+        delete m_frame_getter;
+
+        m_mode = mode;
+        constructFrameGetter();
+    }
+}
+
+void Camera::setFrameDim(const FrameDim& frame_dim)
+{
+    m_frame_getter->setFrameDim(frame_dim);
+}
+
+void Camera::getFrameDim(FrameDim& frame_dim)
+{
+    m_frame_getter->getFrameDim(frame_dim);
+}
+
+void Camera::getMaxImageSize(Size& max_image_size) const
+{
+    m_frame_getter->getMaxImageSize(max_image_size);
 }
 
 FrameBuilder* Camera::getFrameBuilder()
 {
-	return &m_frame_builder;
+    return dynamic_cast<FrameBuilder *>(m_frame_getter);
 }
 
-void Camera::getMaxImageSize(Size& max_image_size)
+FramePrefetcher<FrameBuilder>* Camera::getFrameBuilderPrefetched()
 {
-	m_frame_builder.getMaxImageSize(max_image_size);
+    return dynamic_cast<FramePrefetcher<FrameBuilder> *>(m_frame_getter);
+}
+
+FrameLoader* Camera::getFrameLoader()
+{
+    return dynamic_cast<FrameLoader *>(m_frame_getter);
+}
+
+FramePrefetcher<FrameLoader>* Camera::getFrameLoaderPrefetched()
+{
+    return dynamic_cast<FramePrefetcher<FrameLoader> *>(m_frame_getter);
+}
+
+void Camera::getDetectorModel(std::string& det_model) const
+{
+    det_model = DetectorModel[m_frame_getter->getMode()];
 }
 
 void Camera::setNbFrames(int nb_frames)
@@ -177,7 +268,7 @@ void Camera::setExpTime(double exp_time)
 {
 	if (exp_time <= 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid exposure time");
-		
+
 	m_exp_time = exp_time;
 }
 
@@ -190,7 +281,7 @@ void Camera::setLatTime(double lat_time)
 {
 	if (lat_time < 0)
 		throw LIMA_HW_EXC(InvalidValue, "Invalid latency time");
-		
+
 	m_lat_time = lat_time;
 }
 
@@ -199,36 +290,11 @@ void Camera::getLatTime(double& lat_time)
 	lat_time = m_lat_time;
 }
 
-void Camera::setBin(const Bin& bin)
-{
-	m_frame_builder.setBin(bin);
-}
-
-void Camera::getBin(Bin& bin)
-{
-	m_frame_builder.getBin(bin);
-}
-
-void Camera::checkBin(Bin& bin)
-{
-	m_frame_builder.checkBin(bin);
-}
-
-void Camera::setFrameDim(const FrameDim& frame_dim)
-{
-	m_frame_builder.setFrameDim(frame_dim);
-}
-
-void Camera::getFrameDim(FrameDim& frame_dim)
-{
-	m_frame_builder.getFrameDim(frame_dim);
-}
-
 void Camera::reset()
 {
 	stopAcq();
 
-	init();
+	setDefaultProperties();
 }
 
 HwInterface::StatusType::Basic Camera::getStatus()
@@ -291,9 +357,9 @@ int Camera::getNbAcquiredFrames()
 	return m_thread.m_acq_frame_nb;
 }
 
-ostream& lima::Simulator::operator <<(ostream& os, Camera& simu)
+std::ostream& lima::Simulator::operator <<(std::ostream& os, Camera& simu)
 {
-	string status;
+	std::string status;
 	switch (simu.getStatus()) {
 	case HwInterface::StatusType::Ready:
 		status = "Ready"; break;

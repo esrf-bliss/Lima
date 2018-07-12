@@ -19,30 +19,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
 #include "SimulatorDetInfoCtrlObj.h"
+#include "SimulatorFrameBuilder.h"
+#include "SimulatorFrameLoader.h"
+
 
 using namespace lima;
 using namespace lima::Simulator;
-using namespace std;
 
-/*******************************************************************
- * \brief DetInfoCtrlObj constructor
- *******************************************************************/
-
-DetInfoCtrlObj::DetInfoCtrlObj(Camera& simu)
-	: m_simu(simu)
-{
-}
-
-DetInfoCtrlObj::~DetInfoCtrlObj()
-{
-}
 
 void DetInfoCtrlObj::getMaxImageSize(Size& max_image_size)
 {
-	FrameDim fdim;
-	m_simu.getFrameDim(fdim);
-	max_image_size = fdim.getSize();
+	m_simu.getMaxImageSize(max_image_size);
 }
 
 void DetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
@@ -52,24 +41,24 @@ void DetInfoCtrlObj::getDetectorImageSize(Size& det_image_size)
 
 void DetInfoCtrlObj::getDefImageType(ImageType& def_image_type)
 {
-	FrameDim fdim;
-	m_simu.getFrameDim(fdim);
-	def_image_type = fdim.getImageType();
+    FrameDim fdim;
+    m_simu.getFrameDim(fdim);
+    def_image_type = fdim.getImageType();
 }
 
 void DetInfoCtrlObj::setCurrImageType(ImageType curr_image_type)
 {
-	FrameDim fdim;
-	m_simu.getFrameDim(fdim);
+    FrameDim fdim;
+    m_simu.getFrameDim(fdim);
 	fdim.setImageType(curr_image_type);
-	m_simu.setFrameDim(fdim);
+    m_simu.setFrameDim(fdim);
 }
 
 void DetInfoCtrlObj::getCurrImageType(ImageType& curr_image_type)
 {
-	FrameDim fdim;
-	m_simu.getFrameDim(fdim);
-	curr_image_type = fdim.getImageType();
+    FrameDim fdim;
+    m_simu.getFrameDim(fdim);
+    curr_image_type = fdim.getImageType();
 }
 
 void DetInfoCtrlObj::getPixelSize(double& x_size,double& y_size)
@@ -77,30 +66,30 @@ void DetInfoCtrlObj::getPixelSize(double& x_size,double& y_size)
 	x_size = y_size = 1e-6;
 }
 
-void DetInfoCtrlObj::getDetectorType(string& det_type)
+void DetInfoCtrlObj::getDetectorType(std::string& det_type)
 {
 	det_type = "Simulator";
 }
 
-void DetInfoCtrlObj::getDetectorModel(string& det_model)
+void DetInfoCtrlObj::getDetectorModel(std::string& det_model)
 {
-	det_model = "PeakGenerator";
+    return m_simu.getDetectorModel(det_model);
 }
 
 void DetInfoCtrlObj::registerMaxImageSizeCallback(
 						HwMaxImageSizeCallback& cb)
 {
-	m_mis_cb_gen.registerMaxImageSizeCallback(cb);
+    //Register call back for the frame loader
+    FrameLoader *loader = m_simu.getFrameLoader();
+	if (loader)
+        loader->registerMaxImageSizeCallback(cb);
 }
 
 void DetInfoCtrlObj::unregisterMaxImageSizeCallback(
 						HwMaxImageSizeCallback& cb)
 {
-	m_mis_cb_gen.unregisterMaxImageSizeCallback(cb);
-}
-
-
-void DetInfoCtrlObj::
-     MaxImageSizeCallbackGen::setMaxImageSizeCallbackActive(bool cb_active)
-{
+    //Register call back for the frame loader
+    FrameLoader *loader = m_simu.getFrameLoader();
+    if (loader)
+        loader->unregisterMaxImageSizeCallback(cb);
 }

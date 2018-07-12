@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
 %MappedType std::vector<struct Simulator::GaussPeak>
 {
 %TypeHeaderCode
@@ -114,14 +115,15 @@ struct GaussPeak {
 	GaussPeak(double x, double y, double w, double m);
 };
 
-class FrameBuilder 
+
+class FrameBuilder
 {
 %TypeHeaderCode
 #include "SimulatorFrameBuilder.h"
 #include <vector>
 %End
 
-  public:
+public:
 	enum FillType { 
 		Gauss, Diffraction,
 	};
@@ -137,6 +139,11 @@ class FrameBuilder
 
 	void getFrameDim( FrameDim &dim /Out/ ) const;
 	void setFrameDim( const FrameDim &dim );
+
+	unsigned long getFrameNr();
+	void resetFrameNr( int frame_nr=0 );
+
+	void getMaxImageSize(Size& max_size /Out/);
 
 	void getBin( Bin &bin /Out/ ) const;
 	void setBin( const Bin &bin );
@@ -175,12 +182,6 @@ class FrameBuilder
 
 	void getDiffractionSpeed( double &sx /Out/, double &sy /Out/ ) const;
 	void setDiffractionSpeed( const double &sx, const double &sy );
-
-//	void getNextFrame( unsigned char *ptr ) throw (Exception);
-	unsigned long getFrameNr();
-	void resetFrameNr( int frame_nr=0 );
-
-	void getMaxImageSize(Size& max_size /Out/);
-};
 };
 
+};
