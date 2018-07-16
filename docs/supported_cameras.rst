@@ -29,9 +29,9 @@ Linux Only
   Dectris Mythen 3 <camera/mythen3/doc/index>
   Dectris Pilatus 2 & 3  <camera/pilatus/doc/index>
   ImXpad <camera/imxpad/doc/index>
-  PointGrey <camera/pointgrey/doc/index>
   Merlin <camera/merlin/doc/index>
   Pixirad <camera/pixirad/doc/index>
+  PointGrey <camera/pointgrey/doc/index>
   Prosilica <camera/prosilica/doc/index>
   Rayonix MarCCD <camera/marccd/doc/index>
   Rayonix HS <camera/rayonixhs/doc/index>
@@ -42,6 +42,7 @@ Linux Only
   Xpad <camera/xpad/doc/index>
   Xspress3 <camera/xspress3/doc/index>
   Xh <camera/xh/doc/index>
+  Zwo <camera/zwo/doc/index>
 
 Windows and Linux
 ==================
