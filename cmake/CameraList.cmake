@@ -359,6 +359,16 @@ if(UNIX)
 	if(LIMACAMERA_XSPRESS3)
 		add_subdirectory(camera/xspress3)
 	endif(LIMACAMERA_XSPRESS3)
+
+	#ZWO
+	if(DEFINED ENV{LIMACAMERA_ZWO})
+		set(LIMACAMERA_ZWO "$ENV{LIMACAMERA_ZWO}" CACHE BOOL "compile zwo ?" FORCE)
+	else()
+		set(LIMACAMERA_ZWO OFF CACHE BOOL "compile zwo ?")
+	endif()	
+	if(LIMACAMERA_ZWO)
+		add_subdirectory(camera/zwo)
+	endif(LIMACAMERA_ZWO)
 endif()
 
 #CAMERA ONLY WORKING ON WINDOWS
