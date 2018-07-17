@@ -45,6 +45,7 @@ target_include_directories(lima${NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inclu
 
 target_link_libraries(lima${NAME} limacore)
 if(WIN32)
+    target_compile_definitions(lima${NAME} PUBLIC NOMINMAX)
     target_compile_definitions(lima${NAME} PRIVATE LIBSIMULATOR_EXPORTS)
 endif()
 

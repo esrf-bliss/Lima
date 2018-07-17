@@ -84,10 +84,11 @@ void Camera::SimuThread::execPrepareAcq()
 	DEB_MEMBER_FUNCT();
 
 	m_acq_frame_nb = 0;
-	setStatus(Prepare);
 
 	// Delegate to the frame getter that may need some preparation
 	m_simu->m_frame_getter->prepareAcq();
+
+	setStatus(Prepared);
 }
 
 void Camera::SimuThread::execStartAcq()
@@ -304,7 +305,7 @@ HwInterface::StatusType::Basic Camera::getStatus()
 	int thread_status = m_thread.getStatus();
 	switch (thread_status) {
 	case SimuThread::Ready:
-	case SimuThread::Prepare:
+	case SimuThread::Prepared:
 		return HwInterface::StatusType::Ready;
 	case SimuThread::Exposure:
 		return HwInterface::StatusType::Exposure;
@@ -321,25 +322,27 @@ void Camera::prepareAcq()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (m_thread.getStatus() == SimuThread::Prepare)
+	if (m_thread.getStatus() == SimuThread::Prepared)
 		return;
 	if (m_thread.getStatus() != SimuThread::Ready)
 		THROW_HW_ERROR(Error) << "Camera not Ready";
 	m_thread.sendCmd(SimuThread::PrepareAcq);
-	m_thread.waitStatus(SimuThread::Prepare);
+	m_thread.waitStatus(SimuThread::Prepared);
 }
 
 void Camera::startAcq()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (m_thread.getStatus() != SimuThread::Prepare)
-		THROW_HW_ERROR(Error) << "Camera not Prepared";
+	int status = m_thread.getStatus();
+	if (status != SimuThread::Prepared && status != SimuThread::Ready)
+		THROW_HW_ERROR(Error) << "Camera not Prepared and not Ready neither";
 
 	m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
 	m_thread.sendCmd(SimuThread::StartAcq);
-	m_thread.waitNotStatus(SimuThread::Prepare);
+	
+	m_thread.waitStatus(SimuThread::Exposure);
 }
 
 void Camera::stopAcq()

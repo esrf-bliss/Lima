@@ -47,7 +47,7 @@ The camera will be initialized within the :cpp:class:`Camera` object. The :cpp:f
 
 This simulator plugin architecture is based on the :cpp:class:`FrameGetter` interface that have multiple implementations.
 
-.. image:: https://yuml.me/diagram/scruffy/class/edit/Simulator%20Class%20Diagram,%20[FrameGetter%7CgetNextFrame()],%20[FrameGetter]%5E-[FrameBuilder],%20[FrameGetter]%5E-[FrameLoader]
+.. image:: https://yuml.me/diagram/scruffy/class/Simulator%20Class%20Diagram,%20[FrameGetter%7CgetNextFrame()],%20[FrameGetter]%5E-[FrameBuilder],%20[FrameGetter]%5E-[FrameLoader]
 
 The :cpp:class:`SimulatorCamera` class provides a specific member function :cpp:func:`SimulatorCamera::getFrameGetter()` that returns the :cpp:class:`FrameGetter` instance.
 
@@ -113,7 +113,7 @@ For a quick test one can use the python binding, here is a short code example:
 .. code-block:: python
 
   from Lima import Simulator
-  from lima import Core
+  from Lima import Core
   import time
 
   def test_mode_generator(cam, nb_frames_prefetched = 0):
