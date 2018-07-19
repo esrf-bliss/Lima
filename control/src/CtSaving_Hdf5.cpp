@@ -46,10 +46,10 @@ struct SaveContainerHdf5::_File
     m_image_dataset(NULL),
     m_file(NULL),
     m_entry(NULL),
-    m_measurement(NULL),
+    m_measurement_detector(NULL),
+    m_measurement_detector_data(NULL),
+    m_measurement_detector_data_header(NULL),
     m_instrument_detector(NULL),
-		m_instrument_detector_data(NULL),
-    m_instrument_detector_data_parameters(NULL),
     m_entry_index(0)
   {}
   
@@ -57,10 +57,10 @@ struct SaveContainerHdf5::_File
   {
     delete m_image_dataspace;
     delete m_image_dataset;
-    delete m_measurement;
+    delete m_measurement_detector;
     delete m_instrument_detector;
-    delete m_instrument_detector_data;
-		delete m_instrument_detector_data_parameters;
+    delete m_measurement_detector_data;
+    delete m_measurement_detector_data_header;
     delete m_entry;
     delete m_file;
   }
@@ -75,10 +75,10 @@ struct SaveContainerHdf5::_File
     m_image_dataset = other.m_image_dataset;
     m_file = other.m_file;
     m_entry = other.m_entry;
-    m_measurement = other.m_measurement;
+    m_measurement_detector = other.m_measurement_detector;
     m_instrument_detector = other.m_instrument_detector;
-    m_instrument_detector_data = other.m_instrument_detector_data;
-		m_instrument_detector_data_parameters = other.m_instrument_detector_data_parameters;
+    m_measurement_detector_data_header = other.m_measurement_detector_data_header;
+    m_measurement_detector_data = other.m_measurement_detector_data;
     m_entry_index = other.m_entry_index;
     m_entry_name = other.m_entry_name;
     m_data_name = other.m_data_name;
@@ -88,10 +88,10 @@ struct SaveContainerHdf5::_File
     other.m_image_dataset = NULL;
     other.m_file = NULL;
     other.m_entry = NULL;
-    other.m_measurement = NULL;
+    other.m_measurement_detector = NULL;
     other.m_instrument_detector = NULL;
-    other.m_instrument_detector_data = NULL;
-		other.m_instrument_detector_data_parameters = NULL;
+    other.m_measurement_detector_data = NULL;
+    other.m_measurement_detector_data_header = NULL;
   }
 
   bool m_format_written;
@@ -102,10 +102,10 @@ struct SaveContainerHdf5::_File
   DataSet *m_image_dataset;
   H5File *m_file;
   Group *m_entry;
-  Group *m_measurement;
+  Group *m_measurement_detector;
   Group *m_instrument_detector;
-	Group *m_instrument_detector_data;
-  Group *m_instrument_detector_data_parameters;
+  Group *m_measurement_detector_data;
+  Group *m_measurement_detector_data_header;
   int m_entry_index;
   string m_entry_name;
   string m_data_name;
@@ -364,26 +364,30 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  new_file.m_instrument_detector = new Group(instrument.createGroup(m_ct_parameters.det_name));
 		  string nxdetector = "NXdetector";
 		  write_h5_attribute(*new_file.m_instrument_detector, "NX_class", nxdetector);
-		  		  			  
 		  
-			new_file.m_instrument_detector_data = new Group(new_file.m_instrument_detector->createGroup("data"));
-		  new_file.m_instrument_detector_data_parameters = 
-				new Group(new_file.m_instrument_detector_data->createGroup("parameters"));
-
-			// set attributes for default path to data, measurement/detector is the default path but a soft-link to instrument/detector
-		  new_file.m_data_name = "images";
-		  string path_to_nxdata = new_file.m_entry_name + "/measurement/" + m_ct_parameters.det_name +"/data";
+		  Group measurement = Group(new_file.m_entry->createGroup("measurement"));
+		  string nxcollection = "NXcollection";
+		  write_h5_attribute(measurement, "NX_class", nxcollection);
+		  
+		  new_file.m_measurement_detector = new Group(measurement.createGroup(m_ct_parameters.det_name));
+		  write_h5_attribute(*new_file.m_measurement_detector, "NX_class", nxdetector);
+		  
+		  // This group called data will contain image array and image header (external meta-data)
+		  new_file.m_measurement_detector_data = 
+		    new Group(new_file.m_measurement_detector->createGroup("data"));
+		  string nxdata = "NXdata";
+		  write_h5_attribute(*new_file.m_measurement_detector_data, "NX_class", nxdata);
+		  
+		  // Add attribute "default" for path to the NXdata
+		  new_file.m_data_name = "array";
+		  string path_to_nxdata = new_file.m_entry_name + "/measurement/" + m_ct_parameters.det_name + "/data";
 		  write_h5_attribute(*new_file.m_entry, "default", path_to_nxdata);
 
-		  string nxdata = "NXdata";
-		  write_h5_attribute(*new_file.m_instrument_detector_data, "NX_class", nxdata);
-		  write_h5_attribute(*new_file.m_instrument_detector_data, "signal", new_file.m_data_name);
-
-		// Finally create a measurement group, it will only contain a sof-link to intrument_detector created at _close()
-		  new_file.m_measurement = new Group(new_file.m_entry->createGroup("measurement"));
-		  string nxcollection = "NXcollection";
-		  write_h5_attribute(*new_file.m_measurement, "NX_class", nxcollection);
-			
+		  // Add attribute "signal" for final data path
+		  write_h5_attribute(*new_file.m_measurement_detector_data, "signal", new_file.m_data_name);
+		  
+		  new_file.m_measurement_detector_data_header = 
+		    new Group(new_file.m_measurement_detector_data->createGroup("header"));
 
 		  // write the control parameters (detinfo, acq and image)
 		  
@@ -453,7 +457,8 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		} else {
 		  new_file.m_entry = new Group(new_file.m_file->openGroup(strname));
 		  Group instrument = Group(new_file.m_entry->openGroup(m_ct_parameters.instrument_name));
-		  new_file.m_measurement = new Group(new_file.m_entry->openGroup("measurement"));
+		  Group measurement = Group(new_file.m_entry->openGroup("measurement"));
+		  new_file.m_measurement_detector = new Group(measurement.openGroup(m_ct_parameters.det_name));
 		  new_file.m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
 		}
 	} catch (FileIException &error) {
@@ -470,11 +475,10 @@ void SaveContainerHdf5::_close(void* f) {
 
 	_File *file = (_File*)f;
 	if (!file->m_in_append || m_is_multiset) {
-		// Create in measurement a soft link to the instrument detector group
-		string root_path = file->m_entry_name + "/" + m_ct_parameters.instrument_name+ "/";
-		string path = root_path + m_ct_parameters.det_name;
-		file->m_measurement->link(H5L_TYPE_SOFT, path, m_ct_parameters.det_name);
-		
+		// Finally create in the instrument group a link to the measurement data
+		string path = file->m_entry_name;
+		path += "/measurement/" + m_ct_parameters.det_name + "/data";
+		file->m_instrument_detector->link(H5L_TYPE_SOFT, path, "data");
 		
 		// ISO 8601 Time format
 		time_t now;
@@ -562,12 +566,12 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 
 						string key = it->first;
 						string value = it->second;
-						write_h5_dataset(*file->m_instrument_detector_data_parameters,
+						write_h5_dataset(*file->m_measurement_detector_data_header,
 								 key.c_str(),value);
 					}
 				}
-				delete file->m_instrument_detector_data_parameters;
-				file->m_instrument_detector_data_parameters = NULL;
+				delete file->m_measurement_detector_data_header;
+				file->m_measurement_detector_data_header = NULL;
 					
 				// create the image data structure in the file
 				hsize_t data_dims[3], max_dims[3];
@@ -598,7 +602,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				// create new dspace
 				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, NULL);
 				file->m_image_dataset = 
-				  new DataSet(file->m_instrument_detector_data->createDataSet(file->m_data_name,
+				  new DataSet(file->m_measurement_detector_data->createDataSet(file->m_data_name,
 											  data_type,
 											  *file->m_image_dataspace,
 											  plist));
@@ -608,7 +612,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_format_written = true;
 			} else if (file->m_in_append && !m_is_multiset && !file->m_dataset_extended) {
 				hsize_t allocated_dims[3];
-				file->m_image_dataset = new DataSet(file->m_instrument_detector_data->
+				file->m_image_dataset = new DataSet(file->m_measurement_detector_data->
 								    openDataSet(file->m_data_name));
 				file->m_image_dataspace = new DataSpace(file->m_image_dataset->getSpace());
 				file->m_image_dataspace->getSimpleExtentDims(allocated_dims);
