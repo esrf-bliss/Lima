@@ -35,7 +35,7 @@ deploy:
     - build-conda-linux
     - build-conda-win
   script:
-    - mv -Rf dist/* /conda/
+    - mv -f -u dist/* /conda/
     - conda index /conda/
   tags:
     - conda
