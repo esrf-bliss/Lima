@@ -106,7 +106,7 @@
 	url = ../Lima-camera-v4l2
 [submodule "applications/tango/python"]
 	path = applications/tango/python
-	url = ../Lima-tango-python
+	url = git://github.com/esrf-bliss/Lima-tango-python
 [submodule "applications/tango/cpp"]
 	path = applications/tango/cpp
 	url = git://github.com/esrf-bliss/Lima-tango-cpp
