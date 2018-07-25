@@ -1,39 +1,23 @@
-{% set version = "1.8.0" %}
-
-{% set REL_SP_DIR = 'lib/python2.7/site-packages' %} # [linux and py27]
-{% set REL_SP_DIR = 'lib/python3.6/site-packages' %} # [linux and py36]
-{% set REL_SP_DIR = 'Lib/site-packages' %} # [win]
-
-{% set REL_BIN_DIR = 'bin' %}          # [linux]
-{% set REL_BIN_DIR = 'Library/bin' %}  # [win]
-
-{% set REL_SHLIB_DIR = 'lib' %}          # [linux]
-{% set REL_SHLIB_DIR = 'Library/bin' %}  # [win]
-
-{% set PYMOD_EXT = '.so' %}   # [linux]
-{% set PYMOD_EXT = '.pyd' %}  # [win]
+# Strip the 'v' from the version tag
+{% set version = GIT_DESCRIBE_TAG[1:] %}
 
 package:
-  name: lima
+  name: lima-core
   version: {{ version }}
 
 source:
   path: ..
 
 build:
-  number: 2
-  string: py{{ CONDA_PY }}_{{ PKG_BUILDNUM }}
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
 
 requirements:
-  build:
-    - git
-    - {{ compiler('cxx') }}
-    - python {{ python }} #Python is used by CMake configure stage
-    - numpy
-    - sip 4.19*           #For the SIP generator
-    - cmake
   host:
-    - gsl 2.2*
+    - python {{ python }}
+    - numpy
+    - sip 4.19.8           #For the SIP module
+    - processlib
+    - libconfig 1.7*
     # I/O formats
     - zlib
     - lz4-c 1.8.2
@@ -41,76 +25,32 @@ requirements:
     - libtiff
     - cbflib        # [linux]
     - openssl       # [linux]
-    #- cfitsio
-
-outputs:
-  - name: lima-core
-    requirements:
-      run:
-        - python {{ python }}
-        - sip 4.19*
-        - numpy
-        - gsl 2.2*
-        # I/O formats
-        - zlib
-        - lz4-c 1.8.2
-        - hdf5 1.10*
-        - libtiff
-        - cbflib        # [linux]
-        #- cfitsio
-    files:
-      - {{ REL_SHLIB_DIR }}/liblimacore{{ SHLIB_EXT }}
-      - {{ REL_SHLIB_DIR }}/liblimacore{{ SHLIB_EXT }}*
-      - {{ REL_SHLIB_DIR }}/libprocesslib{{ SHLIB_EXT }}
-      - {{ REL_SHLIB_DIR }}/libprocesslib{{ SHLIB_EXT }}*
-      - {{ REL_SHLIB_DIR }}/libh5bshuf{{ SHLIB_EXT }}
-      - {{ REL_SP_DIR }}/limacore{{ PYMOD_EXT }}
-      - {{ REL_SP_DIR }}/processlib{{ PYMOD_EXT }}
-      - {{ REL_SP_DIR }}/Lima/__init__.py
-      - {{ REL_SP_DIR }}/Lima/Core
-    test:
-      #commands:
-      #  - cd build
-      #  - ctest --timeout 10 --output-on-failure
-      imports:
-        - Lima.Core
-  - name: lima-tango-server
-    requirements:
-      run:
-        - python {{ python }}
-        - pytango
-    files:
-      - {{ REL_BIN_DIR }}/LimaCCDs
-      - {{ REL_SP_DIR }}/Lima/Server/__init__.py
-      - {{ REL_SP_DIR }}/Lima/Server/LimaCCDs.py
-      - {{ REL_SP_DIR }}/Lima/Server/LimaViewer.py
-      - {{ REL_SP_DIR }}/Lima/Server/AttrHelper.py
-      - {{ REL_SP_DIR }}/Lima/Server/EnvHelper.py
-      - {{ REL_SP_DIR }}/Lima/Server/camera/__init__.py
-      - {{ REL_SP_DIR }}/Lima/Server/plugins/
-  - name: lima-simulator
-    requirements:
-      run:
-        - lima-core
-    files:
-      - {{ REL_SHLIB_DIR }}/liblimasimulator{{ SHLIB_EXT }}*
-      - {{ REL_SP_DIR }}/limasimulator{{ PYMOD_EXT }}
-      - {{ REL_SP_DIR }}/Lima/Simulator/
-    test:
-      imports:
-        - Lima.Simulator
-  - name: lima-simulator-server
-    requirements:
-      run:
-        - lima-tango-server
-        - lima-simulator
-    files:
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Simulator.py
+  build:
+    - git
+    - cmake
+    - {{ compiler('cxx') }}
+  run:
+    - python
+    - numpy
+    - sip >=4.19.4, <=4.19.8 # For compatibility with pyqt 5.9.2
+    - {{ pin_compatible('processlib', max_pin='x.x') }}
+    - libconfig 1.7*
+    # I/O formats
+    - zlib
+    - lz4-c 1.8.2
+    - hdf5 1.10*
+    - libtiff
+    - cbflib        # [linux]
 
 test:
   requires:
     - cmake
     - python {{ python }}
+  imports:
+    - Lima.Core
+  #commands:
+  #  - cd build
+  #  - ctest --timeout 10 --output-on-failure
 
 about:
   home: https://github.com/esrf-bliss/Lima

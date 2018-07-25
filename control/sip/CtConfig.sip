@@ -39,8 +39,6 @@ class Setting;
 
 #include "numpy/numpyconfig.h"
 #if (defined(NPY_API_VERSION) && NPY_API_VERSION >= 0x00000004 && PY_VERSION_HEX >= 0x03000000)
-#define NO_IMPORT_ARRAY
-#define PY_ARRAY_UNIQUE_SYMBOL _LimacoreNumPy
 #include "numpy/npy_3kcompat.h"
 #endif
 
@@ -76,7 +74,7 @@ inline int _fill_setting_with_list(Setting &setting,
 	  !return_value && index < list_lenght;++index)
 	{
 	  PyObject* value = PyList_GetItem(list,index);
-	  
+
 	  if(PyString_Check(value))
 	    setting.append(PyString_AS_STRING(value));
 	  else if(PyFloat_Check(value))
@@ -135,7 +133,7 @@ inline int _fill_setting_with_dict(Setting &setting,
 	      return_value = 1;
 	      break;
 	    }
-       
+
 	  if(PyString_Check(value))
 	    setting.set(PyString_AS_STRING(key),
 			PyString_AS_STRING(value));
@@ -169,9 +167,9 @@ inline int _fill_setting_with_dict(Setting &setting,
 	      int state;
 	      int error = 0;
 	      int *sipIsErr = &error;
-	      Data *data = 
+	      Data *data =
 		reinterpret_cast<Data*>(sipConvertToType(value,
-							 sipType_Data, 0,	
+							 sipType_Data, 0,
 							 SIP_NOT_NONE,
 							 &state, sipIsErr));
 	      if(*sipIsErr)
@@ -288,7 +286,7 @@ inline bool _build_dict_from_setting(const Setting &setting,
 	      else
 		return_value = PyList_Append(dict,py_value);
 	    }
-	  
+
 	  if(py_value)
 	    Py_DECREF(py_value);
 	}
@@ -319,7 +317,7 @@ public:
 
   CtConfig(CtControl &);
   ~CtConfig();
-    
+
   // --- set current config into a context alias
   void store(const std::string& alias,
 	     const char*);
@@ -330,7 +328,7 @@ public:
 	      const char*);
   void update(const std::string& alias,
 	      const std::list<const char*>&);
-    
+
   void getAlias(std::list<std::string>& /Out/) const;
   void getAvailableModule(std::list<const char*>& /Out/) const;
 
@@ -345,7 +343,7 @@ public:
 
   void save();
   void load();
-  
+
   class ModuleTypeCallback
     {
 %TypeHeaderCode
