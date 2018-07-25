@@ -1,39 +1,23 @@
-{% set version = "1.8.0" %}
-
-{% set REL_SP_DIR = 'lib/python2.7/site-packages' %} # [linux and py27]
-{% set REL_SP_DIR = 'lib/python3.6/site-packages' %} # [linux and py36]
-{% set REL_SP_DIR = 'Lib/site-packages' %} # [win]
-
-{% set REL_BIN_DIR = 'bin' %}          # [linux]
-{% set REL_BIN_DIR = 'Library/bin' %}  # [win]
-
-{% set REL_SHLIB_DIR = 'lib' %}          # [linux]
-{% set REL_SHLIB_DIR = 'Library/bin' %}  # [win]
-
-{% set PYMOD_EXT = '.so' %}   # [linux]
-{% set PYMOD_EXT = '.pyd' %}  # [win]
+# Strip the 'v' from the version tag
+{% set version = GIT_DESCRIBE_TAG[1:] %}
 
 package:
-  name: lima
+  name: lima-core
   version: {{ version }}
 
 source:
   path: ..
 
 build:
-  number: 2
-  string: py{{ CONDA_PY }}_{{ PKG_BUILDNUM }}
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
 
 requirements:
-  build:
-    - git
-    - {{ compiler('cxx') }}
-    - python {{ python }} #Python is used by CMake configure stage
-    - numpy
-    - sip 4.19*           #For the SIP generator
-    - cmake
   host:
-    - gsl 2.2*
+    - python {{ python }}
+    - numpy
+    - sip 4.19.8           #For the SIP module
+    - processlib
+    - libconfig 1.7*
     # I/O formats
     - zlib
     - lz4-c 1.8.2
@@ -41,282 +25,32 @@ requirements:
     - libtiff
     - cbflib        # [linux]
     - openssl       # [linux]
-    #- cfitsio
-    # Cameras SDKs
-    - pylon5-sdk    # [linux]
-    - libv4l        # [linux]
-    - espia         # [linux]
-    - andor2-sdk    # [linux]
-    - andor3-sdk    # [linux]
-    - pvapi-sdk     # [linux]
-
-outputs:
-  - name: lima-core
-    requirements:
-      run:
-        - python {{ python }}
-        - sip 4.19*
-        - numpy
-        - gsl 2.2*
-        # I/O formats
-        - zlib
-        - lz4-c 1.8.2
-        - hdf5 1.10*
-        - libtiff
-        - cbflib        # [linux]
-        #- cfitsio
-    files:
-      - {{ REL_SHLIB_DIR }}/liblimacore{{ SHLIB_EXT }}
-      - {{ REL_SHLIB_DIR }}/liblimacore{{ SHLIB_EXT }}*
-      - {{ REL_SHLIB_DIR }}/libprocesslib{{ SHLIB_EXT }}
-      - {{ REL_SHLIB_DIR }}/libprocesslib{{ SHLIB_EXT }}*
-      - {{ REL_SP_DIR }}/limacore{{ PYMOD_EXT }}
-      - {{ REL_SP_DIR }}/processlib{{ PYMOD_EXT }}
-      - {{ REL_SP_DIR }}/Lima/__init__.py
-      - {{ REL_SP_DIR }}/Lima/Core
-    test:
-      #commands:
-      #  - cd build
-      #  - ctest --timeout 10 --output-on-failure
-      imports:
-        - Lima.Core
-  - name: lima-tango-server
-    requirements:
-      run:
-        - python {{ python }}
-        - pytango
-    files:
-      - {{ REL_BIN_DIR }}/LimaCCDs
-      - {{ REL_SP_DIR }}/Lima/Server/__init__.py
-      - {{ REL_SP_DIR }}/Lima/Server/LimaCCDs.py
-      - {{ REL_SP_DIR }}/Lima/Server/LimaViewer.py
-      - {{ REL_SP_DIR }}/Lima/Server/AttrHelper.py
-      - {{ REL_SP_DIR }}/Lima/Server/EnvHelper.py
-      - {{ REL_SP_DIR }}/Lima/Server/camera/__init__.py
-      - {{ REL_SP_DIR }}/Lima/Server/plugins/
-  - name: lima-simulator
-    requirements:
-      run:
-        - lima-core
-    files:
-      - {{ REL_SHLIB_DIR }}/liblimasimulator{{ SHLIB_EXT }}*
-      - {{ REL_SP_DIR }}/limasimulator{{ PYMOD_EXT }}
-      - {{ REL_SP_DIR }}/Lima/Simulator/
-    test:
-      imports:
-        - Lima.Simulator
-  - name: lima-simulator-server
-    requirements:
-      run:
-        - lima-tango-server
-        - lima-simulator
-    files:
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Simulator.py
-  #
-  # Basler
-  - name: lima-camera-basler                                  # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - pylon5-sdk                                          # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimabasler{{ SHLIB_EXT }}*     # [linux]
-      - {{ REL_SP_DIR }}/limabasler{{ PYMOD_EXT }}            # [linux]
-      - {{ REL_SP_DIR }}/Lima/Basler/                         # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.Basler                                         # [linux]
-  - name: lima-camera-basler-server                           # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-basler                                  # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Basler.py         # [linux]
-  #
-  # Pilatus
-  - name: lima-camera-pilatus                                 # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - cbflib                                              # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimapilatus{{ SHLIB_EXT }}*    # [linux]
-      - {{ REL_SP_DIR }}/limapilatus{{ PYMOD_EXT }}           # [linux]
-      - {{ REL_SP_DIR }}/Lima/Pilatus/                        # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.Pilatus                                        # [linux]
-  - name: lima-camera-pilatus-server                          # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-pilatus                                 # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Pilatus.py        # [linux]
-  #
-  # Video4Linux
-  - name: lima-camera-v4l2                                    # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - libv4l                                              # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimav4l2{{ SHLIB_EXT }}*       # [linux]
-      - {{ REL_SP_DIR }}/limav4l2{{ PYMOD_EXT }}              # [linux]
-      - {{ REL_SP_DIR }}/Lima/V4l2/                           # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.V4l2                                           # [linux]
-  - name: lima-camera-v4l2-server                             # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-v4l2                                    # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/V4l2.py           # [linux]
-  #
-  # Espia
-  - name: lima-camera-espia                                   # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - espia                                               # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimaespia{{ SHLIB_EXT }}*      # [linux]
-      - {{ REL_SP_DIR }}/limaespia{{ PYMOD_EXT }}             # [linux]
-      - {{ REL_SP_DIR }}/Lima/Espia/                          # [linux]
-  #
-  # Frelon
-  - name: lima-camera-frelon                                  # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - lima-camera-espia                                   # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimafrelon{{ SHLIB_EXT }}*     # [linux]
-      - {{ REL_SP_DIR }}/limafrelon{{ PYMOD_EXT }}            # [linux]
-      - {{ REL_SP_DIR }}/Lima/Frelon/                         # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.Frelon                                         # [linux]
-  - name: lima-camera-frelon-server                           # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-frelon                                  # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Frelon.py         # [linux]
-  #
-  # Maxipix
-  - name: lima-camera-maxipix                                 # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - lima-camera-espia                                   # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimamaxipix{{ SHLIB_EXT }}*    # [linux]
-      - {{ REL_SP_DIR }}/limamaxipix{{ PYMOD_EXT }}           # [linux]
-      - {{ REL_SP_DIR }}/Lima/Maxipix/                        # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.Maxipix                                        # [linux]
-  - name: lima-camera-maxipix-server                          # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-maxipix                                 # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Maxipix.py        # [linux]
-  #
-  # Andor
-  - name: lima-camera-andor2                                  # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - andor2-sdk                                          # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimaandor{{ SHLIB_EXT }}*      # [linux]
-      - {{ REL_SP_DIR }}/limaandor{{ PYMOD_EXT }}             # [linux]
-      - {{ REL_SP_DIR }}/Lima/Andor/                          # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.Andor                                          # [linux]
-  - name: lima-camera-andor2-server                           # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-andor2                                  # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Andor.py          # [linux]
-  #
-  # Andor3
-  - name: lima-camera-andor3                                  # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - andor3-sdk                                          # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimaandor3{{ SHLIB_EXT }}*     # [linux]
-      - {{ REL_SP_DIR }}/limaandor3{{ PYMOD_EXT }}            # [linux]
-      - {{ REL_SP_DIR }}/Lima/Andor3/                         # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.Andor3                                         # [linux]
-  - name: lima-camera-andor3-server                           # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-andor3                                  # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Andor3.py         # [linux]
-  #
-  # Prosilica
-  - name: lima-camera-prosilica                               # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-core                                           # [linux]
-        - pvapi-sdk                                           # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SHLIB_DIR }}/liblimaprosilica{{ SHLIB_EXT }}*  # [linux]
-      - {{ REL_SP_DIR }}/limaprosilica{{ PYMOD_EXT }}         # [linux]
-      - {{ REL_SP_DIR }}/Lima/Prosilica/                      # [linux]
-    test:                                                     # [linux]
-      imports:                                                # [linux]
-        - Lima.Prosilica                                      # [linux]
-  - name: lima-camera-prosilica-server                        # [linux]
-    requirements:                                             # [linux]
-      run:                                                    # [linux]
-        - lima-tango-server                                   # [linux]
-        - lima-camera-prosilica                               # [linux]
-    files:                                                    # [linux]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Prosilica.py      # [linux]
-  #
-  # PCO
-  - name: lima-camera-pco                                     # [win]
-    requirements:                                             # [win]
-      run:                                                    # [win]
-        - lima-core                                           # [win]
-        - pco-sdk                                                 # [win]
-    files:                                                    # [win]
-      - {{ REL_SHLIB_DIR }}/liblimapco{{ SHLIB_EXT }}         # [win]
-      - {{ REL_SP_DIR }}/limapco{{ PYMOD_EXT }}               # [win]
-      - {{ REL_SP_DIR }}/Lima/Pco/                            # [win]
-    test:                                                     # [win]
-      imports:                                                # [win]
-        - Lima.Pco                                            # [win]
-  - name: lima-camera-pco-server                              # [win]
-    requirements:                                             # [win]
-      run:                                                    # [win]
-        - lima-tango-server                                   # [win]
-        - lima-camera-pco                                     # [win]
-    files:                                                    # [win]
-      - {{ REL_SP_DIR }}/Lima/Server/camera/Pco.py            # [win]
+  build:
+    - git
+    - cmake
+    - {{ compiler('cxx') }}
+  run:
+    - python
+    - numpy
+    - sip >=4.19.4, <=4.19.8 # For compatibility with pyqt 5.9.2
+    - {{ pin_compatible('processlib', max_pin='x.x') }}
+    - libconfig 1.7*
+    # I/O formats
+    - zlib
+    - lz4-c 1.8.2
+    - hdf5 1.10*
+    - libtiff
+    - cbflib        # [linux]
 
 test:
   requires:
     - cmake
     - python {{ python }}
+  imports:
+    - Lima.Core
+  #commands:
+  #  - cd build
+  #  - ctest --timeout 10 --output-on-failure
 
 about:
   home: https://github.com/esrf-bliss/Lima

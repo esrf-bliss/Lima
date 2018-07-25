@@ -648,7 +648,7 @@ return aReturnListPt;
 // "npy_3kcompat.h" also includes the C-API. The macros NO_IMPORT[_ARRAY]
 // and PY_ARRAY_UNIQUE_SYMBOL modify the behaviour of the header files
 // and must be defined before those files are interpreted. The C-API
-// can be imported only once per each module. 
+// can be imported only once per each module.
 //
 // SIP can be configured to create one or multiple compilation units,
 // either one per mapped type plus one for the Python module, or an
@@ -662,7 +662,7 @@ return aReturnListPt;
 %ModuleHeaderCode
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #define NO_IMPORT_ARRAY
-#define PY_ARRAY_UNIQUE_SYMBOL _LimacoreNumPy
+#define PY_ARRAY_UNIQUE_SYMBOL _@PROJECT_NAME@NumpyArray
 #include "numpy/arrayobject.h"
 #if (defined(NPY_API_VERSION) && NPY_API_VERSION >= 0x00000004 && PY_VERSION_HEX >= 0x03000000)
 #include "numpy/npy_3kcompat.h"
@@ -671,9 +671,9 @@ return aReturnListPt;
 extern "C"
 {
 #if PY_VERSION_HEX >= 0x03000000
-int limacore_import_array();
+int @PROJECT_NAME_LOWER@_import_array();
 #else
-void limacore_import_array();
+void @PROJECT_NAME_LOWER@_import_array();
 #endif
 }
 %End
@@ -689,10 +689,9 @@ void limacore_import_array();
 %End
 
 %PostInitialisationCode
-limacore_import_array();
+@PROJECT_NAME_LOWER@_import_array();
 %End
 
 %Import processlib.sip
 
 @INCLUDES@
-%Include HwFrameInfo.sip

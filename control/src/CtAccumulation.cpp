@@ -23,13 +23,18 @@
 #include "lima/CtAcquisition.h"
 #include "lima/CtBuffer.h"
 #include "processlib/SinkTask.h"
+#include "processlib/SinkTaskMgr.h"
 #include <algorithm>
+
 using std::min;
 using std::max;
+
 #ifdef __SSE2__
 #include <emmintrin.h>
 #endif
+
 using namespace lima;
+
 /****************************************************************************
 CtAccumulation::_ImageReady4AccCallback
 ****************************************************************************/
@@ -114,32 +119,32 @@ public:
     switch(aData.type)
       {
       case Data::UINT8:
-	result.value = 
+	result.value =
 	  _calc_saturated_image_n_counter<unsigned char>(aData,m_dst,
 							  mask,pixelThresholdValue);
 	break;
       case Data::INT8:
-	result.value = 
+	result.value =
 	  _calc_saturated_image_n_counter<char>(aData,m_dst,
 						mask,pixelThresholdValue);
 	break;
       case Data::UINT16:
-	result.value = 
+	result.value =
 	  _calc_saturated_image_n_counter<unsigned short>(aData,m_dst,
 							  mask,pixelThresholdValue);
 	break;
       case Data::INT16:
-	result.value = 
+	result.value =
 	  _calc_saturated_image_n_counter<short>(aData,m_dst,
 						 mask,pixelThresholdValue);
 	break;
       case Data::UINT32:
-	result.value = 
+	result.value =
 	  _calc_saturated_image_n_counter<unsigned int>(aData,m_dst,
 							mask,pixelThresholdValue);
 	break;
       case Data::INT32:
-	result.value = 
+	result.value =
 	  _calc_saturated_image_n_counter<int>(aData,m_dst,
 					       mask,pixelThresholdValue);
 	break;
@@ -188,7 +193,7 @@ private:
 };
 
 //	     ******** CtAccumulation::Parameters ********
-CtAccumulation::Parameters::Parameters() : 
+CtAccumulation::Parameters::Parameters() :
   pixelThresholdValue(2^16),
   savingFlag(false),
   savePrefix("saturated_"),
@@ -216,7 +221,7 @@ public:
   {
     CtAccumulation::Parameters pars;
     m_acc.getParameters(pars);
-  
+
     accumulation_setting.set("active",pars.active);
     accumulation_setting.set("pixelThresholdValue",pars.pixelThresholdValue);
     accumulation_setting.set("savingFlag",pars.savingFlag);
@@ -226,7 +231,7 @@ public:
   {
     CtAccumulation::Parameters pars;
     m_acc.getParameters(pars);
-  
+
     accumulation_setting.get("active",pars.active);
     accumulation_setting.get("pixelThresholdValue",
 			     pars.pixelThresholdValue);
@@ -241,7 +246,7 @@ private:
 #endif //WITH_CONFIG
 
 //		   ******** CtAccumulation ********
-CtAccumulation::CtAccumulation(CtControl &ct) : 
+CtAccumulation::CtAccumulation(CtControl &ct) :
   m_buffers_size(16),
   m_ct(ct),
   m_calc_ready(true),
@@ -317,7 +322,7 @@ void CtAccumulation::getPixelThresholdValue(long long &pixelThresholdValue) cons
 }
 
 void CtAccumulation::getBufferSize(int &aBufferSize) const
-{ 
+{
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
@@ -438,7 +443,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
 }
 /** @brief read the saturated counters
     @param from is the start frame acquisition id
-    @param result It's a list of list of saturated counters. 
+    @param result It's a list of list of saturated counters.
     i.e: from == 5 result == [[2,3,2],[4,3,2],...] : so first list [2,3,2] is the saturated counters of image 5
 */
 void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterResult &result,int from)
@@ -469,7 +474,7 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
 	{
 	  if(!(i->frameNumber % acc_nframes))
 	    result.push_back(std::list<long long>());
-	  
+
 	  std::list<long long> &satImgCounters = result.back();
 	  satImgCounters.push_back(i->value);
 	}
@@ -519,7 +524,7 @@ void CtAccumulation::unregisterThresholdCallback(ThresholdCallback &cb)
   AutoMutex aLock(m_cond.mutex());
   while(!m_calc_ready)
     m_cond.wait();
-  
+
   if(m_threshold_cb != &cb)
     THROW_CTL_ERROR(InvalidValue) <<  "ThresholdCallback not registered";
 
@@ -708,7 +713,7 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
   AutoMutex aLock(m_cond.mutex());
   if(m_datas.empty())		// something weard append!
     THROW_CTL_ERROR(InvalidValue) << "Something weard append should be never in that case";
-  
+
   if(frameNumber < 0)		// means last
     aReturnData = m_datas.back();
   else
@@ -724,12 +729,12 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
 }
 
 
-template <class SrcType, class DstType> 
+template <class SrcType, class DstType>
 void accumulateFrame(void *src_ptr,void *dst_ptr,int nb_items)
 {
   SrcType *sp  = (SrcType *) src_ptr;
   DstType *dp = (DstType *) dst_ptr;
-	
+
   for(int i = nb_items;i;--i,++sp,++dp)
     *dp += *sp;
 }
@@ -779,12 +784,12 @@ void CtAccumulation::_accFrame(Data &src,Data &dst)
       THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
     }
 }
-template <class SrcType, class DstType> 
+template <class SrcType, class DstType>
 void accumulateFrameThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long threshold)
 {
   SrcType *sp  = (SrcType *) src_ptr;
   DstType *dp = (DstType *) dst_ptr;
-	
+
   for(int i = nb_items;i;--i,++sp,++dp)
     if(*sp > threshold)
       *dp += *sp;
@@ -809,13 +814,13 @@ void CtAccumulation::_accFrameWithThreshold(Data &src,Data &dst,long long thresh
     }
 }
 
-template <class SrcType, class DstType> 
+template <class SrcType, class DstType>
 void accumulateFrameOffsetThenThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long offset, long long threshold)
 {
   SrcType *sp  = (SrcType *) src_ptr;
   DstType *dp = (DstType *) dst_ptr;
   DstType tmp_d;
-	
+
   for(int i = nb_items;i;--i,++sp,++dp)
     {
       tmp_d = DstType(*sp) - offset;
