@@ -23,16 +23,19 @@
 #include "lima/CtAcquisition.h"
 #include "lima/CtBuffer.h"
 #include "processlib/SinkTask.h"
+#include "processlib/SinkTaskMgr.h"
 #include <algorithm>
+
 using std::min;
 using std::max;
-#ifndef __unix
-#include "processlib/SinkTaskMgr.i"
-#endif
+
+
 #ifdef __SSE2__
 #include <emmintrin.h>
 #endif
+
 using namespace lima;
+
 /****************************************************************************
 CtAccumulation::_ImageReady4AccCallback
 ****************************************************************************/

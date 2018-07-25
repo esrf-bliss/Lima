@@ -89,13 +89,13 @@
 // If argument is a Python string, assume it's UTF-8
 // Suppose a mixed of unicode and string is possible !!
 if (sipIsErr == NULL)
-{	
+{
   bool aReturnFlag = PyList_Check(sipPy);
   for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
 	  aReturnFlag = (PyString_Check(PyList_GET_ITEM(sipPy,i)) || PyUnicode_Check(PyList_GET_ITEM(sipPy,i)));
   return aReturnFlag;
 }
- 
+
 *sipCppPtr = new std::vector<std::string>(PyList_Size(sipPy));
 for(int i = 0;i < PyList_Size(sipPy);++i)
 {
@@ -127,7 +127,7 @@ for(int i = 0;vIter != sipCpp->end();++vIter,++i) {
   if(newstring == NULL) {
     PyErr_Clear();
     newstring = PyString_FromString(vIter->c_str());
-  }  
+  }
   PyList_SET_ITEM(aReturnListPt,i,newstring);
 }
 
@@ -144,13 +144,13 @@ return aReturnListPt;
 
 %ConvertToTypeCode
 if (sipIsErr == NULL)
-{	
+{
 bool aReturnFlag = PyList_Check(sipPy);
 for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
 	aReturnFlag = PyInt_Check(PyList_GET_ITEM(sipPy,i));
 return aReturnFlag;
 }
- 
+
 *sipCppPtr = new std::vector<int>(PyList_Size(sipPy));
 for(int i = 0;i < PyList_Size(sipPy);++i)
   (*sipCppPtr)->operator[](i) = PyInt_AS_LONG(PyList_GET_ITEM(sipPy,i));
@@ -427,9 +427,9 @@ pos = 0;
 while(PyDict_Next(sipPy, &pos, &key, &value))
 {
   int anIndex = PyInt_AS_LONG(key);
-  std::pair<std::map<int,std::list<std::string> >::iterator, bool> aResult = 
+  std::pair<std::map<int,std::list<std::string> >::iterator, bool> aResult =
   (*sipCppPtr)->insert(std::pair<int,std::list<std::string> >(anIndex,std::list<std::string>()));
-  
+
   for(int i = 0;i < PyList_Size(value);++i)
   {
     PyObject *aPyObj = PyList_GET_ITEM(value, i);
@@ -437,7 +437,7 @@ while(PyDict_Next(sipPy, &pos, &key, &value))
       continue;
     }
     if (PyUnicode_Check(aPyObj)) {
-      PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");    
+      PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");
       aResult.first->second.push_back(PyString_AS_STRING(s));
       Py_DECREF(s);
       continue;
@@ -500,7 +500,7 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
     continue;
   }
   if (PyUnicode_Check(aPyObj)) {
-    PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");    
+    PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");
     (*sipCppPtr)->push_back(PyString_AS_STRING(s));
     Py_DECREF(s);
     continue;
@@ -522,7 +522,7 @@ for(int i = 0;vIter != sipCpp->end();++vIter,++i) {
     if(newstring == NULL) {
       PyErr_Clear();
       newstring = PyString_FromString(vIter->c_str());
-    }  
+    }
     PyList_SET_ITEM(aReturnListPt,i,newstring);
 }
 return aReturnListPt;
@@ -553,7 +553,7 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
     continue;
   }
   if (PyUnicode_Check(aPyObj)) {
-    PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");    
+    PyObject* s = PyUnicode_AsEncodedString(aPyObj, "UTF-8", "");
     (*sipCppPtr)->push_back(PyString_AS_STRING(s));
     Py_DECREF(s);
     continue;
@@ -575,7 +575,7 @@ for(int i = 0;vIter != sipCpp->end();++vIter,++i) {
     if(newstring == NULL) {
       PyErr_Clear();
       newstring = PyString_FromString(*vIter);
-    }  
+    }
     PyList_SET_ITEM(aReturnListPt,i,newstring);
 }
 return aReturnListPt;
@@ -640,6 +640,15 @@ return aReturnListPt;
 #if (defined(NPY_API_VERSION) && NPY_API_VERSION >= 0x00000004 && PY_VERSION_HEX >= 0x03000000)
 #include "numpy/npy_3kcompat.h"
 #endif
+
+extern "C"
+{
+#if PY_VERSION_HEX >= 0x03000000
+int lima_import_array();
+#else
+void lima_import_array();
+#endif
+}
 %End
 
 %UnitCode
@@ -647,12 +656,23 @@ return aReturnListPt;
 %End
 
 %ModuleCode
+#define PY_ARRAY_UNIQUE_SYMBOL _limaNumpyArray
+#include "numpy/arrayobject.h"
+#include <iostream>
+using namespace std;
 extern "C"
 {
 #if PY_VERSION_HEX >= 0x03000000
-int lima_import_array();
+  int lima_import_array()
+  {
+    import_array();
+    return 0;
+  }
 #else
-void lima_import_array();
+  void lima_import_array()
+  {
+    import_array();
+  }
 #endif
 }
 %End

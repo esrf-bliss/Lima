@@ -22,15 +22,15 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-function(limatools_set_library_soversion lib_name version_file)
-
-    file(STRINGS ${version_file}  version)
-    # for lib version as 1.2.3 soverion is fixed to 1.2
-    string(REGEX MATCH "^([0-9]+)\\.([0-9]+)" soversion "${version}")
-
-    set_target_properties(${lib_name} PROPERTIES VERSION "${version}" SOVERSION "${soversion}")
-
-endfunction()
+# function(limatools_set_library_soversion lib_name version_file)
+#
+#     file(STRINGS ${version_file}  version)
+#     # for lib version as 1.2.3 soverion is fixed to 1.2
+#     string(REGEX MATCH "^([0-9]+)\\.([0-9]+)" soversion "${version}")
+#
+#     set_target_properties(${lib_name} PROPERTIES VERSION "${version}" SOVERSION "${soversion}")
+#
+# endfunction()
 
 
 function(limatools_run_camera_tests test_src cam_name)
