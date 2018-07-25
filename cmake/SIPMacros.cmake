@@ -19,11 +19,15 @@
 # The behaviour of the ADD_SIP_PYTHON_MODULE macro can be controlled by a
 # number of variables:
 #
-# SIP_INCLUDES - List of directories which SIP will scan through when looking
+# SIP_INCLUDE_DIRS - List of directories which SIP will scan through when looking
 #     for included .sip files. (Corresponds to the -I option for SIP.)
 #
 # SIP_TAGS - List of tags to define when running SIP. (Corresponds to the -t
 #     option for SIP.)
+#
+# SIP_CONCAT_PARTS - An integer which defines the number of parts the C++ code
+#     of each module should be split into. Defaults to 8. (Corresponds to the
+#     -j option for SIP.)
 #
 # SIP_DISABLE_FEATURES - List of feature names which should be disabled
 #     running SIP. (Corresponds to the -x option for SIP.)
@@ -31,8 +35,12 @@
 # SIP_EXTRA_OPTIONS - Extra command line options which should be passed on to
 #     SIP.
 
-set(SIP_INCLUDES)
+# See https://itk.org/Bug/view.php?id=12265
+get_filename_component(_SIPMACRO_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
+
+set(SIP_INCLUDE_DIRS)
 set(SIP_TAGS)
+set(SIP_CONCAT_PARTS 16)
 set(SIP_DISABLE_FEATURES)
 set(SIP_EXTRA_OPTIONS)
 
@@ -56,10 +64,10 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
 
     file(MAKE_DIRECTORY ${_module_path})    # Output goes in this dir.
 
-    set(_sip_includes)
-    foreach (_inc ${SIP_INCLUDES})
+    set(_sip_include_dirs)
+    foreach (_inc ${SIP_INCLUDE_DIRS})
         get_filename_component(_abs_inc ${_inc} ABSOLUTE)
-        list(APPEND _sip_includes -I ${_abs_inc})
+        list(APPEND _sip_include_dirs -I ${_abs_inc})
     endforeach (_inc )
 
     set(_sip_tags)
@@ -72,84 +80,55 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
         list(APPEND _sip_x -x ${_x})
     endforeach (_x ${SIP_DISABLE_FEATURES})
 
-    set(_message "-DMESSAGE=Generating CPP code for module ${MODULE_NAME}")
-	
-    set(_module_sbf ${_module_path}/${MODULE_NAME}.sbf)
-    execute_process(COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x}
-                    ${SIP_EXTRA_OPTIONS} ${_sip_includes}
-                    -b ${_module_sbf} ${_abs_module_sip}
-    )
-
-    if(${MODULE_NAME} STREQUAL "processlib")
-        message(FATAL_ERROR "processlib module has its own SIPMacros")
-    endif()
-    set(_init_numpy "${_child_module_name}_init_numpy.cpp")
-    set(_init_numpy_cpp ${_module_path}/${_init_numpy})
-
-    set(_sip_output_files_list)
-    execute_process(
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/readsipsbf.py 
-                                     ${_module_sbf} ${_module_path}
-        OUTPUT_VARIABLE _sip_output_files_list
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-	
     set(_sip_output_files)
-    foreach(filename IN LISTS _sip_output_files_list)
-        set(_sip_output_files ${_sip_output_files} ${filename})
-    endforeach(filename)
-
-    if(NOT WIN32)
-        set(TOUCH_COMMAND touch)
-    else(NOT WIN32)
-        set(TOUCH_COMMAND echo)
-        # instead of a touch command, give out the name and append to the files
-        # this is basically what the touch command does.
-        foreach(filename ${_sip_output_files})
-            file(APPEND filename "")
-        endforeach(filename ${_sip_output_files})
-    endif(NOT WIN32)
-
-    # TODO: add all SIP files with the %Include directive + Exceptions.sip
+    foreach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
+        if( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
+            set(_sip_output_files ${_sip_output_files} ${_module_path}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
+        endif( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
+    endforeach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
 
     add_custom_command(
         OUTPUT ${_sip_output_files}
-        COMMAND ${CMAKE_COMMAND} -E echo ${message}
-        COMMAND ${TOUCH_COMMAND} ${_sip_output_files}
-        COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
-                                  ${_sip_includes} -c ${_module_path}
-                                  ${_abs_module_sip}
+        COMMAND ${CMAKE_COMMAND} -E touch ${_sip_output_files}
+        COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS} -j ${SIP_CONCAT_PARTS} -c ${_module_path} ${_sip_include_dirs} ${_abs_module_sip}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
+        COMMENT "Generating SIP code for module ${MODULE_NAME}"
     )
 
     if (${RUN_CHECK_SIP_EXC})
-        add_custom_command(
-            OUTPUT ${_sip_output_files}
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py ${_sip_output_files}
-            COMMENT "Running SIP exceptions check"
-            APPEND
-        )
-    endif()
+    add_custom_command(
+        OUTPUT ${_sip_output_files}
+        COMMAND ${PYTHON_EXECUTABLE} "${_SIPMACRO_LIST_DIR}/checksipexc.py" ${_sip_output_files}
+        DEPENDS ${_sip_output_files}
+        COMMENT "Running checksipexc.py"
+        APPEND
+    )
+    endif ()
+
+    # Add the import numpy compilation unit
+    # See https://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
+    configure_file(${_SIPMACRO_LIST_DIR}/sip_init_numpy.cpp.in sip/sip_init_numpy.cpp)
+    list(APPEND _sip_output_files "${CMAKE_CURRENT_BINARY_DIR}/sip/sip_init_numpy.cpp")
 
     # not sure if type MODULE could be uses anywhere, limit to cygwin for now
-    set(_sip_all_files ${_init_numpy_cpp} ${_sip_output_files})
     if (CYGWIN)
-        add_library(${_logical_name} MODULE ${_sip_all_files} )
+        add_library(${_logical_name} MODULE ${_sip_output_files} )
     else (CYGWIN)
-        add_library(${_logical_name} SHARED ${_sip_all_files} )
+        add_library(${_logical_name} SHARED ${_sip_output_files} )
     endif (CYGWIN)
-    target_link_libraries(${_logical_name} ${PYTHON_LIBRARY})
-    target_link_libraries(${_logical_name} ${EXTRA_LINK_LIBRARIES})
+    target_link_libraries(${_logical_name} PRIVATE ${PYTHON_LIBRARY})
+    target_link_libraries(${_logical_name} PRIVATE ${EXTRA_LINK_LIBRARIES})
     set_target_properties(${_logical_name} PROPERTIES
                           PREFIX "" OUTPUT_NAME ${_child_module_name}
                           LINKER_LANGUAGE CXX)
 
     if (WIN32)
       set_target_properties(${_logical_name} PROPERTIES SUFFIX ".pyd")
-      set_target_properties(${_logical_name} PROPERTIES IMPORT_SUFFIX ".dll")
     endif (WIN32)
 
-    install(TARGETS ${_logical_name} 
-            DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}")
+    install(TARGETS ${_logical_name}
+      LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}"
+      RUNTIME DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}"
+    )
 
 endmacro(ADD_SIP_PYTHON_MODULE)
