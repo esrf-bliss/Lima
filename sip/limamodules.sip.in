@@ -1,12 +1,24 @@
-%Module(name=lima@NAME@,version=0)
-
+%Module(name=@MODULE_NAME@,version=0)
 
 %ModuleCode
-extern "C" {
+#define PY_ARRAY_UNIQUE_SYMBOL _limaNumpyArray
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include "numpy/arrayobject.h"
+#include <iostream>
+using namespace std;
+extern "C"
+{
 #if PY_VERSION_HEX >= 0x03000000
-int lima_import_array();
+  int lima_import_array()
+  {
+    import_array();
+    return 0;
+  }
 #else
-void lima_import_array();
+  void lima_import_array()
+  {
+    import_array();
+  }
 #endif
 }
 %End
@@ -17,10 +29,38 @@ void lima_import_array();
 #if (defined(NPY_API_VERSION) && NPY_API_VERSION >= 0x00000004 && PY_VERSION_HEX >= 0x03000000)
 #include "numpy/npy_3kcompat.h"
 #endif
+
+extern "C" {
+#if PY_VERSION_HEX >= 0x03000000
+int lima_import_array();
+#else
+void lima_import_array();
+#endif
+}
 %End
 
 %UnitCode
-#include <lima_repr_attr.cpp>
+#include <Python.h>
+// __repr__ attr for both python 2 (string) and 3 (unicode)
+// to be included in sip class definition using %include
+
+//	SIP_PYOBJECT __repr__() const /TypeHint="str"/;
+
+#if !defined(LIMA_REPR_CODE)
+#if PY_VERSION_HEX >= 0x03000000
+#define LIMA_REPR_CODE \
+  std::ostringstream str; \
+  str << *sipCpp;	\
+  const std::string& tmpString = str.str(); \
+  sipRes = PyUnicode_FromString(tmpString.c_str());
+#else
+#define LIMA_REPR_CODE \
+  std::ostringstream str; \
+  str << *sipCpp;	\
+  const std::string& tmpString = str.str(); \
+  sipRes = PyString_FromString(tmpString.c_str());
+#endif // LIMA_REPR_CODE
+#endif // !defined(LIMA_REPR_CODE)
 %End
 
 %PostInitialisationCode
