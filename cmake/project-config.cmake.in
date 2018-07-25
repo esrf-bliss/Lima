@@ -1,0 +1,23 @@
+# Config file for @PROJECT_NAME_LOWER@
+#
+# It defines the following variables:
+#
+# @PROJECT_NAME_UPPER@_INCLUDE_DIRS     - include directory
+# @PROJECT_NAME_UPPER@_LIBRARIES        - all dynamic libraries
+# @PROJECT_NAME_UPPER@_STATIC_LIBRARIES - all static libraries
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Processlib)
+
+# Add optional dependencies here
+#find_dependency(HDF5)
+
+set(@PROJECT_NAME_UPPER@_SIP_DISABLE_FEATURES "@SIP_DISABLE_FEATURES@")
+
+set_and_check(@PROJECT_NAME_UPPER@_SIP_INCLUDE_DIRS "@PACKAGE_SIP_INSTALL_DIR@")
+set_and_check(@PROJECT_NAME_UPPER@_CMAKE_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_DIR@")
+
+include("${CMAKE_CURRENT_LIST_DIR}/@TARGETS_EXPORT_NAME@.cmake")
+check_required_components("@PROJECT_NAME@")

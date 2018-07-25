@@ -22,102 +22,81 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-function(limatools_set_library_soversion lib_name version_file)
+# this function runs camera's c++ tests
+function(limatools_run_camera_tests test_src camera)
 
-    file(STRINGS ${version_file}  version)
-    # for lib version as 1.2.3 soverion is fixed to 1.2
-    string(REGEX MATCH "^([0-9]+)\\.([0-9]+)" soversion "${version}")
-
-    set_target_properties(${lib_name} PROPERTIES VERSION "${version}" SOVERSION "${soversion}")
-
-endfunction()
-
-
-function(limatools_run_camera_tests test_src cam_name)
-
-	if(${ARGC} GREATER 2)
-		set(test_arg ${ARGV2} ${ARGV3} ${ARGV4} ${ARGV5} ${ARGV6})
-	endif()
-	foreach(file ${test_src})
-		add_executable(${file} "${file}.cpp")
-		target_link_libraries(${file} limacore lima${cam_name})
-		add_test(NAME ${file} COMMAND ${file} ${test_arg})
-		if(WIN32)
-			# Add the dlls to the %PATH%
-			string(REPLACE ";" "\;" ESCAPED_PATH "$ENV{PATH}")
-			set_tests_properties(${file} PROPERTIES ENVIRONMENT "PATH=${ESCAPED_PATH}\;$<SHELL_PATH:$<TARGET_FILE_DIR:limacore>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:processlib>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:lima${cam_name}>>")
-		endif()
-	endforeach(file)
+  if(${ARGC} GREATER 2)
+    set(test_arg ${ARGV2} ${ARGV3} ${ARGV4} ${ARGV5} ${ARGV6})
+  endif()
+  foreach(file ${test_src})
+    add_executable(${file} "${file}.cpp")
+    target_link_libraries(${file} limacore lima${camera})
+    add_test(NAME ${file} COMMAND ${file} ${test_arg})
+    if(WIN32)
+      # Add the dlls to the %PATH%
+      string(REPLACE ";" "\;" ESCAPED_PATH "$ENV{PATH}")
+      set_tests_properties(${file} PROPERTIES ENVIRONMENT "PATH=${ESCAPED_PATH}\;$<SHELL_PATH:$<TARGET_FILE_DIR:limacore>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:processlib>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:lima${camera}>>")
+    endif()
+  endforeach(file)
 
 endfunction()
 
-function(limatools_run_camera_python_tests test_src cam_name)
+# this function runs camera's python tests
+function(limatools_run_camera_python_tests test_src camera)
 
-	foreach(file ${test_src})
+  foreach(file ${test_src})
     add_test(NAME ${file}
       COMMAND ${PYTHON_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/${file}.py)
     if(WIN32)
         # Add the dlls to the %PATH%
         string(REPLACE ";" "\;" ESCAPED_PATH "$ENV{PATH}")
-        set_tests_properties(${file} PROPERTIES ENVIRONMENT "PATH=${ESCAPED_PATH}\;$<SHELL_PATH:$<TARGET_FILE_DIR:limacore>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:processlib>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:lima${cam_name}>>;PYTHONPATH=$<SHELL_PATH:${CMAKE_BINARY_DIR}/python>\;$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_limacore>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_processlib>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_lima${cam_name}>>")
+        set_tests_properties(${file} PROPERTIES ENVIRONMENT "PATH=${ESCAPED_PATH}\;$<SHELL_PATH:$<TARGET_FILE_DIR:limacore>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:processlib>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:lima${camera}>>;PYTHONPATH=$<SHELL_PATH:${CMAKE_BINARY_DIR}/python>\;$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_limacore>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_processlib>>\;$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_lima${camera}>>")
     else()
-        set_tests_properties(${file} PROPERTIES ENVIRONMENT "PYTHONPATH=$<SHELL_PATH:${CMAKE_BINARY_DIR}/python>:$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_limacore>>:$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_processlib>>:$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_lima${cam_name}>>")
+        set_tests_properties(${file} PROPERTIES ENVIRONMENT "PYTHONPATH=$<SHELL_PATH:${CMAKE_BINARY_DIR}/python>:$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_limacore>>:$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_processlib>>:$<SHELL_PATH:$<TARGET_FILE_DIR:python_module_lima${camera}>>")
     endif()
-	endforeach(file)
+  endforeach(file)
 
 endfunction()
 
+# this function is used to build camera's python binding
+function(limatools_run_sip_for_camera camera)
 
-function(limatools_run_sip_for_camera cam_name)
+  set(MODULE_NAME lima${camera})
 
+  # Add %Include directives for every source files
   set(INCLUDES)
   file(GLOB sipfiles RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/sip" "${CMAKE_CURRENT_SOURCE_DIR}/sip/*.sip")
   foreach(sipfile ${sipfiles})
-    set(INCLUDES
-      "${INCLUDES}
-%Include ${sipfile}")
+    set(INCLUDES "${INCLUDES} \n%Include ${sipfile}")
   endforeach()
 
-  set(IMPORTS
-    "${IMPORTS}
-%Import limacore.sip")
+  # Add %import directives for every source files
+  set(sipfiles "limacore.sip" )
+  list(APPEND sipfiles ${IMPORTS})
+  set(IMPORTS)
+  foreach(sipfile ${sipfiles})
+    set(IMPORTS "${IMPORTS} \n%Import ${sipfile}")
+  endforeach()
 
-  if(SIP_VERSION_STR VERSION_LESS "4.12")
-    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules_before_4_12.sip.in sip/lima${cam_name}.sip)
-  else()
-    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/lima${cam_name}.sip)
-  endif()
+  # Uses INCLUDES and IMPORTS
+  configure_file(${LIMA_SIP_INCLUDE_DIRS}/limamodules.sip.in sip/${MODULE_NAME}.sip)
   set(SIP_CONCAT_PARTS 1)
-  set(SIP_INCLUDES ${SIP_INCLUDES}
-    "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip"
-    "${CMAKE_BINARY_DIR}/sip/core"
-    "${CMAKE_SOURCE_DIR}/third-party/Processlib/tasks/sip"
-    "${CMAKE_SOURCE_DIR}/common/sip"
-    "${CMAKE_SOURCE_DIR}/hardware/sip"
-    "${CMAKE_SOURCE_DIR}/control/sip"
-    "${CMAKE_SOURCE_DIR}/control/software_operation/sip"
-    "${CMAKE_CURRENT_SOURCE_DIR}/sip")
 
-  add_sip_python_module(lima${cam_name} ${CMAKE_CURRENT_BINARY_DIR}/sip/lima${cam_name}.sip)
-  target_include_directories(python_module_lima${cam_name} PRIVATE
+  list(APPEND SIP_INCLUDE_DIRS
+    ${LIMA_SIP_INCLUDE_DIRS}
+    ${PROCESSLIB_SIP_INCLUDE_DIRS}
+    "${CMAKE_CURRENT_SOURCE_DIR}/sip"
+  )
+
+  # If Lima is an imported target, set the SIP_DISABLE_FEATURES
+  set(SIP_DISABLE_FEATURES ${LIMA_SIP_DISABLE_FEATURES})
+
+  add_sip_python_module(${MODULE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/${MODULE_NAME}.sip)
+  target_include_directories(python_module_${MODULE_NAME} PRIVATE
     ${PYTHON_INCLUDE_DIRS}
-    "${CMAKE_SOURCE_DIR}/sip"
-    "${CMAKE_SOURCE_DIR}/sip/core"
-    "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip")
-  target_link_libraries(python_module_lima${cam_name} lima${cam_name})
-endfunction()
+    ${NUMPY_INCLUDE_DIRS}
+  )
 
-# set install dir for libraries "name"
-function(limatools_set_install_libdir lib_name)
-  if(WIN32)
-    set_target_properties(${lib_name} PROPERTIES PREFIX "lib")
-    install(TARGETS ${lib_name}
-            LIBRARY DESTINATION lib
-            RUNTIME DESTINATION bin)
-  else()
-    include(GNUInstallDirs)
-    install(TARGETS ${lib_name}
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  endif()
+  target_link_libraries(python_module_${MODULE_NAME} PUBLIC ${camera} limacore ${NUMPY_LIBRARIES})
 endfunction()

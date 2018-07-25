@@ -22,10 +22,7 @@
 struct HwFrameInfoType
 {
 %TypeHeaderCode
-#define NO_IMPORT_ARRAY
-#define PY_ARRAY_UNIQUE_SYMBOL _LimaNumPy
-#include "numpy/arrayobject.h"
-#include <lima/HwFrameInfo.h>
+#include "lima/HwFrameInfo.h"
 #include <sstream>
 using namespace lima;
 %End
@@ -33,7 +30,8 @@ using namespace lima;
 
 	int acq_frame_nb;
 
-	void *frame_data;
+	void *frame_data
+{
 %GetCode
 	if(!sipCpp->frame_ptr || !sipCpp->frame_dim.isValid())
    		Py_RETURN_NONE;
@@ -71,7 +69,7 @@ if(!sipErr)
   if(!sipErr)
   {
     ImageType image_type;
-    switch(tmpObject->descr->type_num)
+    switch(PyArray_TYPE(tmpObject))
     {
     case NPY_BYTE: 	image_type = Bpp8S; 	break;
     case NPY_UBYTE:  	image_type = Bpp8;  	break;
@@ -95,7 +93,7 @@ if(!sipErr)
 }
 Py_DECREF(tmpObject);
 %End
-
+};
 	Timestamp frame_timestamp;
 	int valid_pixels;
         HwFrameInfoType::OwnerShip buffer_owner_ship;
@@ -113,7 +111,7 @@ Py_DECREF(tmpObject);
   	  if(nbDim == 2)
 	  {
  	    ImageType image_type;
-    	    switch(tmpObject->descr->type_num)
+    	    switch(PyArray_TYPE(tmpObject))
     	    {
 	      case NPY_BYTE:	image_type = Bpp8S;  	break;
     	      case NPY_UBYTE:  	image_type = Bpp8;  	break;
@@ -129,18 +127,15 @@ Py_DECREF(tmpObject);
 				   PyArray_DIM(tmpObject,0),
 				   image_type);
               
-	      sipCpp = new HwFrameInfoType(a0, PyArray_DATA(a1),&tmpFrameDim, *a2, a3, a4);
+	      sipCpp = new HwFrameInfoType(a0, PyArray_DATA(tmpObject),&tmpFrameDim, *a2, a3, a4);
 	  }
 	clean:
 	  Py_DECREF(tmpObject);
 	}
 %End
-	const char* __repr__();
+	SIP_PYOBJECT __repr__() const;
 %MethodCode
-	std::ostringstream str;
-	str << *sipCpp;	
-	const std::string& tmpString = str.str();
-	sipRes = tmpString.c_str();
+        LIMA_REPR_CODE
 %End
 };
 

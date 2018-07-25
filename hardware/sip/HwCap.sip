@@ -29,7 +29,50 @@ class HwCap
 #include "lima/HwBufferCtrlObj.h"
 #include "lima/HwSyncCtrlObj.h"
 #include "lima/HwBinCtrlObj.h"
-#include <LimaConvertor.h>
+
+#define LIMA_HWCAP_TO_SIP_CTRLOBJ_HEAD(cppHwCap)			\
+  switch(cppHwCap->getType())						\
+  {
+
+#define LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, cppClass, sipClass) \
+  case HwCap::aCap:							\
+  {									\
+    cppClass *aCtrlObjPtr = NULL;					\
+    if (cppHwCap->getCtrlObj(aCtrlObjPtr))				\
+      sipRes = sipConvertFromInstance(aCtrlObjPtr, sipClass, NULL);	\
+    break;								\
+  }
+
+#define LIMA_HWCAP_TO_SIP_CTRLOBJ_TAIL(cppHwCap)			\
+  default:								\
+    std::cerr << "HwCap getCtrlObj : sip wrapping Type -> "		\
+              << cppHwCap->getType() << " not yet managed"		\
+	      << std::endl;						\
+    break;								\
+  }
+
+#define LIMA_HWCAP_TO_SIP_HW_CTRLOBJ_CASE(cppHwCap, aCap)		\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Hw##aCap##CtrlObj,	\
+				 sipClass_Hw##aCap##CtrlObj)
+
+#define LIMA_HWCAP_TO_SIP_FRELON_CTRLOBJ_CASE(cppHwCap, aCap)		\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Frelon::aCap##CtrlObj,	\
+				 sipClass_Frelon_##aCap##CtrlObj)
+
+#define LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(cppHwCap, macDomain)		\
+{									\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_HEAD(cppHwCap)				\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, DetInfo)	\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Buffer)	\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Sync)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Bin)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Roi)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Flip)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Shutter)	\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Event)		\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_TAIL(cppHwCap)				\
+}
+
 using namespace lima;
 %End
 public:
@@ -41,7 +84,7 @@ public:
 		Timing,			// Read only detector timmings
 		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
-		Video,			// Video capable usualy color camera 
+		Video,			// Video capable usualy color camera
 		Event,			// Asynch. event (error) generator
 	};
 	HwCap();
@@ -61,4 +104,3 @@ public:
 LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(sipCpp, HW);
 %End
 };
- 

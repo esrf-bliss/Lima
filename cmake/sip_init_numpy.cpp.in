@@ -1,5 +1,6 @@
 //###########################################################################
-// This file is part of LImA, a Library for Image Acquisition
+// This file is part of ProcessLib, a submodule of LImA project the
+// Library for Image Acquisition
 //
 // Copyright (C) : 2009-2011
 // European Synchrotron Radiation Facility
@@ -22,18 +23,18 @@
 #include <Python.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#define PY_ARRAY_UNIQUE_SYMBOL _LimaNumPy
+#define PY_ARRAY_UNIQUE_SYMBOL _@PROJECT_NAME@NumpyArray
 #include "numpy/arrayobject.h"
 extern "C"
 {
 #if PY_VERSION_HEX >= 0x03000000
-  int lima_import_array()
+  int @PROJECT_NAME_LOWER@_import_array()
   {
     import_array();
     return 0;
   }
 #else
-  void lima_import_array()
+  void @PROJECT_NAME_LOWER@_import_array()
   {
     import_array();
   }

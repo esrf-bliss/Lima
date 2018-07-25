@@ -39,8 +39,6 @@ class Setting;
 
 #include "numpy/numpyconfig.h"
 #if (defined(NPY_API_VERSION) && NPY_API_VERSION >= 0x00000004 && PY_VERSION_HEX >= 0x03000000)
-#define NO_IMPORT_ARRAY
-#define PY_ARRAY_UNIQUE_SYMBOL _LimaNumPy
 #include "numpy/npy_3kcompat.h"
 #endif
 

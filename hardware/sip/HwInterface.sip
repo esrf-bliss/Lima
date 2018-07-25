@@ -60,7 +60,7 @@ int aPos = 0;
 for(std::vector<HwCap>::iterator i = sipCpp->begin();
     i != sipCpp->end();++i,++aPos)
 {
-  PyObject *aHwCap = sipConvertFromInstance(&(*i),sipClass_HwCap,NULL); 
+  PyObject *aHwCap = sipConvertFromInstance(&(*i),sipClass_HwCap,NULL);
   PyList_SET_ITEM(returnList,aPos,aHwCap);
   Py_DECREF(aHwCap);
 }
@@ -73,9 +73,53 @@ class HwInterface
 %TypeHeaderCode
 #include "lima/HwCap.h"
 #include "lima/HwInterface.h"
-#include <LimaConvertor.h>
+
+#define LIMA_HWCAP_TO_SIP_CTRLOBJ_HEAD(cppHwCap)			\
+  switch(cppHwCap->getType())						\
+  {
+
+#define LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, cppClass, sipClass) \
+  case HwCap::aCap:							\
+  {									\
+    cppClass *aCtrlObjPtr = NULL;					\
+    if (cppHwCap->getCtrlObj(aCtrlObjPtr))				\
+      sipRes = sipConvertFromInstance(aCtrlObjPtr, sipClass, NULL);	\
+    break;								\
+  }
+
+
+#define LIMA_HWCAP_TO_SIP_CTRLOBJ_TAIL(cppHwCap)			\
+  default:								\
+    std::cerr << "HwCap getCtrlObj : sip wrapping Type -> "		\
+              << cppHwCap->getType() << " not yet managed"		\
+	      << std::endl;						\
+    break;								\
+  }
+
+#define LIMA_HWCAP_TO_SIP_HW_CTRLOBJ_CASE(cppHwCap, aCap)		\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Hw##aCap##CtrlObj,	\
+				 sipClass_Hw##aCap##CtrlObj)
+
+#define LIMA_HWCAP_TO_SIP_FRELON_CTRLOBJ_CASE(cppHwCap, aCap)		\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Frelon::aCap##CtrlObj,	\
+				 sipClass_Frelon_##aCap##CtrlObj)
+
+#define LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(cppHwCap, macDomain)		\
+{									\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_HEAD(cppHwCap)				\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, DetInfo)	\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Buffer)	\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Sync)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Bin)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Roi)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Flip)		\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Shutter)	\
+  LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Event)		\
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_TAIL(cppHwCap)				\
+}
+
 using namespace lima;
-%End  
+%End
  public:
         struct StatusType {
 	  enum Basic {Ready,Exposure,Readout,Latency,Config};
@@ -117,7 +161,7 @@ using namespace lima;
 	virtual void getStatus(StatusType& status /Out/) = 0;
 	virtual int getNbAcquiredFrames();
 	virtual int getNbHwAcquiredFrames() = 0;
-	
+
 	virtual bool firstProcessingInPlace() const ;
 
 };
