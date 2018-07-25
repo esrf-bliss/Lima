@@ -31,7 +31,7 @@ if(SIP_VERSION)
   set(SIP_FOUND TRUE)
 else(SIP_VERSION)
 
-  set(find_sip_py ${CMAKE_SOURCE_DIR}/cmake/FindSIP.py)
+  set(find_sip_py ${CMAKE_CURRENT_LIST_DIR}/FindSIP.py)
 
   execute_process(COMMAND ${PYTHON_EXECUTABLE} ${find_sip_py} OUTPUT_VARIABLE sip_config)
   if(sip_config)
