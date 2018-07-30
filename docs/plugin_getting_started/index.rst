@@ -8,7 +8,7 @@ Library structure
 
 The library structure is divided into two main layers: the control, containing the common control and processing code, and the hardware which is implementing the detector-specific part.
 The control layer provides the library interface to the high level application. User requests to configure and control the acquisition are gathered by the control layer,
-so the hardware layer functionality is limited to the generation the image frames in a best-effort basis. The control layer is responsible of:
+so the hardware layer functionality is limited to the generation of the image frames in a best-effort basis. The control layer is responsible of:
 i) adapting the received image geometry if it does not match the user requests, and ii) execute the frame processing chain.
 
 Generic Interface
