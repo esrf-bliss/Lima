@@ -46,6 +46,7 @@ namespace lima {
     CtAccumulation* 	m_ct_accumulation;
   };
 
+  /// Controls buffer settings such as number of buffers, binning and rotation
   class LIMACORE_API CtBuffer 
   {
     DEB_CLASS_NAMESPC(DebModControl,"Buffer","Control");

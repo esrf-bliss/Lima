@@ -1,10 +1,16 @@
-.. _getit:
+.. _get_source:
 
-Get the Software
-----------------
-As Lima is not packaged yet, the only way for now is to retrieve the source from Github. You may either get the source tarball from the releases or using ``git``.
+Get the Source
+--------------
+As Lima is not packaged yet, the only way for now is to retrieve the source from Github. You may either get the source tarball from the releases or use Git_.
 
-For both Linux and Windows we recommend to use the git tools:
+Recent version of Git_ are provided by Conda, so if you already have Conda, you may want to install it in your base environment:
+
+.. code-block:: bash
+
+  conda install git
+
+Else, for both Linux and Windows, we recommend to use the git tools:
 
 - For Linux, install Git_ package if your linux distribution did not.
 - For Windows, get and install Git_ first from the download section. Then use the git-bash tool with linux-like commands.
@@ -35,20 +41,19 @@ In addition (but optional) you can get the **TANGO** python device servers, so u
 
 .. code-block:: bash
 
-  git submodule init application/tango/python
+  git submodule init applications/tango/python
   git submodule update
 
-
-Need a Specific Version?
-^^^^^^^^^^^^^^^^^^^^^^^^
+For a Specific Version
+^^^^^^^^^^^^^^^^^^^^^^
 Stable versions of lima are tracked via Git branches and Git tags. So you can retrieve any particular version using git tools.
 Please refer to the release notes document `release notes`_ , for more information of the latest release and tags.
 
-For instance if you want to get version 1.7.1 of Lima core, do:
+For instance if you want to get version 1.8.0 of Lima core, do:
 
 .. code-block:: bash
 
-  git checkout core-1.7.1
+  git checkout v1.8.0
   git submodule init
   git submodule update
 

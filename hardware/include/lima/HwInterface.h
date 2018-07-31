@@ -30,6 +30,8 @@
 namespace lima
 {
 
+/// As an interface to the Control Layer, this class exports the capabilities provided by the hardware.
+/// It is implemented by every camera plugins.
 class LIMACORE_API HwInterface
 {
 	DEB_CLASS(DebModHardware, "HwInterface");
@@ -37,13 +39,15 @@ class LIMACORE_API HwInterface
  public:
 	typedef std::vector<HwCap> CapList;
 
-	typedef struct Status {
-	  enum Basic {Fault,Ready,Exposure,Readout,Latency,Config};
-	  inline void set(Basic);
+  /// A tuple of status with acquisition and detector status / mask
+	typedef struct Status
+	{
+		enum Basic {Fault, Ready, Exposure, Readout, Latency, Config};
+		inline void set(Basic);
 
-		AcqStatus acq;
-		DetStatus det;
-		DetStatus det_mask;
+		AcqStatus acq;			//!< Global acquisition status.
+		DetStatus det;			//!< Compound bit flags specifying the current detector status.
+		DetStatus det_mask;	//!< A mask specifying the detector status bits that are supported by the hardware.
 	} StatusType;
 
 	enum ResetLevel {
@@ -53,18 +57,32 @@ class LIMACORE_API HwInterface
 	HwInterface();
 	virtual ~HwInterface();
 
+  /// Returns a list of capabilities
 	virtual void getCapList(CapList &) const = 0;
 
 	template <class CtrlObj>
 	bool getHwCtrlObj(CtrlObj *& ctrl_obj_ptr) const;
 
+	/// Reset the hardware interface
 	virtual void reset(ResetLevel reset_level) = 0;
+
+	/// Prepare the acquisition and make sure the camera is properly configured.
+	/// This member function is always called before the acquisition is started.
 	virtual void prepareAcq() = 0;
+
+	/// Start the acquisition
 	virtual void startAcq() = 0;
+
+	/// Stop the acquisition
 	virtual void stopAcq() = 0;
+
+	/// Returns the current state of the hardware
 	virtual void getStatus(StatusType& status) = 0;
 
+	/// Returns the number of acquired frames
 	virtual int getNbAcquiredFrames();
+
+	/// Returns the number of acquired frames returned by the hardware (may differ from getNbAcquiredFrames if accumulation is on)
 	virtual int getNbHwAcquiredFrames() = 0;
 
 	virtual bool firstProcessingInPlace() const {return true;}
@@ -84,14 +102,14 @@ bool HwInterface::getHwCtrlObj(CtrlObj *& ctrl_obj) const
 	return false;
 }
 
-LIMACORE_API std::ostream& operator <<(std::ostream& os, 
+LIMACORE_API std::ostream& operator <<(std::ostream& os,
 				       const HwInterface::StatusType& status);
-LIMACORE_API std::ostream& operator <<(std::ostream& os, 
+LIMACORE_API std::ostream& operator <<(std::ostream& os,
 				       HwInterface::ResetLevel reset_level);
 
 void HwInterface::StatusType::set(HwInterface::StatusType::Basic basic_status)
 {
-  switch (basic_status) 
+  switch (basic_status)
     {
     case HwInterface::StatusType::Ready:
       acq = AcqReady;

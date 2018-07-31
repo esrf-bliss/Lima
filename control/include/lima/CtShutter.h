@@ -33,6 +33,7 @@
 
 namespace lima {
 
+  /// Control shutter settings such as open and close time
   class LIMACORE_API CtShutter 
   {
     friend class CtControl;

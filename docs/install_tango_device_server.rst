@@ -6,7 +6,7 @@ PyTango Device Server
 Server setup
 ````````````
 
-As PyTango_ (Tango_ for python) server is provided as Python script, you just have to copy the application/tango/python directory wherever you want.
+As PyTango_ (Tango_ for python) server is provided as Python script, you just have to copy the ``applications/tango/python`` directory wherever you want.
 
 - ``camera`` directory: contained all camera Tango device specifics so remove all none need script
 - ``doc`` directory: contained plugins camera documentation (exhaustive list of properties, commands and attributes)

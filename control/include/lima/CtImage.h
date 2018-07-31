@@ -130,7 +130,7 @@ class LIMACORE_API CtMaxImageSizeCB : public HwMaxImageSizeCallback
 	CtImage *m_ct;
 };
 
-	
+/// Control image processing settings such as ROI, binning and rotation
 class LIMACORE_API CtImage {
 	friend class CtControl;
 	DEB_CLASS_NAMESPC(DebModControl,"Image","Control");

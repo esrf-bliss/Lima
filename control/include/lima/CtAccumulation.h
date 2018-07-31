@@ -32,6 +32,8 @@
 
 namespace lima
 {
+  
+  /// Control image accumulation settings
   class LIMACORE_API CtAccumulation
   {
     DEB_CLASS_NAMESPC(DebModControl,"Accumulation","Control");

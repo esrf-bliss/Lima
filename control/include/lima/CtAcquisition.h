@@ -33,10 +33,11 @@
 #include "lima/CtConfig.h"
 #include "lima/Debug.h"
 
-namespace lima 
-{	
-
-  class LIMACORE_API CtAcquisition 
+namespace lima
+{
+  /// This class control the acquisition of images given a hardware
+  /// interface.
+  class LIMACORE_API CtAcquisition
   {
     DEB_CLASS_NAMESPC(DebModControl,"Acquisition","Control");
     friend class CtControl;

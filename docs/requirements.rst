@@ -1,10 +1,12 @@
 .. _requirements:
 
-
 Requirements
 ------------
 
 Some tools and libraries are required to build Lima for either Windows and Linux.
+
+.. note::
+  All the dependencies, build or runtime, are available as Conda_ packages for both Windows and Linux platforms.
 
 Build dependencies
 ~~~~~~~~~~~~~~~~~~
@@ -13,19 +15,17 @@ Build dependencies
 
   - Visual Studio 2008 for x86 or x64 for python2.7.x
   - Visual Studio 2008 Express for x86 only for python2.7.x
-  - Visual Studio 2015 for x86 and x64 for python >= 3.5
-  - Visual Studio 2017
+  - Visual Studio 2015 or 2017 for x86 and x64 for python >= 3.5
 
 - CMake_ >= 3.1
-- The GSL_ library. For Windows, download the ESRF binary package `gsl-windows`_ and install it under ``C:\Program Files``.
 
 Python dependencies
 ~~~~~~~~~~~~~~~~~~~
 
-Lima_ is compatible with python 2 and 3 (Linux only).
+Lima_ is compatible with python 2 and 3.
 
 - numpy_ >= 1.1
-- sip_ <= 4.18. Version 4.19 is known not to work.
+- sip_ >= 4.19
 
 Optional dependencies
 ~~~~~~~~~~~~~~~~~~~~~
@@ -34,27 +34,29 @@ Saving format dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - TIFF_, Tag Image File Format (TIFF), a widely used format for storing image data ;
-- zlib_, a lossless data-compression library. For Windows, you can download the esrf binary package `zlib-windows`_ and install it under ``C:\Program Files`` ;
+- zlib_, a lossless data-compression library. For Windows, you can download the ESRF binary package `zlib-windows`_ and install it under ``C:\Program Files`` ;
 - CBF_, a library for accessing Crystallographic Binary Files (CBF files) and Image-supporting CIF (imgCIF) files ;
 - HDF5_, a data model, library, and file format for storing and managing data ;
 - CCfits_, CFITSIO_, a library for reading and writing data files in FITS (Flexible Image Transport System) data format ;
 - LZ4_ >= 1.8.2, a lossless compression algorithm ;
-- libconfig_, a libraryfor processing structured configuration files. For Windows, you can download the ESRF binary package `libconfig-windows`_ and install it under ``C:\Program Files``.
+- libconfig_, a library for processing structured configuration files. For Windows, you can download the ESRF binary package `libconfig-windows`_ and install it under ``C:\Program Files``.
 
-PyTango_ server dependencies
+PyTango server dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- PyTango_
-- libtango_
+- PyTango_, the Tango python binding
+- libtango_, the Tango toolkit
 
 .. _git: https://git-scm.com
+.. _CMake: https://cmake.org
+.. _Conda: https://conda.io
+
 .. _Python: http://python.org
 .. _Lima: http://lima.blissgarden.org
 .. _GSL: https://www.gnu.org/software/gsl
 .. _gsl-windows:  http://ftp.esrf.fr/pub/bliss/lima/gsl-windows.zip
 .. _zlib-windows:  http://ftp.esrf.fr/pub/bliss/lima/zlib-windows.zip
 .. _libconfig-windows:  http://ftp.esrf.fr/pub/bliss/lima/libconfig-windows.zip
-.. _CMake: https://cmake.org
 
 .. _Tango: http://tango-control.org
 .. _PyTango: http://github.com/tango-cs/pytango

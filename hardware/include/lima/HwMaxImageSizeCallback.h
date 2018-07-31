@@ -26,11 +26,12 @@
 #include "lima/SizeUtils.h"
 #include "lima/Debug.h"
 
-namespace lima 
+namespace lima
 {
 
 class HwMaxImageSizeCallbackGen;
 
+/// A callback that let a camera plugin signal a change of image size after reconfiguration
 class LIMACORE_API HwMaxImageSizeCallback
 {
 	DEB_CLASS(DebModHardware, "HwMaxImageSizeCallback");
@@ -42,7 +43,7 @@ class LIMACORE_API HwMaxImageSizeCallback
 	HwMaxImageSizeCallbackGen *getMaxImageSizeCallbackGen() const;
 
  protected:
-	virtual void maxImageSizeChanged(const Size& size, 
+	virtual void maxImageSizeChanged(const Size& size,
 					 ImageType image_type) = 0;
 
  private:
