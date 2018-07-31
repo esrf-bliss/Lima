@@ -2,7 +2,7 @@ stages:
   - build
   - deploy
 
-build-conda-linux:
+build-linux:
   stage: build
   script:
     - conda build ./conda --prefix-length=80 --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
@@ -13,18 +13,16 @@ build-conda-linux:
     - conda
     - linux
 
-build-conda-win:
+build-win:
   stage: build
   script:
-    #- conda build ./conda --prefix-length=80 --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
-    - docker run --mount type=bind,source="%CD%",target="C:\sources" docker-registry.esrf.fr/bcu/conda-builder-win cmd /K cd C:\sources ^& conda build ./conda --prefix-length=80 --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
+    - conda build ./conda --prefix-length=80 --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
   artifacts:
     paths:
       - dist/
   tags:
     - conda
     - win
-    - shell
 
 deploy:
   stage: deploy
@@ -32,8 +30,8 @@ deploy:
     name: production
     url: http://bcu-ci.esrf.fr/stable
   dependencies:
-    - build-conda-linux
-    - build-conda-win
+    - build-linux
+    - build-win
   script:
     - cp -Rf dist/* /conda/
     - conda index /conda/
