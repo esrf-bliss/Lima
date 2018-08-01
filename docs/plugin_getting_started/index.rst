@@ -51,6 +51,7 @@ Parameters       Description
 =============== ============
 AcqStatus        Global acquisition status: Ready/Running/Fault
 DetStatus        Compound bit flags specifying the current detector status:
+
                    * Fault
                    * WaitForTrigger
                    * ShutterOpen
@@ -58,6 +59,7 @@ DetStatus        Compound bit flags specifying the current detector status:
                    * ShutterClose
                    * ChargeShift
                    * Readout
+
 DetStatusMask    A mask specifying the detector status bits that are supported by the hardware
 =============== ============
 
@@ -109,12 +111,14 @@ set/getExpTime   Frame exposure time
 set/getLatTime   Latency time between frames
 checkTrigMode    A check method which returns True/False for the supported trigger modes
 set/getTrigMode  Triggering mode:
+
                    * Internal: software triggering
                    * ExtStart: one external signal to start the whole sequence acquisition (one or more frames per
                      sequence)
                    * MultExtStart: one external signal for each frame in the acquisition sequence
                    * Gate: controls start and stop of each frame
                    * ExtStartStop: one start signal to start acquisition of one frame and one signal to stop it
+
 ================ ======================================================================================================
 
 Buffer Management
@@ -135,8 +139,7 @@ Parameters       Description
 NbBuffers        Number of image buffers in memory.
 NbConcatFrames   The number of concatenated frames per buffer.
 NbAccFrames      The number of detector frames to accumulate into a single buffer.
-MaxNbBuffers     This Read-Only parameter indicates the maximum number of buffers that can be allocated,
-                 given the size of the frame and the number of (concatenated) frames per buffer.
+MaxNbBuffers     This Read-Only parameter indicates the maximum number of buffers that can be allocated, given the size of the frame and the number of (concatenated) frames per buffer.
 BufferMode       Buffer filling mode (linear or circular)
 =============== ======================================================================================================
 
@@ -179,17 +182,17 @@ This chapter provides general guidelines to follow, to share a plugin with the *
 Source code
 -----------
 
- - **Plug-ins directory**
+- **Plug-ins directory**
 
   The source files and documentation of each new plug-in must be located under Lima/Camera as shown figure below.
 
-   .. image:: plugin_arbo.png
+  .. image:: plugin_arbo.png
 
-   To maintain homogeneity between the different plug-ins, each plug-in must have at minimum the following folders:
+  To maintain homogeneity between the different plug-ins, each plug-in must have at minimum the following folders:
 
-  - **src** : contains the source files. Plug-ins must be developed in C++.
+  - **src**: contains the source files. Plug-ins must be developed in C++.
 
-   The "src" folder must contain the following files :
+  The "src" folder must contain the following files :
     - DetectorNameCamera.cpp : interface class with the detector librairies **(mandatory)**
     - DetectorNameInterface.cpp : interface class between detector capabilities from the hardware interface and the control layer **(mandatory)**
     - DetectorNameDetInfoCtrObj.cpp : capabilities to get static informations about the detector **(mandatory)**
@@ -203,7 +206,7 @@ Source code
     - DetectorNameEventCtrlObj.cpp : capabilities to generate event **(optional)**
     - DetectorNameSavingCtrlObj.cpp : capabilities to save images in different formats **(optional)**
 
-   **If optional capabilities are not defined, they are emulated by the Lima Core.**
+  **If optional capabilities are not defined, they are emulated by the Lima Core.**
 
   - **include** : contains the header files relative to the sources files described before.
   - **doc** : contains at least "index.rst" for plug-in documentation. Other files such as image can be added. The minimum content of the index file is detailed in the documentation section.
@@ -211,13 +214,13 @@ Source code
 
   - **Camera device**
 
-  Once the plug-in was developed, you must create a camera device to execute all commands on the camera. This device can be developed in Python or C++. Python devices must be located on "Lima/applications/tango/camera", C++ devices on "Lima/applications/tango/LimaDetector"
+    Once the plug-in was developed, you must create a camera device to execute all commands on the camera. This device can be developed in Python or C++. Python devices must be located on "Lima/applications/tango/camera", C++ devices on "Lima/applications/tango/LimaDetector"
 
-  It is recommended that the camera device comply with the design guidelines of a TANGO device. These few rules are described below :
+    It is recommended that the camera device comply with the design guidelines of a TANGO device. These few rules are described below :
 
   - **Tango design guidelines**
 
-  In order to enhance the general software quality of Device Servers developed by the various institutes using Tango, a Design and Implementation Guidelines document has been written by SOLEIL. This document can be downloaded form thr URL : `http://www-controle.synchrotron-soleil.fr:8001/docs/TangoGuidelines/TangoDesignGuidelines-GB4-3.pdf`
+    In order to enhance the general software quality of Device Servers developed by the various institutes using Tango, a Design and Implementation Guidelines document has been written by SOLEIL. This document can be downloaded form thr URL : `http://www-controle.synchrotron-soleil.fr:8001/docs/TangoGuidelines/TangoDesignGuidelines-GB4-3.pdf`
 
 Class names
 -----------

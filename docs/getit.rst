@@ -35,7 +35,15 @@ In addition (but optional) you can get the **TANGO** python device servers, so u
 
 .. code-block:: bash
 
-  git submodule init application/tango/python
+  git submodule init applications/tango/python
+  git submodule update
+
+
+The same way, you can get the **TANGO** C++ device servers by updating your git clone again:
+
+ .. code-block:: bash
+
+  git submodule init applications/tango/cpp
   git submodule update
 
 
