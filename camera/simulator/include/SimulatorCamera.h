@@ -113,7 +113,7 @@ class LIBSIMULATOR_API Camera
 	public:
 		enum { // Status
 			Ready = MaxThreadStatus,
-			Prepare,
+			Prepared,
 			Exposure,
 			Readout,
 			Latency,

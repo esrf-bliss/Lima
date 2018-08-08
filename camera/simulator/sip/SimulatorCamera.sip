@@ -40,7 +40,7 @@ public:
        MODE_LOADER_PREFETCH
     };
 
-	Camera(const Mode& mode);
+	Camera(const Mode& mode = Simulator::Camera::Mode::MODE_GENERATOR);
 	~Camera();
 
 	HwBufferCtrlObj* getBufferCtrlObj();

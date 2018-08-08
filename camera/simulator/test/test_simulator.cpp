@@ -76,8 +76,8 @@ void simulator_test(double expo, long nframe)
 	Simulator::Camera simu;
 
     //config_loader(simu);
-    config_loader_prefetched(simu);
-    //config_generator(simu);
+    //config_loader_prefetched(simu);
+    config_generator(simu);
     //config_generator_prefetched(simu);
 
 	Simulator::Interface hw(simu);
@@ -138,7 +138,7 @@ void simulator_test(double expo, long nframe)
 			std::cout << "  " << duration << " usec for " << nb_frames << " frames\n";
 			std::cout << "  " << 1e6 * nb_frames / duration << " fps" << std::endl;
 
-			frame = img_status.LastImageAcquired;			
+			frame = img_status.LastImageAcquired;
 		}
 	}
 	std::cout << "SIMUTEST: acq finished" << std::endl;
@@ -153,6 +153,58 @@ void simulator_test(double expo, long nframe)
 	ct.stopAcq();
 	std::cout << "SIMUTEST: acq stopped" << std::endl;
 }
+
+
+void simulator_test_int_trig_mult(double expo, long nframe)
+{
+	Simulator::Camera simu;
+
+	Simulator::Interface hw(simu);
+	CtControl ct = CtControl(&hw);
+		std::cout << "SIMUTEST: " << expo << " sec / " << nframe << " frames" << std::endl;
+
+	CtAcquisition *acq = ct.acquisition();
+	acq->setAcqMode(Single);
+	acq->setAcqExpoTime(expo);
+	acq->setAcqNbFrames(nframe);
+	acq->setTriggerMode(IntTrigMult);
+
+	ct.prepareAcq();
+	ct.startAcq();
+
+	std::cout << "SIMUTEST: acq started" << std::endl;
+
+	long frame = -1;
+	while (frame < (nframe - 1))
+	{
+		usleep(100000);
+
+		CtControl::ImageStatus img_status;
+		ct.getImageStatus(img_status);
+
+		CtControl::Status status;
+		ct.getStatus(status);
+
+		std::cout << "SIMUTEST: status " << status.AcquisitionStatus << std::endl;
+
+		if (frame != img_status.LastImageAcquired) {
+			if (frame < (nframe - 2))
+				ct.startAcq();
+
+			std::cout << "SIMUTEST: acq frame nr " << img_status.LastImageAcquired << std::endl;
+
+			frame = img_status.LastImageAcquired;
+		}
+	}
+	
+	std::cout << "SIMUTEST: acq finished" << std::endl;
+
+	CtControl::Status status;
+	ct.getStatus(status);
+
+	std::cout << "SIMUTEST: status " << status << std::endl;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -170,6 +222,7 @@ int main(int argc, char *argv[])
 
 	try {
 		simulator_test(expo, nframe);
+		simulator_test_int_trig_mult(expo, nframe);
 	}
 	catch (Exception e) {
 		std::cerr << "LIMA Exception:" << e.getErrMsg() << std::endl;

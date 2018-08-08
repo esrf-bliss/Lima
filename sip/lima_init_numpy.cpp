@@ -30,6 +30,7 @@ extern "C"
   int lima_import_array()
   {
     import_array();
+    return 0;
   }
 #else
   void lima_import_array()
