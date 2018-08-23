@@ -27,7 +27,7 @@ Here are the commands for a minimum checkout to get all source needed for a spec
 
   git clone git://github.com/esrf-bliss/Lima.git
   cd Lima
-  git submodule init third-party/Processlib third-party/Sps third-party/libconfig
+  git submodule init third-party/Processlib third-party/Sps
   git submodule init camera/CAMERA_YOU_WANT_TO_COMPILE
   git submodule update
 
