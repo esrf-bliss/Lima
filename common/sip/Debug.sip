@@ -115,12 +115,12 @@ static std::map<DebParams *, DebParamsData *> deb_params_data_map;
 	static const Flags AllFlags;
 
 	DebParams(DebModule mod = DebModNone, 
-		  const std::string& class_name = "", 
-		  const std::string& name_space = "");
+		  const char *class_name = "", 
+		  const char *name_space = "");
 %MethodCode
-	std::string *cn = new std::string(*a1);
-	std::string *ns = new std::string(*a2);
-	sipCpp = new DebParams(a0, getConstStr(cn), getConstStr(ns));
+	std::string *cn = new std::string(a1);
+	std::string *ns = new std::string(a2);
+	sipCpp = new sipDebParams(a0, getConstStr(cn), getConstStr(ns));
 	deb_params_data_map[sipCpp] = new DebParamsData(cn, ns);
 %End
 
@@ -261,16 +261,22 @@ static void write(DebObj *deb_obj, const std::string *msg)
 
  public:
 	DebObj(DebParams& deb_params,
-	       const std::string& funct_name = "", 
-	       const std::string& obj_name = "",
-	       const std::string& file_name = "", int line_nr = 0);
+	       bool destructor = false,
+	       //const std::string& funct_name = "", 
+	       //const std::string& obj_name = "",
+	       //const std::string& file_name = "", int line_nr = 0);
+           const char *funct_name = "", 
+	       const char *obj_name = "",
+	       const char *file_name = "", int line_nr = 0);
+
 %MethodCode
 	DebParams *dp    = new DebParams(*a0);
-	std::string *fn  = new std::string(*a1);
-	std::string *on  = new std::string(*a2);
-	std::string *fin = new std::string(*a3);
-	sipCpp = new DebObj(*dp, false, getConstStr(fn), getConstStr(on), 
-			    getConstStr(fin), a4);
+	std::string *fn  = new std::string(a2);
+	std::string *on  = new std::string(a3);
+	std::string *fin = new std::string(a4);
+	// Note that we use the SIP generated derived class constructor.
+	sipCpp = new sipDebObj(*dp, a1, getConstStr(fn), getConstStr(on), 
+			    getConstStr(fin), a5);
 	deb_obj_data_map[sipCpp] = new DebObjData(dp, fn, on, fin);
 %End
 

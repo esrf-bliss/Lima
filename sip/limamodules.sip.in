@@ -1,4 +1,4 @@
-%Module(name=lima@NAME@,version=0)
+%Module(name=lima@NAME@)
 
 
 %ModuleCode

@@ -44,7 +44,7 @@ if(sipIsErr == NULL)
       PyObject *aTmpList = PySequence_Fast_GET_ITEM(p,1);
       for(int k = 0;aReturnFlag && k < PyList_Size(aTmpList);++k)
 	aReturnFlag = !!sipCanConvertToType(PyList_GET_ITEM(aTmpList, k),
-					  sipType_Tasks_RoiCounterResult, SIP_NOT_NONE);
+					  sipFindType("Tasks::RoiCounterResult"), SIP_NOT_NONE);
     }
  }
  return aReturnFlag;
@@ -75,13 +75,13 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
      int state;
      Tasks::RoiCounterResult *aRoiCounterResult = 
        reinterpret_cast<Tasks::RoiCounterResult*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
-								   sipType_Tasks_RoiCounterResult, 0,	
+								   sipFindType("Tasks::RoiCounterResult"), 0,	
 								   SIP_NOT_NONE,
 								   &state, sipIsErr));
      // Deal with any errors.
      if (*sipIsErr)
        {
-	 sipReleaseType(aRoiCounterResult, sipType_Tasks_RoiCounterResult, state);
+	 sipReleaseType(aRoiCounterResult, sipFindType("Tasks::RoiCounterResult"), state);
 	 
 	 // Tidy up.
 	 delete roiNameNResultPt;
@@ -91,7 +91,7 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
        }
      
      roiNameNResultPt->back().second.push_back(*aRoiCounterResult);
-     sipReleaseType(aRoiCounterResult, sipType_Tasks_RoiCounterResult, state);
+     sipReleaseType(aRoiCounterResult, sipFindType("Tasks::RoiCounterResult"), state);
    }
 }
 *sipCppPtr = roiNameNResultPt;
@@ -121,7 +121,7 @@ return sipGetState(sipTransferObj);
      // Get the Python wrapper for the RoiCounterResult instance, creating a new
      // one if necessary, and handle any ownership transfer.
      Tasks::RoiCounterResult *aResultPt = new Tasks::RoiCounterResult(*k);
-     if (!(wobj = sipConvertFromNewType(aResultPt, sipType_Tasks_RoiCounterResult, sipTransferObj)))
+     if (!(wobj = sipConvertFromNewType(aResultPt, sipFindType("Tasks::RoiCounterResult"), sipTransferObj)))
      {
       delete aResultPt;
       // There was an error so garbage collect the Python lists.
@@ -416,7 +416,7 @@ if(sipIsErr == NULL)
                       (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
                        PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
-					  sipType_Tasks_RoiCounterTask,SIP_NOT_NONE);
+					  sipFindType("Tasks::RoiCounterTask"),SIP_NOT_NONE);
       }
     return aReturnFlag;
   }
@@ -439,17 +439,17 @@ if(sipIsErr == NULL)
       int state;
       Tasks::RoiCounterTask *task =
 	reinterpret_cast<Tasks::RoiCounterTask*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
-								  sipType_Tasks_RoiCounterTask,0,
+								  sipFindType("Tasks::RoiCounterTask"),0,
 								  SIP_NOT_NONE,
 								  &state,sipIsErr));
       if(*sipIsErr)
 	{
-	  sipReleaseType(task,sipType_Tasks_RoiCounterTask,state);
+	  sipReleaseType(task,sipFindType("Tasks::RoiCounterTask"),state);
 	  delete named_tasksPt;
 	  return 0;
 	}
       named_tasksPt->push_back(SoftOpRoiCounter::RoiNameAndTask(name,task));
-      sipReleaseType(task,sipType_Tasks_RoiCounterTask,state);
+      sipReleaseType(task,sipFindType("Tasks::RoiCounterTask"),state);
     }
   *sipCppPtr = named_tasksPt;
   return sipGetState(sipTransferObj);
@@ -467,7 +467,7 @@ if(sipIsErr == NULL)
     {
       PyObject *wobj;
       Tasks::RoiCounterTask *task = new Tasks::RoiCounterTask(*(j->second));
-      if(!(wobj = sipConvertFromNewType(task,sipType_Tasks_RoiCounterTask,sipTransferObj)))
+      if(!(wobj = sipConvertFromNewType(task,sipFindType("Tasks::RoiCounterTask"),sipTransferObj)))
 	{
 	  delete task;
 	  Py_DECREF(l);
@@ -512,7 +512,7 @@ if(sipIsErr == NULL)
       PyObject *aTmpList = PySequence_Fast_GET_ITEM(p,1);
       for(int k = 0;aReturnFlag && k < PyList_Size(aTmpList);++k)
 	aReturnFlag = !!sipCanConvertToType(PyList_GET_ITEM(aTmpList, k),
-					  sipType_Tasks_Roi2SpectrumResult, SIP_NOT_NONE);
+					  sipFindType("Tasks::Roi2SpectrumResult"), SIP_NOT_NONE);
     }
  }
  return aReturnFlag;
@@ -544,13 +544,13 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
      int state;
      Tasks::Roi2SpectrumResult *aRoi2SpectrumResult = 
        reinterpret_cast<Tasks::Roi2SpectrumResult*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
-								   sipType_Tasks_Roi2SpectrumResult, 0,	
+								   sipFindType("Tasks::Roi2SpectrumResult"), 0,	
 								   SIP_NOT_NONE,
 								   &state, sipIsErr));
      // Deal with any errors.
      if (*sipIsErr)
        {
-	 sipReleaseType(aRoi2SpectrumResult, sipType_Tasks_Roi2SpectrumResult, state);
+	 sipReleaseType(aRoi2SpectrumResult, sipFindType("Tasks::Roi2SpectrumResult"), state);
 	 
 	 // Tidy up.
 	 delete roiNameNResultPt;
@@ -560,7 +560,7 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
        }
      
      roiNameNResultPt->back().second.push_back(*aRoi2SpectrumResult);
-     sipReleaseType(aRoi2SpectrumResult, sipType_Tasks_Roi2SpectrumResult, state);
+     sipReleaseType(aRoi2SpectrumResult, sipFindType("Tasks::Roi2SpectrumResult"), state);
    }
 }
 *sipCppPtr = roiNameNResultPt;
@@ -590,7 +590,7 @@ return sipGetState(sipTransferObj);
      // Get the Python wrapper for the Roi2SpectrumResult instance, creating a new
      // one if necessary, and handle any ownership transfer.
      Tasks::Roi2SpectrumResult *aResultPt = new Tasks::Roi2SpectrumResult(*k);
-     if (!(wobj = sipConvertFromNewType(aResultPt, sipType_Tasks_Roi2SpectrumResult, sipTransferObj)))
+     if (!(wobj = sipConvertFromNewType(aResultPt, sipFindType("Tasks::Roi2SpectrumResult"), sipTransferObj)))
      {
       delete aResultPt;
       // There was an error so garbage collect the Python lists.
@@ -726,8 +726,7 @@ if(sipIsErr == NULL)
                       PySequence_Size(p) == 2 &&
                       (PyUnicode_Check(PySequence_Fast_GET_ITEM(p,0)) ||
                        PyString_Check(PySequence_Fast_GET_ITEM(p,0))) &&
-                      sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
-					  sipType_Tasks_Roi2SpectrumTask,SIP_NOT_NONE);
+                      sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),sipFindType("Tasks::Roi2SpectrumTask"),SIP_NOT_NONE);
       }
     return aReturnFlag;
   }
@@ -750,17 +749,17 @@ if(sipIsErr == NULL)
       int state;
       Tasks::Roi2SpectrumTask *task =
 	reinterpret_cast<Tasks::Roi2SpectrumTask*>(sipConvertToType(PySequence_Fast_GET_ITEM(p,1),
-								  sipType_Tasks_Roi2SpectrumTask,0,
+								  sipFindType("Tasks::Roi2SpectrumTask"),0,
 								  SIP_NOT_NONE,
 								  &state,sipIsErr));
       if(*sipIsErr)
 	{
-	  sipReleaseType(task,sipType_Tasks_Roi2SpectrumTask,state);
+	  sipReleaseType(task,sipFindType("Tasks::Roi2SpectrumTask"),state);
 	  delete named_tasksPt;
 	  return 0;
 	}
       named_tasksPt->push_back(SoftOpRoi2Spectrum::RoiNameAndTask(name,task));
-      sipReleaseType(task,sipType_Tasks_Roi2SpectrumTask,state);
+      sipReleaseType(task,sipFindType("Tasks::Roi2SpectrumTask"),state);
     }
   *sipCppPtr = named_tasksPt;
   return sipGetState(sipTransferObj);
@@ -778,7 +777,7 @@ if(sipIsErr == NULL)
     {
       PyObject *wobj;
       Tasks::Roi2SpectrumTask *task = new Tasks::Roi2SpectrumTask(*(j->second));
-      if(!(wobj = sipConvertFromNewType(task,sipType_Tasks_Roi2SpectrumTask,sipTransferObj)))
+      if(!(wobj = sipConvertFromNewType(task,sipFindType("Tasks::Roi2SpectrumTask"),sipTransferObj)))
 	{
 	  delete task;
 	  Py_DECREF(l);
