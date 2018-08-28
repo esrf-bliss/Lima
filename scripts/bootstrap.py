@@ -170,6 +170,8 @@ class Config:
 				    help='directory where Lima is installed')
 		parser.add_argument('--install-python-prefix',
 				    help='install directory for Python code')
+		parser.add_argument('--verbose', action='store_true',
+				    help='verbose build')
 		parser.add_argument('mod_opts', metavar='mod_opt', nargs='+',
 				    help='module/option to process')
 		self.cmd_opts = parser.parse_args(argv[1:])
@@ -246,12 +248,17 @@ class Config:
 
 class CMakeOptions:
 
-	cmd_2_cmake_map = [
-		('build-type', 'cmake-build-type'),
-		('install-prefix', 'cmake-install-prefix'),
-		('install-python-prefix', 'python-site-packages-dir'),
-		('find-root-path', 'cmake-find-root-path')
-	]
+	cmd_2_cmake_map = {
+		'Common': [
+			('build-type', 'cmake-build-type'),
+			('install-prefix', 'cmake-install-prefix'),
+			('install-python-prefix', 'python-site-packages-dir'),
+			('find-root-path', 'cmake-find-root-path'),
+		],
+		'Linux': [
+			('verbose', 'cmake-verbose-makefile'),
+		],
+	}
 
 	def __init__(self, cfg):
 		self.cfg = cfg
@@ -275,7 +282,7 @@ class CMakeOptions:
 					val = cmd_val
 					break
 				# arg-passed option must match the end
-				# of opt a nd must be preceeded by 
+				# of opt and must be preceeded by 
 				# the '_' separator
 				t = opt.split(cmd_opt)
 				if ((len(t) == 2) and 
@@ -285,7 +292,9 @@ class CMakeOptions:
 			if is_active(val):
 				cmake_opts.append((opt, val))
 
-		for cmd_key, cmake_key in self.cmd_2_cmake_map:
+		cmd_2_cmake_map = (self.cmd_2_cmake_map.get('Common') +
+				   self.cmd_2_cmake_map.get(OS_TYPE, []))
+		for cmd_key, cmake_key in cmd_2_cmake_map:
 			val = self.cfg.get(cmd_key)
 			if is_active(val) and cmake_key not in dict(cmake_opts):
 				cmake_opts.append((cmake_key, val))
@@ -319,11 +328,15 @@ class CMakeOptions:
 
 	def get_build_options(self):
 		opts = ['--build .']
+		if OS_TYPE == 'Windows':
+			opts += ['--config %s' % self.cfg.get('build-type')]
+		opts += ['--']
 		if OS_TYPE == 'Linux':
 			nb_jobs = multiprocessing.cpu_count() + 1
-			opts += ['--', '-j %d' % nb_jobs]
-		if OS_TYPE == 'Windows':
-			opts += ['--config %s' %  self.cfg.get('build-type')]
+			opts += ['-j %d' % nb_jobs]
+		elif OS_TYPE == 'Windows':
+			verb = self.cfg.get('verbose')
+			opts += ['-v:%s' % ('detailed' if verb else 'normal')]
 		return self.get_cmd_line_from_options(opts)
 
 	def get_install_options(self):
