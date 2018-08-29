@@ -139,26 +139,19 @@ Pipe::Pipe(int buff_size)
 	m_stream[WriteFd].setFd(fd[WriteFd]);
 }
 
-int Pipe::checkWhich(int which) const
+void Pipe::dupInto(EndFd which, int target_fd)
 {
-	if ((which != ReadFd) && (which != WriteFd))
-		throw exception();
-	return which;
+	m_stream[which].dupInto(target_fd);
 }
 
-void Pipe::dupInto(int which, int target_fd)
+void Pipe::restoreDup(EndFd which)
 {
-	m_stream[checkWhich(which)].dupInto(target_fd);
+	m_stream[which].restoreDup();
 }
 
-void Pipe::restoreDup(int which)
+void Pipe::close(EndFd which)
 {
-	m_stream[checkWhich(which)].restoreDup();
-}
-
-void Pipe::close(int which)
-{
-	m_stream[checkWhich(which)].close();
+	m_stream[which].close();
 }
 
 void Pipe::write(string s)

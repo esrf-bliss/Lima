@@ -28,8 +28,8 @@
 class Pipe
 {
  public:
-	enum {
-		ReadFd, WriteFd, NbPipes,
+	enum EndFd {
+		ReadFd, WriteFd,
 	};
 
 	Pipe(int buff_size = 0);
@@ -38,12 +38,16 @@ class Pipe
 	std::string read(int len, double timeout = -1);
 	std::string readLine(int len, std::string term, double timeout = -1);
 
-	void dupInto(int which, int target_fd);
-	void restoreDup(int which);
+	void dupInto(EndFd which, int target_fd);
+	void restoreDup(EndFd which);
 
-	void close(int which);
+	void close(EndFd which);
 
  private:
+	enum {
+		NbPipes = 2,
+	};
+
 	class Stream {
 	public:
 		Stream();
@@ -70,8 +74,6 @@ class Pipe
 		int m_fd;
 		DupDataList m_dup_list;
 	};
-
-	int checkWhich(int which) const;
 
 	bool waitForInput(double timeout);
 
