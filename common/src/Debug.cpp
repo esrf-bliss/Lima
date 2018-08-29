@@ -25,6 +25,7 @@
 
 #include <ctime>
 #include <iomanip>
+#include <cstring>
 #include <unistd.h>
 #ifdef __unix
 #include <sys/time.h>
@@ -475,14 +476,13 @@ void DebObj::heading(DebType type, ConstStr funct_name, ConstStr file_name,
 			csep = "::";
 		}
 #endif
-		if ((m = funct_name)) {
-			bool is_destructor = deb && deb->m_destructor;
-			bool need_tilde = is_destructor && (m[0] != '~');
+		if (deb && (m = funct_name)) {
+			bool need_tilde = deb->m_destructor && (m[0] != '~');
 			ConstStr destruct = need_tilde ? "~" : "";
 			os << csep << destruct << m;
 			csep = "::";
 		}
-		if (string(csep) == "::")
+		if (strcmp(csep, "::") == 0)
 			sep = " ";
 	}
 
