@@ -399,7 +399,7 @@ inline DebProxy::DebProxy()
 inline DebProxy::DebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
 			  ConstStr file_name, int line_nr)
 {
-#ifdef NO_LIMA_DEBUG
+#ifdef LIMA_NO_DEBUG
 	DebParams::checkInit();
 #endif
 
@@ -543,7 +543,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_CLASS(mod, class_name)					\
 	DEB_CLASS_NAMESPC(mod, class_name, NULL)
 
-#ifndef NO_LIMA_DEBUG
+#ifndef LIMA_NO_DEBUG
 
 #define DEB_GLOBAL_FUNCT()						\
 	lima::DebObj deb(getDebParams(), false, __FUNCTION__,		\
@@ -588,7 +588,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 #define DEB_CHECK_ANY(type)	deb.checkAny(type)
 
-#else // NO_LIMA_DEBUG
+#else // LIMA_NO_DEBUG
 
 #define DEB_GLOBAL_FUNCT()	DEB_NOP()
 #define DEB_CONSTRUCTOR()	DEB_NOP()
@@ -623,7 +623,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 	(((type) == lima::DebTypeFatal) || ((type) == lima::DebTypeError) || \
 	 ((type) == lima::DebTypeWarning) || ((type) == lima::DebTypeAlways))
 
-#endif // NO_LIMA_DEBUG
+#endif // LIMA_NO_DEBUG
 
 #define DEB_HEX(x)	DebHex(x)
 
@@ -647,7 +647,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
  *  DebParams checkTypeFlags
  *------------------------------------------------------------------*/
 
-#ifdef NO_LIMA_DEBUG
+#ifdef LIMA_NO_DEBUG
 inline void lima::DebParams::checkTypeFlags(Flags& type_flags)
 {
 	if (type_flags & DEB_IGNORED_TYPE_FLAGS) {
