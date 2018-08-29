@@ -336,7 +336,8 @@ class CMakeOptions:
 			opts += ['-j %d' % nb_jobs]
 		elif OS_TYPE == 'Windows':
 			verb = self.cfg.get('verbose')
-			opts += ['-v:%s' % ('detailed' if verb else 'normal')]
+			level = 'detailed' if verb else 'normal'
+			opts += ['/verbosity:%s' % level]
 		return self.get_cmd_line_from_options(opts)
 
 	def get_install_options(self):
