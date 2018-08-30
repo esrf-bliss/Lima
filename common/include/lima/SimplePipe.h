@@ -22,17 +22,23 @@
 #ifndef SIMPLEPIPE_H
 #define SIMPLEPIPE_H
 
+#include "lima/Debug.h"
+
 #include <string>
 #include <vector>
 
+namespace lima 
+{
+
 class Pipe
 {
+	DEB_CLASS(DebModCommon, "Pipe");
  public:
 	enum EndFd {
 		ReadFd, WriteFd,
 	};
 
-	Pipe(int buff_size = 0);
+	Pipe(int buff_size = 0, bool binary = false);
 
 	void write(std::string s);
 	std::string read(int len, double timeout = -1);
@@ -49,6 +55,7 @@ class Pipe
 	};
 
 	class Stream {
+		DEB_CLASS(DebModCommon, "Pipe::Stream");
 	public:
 		Stream();
 		~Stream();
@@ -75,13 +82,16 @@ class Pipe
 		DupDataList m_dup_list;
 	};
 
-	bool waitForInput(double timeout);
+	std::string readFunct(int len, double timeout, DebObj *deb_ptr);
+	bool waitForInput(double timeout, DebObj *deb_ptr);
 
 	Stream m_stream[NbPipes];
 	int m_buff_size;
+	bool m_binary;
 
 	static const int DefBuffSize;
 };
 
+} // namespace lima
 
 #endif // SIMPLEPIPE_H
