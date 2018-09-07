@@ -53,13 +53,17 @@ Description:
     relative to the source-prefix, and --build-prefix relative to the CWD.
 
 Module/option description:
-    It can be any camera name or saving format.
-    Available saving formats: edf, cbf, tiff, lz4, gz, hdf5, fits.
-    Other otions are:
-     + python: Build Python wrapping.
-     + pytango-server: install the PyTango server Python code
-     + tests: build tests (in order to run them execute "ctest" in <build>)
-     + config, sps-image, gldisplay: for the fun!
+    Two formats are accepted:
+    1. Single word, indicating any camera name or saving format.
+       Available saving formats: edf, cbf, tiff, lz4, gz, hdf5, fits.
+       Other otions are:
+        + python: Build Python wrapping.
+        + pytango-server: install the PyTango server Python code
+        + tests: build tests (in order to run them execute "ctest" in <build>)
+        + config, sps-image, gldisplay: for the fun!
+    2. Any CMake configure option in the form option-name=value
+       The option name will be capitalised and '-' converted to '_':
+        + gsl-root-dir=/opt/sware -> -DGSL_ROOT_DIR=/opt/sware
 
 Examples:
     ./install.[bat | sh] --install=yes basler python cbf
@@ -206,7 +210,12 @@ class Config:
 	def get_cmd_options(self):
 		opts = dict([(self.from_underscore(k), v)
 			     for k, v in self.cmd_opts._get_kwargs()])
+                opts['cmake-opts'] = []
 		for arg in opts.pop('mod-opts'):
+                        if '=' in arg:
+                                opt, val = arg.split('=')
+                                opts['cmake-opts'].append((opt, val))
+                                continue
 			for oprefix, sdir in [("limacamera", "camera"), 
 					      ("lima-enable", "third-party")]:
 				sdir += '/'
@@ -275,7 +284,7 @@ class CMakeOptions:
 				return val
 			return val and (val.lower() not in [str(0), 'no'])
 
-		cmake_opts = []
+		cmake_opts = cmd_opts['cmake-opts']
 		for opt, val in config_opts:
 			for cmd_opt, cmd_val in cmd_opts.items():
 				if cmd_opt == opt:
