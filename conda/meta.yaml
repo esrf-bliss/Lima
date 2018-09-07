@@ -297,7 +297,7 @@ outputs:
     requirements:                                             # [win]
       run:                                                    # [win]
         - lima-core                                           # [win]
-        - pco                                                 # [win]
+        - pco-sdk                                                 # [win]
     files:                                                    # [win]
       - {{ REL_SHLIB_DIR }}/liblimapco{{ SHLIB_EXT }}         # [win]
       - {{ REL_SP_DIR }}/limapco{{ PYMOD_EXT }}               # [win]
