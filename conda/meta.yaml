@@ -49,7 +49,6 @@ requirements:
     - andor2-sdk    # [linux]
     - andor3-sdk    # [linux]
     - pvapi-sdk     # [linux]
-    - pco           # [win]
 
 outputs:
   - name: lima-core
