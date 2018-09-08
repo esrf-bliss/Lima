@@ -57,38 +57,38 @@ Module/option description:
     1. Single word, indicating any camera name or saving format.
        Available saving formats: edf, cbf, tiff, lz4, gz, hdf5, fits.
        Other otions are:
-        + python: Build Python wrapping.
-        + pytango-server: install the PyTango server Python code
-        + tests: build tests (in order to run them execute "ctest" in <build>)
-        + config, sps-image, gldisplay: for the fun!
+	+ python: Build Python wrapping.
+	+ pytango-server: install the PyTango server Python code
+	+ tests: build tests (in order to run them execute "ctest" in <build>)
+	+ config, sps-image, gldisplay: for the fun!
     2. Any CMake configure option in the form option-name=value
        The option name will be capitalised and '-' converted to '_':
-        + gsl-root-dir=/opt/sware -> -DGSL_ROOT_DIR=/opt/sware
+	+ gsl-root-dir=/opt/sware -> -DGSL_ROOT_DIR=/opt/sware
 
 Examples:
     ./install.[bat | sh] --install=yes basler python cbf
-        -> compile and install Lima with cameras simulator and basler with
-           Python wrapping and cbf saving format.
-        -> install directory for C library and Python library will be in
-           default directory.
+	-> compile and install Lima with cameras simulator and basler with
+	   Python wrapping and cbf saving format.
+	-> install directory for C library and Python library will be in
+	   default directory.
 
-        This is equivalent to adding the following options in config.txt:
-           + LIMACAMERA_BASLER=1
-           + LIMA_ENABLE_CBF=1
-           + LIMA_ENABLE_PYTHON=1
+	This is equivalent to adding the following options in config.txt:
+	   + LIMACAMERA_BASLER=1
+	   + LIMA_ENABLE_CBF=1
+	   + LIMA_ENABLE_PYTHON=1
 
     ./install.[bat | sh] --install-prefix=${HOME} tests
-        -> compile and install Lima with camera simulator, also compiling
-           simulator tests.
-        -> the install directory is set in the home directory (${HOME})
+	-> compile and install Lima with camera simulator, also compiling
+	   simulator tests.
+	-> the install directory is set in the home directory (${HOME})
 
-        This is equivalent to adding the following options in config.txt:
-           + LIMA_ENABLE_TESTS=1
-           + CMAKE_INSTALL_PREFIX=<path_to_home>
+	This is equivalent to adding the following options in config.txt:
+	   + LIMA_ENABLE_TESTS=1
+	   + CMAKE_INSTALL_PREFIX=<path_to_home>
 
     ONLY ON LINUX:
     ./install.sh --git [options]
-        -> clone and update (checkout) on every (sub)module in [options]
+	-> clone and update (checkout) on every (sub)module in [options]
 '''
 
 
@@ -210,12 +210,12 @@ class Config:
 	def get_cmd_options(self):
 		opts = dict([(self.from_underscore(k), v)
 			     for k, v in self.cmd_opts._get_kwargs()])
-                opts['cmake-opts'] = []
+		opts['cmake-opts'] = []
 		for arg in opts.pop('mod-opts'):
-                        if '=' in arg:
-                                opt, val = arg.split('=')
-                                opts['cmake-opts'].append((opt, val))
-                                continue
+			if '=' in arg:
+				opt, val = arg.split('=')
+				opts['cmake-opts'].append((opt, val))
+				continue
 			for oprefix, sdir in [("limacamera", "camera"), 
 					      ("lima-enable", "third-party")]:
 				sdir += '/'
