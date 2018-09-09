@@ -25,10 +25,6 @@
 # SIP_TAGS - List of tags to define when running SIP. (Corresponds to the -t
 #     option for SIP.)
 #
-# SIP_CONCAT_PARTS - An integer which defines the number of parts the C++ code
-#     of each module should be split into. Defaults to 8. (Corresponds to the
-#     -j option for SIP.)
-#
 # SIP_DISABLE_FEATURES - List of feature names which should be disabled
 #     running SIP. (Corresponds to the -x option for SIP.)
 #
@@ -78,41 +74,24 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
 
     set(_message "-DMESSAGE=Generating CPP code for module ${MODULE_NAME}")
 	
-#    if(WIN32)
-#		set(COPY_COMMAND copy)
-#	else()
-#		set(COPY_COMMAND cp)	
-#    endif()
-	
-	set(_module_sbf ${_module_path}/${MODULE_NAME}.sbf)
-	execute_process(
-		COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
-	                              ${_sip_includes} -b ${_module_sbf} 
-								  ${_abs_module_sip}
-	)
+    set(_module_sbf ${_module_path}/${MODULE_NAME}.sbf)
+    execute_process(COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x}
+                    ${SIP_EXTRA_OPTIONS} ${_sip_includes}
+                    -b ${_module_sbf} ${_abs_module_sip}
+    )
 
-	set(_lima_init_numpy_cpp)
-    if(NOT (${MODULE_NAME} STREQUAL "processlib"))
-        set(_lima_init_numpy "lima_init_numpy.cpp")
-        set(_lima_init_numpy_cpp ${_module_path}/${_lima_init_numpy})
-#        add_custom_command(
-#            OUTPUT ${_lima_init_numpy_cpp}
-#	    COMMAND ${COPY_COMMAND} ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy} 
-#                    ${_module_path}
-#            DEPENDS ${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy}
-#        )
-		configure_file(${CMAKE_SOURCE_DIR}/sip/${_lima_init_numpy} 
-                    ${_module_path}
-					COPYONLY
-		)
+    if(${MODULE_NAME} STREQUAL "processlib")
+        message(FATAL_ERROR "processlib module has its own SIPMacros")
     endif()
+    set(_init_numpy "${_child_module_name}_init_numpy.cpp")
+    set(_init_numpy_cpp ${_module_path}/${_init_numpy})
 
     set(_sip_output_files_list)
     execute_process(
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/readsipsbf.py 
-		                             ${_module_sbf} ${_module_path}
-	    OUTPUT_VARIABLE _sip_output_files_list
-	OUTPUT_STRIP_TRAILING_WHITESPACE
+                                     ${_module_sbf} ${_module_path}
+        OUTPUT_VARIABLE _sip_output_files_list
+        OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 	
     set(_sip_output_files)
@@ -134,18 +113,18 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
     # TODO: add all SIP files with the %Include directive + Exceptions.sip
 
     add_custom_command(
-        OUTPUT ${_sip_output_files} 
+        OUTPUT ${_sip_output_files}
         COMMAND ${CMAKE_COMMAND} -E echo ${message}
-        COMMAND ${TOUCH_COMMAND} ${_sip_output_files} 
+        COMMAND ${TOUCH_COMMAND} ${_sip_output_files}
         COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
-	                          ${_sip_includes} -c ${_module_path} 
-				  ${_abs_module_sip}
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py 
+                                  ${_sip_includes} -c ${_module_path} 
+                                  ${_abs_module_sip}
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py
                                      ${_sip_output_files}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
     )
     # not sure if type MODULE could be uses anywhere, limit to cygwin for now
-    set(_sip_all_files ${_lima_init_numpy_cpp} ${_sip_output_files})
+    set(_sip_all_files ${_init_numpy_cpp} ${_sip_output_files})
     if (CYGWIN)
         add_library(${_logical_name} MODULE ${_sip_all_files} )
     else (CYGWIN)
@@ -153,10 +132,10 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
     endif (CYGWIN)
     target_link_libraries(${_logical_name} ${PYTHON_LIBRARY})
     target_link_libraries(${_logical_name} ${EXTRA_LINK_LIBRARIES})
-    set_target_properties(${_logical_name} PROPERTIES 
-                          PREFIX "" OUTPUT_NAME ${_child_module_name} 
+    set_target_properties(${_logical_name} PROPERTIES
+                          PREFIX "" OUTPUT_NAME ${_child_module_name}
                           LINKER_LANGUAGE CXX)
-    
+
     if (WIN32)
       set_target_properties(${_logical_name} PROPERTIES SUFFIX ".pyd")
       set_target_properties(${_logical_name} PROPERTIES IMPORT_SUFFIX ".dll")

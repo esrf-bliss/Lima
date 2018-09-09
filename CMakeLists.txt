@@ -64,7 +64,7 @@ if(UNIX)
 endif()
 
 #--------------------------------------------------------------------------------
-#Compile tests
+# Compile tests
 #--------------------------------------------------------------------------------
 option(LIMA_ENABLE_TESTS "compile test directories ?" OFF)
 
@@ -156,13 +156,6 @@ if(LIMA_ENABLE_PYTHON)
 
     set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
-    find_package(SIP)
-  	if(${SIP_FOUND})
-  		include(SIPMacros)
-  	else()
-  		message(FATAL_ERROR "python SIP not installed, please install or disable LIMA_ENABLE_PYTHON")
-  	endif()
-
     find_package(NumPy)
     if(${NUMPY_FOUND})
       include_directories(${NUMPY_INCLUDE_DIRS})
@@ -170,22 +163,31 @@ if(LIMA_ENABLE_PYTHON)
     else()
         message(FATAL_ERROR "NumPy not found, cannot build python extensions")
     endif()
+ endif()
+
+#--------------------------------------------------------------------------------
+# Processlib third-party is mandatory
+#--------------------------------------------------------------------------------
+add_subdirectory(third-party/Processlib)
+
+#--------------------------------------------------------------------------------
+# Load SIPMacros after Processlib
+#--------------------------------------------------------------------------------
+
+if(LIMA_ENABLE_PYTHON)
+    find_package(SIP)
+  	if(${SIP_FOUND})
+  		include(SIPMacros)
+  	else()
+  		message(FATAL_ERROR "python SIP not installed, please install or disable LIMA_ENABLE_PYTHON")
+  	endif()
     if(WIN32)
         set(SIP_TAGS WIN32_PLATFORM)
     elseif(UNIX)
         set(SIP_TAGS POSIX_PLATFORM)
     endif(WIN32)
     set(SIP_EXTRA_OPTIONS -e -g)
- endif()
-
-#--------------------------------------------------------------------------------
-#Processlib third-party is mandatory
-#--------------------------------------------------------------------------------
-set(PROCESSLIB_EXTERNALLY_CONFIGURED ON)
-if(LIMA_ENABLE_PYTHON)
-  set(PROCESSLIB_EXTERNALLY_ENABLE_PYTHON ON)
 endif()
-add_subdirectory(third-party/Processlib)
 
 #--------------------------------------------------------------------------------
 # Define source files
@@ -489,12 +491,11 @@ if(LIMA_ENABLE_PYTHON)
     endforeach()
 
     if(SIP_VERSION_STR VERSION_LESS "4.12")
-	    configure_file(sip/core/limacore_before_4_12.sip.in sip/core/limacore.sip)
-	    configure_file(hardware/sip/HwFrameInfo.sip_before_4_12 sip/core/HwFrameInfo.sip)
-    else()
-	    configure_file(sip/core/limacore.sip.in sip/core/limacore.sip)
-	    configure_file(hardware/sip/HwFrameInfo.sip_after_4_12 sip/core/HwFrameInfo.sip)
+        message(FATAL_ERROR "SIP older than 4.12 is no longer supported")
     endif()
+      
+    configure_file(sip/core/limacore.sip.in sip/core/limacore.sip)
+    configure_file(sip/lima_init_numpy.cpp.in sip/core/limacore_init_numpy.cpp)
     set(SIP_INCLUDES ${SIP_INCLUDES}
         "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/sip"
@@ -508,7 +509,7 @@ if(LIMA_ENABLE_PYTHON)
     if (NOT LIMA_ENABLE_SPS_IMAGE)
       set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_SPS_IMAGE)
     endif()
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip PROPERTIES OBJECT_DEPENDS ${sipfiles} sip/core/HwFrameInfo.sip)
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip PROPERTIES OBJECT_DEPENDS ${sipfiles})
     # Run sip now !
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip)
 
@@ -531,7 +532,7 @@ if(LIMA_ENABLE_GLDISPLAY)
 endif()
 
 #--------------------------------------------------------------------------------
-#TESTS, run ctest or make test
+# TESTS, run ctest or make test
 #--------------------------------------------------------------------------------
 if(LIMA_ENABLE_TESTS)
     enable_testing()

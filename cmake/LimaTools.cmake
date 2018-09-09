@@ -84,11 +84,10 @@ function(limatools_run_sip_for_camera cam_name)
 %Import limacore.sip")
 
   if(SIP_VERSION_STR VERSION_LESS "4.12")
-    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules_before_4_12.sip.in sip/lima${cam_name}.sip)
-  else()
-    configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/lima${cam_name}.sip)
+    message(FATAL_ERROR "SIP older than 4.12 is no longer supported")
   endif()
-  set(SIP_CONCAT_PARTS 1)
+  configure_file(${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in sip/lima${cam_name}.sip)
+  configure_file(${CMAKE_SOURCE_DIR}/sip/lima_init_numpy.cpp.in sip/lima${cam_name}_init_numpy.cpp)
   set(SIP_INCLUDES ${SIP_INCLUDES}
     "${CMAKE_SOURCE_DIR}/third-party/Processlib/sip"
     "${CMAKE_BINARY_DIR}/sip/core"
