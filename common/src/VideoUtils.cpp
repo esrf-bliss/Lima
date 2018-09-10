@@ -151,14 +151,14 @@ inline void _bayer_bg_2_yuv(const xClass* bayer0,xClass* luma,
 inline void _yuv422packed_2_yuv(const unsigned char *data,unsigned char *luma,
 			int column,int row)
 {
-  // format 4 bytes for 2 pixels U and V common for 2pixels: |U0|Y0|V0|Y1|  |U2|Y2|V2|Y3|
+  // Format is 4 bytes for 2 pixels U and V common for 2 pixels: |U|Y0|V|Y1|  |U|Y2|V|Y3|
   // so Y (luma) is every 2 bytes
   long nbIter = column * row /2;
   --nbIter;
-  for(const unsigned char *src = data+1; nbIter; --nbIter, src += 4, luma+=2)
+  for(; nbIter; --nbIter, data += 4, luma+=2)
     {
-      luma[0] = src[0];
-      luma[1] = src[2];
+      luma[0] = data[1];
+      luma[1] = data[3];
     }
 }
 
@@ -219,6 +219,7 @@ void lima::image2YUV(const unsigned char *srcPt,int width,int height,VideoMode m
       break;
     case YUV422PACKED:
       _yuv422packed_2_yuv(srcPt,dst,width,height);
+      break;
     case RGB555:
       _rgb555_2_yuv(srcPt,dst,width,height);
       break;
