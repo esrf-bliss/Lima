@@ -19,15 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-import os, sys, re, DLFCN
+import os, sys, re
 
 VSEP = '.'
 version_re = re.compile('v?([0-9]+)(\\.([0-9]+)(\\.([0-9]+))?)?')
+RTLD_GLOBAL = 0x00100
 
 
 def version_code(s):
         return list(map(int, s.strip('v').split(VSEP)))
-        
+
 def good_version_dir(v, r, f):
         m = version_re.match(v)
         d = os.path.join(r, v)
@@ -82,7 +83,7 @@ def load_prepare(mod_path, depends_on, has_dependent):
         elif link_strict_version != 'FULL':
                 raise ImportError('Invalid LIMA_LINK_STRICT_VERSION var: %s' %
                                   link_strict_version)
-        
+
         env_var_name = 'LIMA_%s_VERSION' % cap_dep
         if env_var_name in os.environ:
                 prev_version = os.environ[env_var_name]
@@ -97,13 +98,13 @@ def load_prepare(mod_path, depends_on, has_dependent):
 
 def load_ld_prepare(cleanup_data):
         mod_path, mod_dir, ld_open_flags, has_dependent = cleanup_data
-        sys.setdlopenflags(ld_open_flags | DLFCN.RTLD_GLOBAL)
+        sys.setdlopenflags(ld_open_flags | RTLD_GLOBAL)
         if has_dependent:
                 sys.path.insert(0, mod_dir)
         else:
                 mod_path.append(mod_dir)
         return cleanup_data
-        
+
 def load_dep_cleanup(cleanup_data):
         return load_ld_prepare(cleanup_data)
 
