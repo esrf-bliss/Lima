@@ -21,6 +21,7 @@ if platform.machine() == 'AMD64':
                  ('camera/pco/sdkPco/bin64/SC2_Cam.dll','Lima'),
                  ('camera/pco/sdkPco/bin64/sc2_cl_me4.dll','Lima'),
                  ('camera/pco/sdkPco/bin64/sc2_clhs.dll','Lima'),
+                 ('camera/pco/sdkPco/bin64/sc2_clhs_org.dll','Lima'),
                  ('camera/pco/sdkPco/bin64/sc2_clhs_v1.3.32.dll','Lima'),
                  (sip.__file__,''),
                  ('applications/tango/python/camera/Pco.py','Lima/Server/camera'),
