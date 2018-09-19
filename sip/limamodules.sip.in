@@ -35,6 +35,7 @@ void lima@NAME@_import_array();
 }
 %End
 
+
 %UnitCode
 #ifndef LIMA_REPR_CODE
 #define LIMA_REPR_CODE \
@@ -52,3 +53,13 @@ lima@NAME@_import_array();
 @IMPORTS@
 
 @INCLUDES@
+
+%ModuleHeaderCode
+#include "lima/Exceptions.h"
+static inline void LimaExceptionTest()
+{
+	throw LIMA_HW_EXC(lima::Error, "Test exception");
+}
+%End
+
+void LimaExceptionTest() throw (Exception);
