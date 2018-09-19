@@ -511,7 +511,9 @@ if(LIMA_ENABLE_PYTHON)
     endif()
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip PROPERTIES OBJECT_DEPENDS ${sipfiles})
     # Run sip now !
-    add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip)
+    add_sip_python_module(limacore
+                          ${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip
+                          0)
 
     target_include_directories(python_module_limacore PRIVATE
         ${PYTHON_INCLUDE_DIRS}

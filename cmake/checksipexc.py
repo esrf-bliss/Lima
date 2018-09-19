@@ -140,8 +140,5 @@ def checksipexc(ifname, inplace=False):
 
 if __name__ == '__main__':
     for src in sys.argv[1:]:
-        if 'camera' in src:
-            checksipexc(src, inplace=True)
-        else:
-            continue
+        checksipexc(src, inplace=True)
     sys.exit(0)

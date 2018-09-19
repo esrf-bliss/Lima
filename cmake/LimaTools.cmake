@@ -98,7 +98,9 @@ function(limatools_run_sip_for_camera cam_name)
     "${CMAKE_SOURCE_DIR}/control/software_operation/sip"
     "${CMAKE_CURRENT_SOURCE_DIR}/sip")
 
-  add_sip_python_module(lima${cam_name} ${CMAKE_CURRENT_BINARY_DIR}/sip/lima${cam_name}.sip)
+  add_sip_python_module(lima${cam_name}
+                        ${CMAKE_CURRENT_BINARY_DIR}/sip/lima${cam_name}.sip
+                        1)
   target_include_directories(python_module_lima${cam_name} PRIVATE
     ${PYTHON_INCLUDE_DIRS}
     "${CMAKE_SOURCE_DIR}/sip"

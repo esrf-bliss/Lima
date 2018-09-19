@@ -36,7 +36,7 @@ set(SIP_TAGS)
 set(SIP_DISABLE_FEATURES)
 set(SIP_EXTRA_OPTIONS)
 
-macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
+macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
 
     set(EXTRA_LINK_LIBRARIES ${ARGN})
 
@@ -112,6 +112,13 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
 
     # TODO: add all SIP files with the %Include directive + Exceptions.sip
 
+    if (${RUN_CHECK_SIP_EXC})
+        set(_check_sip_exc_cmd ${PYTHON_EXECUTABLE}
+	                       ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py)
+    else()
+        set(_check_sip_exc_cmd true)
+    endif()
+    
     add_custom_command(
         OUTPUT ${_sip_output_files}
         COMMAND ${CMAKE_COMMAND} -E echo ${message}
@@ -119,8 +126,7 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP)
         COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
                                   ${_sip_includes} -c ${_module_path} 
                                   ${_abs_module_sip}
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py
-                                     ${_sip_output_files}
+        COMMAND ${_check_sip_exc_cmd} ${_sip_output_files}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
     )
     # not sure if type MODULE could be uses anywhere, limit to cygwin for now
