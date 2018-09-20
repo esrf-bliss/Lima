@@ -143,6 +143,12 @@ MemBuffer::MemBuffer(int size)
 #endif
 }
 
+MemBuffer::MemBuffer(const MemBuffer& buffer)
+	: m_size(0), m_ptr(NULL)
+{
+	deepCopy(buffer);
+}
+
 MemBuffer::~MemBuffer()
 {
 	release();
@@ -173,6 +179,12 @@ void MemBuffer::deepCopy(const MemBuffer& buffer)
 	int size = buffer.getSize();
 	alloc(size);
 	memcpy(getPtr(), buffer.getConstPtr(), size);
+}
+
+MemBuffer& MemBuffer::operator =(const MemBuffer& buffer)
+{
+	deepCopy(buffer);
+	return *this;
 }
 
 void MemBuffer::release()

@@ -49,9 +49,8 @@ class LIMACORE_API MemBuffer
 	MemBuffer(int size);
 	~MemBuffer();
 
-	// MemBuffer are **not** copy-constructible nor copy-assignable.
-	MemBuffer(const MemBuffer&) = delete;
-	MemBuffer& operator=(const MemBuffer&) = delete;
+	MemBuffer(const MemBuffer&);
+	MemBuffer& operator=(const MemBuffer&);
 
 	// MemBuffer are move-constructible or move-assignable.
 	MemBuffer(MemBuffer&&) = default;
