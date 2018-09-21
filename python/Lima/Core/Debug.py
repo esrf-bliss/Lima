@@ -45,7 +45,7 @@ def DEB_FUNCT(fn, in_global=True, frame=1, deb_container=None):
         if sys.version_info < (3, 0): 
             sys.exc_clear()
         fn_globals = dict(fn.__globals__)
-        deb_obj = DebObj(deb_params, fn.__name__.encode(), '', filename.encode(), lineno)
+        deb_obj = DebObj(deb_params, False, fn.__name__.encode(), '', filename.encode(), lineno)
         fn_globals['deb'] = deb_obj
         if deb_container is not None:
             deb_container.add(deb_obj)
