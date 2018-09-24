@@ -30,7 +30,7 @@ requirements:
     - {{ compiler('cxx') }}
     - python {{ python }} #Python is used by CMake configure stage
     - numpy
-    - sip 4.18*           #For the SIP generator
+    - sip 4.19*           #For the SIP generator
     - cmake
   host:
     - gsl 2.2*
@@ -55,7 +55,7 @@ outputs:
     requirements:
       run:
         - python {{ python }}
-        - sip 4.18*
+        - sip 4.19*
         - numpy
         - gsl 2.2*
         # I/O formats
