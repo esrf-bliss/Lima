@@ -112,23 +112,25 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
 
     # TODO: add all SIP files with the %Include directive + Exceptions.sip
 
-    if (${RUN_CHECK_SIP_EXC})
-        set(_check_sip_exc_cmd ${PYTHON_EXECUTABLE}
-	                       ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py)
-    else()
-        set(_check_sip_exc_cmd true)
-    endif()
-    
     add_custom_command(
         OUTPUT ${_sip_output_files}
         COMMAND ${CMAKE_COMMAND} -E echo ${message}
         COMMAND ${TOUCH_COMMAND} ${_sip_output_files}
         COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS}
-                                  ${_sip_includes} -c ${_module_path} 
+                                  ${_sip_includes} -c ${_module_path}
                                   ${_abs_module_sip}
-        COMMAND ${_check_sip_exc_cmd} ${_sip_output_files}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
     )
+
+    if (${RUN_CHECK_SIP_EXC})
+        add_custom_command(
+            OUTPUT ${_sip_output_files}
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py ${_sip_output_files}
+            COMMENT "Running SIP exceptions check"
+            APPEND
+        )
+    endif()
+
     # not sure if type MODULE could be uses anywhere, limit to cygwin for now
     set(_sip_all_files ${_init_numpy_cpp} ${_sip_output_files})
     if (CYGWIN)
