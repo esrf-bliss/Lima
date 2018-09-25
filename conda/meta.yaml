@@ -18,7 +18,7 @@ package:
   version: {{ version }}
 
 source:
-  git_url: https://gitlab.esrf.fr/limagroup/lima.git
+  path: ..
 
 build:
   number: 2
