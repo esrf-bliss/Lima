@@ -23,6 +23,15 @@ from limacore import DebParams, DebObj
 import os, sys, types
 import functools
 
+if sys.version_info < (3, 0):
+    # Python 2: str
+    def to_cstring(str):
+        return str
+else:
+    # Python 3: bytes
+    def to_cstring(str):
+        return str.encode()
+
 def DEB_GLOBAL_FUNCT(fn):
     return DEB_FUNCT(fn, True, 2)
 
@@ -42,10 +51,10 @@ def DEB_FUNCT(fn, in_global=True, frame=1, deb_container=None):
     @functools.wraps(fn)
     def real_fn(*arg, **kw):
         # no longer exists on py3
-        if sys.version_info < (3, 0): 
+        if sys.version_info < (3, 0):
             sys.exc_clear()
         fn_globals = dict(fn.__globals__)
-        deb_obj = DebObj(deb_params, False, fn.__name__.encode(), '', filename.encode(), lineno)
+        deb_obj = DebObj(deb_params, False, to_cstring(fn.__name__), to_cstring(''), to_cstring(filename), lineno)
         fn_globals['deb'] = deb_obj
         if deb_container is not None:
             deb_container.add(deb_obj)
@@ -71,4 +80,4 @@ def DEB_PARAMS(deb_mod, class_name, in_global=True, frame=1):
         d_dict = g_dict
     else:
         d_dict = l_dict
-    d_dict['deb_params'] = DebParams(deb_mod, class_name, mod_name)
+    d_dict['deb_params'] = DebParams(deb_mod, to_cstring(class_name), to_cstring(mod_name))
