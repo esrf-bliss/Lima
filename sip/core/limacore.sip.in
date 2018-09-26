@@ -40,14 +40,22 @@
 %End
 
 %ConvertFromTypeCode
+  PyObject* newstring;
+
+#if PY_MAJOR_VERSION >= 3
     // convert an std::string to a Python (unicode) string
-    PyObject* newstring;
     newstring = PyUnicode_DecodeUTF8(sipCpp->c_str(), sipCpp->length(), NULL);
     if(newstring == NULL) {
         PyErr_Clear();
         newstring = PyString_FromString(sipCpp->c_str());
     }
-    return newstring;
+#else
+    // convert an std::string to a Python string
+    // I removed the part that converts to a Python unicode string.
+    newstring = PyString_FromString(sipCpp->c_str());
+#endif
+
+  return newstring;
 %End
 
 %ConvertToTypeCode
