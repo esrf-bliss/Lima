@@ -70,6 +70,7 @@ outputs:
       - {{ REL_SHLIB_DIR }}/liblimacore{{ SHLIB_EXT }}*
       - {{ REL_SHLIB_DIR }}/libprocesslib{{ SHLIB_EXT }}
       - {{ REL_SHLIB_DIR }}/libprocesslib{{ SHLIB_EXT }}*
+      - {{ REL_SHLIB_DIR }}/libh5bshuf{{ SHLIB_EXT }}
       - {{ REL_SP_DIR }}/limacore{{ PYMOD_EXT }}
       - {{ REL_SP_DIR }}/processlib{{ PYMOD_EXT }}
       - {{ REL_SP_DIR }}/Lima/__init__.py
