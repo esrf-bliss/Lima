@@ -43,6 +43,10 @@ Description:
     setting the corresponding "LIMACAMERA_SIMULATOR=0" option in
     config.txt.
 
+    If --use-conda-env is specified, the CONDA_SYSROOT and CONDA_PREFIX
+    environment variables are used as default values for
+    --sysroot and --prefix-path options for CMake, respectively.
+
     Running ./install.sh with no parameter will just build Lima with the
     options in config.txt. No installation will be performed. If at least
     one of --install-prefix or --install-python-prefix option is specified
@@ -145,7 +149,7 @@ class Config:
 			self.decode_args(argv)
 
 	def decode_args(self, argv):
-		build_type = ('RelWithDebInfo' if OS_TYPE == 'Linux' 
+		build_type = ('RelWithDebInfo' if OS_TYPE == 'Linux'
 			      else 'Release')
 		cwd = os.getcwd()
 		src = os.path.realpath(os.path.join(os.path.dirname(argv[0]), 
@@ -156,7 +160,13 @@ class Config:
 						 epilog=prog_instructions)
 		parser.add_argument('--git', action='store_true',
 				    help='init/update Git submodules')
+		parser.add_argument('--sysroot',
+				    help='CMake system root path')
+		parser.add_argument('--prefix-path',
+				    help='CMake default prefix path')
 		parser.add_argument('--find-root-path',
+				    help='CMake find_package/library root path')
+		parser.add_argument('--use-conda-env', action='store_true',
 				    help='CMake find_package/library root path')
 		parser.add_argument('--source-prefix', default=src,
 				    help='path to the Lima sources')
@@ -179,6 +189,20 @@ class Config:
 		parser.add_argument('mod_opts', metavar='mod_opt', nargs='+',
 				    help='module/option to process')
 		self.cmd_opts = parser.parse_args(argv[1:])
+
+		use_conda = self.get('use-conda-env')
+		sysroot = os.environ.get('CONDA_SYSROOT', None)
+		prefix_path = os.environ.get('CONDA_PREFIX', None)
+		if use_conda and sysroot:
+			if self.get('sysroot'):
+				raise ValueError('use-conda-env provided '
+						 'together with sysroot')
+			self.set_cmd('sysroot', sysroot)
+		if use_conda and prefix_path:
+			if self.get('prefix-path'):
+				raise ValueError('use-conda-env provided '
+						 'together with prefix-path')
+			self.set_cmd('prefix-path', prefix_path)
 
 		# do install if not explicitly specified and user
 		# included install-[python-]prefix
@@ -257,12 +281,13 @@ class Config:
 
 class CMakeOptions:
 
+	direct_opts = ['build-type', 'install-prefix', 'find-root-path',
+		       'prefix-path', 'sysroot']
+
 	cmd_2_cmake_map = {
-		'Common': [
-			('build-type', 'cmake-build-type'),
-			('install-prefix', 'cmake-install-prefix'),
+		'Common': [(x, 'cmake-' + x) for x in direct_opts] +
+			  [
 			('install-python-prefix', 'python-site-packages-dir'),
-			('find-root-path', 'cmake-find-root-path'),
 		],
 		'Linux': [
 			('verbose', 'cmake-verbose-makefile'),
