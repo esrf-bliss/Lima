@@ -842,6 +842,7 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
     }
 
     framesRead += nbFrames;
+    frameNumber += nbFrames;
   }
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
