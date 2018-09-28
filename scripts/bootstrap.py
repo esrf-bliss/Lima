@@ -43,9 +43,10 @@ Description:
     setting the corresponding "LIMACAMERA_SIMULATOR=0" option in
     config.txt.
 
-    If --use-conda-env is specified, the CONDA_SYSROOT and CONDA_PREFIX
-    environment variables are used as default values for
-    --sysroot and --prefix-path options for CMake, respectively.
+    The --use-conda-env option, which defaults to 'yes', uses the
+    CONDA_SYSROOT and CONDA_PREFIX environment variables as default values
+    for --sysroot and --prefix-path options for CMake, respectively. Set
+    to 'no' or '0' to disable this behavior.
 
     Running ./install.sh with no parameter will just build Lima with the
     options in config.txt. No installation will be performed. If at least
@@ -166,8 +167,8 @@ class Config:
 				    help='CMake default prefix path')
 		parser.add_argument('--find-root-path',
 				    help='CMake find_package/library root path')
-		parser.add_argument('--use-conda-env', action='store_true',
-				    help='CMake find_package/library root path')
+		parser.add_argument('--use-conda-env', default='yes',
+				    help='Use CONDA environ. vars. as default')
 		parser.add_argument('--source-prefix', default=src,
 				    help='path to the Lima sources')
 		parser.add_argument('--config-file', 
@@ -190,7 +191,7 @@ class Config:
 				    help='module/option to process')
 		self.cmd_opts = parser.parse_args(argv[1:])
 
-		use_conda = self.get('use-conda-env')
+		use_conda = self.get('use-conda-env').lower() not in ['no', '0']
 		sysroot = os.environ.get('CONDA_SYSROOT', None)
 		prefix_path = os.environ.get('CONDA_PREFIX', None)
 		if use_conda and sysroot:
