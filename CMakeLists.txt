@@ -263,6 +263,11 @@ if(LIMA_ENABLE_SPS_IMAGE)
     target_include_directories(limacore PRIVATE "${CMAKE_SOURCE_DIR}/third-party/Sps/Include")
 endif()
 
+# Set LIMA_NO_DEBUG if the build type is not debug
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_definitions(limacore PUBLIC LIMA_NO_DEBUG)
+endif()
+
 # add all include paths coming from saving format options
 target_include_directories(limacore PRIVATE ${extra_includes} ${saving_includes})
 
