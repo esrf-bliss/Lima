@@ -54,8 +54,8 @@ def DEB_FUNCT(fn, in_global=True, frame=1, deb_container=None):
         if sys.version_info < (3, 0):
             sys.exc_clear()
         fn_globals = dict(fn.__globals__)
-        cstr = map(to_cstring, [fn.__name__, '', filename])
-        deb_obj = DebObj(deb_params, False, cstr[0], cstr[1], cstr[2], lineno)
+        deb_obj = DebObj(deb_params, False,
+            to_cstring(fn.__name__), to_cstring(''), to_cstring(filename), lineno)
         fn_globals['deb'] = deb_obj
         if deb_container is not None:
             deb_container.add(deb_obj)
@@ -81,5 +81,5 @@ def DEB_PARAMS(deb_mod, class_name, in_global=True, frame=1):
         d_dict = g_dict
     else:
         d_dict = l_dict
-    cstr = map(to_cstring, [class_name, mod_name])
-    d_dict['deb_params'] = DebParams(deb_mod, *cstr)
+    d_dict['deb_params'] = DebParams(deb_mod,
+        to_cstring(class_name), to_cstring(mod_name))
