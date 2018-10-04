@@ -60,6 +60,8 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
+# Import pthread
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
 
 ### Define options
@@ -263,16 +265,9 @@ target_include_directories(limacore PRIVATE ${extra_includes} ${saving_includes}
 target_compile_definitions(limacore PUBLIC ${extra_definitions} ${saving_definitions})
 
 # add libraries
+target_link_libraries(limacore PUBLIC Threads::Threads)
 target_link_libraries(limacore PUBLIC processlib ${saving_libs} ${extra_libs})
 target_link_libraries(limacore PRIVATE ${saving_private_libs})
-
-if(THREADS_HAVE_PTHREAD_ARG)
-    target_compile_options(limacore PUBLIC "-pthread")
-endif()
-
-if(CMAKE_THREAD_LIBS_INIT)
-    target_link_libraries(limacore PUBLIC "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
 if(UNIX)
     target_compile_definitions(limacore PUBLIC -DHAS_INOTIFY)
