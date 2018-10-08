@@ -37,12 +37,21 @@ void lima@NAME@_import_array();
 
 
 %UnitCode
+#include <Python.h>
 #ifndef LIMA_REPR_CODE
+#if PY_MAJOR_VERSION >= 3
+#define LIMA_REPR_CODE \
+	std::ostringstream str; \
+	str << *sipCpp;	\
+	const std::string& tmpString = str.str(); \
+	sipRes = PyUnicode_FromString(tmpString.c_str());
+#else
 #define LIMA_REPR_CODE \
 	std::ostringstream str; \
 	str << *sipCpp;	\
 	const std::string& tmpString = str.str(); \
 	sipRes = PyString_FromString(tmpString.c_str());
+#endif
 #endif
 %End
 
