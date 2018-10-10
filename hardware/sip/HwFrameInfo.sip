@@ -22,9 +22,6 @@
 struct HwFrameInfoType
 {
 %TypeHeaderCode
-#define NO_IMPORT_ARRAY
-#define PY_ARRAY_UNIQUE_SYMBOL _LimacoreNumPy
-#include "numpy/arrayobject.h"
 #include "lima/HwFrameInfo.h"
 #include <sstream>
 using namespace lima;
@@ -57,7 +54,7 @@ using namespace lima;
 		return NULL;
 	}
 
-	sipPy = PyArray_SimpleNewFromData(2, dims, arr_type, 
+	sipPy = PyArray_SimpleNewFromData(2, dims, arr_type,
 					  sipCpp->frame_ptr);
 %End
 %SetCode
@@ -83,7 +80,7 @@ if(!sipErr)
     default:
     sipErr = 1;
     }
-    
+
     if(!sipErr)
     {
 
@@ -108,7 +105,7 @@ Py_DECREF(tmpObject);
 %MethodCode
 	PyArrayObject *tmpObject = (PyArrayObject *) PyArray_ContiguousFromObject(a1, NPY_NOTYPE,
 							                    0, 0);
-	if (tmpObject) 
+	if (tmpObject)
 	{
 	  int nbDim = PyArray_NDIM(tmpObject);
   	  if(nbDim == 2)
@@ -125,11 +122,11 @@ Py_DECREF(tmpObject);
     	      default:
 		goto clean;
             }
-    
+
 	      FrameDim tmpFrameDim(PyArray_DIM(tmpObject,1),
 				   PyArray_DIM(tmpObject,0),
 				   image_type);
-              
+
 	      sipCpp = new HwFrameInfoType(a0, PyArray_DATA(tmpObject),&tmpFrameDim, *a2, a3, a4);
 	  }
 	clean:
@@ -141,5 +138,3 @@ Py_DECREF(tmpObject);
         LIMA_REPR_CODE
 %End
 };
-
-

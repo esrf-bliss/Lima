@@ -23,124 +23,61 @@
 ############################################################################
 
 cmake_minimum_required(VERSION 3.1)
+
 project (lima)
+include(cmake/project_version.cmake)
 
 set(NAME "core")
+
+# Include additional modules that are used unconditionally
+include(GNUInstallDirs)
+include(GenerateExportHeader)
+
+# If conda build, always set lib dir to 'lib'
+if($ENV{CONDA_BUILD})
+  set(CMAKE_INSTALL_LIBDIR "lib")
+endif()
+
+# Set lower / upper case project names
+string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+string(TOLOWER "${PROJECT_NAME}" PROJECT_NAME_LOWER)
+
+# Set targets export name (used by lima and dependencies)
+set(TARGETS_EXPORT_NAME "${PROJECT_NAME_LOWER}-targets")
+#set(namespace "${PROJECT_NAME}::")
 
 # Enable C++11 and later
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#--------------------------------------------------------------------------------
-# cmake/ directory contains tools
-#--------------------------------------------------------------------------------
+if(MSVC AND MSVC_VERSION GREATER 1500)
+    # Compiler specific (parallel build)
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} /MP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
+
+# CMake additional macros
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
+# Import pthread
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
 
-if(MSVC AND MSVC_VERSION GREATER 1500)
-  # Compiler specific (parallel build)
-  set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} /MP")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-endif()
+### Define options
 
-if(UNIX)
-#--------------------------------------------------------------------------------
-# Spec-like shared memory
-#--------------------------------------------------------------------------------
-  if(DEFINED ENV{COMPILE_SPS_IMAGE})
-    set(LIMA_ENABLE_SPS_IMAGE "$ENV{COMPILE_SPS_IMAGE}" CACHE BOOL "compile sps_image?" FORCE)
-  else()
-    option(LIMA_ENABLE_SPS_IMAGE "compile sps_image?" OFF)
-  endif()
+include(Options.cmake)
 
-# openGL real-time display
-  if(DEFINED ENV{COMPILE_GLDISPLAY})
-    set(LIMA_ENABLE_GLDISPLAY "$ENV{COMPILE_GLDISPLAY}" CACHE BOOL "compile gldisplay?" FORCE)
-  else()
-    option(LIMA_ENABLE_GLDISPLAY "compile sps_image?" OFF)
-  endif()
-endif()
+### Find dependencies
 
-#--------------------------------------------------------------------------------
-# Compile tests
-#--------------------------------------------------------------------------------
-option(LIMA_ENABLE_TESTS "compile test directories ?" OFF)
-
-#--------------------------------------------------------------------------------
-# libconfig
-#--------------------------------------------------------------------------------
-if(DEFINED ENV{LIMA_ENABLE_CONFIG})
-    set(LIMA_ENABLE_CONFIG "$ENV{LIMA_ENABLE_CONFIG}" CACHE BOOL "compile with libconfig code?" FORCE)
+# Processlib third-party is mandatory
+if (LIMA_BUILD_SUBMODULES)
+    add_subdirectory(third-party/Processlib)
 else()
-    option(LIMA_ENABLE_CONFIG "compile with libconfig?" OFF)
+    find_package(Processlib REQUIRED)
 endif()
 
-#--------------------------------------------------------------------------------
-# Saving formats can be enabled from environment variables using config.inc file
-#--------------------------------------------------------------------------------
-if(UNIX)
-	# The formats have not been tested on windows
-	if(DEFINED ENV{LIMA_ENABLE_CBF})
-		set(LIMA_ENABLE_CBF "$ENV{LIMA_ENABLE_CBF}" CACHE BOOL "compile CBF saving code?" FORCE)
-	else()
-		option(LIMA_ENABLE_CBF "compile CBF saving code?" OFF)
-	endif()
-	if(DEFINED ENV{LIMA_ENABLE_EDFLZ4})
-		set(LIMA_ENABLE_EDFLZ4 "$ENV{LIMA_ENABLE_EDFLZ4}" CACHE BOOL "compile EDF.LZ4 saving code?" FORCE)
-	else()
-		option(LIMA_ENABLE_EDFLZ4 "compile EDF.LZ4 saving code?" OFF)
-	endif()
-	if(DEFINED ENV{LIMA_ENABLE_FITS})
-		set(LIMA_ENABLE_FITS "$ENV{LIMA_ENABLE_FITS}" CACHE BOOL "compile FITS saving code?" FORCE)
-	else()
-		option(LIMA_ENABLE_FITS "compile FITS saving code?" OFF)
-	endif()
-	if(DEFINED ENV{LIMA_ENABLE_NXS})
-		set(LIMA_ENABLE_NXS "$ENV{LIMA_ENABLE_NXS}" CACHE BOOL "compile Nexus saving code?" FORCE)
-	else()
-		option(LIMA_ENABLE_NXS "compile Nexus saving code?" OFF)
-	endif()
-	if(DEFINED ENV{LIMA_ENABLE_TIFF})
-		set(LIMA_ENABLE_TIFF "$ENV{LIMA_ENABLE_TIFF}" CACHE BOOL "compile TIFF saving code?" FORCE)
-	else()
-		option(LIMA_ENABLE_TIFF "compile TIFF saving code?" OFF)
-	endif()
-endif()
-
-if(DEFINED ENV{LIMA_ENABLE_EDFGZ})
-    set(LIMA_ENABLE_EDFGZ "$ENV{LIMA_ENABLE_EDFGZ}" CACHE BOOL "compile EDF.GZ saving code?" FORCE)
-else()
-    option(LIMA_ENABLE_EDFGZ "compile EDF.GZ saving code?" OFF)
-endif()
-if(DEFINED ENV{LIMA_ENABLE_HDF5})
-    set(LIMA_ENABLE_HDF5 "$ENV{LIMA_ENABLE_HDF5}" CACHE BOOL "compile HDF5 saving code?" FORCE)
-else()
-    option(LIMA_ENABLE_HDF5 "compile HDF5 saving code?" OFF)
-endif()
-if(DEFINED ENV{LIMA_ENABLE_HDF5_BS})
-    set(LIMA_ENABLE_HDF5_BS "$ENV{LIMA_ENABLE_HDF5_BS}" CACHE BOOL "compile HDF5/BS saving code?" FORCE)
-else()
-    option(LIMA_ENABLE_HDF5_BS "compile HDF5/BS saving code?" OFF)
-endif()
-
-# Compile python wrapping code generated using SIP
-IF(DEFINED ENV{LIMA_ENABLE_PYTHON})
-    set(LIMA_ENABLE_PYTHON "$ENV{LIMA_ENABLE_PYTHON}" CACHE BOOL "compile python modules?" FORCE)
-else()
-    option(LIMA_ENABLE_PYTHON "compile python modules?" OFF)
-endif()
-
-# Python Tango server
-IF(DEFINED ENV{LIMA_ENABLE_PYTANGO_SERVER})
-    set(LIMA_ENABLE_PYTANGO_SERVER "$ENV{LIMA_ENABLE_PYTANGO_SEVER}" CACHE BOOL "install python tango server?" FORCE)
-else()
-    option(LIMA_ENABLE_PYTANGO_SERVER "install python tango server?" OFF)
-endif()
-#--------------------------------------------------------------------------------
 # Enable python binding code compilation using sip generator
-#--------------------------------------------------------------------------------
 if(LIMA_ENABLE_PYTHON)
     find_package(PythonInterp)
     find_package(PythonLibs)
@@ -156,265 +93,168 @@ if(LIMA_ENABLE_PYTHON)
 
     set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
-    find_package(NumPy)
-    if(${NUMPY_FOUND})
-      include_directories(${NUMPY_INCLUDE_DIRS})
-      link_directories(${NUMPY_LIBRARIES})
-    else()
-        message(FATAL_ERROR "NumPy not found, cannot build python extensions")
-    endif()
- endif()
-
-#--------------------------------------------------------------------------------
-# Processlib third-party is mandatory
-#--------------------------------------------------------------------------------
-add_subdirectory(third-party/Processlib)
-
-#--------------------------------------------------------------------------------
-# Load SIPMacros after Processlib
-#--------------------------------------------------------------------------------
-
-if(LIMA_ENABLE_PYTHON)
-    find_package(SIP)
-  	if(${SIP_FOUND})
-  		include(SIPMacros)
-  	else()
-  		message(FATAL_ERROR "python SIP not installed, please install or disable LIMA_ENABLE_PYTHON")
-  	endif()
+    find_package(SIP REQUIRED)
+    include(SIPMacros)
     if(WIN32)
-        set(SIP_TAGS WIN32_PLATFORM)
+      set(SIP_TAGS WIN32_PLATFORM)
     elseif(UNIX)
-        set(SIP_TAGS POSIX_PLATFORM)
+      set(SIP_TAGS POSIX_PLATFORM)
     endif(WIN32)
     set(SIP_EXTRA_OPTIONS -e -g)
-endif()
+
+    find_package(NumPy REQUIRED)
+ endif()
 
 #--------------------------------------------------------------------------------
 # Define source files
 #--------------------------------------------------------------------------------
-if(WIN32)
-    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/core/include/WindowSpecific")
-endif(WIN32)
 
-set(common_srcs common/src/Constants.cpp common/src/SizeUtils.cpp common/src/Timestamp.cpp common/src/ThreadUtils.cpp
-                common/src/Exceptions.cpp common/src/MemUtils.cpp common/src/RegExUtils.cpp common/src/AcqState.cpp
-                common/src/Debug.cpp common/src/VideoUtils.cpp common/src/Event.cpp common/src/Timer.cpp
-                common/src/DirectoryEventUtils.cpp common/src/SimplePipe.cpp)
+# add_subdirectory(common)
+# add_subdirectory(control)
+# add_subdirectory(control/software_operation)
+# add_subdirectory(hardware)
 
-if(WIN32)
-    list(REMOVE_ITEM common_srcs common/src/RegExUtils.cpp common/src/SimplePipe.cpp)
+set(common_srcs
+    common/src/Constants.cpp
+    common/src/SizeUtils.cpp
+    common/src/Timestamp.cpp
+    common/src/ThreadUtils.cpp
+    common/src/Exceptions.cpp
+    common/src/MemUtils.cpp
+    common/src/AcqState.cpp
+    common/src/Debug.cpp
+    common/src/VideoUtils.cpp
+    common/src/Event.cpp
+    common/src/Timer.cpp
+    common/src/DirectoryEventUtils.cpp)
+
+if(UNIX)
+    list(APPEND common_srcs
+        common/src/RegExUtils.cpp
+        common/src/SimplePipe.cpp
+    )
 endif()
 
 file(GLOB_RECURSE common_incs "common/include/*.h")
 
-set(hw_srcs hardware/src/HwInterface.cpp hardware/src/HwCap.cpp hardware/src/HwSyncCtrlObj.cpp hardware/src/HwFrameInfo.cpp
-            hardware/src/HwFrameCallback.cpp hardware/src/HwBufferCtrlObj.cpp hardware/src/HwBufferMgr.cpp
-            hardware/src/HwShutterCtrlObj.cpp hardware/src/HwMaxImageSizeCallback.cpp hardware/src/HwDetInfoCtrlObj.cpp
-            hardware/src/HwBinCtrlObj.cpp hardware/src/HwRoiCtrlObj.cpp hardware/src/HwFlipCtrlObj.cpp hardware/src/HwSerialLine.cpp
-            hardware/src/HwBufferSave.cpp hardware/src/HwVideoCtrlObj.cpp hardware/src/HwEventCtrlObj.cpp hardware/src/HwSavingCtrlObj.cpp
-            hardware/src/HwFileEventMgr.cpp hardware/src/HwReconstructionCtrlObj.cpp)
+set(hardware_srcs
+    hardware/src/HwInterface.cpp
+    hardware/src/HwCap.cpp
+    hardware/src/HwSyncCtrlObj.cpp
+    hardware/src/HwFrameInfo.cpp
+    hardware/src/HwFrameCallback.cpp
+    hardware/src/HwBufferCtrlObj.cpp
+    hardware/src/HwBufferMgr.cpp
+    hardware/src/HwShutterCtrlObj.cpp
+    hardware/src/HwMaxImageSizeCallback.cpp
+    hardware/src/HwDetInfoCtrlObj.cpp
+    hardware/src/HwBinCtrlObj.cpp
+    hardware/src/HwRoiCtrlObj.cpp
+    hardware/src/HwFlipCtrlObj.cpp
+    hardware/src/HwSerialLine.cpp
+    hardware/src/HwBufferSave.cpp
+    hardware/src/HwVideoCtrlObj.cpp
+    hardware/src/HwEventCtrlObj.cpp
+    hardware/src/HwSavingCtrlObj.cpp
+    hardware/src/HwReconstructionCtrlObj.cpp
+)
 
-if(WIN32)
-    list(REMOVE_ITEM hw_srcs hardware/src/HwFileEventMgr.cpp)
+if(UNIX)
+    list(APPEND hardware_srcs hardware/src/HwFileEventMgr.cpp)
 endif()
 
 file(GLOB_RECURSE hardware_incs "hardware/include/*.h")
 
-set(control_srcs control/src/CtSaving.cpp control/src/CtControl.cpp control/src/CtAcquisition.cpp control/src/CtBuffer.cpp
-                 control/src/CtImage.cpp control/src/CtSaving_Compression.cpp control/src/CtSaving_Edf.cpp control/src/CtShutter.cpp
-                 control/src/CtAccumulation.cpp control/src/CtVideo.cpp
-                 control/src/CtEvent.cpp)
-set(ct_srcs control/software_operation/src/SoftOpInternalMgr.cpp control/software_operation/src/SoftOpExternalMgr.cpp control/software_operation/src/SoftOpId.cpp)
+set(control_srcs
+    control/src/CtSaving.cpp
+    control/src/CtControl.cpp
+    control/src/CtAcquisition.cpp
+    control/src/CtBuffer.cpp
+    control/src/CtImage.cpp
+    control/src/CtSaving_Compression.cpp
+    control/src/CtSaving_Edf.cpp
+    control/src/CtShutter.cpp
+    control/src/CtAccumulation.cpp
+    control/src/CtVideo.cpp
+    control/src/CtEvent.cpp
+)
 
 file(GLOB_RECURSE control_incs "control/include/*.h")
 
-#--------------------------------------------------------------------------------
-# Option for libconfig++ support
-#--------------------------------------------------------------------------------
+set(software_operation_srcs
+    control/software_operation/src/SoftOpInternalMgr.cpp
+    control/software_operation/src/SoftOpExternalMgr.cpp
+    control/software_operation/src/SoftOpId.cpp
+)
+
+file(GLOB_RECURSE software_operation_incs "control/software_operation/include/*.h")
+
 set(extra_libs)
 set(extra_includes)
+set(extra_definitions)
+
+# Optional for libconfig++ support
 if(LIMA_ENABLE_CONFIG)
-	if(WIN32)
-		if (${CMAKE_GENERATOR} MATCHES "(2008|2010|2013)")
-			if (${CMAKE_GENERATOR} MATCHES "Win64$")
-				set(CONFIG_VERSION "win64-msvc2008")
-			else()
-				set(CONFIG_VERSION "win32-msvc2008")
-			endif()
-		elseif(${CMAKE_GENERATOR} MATCHES "2015|2017")
-			if (${CMAKE_GENERATOR} MATCHES "Win64$")
-				set(CONFIG_VERSION "win64-msvc2015")
-			else()
-				set(CONFIG_VERSION "win32-msvc2015")
-			endif()
-		else()
-			message(FATAL_ERROR "This compiler is not supported: " ${CMAKE_GENERATOR})
-		endif()
-		set(LIB_CONFIG_INCLUDE_DIR "C:/Program Files/LIBCONFIG-windows/${CONFIG_VERSION}/include" CACHE PATH "Path to LIBCONFIG++ includes")
-		set(LIB_CONFIG_DIR "C:/Program Files/LIBCONFIG-windows/${CONFIG_VERSION}/lib" CACHE PATH "Path to LIBCONFIG++ lib folder")
-		find_library(LIB_CONFIG libconfig++ ${LIB_CONFIG_DIR})
-	else()
-		find_library(LIB_CONFIG config++)
-	endif()
-	find_path(LIB_CONFIG_INCLUDE_DIR libconfig.h++)
-
-	include(FindPackageHandleStandardArgs)
-	find_package_handle_standard_args(config DEFAULT_MSG LIB_CONFIG LIB_CONFIG_INCLUDE_DIR)
-	if(${CONFIG_FOUND})
-		add_definitions(-DWITH_CONFIG)
-		set(extra_libs ${extra_libs} ${LIB_CONFIG})
-		set(common_srcs ${common_srcs} common/src/ConfigUtils.cpp)
-		set(control_srcs ${control_srcs} control/src/CtConfig.cpp)
-		link_directories(${LIB_CONFIG_DIR})
-		set(extra_includes ${extra_includes} ${LIB_CONFIG_INCLUDE_DIR})
-		if (WIN32)
-			add_definitions(-DLIBCONFIGXX_STATIC)
-		endif()
-	else()
-		message(FATAL_ERROR "libconfig++ not found, set LIB_CONFIG path or disable LIMA_ENABLE_CONFIG")
-	endif()
-endif()
-
-#--------------------------------------------------------------------------------
-# Option for Spec-like shared-memory (SPS)  support
-#--------------------------------------------------------------------------------
-if(LIMA_ENABLE_SPS_IMAGE)
-    add_definitions(-DWITH_SPS_IMAGE)
-    set(ct_srcs ${ct_srcs} control/src/CtSpsImage.cpp third-party/Sps/Src/sps.c)
-endif()
-
-#--------------------------------------------------------------------------------
-# Option for extra saving formats edf.gz, edf.lz4, cbf, hdf5, tiff, fits ...
-#--------------------------------------------------------------------------------
-set(saving_libs)
-set(saving_includes)
-if(LIMA_ENABLE_EDFGZ)
-  find_package(ZLIB)
-	if(${ZLIB_FOUND})
-		add_definitions(-DWITH_Z_COMPRESSION)
-		set(saving_libs ${saving_libs} ${ZLIB_LIBRARIES})
-		set(saving_includes ${saving_includes} ${ZLIB_INCLUDE_DIRS})
-	else()
-		message(FATAL_ERROR "ZLIB library not found, please install or disable LIMA_ENABLE_EDFGZ")
-	endif()
-endif()
-
-if(LIMA_ENABLE_EDFLZ4)
-    find_package(LZ4)
-    if (${LZ4_FOUND})
-        add_definitions(-DWITH_LZ4_COMPRESSION)
-        set(saving_libs ${saving_libs} ${LZ4_LIBRARIES})
-      	set(saving_includes ${saving_includes} ${LZ4_INCLUDE_DIRS})
+    find_package(Libconfig)
+    if(${CONFIG_FOUND})
+        list(APPEND extra_definitions -DWITH_CONFIG)
+        list(APPEND extra_libs ${LIBCONFIG_LIBRARIES})
+        list(APPEND common_srcs common/src/ConfigUtils.cpp)
+        list(APPEND control_srcs control/src/CtConfig.cpp)
+        list(APPEND extra_includes ${LIBCONFIG_INCLUDE_DIRS})
     else()
-        message(FATAL_ERROR "LZ4 library: required version = 1.8.2, please update or switch off LIMA_ENABLE_EDFLZ4")
+        message(FATAL_ERROR "libconfig++ not found, set LIB_CONFIG path or disable LIMA_ENABLE_CONFIG")
     endif()
 endif()
 
-if(LIMA_ENABLE_CBF)
-  find_package(CBF)
-	if (${CBF_FOUND})
-		add_definitions(-DWITH_CBF_SAVING)
-		add_definitions(-DPROTOTYPES)
-		set(ct_srcs ${ct_srcs} control/src/CtSaving_Cbf.cpp)
-		set(saving_libs ${saving_libs} ${CBF_LIBRARIES} crypto)
-		set(saving_includes ${saving_includes} ${CBF_INCLUDE_DIRS})
-	else()
-		message(FATAL_ERROR "CBF library not found, please install or disable LIMA_ENABLE_CBF")
-	endif()
+# Option for Spec-like shared-memory (SPS)  support
+if(LIMA_ENABLE_SPS_IMAGE)
+    list(APPEND extra_definitions -DWITH_SPS_IMAGE)
+    list(APPEND control_srcs control/src/CtSpsImage.cpp third-party/Sps/Src/sps.c)
 endif()
 
-if(LIMA_ENABLE_FITS)
-  find_package(CCFits)
-	if(${CCFITS_FOUND})
-		add_definitions(-DWITH_FITS_SAVING)
-		set(ct_srcs ${ct_srcs} control/src/CtSaving_Fits.cpp)
-		set(saving_libs ${saving_libs} ${CFITSIO_LIBRARY} ${CCFITS_LIBRARY})
-		set(saving_includes ${saving_includes} ${CFITSIO_INCLUDE_DIR})
-	else()
-		message(FATAL_ERROR "CFITSIO and/or CCFITS library not found, please install or disable LIMA_ENABLE_FITS")
-	endif()
-endif()
-
-if(LIMA_ENABLE_HDF5)
-  #set (HDF5_USE_STATIC_LIBRARIES ON)
-  find_package(HDF5 COMPONENTS CXX HL)
-  if(${HDF5_FOUND})
-    add_definitions(-DWITH_HDF5_SAVING)
-    set(ct_srcs ${ct_srcs} control/src/CtSaving_Hdf5.cpp)	
-    set(saving_libs ${saving_libs} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${LIB_SZIP} ${LIB_ZLIB})
-    set(saving_includes ${saving_includes} ${HDF5_INCLUDE_DIRS})
-    set(saving_definitions ${saving_definitions} ${HDF5_DEFINITIONS})
-  else()
-    message(FATAL_ERROR "HDF5 library not found, please install or disable LIMA_ENABLE_HDF5")
-  endif()
-
-  if(LIMA_ENABLE_HDF5_BS)
-      set(BITSHUFFLE_EXTERNALLY_CONFIGURED ON)
-      add_subdirectory(control/bitshuffle)
-
-      add_definitions(-DWITH_BS_COMPRESSION)
-      set(saving_includes ${saving_includes} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/bitshuffle/src)
-      set(saving_libs ${saving_libs} h5bshuf)
-
-      # set(LIB_BS_INCLUDE_DIR "/usr/local/include/" CACHE PATH "Path to BitShuffle include files")
-      # link_directories(${LIB_HDF5_PLUGIN})
-      # find_library(LIB_HDF5_BS h5bshuf ${LIB_HDF5_PLUGIN})
-      # find_path(LIB_BS_INCLUDE_DIR bitshuffle.h)
-      # set(saving_libs ${saving_libs} ${LIB_HDF5_BS})
-      # set(saving_includes ${saving_includes} ${LIB_BS_INCLUDE_DIR})
-  endif()
-endif()
-
-if(LIMA_ENABLE_NXS)
-  find_path(LIB_NXS_INCLUDE_DIR nexuscpp/nexuscpp.h)
-  find_library(LIB_NXS nexuscpp)
-  include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(NXS DEFAULT_MSG LIB_NXS LIB_NXS_INCLUDE_DIR)
-	if(${NXS_FOUND})
-		add_definitions(-DWITH_NXS_SAVING)
-		set(ct_srcs ${ct_srcs} control/src/CtSaving_NXS.cpp)
-		set(saving_includes ${saving_includes} ${LIB_NXS_INCLUDE_DIR})
-	else()
-		message(FATAL_ERROR "NEXUS cpp library not installed, please install or disable LIMA_ENABLE_NXS")
-	endif()
-endif()
-
-if(LIMA_ENABLE_TIFF)
-  find_package(TIFF)
-	if(${TIFF_FOUND})
-		add_definitions(-DWITH_TIFF_SAVING)
-		set(ct_srcs ${ct_srcs} control/src/CtSaving_Tiff.cpp)
-		set(saving_libs ${saving_libs} ${TIFF_LIBRARIES})
-		set(saving_includes ${saving_includes} ${TIFF_INCLUDE_DIRS})
-	else()
-		message(FATAL_ERROR "TIFF library not found, please install or disable LIMA_ENABLE_TIFF")
-	endif()
-endif()
+# Option for extra saving formats edf.gz, edf.lz4, cbf, hdf5, tiff, fits
+include(Saving.cmake)
 
 #--------------------------------------------------------------------------------
 # Add the library limacore definition
 #--------------------------------------------------------------------------------
 add_library(limacore SHARED
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/project_version.cc # Add version info
     ${common_srcs}
-    ${hw_srcs}
+    ${hardware_srcs}
     ${control_srcs}
-    ${ct_srcs}
+    ${software_operation_srcs}
     ${common_incs}
     ${hardware_incs}
     ${control_incs}
+    ${software_operation_incs}
 )
 
-limatools_set_library_soversion(limacore "common/VERSION")
+# Set version
+set_target_properties(limacore PROPERTIES
+    VERSION "${VERSION}"
+    SOVERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}")
 
-target_include_directories(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/common/include")
-target_include_directories(limacore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/hardware/include")
+# Generate export macros
+generate_export_header(limacore)
+
 target_include_directories(limacore PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/control/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/include")
-target_include_directories(limacore PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/core/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/include")
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/common/include>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/hardware/include>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/control/include>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/include>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+if(LIMA_BUILD_SUBMODULES)
+    target_include_directories(limacore PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/core/include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/include>")
+endif()
+
 if(LIMA_ENABLE_SPS_IMAGE)
+    target_compile_definitions(limacore PUBLIC -DWITH_SPS_IMAGE)
     target_include_directories(limacore PRIVATE "${CMAKE_SOURCE_DIR}/third-party/Sps/Include")
 endif()
 
@@ -422,59 +262,30 @@ endif()
 target_include_directories(limacore PRIVATE ${extra_includes} ${saving_includes})
 
 # add compiler definitions required by saving libraries
-target_compile_definitions(limacore PRIVATE ${saving_definitions})
+target_compile_definitions(limacore PUBLIC ${extra_definitions} ${saving_definitions})
 
-if(THREADS_HAVE_PTHREAD_ARG)
-    target_compile_options(PUBLIC limacore "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(limacore "${CMAKE_THREAD_LIBS_INIT}")
-endif()
+# add libraries
+target_link_libraries(limacore PUBLIC Threads::Threads)
+target_link_libraries(limacore PUBLIC processlib ${saving_libs} ${extra_libs})
+target_link_libraries(limacore PRIVATE ${saving_private_libs})
+
 if(UNIX)
-    add_definitions(-DHAS_INOTIFY)
-    target_link_libraries(limacore "rt")
-endif()
-target_link_libraries(limacore processlib)
-target_link_libraries(limacore ${saving_libs} ${extra_libs})
-
-if (WIN32)
-	target_link_libraries(limacore shlwapi.lib)
+    target_compile_definitions(limacore PUBLIC -DHAS_INOTIFY)
+    target_link_libraries(limacore PUBLIC "rt")
 endif()
 
 if(WIN32)
     target_compile_definitions(limacore PRIVATE LIMACORE_EXPORTS)
     set_target_properties(limacore PROPERTIES PREFIX "lib")
+    set_target_properties(limacore PROPERTIES IMPORT_PREFIX "lib")
 endif()
-
-include(GNUInstallDirs)
-install(
-    TARGETS limacore
-    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
-install(
-    DIRECTORY ${CMAKE_SOURCE_DIR}/common/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h")
-install(
-    DIRECTORY ${CMAKE_SOURCE_DIR}/hardware/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h")
-install(
-    DIRECTORY ${CMAKE_SOURCE_DIR}/control/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h")
-install(
-    DIRECTORY ${CMAKE_SOURCE_DIR}/control/software_operation/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h")
 
 #--------------------------------------------------------------------------------
 # SIP generates binding code for python
 #--------------------------------------------------------------------------------
 if(LIMA_ENABLE_PYTHON)
     set(INCLUDES)
-    file(GLOB sipfiles
+    file(GLOB SIP_SOURCES
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/common/sip"
          "${CMAKE_CURRENT_SOURCE_DIR}/common/sip/*.sip"
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/hardware/sip"
@@ -483,54 +294,59 @@ if(LIMA_ENABLE_PYTHON)
          "${CMAKE_CURRENT_SOURCE_DIR}/control/sip/*.sip"
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip"
          "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip/*.sip")
-    foreach(sipfile ${sipfiles})
+    foreach(SIP_SOURCES ${SIP_SOURCES})
         set(INCLUDES
 "${INCLUDES}
-%Include ${sipfile}"
+%Include ${SIP_SOURCES}"
 )
     endforeach()
 
-    if(SIP_VERSION_STR VERSION_LESS "4.12")
-        message(FATAL_ERROR "SIP older than 4.12 is no longer supported")
-    endif()
-      
-    configure_file(sip/core/limacore.sip.in sip/core/limacore.sip)
+    configure_file(sip/limacore.sip.in sip/limacore.sip)
     configure_file(sip/lima_init_numpy.cpp.in sip/core/limacore_init_numpy.cpp)
-    set(SIP_INCLUDES ${SIP_INCLUDES}
-        "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip"
-        "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/sip"
+    set(SIP_INCLUDE_DIRS
+        ${PROCESSLIB_SIP_INCLUDE_DIRS}
         "${CMAKE_CURRENT_SOURCE_DIR}/common/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/hardware/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip")
+    if (LIMA_BUILD_SUBMODULES)
+      list(APPEND SIP_INCLUDE_DIRS
+          "${CMAKE_CURRENT_BINARY_DIR}/sip"
+          "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip"
+          "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/sip")
+      # This is required for LimaTools
+      set(LIMA_SIP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/sip")
+    endif()
     if (NOT LIMA_ENABLE_CONFIG)
       set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_CONFIG)
     endif()
     if (NOT LIMA_ENABLE_SPS_IMAGE)
       set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_SPS_IMAGE)
     endif()
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip PROPERTIES OBJECT_DEPENDS ${sipfiles})
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip PROPERTIES OBJECT_DEPENDS ${SIP_SOURCES})
     # Run sip now !
-    add_sip_python_module(limacore
-                          ${CMAKE_CURRENT_BINARY_DIR}/sip/core/limacore.sip
-                          0)
+    add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip FALSE)
 
     target_include_directories(python_module_limacore PRIVATE
         ${PYTHON_INCLUDE_DIRS}
+        ${NUMPY_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/sip
         ${CMAKE_CURRENT_SOURCE_DIR}/sip/core
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip)
-    target_link_libraries(python_module_limacore limacore)
+    target_link_libraries(python_module_limacore PRIVATE limacore ${NUMPY_LIBRARIES})
 
     add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python/Lima ${CMAKE_BINARY_DIR}/python/Lima)
-    install(DIRECTORY python/Lima/ DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
 endif()
+
+## Installation
+
+include(Install.cmake)
 
 #--------------------------------------------------------------------------------
 # Option for openGL real-time display  support
 #--------------------------------------------------------------------------------
 if(LIMA_ENABLE_GLDISPLAY)
-  add_subdirectory(third-party/gldisplay)
+    add_subdirectory(third-party/gldisplay)
 endif()
 
 #--------------------------------------------------------------------------------
@@ -538,19 +354,18 @@ endif()
 #--------------------------------------------------------------------------------
 if(LIMA_ENABLE_TESTS)
     enable_testing()
-endif()
-
-if(LIMA_ENABLE_TESTS)
-        add_subdirectory(control/test)
-	if (NOT WIN32)
-          add_subdirectory(common/test)
-	endif()
+    add_subdirectory(control/test)
+    if (NOT WIN32)
+        add_subdirectory(common/test)
+    endif()
 endif()
 
 #--------------------------------------------------------------------------------
 # CAMERA list is in cmake/CameraList.cmake file
 #--------------------------------------------------------------------------------
-include(CameraList)
+if (LIMA_BUILD_SUBMODULES)
+    include(CameraList)
+endif()
 
 #--------------------------------------------------------------------------------
 # Python Tango server
