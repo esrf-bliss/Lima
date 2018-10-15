@@ -236,15 +236,15 @@ std::ostream& operator <<(std::ostream& os,
 
 class LIMACORE_API DebProxy
 {
- public:
+public:
 	DebProxy();
-	DebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name, 
-		 ConstStr file_name, int line_nr);
+	DebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
+		ConstStr file_name, int line_nr);
 	DebProxy(const DebProxy& p);
 	~DebProxy();
 
-	template <class T> 
-        const DebProxy& operator <<(const T& o) const;
+	template <class T>
+	const DebProxy& operator <<(const T& o) const;
 
 	bool isActive() const;
 
@@ -498,8 +498,6 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
  *  debug macros
  *------------------------------------------------------------------*/
 
-#define DEB_NOP()		do {} while (0)
-
 #define DEB_GLOBAL_NAMESPC(mod, name_space)				\
 	inline lima::DebParams& getDebParams()				\
 	{								\
@@ -588,30 +586,42 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 #define DEB_CHECK_ANY(type)	deb.checkAny(type)
 
+#define DEB_EVENT(event)	DEB_MSG((event).getDebType())
+
 #else // LIMA_NO_DEBUG
 
-#define DEB_GLOBAL_FUNCT()	DEB_NOP()
-#define DEB_CONSTRUCTOR()	DEB_NOP()
-#define DEB_DESTRUCTOR()	DEB_NOP()
-#define DEB_MEMBER_FUNCT()	DEB_NOP()
+// Mock implementation of the DebProxy
+class LIMACORE_API DebSink
+{
+public:
+	DebSink() {};
+
+	template <class T>
+	const DebSink& operator <<(const T&) const {return *this;}
+};
+
+#define DEB_GLOBAL_FUNCT()
+#define DEB_CONSTRUCTOR()
+#define DEB_DESTRUCTOR()
+#define DEB_MEMBER_FUNCT()
 
 #define DEB_PTR()		NULL
-#define DEB_FROM_PTR(deb_ptr)	DEB_NOP()
-#define DEB_STATIC_FUNCT()	DEB_NOP()
-#define DEB_SET_OBJ_NAME(n)	DEB_NOP()
+#define DEB_FROM_PTR(deb_ptr)
+#define DEB_STATIC_FUNCT()
+#define DEB_SET_OBJ_NAME(n)
 
-#define DEB_OUT_MSG(type)						\
+#define DEB_MSG(type)						\
 	DebProxy(NULL, type, __FUNCTION__, __FILE__, __LINE__)
 #define DEB_NO_MSG()							\
-	DebProxy()
+	DebSink()
 
-#define DEB_FATAL()		DEB_OUT_MSG(lima::DebTypeFatal)
-#define DEB_ERROR()		DEB_OUT_MSG(lima::DebTypeError)
-#define DEB_WARNING()		DEB_OUT_MSG(lima::DebTypeWarning)
+#define DEB_FATAL()		DEB_MSG(lima::DebTypeFatal)
+#define DEB_ERROR()		DEB_MSG(lima::DebTypeError)
+#define DEB_WARNING()		DEB_MSG(lima::DebTypeWarning)
 #define DEB_TRACE()		DEB_NO_MSG()
 #define DEB_PARAM()		DEB_NO_MSG()
 #define DEB_RETURN()		DEB_NO_MSG()
-#define DEB_ALWAYS()		DEB_OUT_MSG(lima::DebTypeAlways)
+#define DEB_ALWAYS()		DEB_MSG(lima::DebTypeAlways)
 
 #define DEB_OBJ_NAME(o)		NULL
 
@@ -622,6 +632,8 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_CHECK_ANY(type)						\
 	(((type) == lima::DebTypeFatal) || ((type) == lima::DebTypeError) || \
 	 ((type) == lima::DebTypeWarning) || ((type) == lima::DebTypeAlways))
+
+#define DEB_EVENT(event)	DEB_MSG((event).getDebType())
 
 #endif // LIMA_NO_DEBUG
 

@@ -60,11 +60,6 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
-# Logging, disable trace in Release builds
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_definitions(-DLIMA_NO_DEBUG)
-endif()
-
 # Import pthread
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
@@ -264,9 +259,7 @@ if(LIMA_ENABLE_SPS_IMAGE)
 endif()
 
 # Set LIMA_NO_DEBUG if the build type is not debug
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_definitions(limacore PUBLIC LIMA_NO_DEBUG)
-endif()
+target_compile_definitions(limacore PUBLIC $<$<NOT:$<CONFIG:DEBUG>>:LIMA_NO_DEBUG>)
 
 # add all include paths coming from saving format options
 target_include_directories(limacore PRIVATE ${extra_includes} ${saving_includes})

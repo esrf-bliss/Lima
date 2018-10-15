@@ -24,6 +24,7 @@
 
 #include "lima/LimaCompatibility.h"
 #include "lima/Timestamp.h"
+#include "lima/Debug.h"
 #include <string>
 #include <ostream>
 
@@ -60,12 +61,10 @@ class LIMACORE_API Event
 	Event(Layer l, Severity s, Domain d, Code c,const std::string &e);
 	virtual ~Event();
 
-	virtual std::string getMsgStr();
+	virtual std::string getMsgStr() const;
 
-	DebProxy getDebug(DebObj *deb) const;
+	DebType getDebType() const;
 };
-
-#define DEB_EVENT(event)	(event).getDebug(DEB_PTR())
 
 std::ostream& operator <<(std::ostream& os, const Event& event);
 

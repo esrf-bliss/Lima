@@ -44,7 +44,7 @@ Event::~Event()
 {
 }
 
-string Event::getMsgStr()
+string Event::getMsgStr() const
 {
 	ostringstream os;
 
@@ -100,26 +100,23 @@ string Event::getMsgStr()
 	return os.str();
 }
 
-DebProxy Event::getDebug(DebObj *deb_obj) const
+DebType Event::getDebType() const
 {
-	DEB_FROM_PTR(deb_obj);
-
 	switch (severity) {
 	case Event::Fatal:
-		return DEB_FATAL();
+		return DebTypeFatal;
 	case Event::Error:
-		return DEB_ERROR();
+		return DebTypeError;
 	case Event::Warning:
-		return DEB_WARNING();
+		return DebTypeWarning;
 	default:
-		return DEB_TRACE();
+		return DebTypeTrace;
 	}
 }
 
 ostream& lima::operator <<(ostream& os, const Event& event)
 {
-	Event& noconst_event = const_cast<Event&>(event);
-	return os << "<" << noconst_event.getMsgStr() << ">";
+	return os << "<" << event.getMsgStr() << ">";
 }
 
 
