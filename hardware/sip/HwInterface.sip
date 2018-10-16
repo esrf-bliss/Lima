@@ -78,12 +78,12 @@ class HwInterface
   switch(cppHwCap->getType())						\
   {
 
-#define LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, cppClass, sipClass) \
+#define LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, cppClass)        \
   case HwCap::aCap:							\
   {									\
     cppClass *aCtrlObjPtr = NULL;					\
     if (cppHwCap->getCtrlObj(aCtrlObjPtr))				\
-      sipRes = sipConvertFromInstance(aCtrlObjPtr, sipClass, NULL);	\
+      sipRes = sipConvertFromType(aCtrlObjPtr, sipFindType(#cppClass), NULL);	\
     break;								\
   }
 
@@ -97,12 +97,10 @@ class HwInterface
   }
 
 #define LIMA_HWCAP_TO_SIP_HW_CTRLOBJ_CASE(cppHwCap, aCap)		\
-  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Hw##aCap##CtrlObj,	\
-				 sipClass_Hw##aCap##CtrlObj)
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Hw##aCap##CtrlObj)
 
 #define LIMA_HWCAP_TO_SIP_FRELON_CTRLOBJ_CASE(cppHwCap, aCap)		\
-  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Frelon::aCap##CtrlObj,	\
-				 sipClass_Frelon_##aCap##CtrlObj)
+  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Frelon::aCap##CtrlObj)
 
 #define LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(cppHwCap, macDomain)		\
 {									\
