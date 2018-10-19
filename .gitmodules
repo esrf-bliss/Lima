@@ -127,3 +127,6 @@
 [submodule "camera/zwo"]
 	path = camera/zwo
 	url = ../Lima-camera-zwo
+[submodule "camera/simulator"]
+	path = camera/simulator
+	url = ../Lima-camera-simulator.git
