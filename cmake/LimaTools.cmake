@@ -22,6 +22,19 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
+# DEPRECATED: this function set the so vertsion according to
+function(limatools_set_library_soversion lib_name version_file)
+    message(AUTHOR_WARNING "limatools_set_library_soversion is DEPRECATED: check the camera plugin template \
+        to update your CMakeFile to use git tags instead.")
+
+    file(STRINGS ${version_file}  version)
+    # for lib version as 1.2.3 soverion is fixed to 1.2
+    string(REGEX MATCH "^([0-9]+)\\.([0-9]+)" soversion "${version}")
+
+    set_target_properties(${lib_name} PROPERTIES VERSION "${version}" SOVERSION "${soversion}")
+
+endfunction()
+
 # this function runs camera's c++ tests
 function(limatools_run_camera_tests test_src camera)
 
