@@ -303,20 +303,21 @@ if(LIMA_ENABLE_PYTHON)
 
     configure_file(sip/limacore.sip.in sip/limacore.sip)
     configure_file(sip/lima_init_numpy.cpp.in sip/core/limacore_init_numpy.cpp)
-    set(SIP_INCLUDE_DIRS
-        ${PROCESSLIB_SIP_INCLUDE_DIRS}
+    list(APPEND LIMA_SIP_INCLUDE_DIRS
+        "${CMAKE_CURRENT_BINARY_DIR}/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/common/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/hardware/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip")
     if (LIMA_BUILD_SUBMODULES)
-      list(APPEND SIP_INCLUDE_DIRS
-          "${CMAKE_CURRENT_BINARY_DIR}/sip"
+      # This is required for LimaTools
+      list(APPEND PROCESSLIB_SIP_INCLUDE_DIRS
           "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip"
           "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/sip")
-      # This is required for LimaTools
-      set(LIMA_SIP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/sip")
     endif()
+    set(SIP_INCLUDE_DIRS
+        ${LIMA_SIP_INCLUDE_DIRS}
+        ${PROCESSLIB_SIP_INCLUDE_DIRS})
     if (NOT LIMA_ENABLE_CONFIG)
       set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_CONFIG)
     endif()
