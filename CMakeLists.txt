@@ -310,6 +310,8 @@ if(LIMA_ENABLE_PYTHON)
         "${CMAKE_CURRENT_SOURCE_DIR}/control/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip")
     if (LIMA_BUILD_SUBMODULES)
+      list(APPEND LIMA_SIP_INCLUDE_DIRS
+          "${CMAKE_CURRENT_SOURCE_DIR}/sip")
       # This is required for LimaTools
       list(APPEND PROCESSLIB_SIP_INCLUDE_DIRS
           "${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip"
