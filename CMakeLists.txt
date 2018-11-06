@@ -57,7 +57,7 @@ if(MSVC AND MSVC_VERSION GREATER 1500)
 endif()
 
 # CMake additional macros
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
 # Import pthread
@@ -233,7 +233,7 @@ add_library(limacore SHARED
 
 # Set version
 set_target_properties(limacore PROPERTIES
-    VERSION "${VERSION}"
+    VERSION "${PROJECT_VERSION}"
     SOVERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}")
 
 # Generate export macros
