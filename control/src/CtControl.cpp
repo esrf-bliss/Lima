@@ -877,10 +877,12 @@ void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber,
 	m_ct_saving->_ReadImage(aReturnData,frameNumber);
       } else {
 	m_ct_buffer->getFrame(aReturnData,frameNumber,readBlockLen);
-	// if the processing is not in place,
-	// the processed buffer is lost.
-	// need to re-do the internal processing
-	if(!m_hw->firstProcessingInPlace())
+	// if the processing is not in place, the processed buffer is lost.
+	// need to re-do the internal processing. Except for the accumulation
+	// mode: accumulated images are already processed
+	AcqMode acqMode;
+	m_ct_acq->getAcqMode(acqMode);
+	if(!m_hw->firstProcessingInPlace() && (acqMode != Accumulation))
 	  {
 	    TaskMgr mgr;
 	    mgr.setInputData(aReturnData);
