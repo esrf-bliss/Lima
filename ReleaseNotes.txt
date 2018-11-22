@@ -2,9 +2,15 @@ LIMA Release Notes
 
 This is the release notes of LIMA, the library for image acquisition.
 
-You can find information releated to new features and bug fixes. The notes are ordered by branch and release number.
+You can find information related to new features and bug fixes. The notes are ordered by branch and release number.
 The notes are prefixed with a category name for core, subsystems image/saving/processlib/..., camera names andor/andor3/basler...,  windows, applications tango python/tango c++/spec and third-party submodules sps/processlib/...
 
+Stable branch core-1.8
+----------------------
+
+Revamp the build system to use CMake, a cross-platform family of tools designed to build, test and package software.
+
+Bug Fixes
 
 Stable branch core-1.7
 ----------------------

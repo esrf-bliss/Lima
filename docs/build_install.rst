@@ -3,11 +3,37 @@
 Build and Install
 -----------------
 
-Two methods are provided to build Lima from source.
+Install binary packages
+^^^^^^^^^^^^^^^^^^^^^^^
+
+We provide Conda_ binary packages for some cameras. This is, by far, the easiest way to get started with LImA! For instance:
+
+::
+
+  conda install --channel esrf-bcu lima-camera-basler
+
+would install a fully loaded LImA and all its dependencies with the Basler camera plugin and SDK. The camera comes as a python module but is also  C++ development package that includes header files and `CMake package config <https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html>`_ files.
+
+If you need the Tango device server for the camera, run:
+
+::
+
+  conda install --channel esrf-bcu lima-camera-basler-tango
+
+.. note:: The runtime libraries of the camera's SDK are provided as well but some cameras requires drivers or specific setups than needs to be installed manually.
+
+Build from source
+^^^^^^^^^^^^^^^^^
+
+First, you need to :ref:`get_source`. Two methods are provided to build LImA from source:
+
+ - using our install script that aims to hide the complexity of CMake_;
+ - using CMake_ directly for developers who are already acquainted with the tool and need the extra flexibility.
 
 Using scripts
-^^^^^^^^^^^^^
-The ``install`` scripts will run cmake, compile and install.
+"""""""""""""
+
+The ``install`` scripts will run CMake_ to compile and/or install.
 
 It accepts input arguments (see below) but it also uses a configuration file  ``scripts/config.txt``. Feel free to update this file for setting a permanent configuration for your own installation.
 
@@ -53,31 +79,31 @@ Options are ``<camera-name> <saving-format> python pytango-server``:
 
 ``pytango-server`` will install the PyTango_ server
 
-For example, to install the basler camera, use the TIFF output format, the python binding and the TANGO server, one would run:
+For example, to install the Basler camera, use the TIFF output format, the python binding and the TANGO server, one would run:
 
 .. code-block:: bash
 
   $ sudo install.sh --git --install-prefix=./install --install-python-prefix=./install/python tiff basler python pytango-server
 
 Using CMake
-^^^^^^^^^^^
+"""""""""""
 
 Install first the project submodules:
 
 .. code-block:: bash
 
- git submodule init third-party/Processlib
- git submodule init camera/basler
- git submodule init applications/tango/python
- git submodule update
+  git submodule init third-party/Processlib
+  git submodule init camera/basler
+  git submodule init applications/tango/python
+  git submodule update
 
 Run ``cmake`` in the build directory:
 
 .. code-block:: bash
 
- mkdir build
- cd build
- cmake ..
+  mkdir build
+  cd build
+  cmake ..
      [-G "Visual Studio 15 2017 Win64" | -G "Visual Studio 15 2017" | -G "Unix Makefiles"]
      [-DCMAKE_INSTALL_PREFIX=<desired installation path>]
      [-DPYTHON_SITE_PACKAGES_DIR=<desired python installation path>]
@@ -96,23 +122,29 @@ Then compile and install:
 Environment Setup
 ^^^^^^^^^^^^^^^^^
 
-If you have changed the default destination path for both libraries and python modules you should update your environment variables.
+.. warning::
+  
+  If you are using Conda_, we advice against setting any environment variables that might affect the Conda environment (e.g. ``PATH``, ``PYTHONPATH``)as this one of the most common source of troubles.
+
+If the install path for libraries and python modules are not the default, you need to update your environment variables as follow:
 
 For Linux:
 
 .. code-block:: bash
 
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<my-new-install-dir>/Lima/lib
-  export PYTHONPATH=$PYTHONPATH:<my-new-install-dir>
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<my-custom-install-dir>/Lima/lib
+  export PYTHONPATH=$PYTHONPATH:<my-custom-install-dir>
 
 For Windows:
 
 .. code-block:: bash
 
-  set PATH=%PATH%;<my-new-install-dir>\Lima\lib
-  set PYTHONPATH=%PYTHONPATH%;<my-new-install-dir>
+  set PATH=%PATH%;<my-custom-install-dir>\Lima\lib
+  set PYTHONPATH=%PYTHONPATH%;<my-custom-install-dir>
 
 or update the system wide variables ``PATH`` for the libraries and ``PYTHONPATH`` for python.
 
+.. _CMake: https://cmake.org
+.. _Conda: https://conda.io
 
 .. _PyTango: http://github.com/tango-cs/pytango

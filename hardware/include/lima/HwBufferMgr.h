@@ -274,9 +274,8 @@ class LIMACORE_API BufferCtrlMgr : public HwFrameCallbackGen
 	bool m_frame_cb_act;
 };
 
-/** @brief this class is a basic software allocation class,
- *  It can be directly provide to the control layer as a HwBufferCtrlObj
- */
+/// This class is a basic HwBufferCtrlObj software allocation implementation,
+/// It can be directly provided to the control layer as a HwBufferCtrlObj.
 class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 {
  public:

@@ -35,12 +35,10 @@ enum AlignDir {
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, AlignDir align_dir);
-/**@brief ImageType is the depth of detectors images
- * - Bpp8 means 8 bits unsigned
- * - Bpp8S means 8 bits signed....
- */
+
+/// The depth of detectors images
 enum ImageType {
-	Bpp8, Bpp8S, Bpp10, Bpp10S, Bpp12, Bpp12S, Bpp14, Bpp14S, 
+	Bpp8, Bpp8S, Bpp10, Bpp10S, Bpp12, Bpp12S, Bpp14, Bpp14S,
 	Bpp16, Bpp16S, Bpp32, Bpp32S, Bpp32F, Bpp1, Bpp4, Bpp6, Bpp24, Bpp24S
 };
 
@@ -54,10 +52,17 @@ enum AcqMode {
 LIMACORE_API std::ostream& operator <<(std::ostream& os, AcqMode acq_mode);
 LIMACORE_API const char* convert_2_string(AcqMode mode);
 LIMACORE_API void convert_from_string(const std::string&,AcqMode&);
+
+/// Triggering mode
 enum TrigMode {
-	IntTrig,IntTrigMult,
-	ExtTrigSingle, ExtTrigMult,
-	ExtGate, ExtStartStop, ExtTrigReadout,
+	IntTrig,			//!< Internal software triggering
+	IntTrigMult,	//!< Internal multiple software triggering (one prepareAcq, multiple startAcq)
+	ExtTrigSingle,
+	ExtTrigMult,
+	ExtGate,			//!< External signal controls start and stop for each frame
+	ExtStartStop,	//!< One external start signal to start acquisition of one frame and one external signal to stop it
+
+	ExtTrigReadout,
 };
 
 typedef std::vector<TrigMode> TrigModeList;
@@ -80,15 +85,21 @@ typedef std::vector<ShutterMode> ShutterModeList;
 LIMACORE_API std::ostream& operator <<(std::ostream& os, ShutterMode shutter_mode);
 LIMACORE_API const char* convert_2_string(ShutterMode);
 LIMACORE_API void convert_from_string(const std::string&,ShutterMode&);
+
+/// The global acquisition status
 enum AcqStatus {
-	AcqReady, AcqRunning, AcqFault, AcqConfig
+	AcqReady,		//!< Acquisition is Ready
+	AcqRunning,	//!< Acquisition is Running
+	AcqFault,		//!< An error occured
+	AcqConfig		//!< Configuring the camera
 };
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, AcqStatus acq_status);
 
+/// Compound bit flags specifying the current detector status
 enum DetStatus {
 	DetIdle			= 0x00,
-	DetFault		= 0x01, 
+	DetFault		= 0x01,
 	DetWaitForTrigger	= 0x02,
 	DetShutterOpen		= 0x04,
 	DetExposure		= 0x08,

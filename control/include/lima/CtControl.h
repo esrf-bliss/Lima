@@ -33,7 +33,7 @@
 #include "processlib/LinkTask.h"
 
 
-namespace lima 
+namespace lima
 {
 
   class CtAcquisition;
@@ -53,16 +53,8 @@ namespace lima
 #endif
   class SoftOpInternalMgr;
   class SoftOpExternalMgr;
-  /** @brief Main client class.
-   *
-   * With this class you have access to all LImA advance feature:
-   * - Saving (CtSaving)
-   * - Image control (CtImage)
-   * - Acquisition control (CtAcquisition)
-   * - Accumulation (CtAccumulation)
-   * - Video (CtVideo)
-   * - Software operation (SoftOpExternalMgr)
-  */
+
+  /// Main client class which should be instantiated by the users in their acquisition software.
   class LIMACORE_API CtControl {
     DEB_CLASS_NAMESPC(DebModControl,"Control","Control");
 
@@ -95,9 +87,9 @@ namespace lima
     };
 
 
-    class LIMACORE_API ImageStatusCallback 
+    class LIMACORE_API ImageStatusCallback
     {
-      DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatusCallback", 
+      DEB_CLASS_NAMESPC(DebModControl,"Control::ImageStatusCallback",
 			"Control");
     public:
       enum RatePolicy {
@@ -125,7 +117,7 @@ namespace lima
 		    ProcessingOverun,
 		    CameraError,
 		    EventOther}; /* @todo convert to typedef Event::Code */
-    
+
     enum CameraErrorCode {NoCameraError}; /* @todo fix this */
 
     struct LIMACORE_API Status
@@ -170,29 +162,39 @@ namespace lima
     CtConfig*		config();
 #endif
     SoftOpExternalMgr* 	externalOperation();
-
     HwInterface* 	hwInterface();
-#else //unix
+#else //WIN32
+    /// \{
+    /// \name Advanced control accessors
+    
+    /// Returns a pointer to the acquisition control
     CtAcquisition* 	acquisition() 		{ return m_ct_acq; }
+    /// Returns a pointer to the saving control
     CtSaving* 		saving() 		{ return m_ct_saving; }
 #ifdef WITH_SPS_IMAGE
     CtSpsImage* 	display() 		{ return m_ct_sps_image; }
 #endif
+    /// Returns a pointer to the image control
     CtImage* 		image() 		{ return m_ct_image; }
+    /// Returns a pointer to the buffer control
     CtBuffer* 		buffer() 		{ return m_ct_buffer; }
+    /// Returns a pointer to the accumulation control
     CtAccumulation* 	accumulation() 		{ return m_ct_accumulation; }
+    /// Returns a pointer to the video control
     CtVideo*		video()			{ return m_ct_video;}
+    /// Returns a pointer to the shutter control
     CtShutter* 		shutter() 		{ return m_ct_shutter; }
+    /// Returns a pointer to the event control
     CtEvent* 		event() 		{ return m_ct_event; }
 #ifdef WITH_CONFIG
+    /// Returns a pointer to the config control
     CtConfig*		config()		{ return m_ct_config; }
 #endif
+    /// \}
 
     SoftOpExternalMgr* 	externalOperation() 	{return m_op_ext;}
-
     HwInterface* 	hwInterface() 		{return m_hw;}
-
-#endif
+#endif //WIN32
 
     void setApplyPolicy(ApplyPolicy policy);
     void getApplyPolicy(ApplyPolicy &policy) const;
@@ -251,7 +253,7 @@ namespace lima
     HwInterface		*m_hw;
     mutable Cond	m_cond;
     mutable Status      m_status;
-    
+
     CtSaving		*m_ct_saving;
 #ifdef WITH_SPS_IMAGE
     CtSpsImage		*m_ct_sps_image;
@@ -318,7 +320,7 @@ namespace lima
     return os;
   }
 
-  
+
   inline std::ostream& operator<<(std::ostream &os,
 				  const CtControl::ErrorCode &err_code)
   {
@@ -340,7 +342,7 @@ namespace lima
     }
     return os << desc;
   }
-    
+
   inline std::ostream& operator<<(std::ostream &os,
 				  const CtControl::Status &status)
   {
@@ -352,7 +354,7 @@ namespace lima
     return os;
   }
 
-  inline bool operator <(const CtControl::ImageStatus& a, 
+  inline bool operator <(const CtControl::ImageStatus& a,
 			 const CtControl::ImageStatus& b)
   {
     return ((a.LastImageAcquired < b.LastImageAcquired) ||
@@ -362,7 +364,7 @@ namespace lima
 	    (a.LastCounterReady < b.LastCounterReady));
   }
 
-  inline bool operator ==(const CtControl::ImageStatus& a, 
+  inline bool operator ==(const CtControl::ImageStatus& a,
 			 const CtControl::ImageStatus& b)
   {
     return ((a.LastImageAcquired == b.LastImageAcquired) &&
@@ -372,19 +374,19 @@ namespace lima
 	    (a.LastCounterReady == b.LastCounterReady));
   }
 
-  inline bool operator <=(const CtControl::ImageStatus& a, 
+  inline bool operator <=(const CtControl::ImageStatus& a,
 			  const CtControl::ImageStatus& b)
   {
     return (a < b) || (a == b);
   }
 
-  inline bool operator >(const CtControl::ImageStatus& a, 
+  inline bool operator >(const CtControl::ImageStatus& a,
 			 const CtControl::ImageStatus& b)
   {
     return !(a <= b);
   }
 
-  inline bool operator >=(const CtControl::ImageStatus& a, 
+  inline bool operator >=(const CtControl::ImageStatus& a,
 			  const CtControl::ImageStatus& b)
   {
     return !(a < b);

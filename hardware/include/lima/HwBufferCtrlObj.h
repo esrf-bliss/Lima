@@ -27,7 +27,12 @@
 
 namespace lima
 {
-
+/// This interface controls the image memory buffer allocation and management. Buffers are used:
+/// - As temporary frame storage before saving, allowing disk / network speed fluctuations.
+/// - To permanently hold images that can be read by the user after the acquisition is finished.
+/// These buffer functionalities may be implemented by the hardware layer (kernel driver in the case of the Espia).
+/// If not, an auxiliary buffer manager class will be provided to facilitate (and unify) its software implementation.
+/// The buffer management parameters are :
 class LIMACORE_API HwBufferCtrlObj
 {
 	DEB_CLASS(DebModHardware, "HwBufferCtrlObj");
@@ -47,10 +52,14 @@ public:
 
 	virtual void getMaxNbBuffers(int& max_nb_buffers) = 0;
 
+	/// Returns a pointer to the buffer at the specified location
 	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0) = 0;
+	/// Returns a pointer to the frame at the specified location
 	virtual void *getFramePtr(int acq_frame_nb) = 0;
 
+	/// Returns the start timestamp
 	virtual void getStartTimestamp(Timestamp& start_ts) = 0;
+	/// Returns some information for the specified frame number such as timestamp
 	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info) = 0;
 
 	virtual void   registerFrameCallback(HwFrameCallback& frame_cb) = 0;

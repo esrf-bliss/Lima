@@ -44,7 +44,7 @@ public:
 			min_exp_time(-1.),
 			max_exp_time(-1.),
 			min_lat_time(-1.),
-			max_lat_time(-1.) 
+			max_lat_time(-1.)
 		{}
 
 		ValidRangesType(double minExpTime,
@@ -54,16 +54,16 @@ public:
 			min_exp_time(minExpTime),
 			max_exp_time(maxExpTime),
 			min_lat_time(minLatTime),
-			max_lat_time(maxLatTime) 
+			max_lat_time(maxLatTime)
 		{}
 
 		ValidRangesType(const ValidRangesType& range) :
 			min_exp_time(range.min_exp_time),
 			max_exp_time(range.max_exp_time),
 			min_lat_time(range.min_lat_time),
-			max_lat_time(range.max_lat_time) 
+			max_lat_time(range.max_lat_time)
 		{}
-		
+
 		double min_exp_time, max_exp_time;
 		double min_lat_time, max_lat_time;
 	};
@@ -84,19 +84,28 @@ public:
 	HwSyncCtrlObj();
 	virtual ~HwSyncCtrlObj();
 
+	/// Check wether a given trigger mode is supported
 	virtual bool checkTrigMode(TrigMode trig_mode) = 0;
+	/// Set the triggering mode
 	virtual void setTrigMode(TrigMode  trig_mode) = 0;
+	/// Get the current triggering mode
 	virtual void getTrigMode(TrigMode& trig_mode) = 0;
 
+	/// Set the frame exposure time
 	virtual void setExpTime(double  exp_time) = 0;
+	/// Get the current frame exposure time
 	virtual void getExpTime(double& exp_time) = 0;
+
+	/// Check wether a given auto exposure mode is supported
 	virtual bool checkAutoExposureMode(AutoExposureMode mode) const;
 	virtual void setHwAutoExposureMode(AutoExposureMode mode);
 
 	void setAutoExposureMode(AutoExposureMode mode);
 	void getAutoExposureMode(AutoExposureMode& mode) const;
 
+	/// Set the latency time between frames
 	virtual void setLatTime(double  lat_time) = 0;
+	/// Get the current latency time between frames
 	virtual void getLatTime(double& lat_time) = 0;
 
 	virtual void setNbFrames(int  nb_frames);
@@ -128,7 +137,7 @@ public:
 	ValidRangesCallback* 	m_valid_ranges_cb;
 };
 
-LIMACORE_API std::ostream& operator <<(std::ostream& os, 
+LIMACORE_API std::ostream& operator <<(std::ostream& os,
 				       const HwSyncCtrlObj::ValidRangesType&);
 LIMACORE_API std::ostream& operator <<(std::ostream& os,
 				       const HwSyncCtrlObj::AutoExposureMode&);

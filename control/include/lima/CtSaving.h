@@ -46,13 +46,8 @@ namespace lima {
   typedef std::vector<_BufferHelper*> ZBufferType;
   typedef std::map<int,ZBufferType*> dataId2ZBufferType;
 
-
-
-  /** @brief Saving management
-   *
-   * With this class you manage the image saving in different format
-   */
-  class LIMACORE_API CtSaving 
+  /// Control saving settings such as file format and mode
+  class LIMACORE_API CtSaving
   {
     DEB_CLASS_NAMESPC(DebModControl,"Saving","Control");
 
@@ -162,6 +157,8 @@ namespace lima {
     void getHardwareFormat(std::string &format) const;
     // --- saving modes
 
+    ///{
+    /// \name Saving modes
     void setSavingMode(SavingMode mode);
     void getSavingMode(SavingMode& mode) const;
 
@@ -177,6 +174,8 @@ namespace lima {
     
     void setManagedMode(ManagedMode mode);
     void getManagedMode(ManagedMode &mode) const;
+    ///}
+
     // --- common headers
 
     void resetCommonHeader();
