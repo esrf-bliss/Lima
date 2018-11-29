@@ -215,6 +215,9 @@ namespace lima {
 			      int stream_idx=0) const;
     void setStatisticHistorySize(int aSize, int stream_idx=0);
     int getStatisticHistorySize(int stream_idx=0) const;
+
+    void setEnableLogStat(bool enable, int stream_idx=0);
+    void getEnableLogStat(bool& enable, int stream_idx=0) const;
     // --- misc
 
     void clear();
@@ -232,7 +235,7 @@ namespace lima {
 
 
  
-      class Stream;
+    class Stream;
    
     class LIMACORE_API SaveContainer
     {
@@ -329,8 +332,14 @@ namespace lima {
       void createStatistic(Data&);
       void compressionStart(Data&);
       void compressionFinished(Data&);
+      void writeFileStat(Data&, Timestamp start, Timestamp end, long wsize);
+      void prepareLogStat(const CtSaving::Parameters&);
       int getMaxConcurrentWritingTask() const;
       void setMaxConcurrentWritingTask(int nb);
+
+      void setEnableLogStat(bool enable);
+      void getEnableLogStat(bool& enable) const;
+
     protected:
       virtual void* _open(const std::string &filename,
 			 std::ios_base::openmode flags) = 0;
@@ -349,6 +358,10 @@ namespace lima {
     private:
       StatisticsType		m_statistic;
       int			m_statistic_size;
+      bool                      m_log_stat_enable;
+      std::string		m_log_stat_directory;
+      std::string               m_log_stat_filename;
+      FILE*			m_log_stat_file;
       mutable Cond		m_cond;
       long			m_nb_frames_to_write;
 
@@ -433,6 +446,11 @@ namespace lima {
       { nb_threads = m_save_cnt->getMaxConcurrentWritingTask(); }
       void setMaxConcurrentWritingTask(int nb_threads)
       { m_save_cnt->setMaxConcurrentWritingTask(nb_threads); }
+
+      void setEnableLogStat(bool enable)
+      { m_save_cnt->setEnableLogStat(enable); }
+      void getEnableLogStat(bool& enable) const
+      { m_save_cnt->getEnableLogStat(enable); }
 
       void clear()
       { m_save_cnt->clear(); }
