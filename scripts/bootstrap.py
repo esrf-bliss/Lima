@@ -93,6 +93,7 @@ Examples:
 
 	This is equivalent to adding the following options in config.txt:
 	   + LIMA_ENABLE_TESTS=1
+	   + CAMERA_ENABLE_TESTS=1
 	   + CMAKE_INSTALL_PREFIX=<path_to_home>
 
     ONLY ON LINUX:
