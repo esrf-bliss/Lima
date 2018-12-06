@@ -39,8 +39,8 @@ namespace lima
   {
     DEB_CLASS_NAMESPC(DebModControl,"Config","Control");
   public:
-    typedef const char* ModuleType;
-    static ModuleType All;
+    typedef std::string ModuleType;
+    static const ModuleType All;
 
     CtConfig(CtControl &);
     ~CtConfig();
@@ -89,7 +89,7 @@ namespace lima
     protected:
       virtual ~ModuleTypeCallback();
     private:
-      std::string	m_module_type;
+      ModuleType	m_module_type;
       int		m_ref_count;
     };
 
@@ -103,7 +103,7 @@ namespace lima
     CtControl&		m_ctrl;
     libconfig::Config*	m_config;
     std::string		m_file_name;
-    ModuleMap 		m_module_type;
+    ModuleMap 		m_module_map;
   };
 }
 #endif

@@ -42,7 +42,7 @@
 
 using namespace lima;
 
-const char* CtConfig::All = "All";
+const CtConfig::ModuleType CtConfig::All = "All";
 
 //Static function
 static void _remove_if_exists(libconfig::Setting &setting,
@@ -91,8 +91,8 @@ CtConfig::~CtConfig()
     }
   delete m_config;
 
-  for(ModuleMap::iterator i = m_module_type.begin();
-      i != m_module_type.end();++i)
+  for(ModuleMap::iterator i = m_module_map.begin();
+      i != m_module_map.end();++i)
     i->second->unref();
 }
 /** @brief set the full path for the filename used for saving configuration
@@ -138,8 +138,8 @@ void CtConfig::store(const std::string& alias,
 
       if(anAllFlag)
 	{
-	  for(ModuleMap::iterator module = m_module_type.begin();
-	      module != m_module_type.end();++module)
+	  for(ModuleMap::iterator module = m_module_map.begin();
+	      module != m_module_map.end();++module)
 	    {
 	      libconfig::Setting &setting = alias_setting.add(module->first,
 							      libconfig::Setting::TypeGroup);
@@ -152,8 +152,8 @@ void CtConfig::store(const std::string& alias,
 	  for(std::list<ModuleType>::const_iterator i = modules_to_save.begin();
 	      i != modules_to_save.end();++i)
 	    {
-	      ModuleMap::iterator module = m_module_type.find(*i);
-	      if(module != m_module_type.end())
+	      ModuleMap::iterator module = m_module_map.find(*i);
+	      if(module != m_module_map.end())
 		{
 		  libconfig::Setting &setting = alias_setting.add(module->first,
 								  libconfig::Setting::TypeGroup);
@@ -206,8 +206,8 @@ void CtConfig::update(const std::string& alias,
       for(std::list<ModuleType>::const_iterator i = modules_to_save.begin();
 	  i != modules_to_save.end();++i)
 	{
-	  ModuleMap::iterator module = m_module_type.find(*i);
-	  if(module != m_module_type.end())
+	  ModuleMap::iterator module = m_module_map.find(*i);
+	  if(module != m_module_map.end())
 	    {
 	      _remove_if_exists(alias_setting,*i);
 	      try
@@ -251,8 +251,8 @@ void CtConfig::update(const std::string& alias,
 
   void CtConfig::getAvailableModule(std::list<ModuleType>& module) const
   {
-    for(ModuleMap::const_iterator i = m_module_type.begin();
-	i != m_module_type.end();++i)
+    for(ModuleMap::const_iterator i = m_module_map.begin();
+	i != m_module_map.end();++i)
       module.push_back(i->first.c_str());
   }
 
@@ -265,8 +265,8 @@ void CtConfig::update(const std::string& alias,
     try
       {  
 	libconfig::Setting& alias_setting = root[alias];
-	for(ModuleMap::iterator i = m_module_type.begin();
-	    i != m_module_type.end();++i)
+	for(ModuleMap::iterator i = m_module_map.begin();
+	    i != m_module_map.end();++i)
 	  {
 	    if(alias_setting.exists(i->first))
 	      {
@@ -373,7 +373,7 @@ void CtConfig::update(const std::string& alias,
 
     modulePt->ref();
     std::pair<ModuleMap::iterator,bool> result = 
-      m_module_type.insert(ModuleMap::value_type(modulePt->m_module_type.c_str(),
+      m_module_map.insert(ModuleMap::value_type(modulePt->m_module_type.c_str(),
 						 modulePt));
     //if the module already exist, replace
     if(!result.second)
@@ -387,9 +387,9 @@ void CtConfig::update(const std::string& alias,
 
   void CtConfig::unregisterModule(const std::string& module_type)
   {
-    ModuleMap::iterator i = m_module_type.find(module_type.c_str());
-    if(i != m_module_type.end())
-      m_module_type.erase(i);
+    ModuleMap::iterator i = m_module_map.find(module_type.c_str());
+    if(i != m_module_map.end())
+      m_module_map.erase(i);
   }
 
   // --- ModuleTypeCallback
