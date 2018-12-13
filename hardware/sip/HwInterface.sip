@@ -103,7 +103,7 @@ class HwInterface
   LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Frelon::aCap##CtrlObj)
 
 #define LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(cppHwCap, macDomain)		\
-{									\
+do {									\
   LIMA_HWCAP_TO_SIP_CTRLOBJ_HEAD(cppHwCap)				\
   LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, DetInfo)	\
   LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Buffer)	\
@@ -114,7 +114,7 @@ class HwInterface
   LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Shutter)	\
   LIMA_HWCAP_TO_SIP_##macDomain##_CTRLOBJ_CASE(cppHwCap, Event)		\
   LIMA_HWCAP_TO_SIP_CTRLOBJ_TAIL(cppHwCap)				\
-}
+} while (0)
 
 using namespace lima;
 %End
