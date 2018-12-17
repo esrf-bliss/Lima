@@ -26,6 +26,7 @@ import platform, multiprocessing
 from subprocess import Popen, PIPE
 import contextlib
 import argparse
+from distutils.sysconfig import get_python_lib
 
 prog_description = 'Lima build and install tool'
 prog_instructions = '''
@@ -52,7 +53,10 @@ Description:
     options in config.txt. No installation will be performed. If at least
     one of --install-prefix or --install-python-prefix option is specified
     the --install=yes option is assumed (unless --install=no is explicitly
-    specified)
+    specified). Inversely, if --install=yes option is provided, and none of
+    --install-prefix or --install-python-prefix is given, and a Conda
+    environment is detected, the installation will be performed in the
+    Conda environment directories.
 
     If not absolute paths, the --config-file option will be assumed to be
     relative to the source-prefix, and --build-prefix relative to the CWD.
@@ -212,6 +216,11 @@ class Config:
 				  self.get('install-python-prefix'))
 		install = True if not explicit and install_prefix else install
 		self.set_cmd('install', install)
+
+                # or use conda environment if explicitly asked to install
+                if install and not install_prefix and use_conda and prefix_path:
+                        self.set_cmd('install-prefix', prefix_path)
+                        self.set_cmd('install-python-prefix', get_python_lib())
 
 		# if option paths are relative, make them absolute:
 		# config-file is rel. to src, build-prefix is rel. to cwd
