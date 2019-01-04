@@ -118,16 +118,6 @@ if(UNIX)
 		add_subdirectory(camera/dexela)
 	endif(LIMACAMERA_DEXELA)
 
-	#ESPIA
-	if(DEFINED ENV{LIMACAMERA_ESPIA})
-		set(LIMACAMERA_ESPIA "$ENV{LIMACAMERA_ESPIA}" CACHE BOOL "compile espia?" FORCE)
-	else()
-		set(LIMACAMERA_ESPIA OFF CACHE BOOL "compile espia?")
-	endif()
-	if(LIMACAMERA_ESPIA)
-		add_subdirectory(camera/common/espia)
-	endif(LIMACAMERA_ESPIA)
-
 	#EIGER
 	if(DEFINED ENV{LIMACAMERA_EIGER})
 		set(LIMACAMERA_EIGER "$ENV{LIMACAMERA_EIGER}" CACHE BOOL "compile eiger?" FORCE)
@@ -248,7 +238,6 @@ if(UNIX)
 		add_subdirectory(camera/pilatus)
 	endif(LIMACAMERA_PILATUS)
 
-
 	#PIXIRAD
 	if(DEFINED ENV{LIMACAMERA_PIXIRAD})
 		set(LIMACAMERA_PIXIRAD "$ENV{LIMACAMERA_PIXIRAD}" CACHE BOOL "compile pixirad?" FORCE)
@@ -258,7 +247,6 @@ if(UNIX)
 	if(LIMACAMERA_PIXIRAD)
 		add_subdirectory(camera/pixirad)
 	endif(LIMACAMERA_PIXIRAD)
-
 
 	#POINTGREY
 	if(DEFINED ENV{LIMACAMERA_POINTGREY})
@@ -369,6 +357,10 @@ if(UNIX)
 	if(LIMACAMERA_ZWO)
 		add_subdirectory(camera/zwo)
 	endif(LIMACAMERA_ZWO)
+
+	if(LIMACAMERA_FRELON OR LIMACAMERA_MAXIPIX)
+		add_subdirectory(camera/common/espia)
+	endif(LIMACAMERA_FRELON OR LIMACAMERA_MAXIPIX)
 endif()
 
 #CAMERA ONLY WORKING ON WINDOWS
