@@ -70,6 +70,13 @@ bool Setting::get(const std::string& alias,double& value) const
   return m_setting->lookupValue(alias,value);
 }
 
+bool Setting::get(const std::string& alias,const char*& value) const
+{
+  CHECK_NULL();
+
+  return m_setting->lookupValue(alias,value);
+}
+
 bool Setting::get(const std::string& alias,std::string& value) const
 {
   CHECK_NULL();
@@ -191,6 +198,10 @@ void Setting::set(const std::string& alias,double value)
   SET_VALUE(libconfig::Setting::TypeFloat);
 }
 
+void Setting::set(const std::string& alias,const char* value)
+{
+  SET_VALUE(libconfig::Setting::TypeString);
+}
 void Setting::set(const std::string& alias,const std::string& value)
 {
   SET_VALUE(libconfig::Setting::TypeString);

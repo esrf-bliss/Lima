@@ -48,6 +48,7 @@ namespace lima
     bool get(const std::string& alias,long& value) const;
     bool get(const std::string& alias,long long& value) const;
     bool get(const std::string& alias,double& value) const;
+    bool get(const std::string& alias,const char*& value) const;
     bool get(const std::string& alias,std::string& value) const;
     bool get(const std::string& alias,Data&) const;
 
@@ -57,6 +58,7 @@ namespace lima
     void set(const std::string& alias,long value);
     void set(const std::string& alias,long long value);
     void set(const std::string& alias,double value);
+    void set(const std::string& alias,const char* value);
     void set(const std::string& alias,const std::string& value);
     void set(const std::string& alias,const Data&);
 
