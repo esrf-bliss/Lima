@@ -127,4 +127,4 @@ The camera image can be viewed by selecting the "image_ccd" tab
 
 .. _Python: http://python.org
 .. _PyTango: http://github.com/tango-cs/pytango
-.. _Tango: http://tango-control.org
+.. _Tango: http://tango-controls.org

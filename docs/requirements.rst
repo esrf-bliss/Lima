@@ -3,7 +3,7 @@
 Requirements
 ------------
 
-Some tools and libraries are required to build Lima for either Windows and Linux.
+Some tools and libraries are required to build LImA for either Windows and Linux.
 
 .. note::
   All the dependencies, build or runtime, are available as Conda_ packages for both Windows and Linux platforms.
@@ -22,7 +22,7 @@ Build dependencies
 Python dependencies
 ~~~~~~~~~~~~~~~~~~~
 
-Lima_ is compatible with python 2 and 3.
+LImA_ is compatible with python 2 and 3.
 
 - numpy_ >= 1.1
 - sip_ >= 4.19
@@ -51,8 +51,8 @@ PyTango server dependencies
 .. _CMake: https://cmake.org
 .. _Conda: https://conda.io
 
-.. _Python: http://python.org
-.. _Lima: http://lima.blissgarden.org
+.. _Python: https://python.org
+.. _LImA: https://lima1.readthedocs.io
 .. _GSL: https://www.gnu.org/software/gsl
 .. _gsl-windows:  http://ftp.esrf.fr/pub/bliss/lima/gsl-windows.zip
 .. _zlib-windows:  http://ftp.esrf.fr/pub/bliss/lima/zlib-windows.zip
@@ -60,7 +60,7 @@ PyTango server dependencies
 
 .. _Tango: http://tango-control.org
 .. _PyTango: http://github.com/tango-cs/pytango
-.. _libtango: http://tango-controls.org/downloads/source
+.. _libtango: http://www.tango-controls.org/downloads/
 
 .. _numpy: http://pypi.python.org/pypi/numpy
 .. _sip: https://www.riverbankcomputing.com/software/sip

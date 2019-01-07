@@ -28,6 +28,7 @@ Linux Only
   Dectris Mythen <camera/mythen/doc/index>
   Dectris Mythen 3 <camera/mythen3/doc/index>
   Dectris Pilatus 2 & 3  <camera/pilatus/doc/index>
+  Fli <camera/fli/doc/index>
   ImXpad <camera/imxpad/doc/index>
   Merlin <camera/merlin/doc/index>
   Pixirad <camera/pixirad/doc/index>
