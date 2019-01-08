@@ -40,6 +40,10 @@ namespace lima
     DEB_CLASS_NAMESPC(DebModControl,"Config","Control");
   public:
     typedef std::string ModuleType;
+    typedef std::list<ModuleType> ModuleListType;
+    typedef std::string AliasType;
+    typedef std::list<AliasType> AliasListType;
+
     static const ModuleType All;
 
     CtConfig(CtControl &);
@@ -47,29 +51,30 @@ namespace lima
     
 
     // --- set current config into a context alias
-    void store(const std::string& alias,
-	       ModuleType);
-    void store(const std::string& alias,
-	       const std::list<ModuleType>&);
+    void store(const AliasType& alias,
+	       const ModuleType& module_to_save);
+    void store(const AliasType& alias,
+	       const ModuleListType& modules_to_save);
     // --- add current config to a context alias
-    void update(const std::string& alias,
-		ModuleType);
-    void update(const std::string& alias,
-		const std::list<ModuleType>&);
+    void update(const AliasType& alias,
+		const ModuleType& module_to_save);
+    void update(const AliasType& alias,
+		const ModuleListType& modules_to_save);
     // --- get all context aliases
-    void getAlias(std::list<std::string>&) const;
+    void getAlias(AliasListType& aliases) const;
     // --- get all register module type 
-    void getAvailableModule(std::list<ModuleType>&) const;
+    void getAvailableModule(ModuleListType& modules) const;
     // --- apply context to current parameters
-    void apply(const std::string&);
-    void pop(const std::string&);
+    void apply(const AliasType& alias);
+    void pop(const AliasType& alias);
     // --- remove part/all context
-    void remove(const std::string&,ModuleType = All);
-    void remove(const std::string&,
-		const std::list<ModuleType>&);
+    void remove(const AliasType& alias,
+		const ModuleType& module_to_remove = All);
+    void remove(const AliasType& alias,
+		const ModuleListType& modules_to_remove);
     // --- file management
-    void setFilename(const std::string&);
-    void getFilename(std::string&) const;
+    void setFilename(const std::string& full_path);
+    void getFilename(std::string& full_path) const;
 
     void save();
     void load();
@@ -94,7 +99,7 @@ namespace lima
     };
 
     void registerModule(ModuleTypeCallback*);
-    void unregisterModule(const std::string& module_type);
+    void unregisterModule(const ModuleType& module_type);
 
   private:
     typedef std::map<std::string,ModuleTypeCallback*> ModuleMap;

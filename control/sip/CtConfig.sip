@@ -316,26 +316,27 @@ public:
 
   // --- set current config into a context alias
   void store(const std::string& alias,
-	     std::string);
+             const std::string& module_to_save);
   void store(const std::string& alias,
-	     const std::list<std::string>&);
+             const std::list<std::string>& modules_to_save);
   // --- add current config to a context alias
   void update(const std::string& alias,
-	      std::string);
+	      const std::string& module_to_save);
   void update(const std::string& alias,
-	      const std::list<std::string>&);
+	      const std::list<std::string>& modules_to_save);
 
   void getAlias(std::list<std::string>& /Out/) const;
   void getAvailableModule(std::list<std::string>& /Out/) const;
 
-  void apply(const std::string&);
-  void pop(const std::string&);
-  void remove(const std::string&,std::string = CtConfig::All);
-  void remove(const std::string&,
-	      const std::list<std::string>&);
+  void apply(const std::string& alias);
+  void pop(const std::string& alias);
+  void remove(const std::string& alias,
+              const std::string& module_to_remove = CtConfig::All);
+  void remove(const std::string& alias,
+	      const std::list<std::string>& modules_to_remove);
 
-  void setFilename(const std::string&);
-  void getFilename(std::string& /Out/) const;
+  void setFilename(const std::string& full_path);
+  void getFilename(std::string& full_path /Out/) const;
 
   void save();
   void load();

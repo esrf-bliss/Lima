@@ -46,7 +46,7 @@ const CtConfig::ModuleType CtConfig::All = "All";
 
 //Static function
 static void _remove_if_exists(libconfig::Setting &setting,
-			      const std::string& alias)
+			      const CtConfig::AliasType& alias)
 {
   if(setting.exists(alias))
     setting.remove(alias);
@@ -110,17 +110,17 @@ void CtConfig::getFilename(std::string &full_path) const
   full_path = m_file_name;
 }
 
-void CtConfig::store(const std::string& alias,
-		     ModuleType module_to_save)
+void CtConfig::store(const AliasType& alias,
+		     const ModuleType& module_to_save)
 {
-  std::list<ModuleType> modules_to_save;
+  ModuleListType modules_to_save;
   modules_to_save.push_back(module_to_save);
 
   store(alias,modules_to_save);
 }
 
-void CtConfig::store(const std::string& alias,
-		     const std::list<ModuleType>& modules_to_save)
+void CtConfig::store(const AliasType& alias,
+		     const ModuleListType& modules_to_save)
 {
   DEB_MEMBER_FUNCT();
 
@@ -132,7 +132,7 @@ void CtConfig::store(const std::string& alias,
 	root.add(alias,libconfig::Setting::TypeGroup);
  
       bool anAllFlag = false;
-      for(std::list<ModuleType>::const_iterator i = modules_to_save.begin();
+      for(ModuleListType::const_iterator i = modules_to_save.begin();
 	  i != modules_to_save.end() && !anAllFlag;++i)
 	anAllFlag = *i == All;
 
@@ -149,7 +149,7 @@ void CtConfig::store(const std::string& alias,
 	}
       else
 	{
-	  for(std::list<ModuleType>::const_iterator i = modules_to_save.begin();
+	  for(ModuleListType::const_iterator i = modules_to_save.begin();
 	      i != modules_to_save.end();++i)
 	    {
 	      ModuleMap::iterator module = m_module_map.find(*i);
@@ -179,23 +179,23 @@ void CtConfig::store(const std::string& alias,
     }
 }
 
-void CtConfig::update(const std::string& alias,
-			ModuleType module_to_save)
+void CtConfig::update(const AliasType& alias,
+		      const ModuleType& module_to_save)
 {
-  std::list<ModuleType> modules_to_save;
+  ModuleListType modules_to_save;
   modules_to_save.push_back(module_to_save);
   update(alias,modules_to_save);
 }
 
-void CtConfig::update(const std::string& alias,
-		      const std::list<ModuleType>& modules_to_save)
+void CtConfig::update(const AliasType& alias,
+		      const ModuleListType& modules_to_save)
 
 {
   DEB_MEMBER_FUNCT();
   
   libconfig::Setting& root = m_config->getRoot();
   bool anAllFlag = false;
-  for(std::list<ModuleType>::const_iterator i = modules_to_save.begin();
+  for(ModuleListType::const_iterator i = modules_to_save.begin();
       i != modules_to_save.end() && !anAllFlag;++i)
     anAllFlag = *i == All;
 
@@ -203,7 +203,7 @@ void CtConfig::update(const std::string& alias,
     {
       libconfig::Setting& alias_setting = root[alias];
 
-      for(std::list<ModuleType>::const_iterator i = modules_to_save.begin();
+      for(ModuleListType::const_iterator i = modules_to_save.begin();
 	  i != modules_to_save.end();++i)
 	{
 	  ModuleMap::iterator module = m_module_map.find(*i);
@@ -237,7 +237,7 @@ void CtConfig::update(const std::string& alias,
     store(alias,modules_to_save);
 }
 
-  void CtConfig::getAlias(std::list<std::string>& aliases) const
+  void CtConfig::getAlias(AliasListType& aliases) const
   {
     libconfig::Setting& root = m_config->getRoot();
     int nbAlias = root.getLength();
@@ -249,14 +249,14 @@ void CtConfig::update(const std::string& alias,
       }
   }
 
-  void CtConfig::getAvailableModule(std::list<ModuleType>& module) const
+  void CtConfig::getAvailableModule(ModuleListType& modules) const
   {
     for(ModuleMap::const_iterator i = m_module_map.begin();
 	i != m_module_map.end();++i)
-      module.push_back(i->first.c_str());
+      modules.push_back(i->first);
   }
 
-  void CtConfig::apply(const std::string& alias)
+  void CtConfig::apply(const AliasType& alias)
   {
     DEB_MEMBER_FUNCT();
     DEB_PARAM() << DEB_VAR1(alias);
@@ -290,32 +290,33 @@ void CtConfig::update(const std::string& alias,
       }
   }
 
-  void CtConfig::pop(const std::string& alias)
+  void CtConfig::pop(const AliasType& alias)
   {
     apply(alias);
     remove(alias);
   }
 
-  void CtConfig::remove(const std::string& alias,ModuleType modules_to_remove)
+  void CtConfig::remove(const AliasType& alias,
+			const ModuleType& module_to_remove)
   {
     libconfig::Setting& root = m_config->getRoot();
-    if(modules_to_remove == All)
+    if(module_to_remove == All)
       _remove_if_exists(root,alias);
     else if(root.exists(alias))
       {
 	libconfig::Setting& alias_setting = root[alias];
-	_remove_if_exists(alias_setting,modules_to_remove);
+	_remove_if_exists(alias_setting,module_to_remove);
       }
   }
 
-  void CtConfig::remove(const std::string& alias,
-			const std::list<ModuleType>& modules_to_remove)
+  void CtConfig::remove(const AliasType& alias,
+			const ModuleListType& modules_to_remove)
   {
     libconfig::Setting& root = m_config->getRoot();
     if(!root.exists(alias)) return;
 
     libconfig::Setting& alias_setting = root[alias];
-    for(std::list<ModuleType>::const_iterator i = modules_to_remove.begin();
+    for(ModuleListType::const_iterator i = modules_to_remove.begin();
 	i != modules_to_remove.end();++i)
       {
 	if(*i == All)
@@ -373,7 +374,7 @@ void CtConfig::update(const std::string& alias,
 
     modulePt->ref();
     std::pair<ModuleMap::iterator,bool> result = 
-      m_module_map.insert(ModuleMap::value_type(modulePt->m_module_type.c_str(),
+      m_module_map.insert(ModuleMap::value_type(modulePt->m_module_type,
 						 modulePt));
     //if the module already exist, replace
     if(!result.second)
@@ -385,9 +386,9 @@ void CtConfig::update(const std::string& alias,
       }
   }
 
-  void CtConfig::unregisterModule(const std::string& module_type)
+  void CtConfig::unregisterModule(const ModuleType& module_type)
   {
-    ModuleMap::iterator i = m_module_map.find(module_type.c_str());
+    ModuleMap::iterator i = m_module_map.find(module_type);
     if(i != m_module_map.end())
       m_module_map.erase(i);
   }
