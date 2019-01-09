@@ -99,9 +99,6 @@ class HwInterface
 #define LIMA_HWCAP_TO_SIP_HW_CTRLOBJ_CASE(cppHwCap, aCap)		\
   LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Hw##aCap##CtrlObj)
 
-#define LIMA_HWCAP_TO_SIP_FRELON_CTRLOBJ_CASE(cppHwCap, aCap)		\
-  LIMA_HWCAP_TO_SIP_CTRLOBJ_CASE(cppHwCap, aCap, Frelon::aCap##CtrlObj)
-
 #define LIMA_CONVERT_HWCAP_TO_SIP_CTRLOBJ(cppHwCap, macDomain)		\
 do {									\
   LIMA_HWCAP_TO_SIP_CTRLOBJ_HEAD(cppHwCap)				\
