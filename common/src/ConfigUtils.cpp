@@ -34,19 +34,19 @@ using namespace lima;
   DEB_MEMBER_FUNCT();				\
   if(!m_setting) THROW_COM_ERROR(Error) << "Setting is Null";
 
-bool Setting::get(const char* alias,bool& value) const
+bool Setting::get(const std::string& alias,bool& value) const
 {
   CHECK_NULL();
   return m_setting->lookupValue(alias,value);
 }
 
-bool Setting::get(const char* alias,int& value) const
+bool Setting::get(const std::string& alias,int& value) const
 {
   CHECK_NULL();
   return m_setting->lookupValue(alias,value);
 }
 
-bool Setting::get(const char* alias,long& value) const
+bool Setting::get(const std::string& alias,long& value) const
 {
   CHECK_NULL();
 
@@ -56,35 +56,35 @@ bool Setting::get(const char* alias,long& value) const
   return rFlag;
 }
 
-bool Setting::get(const char* alias,long long& value) const
+bool Setting::get(const std::string& alias,long long& value) const
 {
   CHECK_NULL();
 
   return m_setting->lookupValue(alias,value);
 }
 
-bool Setting::get(const char* alias,double& value) const
+bool Setting::get(const std::string& alias,double& value) const
 {
   CHECK_NULL();
 
   return m_setting->lookupValue(alias,value);
 }
 
-bool Setting::get(const char* alias,const char*& value) const
+bool Setting::get(const std::string& alias,const char*& value) const
 {
   CHECK_NULL();
 
   return m_setting->lookupValue(alias,value);
 }
 
-bool Setting::get(const char* alias,std::string& value) const
+bool Setting::get(const std::string& alias,std::string& value) const
 {
   CHECK_NULL();
 
   return m_setting->lookupValue(alias,value);
 }
 
-bool Setting::get(const char* alias,Data& data) const
+bool Setting::get(const std::string& alias,Data& data) const
 {
   CHECK_NULL();
   Setting data_setting;
@@ -105,9 +105,9 @@ bool Setting::get(const char* alias,Data& data) const
 	      i != header_group.end();++i)
 	    {
 	      const Setting& setting = *i;
-	      const char* name = setting.getName();
-	      const char* value = setting;
-	      data.header.insert(name,value);
+	      const std::string name = setting.getName();
+	      const std::string value = setting;
+	      data.header.insert(name.c_str(),value.c_str());
 	    }
 	}
       Setting buffer_setting;
@@ -173,43 +173,41 @@ bool Setting::get(const char* alias,Data& data) const
       nSetting = value;							\
     }
 
-void Setting::set(const char* alias,bool value)
+void Setting::set(const std::string& alias,bool value)
 {
   SET_VALUE(libconfig::Setting::TypeBoolean);
 }
 
-void Setting::set(const char* alias,int value)
+void Setting::set(const std::string& alias,int value)
 {
   SET_VALUE(libconfig::Setting::TypeInt);
 }
 
-void Setting::set(const char* alias,long value)
+void Setting::set(const std::string& alias,long value)
 {
   SET_VALUE(libconfig::Setting::TypeInt64);
 }
 
-void Setting::set(const char* alias,long long value)
+void Setting::set(const std::string& alias,long long value)
 {
   SET_VALUE(libconfig::Setting::TypeInt64);
 }
 
-void Setting::set(const char* alias,double value)
+void Setting::set(const std::string& alias,double value)
 {
   SET_VALUE(libconfig::Setting::TypeFloat);
 }
 
-void Setting::set(const char* alias,const char* value)
+void Setting::set(const std::string& alias,const char* value)
+{
+  SET_VALUE(libconfig::Setting::TypeString);
+}
+void Setting::set(const std::string& alias,const std::string& value)
 {
   SET_VALUE(libconfig::Setting::TypeString);
 }
 
-void Setting::set(const char* alias,
-		  const std::string &value)
-{
-  SET_VALUE(libconfig::Setting::TypeString);
-}
-
-void Setting::set(const char* alias,
+void Setting::set(const std::string& alias,
 		  const Data& data)
 {
   CHECK_NULL();
@@ -269,7 +267,7 @@ void Setting::set(const char* alias,
   CHECK_NULL();							\
   try									\
     {									\
-      if(alias)								\
+      if(!alias.empty())						\
 	{								\
 	  libconfig::Setting &alias_setting =				\
 	    m_setting->add(alias,type);					\
@@ -303,34 +301,34 @@ void Setting::set(const char* alias,
     }									\
   return returnFlag;
 
-Setting Setting::addChild(const char *alias)
+Setting Setting::addChild(const std::string& alias)
 {
   ADD_NESTED_TYPE(libconfig::Setting::TypeGroup);
 }
 
-bool Setting::getChild(const char* alias,Setting& child) const
+bool Setting::getChild(const std::string& alias,Setting& child) const
 {
   GET_NESTED_TYPE(alias_setting.isGroup());
 }
 
 // --- list management
-Setting Setting::addList(const char* alias)
+Setting Setting::addList(const std::string& alias)
 {
   ADD_NESTED_TYPE(libconfig::Setting::TypeList);
 }
 
-bool Setting::getList(const char* alias,Setting& child) const
+bool Setting::getList(const std::string& alias,Setting& child) const
 {
   GET_NESTED_TYPE(alias_setting.isList());
 }
 
 // --- array management
-Setting Setting::addArray(const char* alias)
+Setting Setting::addArray(const std::string& alias)
 {
   ADD_NESTED_TYPE(libconfig::Setting::TypeArray);
 }
 
-bool Setting::getArray(const char* alias,Setting& child) const
+bool Setting::getArray(const std::string& alias,Setting& child) const
 {
   GET_NESTED_TYPE(alias_setting.isArray());
 }
@@ -373,12 +371,7 @@ void Setting::append(double value)
   APPEND(libconfig::Setting::TypeFloat);
 }
 
-void Setting::append(const char* value)
-{
-  APPEND(libconfig::Setting::TypeString);
-}
-
-void Setting::append(const std::string &value)
+void Setting::append(const std::string& value)
 {
   APPEND(libconfig::Setting::TypeString);
 }
@@ -420,11 +413,7 @@ void Setting::set(int pos,double value)
 {
   SET_VALUE_AT_POS();
 }
-void Setting::set(int pos,const char* value)
-{
-  SET_VALUE_AT_POS();
-}
-void Setting::set(int pos,const std::string &value)
+void Setting::set(int pos,const std::string& value)
 {
   SET_VALUE_AT_POS();
 }
@@ -498,7 +487,7 @@ int Setting::getLength() const
   return m_setting->getLength();
 }
 
-const char* Setting::getName() const
+std::string Setting::getName() const
 {
   CHECK_NULL();
 
@@ -543,14 +532,9 @@ Setting::operator double() const
   CAST_TYPE(double);
 }
 
-Setting::operator const char*() const
-{
-  CAST_TYPE(const char*);
-}
-
 Setting::operator std::string() const
 {
-  CAST_TYPE(const char*);
+  CAST_TYPE(const std::string&);
 }
 
 #define ASSIGN()				\
@@ -582,11 +566,6 @@ Setting& Setting::operator=(long long value)
 }
  
 Setting& Setting::operator=(double value)
-{
-  ASSIGN();
-}
-
-Setting& Setting::operator=(const char* value)
 {
   ASSIGN();
 }

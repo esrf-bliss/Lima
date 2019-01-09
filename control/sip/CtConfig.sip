@@ -75,8 +75,8 @@ inline int _fill_setting_with_list(Setting &setting,
 	{
 	  PyObject* value = PyList_GetItem(list,index);
 
-	  if(PyString_Check(value))
-	    setting.append(PyString_AS_STRING(value));
+	  if(sipCheckConvertFromPyStr(value))
+	    setting.append(sipConvertFromPyStr(value));
 	  else if(PyFloat_Check(value))
 	    setting.append(PyFloat_AS_DOUBLE(value));
 	  else if(PyLong_Check(value))
@@ -126,7 +126,7 @@ inline int _fill_setting_with_dict(Setting &setting,
     {
       while(PyDict_Next(dict, &pos, &key, &value))
 	{
-	  if(!PyString_Check(key))
+	  if(!sipCheckConvertFromPyStr(key))
 	    {
 	      PyErr_SetString(PyExc_ValueError,
 			      "key can only by string type");
@@ -134,32 +134,28 @@ inline int _fill_setting_with_dict(Setting &setting,
 	      break;
 	    }
 
-	  if(PyString_Check(value))
-	    setting.set(PyString_AS_STRING(key),
-			PyString_AS_STRING(value));
+	  std::string key_str = sipConvertFromPyStr(key);
+	  if(sipCheckConvertFromPyStr(value))
+	    setting.set(key_str, sipConvertFromPyStr(value));
 	  else if(PyFloat_Check(value))
-	    setting.set(PyString_AS_STRING(key),
-			PyFloat_AS_DOUBLE(value));
+	    setting.set(key_str, PyFloat_AS_DOUBLE(value));
 	  else if(PyLong_Check(value))
 	    {
 	      long cValue = _from_python_long_2_c(value,return_value);
-	      setting.set(PyString_AS_STRING(key),
-			  cValue);
+	      setting.set(key_str, cValue);
 	    }
 	  else if(PyInt_Check(value))
-	    setting.set(PyString_AS_STRING(key),
-			int(PyInt_AsLong(value)));
+	    setting.set(key_str, int(PyInt_AsLong(value)));
 	  else if(PyBool_Check(value))
-	    setting.set(PyString_AS_STRING(key),
-			PyObject_IsTrue(value));
+	    setting.set(key_str, PyObject_IsTrue(value));
 	  else if(PyDict_Check(value))
 	    {
-	      Setting child = setting.addChild(PyString_AS_STRING(key));
+	      Setting child = setting.addChild(key_str);
 	      return_value = _fill_setting_with_dict(child,value);
 	    }
 	  else if(PyList_Check(value))
 	    {
-	      Setting child = setting.addList(PyString_AS_STRING(key));
+	      Setting child = setting.addList(key_str);
 	      return_value = _fill_setting_with_list(child,value);
 	    }
 	  else if(sipCanConvertToType(value,sipType_Data,SIP_NOT_NONE))
@@ -183,7 +179,7 @@ inline int _fill_setting_with_dict(Setting &setting,
 		}
 	      else
 		{
-		  setting.set(PyString_AS_STRING(key),*data);
+		  setting.set(key_str,*data);
 		  sipReleaseType(data,sipType_Data,state);
 		}
 	    }
@@ -238,8 +234,8 @@ inline bool _build_dict_from_setting(const Setting &setting,
 	      }
 	    case Setting::String:
 	      {
-		const char* value = sub_setting;
-		py_value = PyString_FromString(value);
+		std::string value = sub_setting;
+		py_value = sipConvertToPyStr(value);
 		break;
 	      }
 	    case Setting::Boolean:
@@ -281,7 +277,7 @@ inline bool _build_dict_from_setting(const Setting &setting,
 	    {
 	      if(PyDict_Check(dict))
 		return_value = PyDict_SetItemString(dict,
-						    sub_setting.getName(),
+						    sub_setting.getName().c_str(),
 						    py_value);
 	      else
 		return_value = PyList_Append(dict,py_value);
@@ -313,33 +309,34 @@ class CtConfig
 using namespace lima;
 %End
 public:
-  static const char* All;
+  static const std::string All;
 
   CtConfig(CtControl &);
   ~CtConfig();
 
   // --- set current config into a context alias
   void store(const std::string& alias,
-	     const char*);
+             const std::string& module_to_save);
   void store(const std::string& alias,
-	     const std::list<const char*>&);
+             const std::list<std::string>& modules_to_save);
   // --- add current config to a context alias
   void update(const std::string& alias,
-	      const char*);
+	      const std::string& module_to_save);
   void update(const std::string& alias,
-	      const std::list<const char*>&);
+	      const std::list<std::string>& modules_to_save);
 
   void getAlias(std::list<std::string>& /Out/) const;
-  void getAvailableModule(std::list<const char*>& /Out/) const;
+  void getAvailableModule(std::list<std::string>& /Out/) const;
 
-  void apply(const std::string&);
-  void pop(const std::string&);
-  void remove(const std::string&,const char* = CtConfig::All);
-  void remove(const std::string&,
-	      const std::list<const char*>&);
+  void apply(const std::string& alias);
+  void pop(const std::string& alias);
+  void remove(const std::string& alias,
+              const std::string& module_to_remove = CtConfig::All);
+  void remove(const std::string& alias,
+	      const std::list<std::string>& modules_to_remove);
 
-  void setFilename(const std::string&);
-  void getFilename(std::string& /Out/) const;
+  void setFilename(const std::string& full_path);
+  void getFilename(std::string& full_path /Out/) const;
 
   void save();
   void load();
@@ -353,7 +350,7 @@ using namespace lima;
 
 
     public:
-      explicit ModuleTypeCallback(const char*);
+      explicit ModuleTypeCallback(std::string);
 
       virtual SIP_PYDICT store() = 0 [void (Setting&)];
 %MethodCode

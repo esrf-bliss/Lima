@@ -43,36 +43,36 @@ namespace lima
     Setting(const Setting &setting) : m_setting(setting.m_setting) {}
 
     // --- lookup
-    bool get(const char* alias,bool& value) const;
-    bool get(const char* alias,int& value) const;
-    bool get(const char* alias,long& value) const;
-    bool get(const char* alias,long long& value) const;
-    bool get(const char* alias,double& value) const;
-    bool get(const char* alias,const char*& value) const;
-    bool get(const char* alias,std::string &value) const;
-    bool get(const char* alias,Data&) const;
+    bool get(const std::string& alias,bool& value) const;
+    bool get(const std::string& alias,int& value) const;
+    bool get(const std::string& alias,long& value) const;
+    bool get(const std::string& alias,long long& value) const;
+    bool get(const std::string& alias,double& value) const;
+    bool get(const std::string& alias,const char*& value) const;
+    bool get(const std::string& alias,std::string& value) const;
+    bool get(const std::string& alias,Data&) const;
 
     // --- modifiers
-    void set(const char* alias,bool value);
-    void set(const char* alias,int value);
-    void set(const char* alias,long value);
-    void set(const char* alias,long long value);
-    void set(const char* alias,double value);
-    void set(const char* alias,const char* value);
-    void set(const char* alias,const std::string &value);
-    void set(const char* alias,const Data&);
+    void set(const std::string& alias,bool value);
+    void set(const std::string& alias,int value);
+    void set(const std::string& alias,long value);
+    void set(const std::string& alias,long long value);
+    void set(const std::string& alias,double value);
+    void set(const std::string& alias,const char* value);
+    void set(const std::string& alias,const std::string& value);
+    void set(const std::string& alias,const Data&);
 
     // --- child
-    Setting addChild(const char* alias);
-    bool getChild(const char* alias,Setting& child) const;
+    Setting addChild(const std::string& alias);
+    bool getChild(const std::string& alias,Setting& child) const;
 
     // --- list
-    Setting addList(const char* alias);
-    bool getList(const char* alias,Setting& list) const;
+    Setting addList(const std::string& alias);
+    bool getList(const std::string& alias,Setting& list) const;
 
     // --- array
-    Setting addArray(const char* alias);
-    bool getArray(const char* alias,Setting& array) const;
+    Setting addArray(const std::string& alias);
+    bool getArray(const std::string& alias,Setting& array) const;
 
     // --- list & array mgt
     void append(bool value);
@@ -80,43 +80,38 @@ namespace lima
     void append(long value);
     void append(long long value);
     void append(double value);
-    void append(const char* value);
-    void append(const std::string &value);
+    void append(const std::string& value);
 
     void get(int pos,bool& value) const;
     void get(int pos,int& value) const;
     void get(int pos,long& value) const;
     void get(int pos,long long& value) const;
     void get(int pos,double& value) const;
-    void get(int pos,const char*& value) const;
-    void get(int pos,std::string &value) const;
+    void get(int pos,std::string& value) const;
 
     void set(int pos,bool value);
     void set(int pos,int value);
     void set(int pos,long value);
     void set(int pos,long long value);
     void set(int pos,double value);
-    void set(int pos,const char* value);
-    void set(int pos,const std::string &value);
+    void set(int pos,const std::string& value);
 
     // --- settings
     Type getType() const;
     int getLength() const;
-    const char* getName() const;
+    std::string getName() const;
     bool isGroup() const;
 
     operator bool() const;
     operator int() const;
     operator long long() const;
     operator double() const;
-    operator const char*() const;
     operator std::string() const;
 
     Setting& operator=(bool value);
     Setting& operator=(int value);
     Setting& operator=(long long value);
     Setting& operator=(double value);
-    Setting& operator=(const char* value);
     Setting& operator=(const std::string& value);
 
     const libconfig::Setting* get_raw_setting() const {return m_setting;}
