@@ -132,7 +132,8 @@ inline DebStream& DebStream::SetStream(Selector new_selector)
  *------------------------------------------------------------------*/
 
 class DebObj;
-class DebProxy;
+template <bool active>
+class TDebProxy;
 
 class LIMACORE_API DebParams
 {
@@ -195,7 +196,8 @@ class LIMACORE_API DebParams
 	static void checkInit();
 
 private:
-	friend class DebProxy;
+	template <bool active>
+	friend class TDebProxy;
 	friend class DebObj;
 
 	static void doInit();
@@ -231,26 +233,36 @@ std::ostream& operator <<(std::ostream& os,
 
 
 /*------------------------------------------------------------------
- *  class DebProxy
+ *  class TDebProxy
  *------------------------------------------------------------------*/
 
-class LIMACORE_API DebProxy
+template <bool active>
+class LIMACORE_API TDebProxy
 {
 public:
-	DebProxy();
-	DebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
-		ConstStr file_name, int line_nr);
-	DebProxy(const DebProxy& p);
-	~DebProxy();
+	TDebProxy();
+	TDebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
+		  ConstStr file_name, int line_nr);
+	TDebProxy(const TDebProxy& p);
+	~TDebProxy();
 
 	template <class T>
-	const DebProxy& operator <<(const T& o) const;
+	const TDebProxy& operator <<(const T& o) const
+	{
+		if (isActive()) 
+			*DebParams::s_deb_stream << o;
+		return *this;
+	}
 
-	bool isActive() const;
+	bool isActive() const
+	{ return active && !!m_lock; }
 
  private:
 	mutable AutoMutex *m_lock;
 };
+
+typedef TDebProxy<true> DebProxy;
+typedef TDebProxy<false> DebSink;
 
 /*------------------------------------------------------------------
  *  class DebObj
@@ -278,7 +290,8 @@ class LIMACORE_API DebObj
 		       ConstStr file_name = NULL, int line_nr = 0);
 
  private:
-	friend class DebProxy;
+	template <bool active>
+	friend class TDebProxy;
 
 	typedef struct ThreadData {
 		int indent;
@@ -388,16 +401,18 @@ inline bool DebParams::checkType(DebType type) const
 }
 
 /*------------------------------------------------------------------
- *  class DebProxy inline functions
+ *  class TDebProxy inline functions
  *------------------------------------------------------------------*/
 
-inline DebProxy::DebProxy()
+template <>
+inline TDebProxy<true>::TDebProxy()
 	: m_lock(NULL)
 {
 }
 
-inline DebProxy::DebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
-			  ConstStr file_name, int line_nr)
+template <>
+inline TDebProxy<true>::TDebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
+				  ConstStr file_name, int line_nr)
 {
 #ifdef LIMA_NO_DEBUG
 	DebParams::checkInit();
@@ -410,13 +425,15 @@ inline DebProxy::DebProxy(DebObj *deb_obj, DebType type, ConstStr funct_name,
 	m_lock = new AutoMutex(lock);
 }
 
-inline DebProxy::DebProxy(const DebProxy& p)
+template <>
+inline TDebProxy<true>::TDebProxy(const TDebProxy& p)
 	: m_lock(p.m_lock)
 {
 	p.m_lock = NULL;
 }
 
-inline DebProxy::~DebProxy()
+template <>
+inline TDebProxy<true>::~TDebProxy()
 {
 	if (!m_lock)
 		return;
@@ -425,19 +442,13 @@ inline DebProxy::~DebProxy()
 	delete m_lock;
 }
 
-inline bool DebProxy::isActive() const
-{
-	return !!m_lock;
-}
+template <>
+inline TDebProxy<false>::TDebProxy()
+{}
 
-template <class T>
-inline const DebProxy& DebProxy::operator <<(const T& o) const
-{
-	if (isActive()) 
-		*DebParams::s_deb_stream << o;
-	return *this;
-}
-
+template <>
+inline TDebProxy<false>::~TDebProxy()
+{}
 
 /*------------------------------------------------------------------
  *  class DebObj inline functions
@@ -589,16 +600,6 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 #define DEB_EVENT(event)	DEB_MSG((event).getDebType())
 
 #else // LIMA_NO_DEBUG
-
-// Mock implementation of the DebProxy
-class LIMACORE_API DebSink
-{
-public:
-	DebSink() {};
-
-	template <class T>
-	const DebSink& operator <<(const T&) const {return *this;}
-};
 
 #define DEB_GLOBAL_FUNCT()
 #define DEB_CONSTRUCTOR()
