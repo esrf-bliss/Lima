@@ -217,10 +217,10 @@ class Config:
 		install = True if not explicit and install_prefix else install
 		self.set_cmd('install', install)
 
-                # or use conda environment if explicitly asked to install
-                if install and not install_prefix and use_conda and prefix_path:
-                        self.set_cmd('install-prefix', prefix_path)
-                        self.set_cmd('install-python-prefix', get_python_lib())
+		# or use conda environment if explicitly asked to install
+		if install and not install_prefix and use_conda and prefix_path:
+			self.set_cmd('install-prefix', prefix_path)
+			self.set_cmd('install-python-prefix', get_python_lib())
 
 		# if option paths are relative, make them absolute:
 		# config-file is rel. to src, build-prefix is rel. to cwd
