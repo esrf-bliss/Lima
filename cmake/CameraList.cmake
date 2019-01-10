@@ -22,6 +22,8 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
+#VARIABLE DEFINITION SECTION
+
 #CAMERA WORKING ON BOTH LINUX AND WINDOWS
 
 #ANDOR
@@ -30,9 +32,6 @@ if(DEFINED ENV{LIMACAMERA_ANDOR})
 else()
     set(LIMACAMERA_ANDOR OFF CACHE BOOL "compile andor?")
 endif()
-if(LIMACAMERA_ANDOR)
-   add_subdirectory(camera/andor)
-endif(LIMACAMERA_ANDOR)
 
 #BASLER
 if(DEFINED ENV{LIMACAMERA_BASLER})
@@ -40,9 +39,6 @@ if(DEFINED ENV{LIMACAMERA_BASLER})
 else()
     set(LIMACAMERA_BASLER OFF CACHE BOOL "compile basler?")
 endif()
-if(LIMACAMERA_BASLER)
-    add_subdirectory(camera/basler)
-endif(LIMACAMERA_BASLER)
 	
 #PCO
 if(DEFINED ENV{LIMACAMERA_PCO})
@@ -50,9 +46,6 @@ if(DEFINED ENV{LIMACAMERA_PCO})
 else()
     set(LIMACAMERA_PCO OFF CACHE BOOL "compile pco?")
 endif()
-if(LIMACAMERA_PCO)
-    add_subdirectory(camera/pco)
-endif(LIMACAMERA_PCO)
 
 #SIMULATOR
 if(DEFINED ENV{LIMACAMERA_SIMULATOR})
@@ -60,9 +53,6 @@ if(DEFINED ENV{LIMACAMERA_SIMULATOR})
 else()
     set(LIMACAMERA_SIMULATOR ON CACHE BOOL "compile simulator?")
 endif()
-if(LIMACAMERA_SIMULATOR)
-    add_subdirectory(camera/simulator)
-endif(LIMACAMERA_SIMULATOR)
 
 #ROPERSCIENTIFIC
 if(DEFINED ENV{LIMACAMERA_ROPERSCIENTIFIC})
@@ -70,11 +60,6 @@ if(DEFINED ENV{LIMACAMERA_ROPERSCIENTIFIC})
 else()
    set(LIMACAMERA_ROPERSCIENTIFIC OFF CACHE BOOL "compile roperscientific?")
 endif()
-if(LIMACAMERA_ROPERSCIENTIFIC)
-    add_subdirectory(camera/roperscientific)
-endif(LIMACAMERA_ROPERSCIENTIFIC)
-
-
 
 #CAMERA ONLY WORKING ON LINUX
 if(UNIX)
@@ -84,9 +69,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_ANDOR3 OFF CACHE BOOL "compile andor3?")
 	endif()
-	if(LIMACAMERA_ANDOR3)
-		add_subdirectory(camera/andor3)
-	endif(LIMACAMERA_ANDOR3)
 
 	#AVIEX
 	if(DEFINED ENV{LIMACAMERA_AVIEX})
@@ -94,9 +76,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_AVIEX OFF CACHE BOOL "compile aviex?")
 	endif()
-	if(LIMACAMERA_AVIEX)
-		add_subdirectory(camera/aviex)
-	endif(LIMACAMERA_AVIEX)
 	
 	#ADSC
 	if(DEFINED ENV{LIMACAMERA_ADSC})
@@ -104,9 +83,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_ADSC OFF CACHE BOOL "compile adsc?")
 	endif()
-	if(LIMACAMERA_ADSC)
-		add_subdirectory(camera/adsc)
-	endif(LIMACAMERA_ADSC)
 	
 	#DEXELA
 	if(DEFINED ENV{LIMACAMERA_DEXELA})
@@ -114,9 +90,13 @@ if(UNIX)
 	else()
 	   set(LIMACAMERA_DEXELA OFF CACHE BOOL "compile dexela ?")
 	endif()
-	if(LIMACAMERA_DEXELA)
-		add_subdirectory(camera/dexela)
-	endif(LIMACAMERA_DEXELA)
+
+	#ESPIA
+	if(DEFINED ENV{LIMACAMERA_ESPIA})
+		set(LIMACAMERA_ESPIA "$ENV{LIMACAMERA_ESPIA}" CACHE BOOL "compile espia?" FORCE)
+	else()
+		set(LIMACAMERA_ESPIA OFF CACHE BOOL "compile espia?")
+	endif()
 
 	#EIGER
 	if(DEFINED ENV{LIMACAMERA_EIGER})
@@ -124,9 +104,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_EIGER OFF CACHE BOOL "compile eiger?")
 	endif()
-	if(LIMACAMERA_EIGER)
-		add_subdirectory(camera/eiger)
-	endif(LIMACAMERA_EIGER)
 
 	#FRELON
 	if(DEFINED ENV{LIMACAMERA_FRELON})
@@ -134,9 +111,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_FRELON OFF CACHE BOOL "compile frelon?")
 	endif()
-	if(LIMACAMERA_FRELON)
-		add_subdirectory(camera/frelon)
-	endif(LIMACAMERA_FRELON)
 
 	#FLI
 	if(DEFINED ENV{LIMACAMERA_FLI})
@@ -144,9 +118,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_FLI OFF CACHE BOOL "compile Finger Lake Instrument camera?")
 	endif()
-	if(LIMACAMERA_FLI)
-		add_subdirectory(camera/fli)
-	endif(LIMACAMERA_FLI)
 
 	#HEXITEC
 	if(DEFINED ENV{LIMACAMERA_HEXITEC})
@@ -154,9 +125,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_HEXITEC OFF CACHE BOOL "compile hexitec ?")
 	endif()
-	if(LIMACAMERA_HEXITEC)
-		add_subdirectory(camera/hexitec)
-	endif(LIMACAMERA_HEXITEC)
 
 	#IMXPAD
 	if(DEFINED ENV{LIMACAMERA_IMXPAD})
@@ -164,9 +132,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_IMXPAD OFF CACHE BOOL "compile imxpad?")
 	endif()
-	if(LIMACAMERA_IMXPAD)
-		add_subdirectory(camera/imxpad)
-	endif(LIMACAMERA_IMXPAD)
 
 	#LAMBDA
 	if(DEFINED ENV{LIMACAMERA_LAMBDA})
@@ -174,9 +139,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_LAMBDA OFF CACHE BOOL "compile lambda?")
 	endif()
-	if(LIMACAMERA_LAMBDA)
-		add_subdirectory(camera/lambda)
-	endif(LIMACAMERA_LAMBDA)
 
 	#MARCCD
 	if(DEFINED ENV{LIMACAMERA_MARCCD})
@@ -184,9 +146,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_MARCCD OFF CACHE BOOL "compile marccd?")
 	endif()
-	if(LIMACAMERA_MARCCD)
-		add_subdirectory(camera/marccd)
-	endif(LIMACAMERA_MARCCD)
 
 	#MAXIPIX
 	if(DEFINED ENV{LIMACAMERA_MAXIPIX})
@@ -194,9 +153,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_MAXIPIX OFF CACHE BOOL "compile maxipix?")
 	endif()
-	if(LIMACAMERA_MAXIPIX)
-		add_subdirectory(camera/maxipix)
-	endif(LIMACAMERA_MAXIPIX)
 
 	#MERLIN
 	if(DEFINED ENV{LIMACAMERA_MERLIN})
@@ -204,9 +160,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_MERLIN OFF CACHE BOOL "compile merlin?")
 	endif()
-	if(LIMACAMERA_MERLIN)
-		add_subdirectory(camera/merlin)
-	endif(LIMACAMERA_MERLIN)
 
 	#MYTHEN
 	if(DEFINED ENV{LIMACAMERA_MYTHEN})
@@ -214,9 +167,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_MYTHEN OFF CACHE BOOL "compile mythen ?")
 	endif()
-	if(LIMACAMERA_MYTHEN)
-		add_subdirectory(camera/mythen)
-	endif(LIMACAMERA_MYTHEN)
 
 	#MYTHEN3
 	if(DEFINED ENV{LIMACAMERA_MYTHEN3})
@@ -224,9 +174,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_MYTHEN3 OFF CACHE BOOL "compile mythen3 ?")
 	endif()
-	if(LIMACAMERA_MYTHEN3)
-		add_subdirectory(camera/mythen3)
-	endif(LIMACAMERA_MYTHEN3)
 
 	#PILATUS
 	if(DEFINED ENV{LIMACAMERA_PILATUS})
@@ -234,9 +181,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_PILATUS OFF CACHE BOOL "compile pilatus?")
 	endif()
-	if(LIMACAMERA_PILATUS)
-		add_subdirectory(camera/pilatus)
-	endif(LIMACAMERA_PILATUS)
 
 	#PIXIRAD
 	if(DEFINED ENV{LIMACAMERA_PIXIRAD})
@@ -244,9 +188,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_PIXIRAD OFF CACHE BOOL "compile pixirad?")
 	endif()
-	if(LIMACAMERA_PIXIRAD)
-		add_subdirectory(camera/pixirad)
-	endif(LIMACAMERA_PIXIRAD)
 
 	#POINTGREY
 	if(DEFINED ENV{LIMACAMERA_POINTGREY})
@@ -254,9 +195,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_POINTGREY OFF CACHE BOOL "compile pointgrey?")
 	endif()
-	if(LIMACAMERA_POINTGREY)
-		add_subdirectory(camera/pointgrey)
-	endif(LIMACAMERA_POINTGREY)
 
 	#PROSILICA
 	if(DEFINED ENV{LIMACAMERA_PROSILICA})
@@ -264,9 +202,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_PROSILICA OFF CACHE BOOL "compile prosilica?")
 	endif()
-	if(LIMACAMERA_PROSILICA)
-		add_subdirectory(camera/prosilica)
-	endif(LIMACAMERA_PROSILICA)
 	
 	#RAYONIX HS
 	if(DEFINED ENV{LIMACAMERA_RAYONIXHS})
@@ -274,9 +209,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_RAYONIXHS OFF CACHE BOOL "compile rayonix hs?")
 	endif()
-	if(LIMACAMERA_RAYONIXHS)
-		add_subdirectory(camera/rayonixhs)
-	endif(LIMACAMERA_RAYONIXHS)
 
 	#SLSDETECTOR
 	if(DEFINED ENV{LIMACAMERA_SLSDETECTOR})
@@ -284,9 +216,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_SLSDETECTOR OFF CACHE BOOL "compile slsdetector ?")
 	endif()	
-	if(LIMACAMERA_SLSDETECTOR)
-		add_subdirectory(camera/slsdetector)
-	endif(LIMACAMERA_SLSDETECTOR)
 
 	#UEYE
 	if(DEFINED ENV{LIMACAMERA_UEYE})
@@ -294,9 +223,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_UEYE OFF CACHE BOOL "compile ueye ?")
 	endif()
-	if(LIMACAMERA_UEYE)
-		add_subdirectory(camera/ueye)
-	endif(LIMACAMERA_UEYE)
 
 	#ULTRA
 	if(DEFINED ENV{LIMACAMERA_ULTRA})
@@ -304,9 +230,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_ULTRA OFF CACHE BOOL "compile ultra ?")
 	endif()
-	if(LIMACAMERA_ULTRA)
-		add_subdirectory(camera/ultra)
-	endif(LIMACAMERA_ULTRA)
 
 	#V4L2
 	if(DEFINED ENV{LIMACAMERA_V4L2})
@@ -314,9 +237,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_V4L2 OFF CACHE BOOL "compile v4l2 ?")
 	endif()
-	if(LIMACAMERA_V4L2)
-		add_subdirectory(camera/v4l2)
-	endif(LIMACAMERA_V4L2)
 
 	#XPAD
 	if(DEFINED ENV{LIMACAMERA_XPAD})
@@ -324,9 +244,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_XPAD OFF CACHE BOOL "compile Xpad ?")
 	endif()
-	if(LIMACAMERA_XPAD)
-		add_subdirectory(camera/xpad)
-	endif(LIMACAMERA_XPAD)
 
 	#XH
 	if(DEFINED ENV{LIMACAMERA_XH})
@@ -334,9 +251,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_XH OFF CACHE BOOL "compile xh ?")
 	endif()
-	if(LIMACAMERA_XH)
-		add_subdirectory(camera/xh)
-	endif(LIMACAMERA_XH)
 
 	#XSPRESS3
 	if(DEFINED ENV{LIMACAMERA_XSPRESS3})
@@ -344,9 +258,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_XSPRESS3 OFF CACHE BOOL "compile xspress3 ?")
 	endif()	
-	if(LIMACAMERA_XSPRESS3)
-		add_subdirectory(camera/xspress3)
-	endif(LIMACAMERA_XSPRESS3)
 
 	#ZWO
 	if(DEFINED ENV{LIMACAMERA_ZWO})
@@ -354,13 +265,6 @@ if(UNIX)
 	else()
 		set(LIMACAMERA_ZWO OFF CACHE BOOL "compile zwo ?")
 	endif()	
-	if(LIMACAMERA_ZWO)
-		add_subdirectory(camera/zwo)
-	endif(LIMACAMERA_ZWO)
-
-	if(LIMACAMERA_FRELON OR LIMACAMERA_MAXIPIX)
-		add_subdirectory(camera/common/espia)
-	endif(LIMACAMERA_FRELON OR LIMACAMERA_MAXIPIX)
 endif()
 
 #CAMERA ONLY WORKING ON WINDOWS
@@ -371,9 +275,6 @@ if(WIN32)
 	else()
 		set(LIMACAMERA_HAMAMATSU OFF CACHE BOOL "compile hamamatsu ?")
 	endif()
-	if(LIMACAMERA_HAMAMATSU)
-        	add_subdirectory(camera/hamamatsu)
-	endif(LIMACAMERA_HAMAMATSU)
 
 	#PERKIN ELMER
 	if(DEFINED ENV{LIMACAMERA_PERKINELMER})
@@ -381,10 +282,6 @@ if(WIN32)
 	else()
 		set(LIMACAMERA_PERKINELMER OFF CACHE BOOL "compile perkin elmer ?")
 	endif()
-	#PERKIN ELMER
-	if(LIMACAMERA_PERKINELMER)
-		add_subdirectory(camera/perkinelmer)
-	endif(LIMACAMERA_PERKINELMER)
 		
 	#PHOTONICSCIENCE
 	if(DEFINED ENV{LIMACAMERA_PHOTONICSCIENCE})
@@ -392,6 +289,212 @@ if(WIN32)
 	else()
 		set(LIMACAMERA_PHOTONICSCIENCE OFF CACHE BOOL "compile photonicscience ?")
 	endif()
+endif()
+
+
+#DEPENDENCY LOGIC SECTION
+
+#CAMERA ONLY WORKING ON LINUX
+if(UNIX)
+	#ESPIA/FRELON/MAXIPIX
+	if(LIMACAMERA_FRELON OR LIMACAMERA_MAXIPIX)
+		set(LIMACAMERA_ESPIA ON)
+	endif(LIMACAMERA_FRELON OR LIMACAMERA_MAXIPIX)
+endif()
+
+
+#CAMERA DIRECTORY SECTION
+
+#CAMERA WORKING ON BOTH LINUX AND WINDOWS
+
+#ANDOR
+if(LIMACAMERA_ANDOR)
+   add_subdirectory(camera/andor)
+endif(LIMACAMERA_ANDOR)
+
+#BASLER
+if(LIMACAMERA_BASLER)
+    add_subdirectory(camera/basler)
+endif(LIMACAMERA_BASLER)
+	
+#PCO
+if(LIMACAMERA_PCO)
+    add_subdirectory(camera/pco)
+endif(LIMACAMERA_PCO)
+
+#SIMULATOR
+if(LIMACAMERA_SIMULATOR)
+    add_subdirectory(camera/simulator)
+endif(LIMACAMERA_SIMULATOR)
+
+#ROPERSCIENTIFIC
+if(LIMACAMERA_ROPERSCIENTIFIC)
+    add_subdirectory(camera/roperscientific)
+endif(LIMACAMERA_ROPERSCIENTIFIC)
+
+
+
+#CAMERA ONLY WORKING ON LINUX
+if(UNIX)
+	#ANDOR3
+	if(LIMACAMERA_ANDOR3)
+		add_subdirectory(camera/andor3)
+	endif(LIMACAMERA_ANDOR3)
+
+	#AVIEX
+	if(LIMACAMERA_AVIEX)
+		add_subdirectory(camera/aviex)
+	endif(LIMACAMERA_AVIEX)
+	
+	#ADSC
+	if(LIMACAMERA_ADSC)
+		add_subdirectory(camera/adsc)
+	endif(LIMACAMERA_ADSC)
+	
+	#DEXELA
+	if(LIMACAMERA_DEXELA)
+		add_subdirectory(camera/dexela)
+	endif(LIMACAMERA_DEXELA)
+
+	#ESPIA
+	if(LIMACAMERA_ESPIA)
+		add_subdirectory(camera/common/espia)
+	endif(LIMACAMERA_ESPIA)
+
+	#EIGER
+	if(LIMACAMERA_EIGER)
+		add_subdirectory(camera/eiger)
+	endif(LIMACAMERA_EIGER)
+
+	#FRELON
+	if(LIMACAMERA_FRELON)
+		add_subdirectory(camera/frelon)
+	endif(LIMACAMERA_FRELON)
+
+	#FLI
+	if(LIMACAMERA_FLI)
+		add_subdirectory(camera/fli)
+	endif(LIMACAMERA_FLI)
+
+	#HEXITEC
+	if(LIMACAMERA_HEXITEC)
+		add_subdirectory(camera/hexitec)
+	endif(LIMACAMERA_HEXITEC)
+
+	#IMXPAD
+	if(LIMACAMERA_IMXPAD)
+		add_subdirectory(camera/imxpad)
+	endif(LIMACAMERA_IMXPAD)
+
+	#LAMBDA
+	if(LIMACAMERA_LAMBDA)
+		add_subdirectory(camera/lambda)
+	endif(LIMACAMERA_LAMBDA)
+
+	#MARCCD
+	if(LIMACAMERA_MARCCD)
+		add_subdirectory(camera/marccd)
+	endif(LIMACAMERA_MARCCD)
+
+	#MAXIPIX
+	if(LIMACAMERA_MAXIPIX)
+		add_subdirectory(camera/maxipix)
+	endif(LIMACAMERA_MAXIPIX)
+
+	#MERLIN
+	if(LIMACAMERA_MERLIN)
+		add_subdirectory(camera/merlin)
+	endif(LIMACAMERA_MERLIN)
+
+	#MYTHEN
+	if(LIMACAMERA_MYTHEN)
+		add_subdirectory(camera/mythen)
+	endif(LIMACAMERA_MYTHEN)
+
+	#MYTHEN3
+	if(LIMACAMERA_MYTHEN3)
+		add_subdirectory(camera/mythen3)
+	endif(LIMACAMERA_MYTHEN3)
+
+	#PILATUS
+	if(LIMACAMERA_PILATUS)
+		add_subdirectory(camera/pilatus)
+	endif(LIMACAMERA_PILATUS)
+
+	#PIXIRAD
+	if(LIMACAMERA_PIXIRAD)
+		add_subdirectory(camera/pixirad)
+	endif(LIMACAMERA_PIXIRAD)
+
+	#POINTGREY
+	if(LIMACAMERA_POINTGREY)
+		add_subdirectory(camera/pointgrey)
+	endif(LIMACAMERA_POINTGREY)
+
+	#PROSILICA
+	if(LIMACAMERA_PROSILICA)
+		add_subdirectory(camera/prosilica)
+	endif(LIMACAMERA_PROSILICA)
+	
+	#RAYONIX HS
+	if(LIMACAMERA_RAYONIXHS)
+		add_subdirectory(camera/rayonixhs)
+	endif(LIMACAMERA_RAYONIXHS)
+
+	#SLSDETECTOR
+	if(LIMACAMERA_SLSDETECTOR)
+		add_subdirectory(camera/slsdetector)
+	endif(LIMACAMERA_SLSDETECTOR)
+
+	#UEYE
+	if(LIMACAMERA_UEYE)
+		add_subdirectory(camera/ueye)
+	endif(LIMACAMERA_UEYE)
+
+	#ULTRA
+	if(LIMACAMERA_ULTRA)
+		add_subdirectory(camera/ultra)
+	endif(LIMACAMERA_ULTRA)
+
+	#V4L2
+	if(LIMACAMERA_V4L2)
+		add_subdirectory(camera/v4l2)
+	endif(LIMACAMERA_V4L2)
+
+	#XPAD
+	if(LIMACAMERA_XPAD)
+		add_subdirectory(camera/xpad)
+	endif(LIMACAMERA_XPAD)
+
+	#XH
+	if(LIMACAMERA_XH)
+		add_subdirectory(camera/xh)
+	endif(LIMACAMERA_XH)
+
+	#XSPRESS3
+	if(LIMACAMERA_XSPRESS3)
+		add_subdirectory(camera/xspress3)
+	endif(LIMACAMERA_XSPRESS3)
+
+	#ZWO
+	if(LIMACAMERA_ZWO)
+		add_subdirectory(camera/zwo)
+	endif(LIMACAMERA_ZWO)
+endif()
+
+#CAMERA ONLY WORKING ON WINDOWS
+if(WIN32)
+	#HAMAMATSU
+	if(LIMACAMERA_HAMAMATSU)
+        	add_subdirectory(camera/hamamatsu)
+	endif(LIMACAMERA_HAMAMATSU)
+
+	#PERKIN ELMER
+	if(LIMACAMERA_PERKINELMER)
+		add_subdirectory(camera/perkinelmer)
+	endif(LIMACAMERA_PERKINELMER)
+		
+	#PHOTONICSCIENCE
 	if(LIMACAMERA_PHOTONICSCIENCE)
 		add_subdirectory(camera/photonicscience)
 	endif(LIMACAMERA_PHOTONICSCIENCE)
