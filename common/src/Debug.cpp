@@ -25,6 +25,7 @@
 
 #include <ctime>
 #include <iomanip>
+#include <cstring>
 #include <unistd.h>
 #ifdef __unix
 #include <sys/time.h>
@@ -138,6 +139,7 @@ void DebParams::checkInit()
 void DebParams::setTypeFlags(Flags type_flags)
 { 
 	checkInit();
+	checkTypeFlags(type_flags);
 	s_type_flags = type_flags; 
 }
 
@@ -150,6 +152,7 @@ DebParams::Flags DebParams::getTypeFlags()
 void DebParams::enableTypeFlags(Flags type_flags)
 {
 	checkInit();
+	checkTypeFlags(type_flags);
 	s_type_flags |= type_flags;
 }
 
@@ -245,7 +248,10 @@ void DebParams::getFlagsNameList(Flags flags,
 void DebParams::setTypeFlagsNameList(const NameList& type_name_list)
 {
 	checkInit();
-	setFlagsNameList(s_type_flags, *s_type_name_map, type_name_list);
+	Flags type_flags = 0;
+	setFlagsNameList(type_flags, *s_type_name_map, type_name_list);
+	checkTypeFlags(type_flags);
+	s_type_flags = type_flags;
 }
 
 DebParams::NameList DebParams::getTypeFlagsNameList()
@@ -404,7 +410,8 @@ ostream& lima::operator <<(ostream& os,
  *  DebObj functions 
  *------------------------------------------------------------------*/
 
-void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
+void DebObj::heading(DebType type, ConstStr funct_name, ConstStr file_name, 
+		     int line_nr, DebObj *deb)
 {
 	ostream& os = *DebParams::s_deb_stream;
 	DebParams::Flags& flags = DebParams::s_fmt_flags;
@@ -437,7 +444,7 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		sep = " ";
 	}
 
-	if (DebHasFlag(flags, DebFmtIndent)) {
+	if (DebHasFlag(flags, DebFmtIndent) && deb) {
 		ThreadData *thread_data = getThreadData();
 		if (thread_data->indent < 0)
 			thread_data->indent = 0;
@@ -446,13 +453,13 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 		sep = " ";
 	}
 
-	if (DebHasFlag(flags, DebFmtModule)) {
-		os << "*" << DebParams::getModuleName(m_deb_params->m_mod)
+	if (DebHasFlag(flags, DebFmtModule) && deb) {
+		os << "*" << DebParams::getModuleName(deb->m_deb_params->m_mod)
 		   << "*";
 		sep = "";
 	}
 
-	if (DebHasFlag(flags, DebFmtObj) && ((m = m_obj_name))) {
+	if (DebHasFlag(flags, DebFmtObj) && deb && ((m = deb->m_obj_name))) {
 		os << sep << m;
 		sep = " ";
 	}
@@ -460,22 +467,22 @@ void DebObj::heading(DebType type, ConstStr file_name, int line_nr)
 	if (DebHasFlag(flags, DebFmtFunct)) {
 		ConstStr csep = sep;
 #ifndef WIN32
-		if ((m = m_deb_params->m_name_space)) {
+		if (deb && (m = deb->m_deb_params->m_name_space)) {
 			os << csep << m;
 			csep = "::";
 		}
-		if ((m = m_deb_params->m_class_name)) {
+		if (deb && (m = deb->m_deb_params->m_class_name)) {
 			os << csep << m;
 			csep = "::";
 		}
 #endif
-		if ((m = m_funct_name)) {
-			bool need_tilde = m_destructor && (m[0] != '~');
+		if (deb && (m = funct_name)) {
+			bool need_tilde = deb->m_destructor && (m[0] != '~');
 			ConstStr destruct = need_tilde ? "~" : "";
 			os << csep << destruct << m;
 			csep = "::";
 		}
-		if (string(csep) == "::")
+		if (strcmp(csep, "::") == 0)
 			sep = " ";
 	}
 

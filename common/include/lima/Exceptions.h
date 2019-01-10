@@ -125,7 +125,7 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os, const Exception& e);
 #define LIMA_HW_EXC(err_type, err_desc) \
 	LIMA_EXC(Hardware, err_type, err_desc)
 
-#ifndef NO_LIMA_DEBUG
+#ifndef LIMA_NO_DEBUG
 #define LIMA_EXC_DEB(layer, err_type, deb_err_type) \
 	Exception(layer, err_type, "", __FILE__, __FUNCTION__, __LINE__,\
 		  new DebProxy(DEB_MSG(deb_err_type)))
