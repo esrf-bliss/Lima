@@ -1,8 +1,10 @@
+# Set install dir for SIP files and CMake packages
+set(SIP_INSTALL_DIR ${CMAKE_INSTALL_DATADIR}/sip/lima)
+set(CMAKE_INSTALL_DIR ${CMAKE_INSTALL_DATADIR}/cmake/lima)
+
 if(NOT LIMA_BUILD_SUBMODULES)
     # Generate and install package config file and version
     set(PROJECT_LIBRARIES limacore h5bshuf)
-    set(SIP_INSTALL_DIR ${CMAKE_INSTALL_DATADIR}/sip/lima)
-    set(CMAKE_INSTALL_DIR ${CMAKE_INSTALL_DATADIR}/cmake/lima)
     include(cmake/package_config.cmake)
 endif()
 
