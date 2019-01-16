@@ -95,6 +95,7 @@ function(limatools_run_sip_for_camera camera)
   # Uses INCLUDES and IMPORTS
   find_file(module_sip_file NAMES "limamodules.sip.in" PATHS ${LIMA_SIP_INCLUDE_DIRS} NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
   configure_file(${module_sip_file} sip/${MODULE_NAME}.sip)
+  unset(module_sip_file CACHE)
   list(APPEND SIP_INCLUDE_DIRS
     ${LIMA_SIP_INCLUDE_DIRS}
     ${PROCESSLIB_SIP_INCLUDE_DIRS}

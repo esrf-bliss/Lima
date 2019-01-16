@@ -106,7 +106,7 @@ if OS_TYPE not in ['Linux', 'Windows']:
 	sys.exit('Platform not supported: ' + OS_TYPE)
 
 def exec_cmd(cmd, exc_msg=''):
-	print('Executing:' + cmd)
+	print('Executing: ' + cmd)
 	sys.stdout.flush()
 	ret = os.system(cmd)
 	if ret != 0:
@@ -125,11 +125,15 @@ class Config:
 
 	bool_map = {'yes': True, 'no': False}
 
+        @classmethod
+        def default_coding(klass, o):
+                return '__%s__' % o
+
 	@classmethod
 	def get_bool_opt_default(klass, val):
 		for o, v in klass.bool_map.items():
 			if val == v:
-				return '__%s__' % o
+				return klass.default_coding(o)
 		raise ValueError('Invalid value: ' + val)
 
 	# return (val, explicit), where explicit is True if val was
@@ -140,7 +144,7 @@ class Config:
 		for o, v in klass.bool_map.items():
 			if val == o:
 				return v, True
-			if val == '__%s__' % o:
+			if val == klass.default_coding(o):
 				return v, False
 		raise ValueError('Invalid value: ' + val)
 		
@@ -178,6 +182,9 @@ class Config:
 		parser.add_argument('--config-file', 
 				    default='scripts/config.txt',
 				    help='file with configuration options')
+		parser.add_argument('--full-cmake-config',
+				    default=self.get_bool_opt_default(False),
+				    help='pass all config options to CMAKE')
 		parser.add_argument('--build-prefix', default='build',
 				    help='directory where binaries are built')
 		parser.add_argument('--build-type', default=build_type,
@@ -209,7 +216,20 @@ class Config:
 						 'together with prefix-path')
 			self.set_cmd('prefix-path', prefix_path)
 
-		# do install if not explicitly specified and user
+                val = self.get('full-cmake-config')
+                full_config, explicit = self.get_bool_opt(val)
+                build_prefix = self.get('build-prefix')
+                cmake_cache = os.path.join(build_prefix, 'CMakeCache.txt')
+                if not full_config and os.path.exists(cmake_cache):
+                        if not explicit:
+                                print('CMake cache found: passing full config')
+                                full_config = True
+                        else:
+                                print('Warning: CMake cache found and '
+                                      'requested to NOT pass the full config!')
+                self.set_cmd('full-cmake-config', full_config)
+
+                # do install if not explicitly specified and user
 		# included install-[python-]prefix
 		install, explicit = self.get_bool_opt(self.get('install'))
 		install_prefix = (self.get('install-prefix') or 
@@ -314,11 +334,12 @@ class CMakeOptions:
 		cmd_opts = self.cfg.get_cmd_options()
 		config_opts = self.cfg.get_config_options()
 
-		def is_active(v):
+		def is_active(val):
 			if type(val) in [bool, int]:
 				return val
 			return val and (val.lower() not in [str(0), 'no'])
 
+                full_config = cmd_opts.get('full-cmake-config')
 		cmake_opts = cmd_opts['cmake-opts']
 		for opt, val in config_opts:
 			for cmd_opt, cmd_val in cmd_opts.items():
@@ -333,7 +354,7 @@ class CMakeOptions:
 				    (t[0][-1] == '-') and not t[1]):
 					val = cmd_val
 					break
-			if is_active(val):
+			if is_active(val) or full_config:
 				cmake_opts.append((opt, val))
 
 		cmd_2_cmake_map = (self.cmd_2_cmake_map.get('Common') +
@@ -361,8 +382,8 @@ class CMakeOptions:
 			if platform.architecture()[0] == '64bit':
 				win_compiler += ' Win64' 
 
-			print ('Found Python ', sys.version)
-			print ('Used compiler: ', win_compiler)
+			print('Found Python ', sys.version)
+			print('Used compiler: ', win_compiler)
 			cmake_gen = win_compiler
 
 		source_prefix = self.cfg.get('source-prefix')
@@ -410,8 +431,7 @@ class CMakeOptions:
 class GitHelper:
 
 	not_submodules = (
-		'git', 'python', 'tests', 'test', 'cbf', 'lz4', 'fits', 'gz', 
-		'tiff', 'hdf5'
+		'python', 'tests', 'cbf', 'lz4', 'fits', 'gz', 'tiff', 'hdf5',
 	)
 
 	submodule_map = {
@@ -484,7 +504,7 @@ def build_install_lima(cfg):
 
 	cmake_cmd = cmake_opts.get_build_options()
 	exec_cmd(cmake_cmd, ('CMake could not build Lima. ' + 
-			     'Pleae contact lima@esrf.fr for help.'))
+			     'Please contact lima@esrf.fr for help.'))
 
 	if not cfg.is_install_required():
 		return
