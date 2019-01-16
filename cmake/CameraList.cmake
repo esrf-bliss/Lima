@@ -39,7 +39,20 @@ if(DEFINED ENV{LIMACAMERA_BASLER})
 else()
     set(LIMACAMERA_BASLER OFF CACHE BOOL "compile basler?")
 endif()
-	
+if(LIMACAMERA_BASLER)
+    add_subdirectory(camera/basler)
+endif(LIMACAMERA_BASLER)
+  
+#META
+if(DEFINED ENV{LIMACAMERA_META})
+    set(LIMACAMERA_META "$ENV{LIMACAMERA_META}" CACHE BOOL "compile meta?" FORCE)
+else()
+    set(LIMACAMERA_META ON CACHE BOOL "compile meta?")
+endif()
+if(LIMACAMERA_META)
+    add_subdirectory(camera/common/meta)
+endif(LIMACAMERA_META)
+
 #PCO
 if(DEFINED ENV{LIMACAMERA_PCO})
     set(LIMACAMERA_PCO "$ENV{LIMACAMERA_PCO}" CACHE BOOL "compile pco?" FORCE)

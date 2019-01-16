@@ -23,6 +23,7 @@
 ############################################################################
 
 LIMACAMERA_SIMULATOR=1
+LIMACAMERA_META=1
 LIMACAMERA_PILATUS=0
 LIMACAMERA_BASLER=0
 LIMACAMERA_PROSILICA=0
