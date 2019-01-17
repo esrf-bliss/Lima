@@ -133,6 +133,8 @@ void CtSpsImage::_check_data_size(Data &data)
 	case Data::UINT32: image_type = Bpp32; break;
 	case Data::INT32: image_type = Bpp32S; break;
 	case Data::FLOAT: image_type = Bpp32F; break;
+	case Data::UINT64: image_type = Bpp64; break;
+	case Data::INT64: image_type = Bpp64S; break;
 	default:
 		THROW_CTL_ERROR(InvalidValue) << "Invalid " 
 					      << DEB_VAR1(data.type);
