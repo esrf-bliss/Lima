@@ -130,6 +130,3 @@
 [submodule "camera/simulator"]
 	path = camera/simulator
 	url = ../Lima-camera-simulator.git
-[submodule "camera/common/meta"]
-	path = camera/common/meta
-	url = ../Lima-camera-meta.git
