@@ -2145,7 +2145,8 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
   Timestamp diff = end_write - start_write;
   DEB_TRACE() << "Write took : " << diff << "s";
 
-  writeFileStat(aData, start_write, end_write, write_size);
+  if (m_log_stat_enable)
+    writeFileStat(aData, start_write, end_write, write_size);
 }
 
 void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timestamp end, long wsize)
