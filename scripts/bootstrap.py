@@ -93,6 +93,7 @@ Examples:
 
 	This is equivalent to adding the following options in config.txt:
 	   + LIMA_ENABLE_TESTS=1
+	   + CAMERA_ENABLE_TESTS=1
 	   + CMAKE_INSTALL_PREFIX=<path_to_home>
 
     ONLY ON LINUX:
@@ -125,9 +126,9 @@ class Config:
 
 	bool_map = {'yes': True, 'no': False}
 
-        @classmethod
-        def default_coding(klass, o):
-                return '__%s__' % o
+	@classmethod
+	def default_coding(klass, o):
+		return '__%s__' % o
 
 	@classmethod
 	def get_bool_opt_default(klass, val):
@@ -216,20 +217,20 @@ class Config:
 						 'together with prefix-path')
 			self.set_cmd('prefix-path', prefix_path)
 
-                val = self.get('full-cmake-config')
-                full_config, explicit = self.get_bool_opt(val)
-                build_prefix = self.get('build-prefix')
-                cmake_cache = os.path.join(build_prefix, 'CMakeCache.txt')
-                if not full_config and os.path.exists(cmake_cache):
-                        if not explicit:
-                                print('CMake cache found: passing full config')
-                                full_config = True
-                        else:
-                                print('Warning: CMake cache found and '
-                                      'requested to NOT pass the full config!')
-                self.set_cmd('full-cmake-config', full_config)
+		val = self.get('full-cmake-config')
+		full_config, explicit = self.get_bool_opt(val)
+		build_prefix = self.get('build-prefix')
+		cmake_cache = os.path.join(build_prefix, 'CMakeCache.txt')
+		if not full_config and os.path.exists(cmake_cache):
+			if not explicit:
+				print('CMake cache found: passing full config')
+				full_config = True
+			else:
+				print('Warning: CMake cache found and '
+				      'requested to NOT pass the full config!')
+		self.set_cmd('full-cmake-config', full_config)
 
-                # do install if not explicitly specified and user
+		# do install if not explicitly specified and user
 		# included install-[python-]prefix
 		install, explicit = self.get_bool_opt(self.get('install'))
 		install_prefix = (self.get('install-prefix') or 
@@ -339,7 +340,7 @@ class CMakeOptions:
 				return val
 			return val and (val.lower() not in [str(0), 'no'])
 
-                full_config = cmd_opts.get('full-cmake-config')
+		full_config = cmd_opts.get('full-cmake-config')
 		cmake_opts = cmd_opts['cmake-opts']
 		for opt, val in config_opts:
 			for cmd_opt, cmd_val in cmd_opts.items():
