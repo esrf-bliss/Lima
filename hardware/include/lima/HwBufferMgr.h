@@ -48,6 +48,10 @@ class LIMACORE_API BufferAllocMgr
 	BufferAllocMgr();
 	virtual ~BufferAllocMgr();
 
+	// BufferAllocMgr are **not** copy-constructible nor copy-assignable.
+	BufferAllocMgr(const BufferAllocMgr&) = delete;
+	BufferAllocMgr& operator=(const BufferAllocMgr&) = delete;
+
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
 	virtual void allocBuffers(int nb_buffers, 
 				  const FrameDim& frame_dim) = 0;
@@ -87,7 +91,7 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	virtual void *getBufferPtr(int buffer_nb);
 	
  private:
-	typedef std::vector<MemBuffer *> BufferList;
+	typedef std::vector<MemBuffer> BufferList;
 	typedef BufferList::const_reverse_iterator BufferListCRIt;
 
 	FrameDim m_frame_dim;
