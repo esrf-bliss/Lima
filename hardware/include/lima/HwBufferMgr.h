@@ -89,6 +89,11 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	virtual void releaseBuffers();
 
 	virtual void *getBufferPtr(int buffer_nb);
+
+#ifdef LIMA_USE_NUMA
+	void setCPUAffinityMask(unsigned long  cpu_mask);
+	void getCPUAffinityMask(unsigned long& cpu_mask);
+#endif
 	
  private:
 	typedef std::vector<MemBuffer> BufferList;
@@ -96,6 +101,10 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 
 	FrameDim m_frame_dim;
 	BufferList m_buffer_list;
+
+#ifdef LIMA_USE_NUMA
+	unsigned long m_cpu_mask;
+#endif
 };
 
 
@@ -304,6 +313,11 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 
 	virtual void   registerFrameCallback(HwFrameCallback& frame_cb);
 	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb);
+
+#ifdef LIMA_USE_NUMA
+	void setCPUAffinityMask(unsigned long  cpu_mask);
+	void getCPUAffinityMask(unsigned long& cpu_mask);
+#endif
 
 	StdBufferCbMgr&  getBuffer();
 

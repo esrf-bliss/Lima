@@ -56,6 +56,10 @@ class LIMACORE_API MemBuffer
 	MemBuffer(MemBuffer&&) = default;
 	MemBuffer& operator=(MemBuffer&&) = default;
 
+#ifdef LIMA_USE_NUMA
+	void setCPUAffinityMask(unsigned long cpu_mask);
+#endif
+
 	void alloc(int size);
 	void deepCopy(const MemBuffer& buffer);
 	void release();
@@ -66,12 +70,57 @@ class LIMACORE_API MemBuffer
 
 	void clear();
 
-	operator void*();
-	operator const void*() const;
+	operator void *();
+	operator const void *() const;
 
  private:
+	class Allocator
+	{
+	public:
+		virtual void alloc(MemBuffer& buffer, int& size);
+		virtual void init(MemBuffer& buffer);
+		virtual void copy(MemBuffer& buffer, const MemBuffer& src);
+		virtual void clear(MemBuffer& buffer);
+		virtual void release(MemBuffer& buffer);
+
+		static Allocator *getAllocator();
+
+		static int getPageAlignedSize(int size);
+#ifdef __unix
+		static bool useMmap(int size);
+		static void *allocMmap(int& size);
+#endif
+	};
+	friend class Allocator;
+
+	void init();
+	void allocMemory(int& size);
+	void initMemory();
+
 	int m_size;
 	void *m_ptr;
+	Allocator *m_allocator;
+
+#ifdef LIMA_USE_NUMA
+	class NumaAllocator : public Allocator
+	{
+	public:
+		virtual void alloc(MemBuffer& buffer, int& size);
+		virtual void init(MemBuffer& buffer);
+		virtual void copy(MemBuffer& buffer, const MemBuffer& src);
+		virtual void clear(MemBuffer& buffer);
+		virtual void release(MemBuffer& buffer);
+
+		static NumaAllocator *getAllocator();
+
+		void getNUMANodeMask(unsigned long cpu_mask,
+				     unsigned long& node_mask,
+				     int& max_node);
+	};
+	friend class NumaAllocator;
+
+	unsigned long m_cpu_mask;
+#endif
 };
 
 inline int MemBuffer::getSize() const
@@ -98,8 +147,6 @@ inline MemBuffer::operator const void *() const
 {
 	return getConstPtr();
 }
-
-
 
 } // namespace lima
 

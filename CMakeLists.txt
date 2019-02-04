@@ -60,6 +60,11 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include(LimaTools)
 
+if(UNIX AND LIMA_ENABLE_NUMA)
+    # Numa is needed for advanced buffer management
+    find_package(Numa REQUIRED)
+endif()
+
 # Import pthread
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
@@ -253,6 +258,11 @@ if(LIMA_BUILD_SUBMODULES)
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/tasks/include>")
 endif()
 
+if(UNIX AND LIMA_ENABLE_NUMA)
+    add_compile_definitions(LIMA_USE_NUMA)
+    target_include_directories(limacore PRIVATE "${NUMA_INCLUDE_DIR}")
+endif()
+
 if(LIMA_ENABLE_SPS_IMAGE)
     target_compile_definitions(limacore PUBLIC -DWITH_SPS_IMAGE)
     target_include_directories(limacore PRIVATE "${CMAKE_SOURCE_DIR}/third-party/Sps/Include")
@@ -275,6 +285,9 @@ target_link_libraries(limacore PRIVATE ${saving_private_libs})
 if(UNIX)
     target_compile_definitions(limacore PUBLIC -DHAS_INOTIFY)
     target_link_libraries(limacore PUBLIC "rt")
+    if(LIMA_ENABLE_NUMA)
+        target_link_libraries(limacore PUBLIC ${NUMA_LIBRARY})
+    endif()
 endif()
 
 if(WIN32)

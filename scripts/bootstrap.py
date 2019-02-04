@@ -433,6 +433,7 @@ class GitHelper:
 
 	not_submodules = (
 		'python', 'tests', 'cbf', 'lz4', 'fits', 'gz', 'tiff', 'hdf5',
+		'numa',
 	)
 
 	submodule_map = {
