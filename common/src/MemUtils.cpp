@@ -109,8 +109,8 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 
 MemBuffer::Allocator *MemBuffer::Allocator::getAllocator()
 {
-	static Allocator *allocator = new Allocator();
-	return allocator;
+	static Allocator allocator;
+	return &allocator;
 }
 
 void MemBuffer::Allocator::alloc(MemBuffer& buffer, int& size)
@@ -347,8 +347,8 @@ void MemBuffer::NumaAllocator::release(MemBuffer& buffer)
 
 MemBuffer::NumaAllocator *MemBuffer::NumaAllocator::getAllocator()
 {
-	static NumaAllocator *allocator = new NumaAllocator();
-	return allocator;
+	static NumaAllocator allocator;
+	return &allocator;
 }
 
 void MemBuffer::NumaAllocator::getNUMANodeMask(unsigned long cpu_mask,

@@ -77,19 +77,30 @@ class LIMACORE_API MemBuffer
 	class Allocator
 	{
 	public:
+		// Allocate a buffer of a given size 
 		virtual void alloc(MemBuffer& buffer, int& size);
+		// Fill buffer with zeros (hot page)
 		virtual void init(MemBuffer& buffer);
-		virtual void copy(MemBuffer& buffer, const MemBuffer& src);
+		// Copy a buffer from src to dst
+		virtual void copy(MemBuffer& dst, const MemBuffer& src);
+		// Fill buffer with zeros
 		virtual void clear(MemBuffer& buffer);
+		// 
 		virtual void release(MemBuffer& buffer);
 
+		// Returns a Singleton
 		static Allocator *getAllocator();
 
+		// Returns the size of a page aligned buffer (multiple of page size)
 		static int getPageAlignedSize(int size);
 #ifdef __unix
+		// Returns true if mmap is available
 		static bool useMmap(int size);
+		// Allocate a buffer with mmap (virtual address mapping)
 		static void *allocMmap(int& size);
 #endif
+	private:
+		Allocator() {}
 	};
 	friend class Allocator;
 
@@ -107,19 +118,22 @@ class LIMACORE_API MemBuffer
 	public:
 		virtual void alloc(MemBuffer& buffer, int& size);
 		virtual void init(MemBuffer& buffer);
-		virtual void copy(MemBuffer& buffer, const MemBuffer& src);
+		virtual void copy(MemBuffer& dst, const MemBuffer& src);
 		virtual void clear(MemBuffer& buffer);
 		virtual void release(MemBuffer& buffer);
 
+		// Returns a Singleton
 		static NumaAllocator *getAllocator();
 
+		// Given a cpu_mask, returns the memory node mask
+		// used by alloc to bind memory with the proper socket
 		void getNUMANodeMask(unsigned long cpu_mask,
 				     unsigned long& node_mask,
 				     int& max_node);
 	};
 	friend class NumaAllocator;
 
-	unsigned long m_cpu_mask;
+	unsigned long m_cpu_mask; //<! if NUMA is used, keep the cpu_mask for later use
 #endif
 };
 
