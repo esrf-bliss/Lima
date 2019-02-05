@@ -99,7 +99,7 @@ class LIMACORE_API MemBuffer
 		// Allocate a buffer with mmap (virtual address mapping)
 		static void *allocMmap(int& size);
 #endif
-	private:
+	protected:
 		Allocator() {}
 	};
 	friend class Allocator;
