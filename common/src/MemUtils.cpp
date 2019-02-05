@@ -228,7 +228,6 @@ inline void MemBuffer::init()
 	m_allocator = NULL;
 #ifdef LIMA_USE_NUMA
 	m_cpu_mask = 0;
-	setCPUAffinityMask(1);
 #endif
 }
 
