@@ -15,6 +15,7 @@ find_dependency(Threads)
 # Add optional dependencies here
 #find_dependency(HDF5)
 
+set(@PROJECT_NAME_UPPER@_ENABLE_NUMA "@LIMA_ENABLE_NUMA@")
 set(@PROJECT_NAME_UPPER@_SIP_DISABLE_FEATURES "@SIP_DISABLE_FEATURES@")
 
 set_and_check(@PROJECT_NAME_UPPER@_SIP_INCLUDE_DIRS "@PACKAGE_SIP_INSTALL_DIR@")
