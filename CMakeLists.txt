@@ -259,12 +259,12 @@ if(LIMA_BUILD_SUBMODULES)
 endif()
 
 if(UNIX AND LIMA_ENABLE_NUMA)
-    add_compile_definitions(LIMA_USE_NUMA)
+    target_compile_definitions(limacore PUBLIC LIMA_USE_NUMA)
     target_include_directories(limacore PRIVATE "${NUMA_INCLUDE_DIR}")
 endif()
 
 if(LIMA_ENABLE_SPS_IMAGE)
-    target_compile_definitions(limacore PUBLIC -DWITH_SPS_IMAGE)
+    target_compile_definitions(limacore PUBLIC WITH_SPS_IMAGE)
     target_include_directories(limacore PRIVATE "${CMAKE_SOURCE_DIR}/third-party/Sps/Include")
 endif()
 
