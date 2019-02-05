@@ -56,6 +56,10 @@ class LIMACORE_API MemBuffer
 	MemBuffer(MemBuffer&&) = default;
 	MemBuffer& operator=(MemBuffer&&) = default;
 
+#ifdef LIMA_USE_NUMA
+	void setCPUAffinityMask(unsigned long cpu_mask);
+#endif
+
 	void alloc(int size);
 	void deepCopy(const MemBuffer& buffer);
 	void release();
@@ -66,12 +70,71 @@ class LIMACORE_API MemBuffer
 
 	void clear();
 
-	operator void*();
-	operator const void*() const;
+	operator void *();
+	operator const void *() const;
 
  private:
+	class Allocator
+	{
+	public:
+		// Allocate a buffer of a given size 
+		virtual void alloc(MemBuffer& buffer, int& size);
+		// Fill buffer with zeros (hot page)
+		virtual void init(MemBuffer& buffer);
+		// Copy a buffer from src to dst
+		virtual void copy(MemBuffer& dst, const MemBuffer& src);
+		// Fill buffer with zeros
+		virtual void clear(MemBuffer& buffer);
+		// 
+		virtual void release(MemBuffer& buffer);
+
+		// Returns a Singleton
+		static Allocator *getAllocator();
+
+		// Returns the size of a page aligned buffer (multiple of page size)
+		static int getPageAlignedSize(int size);
+#ifdef __unix
+		// Returns true if mmap is available
+		static bool useMmap(int size);
+		// Allocate a buffer with mmap (virtual address mapping)
+		static void *allocMmap(int& size);
+#endif
+	protected:
+		Allocator() {}
+	};
+	friend class Allocator;
+
+	void init();
+	void allocMemory(int& size);
+	void initMemory();
+
 	int m_size;
 	void *m_ptr;
+	Allocator *m_allocator;
+
+#ifdef LIMA_USE_NUMA
+	class NumaAllocator : public Allocator
+	{
+	public:
+		virtual void alloc(MemBuffer& buffer, int& size);
+		virtual void init(MemBuffer& buffer);
+		virtual void copy(MemBuffer& dst, const MemBuffer& src);
+		virtual void clear(MemBuffer& buffer);
+		virtual void release(MemBuffer& buffer);
+
+		// Returns a Singleton
+		static NumaAllocator *getAllocator();
+
+		// Given a cpu_mask, returns the memory node mask
+		// used by alloc to bind memory with the proper socket
+		void getNUMANodeMask(unsigned long cpu_mask,
+				     unsigned long& node_mask,
+				     int& max_node);
+	};
+	friend class NumaAllocator;
+
+	unsigned long m_cpu_mask; //<! if NUMA is used, keep the cpu_mask for later use
+#endif
 };
 
 inline int MemBuffer::getSize() const
@@ -98,8 +161,6 @@ inline MemBuffer::operator const void *() const
 {
 	return getConstPtr();
 }
-
-
 
 } // namespace lima
 

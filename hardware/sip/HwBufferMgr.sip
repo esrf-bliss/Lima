@@ -42,7 +42,7 @@ using namespace lima;
 	virtual void clearAllBuffers();
 
  private:
-	BufferAllocMgr(const BufferAllocMgr&);
+	BufferAllocMgr(const BufferAllocMgr& o);
 };
 
 class SoftBufferAllocMgr : BufferAllocMgr
@@ -181,4 +181,42 @@ using namespace lima;
 
 	BufferCbMgr& getAcqBufferMgr();
 	AcqMode getAcqMode();
+};
+
+
+class SoftBufferCtrlObj : public HwBufferCtrlObj
+{
+%TypeHeaderCode
+#include "lima/HwBufferMgr.h"
+using namespace lima;
+%End
+ public:
+	SoftBufferCtrlObj();
+
+	virtual void setFrameDim(const FrameDim& frame_dim);
+	virtual void getFrameDim(FrameDim& frame_dim /Out/);
+
+	virtual void setNbBuffers(int  nb_buffers);
+	virtual void getNbBuffers(int& nb_buffers /Out/);
+
+	virtual void setNbConcatFrames(int nb_concat_frames);
+	virtual void getNbConcatFrames(int& nb_concat_frames /Out/);
+
+	virtual void getMaxNbBuffers(int& max_nb_buffers /Out/);
+
+	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb = 0);
+	virtual void *getFramePtr(int acq_frame_nb);
+
+	virtual void getStartTimestamp(Timestamp& start_ts /Out/);
+	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info /Out/);
+
+	virtual void   registerFrameCallback(HwFrameCallback& frame_cb);
+	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb);
+
+	StdBufferCbMgr&  getBuffer();
+
+	int getNbAcquiredFrames();
+
+ private:
+	SoftBufferCtrlObj(const SoftBufferCtrlObj& o);
 };
