@@ -48,12 +48,14 @@ requirements:
     - libnuma       # [linux]
 
 test:
-  requires:
-    - cmake
-    - python {{ python }}
+  # requires:
+  #   - cmake
+  #   - python {{ python }}
   imports:
     - Lima.Core
-  #commands:
+  downstreams:
+    - lima-camera-simulator
+  # commands:
   #  - cd build
   #  - ctest --timeout 10 --output-on-failure
 
