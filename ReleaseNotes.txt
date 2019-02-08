@@ -3,14 +3,31 @@ LIMA Release Notes
 This is the release notes of LIMA, the library for image acquisition.
 
 You can find information related to new features and bug fixes. The notes are ordered by branch and release number.
-The notes are prefixed with a category name for core, subsystems image/saving/processlib/..., camera names andor/andor3/basler...,  windows, applications tango python/tango c++/spec and third-party submodules sps/processlib/...
 
-Stable branch core-1.8
-----------------------
+Version v1.8.0 released on February 2nd 2019
+--------------------------------------------
 
-Revamp the build system to use CMake, a cross-platform family of tools designed to build, test and package software.
+With this release we introduced the following new features:
 
-Bug Fixes
+ * Build system has been refactored to use CMake, a cross-platform build system (Windows and Linux)
+ * Building camera either standalone or using Lima as master project
+ * Better support for C++ developers (with CMake packages)
+ * Install.(sh|bat) to ease build and installation for CMake averse :-)
+ * Conda binary packages for processlib, LImA core and some cameras and pytango device server
+ * Support for Python 3
+ * CI running on ESRF's Gitlab instance
+ * Documentation improvements and migrated to ReadTheDocs (https://lima1.readthedocs.io)
+ * Use semantic versionning
+ * New HDF5 layout, direct chunk and bitshuffle LZ4 / gzip compression support
+ * New BPM pytango plugin, Beam Position Monitor
+ * Simulator improvements (new prefetch and read from files modes)
+
+## New camera plugins
+
+ * ZWO camera plugin (thanks to Jens Krueger)
+ * SlsDetector (PSI Eiger) camera plugin (thanks to Alejandro Homs)
+ * FLI (Finger Lake Instrument) camera plugin (thanks to Laurent Claustre)
+ * Lambda (Quantum) camera plugin (thanks to Teresa Nunez)
 
 Stable branch core-1.7
 ----------------------
