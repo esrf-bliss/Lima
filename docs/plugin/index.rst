@@ -46,7 +46,7 @@ Hardware Interface
 
 The :cpp:func:`lima::HwInterface::getStatus` member function should return the following information:
 
-.. doxygenstruct:: lima::HwInterface::StatusType
+.. doxygenstruct:: lima::HwInterface::Status
     :project: hardware
     :members:
 

@@ -39,15 +39,23 @@ class LIMACORE_API HwInterface
  public:
 	typedef std::vector<HwCap> CapList;
 
-  /// A tuple of status with acquisition and detector status / mask
+	/// A tuple of status with acquisition and detector status / mask
 	typedef struct Status
 	{
-		enum Basic {Fault, Ready, Exposure, Readout, Latency, Config};
+		/// Basic detector states (some detectors may have additional states)
+		enum Basic {
+			Fault,	//!< Fault
+			Ready,	//!< Ready for acquisition
+			Exposure,	//!< Counting photons
+			Readout,	//!< Reading data from the chip
+			Latency,	//!< Latency between exposures
+			Config	//!< Fault
+		};
 		inline void set(Basic);
 
 		AcqStatus acq;			//!< Global acquisition status.
 		DetStatus det;			//!< Compound bit flags specifying the current detector status.
-		DetStatus det_mask;	//!< A mask specifying the detector status bits that are supported by the hardware.
+		DetStatus det_mask;		//!< A mask specifying the detector status bits that are supported by the hardware.
 	} StatusType;
 
 	enum ResetLevel {
