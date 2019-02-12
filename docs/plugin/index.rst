@@ -171,9 +171,12 @@ A good practice would be not to pollute the base environment and work in a dedic
 
 Then install the build tools:
 
+For linux
 ::
 
    conda install cmake gxx_linux-64
+
+For windows, just be sure you have visual studio 2017 x64 installed
 
 You might need to leave the `Conda` environment and enter it again so that the environment variables (`CXX`) needed by CMake are set:
 
@@ -206,10 +209,20 @@ Once you have your new repo ready, clone it and happy coding!
 
 Once you are ready to build, here are the typical `CMake`_ commands for an out of source build (in the `build` folder) and for installing in the current Conda environment (``$CONDA_PREFIX``)
 
+For linux:
+
 ::
 
   cmake -Bbuild -H. -DCAMERA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=$CONDA_PREFIX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DPYTHON_SITE_PACKAGES_DIR=$CONDA_PREFIX/<Python site package location>
-  cmake --build build --target install
+  cmake --build build --target install --config Release
+
+For windows:
+
+::
+
+  cmake -Bbuild -H. -DCAMERA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=%CONDA_PREFIX% -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX% -DPYTHON_SITE_PACKAGES_DIR=%CONDA_PREFIX%/<Python site package location>
+  cmake --build build --target install --config Release
+
 
 .. _Conda: https://conda.io/docs
 .. _Miniconda: https://conda.io/miniconda.html
