@@ -184,7 +184,7 @@ class Config:
 				    default='scripts/config.txt',
 				    help='file with configuration options')
 		parser.add_argument('--full-cmake-config',
-				    default=self.get_bool_opt_default(False),
+				    default=self.get_bool_opt_default(True),
 				    help='pass all config options to CMAKE')
 		parser.add_argument('--build-prefix', default='build',
 				    help='directory where binaries are built')
@@ -222,12 +222,8 @@ class Config:
 		build_prefix = self.get('build-prefix')
 		cmake_cache = os.path.join(build_prefix, 'CMakeCache.txt')
 		if not full_config and os.path.exists(cmake_cache):
-			if not explicit:
-				print('CMake cache found: passing full config')
-				full_config = True
-			else:
-				print('Warning: CMake cache found and '
-				      'requested to NOT pass the full config!')
+			print('Warning: CMake cache found and '
+			      'requested to NOT pass the full config!')
 		self.set_cmd('full-cmake-config', full_config)
 
 		# do install if not explicitly specified and user
