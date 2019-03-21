@@ -91,12 +91,82 @@ void test_alloc()
 	assert(g.getSize() == 1);
 }
 
+
+struct MockAllocator : lima::Allocator
+{
+	virtual void alloc(void* &ptr, size_t size, size_t alignement = 16) override
+	{
+		ptr = malloc(size);
+	}
+
+	virtual void init(void* ptr, size_t size) override
+	{
+		memset(ptr, 0, size);
+	}
+
+	virtual void release(void* ptr) override
+	{
+		assert(ptr);
+		free(ptr);
+	}
+
+	static MockAllocator *getAllocator()
+	{
+		static MockAllocator instance;
+		return &instance;
+	}
+};
+
+
+void test_custom_allocator()
+{
+	MockAllocator allocator;
+
+	//Default construction
+	MemBuffer b(1, &allocator);
+	assert(b.getSize() == 1);
+	assert(b.getAllocator() == &allocator);
+
+	//Copy construction
+	MemBuffer c(b);
+	assert(c.getSize() == 1);
+	assert(c.getConstPtr() != b.getConstPtr());
+	assert(c.getAllocator() == &allocator);
+
+	//Copy assignement
+	MemBuffer d = b;
+	assert(d.getSize() == 1);
+	assert(d.getConstPtr() != b.getConstPtr());
+	assert(d.getAllocator() == &allocator);
+
+	//Move construction
+	const void *ptr = b.getConstPtr();
+	MemBuffer e(std::move(b));
+	assert(e.getSize() == 1);
+	assert(e.getConstPtr() == ptr);
+	assert(b.getConstPtr() == nullptr);
+	assert(b.getSize() == 0);
+	assert(e.getAllocator() == &allocator);
+
+	//Move assignement
+	MemBuffer f = std::move(e);
+	assert(f.getSize() == 1);
+	assert(f.getConstPtr() == ptr);
+	assert(e.getConstPtr() == nullptr);
+	assert(e.getSize() == 0);
+	assert(f.getAllocator() == &allocator);
+}
+
+
 int main(int argc, char *argv[])
 {
 	try {
 		test_empty();
 
 		test_alloc();
+
+		test_custom_allocator();
+
 	} catch (Exception e) {
 		std::cerr << "LIMA Exception: " << e << std::endl;
 	}
