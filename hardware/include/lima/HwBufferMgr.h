@@ -27,6 +27,7 @@
 #include "lima/HwBufferCtrlObj.h"
 #include "lima/MemUtils.h"
 
+#include <memory>
 #include <vector>
 #include <set>
 
@@ -82,31 +83,65 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	virtual ~SoftBufferAllocMgr();
 
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
-	virtual void allocBuffers(int nb_buffers, 
-				  const FrameDim& frame_dim);
+	virtual void allocBuffers(int nb_buffers, const FrameDim& frame_dim) override;
 	virtual const FrameDim& getFrameDim();
 	virtual void getNbBuffers(int& nb_buffers);
 	virtual void releaseBuffers();
 
 	virtual void *getBufferPtr(int buffer_nb);
 
-#ifdef LIMA_USE_NUMA
-	void setCPUAffinityMask(unsigned long  cpu_mask);
-	void getCPUAffinityMask(unsigned long& cpu_mask);
-#endif
-	
- private:
+ protected:
 	typedef std::vector<MemBuffer> BufferList;
 	typedef BufferList::const_reverse_iterator BufferListCRIt;
 
 	FrameDim m_frame_dim;
 	BufferList m_buffer_list;
-
-#ifdef LIMA_USE_NUMA
-	unsigned long m_cpu_mask;
-#endif
 };
 
+
+#ifdef LIMA_USE_NUMA
+
+/// MemBufferGroup is a group of buffers that share some properties
+/// such as the allocator (but more could be added)
+template <typename Iterator>
+struct MemBufferGroup
+{
+	MemBufferGroup(unsigned long cpu_mask) : allocator(cpu_mask) {}
+
+	NumaAllocator allocator;
+	Iterator begin;
+	Iterator end;
+};
+
+/// A SoftBufferAllocMgr that manages groups of buffer that have different allocators
+class LIMACORE_API NumaSoftBufferAllocMgr : public SoftBufferAllocMgr
+{
+	DEB_CLASS(DebModHardware, "NumaSoftBufferAllocMgr");
+
+ public:
+	NumaSoftBufferAllocMgr() {}
+	virtual ~NumaSoftBufferAllocMgr() = default;
+
+	virtual void allocBufferGroup(size_t nb_buffers, unsigned long cpu_mask, const FrameDim& frame_dim)
+	{
+		Group group(cpu_mask);
+
+		//Allocate the buffers per groups
+		group.begin = m_buffer_list.end();
+		m_buffer_list.resize(nb_buffers, MemBuffer(&group.allocator));
+		group.end = m_buffer_list.end();
+
+		m_buffer_groups.emplace_back(group);
+	}
+
+ private:
+	typedef MemBufferGroup<BufferList::iterator> Group;
+	typedef std::vector<Group> Groups;
+
+	Groups m_buffer_groups;
+};
+
+#endif //LIMA_USE_NUMA
 
 /*******************************************************************
  * \class BufferCbMgr
@@ -289,10 +324,11 @@ class LIMACORE_API BufferCtrlMgr : public HwFrameCallbackGen
 
 /// This class is a basic HwBufferCtrlObj software allocation implementation,
 /// It can be directly provided to the control layer as a HwBufferCtrlObj.
-class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
+class LIMACORE_API BasicSoftBufferCtrlObj : public HwBufferCtrlObj
 {
- public:
-	SoftBufferCtrlObj();
+public:
+	BasicSoftBufferCtrlObj(BufferAllocMgr* buffer_alloc_mgr);
+	virtual ~BasicSoftBufferCtrlObj() = default;
 
 	virtual void setFrameDim(const FrameDim& frame_dim);
 	virtual void getFrameDim(FrameDim& frame_dim);
@@ -311,13 +347,8 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 	virtual void getStartTimestamp(Timestamp& start_ts);
 	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info);
 
-	virtual void   registerFrameCallback(HwFrameCallback& frame_cb);
+	virtual void registerFrameCallback(HwFrameCallback& frame_cb);
 	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb);
-
-#ifdef LIMA_USE_NUMA
-	void setCPUAffinityMask(unsigned long  cpu_mask);
-	void getCPUAffinityMask(unsigned long& cpu_mask);
-#endif
 
 	StdBufferCbMgr&  getBuffer();
 
@@ -333,6 +364,7 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 			AVAILABLE,TIMEOUT,INTERRUPTED
 		};
 
+		Sync(BasicSoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond);
 		virtual ~Sync();
 
 		// Important: must be called with the cond.mutex locked!
@@ -346,10 +378,8 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 	private:
 		typedef std::multiset<void *> BufferList;
 
-		Sync(SoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond);
-
 		Cond&			m_cond;
-		SoftBufferCtrlObj& 	m_buffer_ctrl_obj;
+		BasicSoftBufferCtrlObj& 	m_buffer_ctrl_obj;
 		BufferList		m_buffer_in_use;
 	};
 
@@ -357,13 +387,40 @@ class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
     
 	virtual HwBufferCtrlObj::Callback* getBufferCallback();
 
- protected:
-	SoftBufferAllocMgr 		m_buffer_alloc_mgr;
-	StdBufferCbMgr 			m_buffer_cb_mgr;
-	BufferCtrlMgr			m_mgr;
+protected:
+	using BufferAllocMgrPtr = std::unique_ptr<BufferAllocMgr>;
+
+	BufferAllocMgrPtr	m_buffer_alloc_mgr;
+	StdBufferCbMgr 		m_buffer_cb_mgr;
+	BufferCtrlMgr		m_mgr;
 	int				m_acq_frame_nb;
-	HwBufferCtrlObj::Callback* 	m_buffer_callback;
+	std::unique_ptr<HwBufferCtrlObj::Callback> 	m_buffer_callback;
 };
+
+
+class LIMACORE_API SoftBufferCtrlObj : public BasicSoftBufferCtrlObj
+{
+public:
+	SoftBufferCtrlObj() : BasicSoftBufferCtrlObj(new SoftBufferAllocMgr) {}
+	virtual ~SoftBufferCtrlObj() = default;
+};
+
+
+#ifdef LIMA_USE_NUMA
+
+/// This class is a NUMA HwBufferCtrlObj software allocation implementation,
+/// It can be directly provided to the control layer as a HwBufferCtrlObj.
+class LIMACORE_API NumaSoftBufferCtrlObj : public BasicSoftBufferCtrlObj
+{
+public:
+	NumaSoftBufferCtrlObj() : BasicSoftBufferCtrlObj(new NumaSoftBufferAllocMgr) {}
+	virtual ~NumaSoftBufferCtrlObj() = default;
+
+	//TODO  Gives access to the groups
+
+};
+
+#endif // LIMA_USE_NUMA
 
 } // namespace lima
 
