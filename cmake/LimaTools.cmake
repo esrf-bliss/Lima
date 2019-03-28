@@ -37,13 +37,15 @@ endfunction()
 
 # this function runs camera's c++ tests
 function(limatools_run_camera_tests test_src camera)
-
   if(${ARGC} GREATER 2)
     set(test_arg ${ARGV2} ${ARGV3} ${ARGV4} ${ARGV5} ${ARGV6})
   endif()
   foreach(file ${test_src})
     add_executable(${file} "${file}.cpp")
-    target_link_libraries(${file} limacore lima${camera})
+    target_link_libraries(${file} limacore)
+    if (NOT ${camera} STREQUAL "core")
+      target_link_libraries(${file} ${camera})
+    endif()
     add_test(NAME ${file} COMMAND ${file} ${test_arg})
     if(WIN32)
       # Add the dlls to the %PATH%
