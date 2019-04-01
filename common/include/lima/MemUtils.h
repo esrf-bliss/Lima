@@ -22,11 +22,11 @@
 #ifndef MEMUTILS_H
 #define MEMUTILS_H
 
-#include <unordered_map>
-
 #include "lima/LimaCompatibility.h"
 #include "lima/SizeUtils.h"
 #include "lima/Debug.h"
+
+#include <cassert>
 
 namespace lima
 {
@@ -42,18 +42,45 @@ void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& f
 
 struct LIMACORE_API Allocator
 {
-	// Allocate a buffer of a given size 
-	virtual void alloc(void* &ptr, size_t size, size_t alignement = 16);
+	struct Data {
+		virtual ~Data() = default;
+	};
+	typedef AutoPtr<Data> DataPtr;
+
+	Allocator() : m_ref_count(0)
+	{}
+
+	Allocator(const Allocator& o) : m_ref_count(0)
+	{}
+
+	Allocator(Allocator&& o) : m_ref_count(0)
+	{ assert(o.m_ref_count == 0); }
+
+	~Allocator()
+	{ assert(m_ref_count == 0); }
+
+	// Allocate a buffer of a given size and eventually return
+	// the associated allocator data
+	virtual DataPtr alloc(void* &ptr, size_t size, size_t alignement = 16);
 	// Fill buffer with zeros (hot page)
 	virtual void init(void* ptr, size_t size);
 	// Free a buffer
-	virtual void release(void* ptr);
+	virtual void release(void* ptr, size_t size, DataPtr alloc_data);
 
 	// Returns a static instance of the default allocator
-	static Allocator *getAllocator();
+	static Allocator *defaultAllocator();
 
-	// Returns the size of a page aligned buffer (multiple of page size)
-	static int getPageAlignedSize(int size);
+	// All references to this allocator should be obtained and released
+	// through get/put, systematically
+	Allocator *get()
+	{ return ++m_ref_count, this; }
+	void put()
+	{ --m_ref_count; }
+
+ protected:
+	// Keep track of allocated buffers pointing to this Allocator:
+	// if greather than 0 this object cannot be moved
+	unsigned m_ref_count;
 };
 
 
@@ -63,19 +90,20 @@ class LIMACORE_API MMapAllocator : public Allocator
 {
 public:
 	// Allocate a buffer of a given size 
-	virtual void alloc(void* &ptr, size_t size, size_t alignement = 16) override;
+	virtual DataPtr alloc(void* &ptr, size_t size, size_t alignement = 16)
+								override;
 
 	// Free a buffer
-	virtual void release(void* ptr) override;
+	virtual void release(void* ptr, size_t size, DataPtr alloc_data)
+								override;
+
+	// Returns the size of a page aligned buffer (multiple of page size)
+	static int getPageAlignedSize(int size);
 
 protected:
-	// Returns true if mmap is available
-	bool useMmap(size_t size);
-
 	// Allocate a buffer with mmap (virtual address mapping)
-	void *allocMmap(size_t size);
-
-	std::unordered_map<void*, size_t> m_memory_maps;
+	// The real, page-aligned buffer size, is returned in size arg
+	void *allocMmap(size_t& size);
 };
 #endif //__unix
 
@@ -85,8 +113,12 @@ class LIMACORE_API NumaAllocator : public MMapAllocator
 public:
 	NumaAllocator(unsigned long cpu_mask) : m_cpu_mask(cpu_mask) {}
 
+	unsigned long getCPUAffinityMask()
+	{ return m_cpu_mask; }
+
 	// Allocate a buffer and sets the NUMA memory policy with mbind
-	virtual void alloc(void* &ptr, size_t size, size_t alignement = 16) override;
+	virtual DataPtr alloc(void* &ptr, size_t size, size_t alignement = 16)
+								override;
 
 private:
 	// Given a cpu_mask, returns the memory node mask
@@ -104,17 +136,18 @@ class LIMACORE_API MemBuffer
 {
  public:
 	//By default, construct a MemBuffer with the default constructor
-	MemBuffer(Allocator *allocator = Allocator::getAllocator());
-	MemBuffer(int size, Allocator *allocator = Allocator::getAllocator());
+	MemBuffer(Allocator *allocator = Allocator::defaultAllocator());
+	MemBuffer(int size, Allocator *allocator =
+		  				Allocator::defaultAllocator());
 	~MemBuffer();
 
 	// MemBuffer are copy constructible (deep copy, no aliasing)
-	MemBuffer(const MemBuffer&);
-	MemBuffer& operator=(const MemBuffer&);
+	MemBuffer(const MemBuffer& buffer);
+	MemBuffer& operator =(const MemBuffer& buffer);
 
 	// MemBuffer are move-constructible or move-assignable.
-	MemBuffer(MemBuffer&&);
-	MemBuffer& operator=(MemBuffer&&) = default;
+	MemBuffer(MemBuffer&& rhs);
+	MemBuffer& operator =(MemBuffer&& rhs);
 
 	/// Allocate and initialized memory
 	void alloc(size_t size);
@@ -143,6 +176,7 @@ class LIMACORE_API MemBuffer
 	size_t m_size;	//!< The size of the buffer in bytes
 	void *m_ptr;	//!< The pointer ot the buffer
 	Allocator *m_allocator;	//!< The allocator used to alloc and free the buffer
+	Allocator::DataPtr m_alloc_data;
 };
 
 } // namespace lima

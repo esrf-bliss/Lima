@@ -62,12 +62,21 @@ void BufferAllocMgr::clearAllBuffers()
 SoftBufferAllocMgr::SoftBufferAllocMgr()
 {
 	DEB_CONSTRUCTOR();
+	setAllocator(Allocator::defaultAllocator());
 }
 
 SoftBufferAllocMgr::~SoftBufferAllocMgr()
 {
 	DEB_DESTRUCTOR();
 	releaseBuffers();
+}
+
+void SoftBufferAllocMgr::setAllocator(Allocator *allocator)
+{
+	DEB_MEMBER_FUNCT();
+	if (!allocator)
+		THROW_HW_ERROR(InvalidValue) << "Invalid allocator";
+	m_allocator = allocator;
 }
 
 int SoftBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
@@ -105,11 +114,10 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 	try {
 		BufferList& bl = m_buffer_list;
 		if (to_alloc > 0) {
-			bl.resize(nb_buffers);
+			bl.resize(nb_buffers, MemBuffer(m_allocator));
 			DEB_TRACE() << "Allocating " << to_alloc << " buffers";
-			for (int i = curr_nb_buffers; i < nb_buffers; i++) {
+			for (int i = curr_nb_buffers; i < nb_buffers; i++)
 				bl[i].alloc(frame_size);
-			}
 		} else {
 			DEB_TRACE() << "Releasing " << -to_alloc << " buffers";
 		}
@@ -160,7 +168,40 @@ void *SoftBufferAllocMgr::getBufferPtr(int buffer_nb)
 
 #ifdef LIMA_USE_NUMA
 
-//TODO
+NumaSoftBufferAllocMgr::NumaSoftBufferAllocMgr()
+{
+	DEB_CONSTRUCTOR();
+	setCPUAffinityMask(0);
+}
+
+NumaSoftBufferAllocMgr::~NumaSoftBufferAllocMgr()
+{
+	DEB_DESTRUCTOR();
+	releaseBuffers();
+	setAllocator(Allocator::defaultAllocator());
+}
+
+void NumaSoftBufferAllocMgr::setCPUAffinityMask(unsigned long mask)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(DEB_HEX(mask));
+
+	if (m_numa_allocator &&
+	    (mask == m_numa_allocator->getCPUAffinityMask()))
+		return;
+
+	FrameDim frame_dim = getFrameDim();
+	int nb_buffers;
+	getNbBuffers(nb_buffers);
+	if (nb_buffers > 0)
+		releaseBuffers();
+
+	m_numa_allocator = new NumaAllocator(mask);
+	setAllocator(m_numa_allocator);
+
+	if (nb_buffers > 0)
+		allocBuffers(nb_buffers, frame_dim);
+}
 
 #endif
 
@@ -688,115 +729,116 @@ BufferCtrlMgr::AcqFrameCallback::newFrameReady(const HwFrameInfoType& finfo)
 			  SoftBufferCtrlObj
 ****************************************************************************/
 
-BasicSoftBufferCtrlObj::BasicSoftBufferCtrlObj(BufferAllocMgr* buffer_alloc_mgr) 
+SoftBufferCtrlObj::SoftBufferCtrlObj(BufferAllocMgr* buffer_alloc_mgr) 
 	: HwBufferCtrlObj(), 
-	  m_buffer_alloc_mgr(buffer_alloc_mgr),
+	  m_buffer_alloc_mgr(buffer_alloc_mgr ? buffer_alloc_mgr :
+						new SoftBufferAllocMgr),
 	  m_buffer_cb_mgr(*buffer_alloc_mgr), m_mgr(m_buffer_cb_mgr),
 	  m_acq_frame_nb(-1)
 {
 }
 
-void BasicSoftBufferCtrlObj::setFrameDim(const FrameDim& frame_dim) 
+void SoftBufferCtrlObj::setFrameDim(const FrameDim& frame_dim) 
 {
 	m_mgr.setFrameDim(frame_dim);
 }
 
-void BasicSoftBufferCtrlObj::getFrameDim(FrameDim& frame_dim) 
+void SoftBufferCtrlObj::getFrameDim(FrameDim& frame_dim) 
 {
 	m_mgr.getFrameDim(frame_dim);
 }
 
-void BasicSoftBufferCtrlObj::setNbBuffers(int  nb_buffers) 
+void SoftBufferCtrlObj::setNbBuffers(int  nb_buffers) 
 {
 	m_mgr.setNbBuffers(nb_buffers);
 }
 
-void BasicSoftBufferCtrlObj::getNbBuffers(int& nb_buffers)
+void SoftBufferCtrlObj::getNbBuffers(int& nb_buffers)
 {
 	m_mgr.getNbBuffers(nb_buffers);
 }
 
-void BasicSoftBufferCtrlObj::setNbConcatFrames(int nb_concat_frames) 
+void SoftBufferCtrlObj::setNbConcatFrames(int nb_concat_frames) 
 {
 	m_mgr.setNbConcatFrames(nb_concat_frames);
 }
 
-void BasicSoftBufferCtrlObj::getNbConcatFrames(int& nb_concat_frames) 
+void SoftBufferCtrlObj::getNbConcatFrames(int& nb_concat_frames) 
 {
 	m_mgr.getNbConcatFrames(nb_concat_frames);
 }
 
-void BasicSoftBufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers) 
+void SoftBufferCtrlObj::getMaxNbBuffers(int& max_nb_buffers) 
 {
 	m_mgr.getMaxNbBuffers(max_nb_buffers);
 }
 
-void *BasicSoftBufferCtrlObj::getBufferPtr(int buffer_nb, int concat_frame_nb)
+void *SoftBufferCtrlObj::getBufferPtr(int buffer_nb, int concat_frame_nb)
 {
 	return m_mgr.getBufferPtr(buffer_nb,concat_frame_nb);
 }
 
-void *BasicSoftBufferCtrlObj::getFramePtr(int acq_frame_nb)
+void *SoftBufferCtrlObj::getFramePtr(int acq_frame_nb)
 {
 	return m_mgr.getFramePtr(acq_frame_nb);
 }
 
-void BasicSoftBufferCtrlObj::getStartTimestamp(Timestamp& start_ts) 
+void SoftBufferCtrlObj::getStartTimestamp(Timestamp& start_ts) 
 {
 	m_mgr.getStartTimestamp(start_ts);
 }
 
-void BasicSoftBufferCtrlObj::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
+void SoftBufferCtrlObj::getFrameInfo(int acq_frame_nb, HwFrameInfoType& info)
 {
 	m_mgr.getFrameInfo(acq_frame_nb,info);
 }
 
-void BasicSoftBufferCtrlObj::registerFrameCallback(HwFrameCallback& frame_cb)
+void SoftBufferCtrlObj::registerFrameCallback(HwFrameCallback& frame_cb)
 {
 	m_mgr.registerFrameCallback(frame_cb);
 }
 
-void BasicSoftBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb) 
+void SoftBufferCtrlObj::unregisterFrameCallback(HwFrameCallback& frame_cb) 
 {
 	m_mgr.unregisterFrameCallback(frame_cb);
 }
 
-StdBufferCbMgr& BasicSoftBufferCtrlObj::getBuffer() 
+StdBufferCbMgr& SoftBufferCtrlObj::getBuffer() 
 {
 	return m_buffer_cb_mgr;
 }
 
-int BasicSoftBufferCtrlObj::getNbAcquiredFrames() 
+int SoftBufferCtrlObj::getNbAcquiredFrames() 
 {
 	return m_acq_frame_nb + 1;
 }
 
-SoftBufferCtrlObj::Sync* BasicSoftBufferCtrlObj::getBufferSync(Cond& cond)
+SoftBufferCtrlObj::Sync* SoftBufferCtrlObj::getBufferSync(Cond& cond)
 {
 	if(!m_buffer_callback)
 		m_buffer_callback = std::unique_ptr<HwBufferCtrlObj::Callback>(new Sync(*this, cond));
 	return (SoftBufferCtrlObj::Sync*) m_buffer_callback.get();
 }
 
-HwBufferCtrlObj::Callback* BasicSoftBufferCtrlObj::getBufferCallback() 
+HwBufferCtrlObj::Callback* SoftBufferCtrlObj::getBufferCallback() 
 {
 	return m_buffer_callback.get();
 }
 
-BasicSoftBufferCtrlObj::Sync::Sync(BasicSoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond) 
+SoftBufferCtrlObj::Sync::Sync(SoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond) 
 	: m_cond(cond), m_buffer_ctrl_obj(buffer_ctrl_obj)
 {
 	DEB_CONSTRUCTOR();
 }
 
-BasicSoftBufferCtrlObj::Sync::~Sync() 
+SoftBufferCtrlObj::Sync::~Sync() 
 {
 	DEB_DESTRUCTOR();
 }
 
 // Important: must be called with the cond.mutex locked!
-BasicSoftBufferCtrlObj::Sync::Status 
-BasicSoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
+SoftBufferCtrlObj::Sync::Status 
+SoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
 {
 	DEB_MEMBER_FUNCT();
 
@@ -816,7 +858,7 @@ BasicSoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
 		return okFlag ? INTERRUPTED : TIMEOUT;
 }
 
-void BasicSoftBufferCtrlObj::Sync::map(void *address)
+void SoftBufferCtrlObj::Sync::map(void *address)
 {
 	DEB_MEMBER_FUNCT();
 
@@ -824,7 +866,7 @@ void BasicSoftBufferCtrlObj::Sync::map(void *address)
 	m_buffer_in_use.insert(address);
 }
 
-void BasicSoftBufferCtrlObj::Sync::release(void *address)
+void SoftBufferCtrlObj::Sync::release(void *address)
 {
 	DEB_MEMBER_FUNCT();
 
@@ -839,7 +881,7 @@ void BasicSoftBufferCtrlObj::Sync::release(void *address)
 		m_cond.broadcast();
 }
 
-void BasicSoftBufferCtrlObj::Sync::releaseAll()
+void SoftBufferCtrlObj::Sync::releaseAll()
 {
 	DEB_MEMBER_FUNCT();
 

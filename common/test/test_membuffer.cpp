@@ -94,9 +94,10 @@ void test_alloc()
 
 struct MockAllocator : lima::Allocator
 {
-	virtual void alloc(void* &ptr, size_t size, size_t alignement = 16) override
+	virtual DataPtr alloc(void* &ptr, size_t size, size_t alignement = 16) override
 	{
 		ptr = malloc(size);
+		return DataPtr();
 	}
 
 	virtual void init(void* ptr, size_t size) override
@@ -104,7 +105,8 @@ struct MockAllocator : lima::Allocator
 		memset(ptr, 0, size);
 	}
 
-	virtual void release(void* ptr) override
+	virtual void release(void* ptr, size_t /*size*/,
+			     DataPtr /*alloc_data*/) override
 	{
 		assert(ptr);
 		free(ptr);

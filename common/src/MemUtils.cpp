@@ -108,13 +108,13 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 	memset(ptr, 0, nb_concat_frames * frame_dim.getMemSize());
 }
 
-Allocator *Allocator::getAllocator()
+Allocator *Allocator::defaultAllocator()
 {
 	static Allocator allocator;
 	return &allocator;
 }
 
-void Allocator::alloc(void* &ptr, size_t size, size_t alignement)
+Allocator::DataPtr Allocator::alloc(void* &ptr, size_t size, size_t alignement)
 {
 #ifdef __unix
 	int ret = posix_memalign(&ptr, alignement, size);
@@ -127,6 +127,7 @@ void Allocator::alloc(void* &ptr, size_t size, size_t alignement)
 		throw LIMA_COM_EXC(Error, "Error in _aligned_malloc: ")
 			<< "NULL pointer return";
 #endif
+	return DataPtr();
 }
 
 void Allocator::init(void* ptr, size_t size)
@@ -135,7 +136,7 @@ void Allocator::init(void* ptr, size_t size)
 	memset(ptr, 0, size);
 }
 
-void Allocator::release(void* ptr)
+void Allocator::release(void* ptr, size_t /*size*/, DataPtr /*alloc_data*/)
 {
 #ifdef __unix
 	free(ptr);
@@ -144,7 +145,9 @@ void Allocator::release(void* ptr)
 #endif
 }
 
-int Allocator::getPageAlignedSize(int size)
+#ifdef __unix
+
+int MMapAllocator::getPageAlignedSize(int size)
 {
 	int page_size;
 	GetPageSize(page_size);
@@ -154,32 +157,22 @@ int Allocator::getPageAlignedSize(int size)
 	return size;
 }
 
-#ifdef __unix
-
 // Allocate a buffer of a given size 
-void MMapAllocator::alloc(void* &ptr, size_t size, size_t alignement/* = 16*/)
+Allocator::DataPtr MMapAllocator::alloc(void* &ptr, size_t size,
+					size_t alignement/* = 16*/)
 {
 	ptr = allocMmap(size);
-
-	// Record mmap size
-	m_memory_maps.insert({ ptr, size });
+	return DataPtr();
 }
 
 // Free a buffer
-void MMapAllocator::release(void* ptr)
+void MMapAllocator::release(void* ptr, size_t size, DataPtr alloc_data)
 {
-	auto it = m_memory_maps.find(ptr);
-	if (it != m_memory_maps.end())
-		munmap(ptr, it->second);
+	size = getPageAlignedSize(size);
+	munmap(ptr, size);
 }
 
-bool MMapAllocator::useMmap(size_t size)
-{
-	// Use MMap if size is greater than 128KB
-	return size >= 128 * 1024;
-}
-
-void *MMapAllocator::allocMmap(size_t size)
+void *MMapAllocator::allocMmap(size_t& size)
 {
 	size = getPageAlignedSize(size);
 	void *ptr = (char *) mmap(0, size, PROT_READ | PROT_WRITE,
@@ -191,51 +184,74 @@ void *MMapAllocator::allocMmap(size_t size)
 }
 #endif //__unix
 
-MemBuffer::MemBuffer(Allocator *allocator /*= Allocator::getAllocator()*/) :
+MemBuffer::MemBuffer(Allocator *allocator /*= Allocator::defaultAllocator()*/) :
 	m_ptr(nullptr),
 	m_size(0),
-	m_allocator(allocator)
+	m_allocator(allocator->get())
 {
 }
 
-MemBuffer::MemBuffer(int size, Allocator *allocator /*= Allocator::getAllocator()*/):
+MemBuffer::MemBuffer(int size, Allocator *allocator /*=
+					Allocator::defaultAllocator()*/):
 	m_ptr(nullptr),
 	m_size(0),
-	m_allocator(allocator)
+	m_allocator(allocator->get())
 {
 	alloc(size);
 }
 
-MemBuffer::MemBuffer(const MemBuffer& buffer):
+MemBuffer::MemBuffer(const MemBuffer& buffer) :
 	m_ptr(nullptr),
 	m_size(0),
-	m_allocator(buffer.m_allocator)
+	m_allocator(buffer.m_allocator->get())
 {
 	deepCopy(buffer);
 }
 
 MemBuffer& MemBuffer::operator =(const MemBuffer& buffer)
 {
-	m_allocator = buffer.m_allocator;
+	if (m_allocator != buffer.m_allocator) {
+		release();
+		m_allocator->put();
+		m_allocator = buffer.m_allocator->get();
+	}
 	deepCopy(buffer);
 	return *this;
 }
 
-MemBuffer::MemBuffer(MemBuffer&& rhs)
+// Steal buffer ressource
+MemBuffer::MemBuffer(MemBuffer&& rhs) :
+	m_ptr(move(rhs.m_ptr)),
+	m_size(move(rhs.m_size)),
+	m_allocator(rhs.m_allocator->get())
 {
-	// Stealing buffer ressource
-	m_ptr = std::move(rhs.m_ptr);
-	m_size = std::move(rhs.m_size);
-	m_allocator = std::move(rhs.m_allocator);
-
-	// Repare rhs (we don't it to be deallocated twice)
+	// Finish resource transfer: remove it from rhs so
+	// it is not deallocated twice
 	rhs.m_ptr = nullptr;
 	rhs.m_size = 0;
+}
+
+MemBuffer& MemBuffer::operator =(MemBuffer&& rhs)
+{
+	// First release previous contents
+	release();
+	if (m_allocator != rhs.m_allocator) {
+		m_allocator->put();
+		m_allocator = rhs.m_allocator->get();
+	}
+	// Steal buffer ressource
+	m_ptr = move(rhs.m_ptr);
+	m_size = move(rhs.m_size);
+	// Finish transfer
+	rhs.m_ptr = nullptr;
+	rhs.m_size = 0;
+	return *this;
 }
 
 MemBuffer::~MemBuffer()
 {
 	release();
+	m_allocator->put();
 }
 
 void MemBuffer::alloc(size_t size)
@@ -246,9 +262,8 @@ void MemBuffer::alloc(size_t size)
 
 void MemBuffer::release()
 {
-	if (m_size)
-	{
-		m_allocator->release(m_ptr);
+	if (m_size) {
+		m_allocator->release(m_ptr, m_size, m_alloc_data);
 
 		m_ptr = nullptr;
 		m_size = 0;
@@ -267,10 +282,9 @@ void MemBuffer::uninitializedAlloc(size_t size)
 	if (m_size == size)
 		return;
 
-	if (m_ptr)
-		m_allocator->release(m_ptr);
+	release();
 
-	m_allocator->alloc(m_ptr, size);
+	m_alloc_data = m_allocator->alloc(m_ptr, size);
 
 	m_size = size;
 }
@@ -282,26 +296,30 @@ void MemBuffer::initMemory()
 
 void MemBuffer::deepCopy(const MemBuffer& buffer)
 {
-	if (buffer.m_ptr)
-	{
+	if (buffer.m_ptr) {
 		uninitializedAlloc(buffer.getSize());
 		memcpy(getPtr(), buffer.getConstPtr(), buffer.getSize());
+	} else {
+		release();
 	}
 }
 
 
 #ifdef LIMA_USE_NUMA
-void NumaAllocator::alloc(void* &ptr, size_t size, size_t alignement)
+Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t size,
+					size_t alignement)
 {
-	Allocator::alloc(ptr, size, alignement);
+	DataPtr alloc_data = MMapAllocator::alloc(ptr, size, alignement);
 
-	if (!MMapAllocator::useMmap(size) || !m_cpu_mask)
-		return;
+	if (!m_cpu_mask)
+		return alloc_data;
 
 	unsigned long node_mask;
 	int max_node;
 	getNUMANodeMask(m_cpu_mask, node_mask, max_node);
 	mbind(ptr, size, MPOL_BIND, &node_mask, max_node, 0);
+
+	return alloc_data;
 }
 
 void NumaAllocator::getNUMANodeMask(unsigned long cpu_mask,
