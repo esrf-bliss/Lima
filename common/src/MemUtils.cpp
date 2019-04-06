@@ -248,6 +248,18 @@ MemBuffer::MemBuffer(const MemBuffer& buffer)
 	deepCopy(buffer);
 }
 
+MemBuffer::MemBuffer(MemBuffer&& rhs)
+{
+	// Stealing buffer ressource
+	m_ptr = std::move(rhs.m_ptr);
+	m_size = std::move(rhs.m_size);
+	m_allocator = std::move(rhs.m_allocator);
+
+	// Repare rhs (we don't it to be deallocated twice)
+	rhs.m_ptr = nullptr;
+	rhs.m_size = 0;
+}
+
 MemBuffer::~MemBuffer()
 {
 	release();
