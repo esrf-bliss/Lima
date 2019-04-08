@@ -127,7 +127,7 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 		if (to_alloc > 0) {
 			bl.resize(nb_buffers);
 			DEB_TRACE() << "Allocating " << to_alloc << " buffers";
-			for (int i = 0; i < nb_buffers; i++) {
+			for (int i = curr_nb_buffers; i < nb_buffers; i++) {
 #ifdef LIMA_USE_NUMA
 				if (m_cpu_mask)
 					bl[i].setCPUAffinityMask(m_cpu_mask);

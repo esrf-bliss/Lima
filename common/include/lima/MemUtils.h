@@ -53,7 +53,7 @@ class LIMACORE_API MemBuffer
 	MemBuffer& operator=(const MemBuffer&);
 
 	// MemBuffer are move-constructible or move-assignable.
-	MemBuffer(MemBuffer&&) = default;
+	MemBuffer(MemBuffer&&);
 	MemBuffer& operator=(MemBuffer&&) = default;
 
 #ifdef LIMA_USE_NUMA

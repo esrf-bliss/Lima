@@ -20,6 +20,9 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-set(test_src testregex)
+set(test_src test_membuffer)
+if (NOT WIN32)
+    list(APPEND test_src test_regex)
+endif()
 
 limatools_run_camera_tests("${test_src}" ${NAME})

@@ -118,7 +118,8 @@ void MemBuffer::Allocator::alloc(MemBuffer& buffer, int& size)
 	void *ptr;
 #ifdef __unix
 	if (useMmap(size)) {
-		ptr = allocMmap(size);
+		int real_size = size;
+		ptr = allocMmap(real_size);
 	} else {
 		int ret = posix_memalign(&ptr, Alignment, size);
 		if (ret != 0)
@@ -182,10 +183,14 @@ void MemBuffer::Allocator::release(MemBuffer& buffer)
 	int size = buffer.getSize();
 
 #ifdef __unix
-	if (useMmap(size))
-		munmap(ptr, size);
-	else
+	if (useMmap(size)) {
+		int real_size = getPageAlignedSize(size);
+		if (munmap(ptr, real_size) != 0)
+			throw LIMA_COM_EXC(Error, "Error in munmap: ") 
+				<< strerror(errno);
+	} else {
 		free(ptr);
+	}
 #else
 	_aligned_free(ptr);
 #endif
@@ -206,6 +211,7 @@ int MemBuffer::Allocator::getPageAlignedSize(int size)
 #ifdef __unix
 bool MemBuffer::Allocator::useMmap(int size)
 {
+	// Use MMap if size is greater than 128KB
 	return size >= 128 * 1024;
 }
 
@@ -246,6 +252,18 @@ MemBuffer::MemBuffer(const MemBuffer& buffer)
 {
 	init();
 	deepCopy(buffer);
+}
+
+MemBuffer::MemBuffer(MemBuffer&& rhs)
+{
+	// Stealing buffer ressource
+	m_ptr = std::move(rhs.m_ptr);
+	m_size = std::move(rhs.m_size);
+	m_allocator = std::move(rhs.m_allocator);
+
+	// Repare rhs (we don't it to be deallocated twice)
+	rhs.m_ptr = nullptr;
+	rhs.m_size = 0;
 }
 
 MemBuffer::~MemBuffer()
