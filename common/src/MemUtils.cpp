@@ -118,7 +118,8 @@ void MemBuffer::Allocator::alloc(MemBuffer& buffer, int& size)
 	void *ptr;
 #ifdef __unix
 	if (useMmap(size)) {
-		ptr = allocMmap(size);
+		int real_size = size;
+		ptr = allocMmap(real_size);
 	} else {
 		int ret = posix_memalign(&ptr, Alignment, size);
 		if (ret != 0)
@@ -182,10 +183,12 @@ void MemBuffer::Allocator::release(MemBuffer& buffer)
 	int size = buffer.getSize();
 
 #ifdef __unix
-	if (useMmap(size))
-		munmap(ptr, size);
-	else
+	if (useMmap(size)) {
+		int real_size = getPageAlignedSize(size);
+		munmap(ptr, real_size);
+	} else {
 		free(ptr);
+	}
 #else
 	_aligned_free(ptr);
 #endif
@@ -206,6 +209,7 @@ int MemBuffer::Allocator::getPageAlignedSize(int size)
 #ifdef __unix
 bool MemBuffer::Allocator::useMmap(int size)
 {
+	// Use MMap if size is greater than 128KB
 	return size >= 128 * 1024;
 }
 
