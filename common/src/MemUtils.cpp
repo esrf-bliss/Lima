@@ -185,7 +185,9 @@ void MemBuffer::Allocator::release(MemBuffer& buffer)
 #ifdef __unix
 	if (useMmap(size)) {
 		int real_size = getPageAlignedSize(size);
-		munmap(ptr, real_size);
+		if (munmap(ptr, real_size) != 0)
+			throw LIMA_COM_EXC(Error, "Error in munmap: ") 
+				<< strerror(errno);
 	} else {
 		free(ptr);
 	}
