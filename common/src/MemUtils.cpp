@@ -187,7 +187,7 @@ void *MMapAllocator::allocMmap(size_t& size)
 MemBuffer::MemBuffer(Allocator *allocator /*= Allocator::defaultAllocator()*/) :
 	m_ptr(nullptr),
 	m_size(0),
-	m_allocator(allocator->get())
+	m_allocator(allocator)
 {
 }
 
@@ -195,7 +195,7 @@ MemBuffer::MemBuffer(int size, Allocator *allocator /*=
 					Allocator::defaultAllocator()*/):
 	m_ptr(nullptr),
 	m_size(0),
-	m_allocator(allocator->get())
+	m_allocator(allocator)
 {
 	alloc(size);
 }
@@ -203,7 +203,7 @@ MemBuffer::MemBuffer(int size, Allocator *allocator /*=
 MemBuffer::MemBuffer(const MemBuffer& buffer) :
 	m_ptr(nullptr),
 	m_size(0),
-	m_allocator(buffer.m_allocator->get())
+	m_allocator(buffer.m_allocator)
 {
 	deepCopy(buffer);
 }
@@ -212,8 +212,7 @@ MemBuffer& MemBuffer::operator =(const MemBuffer& buffer)
 {
 	if (m_allocator != buffer.m_allocator) {
 		release();
-		m_allocator->put();
-		m_allocator = buffer.m_allocator->get();
+		m_allocator = buffer.m_allocator;
 	}
 	deepCopy(buffer);
 	return *this;
@@ -223,7 +222,7 @@ MemBuffer& MemBuffer::operator =(const MemBuffer& buffer)
 MemBuffer::MemBuffer(MemBuffer&& rhs) :
 	m_ptr(move(rhs.m_ptr)),
 	m_size(move(rhs.m_size)),
-	m_allocator(rhs.m_allocator->get())
+	m_allocator(move(rhs.m_allocator))
 {
 	// Finish resource transfer: remove it from rhs so
 	// it is not deallocated twice
@@ -235,13 +234,10 @@ MemBuffer& MemBuffer::operator =(MemBuffer&& rhs)
 {
 	// First release previous contents
 	release();
-	if (m_allocator != rhs.m_allocator) {
-		m_allocator->put();
-		m_allocator = rhs.m_allocator->get();
-	}
 	// Steal buffer ressource
 	m_ptr = move(rhs.m_ptr);
 	m_size = move(rhs.m_size);
+	m_allocator = move(rhs.m_allocator);
 	// Finish transfer
 	rhs.m_ptr = nullptr;
 	rhs.m_size = 0;
@@ -251,7 +247,6 @@ MemBuffer& MemBuffer::operator =(MemBuffer&& rhs)
 MemBuffer::~MemBuffer()
 {
 	release();
-	m_allocator->put();
 }
 
 void MemBuffer::alloc(size_t size)

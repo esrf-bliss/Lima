@@ -70,19 +70,49 @@ struct LIMACORE_API Allocator
 	// Returns a static instance of the default allocator
 	static Allocator *defaultAllocator();
 
-	// All references to this allocator should be obtained and released
-	// through get/put, systematically
+	// All references to Allocators should be kept with this class
+	class Ref
+	{
+	public:
+		Ref(Allocator *alloc) : m_alloc(alloc->get())
+		{}
+		Ref(const Ref& o) : m_alloc(o.m_alloc->get())
+		{}
+		~Ref()
+		{ m_alloc->put(); }
+
+		Ref& operator =(const Ref& o)
+		{
+			if (m_alloc != o.m_alloc) {
+				m_alloc->put();
+				m_alloc = o.m_alloc->get();
+			}
+			return *this;
+		}
+		operator Allocator *() const
+		{ return m_alloc; }
+		Allocator *operator ->() const
+		{ return m_alloc; }
+	private:
+		Allocator *m_alloc;
+	};
+
+ protected:
+	friend class Ref;
+
+	// The real resource management counter, triggered by Ref
 	Allocator *get()
 	{ return ++m_ref_count, this; }
 	void put()
 	{ --m_ref_count; }
 
- protected:
 	// Keep track of allocated buffers pointing to this Allocator:
 	// if greather than 0 this object cannot be moved
 	unsigned m_ref_count;
 };
 
+inline bool operator ==(const Allocator::Ref& a, const Allocator::Ref& b)
+{ return (Allocator *) a == (Allocator *) b; }
 
 #ifdef __unix
 // Allocator for virtual address mapping
@@ -175,7 +205,7 @@ class LIMACORE_API MemBuffer
 
 	size_t m_size;	//!< The size of the buffer in bytes
 	void *m_ptr;	//!< The pointer ot the buffer
-	Allocator *m_allocator;	//!< The allocator used to alloc and free the buffer
+	Allocator::Ref m_allocator;	//!< The allocator used to alloc and free the buffer
 	Allocator::DataPtr m_alloc_data;
 };
 
