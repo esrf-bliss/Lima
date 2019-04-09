@@ -312,7 +312,9 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t size,
 	unsigned long node_mask;
 	int max_node;
 	getNUMANodeMask(m_cpu_mask, node_mask, max_node);
-	mbind(ptr, size, MPOL_BIND, &node_mask, max_node, 0);
+	if (mbind(ptr, size, MPOL_BIND, &node_mask, max_node, 0) != 0)
+		throw LIMA_COM_EXC(Error, "Error in mbind: ")
+			<< strerror(errno);
 
 	return alloc_data;
 }
