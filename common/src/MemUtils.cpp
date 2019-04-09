@@ -114,15 +114,15 @@ Allocator *Allocator::defaultAllocator()
 	return &allocator;
 }
 
-Allocator::DataPtr Allocator::alloc(void* &ptr, size_t size, size_t alignement)
+Allocator::DataPtr Allocator::alloc(void* &ptr, size_t& size, size_t alignment)
 {
 #ifdef __unix
-	int ret = posix_memalign(&ptr, alignement, size);
+	int ret = posix_memalign(&ptr, alignment, size);
 	if (ret != 0)
 		throw LIMA_COM_EXC(Error, "Error in posix_memalign: ")
 			<< strerror(ret);
 #else
-	ptr = _aligned_malloc(size, alignement);
+	ptr = _aligned_malloc(size, alignment);
 	if (!ptr)
 		throw LIMA_COM_EXC(Error, "Error in _aligned_malloc: ")
 			<< "NULL pointer return";
@@ -158,8 +158,8 @@ int MMapAllocator::getPageAlignedSize(int size)
 }
 
 // Allocate a buffer of a given size 
-Allocator::DataPtr MMapAllocator::alloc(void* &ptr, size_t size,
-					size_t alignement/* = 16*/)
+Allocator::DataPtr MMapAllocator::alloc(void* &ptr, size_t& size,
+					size_t alignment/* = 16*/)
 {
 	ptr = allocMmap(size);
 	return DataPtr();
@@ -279,7 +279,8 @@ void MemBuffer::uninitializedAlloc(size_t size)
 
 	release();
 
-	m_alloc_data = m_allocator->alloc(m_ptr, size);
+	size_t real_size = size;
+	m_alloc_data = m_allocator->alloc(m_ptr, real_size);
 
 	m_size = size;
 }
@@ -301,10 +302,10 @@ void MemBuffer::deepCopy(const MemBuffer& buffer)
 
 
 #ifdef LIMA_USE_NUMA
-Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t size,
-					size_t alignement)
+Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
+					size_t alignment)
 {
-	DataPtr alloc_data = MMapAllocator::alloc(ptr, size, alignement);
+	DataPtr alloc_data = MMapAllocator::alloc(ptr, size, alignment);
 
 	if (!m_cpu_mask)
 		return alloc_data;
