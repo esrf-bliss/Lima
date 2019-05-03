@@ -729,7 +729,7 @@ BufferCtrlMgr::AcqFrameCallback::newFrameReady(const HwFrameInfoType& finfo)
 			  SoftBufferCtrlObj
 ****************************************************************************/
 
-SoftBufferCtrlObj::SoftBufferCtrlObj(BufferAllocMgr* buffer_alloc_mgr) 
+SoftBufferCtrlObj::SoftBufferCtrlObj(BufferAllocMgrPtr buffer_alloc_mgr) 
 	: HwBufferCtrlObj(), 
 	  m_buffer_alloc_mgr(buffer_alloc_mgr ? buffer_alloc_mgr :
 						new SoftBufferAllocMgr),
@@ -813,16 +813,16 @@ int SoftBufferCtrlObj::getNbAcquiredFrames()
 	return m_acq_frame_nb + 1;
 }
 
-SoftBufferCtrlObj::Sync* SoftBufferCtrlObj::getBufferSync(Cond& cond)
+SoftBufferCtrlObj::Sync *SoftBufferCtrlObj::getBufferSync(Cond& cond)
 {
-	if(!m_buffer_callback)
-		m_buffer_callback = std::unique_ptr<HwBufferCtrlObj::Callback>(new Sync(*this, cond));
-	return (SoftBufferCtrlObj::Sync*) m_buffer_callback.get();
+	if (!m_buffer_callback)
+		m_buffer_callback = new Sync(*this, cond);
+	return m_buffer_callback;
 }
 
-HwBufferCtrlObj::Callback* SoftBufferCtrlObj::getBufferCallback() 
+HwBufferCtrlObj::Callback *SoftBufferCtrlObj::getBufferCallback() 
 {
-	return m_buffer_callback.get();
+	return m_buffer_callback;
 }
 
 SoftBufferCtrlObj::Sync::Sync(SoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond) 

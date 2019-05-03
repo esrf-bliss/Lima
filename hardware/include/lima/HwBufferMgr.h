@@ -305,7 +305,9 @@ class LIMACORE_API BufferCtrlMgr : public HwFrameCallbackGen
 class LIMACORE_API SoftBufferCtrlObj : public HwBufferCtrlObj
 {
 public:
-	SoftBufferCtrlObj(BufferAllocMgr* buffer_alloc_mgr = nullptr);
+	typedef AutoPtr<BufferAllocMgr> BufferAllocMgrPtr;
+
+	SoftBufferCtrlObj(BufferAllocMgrPtr buffer_alloc_mgr = NULL);
 	virtual ~SoftBufferCtrlObj() = default;
 
 	virtual void setFrameDim(const FrameDim& frame_dim);
@@ -332,7 +334,7 @@ public:
 
 	int getNbAcquiredFrames();
 
-	class LIMACORE_API Sync : public HwBufferCtrlObj::Callback
+	class LIMACORE_API Sync : public Callback
 	{
 		DEB_CLASS(DebModHardware, "SoftBufferCtrlObj::Sync");
 
@@ -361,18 +363,16 @@ public:
 		BufferList		m_buffer_in_use;
 	};
 
-	Sync* getBufferSync(Cond& cond);
+	Sync *getBufferSync(Cond& cond);
     
-	virtual HwBufferCtrlObj::Callback* getBufferCallback();
+	virtual Callback *getBufferCallback();
 
 protected:
-	using BufferAllocMgrPtr = AutoPtr<BufferAllocMgr>;
-
 	BufferAllocMgrPtr	m_buffer_alloc_mgr;
 	StdBufferCbMgr 		m_buffer_cb_mgr;
 	BufferCtrlMgr		m_mgr;
-	int				m_acq_frame_nb;
-	std::unique_ptr<HwBufferCtrlObj::Callback> 	m_buffer_callback;
+	int			m_acq_frame_nb;
+	AutoPtr<Sync>	 	m_buffer_callback;
 };
 
 
@@ -383,7 +383,10 @@ protected:
 class LIMACORE_API NumaSoftBufferCtrlObj : public SoftBufferCtrlObj
 {
 public:
-	NumaSoftBufferCtrlObj() : SoftBufferCtrlObj(new NumaSoftBufferAllocMgr) {}
+	NumaSoftBufferCtrlObj()
+		: SoftBufferCtrlObj(new NumaSoftBufferAllocMgr())
+	{}
+
 	virtual ~NumaSoftBufferCtrlObj() = default;
 
 	void setCPUAffinityMask(unsigned long mask)
@@ -392,9 +395,6 @@ public:
 		mgr = static_cast<NumaSoftBufferAllocMgr *>(m_buffer_alloc_mgr.getPtr());
 		mgr->setCPUAffinityMask(mask);
 	}
-
-	//TODO  Gives access to the groups
-
 };
 
 #endif // LIMA_USE_NUMA
