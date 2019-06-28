@@ -47,6 +47,11 @@ endif()
 option(LIMA_ENABLE_TESTS "compile test directories ?" OFF)
 
 #--------------------------------------------------------------------------------
+# Compile with trace (debug information)
+#--------------------------------------------------------------------------------
+option(LIMA_ENABLE_DEBUG "compile with trace ?" OFF)
+
+#--------------------------------------------------------------------------------
 # libconfig
 #--------------------------------------------------------------------------------
 if(DEFINED ENV{LIMA_ENABLE_CONFIG})
