@@ -94,7 +94,7 @@ bool SoftOpBinning::addTo(TaskMgr &aMgr,int stage)
 SoftOpBpm::SoftOpBpm() : 
   SoftOpBaseClass()
 {
-#ifndef WITHOUT_GSL
+#ifndef PROCESSLIB_WITHOUT_GSL
   m_manager = new Tasks::BpmManager(DEFAULT_HISTORY_SIZE);
   m_task = new Tasks::BpmTask(*m_manager);
 #else
@@ -106,7 +106,7 @@ SoftOpBpm::SoftOpBpm() :
 
 SoftOpBpm::~SoftOpBpm()
 {
-#ifndef WITHOUT_GSL
+#ifndef PROCESSLIB_WITHOUT_GSL
   m_task->unref();
   m_manager->unref();
 #endif
@@ -115,7 +115,7 @@ SoftOpBpm::~SoftOpBpm()
 
 bool SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
 {
-#ifndef WITHOUT_GSL
+#ifndef PROCESSLIB_WITHOUT_GSL
   aMgr.addSinkTask(stage,m_task);
   return true;
 #endif
@@ -124,7 +124,7 @@ bool SoftOpBpm::addTo(TaskMgr &aMgr,int stage)
 
 void SoftOpBpm::prepare()
 {
-#ifndef WITHOUT_GSL
+#ifndef PROCESSLIB_WITHOUT_GSL
   m_manager->resetHistory();
 #endif
 }
