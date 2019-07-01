@@ -562,7 +562,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				// write header only once into "parameters" group 
 				// but we should write some keys into measurement, like motor_pos counter_pos (spec)???
 				if (!aHeader.empty()) {
-					for (map<string, string>::const_iterator it = aHeader.begin(); it != aHeader.end(); it++) {
+					for (CtSaving::HeaderMap::const_iterator it = aHeader.begin(); it != aHeader.end(); it++) {
 
 						string key = it->first;
 						string value = it->second;
