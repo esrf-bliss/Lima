@@ -34,6 +34,7 @@
 #include "lima/CtControl.h"
 #include "lima/CtConfig.h"
 #include "lima/HwSavingCtrlObj.h"
+#include "lima/OrderedMap.h"
 
 struct Data;
 class TaskEventCallback;
@@ -118,7 +119,7 @@ namespace lima {
     };
     
     typedef std::pair<std::string, std::string> HeaderValue;
-    typedef std::map<std::string,std::string> HeaderMap;
+    typedef OrderedMap<std::string, std::string> HeaderMap;
     typedef std::map<long,Data> FrameMap;
 
     // --- file parameters
