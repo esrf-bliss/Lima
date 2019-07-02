@@ -49,7 +49,7 @@ option(LIMA_ENABLE_TESTS "compile test directories ?" OFF)
 #--------------------------------------------------------------------------------
 # Compile with trace (debug information)
 #--------------------------------------------------------------------------------
-option(LIMA_ENABLE_DEBUG "compile with trace ?" OFF)
+option(LIMA_ENABLE_DEBUG "compile with trace ?" ON)
 
 #--------------------------------------------------------------------------------
 # libconfig
