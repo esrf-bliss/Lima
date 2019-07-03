@@ -19,6 +19,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
+
+
 %MappedType HeaderMap
 {
 %TypeHeaderCode
@@ -29,18 +32,23 @@ typedef std::pair<std::string, std::string> HeaderValue;
 %End
 
 %ConvertToTypeCode
-if (sipIsErr == NULL)
-   return PyDict_Check(sipPy);
+   PyObject *key, *value;
+   SIP_SSIZE_T pos;
+   
+   if (sipIsErr == NULL)
+   {
+       bool aReturnFlag = PyDict_Check(sipPy);
+       pos = 0;
+       while(aReturnFlag && PyDict_Next(sipPy, &pos, &key, &value))
+           aReturnFlag = sipCheckConvertFromPyStr(key) && sipCheckConvertFromPyStr(value);
+
+       return aReturnFlag;
+   }
 
     *sipCppPtr = new HeaderMap();
-    PyObject *key, *value;
-    SIP_SSIZE_T pos = 0;
-
+    pos = 0;
     while (PyDict_Next(sipPy, &pos, &key, &value)) 
-    {
-	if(PyString_Check(key) && PyString_Check(value))
-	   (*sipCppPtr)->insert(HeaderValue(PyString_AS_STRING(key),PyString_AS_STRING(value)));
-    }
+        (*sipCppPtr)->insert(HeaderValue(sipConvertFromPyStr(key),sipConvertFromPyStr(value)));
 
     return sipGetState(sipTransferObj);
 %End
@@ -49,8 +57,9 @@ if (sipIsErr == NULL)
     PyObject* aReturnDict = PyDict_New();
     for(HeaderMap::iterator i = sipCpp->begin();i != sipCpp->end();++i)
 	{
-	  PyObject *value = PyString_FromString(i->second.c_str());
-	  PyDict_SetItemString(aReturnDict,i->first.c_str(),value);
+	  PyObject *key = sipConvertToPyStr(i->first);
+	  PyObject *value = sipConvertToPyStr(i->second);
+	  PyDict_SetItem(aReturnDict,key,value);
 	  Py_DECREF(value);
 	}
 return aReturnDict;
@@ -74,22 +83,22 @@ if (sipIsErr == NULL)
 	{
 	 PyObject *first = PySequence_GetItem(sipPy,0);
 	 PyObject *second = PySequence_GetItem(sipPy,1);
-	 aCheckFlag = (PyString_Check(first) && PyString_Check(second));
+	 aCheckFlag = (sipCheckConvertFromPyStr(first) && sipCheckConvertFromPyStr(second));
 	 Py_DECREF(first);Py_DECREF(second);
 	}
      return aCheckFlag;
    }
     PyObject *first = PySequence_GetItem(sipPy,0);
     PyObject *second = PySequence_GetItem(sipPy,1);
-    *sipCppPtr = new HeaderValue(PyString_AS_STRING(first),PyString_AS_STRING(second));
+    *sipCppPtr = new HeaderValue(sipConvertFromPyStr(first),sipConvertFromPyStr(second));
     Py_DECREF(first);Py_DECREF(second);
 
     return sipGetState(sipTransferObj);
 %End
 
 %ConvertFromTypeCode
-PyObject *key = PyString_FromString(sipCpp->first.c_str());
-PyObject *value = PyString_FromString(sipCpp->second.c_str());
+PyObject *key = sipConvertToPyStr(sipCpp->first);
+PyObject *value = sipConvertToPyStr(sipCpp->second);
 PyObject* aReturnTuple = PyTuple_Pack(2,key,value);
 Py_DECREF(key);Py_DECREF(value);
 
