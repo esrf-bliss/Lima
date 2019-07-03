@@ -733,7 +733,7 @@ SoftBufferCtrlObj::SoftBufferCtrlObj(BufferAllocMgrPtr buffer_alloc_mgr)
 	: HwBufferCtrlObj(), 
 	  m_buffer_alloc_mgr(buffer_alloc_mgr ? buffer_alloc_mgr :
 						new SoftBufferAllocMgr),
-	  m_buffer_cb_mgr(*buffer_alloc_mgr), m_mgr(m_buffer_cb_mgr),
+	  m_buffer_cb_mgr(*m_buffer_alloc_mgr), m_mgr(m_buffer_cb_mgr),
 	  m_acq_frame_nb(-1)
 {
 }
