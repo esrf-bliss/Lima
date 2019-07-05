@@ -1,3 +1,4 @@
+
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
@@ -28,7 +29,6 @@
 #include "lima/Debug.h"
 #include "lima/HwFrameInfo.h"
 #include "lima/DirectoryEventUtils.h"
-#include "lima/OrderedMap.h"
 
 namespace lima
 {
@@ -36,7 +36,7 @@ namespace lima
   {
     DEB_CLASS(DebModHardware,"HwSavingCtrlObj");
   public:
-    typedef OrderedMap<std::string,std::string> HeaderMap;
+    typedef std::map<std::string,std::string> HeaderMap;
 
     //Capabilities
     static const int COMMON_HEADER = 0x1; ///< if support common header @see setCommonHeader

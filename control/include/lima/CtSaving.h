@@ -119,7 +119,8 @@ namespace lima {
     };
     
     typedef std::pair<std::string, std::string> HeaderValue;
-    typedef OrderedMap<std::string, std::string> HeaderMap;
+    typedef std::map<std::string, std::string> HeaderMap;
+    typedef OrderedMap<std::string, std::string> HeaderOrderedMap;
     typedef std::map<long,Data> FrameMap;
 
     // --- file parameters

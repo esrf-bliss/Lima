@@ -25,9 +25,9 @@
 %MappedType HeaderMap
 {
 %TypeHeaderCode
-#include <lima/OrderedMap.h>
+#include <map>
 #include <string>
-typedef OrderedMap<std::string,std::string> HeaderMap;
+typedef std::map<std::string,std::string> HeaderMap;
 typedef std::pair<std::string, std::string> HeaderValue;
 %End
 
