@@ -60,7 +60,7 @@ typedef std::pair<std::string, std::string> HeaderValue;
 	  PyObject *key = sipConvertToPyStr(i->first);
 	  PyObject *value = sipConvertToPyStr(i->second);
 	  PyDict_SetItem(aReturnDict,key,value);
-	  Py_DECREF(value);
+	  Py_DECREF(key); Py_DECREF(value);
 	}
 return aReturnDict;
 %End
