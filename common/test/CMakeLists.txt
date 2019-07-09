@@ -20,7 +20,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-set(test_src test_membuffer)
+set(test_src test_membuffer test_ordered_map)
 if (NOT WIN32)
     list(APPEND test_src test_regex)
 endif()

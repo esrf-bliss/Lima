@@ -1,10 +1,12 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2019
 // European Synchrotron Radiation Facility
-// BP 220, Grenoble 38043
+// CS40220 38043 Grenoble Cedex 9 
 // FRANCE
+//
+// Contact: lima@esrf.fr
 //
 // This is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,6 +36,7 @@
 #include "lima/CtControl.h"
 #include "lima/CtConfig.h"
 #include "lima/HwSavingCtrlObj.h"
+#include "lima/OrderedMap.h"
 
 struct Data;
 class TaskEventCallback;
@@ -118,7 +121,8 @@ namespace lima {
     };
     
     typedef std::pair<std::string, std::string> HeaderValue;
-    typedef std::map<std::string,std::string> HeaderMap;
+    typedef std::map<std::string, std::string> HeaderMap;
+    typedef OrderedMap<std::string, std::string> HeaderOrderedMap;
     typedef std::map<long,Data> FrameMap;
 
     // --- file parameters
