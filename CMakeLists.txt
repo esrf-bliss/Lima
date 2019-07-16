@@ -320,7 +320,6 @@ if(LIMA_ENABLE_PYTHON)
     endforeach()
 
     configure_file(sip/limacore.sip.in sip/limacore.sip)
-    configure_file(sip/lima_init_numpy.cpp.in sip/core/limacore_init_numpy.cpp)
     list(APPEND LIMA_SIP_INCLUDE_DIRS
         "${CMAKE_CURRENT_BINARY_DIR}/sip"
         "${CMAKE_CURRENT_SOURCE_DIR}/common/sip"
