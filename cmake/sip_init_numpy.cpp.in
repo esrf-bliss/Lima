@@ -20,7 +20,37 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+
+#ifdef _DEBUG
+# ifdef _MSC_VER  
+   // VC8.0 will complain if system headers are #included both with
+   // and without _DEBUG defined, so we have to #include all the
+   // system headers used by pyconfig.h right here.
+#  include <stddef.h>
+#  include <stdarg.h>
+#  include <stdio.h>
+#  include <stdlib.h>
+#  include <assert.h>
+#  include <errno.h>
+#  include <ctype.h>
+#  include <wchar.h>
+#  include <basetsd.h>
+#  include <io.h>
+#  include <limits.h>
+#  include <float.h>
+#  include <string.h>
+#  include <math.h>
+#  include <time.h>
+# endif
+# undef _DEBUG // Don't let Python force the debug library just because we're debugging.
+# define DEBUG_WRAP_PYTHON_H
+#endif
+
 #include <Python.h>
+
+#ifdef DEBUG_WRAP_PYTHON_H
+# define _DEBUG
+#endif
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL _@PROJECT_NAME@NumpyArray
