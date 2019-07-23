@@ -42,8 +42,6 @@ endif (NOT PYTHONINTERP_FOUND)
 ##
 ## Check for the header files
 
-message(STATUS "#### NUMPY ${PYTHON_EXECUTABLE}" )
-
 ## Use Python to determine the include directory
 execute_process (
     COMMAND ${PYTHON_EXECUTABLE} -c import\ numpy\;\ print\(numpy.get_include\(\)\);

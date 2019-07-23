@@ -115,3 +115,72 @@ function(limatools_run_sip_for_camera camera)
 
   target_link_libraries(python_module_${MODULE_NAME} PUBLIC ${camera} limacore ${NUMPY_LIBRARIES})
 endfunction()
+
+# this macro is used to check python/sip to build python binding
+macro (limatools_check_python_and_sip)
+  if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    find_package(PythonInterp REQUIRED)
+    find_package(PythonLibs REQUIRED)
+    # python site-packages folder
+    execute_process(
+      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
+      OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+    set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
+  else()
+    find_package(Python COMPONENTS Interpreter Development REQUIRED)
+    # python site-packages folder
+    set(PYTHON_SITE_PACKAGES_DIR ${Python_SITELIB} CACHE PATH "where should python modules be installed?")
+    set(PYTHON_INCLUDE_DIRS ${Python_INCLUDE_DIRS})
+  endif()
+
+  # numpy required
+  find_package(NumPy REQUIRED)
+
+  # sip required and some options to be set
+  find_package(SIP REQUIRED)
+
+  include(SIPMacros)
+
+  if(WIN32)
+    set(SIP_TAGS WIN32_PLATFORM)
+  elseif(UNIX)
+    set(SIP_TAGS POSIX_PLATFORM)
+  endif(WIN32)
+  set(SIP_EXTRA_OPTIONS -e -g)
+
+endmacro()
+
+# This function installs the camera tango plugin to the python third-party directory
+# it must be called from the camera tango/ sub-directory CMakeLists.txt file
+# files is a string containing files separeted by space i.e:
+# limatols_install_camera_tango("Basler.py Basler_sub.py" ON)
+function(limatools_install_camera_tango files check_python)
+  if (${check_python})
+    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+      find_package(PythonInterp REQUIRED)
+      find_package(PythonLibs REQUIRED)
+      # python site-packages folder
+      execute_process(
+	COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
+	OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+      set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
+    else()
+      find_package(Python COMPONENTS Interpreter Development REQUIRED)
+      # python site-packages folder
+      set(PYTHON_SITE_PACKAGES_DIR ${Python_SITELIB} CACHE PATH "where should python modules be installed?")
+    endif()
+  endif()
+
+  set(file_list ${files})
+  separate_arguments(file_list)
+  foreach(file ${file_list})
+    install (
+      FILES ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Server/camera"
+      )
+  endforeach()
+endfunction()
