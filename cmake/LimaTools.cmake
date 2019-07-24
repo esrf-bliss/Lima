@@ -118,22 +118,15 @@ endfunction()
 
 # this macro is used to check python/sip to build python binding
 macro (limatools_check_python_and_sip)
-  if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-    find_package(PythonInterp REQUIRED)
-    find_package(PythonLibs REQUIRED)
-    # python site-packages folder
-    execute_process(
-      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
-      OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
-    set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
-  else()
-    find_package(Python COMPONENTS Interpreter Development REQUIRED)
-    # python site-packages folder
-    set(PYTHON_SITE_PACKAGES_DIR ${Python_SITELIB} CACHE PATH "where should python modules be installed?")
-    set(PYTHON_INCLUDE_DIRS ${Python_INCLUDE_DIRS})
-  endif()
+  find_package(PythonInterp REQUIRED)
+  find_package(PythonLibs REQUIRED)
+  # python site-packages folder
+  execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
+    OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
 
   # numpy required
   find_package(NumPy REQUIRED)
@@ -152,27 +145,21 @@ macro (limatools_check_python_and_sip)
 
 endmacro()
 
-# This function installs the camera tango plugin to the python third-party directory
+# This macro installs the camera tango plugin to the python third-party directory
 # it must be called from the camera tango/ sub-directory CMakeLists.txt file
-# files is a string containing files separeted by space i.e:
-# limatols_install_camera_tango("Basler.py Basler_sub.py" ON)
-function(limatools_install_camera_tango files check_python)
-  if (${check_python})
-    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-      find_package(PythonInterp REQUIRED)
-      find_package(PythonLibs REQUIRED)
-      # python site-packages folder
-      execute_process(
-	COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
-	OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-      set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
-    else()
-      find_package(Python COMPONENTS Interpreter Development REQUIRED)
-      # python site-packages folder
-      set(PYTHON_SITE_PACKAGES_DIR ${Python_SITELIB} CACHE PATH "where should python modules be installed?")
-    endif()
+# 'files' argument is a string containing files separeted by space i.e:
+# limatols_install_camera_tango("Basler.py Basler_sub.py")
+macro (limatools_install_camera_tango files)
+  if (NOT PYTHONINTERP_FOUND)
+    find_package(PythonInterp REQUIRED)
+    find_package(PythonLibs REQUIRED)
+    # python site-packages folder
+    execute_process(
+      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
+      OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+    set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
   endif()
 
   set(file_list ${files})
@@ -183,4 +170,4 @@ function(limatools_install_camera_tango files check_python)
       DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Server/camera"
       )
   endforeach()
-endfunction()
+endmacro()
