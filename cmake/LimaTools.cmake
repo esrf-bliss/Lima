@@ -117,7 +117,7 @@ function(limatools_run_sip_for_camera camera)
 endfunction()
 
 # this macro is used to check python/sip to build python binding
-macro (limatools_check_python_and_sip)
+macro (limatools_find_python_and_sip)
   find_package(PythonInterp REQUIRED)
   find_package(PythonLibs REQUIRED)
   # python site-packages folder

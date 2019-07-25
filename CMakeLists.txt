@@ -84,7 +84,7 @@ endif()
 
 # Enable python binding code compilation using sip generator
 if(LIMA_ENABLE_PYTHON)
-  limatools_check_python_and_sip()
+  limatools_find_python_and_sip()
 endif()
 
 #--------------------------------------------------------------------------------
