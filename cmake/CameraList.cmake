@@ -39,9 +39,6 @@ if(DEFINED ENV{LIMACAMERA_BASLER})
 else()
     set(LIMACAMERA_BASLER OFF CACHE BOOL "compile basler?")
 endif()
-if(LIMACAMERA_BASLER)
-    add_subdirectory(camera/basler)
-endif(LIMACAMERA_BASLER)
   
 #META
 if(DEFINED ENV{LIMACAMERA_META})
@@ -49,9 +46,6 @@ if(DEFINED ENV{LIMACAMERA_META})
 else()
     set(LIMACAMERA_META ON CACHE BOOL "compile meta?")
 endif()
-if(LIMACAMERA_META)
-    add_subdirectory(camera/common/meta)
-endif(LIMACAMERA_META)
 
 #PCO
 if(DEFINED ENV{LIMACAMERA_PCO})
@@ -345,7 +339,10 @@ if(LIMACAMERA_ROPERSCIENTIFIC)
     add_subdirectory(camera/roperscientific)
 endif(LIMACAMERA_ROPERSCIENTIFIC)
 
-
+#META
+if(LIMACAMERA_META)
+    add_subdirectory(camera/common/meta)
+endif(LIMACAMERA_META)
 
 #CAMERA ONLY WORKING ON LINUX
 if(UNIX)

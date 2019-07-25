@@ -84,31 +84,8 @@ endif()
 
 # Enable python binding code compilation using sip generator
 if(LIMA_ENABLE_PYTHON)
-    find_package(PythonInterp)
-    find_package(PythonLibs)
-    if(${PYTHONINTERP_FOUND})
-      # python site-packages folder
-      execute_process(
-        COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
-        OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-  	else()
-  		message(FATAL_ERROR "No python found, please install or disable LIMA_ENABLE_PYTHON")
-    endif()
-
-    set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
-
-    find_package(SIP REQUIRED)
-    include(SIPMacros)
-    if(WIN32)
-      set(SIP_TAGS WIN32_PLATFORM)
-    elseif(UNIX)
-      set(SIP_TAGS POSIX_PLATFORM)
-    endif(WIN32)
-    set(SIP_EXTRA_OPTIONS -e -g)
-
-    find_package(NumPy REQUIRED)
- endif()
+  limatools_find_python_and_sip()
+endif()
 
 #--------------------------------------------------------------------------------
 # Define source files
