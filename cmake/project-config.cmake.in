@@ -8,19 +8,17 @@
 
 @PACKAGE_INIT@
 
-include(CMakeFindDependencyMacro)
-find_dependency(Processlib)
-find_dependency(Threads)
-
-# Add optional dependencies here
-#find_dependency(HDF5)
-
-set(@PROJECT_NAME_UPPER@_ENABLE_NUMA "@LIMA_ENABLE_NUMA@")
-set(@PROJECT_NAME_UPPER@_ENABLE_DEBUG "@LIMA_ENABLE_DEBUG@")
-set(@PROJECT_NAME_UPPER@_SIP_DISABLE_FEATURES "@SIP_DISABLE_FEATURES@")
-
-set_and_check(@PROJECT_NAME_UPPER@_SIP_INCLUDE_DIRS "@PACKAGE_SIP_INSTALL_DIR@")
-set_and_check(@PROJECT_NAME_UPPER@_CMAKE_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_DIR@")
-
 include("${CMAKE_CURRENT_LIST_DIR}/@TARGETS_EXPORT_NAME@.cmake")
+
+# Load config of each components
+include(CMakeFindDependencyMacro)
+foreach(component ${@PROJECT_NAME@_FIND_COMPONENTS})
+  if (${@PROJECT_NAME@_FIND_REQUIRED_${component}})
+    # For requested component, execute its "config" script
+    find_dependency(@PROJECT_NAME@_${component} REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR})
+  else()
+    find_dependency(@PROJECT_NAME@_${component} HINTS ${CMAKE_CURRENT_LIST_DIR})
+  endif()
+endforeach()
+
 check_required_components("@PROJECT_NAME@")

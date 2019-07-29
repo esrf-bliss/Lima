@@ -6,11 +6,13 @@ if(NOT LIMA_BUILD_SUBMODULES)
     # Generate and install package config file and version
     set(PROJECT_LIBRARIES limacore h5bshuf)
     include(cmake/package_config.cmake)
+    include(cmake/components_config.cmake)
 endif()
 
 install(
     TARGETS limacore
     EXPORT "${TARGETS_EXPORT_NAME}"
+    COMPONENT runtime
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}   # import library
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}   # .so files are libraries
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}   # .dll files are binaries
@@ -27,24 +29,28 @@ install(
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/common/include/
+    COMPONENT devel
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/hardware/include/
+    COMPONENT devel
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/control/include/
+    COMPONENT devel
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/control/software_operation/include/
+    COMPONENT devel
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
@@ -58,17 +64,21 @@ if(NOT LIMA_BUILD_SUBMODULES)
               ${CMAKE_SOURCE_DIR}/cmake/SIPMacros.cmake
               ${CMAKE_SOURCE_DIR}/cmake/sip_init_numpy.cpp.in
               ${CMAKE_SOURCE_DIR}/cmake/package_config.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/components_config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/project_version.cmake
               ${CMAKE_SOURCE_DIR}/cmake/project_version.cc.in
               ${CMAKE_SOURCE_DIR}/cmake/project_version.h.in
               ${CMAKE_SOURCE_DIR}/cmake/LimaTools.cmake
-        COMPONENT devel
+        COMPONENT tools
         DESTINATION ${CMAKE_INSTALL_DIR}
     )
 endif()
 
 if(LIMA_ENABLE_PYTHON)
-    install(DIRECTORY python/Lima/ DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
+    install(
+         DIRECTORY python/Lima/
+         COMPONENT sip
+         DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
 
     file(GLOB SIP_SOURCES
         "${CMAKE_SOURCE_DIR}/common/sip/*.sip"
@@ -82,7 +92,7 @@ if(LIMA_ENABLE_PYTHON)
             FILES ${SIP_SOURCES}
                   ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip
                   ${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in
-            COMPONENT devel
+            COMPONENT sip
             DESTINATION ${SIP_INSTALL_DIR}
         )
     endif()

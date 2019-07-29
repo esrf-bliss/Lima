@@ -1,0 +1,11 @@
+# Config file for @PROJECT_NAME_LOWER@
+#
+# It defines the following variables:
+#
+# @PROJECT_NAME_UPPER@_INCLUDE_DIRS     - include directory
+# @PROJECT_NAME_UPPER@_LIBRARIES        - all dynamic libraries
+# @PROJECT_NAME_UPPER@_STATIC_LIBRARIES - all static libraries
+
+@PACKAGE_INIT@
+
+set_and_check(@PROJECT_NAME_UPPER@_CMAKE_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_DIR@")
