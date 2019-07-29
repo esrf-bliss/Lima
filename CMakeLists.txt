@@ -24,7 +24,7 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-project (lima)
+project (Lima)
 include(cmake/project_version.cmake)
 
 set(NAME "core")

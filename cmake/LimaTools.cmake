@@ -116,7 +116,7 @@ function(limatools_run_sip_for_camera camera)
   target_link_libraries(python_module_${MODULE_NAME} PUBLIC ${camera} limacore ${NUMPY_LIBRARIES})
 endfunction()
 
-# this macro is used to check python/sip to build python binding
+# this macro check if python, numpy and sip are available to build python modules
 macro (limatools_find_python_and_sip)
   find_package(PythonInterp REQUIRED)
   find_package(PythonLibs REQUIRED)

@@ -47,7 +47,7 @@ if (NOT NUMPY_FOUND)
 
     ## Use Python to determine the include directory
     execute_process (
-        COMMAND ${PYTHON_EXECUTABLE} -c import\ numpy\;\ print\(numpy.get_include\(\)\);      
+        COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include());"      
         ERROR_VARIABLE NUMPY_FIND_ERROR
         RESULT_VARIABLE NUMPY_FIND_RESULT
         OUTPUT_VARIABLE NUMPY_FIND_OUTPUT
@@ -78,7 +78,7 @@ if (NOT NUMPY_FOUND)
 
     if (PYTHON_EXECUTABLE)
         execute_process (
-            COMMAND ${PYTHON_EXECUTABLE} -c import\ numpy\;\ print\(numpy.__version__\);
+            COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.__version__);"
             ERROR_VARIABLE NUMPY_API_VERSION_ERROR
             RESULT_VARIABLE NUMPY_API_VERSION_RESULT
             OUTPUT_VARIABLE NUMPY_API_VERSION
