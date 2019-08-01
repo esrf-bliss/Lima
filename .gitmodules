@@ -133,3 +133,6 @@
 [submodule "camera/common/meta"]
 	path = camera/common/meta
 	url = ../Lima-camera-meta.git
+[submodule "camera/qhyccd"]
+	path = camera/qhyccd
+	url = ../Lima-camera-qhyccd
