@@ -12,7 +12,7 @@ Lima is a C++ library which can be used with many different cameras. The library
 
 ## Documentation
 
-The documentation is available [here](http://lima1.readthedocs.io/). Thank you to the people running Read the Docs for such an excellent service.
+The documentation is available [here](http://lima.blissgarden.org). Thank you to the people running Read the Docs for such an excellent service.
 
 The source for the documentation is in the `docs` folder. Here are the instructions to built and read it locally. The documentation is built with [Doxygen](http://www.doxygen.org/) and [Sphinx](http://www.sphinx-doc.org). The sphinx template is from [ReadtheDocs](https://docs.readthedocs.io). [Breathe](https://breathe.readthedocs.io) provides a bridge between the Sphinx and Doxygen documentation systems.
 
