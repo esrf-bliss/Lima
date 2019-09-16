@@ -18,7 +18,7 @@ If you need the Tango device server for the camera, run:
 
 ::
 
-  conda install --channel esrf-bcu lima-camera-basler-tango
+  conda install --channel esrf-bcu --channel tango-controls lima-camera-basler-tango
 
 .. note:: The runtime libraries of the camera's SDK are provided as well but some cameras requires drivers or specific setups than needs to be installed manually.
 

@@ -4,6 +4,29 @@ This is the release notes of LIMA, the library for image acquisition.
 
 You can find information related to new features and bug fixes. The notes are ordered by branch and release number.
 
+Version v1.9.0 released on September 13th 2019
+----------------------------------------------
+
+New features
+
+ * More conda packages for cameras are now supported:
+   andor3, andor, basler, dexela, eiger, frelon,
+   frelon, imxpad, maxipix, marccd, merlin,
+   mythen3, pco, pilatus, pixirad, pointgrey,
+   prosilica, simulator, slsdetector, ueye,
+   v4l2, xh
+ * Some refactoring and optimisation of the software buffer classes
+ * Support added for Numa (non-uniform memory access) memory management
+ 
+Bug Fixes
+
+ * CBF saving format now fits with miniCBF spec for Pilatus detectors
+ * Video: fixed issue when taking 8/16-bit images and then changing to Accumulation
+ 
+New cameras
+ * PCO usb
+ * Frelon 16
+
 Version v1.8.0 released on February 2nd 2019
 --------------------------------------------
 
