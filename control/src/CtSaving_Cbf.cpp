@@ -74,7 +74,9 @@ class SaveContainerCbf::Compression : public SinkTaskBase
   int _fillHeader(Data &aData,CtSaving::HeaderMap &aHeader,cbf_handle cbf)
   {
     DEB_MEMBER_FUNCT();
-  
+
+    CtSaving::HeaderOrderedMap anOrderedHeader;
+    
     cbf_failnez(cbf_new_datablock(cbf, "image_0"));
 
     aData.header.lock();
@@ -82,6 +84,35 @@ class SaveContainerCbf::Compression : public SinkTaskBase
     aHeader.insert(aDataHeader.begin(),aDataHeader.end());
     aData.header.unlock();
 
+    // Here prepare a Ordered HeaderMap, so sort the header values and insert them
+    // according to some conventions like Dectris Mini CBF:
+    // Dectris Mini CBF, look for categories
+    // 'array_data/header_convention' and 'array_data/header_contents',
+    // they must be inserted in the header in special order,
+    // 'convention' BEFORE 'contents'
+    CtSaving::HeaderMap::iterator it1, it2;
+    it1  = aHeader.find("array_data/header_convention");
+    if (it1 != aHeader.end())
+      {
+	it2  = aHeader.find("array_data/header_contents");
+	if (it2 != aHeader.end())
+	  {
+	    anOrderedHeader.insert(*it1);
+	    anOrderedHeader.insert(*it2);
+	    aHeader.erase(it1);
+	    aHeader.erase(it2);
+	  }		
+      }
+    _fillHeaderFromMap<CtSaving::HeaderMap>(aHeader, cbf);
+    // Now append ordered header if any
+    _fillHeaderFromMap<CtSaving::HeaderOrderedMap>(anOrderedHeader, cbf);
+    return 0;
+  }
+  
+  template <class T>
+  int _fillHeaderFromMap(T& aHeader, cbf_handle cbf)
+  {
+    
     std::string previousCategory;
 
     for(CtSaving::HeaderMap::iterator i = aHeader.begin();
