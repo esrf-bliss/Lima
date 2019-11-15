@@ -2035,7 +2035,7 @@ CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 CtSaving::SaveContainer::SaveContainer(Stream& stream) 
   : m_stream(stream), m_statistic_size(16),
     m_max_writing_task(1), m_running_writing_task(0),
-    m_log_stat_enable(false)
+    m_log_stat_enable(false), m_log_stat_file(NULL)
 {
   DEB_CONSTRUCTOR();
 }
@@ -2145,8 +2145,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
   Timestamp diff = end_write - start_write;
   DEB_TRACE() << "Write took : " << diff << "s";
 
-  if (m_log_stat_enable)
-    writeFileStat(aData, start_write, end_write, write_size);
+  writeFileStat(aData, start_write, end_write, write_size);
 }
 
 void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timestamp end, long wsize)
@@ -2162,8 +2161,7 @@ void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timest
       i->second.writing_start = start;
       i->second.writing_end = end;
       i->second.write_size = wsize;
-
-      if (m_log_stat_file) {
+      if (m_log_stat_enable && m_log_stat_file)	{
           double comp_time=0., comp_rate=0., comp_ratio=0.;
           double write_time, write_rate, total_time;
 
@@ -2187,6 +2185,12 @@ void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timest
 
 void CtSaving::SaveContainer::setEnableLogStat(bool enable)
 {
+  // TODO: check that no current saving is active
+  AutoMutex aLock = AutoMutex(m_cond.mutex());
+  if (m_log_stat_enable && !enable) {
+    fclose(m_log_stat_file);
+    m_log_stat_file = NULL;
+  }  
   m_log_stat_enable = enable;
 }
 
@@ -2206,6 +2210,10 @@ void CtSaving::SaveContainer::prepareLogStat(const CtSaving::Parameters& pars)
       if (m_log_stat_directory.empty()) {
           m_log_stat_directory = pars.directory;
       } else {
+	// check if directory changed, then update
+	if (m_log_stat_directory != pars.directory)
+	  m_log_stat_directory = pars.directory;
+	else
           m_stream.checkDirectoryAccess(m_log_stat_directory);
       }
 
@@ -2659,6 +2667,11 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 	    }
 	}
     }
+
+  // flush log file each time a frame file is closed
+  aLock.unlock();
+  if (m_log_stat_enable)
+    fflush(m_log_stat_file);
 }
 void CtSaving::SaveContainer::_setBuffer(int frameNumber,
 				  ZBufferType* buffers)
