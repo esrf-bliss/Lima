@@ -353,9 +353,6 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  string title = "Lima 2D detector acquisition";
 		  write_h5_dataset(*new_file.m_entry, "title", title);
 
-		  // Add an attribute "default"  for default entry path
-		  write_h5_attribute(*new_file.m_file, "default", new_file.m_entry_name);
-
 		  // could be the beamline/instrument name instead
 		  Group instrument = Group(new_file.m_entry->createGroup(m_ct_parameters.instrument_name));
 		  string nxinstrument = "NXinstrument";
