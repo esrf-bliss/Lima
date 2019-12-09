@@ -304,7 +304,8 @@ namespace lima
     void readOneImageBuffer(Data&, long frameNumber, long readBlockLen,
 			    bool baseImage);
     static inline long _increment_image_cnt(Data& aData,
-					    long image_cnt,SortedDataType& cnt);
+					    long image_cnt,SortedDataType& cnt,
+					    long step = 1);
   };
 
   inline std::ostream& operator<<(std::ostream &os,
