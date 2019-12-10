@@ -1092,9 +1092,10 @@ void CtControl::newCounterReady(Data&)
  */
 
 long CtControl::_increment_image_cnt(Data& aData,
-				     long image_cnt,SortedDataType& cnt)
+				     long image_cnt,SortedDataType& cnt,
+				     long step)
 {
-  long expectedImageCnt = image_cnt + 1;
+  long expectedImageCnt = image_cnt + step;
   if(aData.frameNumber != expectedImageCnt)
     {
       cnt.insert(aData);
@@ -1104,7 +1105,7 @@ long CtControl::_increment_image_cnt(Data& aData,
   while(!cnt.empty())
     {
       SortedDataType::iterator i = cnt.begin();
-      if(i->frameNumber != expectedImageCnt + 1)
+      if(i->frameNumber != expectedImageCnt + step)
 	break;
       expectedImageCnt = i->frameNumber;
       cnt.erase(i);
@@ -1119,24 +1120,30 @@ long CtControl::_increment_image_cnt(Data& aData,
 void CtControl::newImageSaved(Data &data)
 {
   DEB_MEMBER_FUNCT();
+
   CtSaving::ManagedMode savingManagedMode;
   m_ct_saving->getManagedMode(savingManagedMode);
+  unsigned long frames_per_file = 1;
+  if(savingManagedMode == CtSaving::Hardware)
+    m_ct_saving->getFramesPerFile(frames_per_file);
+
   AutoMutex aLock(m_cond.mutex());
   ImageStatus &imgStatus = m_status.ImageCounters;
-  imgStatus.LastImageSaved = _increment_image_cnt(data,imgStatus.LastImageSaved,
-						  m_images_saved);
 
+  imgStatus.LastImageSaved = _increment_image_cnt(data,imgStatus.LastImageSaved,
+						  m_images_saved, frames_per_file);
   if(savingManagedMode == CtSaving::Hardware)
     {
-      m_status.ImageCounters.LastImageAcquired = m_status.ImageCounters.LastImageSaved;
-      m_status.ImageCounters.LastBaseImageReady = m_status.ImageCounters.LastImageSaved;
-      m_status.ImageCounters.LastImageReady = m_status.ImageCounters.LastImageSaved;
+      imgStatus.LastImageAcquired = imgStatus.LastImageSaved;
+      imgStatus.LastBaseImageReady = imgStatus.LastImageSaved;
+      imgStatus.LastImageReady = imgStatus.LastImageSaved;
     }
+
   aLock.unlock();
 
   for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
       i != m_img_status_thread_list.end();++i)
-    (*i)->imageStatusChanged(m_status.ImageCounters);
+    (*i)->imageStatusChanged(imgStatus);
   _calcAcqStatus();
 }
 
