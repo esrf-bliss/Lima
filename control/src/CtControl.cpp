@@ -1124,9 +1124,12 @@ void CtControl::newImageSaved(Data &data)
   CtSaving::ManagedMode savingManagedMode;
   m_ct_saving->getManagedMode(savingManagedMode);
   unsigned long frames_per_callback = 1;
-  if(savingManagedMode == CtSaving::Hardware)
+  if(savingManagedMode == CtSaving::Hardware) {
     m_ct_saving->getFramesPerFile(frames_per_callback);
-
+    int extra_frames = (data.frameNumber + 1) % frames_per_callback;
+    if (extra_frames > 0)
+      frames_per_callback = extra_frames;
+  }
   AutoMutex aLock(m_cond.mutex());
   ImageStatus &imgStatus = m_status.ImageCounters;
 
