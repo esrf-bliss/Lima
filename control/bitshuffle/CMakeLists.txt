@@ -33,6 +33,7 @@ set(BS_VERSION_MINOR "3")
 set(BS_VERSION_POINT "4")
 
 set(BITSHUFFLE_DIR ../../third-party/bitshuffle)
+
 set(bitshuffle_src
   ${BITSHUFFLE_DIR}/src/bshuf_h5plugin.c
   ${BITSHUFFLE_DIR}/src/bshuf_h5filter.c
@@ -40,6 +41,10 @@ set(bitshuffle_src
   ${BITSHUFFLE_DIR}/src/bitshuffle_core.c
   ${BITSHUFFLE_DIR}/src/iochain.c
   ${BITSHUFFLE_DIR}/lz4/lz4.c)
+
+set(bitshuffle_inc
+  ${BITSHUFFLE_DIR}/src/bitshuffle.h
+  ${BITSHUFFLE_DIR}/src/bitshuffle_core.h)
 
 # this is the "object library" target: compiles the sources only once
 add_library(h5bshuf_objects OBJECT ${bitshuffle_src})
@@ -72,3 +77,5 @@ install(
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}   # .so files are libraries
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}   # .dll files are binaries
 )
+
+install(FILES ${bitshuffle_inc} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
