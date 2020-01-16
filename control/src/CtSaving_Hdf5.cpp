@@ -145,24 +145,37 @@ void write_h5_dataset(Group group,const char* entry_name,std::string& val)
 
 
 }
+
 template <class L,class T>
 void write_h5_attribute(L location,const char* entry_name,T& val)
 {
-       DataSpace dataspace(H5S_SCALAR);
        DataType datatype = get_h5_type(val);
-       Attribute attr(location.createAttribute(entry_name,datatype, dataspace));
+       Attribute attr;
+       if (!location.attrExists(entry_name)) {
+           DataSpace dataspace(H5S_SCALAR);
+           attr = Attribute(location.createAttribute(entry_name,datatype, dataspace));
+       }
+       else {
+           attr = location.openAttribute(entry_name);
+       }
        attr.write(datatype, &val);
 }
 
 template <class L>
 void write_h5_attribute(L location,const char* entry_name,std::string& val)
 {
-       DataSpace dataspace(H5S_SCALAR);
        DataType datatype = get_h5_type(val);
-       Attribute attr(location.createAttribute(entry_name,datatype, dataspace));
+       Attribute attr;
+       if (!location.attrExists(entry_name)) {
+           DataSpace dataspace(H5S_SCALAR);
+           attr = Attribute(location.createAttribute(entry_name,datatype, dataspace));
+       }
+       else {
+           attr = location.openAttribute(entry_name);
+       }
        attr.write(datatype, val.c_str());
-    
 }
+
 /** @brief helper to calculate an optimized chuncking of the image data set
  * 
  *
