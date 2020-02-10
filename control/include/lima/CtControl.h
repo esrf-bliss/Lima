@@ -24,6 +24,8 @@
 
 #include <set>
 
+#include <Lima/project_version.h>
+
 #include "lima/LimaCompatibility.h"
 #include "lima/ThreadUtils.h"
 
@@ -137,6 +139,8 @@ namespace lima
 
     CtControl(HwInterface *hw);
     ~CtControl();
+
+    inline std::string getVersion() { return Lima_runtime_project_version(); }
 
     void prepareAcq();
     void startAcq();

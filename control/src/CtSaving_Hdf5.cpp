@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2014
+// Copyright (C) : 2009-2020
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -46,10 +46,9 @@ struct SaveContainerHdf5::_File
     m_image_dataset(NULL),
     m_file(NULL),
     m_entry(NULL),
-    m_measurement_detector(NULL),
-    m_measurement_detector_data(NULL),
-    m_measurement_detector_data_header(NULL),
     m_instrument_detector(NULL),
+    m_instrument_detector_header(NULL),
+    m_instrument_detector_plot(NULL),
     m_entry_index(0)
   {}
   
@@ -57,10 +56,9 @@ struct SaveContainerHdf5::_File
   {
     delete m_image_dataspace;
     delete m_image_dataset;
-    delete m_measurement_detector;
     delete m_instrument_detector;
-    delete m_measurement_detector_data;
-    delete m_measurement_detector_data_header;
+    delete m_instrument_detector_header;
+    delete m_instrument_detector_plot;
     delete m_entry;
     delete m_file;
   }
@@ -75,23 +73,23 @@ struct SaveContainerHdf5::_File
     m_image_dataset = other.m_image_dataset;
     m_file = other.m_file;
     m_entry = other.m_entry;
-    m_measurement_detector = other.m_measurement_detector;
     m_instrument_detector = other.m_instrument_detector;
-    m_measurement_detector_data_header = other.m_measurement_detector_data_header;
-    m_measurement_detector_data = other.m_measurement_detector_data;
+    m_instrument_detector_header = other.m_instrument_detector_header;
+    m_instrument_detector_plot = other.m_instrument_detector_plot;
     m_entry_index = other.m_entry_index;
     m_entry_name = other.m_entry_name;
     m_data_name = other.m_data_name;
+    m_path_to_data = other.m_path_to_data;
 
     //transfer pointer to the new structure
     other.m_image_dataspace = NULL;
     other.m_image_dataset = NULL;
     other.m_file = NULL;
     other.m_entry = NULL;
-    other.m_measurement_detector = NULL;
     other.m_instrument_detector = NULL;
-    other.m_measurement_detector_data = NULL;
-    other.m_measurement_detector_data_header = NULL;
+    other.m_instrument_detector_data = NULL;
+    other.m_instrument_detector_header = NULL;
+    other.m_instrument_detector_plot = NULL;
   }
 
   bool m_format_written;
@@ -102,13 +100,14 @@ struct SaveContainerHdf5::_File
   DataSet *m_image_dataset;
   H5File *m_file;
   Group *m_entry;
-  Group *m_measurement_detector;
   Group *m_instrument_detector;
-  Group *m_measurement_detector_data;
-  Group *m_measurement_detector_data_header;
+  Group *m_instrument_detector_data;
+  Group *m_instrument_detector_header;
+  Group *m_instrument_detector_plot;
   int m_entry_index;
   string m_entry_name;
   string m_data_name;
+  string m_path_to_data;
 
 };
 /* Static function helper*/
@@ -122,7 +121,7 @@ DataType get_h5_type(unsigned long long)	{return PredType(PredType::NATIVE_UINT6
 DataType get_h5_type(long long)			{return PredType(PredType::NATIVE_INT64);}
 DataType get_h5_type(float)			{return PredType(PredType::NATIVE_FLOAT);}
 DataType get_h5_type(double)			{return PredType(PredType::NATIVE_DOUBLE);}
-DataType get_h5_type(std::string& s)            {return StrType(H5T_C_S1, s.size()? s.size():1);}
+DataType get_h5_type(std::string& s)		{StrType type = StrType(H5T_C_S1, H5T_VARIABLE); type.setCset(H5T_CSET_UTF8); return type;}
 DataType get_h5_type(bool)			{return PredType(PredType::NATIVE_UINT8);}
 
 template <class T>
@@ -132,7 +131,6 @@ void write_h5_dataset(Group group,const char* entry_name,T& val)
        DataType datatype = get_h5_type(val);
        DataSet dataset(group.createDataSet(entry_name,datatype, dataspace));
        dataset.write(&val, datatype);
-
 }
 
 template <>
@@ -141,9 +139,7 @@ void write_h5_dataset(Group group,const char* entry_name,std::string& val)
        DataSpace dataspace(H5S_SCALAR);
        DataType datatype = get_h5_type(val);
        DataSet dataset(group.createDataSet(entry_name,datatype, dataspace));
-       dataset.write(val.c_str(), datatype);
-
-
+       dataset.write(val, datatype);
 }
 
 template <class L,class T>
@@ -173,7 +169,7 @@ void write_h5_attribute(L location,const char* entry_name,std::string& val)
        else {
            attr = location.openAttribute(entry_name);
        }
-       attr.write(datatype, val.c_str());
+       attr.write(datatype, val);
 }
 
 /** @brief helper to calculate an optimized chuncking of the image data set
@@ -191,9 +187,9 @@ static void calculate_chunck(hsize_t* data_size, hsize_t* chunck, int  depth)
 
        hsize_t nb_image = data_size[0];
        while(hsize_t(z_chunk) > nb_image) {
-              --x_chunk,--y_chunk;
-	      if(!x_chunk  || !y_chunk) break;
-	      z_chunk = (long) ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
+          --x_chunk,--y_chunk;
+          if(!x_chunk  || !y_chunk) break;
+          z_chunk = (long) ceil(request_chunck_pixel_nb / ((data_size[2] / x_chunk) * (data_size[1] / y_chunk)));
        }
        if(!x_chunk) x_chunk = 1;
        else if(x_chunk > 8) x_chunk = 8;
@@ -222,7 +218,7 @@ SaveContainerHdf5::SaveContainerHdf5(CtSaving::Stream& stream, CtSaving::FileFor
     if (format == CtSaving::HDF5BS) {
         int ret= bshuf_register_h5filter();
         if (ret < 0) {
-	    THROW_CTL_ERROR(Error) << "Cannot register H5BSHUF filter";
+          THROW_CTL_ERROR(Error) << "Cannot register H5BSHUF filter";
         }
     }
 #endif
@@ -238,6 +234,9 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image = control.image();
 	m_ct_acq = control.acquisition();
 	m_hw_int = control.hwInterface();
+
+  //  lima library version
+	m_ct_parameters.lima_version = control.getVersion();
 
 	// Get detector info 
 	HwDetInfoCtrlObj *det_info;
@@ -366,54 +365,71 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  string title = "Lima 2D detector acquisition";
 		  write_h5_dataset(*new_file.m_entry, "title", title);
 
-		  // Add an attribute "default"  for default entry path
+		  // Add some Nexus attributes to the file: 
+			// - default = entry path  to data
+			// - NX_class = Nxroot
+			// - creator = LIMA-<version>
+
 		  write_h5_attribute(*new_file.m_file, "default", new_file.m_entry_name);
+			string nxroot = "NXroot";
+			write_h5_attribute(*new_file.m_file, "NX_class", nxroot);
+			string nxcreator = "LIMA-"+ m_ct_parameters.lima_version;			
+			write_h5_attribute(*new_file.m_file, "creator", nxcreator);
 
 		  // could be the beamline/instrument name instead
 		  Group instrument = Group(new_file.m_entry->createGroup(m_ct_parameters.instrument_name));
-		  string nxinstrument = "NXinstrument";
+			string nxinstrument = "NXinstrument";
 		  write_h5_attribute(instrument, "NX_class", nxinstrument);
-		  
+		  Group measurement = Group(new_file.m_entry->createGroup("measurement"));
+			string nxmeasurement = "NXmeasurement";
+		  write_h5_attribute(measurement, "NX_class", nxmeasurement);
+
 		  new_file.m_instrument_detector = new Group(instrument.createGroup(m_ct_parameters.det_name));
 		  string nxdetector = "NXdetector";
 		  write_h5_attribute(*new_file.m_instrument_detector, "NX_class", nxdetector);
 		  
-		  Group measurement = Group(new_file.m_entry->createGroup("measurement"));
+		  new_file.m_instrument_detector_header = 
+		    new Group(new_file.m_instrument_detector->createGroup("header"));
 		  string nxcollection = "NXcollection";
-		  write_h5_attribute(measurement, "NX_class", nxcollection);
+		  write_h5_attribute(*new_file.m_instrument_detector_header, "NX_class", nxcollection);
 		  
-		  new_file.m_measurement_detector = new Group(measurement.createGroup(m_ct_parameters.det_name));
-		  write_h5_attribute(*new_file.m_measurement_detector, "NX_class", nxdetector);
+			new_file.m_instrument_detector_plot = 
+		    new Group(new_file.m_instrument_detector->createGroup("plot"));
+			string nxdata = "NXdata";
+		  write_h5_attribute(*new_file.m_instrument_detector_plot, "NX_class", nxdata);			
 		  
-		  // This group called data will contain image array and image header (external meta-data)
-		  new_file.m_measurement_detector_data = 
-		    new Group(new_file.m_measurement_detector->createGroup("data"));
-		  string nxdata = "NXdata";
-		  write_h5_attribute(*new_file.m_measurement_detector_data, "NX_class", nxdata);
+			// save dataset name for final data
+			new_file.m_data_name = "data";		  		  	  	
+			new_file.m_path_to_data = "/" + new_file.m_entry_name+ "/"+ m_ct_parameters.instrument_name + "/" + m_ct_parameters.det_name + "/"+ new_file.m_data_name;
 		  
-		  // Add attribute "default" for path to the NXdata
-		  new_file.m_data_name = "array";
-		  string path_to_nxdata = new_file.m_entry_name + "/measurement/" + m_ct_parameters.det_name + "/data";
+			// set "default" and "signal" attributes "default" for auto plotting
+		  string path_to_nxdata = m_ct_parameters.instrument_name + "/"+ m_ct_parameters.det_name + "/plot";
 		  write_h5_attribute(*new_file.m_entry, "default", path_to_nxdata);
 
-		  // Add attribute "signal" for final data path
-		  write_h5_attribute(*new_file.m_measurement_detector_data, "signal", new_file.m_data_name);
-		  
-		  new_file.m_measurement_detector_data_header = 
-		    new Group(new_file.m_measurement_detector_data->createGroup("header"));
+		  path_to_nxdata = m_ct_parameters.det_name + "/plot";
+		  write_h5_attribute(instrument, "default", path_to_nxdata);
+			path_to_nxdata = "plot";
+			write_h5_attribute(*new_file.m_instrument_detector, "default", path_to_nxdata);		  			
+		  write_h5_attribute(*new_file.m_instrument_detector_plot, "signal", new_file.m_data_name);
+
+			// finally create a soft link into measurement to Nxdata
+		  measurement.link(H5L_TYPE_SOFT,  new_file.m_path_to_data, "data");
 
 		  // write the control parameters (detinfo, acq and image)
 		  
 		  //Det Info
 		  Group det_info = Group(new_file.m_instrument_detector->createGroup("detector_information"));
+			write_h5_attribute(det_info, "NX_class", nxcollection);
 		  write_h5_dataset(det_info,"name",m_ct_parameters.det_name);
 		  write_h5_dataset(det_info,"type",m_ct_parameters.det_type);
 		  write_h5_dataset(det_info,"model",m_ct_parameters.det_model);
 		  Group pixelsize = Group(det_info.createGroup("pixel_size"));
+			write_h5_attribute(pixelsize, "NX_class", nxcollection);
 		  write_h5_dataset(pixelsize,"xsize",m_ct_parameters.pixel_size[0]);
 		  write_h5_dataset(pixelsize,"ysize",m_ct_parameters.pixel_size[1]);
 		  Group imagesize = Group(det_info.createGroup("max_image_size"));
-		  int width = m_ct_parameters.max_image_size.getWidth();
+		  write_h5_attribute(imagesize, "NX_class", nxcollection);
+			int width = m_ct_parameters.max_image_size.getWidth();
 		  int height = m_ct_parameters.max_image_size.getHeight();
 		  write_h5_dataset(imagesize,"xsize",width);
 		  write_h5_dataset(imagesize,"ysize",height);
@@ -421,7 +437,8 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  write_h5_dataset(det_info,"image_lima_type",im_type);
 		  // Acquisition
 		  Group acq = Group(new_file.m_instrument_detector->createGroup("acquisition"));
-		  string acq_mode = lima::convert_2_string(m_ct_parameters.acq_mode);
+		  write_h5_attribute(acq, "NX_class", nxcollection);
+			string acq_mode = lima::convert_2_string(m_ct_parameters.acq_mode);
 		  write_h5_dataset(acq,"mode",acq_mode);
 		  write_h5_dataset(acq,"exposure_time",m_ct_parameters.acq_expo_time);
 		  write_h5_dataset(acq,"latency_time",m_ct_parameters.acq_latency_time);
@@ -430,6 +447,7 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  write_h5_dataset(acq,"trigger_mode",trig_mode);
 		  if (m_ct_parameters.acq_mode == Accumulation) {
 		    Group acc = Group(acq.createGroup("accumulation"));
+				write_h5_attribute(acc, "NX_class", nxcollection);
 		    string time_mode = lima::convert_2_string(m_ct_parameters.acc_time_mode);
 		    write_h5_dataset(acc,"time_mode",time_mode);
 		    write_h5_dataset(acc,"max_exposure_time",m_ct_parameters.acc_max_expotime);
@@ -439,22 +457,27 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  }
 		  if (m_ct_parameters.acq_mode == Concatenation) {
 		    Group concat = Group(acq.createGroup("concatenation"));
+				write_h5_attribute(concat, "NX_class", nxcollection);
 		    write_h5_dataset(concat,"nb_frames",m_ct_parameters.concat_nbframes);
 		  }
 		  // Image
 		  Group image = Group(new_file.m_instrument_detector->createGroup("image_operation"));
-		  Group dim = Group(image.createGroup("dimension"));
+		  write_h5_attribute(image, "NX_class", nxcollection);
+			Group dim = Group(image.createGroup("dimension"));
+			write_h5_attribute(dim, "NX_class", nxcollection);
 		  int xsize = m_ct_parameters.image_dim.getSize().getWidth();
 		  int ysize = m_ct_parameters.image_dim.getSize().getHeight();
 		  write_h5_dataset(dim,"xsize",xsize);				  
 		  write_h5_dataset(dim,"ysize",ysize);				  
 		  Group bin = Group(image.createGroup("binning"));
+			write_h5_attribute(bin, "NX_class", nxcollection);
 		  int xbin = m_ct_parameters.image_bin.getX();
 		  int ybin = m_ct_parameters.image_bin.getY();
 		  write_h5_dataset(bin,"x",xbin);				  
 		  write_h5_dataset(bin,"y",ybin);				  				
 		  Group roi = Group(image.createGroup("region_of_interest"));
-		  Point roip = m_ct_parameters.image_roi.getTopLeft();
+		  write_h5_attribute(roi, "NX_class", nxcollection);
+			Point roip = m_ct_parameters.image_roi.getTopLeft();
 		  Size roiz = m_ct_parameters.image_roi.getSize();
 		  xsize = roiz.getWidth();
 		  ysize = roiz.getHeight();
@@ -463,6 +486,7 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		  write_h5_dataset(roi,"xsize",xsize);
 		  write_h5_dataset(roi,"ysize",ysize);
 		  Group flipping = Group(image.createGroup("flipping"));
+			write_h5_attribute(flipping, "NX_class", nxcollection);
 		  write_h5_dataset(flipping,"x",m_ct_parameters.image_flip.x);
 		  write_h5_dataset(flipping,"y",m_ct_parameters.image_flip.y);
 		  string rot = lima::convert_2_string(m_ct_parameters.image_rotation);
@@ -470,8 +494,6 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		} else {
 		  new_file.m_entry = new Group(new_file.m_file->openGroup(strname));
 		  Group instrument = Group(new_file.m_entry->openGroup(m_ct_parameters.instrument_name));
-		  Group measurement = Group(new_file.m_entry->openGroup("measurement"));
-		  new_file.m_measurement_detector = new Group(measurement.openGroup(m_ct_parameters.det_name));
 		  new_file.m_instrument_detector = new Group(instrument.openGroup(m_ct_parameters.det_name));
 		}
 	} catch (FileIException &error) {
@@ -488,10 +510,8 @@ void SaveContainerHdf5::_close(void* f) {
 
 	_File *file = (_File*)f;
 	if (!file->m_in_append || m_is_multiset) {
-		// Finally create in the instrument group a link to the measurement data
-		string path = file->m_entry_name;
-		path += "/measurement/" + m_ct_parameters.det_name + "/data";
-		file->m_instrument_detector->link(H5L_TYPE_SOFT, path, "data");
+		// Finally create in the instrument group a link to the instrument detector data
+		file->m_instrument_detector_plot->link(H5L_TYPE_SOFT, file->m_path_to_data , "data");
 		
 		// ISO 8601 Time format
 		time_t now;
@@ -572,19 +592,18 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 #endif
 				string stime = string(buf);
 				write_h5_dataset(*file->m_entry,"start_time",stime);
-				// write header only once into "parameters" group 
-				// but we should write some keys into measurement, like motor_pos counter_pos (spec)???
+				// write header only once into "header" group 				
 				if (!aHeader.empty()) {
 					for (CtSaving::HeaderMap::const_iterator it = aHeader.begin(); it != aHeader.end(); it++) {
 
 						string key = it->first;
 						string value = it->second;
-						write_h5_dataset(*file->m_measurement_detector_data_header,
+						write_h5_dataset(*file->m_instrument_detector_header,
 								 key.c_str(),value);
 					}
 				}
-				delete file->m_measurement_detector_data_header;
-				file->m_measurement_detector_data_header = NULL;
+				delete file->m_instrument_detector_header;
+				file->m_instrument_detector_header = NULL;
 					
 				// create the image data structure in the file
 				hsize_t data_dims[3], max_dims[3];
@@ -615,7 +634,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				// create new dspace
 				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, NULL);
 				file->m_image_dataset = 
-				  new DataSet(file->m_measurement_detector_data->createDataSet(file->m_data_name,
+				  new DataSet(file->m_instrument_detector->createDataSet(file->m_data_name,
 											  data_type,
 											  *file->m_image_dataspace,
 											  plist));
@@ -625,7 +644,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_format_written = true;
 			} else if (file->m_in_append && !m_is_multiset && !file->m_dataset_extended) {
 				hsize_t allocated_dims[3];
-				file->m_image_dataset = new DataSet(file->m_measurement_detector_data->
+				file->m_image_dataset = new DataSet(file->m_instrument_detector->
 								    openDataSet(file->m_data_name));
 				file->m_image_dataspace = new DataSpace(file->m_image_dataset->getSpace());
 				file->m_image_dataspace->getSimpleExtentDims(allocated_dims);
