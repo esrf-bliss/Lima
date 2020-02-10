@@ -18,7 +18,6 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - numpy
     - sip 4.19.8           #For the SIP module
     - processlib
     - libconfig 1.7*
@@ -35,7 +34,6 @@ requirements:
     - {{ compiler('cxx') }}
   run:
     - python
-    - numpy
     - sip >=4.19.4, <=4.19.8 # For compatibility with pyqt 5.9.2
     - {{ pin_compatible('processlib', max_pin='x.x') }}
     - libconfig 1.7*
