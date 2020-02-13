@@ -316,6 +316,9 @@ public:
 			std::list<double>& compression_ratio,
 			std::list<double>& incoming_speed) const;
 		void getRawStatistic(StatisticsType&) const;
+		
+		void updateNbFrames(long nb_frames);
+		void cleanRemainingFrames(long last_acquired_frame_nr);
 
 		void getParameters(CtSaving::Parameters&) const;
 		void clear();
@@ -504,6 +507,16 @@ public:
 		{
 			m_save_cnt->createStatistic(data);
 		}
+
+		void updateNbFrames(long last_acquired_frame_nr)
+		{
+			m_save_cnt->updateNbFrames(last_acquired_frame_nr);
+		}
+		void cleanRemainingFrames(long last_acquired_frame_nr)
+		{
+			m_save_cnt->cleanRemainingFrames(last_acquired_frame_nr);
+		}
+
 	private:
 		class _SaveCBK;
 		class _SaveTask;

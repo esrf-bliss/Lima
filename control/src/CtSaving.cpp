@@ -2006,9 +2006,28 @@ void CtSaving::_prepare(CtControl& ct)
 	m_saving_stop = false;
 }
 
-void CtSaving::_stop(CtControl&)
+// CtSaving::_stop is only called from CtControl::stopAcq()
+void CtSaving::_stop(CtControl& ct)
 {
-	close();
+	// Get the last image acquired counter
+	CtControl::ImageStatus img_status;
+	ct.getImageStatus(img_status);
+
+	for (int s = 0; s < m_nb_stream; ++s)
+	{
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+		{
+			// Update the number of frames so that SaveContainer::writeFile() will properly
+			// call SaveContainer::close()
+			stream.updateNbFrames(img_status.LastImageAcquired + 1);
+			
+			// Clean up the frame parameters so that _allStreamReady() return true
+			stream.cleanRemainingFrames(img_status.LastImageAcquired + 1);
+		}
+	}
+
+	_close();
 }
 
 void CtSaving::_close()
@@ -2436,6 +2455,11 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	_prepare(ct);			// call inheritance if needed
 }
 
+void CtSaving::SaveContainer::updateNbFrames(long last_acquired_frame_nr)
+{
+	m_nb_frames_to_write = last_acquired_frame_nr;
+}
+
 bool CtSaving::SaveContainer::isReady(long frame_nr) const
 {
 	DEB_MEMBER_FUNCT();
@@ -2462,6 +2486,16 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 	}
 
 	return i == m_frame_params.begin(); // ready if we are the next (the first)
+}
+
+void CtSaving::SaveContainer::cleanRemainingFrames(long last_acquired_frame_nr)
+{
+	DEB_MEMBER_FUNCT();
+
+	AutoMutex lock(m_cond.mutex());
+	m_frame_params.erase(
+		m_frame_params.find(last_acquired_frame_nr),
+		m_frame_params.end());
 }
 
 void CtSaving::SaveContainer::setReady(long frame_nr)
@@ -2914,5 +2948,3 @@ void CtSaving::Stream::checkDirectoryAccess(const std::string & directory)
 		THROW_CTL_ERROR(Error) << output;
 	}
 }
-
-
