@@ -220,11 +220,15 @@ set_target_properties(limacore PROPERTIES
 
 # Generate export macros
 generate_export_header(limacore)
+message("#####################################")
+message("${CMAKE_BINARY_DIR}")
+message("#####################################")
 
 target_include_directories(limacore PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/common/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/hardware/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/control/include>"
+    "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/include>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )

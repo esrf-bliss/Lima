@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2020
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -72,6 +72,7 @@ private:
 	  string instrument_name;
 	  string det_model;
 	  string det_type;
+	  string lima_version;
 	  double pixel_size[2];
 	  Size max_image_size;
 	  ImageType curr_image_type;

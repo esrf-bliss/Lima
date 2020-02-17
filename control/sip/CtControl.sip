@@ -118,6 +118,8 @@ using namespace lima;
     CtControl(HwInterface *hw /KeepReference/);
     ~CtControl();
 
+    std::string getVersion();
+
     void prepareAcq();
     void startAcq();
     void stopAcq();
