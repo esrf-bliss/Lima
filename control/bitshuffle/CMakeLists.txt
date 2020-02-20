@@ -68,6 +68,11 @@ set_property(TARGET h5bshuf_objects PROPERTY POSITION_INDEPENDENT_CODE 1)
 add_library(h5bshuf SHARED $<TARGET_OBJECTS:h5bshuf_objects>)
 add_library(h5bshuf_static STATIC $<TARGET_OBJECTS:h5bshuf_objects>)
 
+target_include_directories(h5bshuf PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${BITSHUFFLE_DIR}/src>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
 target_link_libraries(h5bshuf PUBLIC ${HDF5_LIBRARIES})
 target_link_libraries(h5bshuf_static PUBLIC ${HDF5_LIBRARIES})
 
