@@ -2147,16 +2147,16 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	lock.lock();
 	++m_written_frames;
+	bool acq_end = (m_written_frames == m_nb_frames_to_write);
 
 	m_frame_params.erase(frameId);
 	--m_running_writing_task;
 	lock.unlock();
 
-	if (pars.overwritePolicy != MultiSet ||
-		m_written_frames == m_nb_frames_to_write) // Close file at the end of acquisition
+	if (pars.overwritePolicy != MultiSet || acq_end) // Close at the end
 	{
 		try {
-			close(&pars, m_written_frames == m_nb_frames_to_write);
+			close(&pars, acq_end);
 		}
 		catch (...) {
 			m_stream.setSavingError(CtControl::SaveCloseError);
@@ -2169,6 +2169,7 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	Timestamp diff = end_write - start_write;
 	DEB_TRACE() << "Write took : " << diff << "s";
 
+	lock.lock();
 	writeFileStat(aData, start_write, end_write, write_size);
 }
 
@@ -2419,13 +2420,13 @@ void CtSaving::SaveContainer::clear()
 void CtSaving::SaveContainer::prepare(CtControl& ct)
 {
 	DEB_MEMBER_FUNCT();
-	m_statistic.clear();
 	int nb_frames;
 	ct.acquisition()->getAcqNbFrames(nb_frames);
-	m_nb_frames_to_write = nb_frames;
-	m_written_frames = 0;
 	CtSaving::Parameters pars = m_stream.getParameters(Auto);
 	AutoMutex lock(m_cond.mutex());
+	m_statistic.clear();
+	m_nb_frames_to_write = nb_frames;
+	m_written_frames = 0;
 	if (m_nb_frames_to_write && 	// if not live
 		pars.savingMode != CtSaving::Manual)
 	{
@@ -2457,6 +2458,7 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 
 void CtSaving::SaveContainer::updateNbFrames(long last_acquired_frame_nr)
 {
+	AutoMutex lock(m_cond.mutex());
 	m_nb_frames_to_write = last_acquired_frame_nr;
 }
 
