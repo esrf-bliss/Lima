@@ -308,7 +308,6 @@ ImageZCompression::ImageZCompression(CtSaving::SaveContainer &save_cnt,  int  le
 
 ImageZCompression::~ImageZCompression()
 {
-  ZBufferType *aBufferListPt = new ZBufferType;
 }
 
 void ImageZCompression::process(Data &aData)
