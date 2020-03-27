@@ -27,27 +27,13 @@
 
 using namespace lima;
 
-const int _BufferHelper::BUFFER_HELPER_SIZE = 64 * 1024;
-
-_BufferHelper::_BufferHelper()
-{
-  DEB_CONSTRUCTOR();
-
-  _init(BUFFER_HELPER_SIZE);
-}
-
-_BufferHelper::_BufferHelper(int buffer_size)
-{
-  DEB_CONSTRUCTOR();
-  DEB_PARAM() << DEB_VAR1(buffer_size);
-
-  _init(buffer_size);
-}
-
-void _BufferHelper::_init(int buffer_size)
+void ZBufferHelper::_alloc(int buffer_size)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(buffer_size);
+
+  if (buffer_size == 0)
+    THROW_CTL_ERROR(InvalidValue) << "Invalid NULL buffer_size";
 
   used_size = 0;
 #ifdef __unix
@@ -59,7 +45,7 @@ void _BufferHelper::_init(int buffer_size)
     THROW_CTL_ERROR(Error) << "Can't allocate buffer";
 }
 
-_BufferHelper::~_BufferHelper()
+void ZBufferHelper::_free()
 {
 #ifdef __unix
   free(buffer);
@@ -68,13 +54,9 @@ _BufferHelper::~_BufferHelper()
 #endif
 }
 
-#define DELETE_BUFFER_LIST(buflist) \
-      for(ZBufferType::iterator i = buflist->begin(); \
-   	i != buflist->end();++i) \
-	  delete *i; \
-      delete buflist;
-
 #ifdef WITH_Z_COMPRESSION
+const int FileZCompression::BUFFER_HELPER_SIZE = 64 * 1024;
+
 FileZCompression::FileZCompression(CtSaving::SaveContainer &save_cnt,
 			   int framesPerFile,const CtSaving::HeaderMap &header) :
   m_container(save_cnt),m_frame_per_file(framesPerFile)
@@ -107,30 +89,38 @@ FileZCompression::~FileZCompression()
 
 void FileZCompression::process(Data &aData)
 {
-  ZBufferType *aBufferListPt = new ZBufferType();
+  ZBufferType aBufferListPt;
 
-  
   std::ostringstream buffer;
-  try
-    {
-      SaveContainerEdf::_writeEdfHeader(aData,m_header,
+  SaveContainerEdf::_writeEdfHeader(aData,m_header,
 					m_frame_per_file,
 					buffer);
-      const std::string& tmpBuffer = buffer.str();
-      _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
+  const std::string& tmpBuffer = buffer.str();
+  _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
+  _compression((char*)aData.data(),aData.size(),aBufferListPt);
+  _end_compression(aBufferListPt);
 
-      _compression((char*)aData.data(),aData.size(),aBufferListPt);
-      _end_compression(aBufferListPt);
-    }
-  catch(Exception&)
-    {
-      DELETE_BUFFER_LIST(aBufferListPt);
-      throw;
-    }
-  m_container._setBuffer(aData.frameNumber,aBufferListPt);
+  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
 }
 
-void FileZCompression::_compression(const char *buffer,int size,ZBufferType* return_buffers)
+inline void FileZCompression::_test_avail_out(ZBufferType& return_buffers)
+{
+  if(!m_compression_struct.avail_out)
+    {
+      return_buffers.emplace_back(BUFFER_HELPER_SIZE);
+      ZBufferHelper& newBuffer = return_buffers.back();
+      m_compression_struct.next_out = (Bytef*)newBuffer.buffer;
+      m_compression_struct.avail_out = BUFFER_HELPER_SIZE;
+    }
+}
+
+inline void FileZCompression::_update_used_size(ZBufferType& return_buffers)
+{
+  return_buffers.back().used_size = (BUFFER_HELPER_SIZE -
+				     m_compression_struct.avail_out);
+}
+
+void FileZCompression::_compression(const char *buffer,int size,ZBufferType& return_buffers)
 {
   DEB_MEMBER_FUNCT();
   
@@ -139,25 +129,22 @@ void FileZCompression::_compression(const char *buffer,int size,ZBufferType* ret
   
   while(m_compression_struct.avail_in)
     {
-      TEST_AVAIL_OUT;
+      _test_avail_out(return_buffers);
       if(deflate(&m_compression_struct,Z_NO_FLUSH) != Z_OK)
 	THROW_CTL_ERROR(Error) << "deflate error";
-      
-      return_buffers->back()->used_size = _BufferHelper::BUFFER_HELPER_SIZE -
-	m_compression_struct.avail_out;
+      _update_used_size(return_buffers);
     }
 }
-void FileZCompression::_end_compression(ZBufferType* return_buffers)
+void FileZCompression::_end_compression(ZBufferType& return_buffers)
 {
   DEB_MEMBER_FUNCT();
   
   int deflate_res = Z_OK;
   while(deflate_res == Z_OK)
     {
-      TEST_AVAIL_OUT;
+      _test_avail_out(return_buffers);
       deflate_res = deflate(&m_compression_struct,Z_FINISH);
-      return_buffers->back()->used_size = _BufferHelper::BUFFER_HELPER_SIZE - 
-	m_compression_struct.avail_out;
+      _update_used_size(return_buffers);
     }
   if(deflate_res != Z_STREAM_END)
     THROW_CTL_ERROR(Error) << "deflate error";
@@ -178,9 +165,9 @@ FileLz4Compression::FileLz4Compression(CtSaving::SaveContainer &save_cnt,
 }
 
 FileLz4Compression::~FileLz4Compression()
-  {
-    LZ4F_freeCompressionContext(m_ctx);
-  }
+{
+  LZ4F_freeCompressionContext(m_ctx);
+}
 
 void FileLz4Compression::process(Data &aData)
 {
@@ -191,31 +178,24 @@ void FileLz4Compression::process(Data &aData)
   SaveContainerEdf::_writeEdfHeader(aData,m_header,
 				    m_frame_per_file,
 				    buffer);
-  ZBufferType *aBufferListPt = new ZBufferType();
+  ZBufferType aBufferListPt;
   const std::string& tmpBuffer = buffer.str();
-  try
-    {
-      _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
-      _compression((char*)aData.data(),aData.size(),aBufferListPt);
-    }
-  catch(Exception&)
-    {
-      DELETE_BUFFER_LIST(aBufferListPt);
-      throw;
-    }
-  m_container._setBuffer(aData.frameNumber,aBufferListPt);
+  _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
+  _compression((char*)aData.data(),aData.size(),aBufferListPt);
+  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
 }
 
-void FileLz4Compression::_compression(const char *src,int size,ZBufferType* return_buffers)
+void FileLz4Compression::_compression(const char *src,int size,
+				      ZBufferType& return_buffers)
 {
   DEB_MEMBER_FUNCT();
   
   int buffer_size = LZ4F_compressFrameBound(size,&lz4_preferences);
   buffer_size += LZ4_HEADER_SIZE + LZ4_FOOTER_SIZE;
   
-  _BufferHelper *newBuffer = new _BufferHelper(buffer_size);
-  return_buffers->push_back(newBuffer);
-  char* buffer = (char*)newBuffer->buffer;
+  return_buffers.emplace_back(buffer_size);
+  ZBufferHelper& newBuffer = return_buffers.back();
+  char* buffer = (char*)newBuffer.buffer;
   
   int offset = LZ4F_compressBegin(m_ctx,buffer,
 				  buffer_size,&lz4_preferences);
@@ -233,7 +213,7 @@ void FileLz4Compression::_compression(const char *src,int size,ZBufferType* retu
   if(LZ4F_isError(error_code))
     THROW_CTL_ERROR(Error) << "Failed to end compression: " << DEB_VAR1(error_code);
   offset += error_code;
-  newBuffer->used_size = offset;
+  newBuffer.used_size = offset;
 }
 #endif // WITH_LZ4_COMPRESSION
 
@@ -260,21 +240,13 @@ ImageBsCompression::~ImageBsCompression()
 
 void ImageBsCompression::process(Data &aData)
 {
-  ZBufferType *aBufferListPt = new ZBufferType;
-
-  try
-    {
-      _compression((char*)aData.data(), aData.size(), aData.depth(), aBufferListPt);
-    }
-  catch(Exception&)
-    {
-      DELETE_BUFFER_LIST(aBufferListPt);
-      throw;
-    }
-  m_container._setBuffer(aData.frameNumber,aBufferListPt);
+  ZBufferType aBufferListPt;
+  _compression((char*)aData.data(), aData.size(), aData.depth(), aBufferListPt);
+  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
 }
 
-void ImageBsCompression::_compression(const char *src,int data_size,int data_depth, ZBufferType* return_buffers)
+void ImageBsCompression::_compression(const char *src,int data_size,int data_depth,
+				      ZBufferType& return_buffers)
 {
   DEB_MEMBER_FUNCT();
 
@@ -282,8 +254,9 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
   unsigned int bs_in_size= (unsigned int)(data_size/data_depth);
   unsigned int bs_out_size;
 
-  _BufferHelper *newBuffer = new _BufferHelper(data_size);
-  char* bs_buffer = (char*)newBuffer->buffer;
+  return_buffers.emplace_back(data_size);
+  ZBufferHelper& newBuffer = return_buffers.back();
+  char* bs_buffer = (char*)newBuffer.buffer;
 
   bshuf_write_uint64_BE(bs_buffer, data_size);
   bshuf_write_uint32_BE(bs_buffer+8, bs_block_size);
@@ -293,8 +266,7 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
   else
     DEB_TRACE() << "BitShuffle Compression IN[" << data_size << "] OUT[" << bs_out_size << "]";
 
-  return_buffers->push_back(newBuffer);
-  return_buffers->back()->used_size = bs_out_size+12;
+  newBuffer.used_size = bs_out_size+12;
 }
 
 #endif // WITH_BS_COMPRESSION
@@ -312,35 +284,27 @@ ImageZCompression::~ImageZCompression()
 
 void ImageZCompression::process(Data &aData)
 {
-  ZBufferType *aBufferListPt = new ZBufferType();
-  
-  try
-    {
-      _compression((char*)aData.data(),aData.size(),aBufferListPt);
-    }
-  catch(Exception&)
-    {
-      DELETE_BUFFER_LIST(aBufferListPt);
-      throw;
-    }
-  m_container._setBuffer(aData.frameNumber,aBufferListPt);
+  ZBufferType aBufferListPt;
+  _compression((char*)aData.data(),aData.size(),aBufferListPt);
+  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
 }
 
-void ImageZCompression::_compression(const char *src,int size,ZBufferType* return_buffers)
+void ImageZCompression::_compression(const char *src,int size,
+				     ZBufferType& return_buffers)
 {
   DEB_MEMBER_FUNCT();
   uLong buffer_size;
   int status;
   // cannot know compression ratio in advance so allocate a buffer for full image size
   buffer_size = compressBound(size);
-  _BufferHelper *newBuffer = new _BufferHelper(buffer_size);
-  return_buffers->push_back(newBuffer);
-  char* buffer = (char*)newBuffer->buffer;
+  return_buffers.emplace_back(buffer_size);
+  ZBufferHelper& newBuffer = return_buffers.back();
+  char* buffer = (char*)newBuffer.buffer;
   
   if ((status=compress2((Bytef*)buffer, &buffer_size, (Bytef*)src, size, m_compression_level)) < 0)
     THROW_CTL_ERROR(Error) << "Compression failed: error code " << status;
         
-  return_buffers->back()->used_size = buffer_size;
+  newBuffer.used_size = buffer_size;
 }
 #endif // WITH_Z_COMPRESSION
 

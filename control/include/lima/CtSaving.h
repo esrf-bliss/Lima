@@ -38,16 +38,13 @@
 #include "lima/HwSavingCtrlObj.h"
 #include "lima/OrderedMap.h"
 
+#include "lima/CtSaving_Compression_Buffer.h"
+
 struct Data;
 class TaskEventCallback;
 class SinkTaskBase;
 
 namespace lima {
-
-struct _BufferHelper;
-
-typedef std::vector<_BufferHelper*> ZBufferType;
-typedef std::map<int, ZBufferType*> dataId2ZBufferType;
 
 /// Control saving settings such as file format and mode
 class LIMACORE_API CtSaving
@@ -359,8 +356,8 @@ public:
 		virtual void _clear();
 		virtual void _prepare(CtControl&) {};
 		// @brief used from compression tasks if any
-		virtual void _setBuffer(int frameNumber, ZBufferType*);
-		virtual ZBufferType* _takeBuffer(int dataId);
+		virtual void _setBuffer(int frameNumber, ZBufferType&& buffer);
+		virtual ZBufferType _takeBuffer(int dataId);
 
 		int			m_written_frames;
 		Stream& m_stream;

@@ -680,17 +680,16 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 
 			if ((aFormat == CtSaving::HDF5GZ) || (aFormat == CtSaving::HDF5BS))
 			  {
-			    ZBufferType* buffers = _takeBuffer(aData.frameNumber);
+			    ZBufferType buffers(std::move(_takeBuffer(aData.frameNumber)));
 			    // with single chunk, only one buffer allocated
-			    buf_size = buffers->front()->used_size;
-			    buf_data = buffers->front()->buffer;
+			    ZBufferHelper& b = buffers.front();
+			    buf_size = b.used_size;
+			    buf_data = b.buffer;
 			    //DEB_ALWAYS() << "Image #"<< aData.frameNumber << " buf_size = "<< buf_size;
 			    status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);			
 			    if (status<0) {
 			      THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed";
 			    }
-			    delete  buffers->front();
-			    delete buffers;
 			  }
 			 else
 			   {

@@ -30,32 +30,8 @@
 
 namespace lima {
 
-struct _BufferHelper
-{
-DEB_CLASS_NAMESPC(DebModControl,"_BufferHelper","Control");
-
-void _init(int buffer_size);
-public:
-static const int BUFFER_HELPER_SIZE;
-_BufferHelper();
-_BufferHelper(int buffer_size);
-~_BufferHelper();
-int used_size;
-void *buffer;
-};
-typedef std::vector<_BufferHelper*> ZBufferType;
-typedef std::map<int,ZBufferType*> dataId2ZBufferType;
-
 #ifdef WITH_Z_COMPRESSION 
 #include <zlib.h>
-
-#define TEST_AVAIL_OUT	if(!m_compression_struct.avail_out) \
-    {									\
-     _BufferHelper *newBuffer = new _BufferHelper(); \
-      m_compression_struct.next_out = (Bytef*)newBuffer->buffer;	\
-      m_compression_struct.avail_out = newBuffer->BUFFER_HELPER_SIZE;	\
-      return_buffers->push_back(newBuffer);				\
-    }
 
    class FileZCompression: public SinkTaskBase
   {
@@ -66,13 +42,18 @@ typedef std::map<int,ZBufferType*> dataId2ZBufferType;
     CtSaving::HeaderMap 	m_header;
     
     z_stream_s		m_compression_struct;
-   public:
+  public:
     FileZCompression(CtSaving::SaveContainer &save_cnt,
 		 int framesPerFile,const CtSaving::HeaderMap &header);
      ~FileZCompression();
     virtual void process(Data &aData);
-    void _compression(const char *buffer,int size,ZBufferType* return_buffers);
-    void _end_compression(ZBufferType* return_buffers);
+  private:
+    static const int BUFFER_HELPER_SIZE;
+
+    void _test_avail_out(ZBufferType& return_buffers);
+    void _update_used_size(ZBufferType& return_buffers);
+    void _compression(const char *buffer,int size,ZBufferType& return_buffers);
+    void _end_compression(ZBufferType& return_buffers);
   };
 #endif // WITH_Z_COMPRESSION
 
@@ -111,7 +92,7 @@ static const LZ4F_preferences_t lz4_preferences = {
 		  int framesPerFile,const CtSaving::HeaderMap &header);
    ~FileLz4Compression();
    virtual void process(Data &aData);
-   void _compression(const char *src,int size,ZBufferType* return_buffers);   
+   void _compression(const char *src,int size,ZBufferType& return_buffers);   
  };
 #endif // WITH_LZ4_COMPRESSION
 
@@ -127,7 +108,7 @@ class ImageBsCompression: public SinkTaskBase
   ImageBsCompression(CtSaving::SaveContainer &save_cnt);
   ~ImageBsCompression();
   virtual void process(Data &aData);
-  void _compression(const char *buffer,int size,int depth,ZBufferType* return_buffers);
+  void _compression(const char *buffer,int size,int depth,ZBufferType& return_buffers);
 };
 #endif // WITH_BS_COMPRESSION 
 
@@ -146,7 +127,7 @@ class ImageZCompression: public SinkTaskBase
   
   ~ImageZCompression();
   virtual void process(Data &aData);
-  void _compression(const char *buffer,int size,ZBufferType* return_buffers);
+  void _compression(const char *buffer,int size,ZBufferType& return_buffers);
 };
 #endif // WITH_Z_COMPRESSION
 
