@@ -202,7 +202,7 @@ include(Saving.cmake)
 # Add the library limacore definition
 #--------------------------------------------------------------------------------
 add_library(limacore SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/project_version.cc # Add version info
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}/project_version.cc # Add version info
     ${common_srcs}
     ${hardware_srcs}
     ${control_srcs}

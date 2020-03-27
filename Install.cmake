@@ -21,7 +21,7 @@ install(
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/project_version.h
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}/project_version.h
         ${CMAKE_CURRENT_BINARY_DIR}/limacore_export.h
     COMPONENT devel
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/lima

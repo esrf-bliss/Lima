@@ -24,7 +24,7 @@
 
 #include <set>
 
-#include <Lima/project_version.h>
+#include <lima/project_version.h>
 
 #include "lima/LimaCompatibility.h"
 #include "lima/ThreadUtils.h"
