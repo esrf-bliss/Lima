@@ -641,26 +641,37 @@ void CtControl::getStatus(Status& status) const
     status.AcquisitionStatus = aHwStatus.acq;
 }
 
-/** @brief aborts an acquisiton from a callback thread: it's safe to call 
- *  from a HW thread. Creates a dummy task that calls stopAcq()
+/** @brief This function is DEPRECATED. Use stopAcqAsync instead
  */
 
 void CtControl::abortAcq(AcqStatus acq_status, ErrorCode error_code, 
 			 Data& data, bool ctrl_mutex_locked)
 {
   DEB_MEMBER_FUNCT();
+  DEB_WARNING() << "This function is deprecated! Use stopAcqAsync instead";
+  if (ctrl_mutex_locked)
+    THROW_CTL_ERROR(InvalidValue) << DEB_VAR1(ctrl_mutex_locked);
+  stopAcqAsync(acq_status, error_code, data);
+}
 
-  if (!ctrl_mutex_locked)
-    m_cond.mutex().lock();
+/** @brief aborts an acquisiton from a callback thread: it's safe to call 
+ *  from a HW thread. Creates a dummy task that calls stopAcq() and waits
+ *  for all buffers to be released
+ */
 
-  bool status_change = (m_status.AcquisitionStatus != acq_status);
-  if (status_change) {
-    m_status.AcquisitionStatus = acq_status;
-    m_status.Error = error_code;
+void CtControl::stopAcqAsync(AcqStatus acq_status, ErrorCode error_code,
+			     Data& data)
+{
+  DEB_MEMBER_FUNCT();
+
+  {
+    AutoMutex lock(m_cond.mutex());
+    bool status_change = (m_status.AcquisitionStatus != acq_status);
+    if (status_change) {
+      m_status.AcquisitionStatus = acq_status;
+      m_status.Error = error_code;
+    }
   }
-
-  if (!ctrl_mutex_locked)
-    m_cond.mutex().unlock();
 
   typedef SinkTaskBase AbortAcqTask;
   AbortAcqTask *abort_task = new AbortAcqTask();
@@ -982,7 +993,7 @@ bool CtControl::newFrameReady(Data& fdata)
 
   bool aContinueFlag = true;
   AutoMutex aLock(m_cond.mutex());
-  if(_checkOverrun(fdata))
+  if(_checkOverrun(fdata, aLock))
     aContinueFlag = false;// Stop Acquisition on overun
   else
     {
@@ -1214,7 +1225,7 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
 /** @brief this methode check if an overrun 
  *  @warning this methode is call under lock
  */
-bool CtControl::_checkOverrun(Data &aData)
+bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
 {
   DEB_MEMBER_FUNCT();
   if(m_status.AcquisitionStatus == AcqFault) return true;
@@ -1253,12 +1264,13 @@ bool CtControl::_checkOverrun(Data &aData)
       error_code = slow_processing ? ProcessingOverun : SaveOverun;
     }
 
-  DEB_PARAM() << DEB_VAR1(overrunFlag);
   if (overrunFlag) {
+    AutoMutexUnlock u(l);
     DEB_ERROR() << DEB_VAR2(m_status, error_code);
-    abortAcq(AcqFault, error_code, aData, true);
+    stopAcqAsync(AcqFault, error_code, aData);
   }
 
+  DEB_RETURN() << DEB_VAR1(overrunFlag);
   return overrunFlag;
 }
 // ----------------------------------------------------------------------------

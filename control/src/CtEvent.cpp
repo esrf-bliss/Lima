@@ -156,7 +156,7 @@ void CtEvent::reportEvent(Event *event)
     }
 
     Data *data = new Data();
-    m_ct.abortAcq(AcqFault, ct_err_code, *data);
+    m_ct.stopAcqAsync(AcqFault, ct_err_code, *data);
   }
 
   if (hasRegisteredCallback())
