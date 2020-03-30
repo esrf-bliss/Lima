@@ -153,6 +153,7 @@ set(control_srcs
     control/src/CtAcquisition.cpp
     control/src/CtBuffer.cpp
     control/src/CtImage.cpp
+    control/src/CtSaving_ZBuffer.cpp
     control/src/CtSaving_Compression.cpp
     control/src/CtSaving_Edf.cpp
     control/src/CtShutter.cpp

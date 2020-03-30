@@ -38,7 +38,7 @@
 #include "lima/HwSavingCtrlObj.h"
 #include "lima/OrderedMap.h"
 
-#include "lima/CtSaving_Compression_Buffer.h"
+#include "lima/CtSaving_ZBuffer.h"
 
 struct Data;
 class TaskEventCallback;

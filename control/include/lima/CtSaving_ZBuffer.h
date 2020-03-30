@@ -22,8 +22,8 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
-#ifndef CTSAVING_COMPRESSION_BUFFER_H
-#define CTSAVING_COMPRESSION_BUFFER_H
+#ifndef CTSAVING_ZBUFFER_H
+#define CTSAVING_ZBUFFER_H
 
 #include "lima/Debug.h"
 
@@ -85,5 +85,5 @@ typedef std::map<int,ZBufferList> dataId2ZBufferList;
 };  //namespace lima
 
 
-#endif // CTSAVING_COMPRESSION_BUFFER_H
+#endif // CTSAVING_ZBUFFER_H
 

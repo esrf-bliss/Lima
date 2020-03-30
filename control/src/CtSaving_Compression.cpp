@@ -27,33 +27,6 @@
 
 using namespace lima;
 
-void ZBuffer::_alloc(int buffer_size)
-{
-  DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR1(buffer_size);
-
-  if (buffer_size == 0)
-    THROW_CTL_ERROR(InvalidValue) << "Invalid NULL buffer_size";
-
-  used_size = 0;
-#ifdef __unix
-  if(posix_memalign(&buffer,4*1024,buffer_size))
-#else
-  buffer = _aligned_malloc(buffer_size,4*1024);
-  if(!buffer)
-#endif
-    THROW_CTL_ERROR(Error) << "Can't allocate buffer";
-}
-
-void ZBuffer::_free()
-{
-#ifdef __unix
-  free(buffer);
-#else
-  _aligned_free(buffer);
-#endif
-}
-
 #ifdef WITH_Z_COMPRESSION
 const int FileZCompression::BUFFER_HELPER_SIZE = 64 * 1024;
 
