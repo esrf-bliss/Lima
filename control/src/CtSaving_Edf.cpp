@@ -201,10 +201,10 @@ long SaveContainerEdf::_writeFile(void* f,Data &aData,
 #if defined(WITH_Z_COMPRESSION) || defined(WITH_LZ4_COMPRESSION)
   if(aFormat == CtSaving::EDFGZ || aFormat == CtSaving::EDFLZ4)
     {
-      ZBufferType buffers(std::move(_takeBuffer(aData.frameNumber)));
-      for(ZBufferType::iterator i = buffers.begin(); i != buffers.end();++i)
+      ZBufferList buffers(std::move(_takeBuffer(aData.frameNumber)));
+      for(ZBufferList::iterator i = buffers.begin(); i != buffers.end();++i)
 	{
-	  ZBufferHelper& b = *i;
+	  ZBuffer& b = *i;
 	  fout->write((char*)b.buffer,b.used_size);
 	  write_size += b.used_size;
 	}

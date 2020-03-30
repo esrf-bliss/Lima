@@ -356,8 +356,8 @@ public:
 		virtual void _clear();
 		virtual void _prepare(CtControl&) {};
 		// @brief used from compression tasks if any
-		virtual void _setBuffer(int frameNumber, ZBufferType&& buffer);
-		virtual ZBufferType _takeBuffer(int dataId);
+		virtual void _setBuffer(int frameNumber, ZBufferList&& buffer);
+		virtual ZBufferList _takeBuffer(int dataId);
 
 		int			m_written_frames;
 		Stream& m_stream;
@@ -376,7 +376,7 @@ public:
 		int			m_max_writing_task; ///< number of maximum parallel write
 		int			m_running_writing_task; ///< number of concurrent write running
 		Mutex			 m_lock;
-		dataId2ZBufferType		 m_buffers;
+		dataId2ZBufferList	m_buffers;
 
 	};
 	friend class SaveContainer;

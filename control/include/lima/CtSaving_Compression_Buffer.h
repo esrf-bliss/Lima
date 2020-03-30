@@ -29,18 +29,18 @@
 
 namespace lima {
 
-struct ZBufferHelper
+struct ZBuffer
 {
-  DEB_CLASS_NAMESPC(DebModControl,"ZBufferHelper","Control");
+  DEB_CLASS_NAMESPC(DebModControl,"ZBuffer","Control");
 
 public:
-  ZBufferHelper(int buffer_size);
-  ZBufferHelper(const ZBufferHelper& o) = delete;
-  ZBufferHelper(ZBufferHelper&& o);
-  ~ZBufferHelper();
+  ZBuffer(int buffer_size);
+  ZBuffer(const ZBuffer& o) = delete;
+  ZBuffer(ZBuffer&& o);
+  ~ZBuffer();
 
-  ZBufferHelper& operator =(const ZBufferHelper& o) = delete;
-  ZBufferHelper& operator =(ZBufferHelper&& o);
+  ZBuffer& operator =(const ZBuffer& o) = delete;
+  ZBuffer& operator =(ZBuffer&& o);
 
   int used_size;
   void *buffer;
@@ -50,20 +50,20 @@ private:
   void _free();
 };
 
-inline ZBufferHelper::ZBufferHelper(int buffer_size)
+inline ZBuffer::ZBuffer(int buffer_size)
 {
   DEB_CONSTRUCTOR();
   _alloc(buffer_size);
 }
 
-inline ZBufferHelper::ZBufferHelper(ZBufferHelper&& o)
+inline ZBuffer::ZBuffer(ZBuffer&& o)
   : used_size(std::move(o.used_size)), buffer(std::move(o.buffer))
 {
   DEB_CONSTRUCTOR();
   o.buffer = NULL;
 }
 
-inline ZBufferHelper& ZBufferHelper::operator =(ZBufferHelper&& o)
+inline ZBuffer& ZBuffer::operator =(ZBuffer&& o)
 {
   if (buffer)
     _free();
@@ -73,14 +73,14 @@ inline ZBufferHelper& ZBufferHelper::operator =(ZBufferHelper&& o)
   return *this;
 }
 
-inline ZBufferHelper::~ZBufferHelper()
+inline ZBuffer::~ZBuffer()
 {
   if (buffer)
     _free();
 }
 
-typedef std::vector<ZBufferHelper> ZBufferType;
-typedef std::map<int,ZBufferType> dataId2ZBufferType;
+typedef std::vector<ZBuffer> ZBufferList;
+typedef std::map<int,ZBufferList> dataId2ZBufferList;
 
 };  //namespace lima
 

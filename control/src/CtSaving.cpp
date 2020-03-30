@@ -2716,20 +2716,20 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 	if (m_log_stat_enable)
 		fflush(m_log_stat_file);
 }
-void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferType&& buffers)
+void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
 {
 	AutoMutex aLock(m_lock);
-	std::pair<dataId2ZBufferType::iterator, bool> result;
+	std::pair<dataId2ZBufferList::iterator, bool> result;
 	result = m_buffers.emplace(std::move(frameNumber), std::move(buffers));
 	if (!result.second)
 		result.first->second = std::move(buffers);
 }
 
-ZBufferType CtSaving::SaveContainer::_takeBuffer(int dataId)
+ZBufferList CtSaving::SaveContainer::_takeBuffer(int dataId)
 {
 	AutoMutex aLock(m_lock);
-	dataId2ZBufferType::iterator i = m_buffers.find(dataId);
-	ZBufferType aReturnBufferPt(std::move(i->second));
+	dataId2ZBufferList::iterator i = m_buffers.find(dataId);
+	ZBufferList aReturnBufferPt(std::move(i->second));
 	m_buffers.erase(i);
 	return aReturnBufferPt;
 }

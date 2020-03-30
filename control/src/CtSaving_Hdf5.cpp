@@ -680,9 +680,9 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 
 			if ((aFormat == CtSaving::HDF5GZ) || (aFormat == CtSaving::HDF5BS))
 			  {
-			    ZBufferType buffers(std::move(_takeBuffer(aData.frameNumber)));
+			    ZBufferList buffers(std::move(_takeBuffer(aData.frameNumber)));
 			    // with single chunk, only one buffer allocated
-			    ZBufferHelper& b = buffers.front();
+			    ZBuffer& b = buffers.front();
 			    buf_size = b.used_size;
 			    buf_data = b.buffer;
 			    //DEB_ALWAYS() << "Image #"<< aData.frameNumber << " buf_size = "<< buf_size;

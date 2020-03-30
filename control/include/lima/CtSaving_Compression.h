@@ -50,10 +50,10 @@ namespace lima {
   private:
     static const int BUFFER_HELPER_SIZE;
 
-    void _test_avail_out(ZBufferType& return_buffers);
-    void _update_used_size(ZBufferType& return_buffers);
-    void _compression(const char *buffer,int size,ZBufferType& return_buffers);
-    void _end_compression(ZBufferType& return_buffers);
+    void _test_avail_out(ZBufferList& return_buffers);
+    void _update_used_size(ZBufferList& return_buffers);
+    void _compression(const char *buffer,int size,ZBufferList& return_buffers);
+    void _end_compression(ZBufferList& return_buffers);
   };
 #endif // WITH_Z_COMPRESSION
 
@@ -92,7 +92,7 @@ static const LZ4F_preferences_t lz4_preferences = {
 		  int framesPerFile,const CtSaving::HeaderMap &header);
    ~FileLz4Compression();
    virtual void process(Data &aData);
-   void _compression(const char *src,int size,ZBufferType& return_buffers);   
+   void _compression(const char *src,int size,ZBufferList& return_buffers);   
  };
 #endif // WITH_LZ4_COMPRESSION
 
@@ -108,7 +108,7 @@ class ImageBsCompression: public SinkTaskBase
   ImageBsCompression(CtSaving::SaveContainer &save_cnt);
   ~ImageBsCompression();
   virtual void process(Data &aData);
-  void _compression(const char *buffer,int size,int depth,ZBufferType& return_buffers);
+  void _compression(const char *buffer,int size,int depth,ZBufferList& return_buffers);
 };
 #endif // WITH_BS_COMPRESSION 
 
@@ -127,7 +127,7 @@ class ImageZCompression: public SinkTaskBase
   
   ~ImageZCompression();
   virtual void process(Data &aData);
-  void _compression(const char *buffer,int size,ZBufferType& return_buffers);
+  void _compression(const char *buffer,int size,ZBufferList& return_buffers);
 };
 #endif // WITH_Z_COMPRESSION
 
