@@ -684,7 +684,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			    // with single chunk, only one buffer allocated
 			    ZBuffer& b = buffers.front();
 			    buf_size = b.used_size;
-			    buf_data = b.buffer;
+			    buf_data = b.ptr();
 			    //DEB_ALWAYS() << "Image #"<< aData.frameNumber << " buf_size = "<< buf_size;
 			    status = H5DOwrite_chunk(dataset, dxpl , filter_mask,  offset, buf_size, buf_data);			
 			    if (status<0) {

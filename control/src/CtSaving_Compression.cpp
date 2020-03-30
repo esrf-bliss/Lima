@@ -82,7 +82,7 @@ inline void FileZCompression::_test_avail_out(ZBufferList& return_buffers)
     {
       return_buffers.emplace_back(BUFFER_HELPER_SIZE);
       ZBuffer& newBuffer = return_buffers.back();
-      m_compression_struct.next_out = (Bytef*)newBuffer.buffer;
+      m_compression_struct.next_out = (Bytef*)newBuffer.ptr();
       m_compression_struct.avail_out = BUFFER_HELPER_SIZE;
     }
 }
@@ -168,7 +168,7 @@ void FileLz4Compression::_compression(const char *src,int size,
   
   return_buffers.emplace_back(buffer_size);
   ZBuffer& newBuffer = return_buffers.back();
-  char* buffer = (char*)newBuffer.buffer;
+  char* buffer = (char*)newBuffer.ptr();
   
   int offset = LZ4F_compressBegin(m_ctx,buffer,
 				  buffer_size,&lz4_preferences);
@@ -229,7 +229,7 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
 
   return_buffers.emplace_back(data_size);
   ZBuffer& newBuffer = return_buffers.back();
-  char* bs_buffer = (char*)newBuffer.buffer;
+  char* bs_buffer = (char*)newBuffer.ptr();
 
   bshuf_write_uint64_BE(bs_buffer, data_size);
   bshuf_write_uint32_BE(bs_buffer+8, bs_block_size);
@@ -272,7 +272,7 @@ void ImageZCompression::_compression(const char *src,int size,
   buffer_size = compressBound(size);
   return_buffers.emplace_back(buffer_size);
   ZBuffer& newBuffer = return_buffers.back();
-  char* buffer = (char*)newBuffer.buffer;
+  char* buffer = (char*)newBuffer.ptr();
   
   if ((status=compress2((Bytef*)buffer, &buffer_size, (Bytef*)src, size, m_compression_level)) < 0)
     THROW_CTL_ERROR(Error) << "Compression failed: error code " << status;

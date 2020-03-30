@@ -32,7 +32,7 @@
 
 namespace lima {
 
-struct ZBuffer
+class ZBuffer
 {
   DEB_CLASS_NAMESPC(DebModControl,"ZBuffer","Control");
 
@@ -45,14 +45,18 @@ public:
   ZBuffer& operator =(const ZBuffer& o);
   ZBuffer& operator =(ZBuffer&& o);
 
-  int alloc_size;
   int used_size;
-  void *buffer;
+
+  void *ptr()
+  { return buffer; }
 
 private:
   void _alloc(int buffer_size);
   void _deep_copy(const ZBuffer& o);
   void _free();
+
+  int alloc_size;
+  void *buffer;
 };
 
 inline ZBuffer::ZBuffer(int buffer_size)

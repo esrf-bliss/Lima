@@ -50,6 +50,8 @@ void ZBuffer::_deep_copy(const ZBuffer& o)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
+  if (o.used_size > o.alloc_size)
+    THROW_CTL_ERROR(Error) << "Invalid " << DEB_VAR2(o.used_size, o.alloc_size);
   _alloc(o.alloc_size);
   used_size = o.used_size;
   memcpy(buffer, o.buffer, used_size);

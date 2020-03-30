@@ -205,7 +205,7 @@ long SaveContainerEdf::_writeFile(void* f,Data &aData,
       for(ZBufferList::iterator i = buffers.begin(); i != buffers.end();++i)
 	{
 	  ZBuffer& b = *i;
-	  fout->write((char*)b.buffer,b.used_size);
+	  fout->write((char*)b.ptr(),b.used_size);
 	  write_size += b.used_size;
 	}
     }
