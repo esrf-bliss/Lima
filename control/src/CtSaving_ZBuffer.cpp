@@ -43,14 +43,27 @@ void ZBuffer::_alloc(int buffer_size)
   if(!buffer)
 #endif
     THROW_CTL_ERROR(Error) << "Can't allocate buffer";
+  alloc_size = buffer_size;
+}
+
+void ZBuffer::_deep_copy(const ZBuffer& o)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
+  _alloc(o.alloc_size);
+  used_size = o.used_size;
+  memcpy(buffer, o.buffer, used_size);
 }
 
 void ZBuffer::_free()
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(alloc_size, used_size);
 #ifdef __unix
   free(buffer);
 #else
   _aligned_free(buffer);
 #endif
+  buffer = NULL;
 }
 

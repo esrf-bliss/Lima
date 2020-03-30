@@ -27,6 +27,9 @@
 
 #include "lima/Debug.h"
 
+#include <vector>
+#include <map>
+
 namespace lima {
 
 struct ZBuffer
@@ -35,18 +38,20 @@ struct ZBuffer
 
 public:
   ZBuffer(int buffer_size);
-  ZBuffer(const ZBuffer& o) = delete;
+  ZBuffer(const ZBuffer& o);
   ZBuffer(ZBuffer&& o);
   ~ZBuffer();
 
-  ZBuffer& operator =(const ZBuffer& o) = delete;
+  ZBuffer& operator =(const ZBuffer& o);
   ZBuffer& operator =(ZBuffer&& o);
 
+  int alloc_size;
   int used_size;
   void *buffer;
 
 private:
   void _alloc(int buffer_size);
+  void _deep_copy(const ZBuffer& o);
   void _free();
 };
 
@@ -56,15 +61,37 @@ inline ZBuffer::ZBuffer(int buffer_size)
   _alloc(buffer_size);
 }
 
+inline ZBuffer::ZBuffer(const ZBuffer& o)
+  : buffer(NULL)
+{
+  DEB_CONSTRUCTOR();
+  if (o.buffer)
+    _deep_copy(o);
+}
+
 inline ZBuffer::ZBuffer(ZBuffer&& o)
-  : used_size(std::move(o.used_size)), buffer(std::move(o.buffer))
+  : alloc_size(std::move(o.alloc_size)),
+    used_size(std::move(o.used_size)), buffer(std::move(o.buffer))
 {
   DEB_CONSTRUCTOR();
   o.buffer = NULL;
 }
 
+inline ZBuffer& ZBuffer::operator =(const ZBuffer& o)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
+  if (buffer)
+    _free();
+  if (o.buffer)
+    _deep_copy(o);
+  return *this;
+}
+
 inline ZBuffer& ZBuffer::operator =(ZBuffer&& o)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
   if (buffer)
     _free();
   used_size = std::move(o.used_size);
@@ -75,6 +102,7 @@ inline ZBuffer& ZBuffer::operator =(ZBuffer&& o)
 
 inline ZBuffer::~ZBuffer()
 {
+  DEB_DESTRUCTOR();
   if (buffer)
     _free();
 }
