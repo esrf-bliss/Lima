@@ -381,7 +381,7 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 			string nxinstrument = "NXinstrument";
 		  write_h5_attribute(instrument, "NX_class", nxinstrument);
 		  Group measurement = Group(new_file.m_entry->createGroup("measurement"));
-			string nxmeasurement = "NXmeasurement";
+			string nxmeasurement = "NXcollection";
 		  write_h5_attribute(measurement, "NX_class", nxmeasurement);
 
 		  new_file.m_instrument_detector = new Group(instrument.createGroup(m_ct_parameters.det_name));
