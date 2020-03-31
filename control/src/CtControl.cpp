@@ -702,7 +702,7 @@ void CtControl::_calcAcqStatus()
   AutoMutex aLock(m_cond.mutex());
 
   AcqStatus& acq_status = m_status.AcquisitionStatus;
-  if(acq_status != AcqRunning)
+  if((acq_status != AcqRunning) && (acq_status != AcqFault))
     return;
 
   const ImageStatus& img_cntrs = m_status.ImageCounters;
@@ -722,7 +722,8 @@ void CtControl::_calcAcqStatus()
   if(!acq_end)
     return;
   
-  acq_status = AcqReady;
+  if(acq_status == AcqRunning)
+    acq_status = AcqReady;
   DEB_TRACE() << DEB_VAR1(m_status);
 
   bool status_threads = !m_img_status_thread_list.empty();
