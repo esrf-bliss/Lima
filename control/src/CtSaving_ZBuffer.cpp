@@ -23,7 +23,10 @@
 //###########################################################################
 
 #include "lima/CtSaving_ZBuffer.h"
-#include "lima/Exceptions.h"
+
+#include <string.h> // For memcpy
+#include <stdlib.h> // For posix_memalign
+#include <malloc.h> // For _aligned_malloc
 
 using namespace lima;
 
@@ -53,8 +56,8 @@ void ZBuffer::_deep_copy(const ZBuffer& o)
   if (o.used_size > o.alloc_size)
     THROW_CTL_ERROR(Error) << "Invalid " << DEB_VAR2(o.used_size, o.alloc_size);
   _alloc(o.alloc_size);
-  used_size = o.used_size;
   memcpy(buffer, o.buffer, used_size);
+  used_size = o.used_size;
 }
 
 void ZBuffer::_free()
@@ -66,6 +69,6 @@ void ZBuffer::_free()
 #else
   _aligned_free(buffer);
 #endif
-  buffer = NULL;
+  _setInvalid();
 }
 

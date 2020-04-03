@@ -26,6 +26,7 @@
 #define CTSAVING_ZBUFFER_H
 
 #include "lima/Debug.h"
+#include "lima/Exceptions.h"
 
 #include <vector>
 #include <map>
@@ -51,6 +52,8 @@ public:
   { return buffer; }
 
 private:
+  bool _isValid() const;
+  void _setInvalid();
   void _alloc(int buffer_size);
   void _deep_copy(const ZBuffer& o);
   void _free();
@@ -59,6 +62,17 @@ private:
   void *buffer;
 };
 
+inline bool ZBuffer::_isValid() const
+{
+  return buffer;
+}
+
+inline void ZBuffer::_setInvalid()
+{
+  buffer = NULL;
+  alloc_size = used_size = 0;
+}
+
 inline ZBuffer::ZBuffer(int buffer_size)
 {
   DEB_CONSTRUCTOR();
@@ -66,11 +80,12 @@ inline ZBuffer::ZBuffer(int buffer_size)
 }
 
 inline ZBuffer::ZBuffer(const ZBuffer& o)
-  : buffer(NULL)
 {
   DEB_CONSTRUCTOR();
-  if (o.buffer)
+  if (o._isValid())
     _deep_copy(o);
+  else
+    _setInvalid();
 }
 
 inline ZBuffer::ZBuffer(ZBuffer&& o)
@@ -78,16 +93,20 @@ inline ZBuffer::ZBuffer(ZBuffer&& o)
     used_size(std::move(o.used_size)), buffer(std::move(o.buffer))
 {
   DEB_CONSTRUCTOR();
-  o.buffer = NULL;
+  o._setInvalid();
 }
 
 inline ZBuffer& ZBuffer::operator =(const ZBuffer& o)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
-  if (buffer)
+  if (std::addressof(o) == this) {
+    DEB_TRACE() << "Copying this into itself";
+    return *this;
+  }
+  if (_isValid())
     _free();
-  if (o.buffer)
+  if (o._isValid())
     _deep_copy(o);
   return *this;
 }
@@ -96,18 +115,20 @@ inline ZBuffer& ZBuffer::operator =(ZBuffer&& o)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
-  if (buffer)
+  if (std::addressof(o) == this)
+    THROW_CTL_ERROR(InvalidValue) << "Trying to this to itself";
+  if (_isValid())
     _free();
   used_size = std::move(o.used_size);
   buffer = std::move(o.buffer);
-  o.buffer = NULL;
+  o._setInvalid();
   return *this;
 }
 
 inline ZBuffer::~ZBuffer()
 {
   DEB_DESTRUCTOR();
-  if (buffer)
+  if (_isValid())
     _free();
 }
 

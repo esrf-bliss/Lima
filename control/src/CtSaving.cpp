@@ -2725,7 +2725,7 @@ void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
 		result.first->second = std::move(buffers);
 }
 
-ZBufferList CtSaving::SaveContainer::_takeBuffer(int dataId)
+ZBufferList CtSaving::SaveContainer::_takeBuffers(int dataId)
 {
 	AutoMutex aLock(m_lock);
 	dataId2ZBufferList::iterator i = m_buffers.find(dataId);

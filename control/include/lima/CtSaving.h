@@ -357,7 +357,7 @@ public:
 		virtual void _prepare(CtControl&) {};
 		// @brief used from compression tasks if any
 		virtual void _setBuffer(int frameNumber, ZBufferList&& buffer);
-		virtual ZBufferList _takeBuffer(int dataId);
+		virtual ZBufferList _takeBuffers(int dataId);
 
 		int			m_written_frames;
 		Stream& m_stream;
