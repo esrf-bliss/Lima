@@ -574,7 +574,7 @@ void CtControl::startAcq()
 
   if (!m_ready)
     THROW_CTL_ERROR(Error) << "Run prepareAcq before starting acquisition";
-  m_running = true;
+
   TrigMode trigMode;
   m_ct_acq->getTriggerMode(trigMode);
 
@@ -595,27 +595,58 @@ void CtControl::startAcq()
       m_ready = m_status.ImageCounters.LastImageAcquired != nbFrames4Acq;
     }
 
-  m_ct_video->_startAcqTime();
-  m_hw->startAcq();
+  bool was_running = m_running;
+  m_running = true;
   m_status.AcquisitionStatus = AcqRunning;
-  DEB_TRACE() << "Hardware Acquisition started";
+
+  if (!was_running)
+    m_ct_video->_startAcqTime();
+
+  aLock.unlock();
+
+  try {
+    m_hw->startAcq();
+    DEB_TRACE() << "Hardware Acquisition started";
+  } catch (...) {
+    DEB_ERROR() << "HwInterface::startAcq failed!";
+    _stopAcq(true);
+    throw;
+  }
 }
  
 void CtControl::stopAcq()
 {
   DEB_MEMBER_FUNCT();
 
-  m_hw->stopAcq();
+  try {
+    m_hw->stopAcq();
+    DEB_TRACE() << "Hardware Acquisition stopped";
+  } catch (...) {
+    DEB_ERROR() << "HwInterface::stopAcq failed!";
+    _stopAcq(true);
+    throw;
+  }
+
+  _stopAcq(false);
+}
+
+void CtControl::_stopAcq(bool faulty_acq)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(faulty_acq);
+
   {
     AutoMutex aLock(m_cond.mutex());
     m_ready = false;
     m_running = false;
+    if (faulty_acq)
+      m_status.AcquisitionStatus = AcqFault;
   }
 
-  DEB_TRACE() << "Hardware Acquisition Stopped";
   _calcAcqStatus();
   m_ct_saving->_stop(*this);
 }
+
 /** @brief stop an acquisition and purge all pending tasks.
  */
 void CtControl::abortAcq()

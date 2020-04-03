@@ -305,6 +305,8 @@ namespace lima
     inline bool _checkOverrun(Data&, AutoMutex&);
     inline void _calcAcqStatus();
 
+    void _stopAcq(bool faulty_acq);
+
     void readBlock(Data&, long frameNumber, long readBlockLen,
 		   bool baseImage);
     void readOneImageBuffer(Data&, long frameNumber, long readBlockLen,
