@@ -1009,17 +1009,18 @@ void CtControl::reset()
   m_ct_sps_image->reset();
 #endif
   resetStatus(false);
-  m_status.AcquisitionStatus = AcqReady;
 }
 
 void CtControl::resetStatus(bool only_acq_status)
 {
   DEB_MEMBER_FUNCT();
   DEB_TRACE() << "Reseting the status";
+  AutoMutex aLock(m_cond.mutex());
   if (only_acq_status) {
     m_status.AcquisitionStatus = AcqReady;
   } else {
     m_status.reset();
+    AutoMutexUnlock u(aLock);
     for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
 	i != m_img_status_thread_list.end();++i)
       (*i)->imageStatusChanged(m_status.ImageCounters, 1);
