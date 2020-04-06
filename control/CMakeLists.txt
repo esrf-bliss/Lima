@@ -28,6 +28,7 @@ set(control_srcs
     src/CtAcquisition.cpp
     src/CtBuffer.cpp
     src/CtImage.cpp
+    src/CtSaving_ZBuffer.cpp
     src/CtSaving_Compression.cpp
     src/CtSaving_Edf.cpp
     src/CtShutter.cpp
