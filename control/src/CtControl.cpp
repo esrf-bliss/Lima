@@ -465,6 +465,8 @@ void CtControl::prepareAcq()
   if(aStatus.AcquisitionStatus == AcqConfig)
     THROW_CTL_ERROR(Error) << "Configuration not finished";
 
+  m_ready= false; // prevent calling startAcq before full preparation
+
   //Abort previous acquisition tasks
   PoolThreadMgr::get().abort();
   m_ct_saving->_resetReadyFlag();
@@ -498,7 +500,6 @@ void CtControl::prepareAcq()
   DEB_TRACE() << "Prepare Saving if needed";
   m_ct_saving->_prepare(*this);
   m_autosave= m_ct_saving->hasAutoSaveMode();
-  m_ready= true;
 
   DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();
@@ -564,6 +565,9 @@ void CtControl::prepareAcq()
 #endif
       m_ct_video->isActive()))
     THROW_CTL_ERROR(Error) << "Can't have any software operation if Hardware saving is active";
+
+  AutoMutex aLock(m_cond.mutex());
+  m_ready= true;
 }
 
 void CtControl::startAcq()
