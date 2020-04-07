@@ -569,8 +569,10 @@ void CtControl::startAcq()
 {
   DEB_MEMBER_FUNCT();
 
+  AutoMutex aLock(m_cond.mutex());
+
   if (!m_ready)
-	THROW_CTL_ERROR(Error) << "Run prepareAcq before starting acquisition";
+    THROW_CTL_ERROR(Error) << "Run prepareAcq before starting acquisition";
   m_running = true;
   TrigMode trigMode;
   m_ct_acq->getTriggerMode(trigMode);
@@ -592,8 +594,6 @@ void CtControl::startAcq()
       m_ready = m_status.ImageCounters.LastImageAcquired != nbFrames4Acq;
     }
 
-  AutoMutex aLock(m_cond.mutex());
-
   m_ct_video->_startAcqTime();
   m_hw->startAcq();
   m_status.AcquisitionStatus = AcqRunning;
@@ -605,8 +605,12 @@ void CtControl::stopAcq()
   DEB_MEMBER_FUNCT();
 
   m_hw->stopAcq();
-  m_ready = false;
-  m_running = false;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    m_ready = false;
+    m_running = false;
+  }
+
   DEB_TRACE() << "Hardware Acquisition Stopped";
   _calcAcqStatus();
   m_ct_saving->_stop(*this);
