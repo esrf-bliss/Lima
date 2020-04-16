@@ -38,12 +38,13 @@ namespace lima
     enum Stat {DOWN,DELAY,UP,RISING_EDGE,FALLING_EDGE};
     class Callback
     {
-      friend class Timer;
     protected:
       virtual void start() {}
       virtual void risingEdge() {}
       virtual void fallingEdge() {}
       virtual void end() {}
+    private:
+      friend class Timer;
     };
 
     Timer(Callback* = NULL);

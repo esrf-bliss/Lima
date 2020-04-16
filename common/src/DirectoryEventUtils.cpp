@@ -412,7 +412,7 @@ _GenericDirectoryEvent::~_GenericDirectoryEvent()
   m_cond.signal();
   lock.unlock();
   void *tReturn;
-  if(m_thread_id >= 0)
+  if(m_thread_id != pthread_t(-1))
     pthread_join(m_thread_id,&tReturn);
 }
 void _GenericDirectoryEvent::_run()

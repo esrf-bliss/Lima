@@ -110,7 +110,7 @@ public:
   _AbortAcqCallback(CtControl &ctrl) :
     TaskEventCallback(),_ctrl(ctrl) {}
   
-  virtual void finished(Data &aData)
+  virtual void finished(Data &/*aData*/)
   {
     _ctrl.stopAcq();
   }
@@ -226,7 +226,7 @@ void CtControl::ImageStatusThread::imageStatusChanged(const ImageStatus& status,
     return;
   }
 
-  volatile bool finished = false;
+  bool finished = false;
   ChangeEvent *event = new ChangeEvent;
   event->status = status;
   event->force = force;

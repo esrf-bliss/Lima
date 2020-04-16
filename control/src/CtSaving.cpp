@@ -2054,8 +2054,8 @@ CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 
 CtSaving::SaveContainer::SaveContainer(Stream& stream)
 	: m_stream(stream), m_statistic_size(16),
-	m_max_writing_task(1), m_running_writing_task(0),
-	m_log_stat_enable(false), m_log_stat_file(NULL)
+	  m_log_stat_enable(false), m_log_stat_file(NULL),
+	  m_max_writing_task(1), m_running_writing_task(0)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -2200,7 +2200,7 @@ void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timest
 			write_rate = i->second.write_size / write_time / 1024. / 1024.;
 			total_time = i->second.writing_end - i->second.received_time;
 
-			fprintf(m_log_stat_file, "%d %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", \
+			fprintf(m_log_stat_file, "%ld %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", \
 				frameId, (double)i->second.received_time, \
 				comp_time * 1000.0, comp_rate, comp_ratio, \
 				write_time * 1000.0, write_rate, total_time * 1000.0);

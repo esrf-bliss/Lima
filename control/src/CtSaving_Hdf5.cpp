@@ -121,7 +121,7 @@ DataType get_h5_type(unsigned long long)	{return PredType(PredType::NATIVE_UINT6
 DataType get_h5_type(long long)			{return PredType(PredType::NATIVE_INT64);}
 DataType get_h5_type(float)			{return PredType(PredType::NATIVE_FLOAT);}
 DataType get_h5_type(double)			{return PredType(PredType::NATIVE_DOUBLE);}
-DataType get_h5_type(std::string& s)		{StrType type = StrType(H5T_C_S1, H5T_VARIABLE); type.setCset(H5T_CSET_UTF8); return type;}
+DataType get_h5_type(std::string& /*s*/)	{StrType type = StrType(H5T_C_S1, H5T_VARIABLE); type.setCset(H5T_CSET_UTF8); return type;}
 DataType get_h5_type(bool)			{return PredType(PredType::NATIVE_UINT8);}
 
 template <class T>
@@ -176,6 +176,7 @@ void write_h5_attribute(L location,const char* entry_name,std::string& val)
  * 
  *
  */
+LIMA_MAYBE_UNUSED
 static void calculate_chunck(hsize_t* data_size, hsize_t* chunck, int  depth)
 {
        const double request_chunck_size = 256.;
@@ -606,13 +607,10 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_instrument_detector_header = NULL;
 					
 				// create the image data structure in the file
-				hsize_t data_dims[3], max_dims[3];
+				hsize_t data_dims[3];
 				data_dims[1] = aData.dimensions[1];
 				data_dims[2] = aData.dimensions[0];
 				data_dims[0] = m_nbframes;
-				max_dims[1] = aData.dimensions[1];
-				max_dims[2] = aData.dimensions[0];
-				max_dims[0] = H5S_UNLIMITED;
 				// Create property list for the dataset and setup chunk size
 				DSetCreatPropList plist;
 				hsize_t chunk_dims[RANK_THREE];
@@ -743,7 +741,7 @@ int SaveContainerHdf5::findLastEntry(const _File &file) {
 	return index;
 }
 
-SinkTaskBase* SaveContainerHdf5::getCompressionTask(const CtSaving::HeaderMap& header)
+SinkTaskBase* SaveContainerHdf5::getCompressionTask(const CtSaving::HeaderMap& /*header*/)
 {
 #if defined(WITH_Z_COMPRESSION)
   if(m_format == CtSaving::HDF5GZ)

@@ -132,6 +132,7 @@ int SimpleRegEx::findNbGroups(const string& regex_str)
 		case '(':
 			if (!in_escape)
 				nb_groups++;
+			[[fallthrough]];
 		default:
 			in_escape = false;
 		}

@@ -69,8 +69,9 @@ inline bool ZBuffer::_isValid() const
 
 inline void ZBuffer::_setInvalid()
 {
+  used_size = 0;
+  alloc_size = 0;
   buffer = NULL;
-  alloc_size = used_size = 0;
 }
 
 inline ZBuffer::ZBuffer(int buffer_size)
@@ -89,8 +90,8 @@ inline ZBuffer::ZBuffer(const ZBuffer& o)
 }
 
 inline ZBuffer::ZBuffer(ZBuffer&& o)
-  : alloc_size(std::move(o.alloc_size)),
-    used_size(std::move(o.used_size)), buffer(std::move(o.buffer))
+  : used_size(std::move(o.used_size)), alloc_size(std::move(o.alloc_size)),
+    buffer(std::move(o.buffer))
 {
   DEB_CONSTRUCTOR();
   o._setInvalid();

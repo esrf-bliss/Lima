@@ -66,7 +66,9 @@ typedef const char *ConstStr;
 
 %UnitCode
 #include <string>
+#include "lima/LimaCompatibility.h"
 
+LIMA_MAYBE_UNUSED
 static const char *getConstStr(const std::string *s)
 {
 	return (!s || s->empty()) ? NULL : s->c_str();

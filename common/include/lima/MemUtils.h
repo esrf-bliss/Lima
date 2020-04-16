@@ -25,8 +25,7 @@
 #include "lima/LimaCompatibility.h"
 #include "lima/SizeUtils.h"
 #include "lima/Debug.h"
-
-#include <cassert>
+#include "lima/Exceptions.h"
 
 namespace lima
 {
@@ -50,14 +49,22 @@ struct LIMACORE_API Allocator
 	Allocator() : m_ref_count(0)
 	{}
 
-	Allocator(const Allocator& o) : m_ref_count(0)
+	Allocator(const Allocator& /*o*/) : m_ref_count(0)
 	{}
 
 	Allocator(Allocator&& o) : m_ref_count(0)
-	{ assert(o.m_ref_count == 0); }
+	{
+		if (o.m_ref_count != 0)
+			throw LIMA_COM_EXC(InvalidValue,
+					   "Moved-from Allocator is not empty");
+	}
 
 	~Allocator()
-	{ assert(m_ref_count == 0); }
+	{
+		if (m_ref_count != 0)
+			std::cerr << "Error: destroying non-empty Allocator"
+				  << std::endl;
+	}
 
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size

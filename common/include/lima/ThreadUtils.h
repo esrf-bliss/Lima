@@ -278,12 +278,15 @@ class LIMACORE_API CmdThread
 	int m_status;
 
 	//No need to have dll-interface for private variables
+#if defined(_WIN32)
 #pragma warning( push )  
-#pragma warning( disable : 4251 ) 
+#pragma warning( disable : 4251 )
+#endif 
 	std::bitset<16> m_status_history;
 	std::queue<int> m_cmd;
+#if defined(_WIN32)
 #pragma warning( pop ) 
-
+#endif
 	mutable Cond m_cond;
 	AuxThread m_thread;
 };

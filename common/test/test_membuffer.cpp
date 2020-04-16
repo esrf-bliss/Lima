@@ -68,7 +68,7 @@ void test_alloc()
 	assert(d.getConstPtr() != b.getConstPtr());
 
 	//Move construction (from lvalue)
-	const void *ptr = b.getConstPtr();
+	LIMA_MAYBE_UNUSED const void *ptr = b.getConstPtr();
 	MemBuffer e(std::move(b));
 	assert(e.getSize() == 1);
 	assert(e.getConstPtr() == ptr);
@@ -94,7 +94,8 @@ void test_alloc()
 
 struct MockAllocator : lima::Allocator
 {
-	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16) override
+	virtual DataPtr alloc(void* &ptr, size_t& size,
+			      size_t /*alignment = 16*/) override
 	{
 		ptr = malloc(size);
 		return DataPtr();
@@ -142,7 +143,7 @@ void test_custom_allocator()
 	assert(d.getAllocator() == &allocator);
 
 	//Move construction
-	const void *ptr = b.getConstPtr();
+	LIMA_MAYBE_UNUSED const void *ptr = b.getConstPtr();
 	MemBuffer e(std::move(b));
 	assert(e.getSize() == 1);
 	assert(e.getConstPtr() == ptr);
@@ -160,7 +161,7 @@ void test_custom_allocator()
 }
 
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char */*argv*/[])
 {
 	try {
 		test_empty();
