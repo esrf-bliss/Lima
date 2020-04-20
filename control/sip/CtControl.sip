@@ -125,6 +125,8 @@ using namespace lima;
     void stopAcq();
     void abortAcq();
 
+    void stopAcqAsync(AcqStatus acq_status, ErrorCode error_code, Data &data);
+    // deprecated: use stopAcqAsync instead
     void abortAcq(AcqStatus acq_status, CtControl::ErrorCode error_code, 
 		  Data &data, bool ctrl_mutex_locked=false);
 

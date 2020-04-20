@@ -147,8 +147,10 @@ namespace lima
     void stopAcq();
     void abortAcq();
 
-    void abortAcq(AcqStatus acq_status, ErrorCode error_code, Data &data,
-		  bool ctrl_mutex_locked=false);
+    void stopAcqAsync(AcqStatus acq_status, ErrorCode error_code, Data &data);
+    [[deprecated("use stopAcqAsync instead")]]
+      void abortAcq(AcqStatus acq_status, ErrorCode error_code, Data &data,
+		    bool ctrl_mutex_locked=false);
 
 #ifdef WIN32
     CtAcquisition* 	acquisition();
@@ -300,8 +302,10 @@ namespace lima
 
     double		m_prepare_timeout;
 
-    inline bool _checkOverrun(Data&);
+    inline bool _checkOverrun(Data&, AutoMutex&);
     inline void _calcAcqStatus();
+
+    void _stopAcq(bool faulty_acq);
 
     void readBlock(Data&, long frameNumber, long readBlockLen,
 		   bool baseImage);
