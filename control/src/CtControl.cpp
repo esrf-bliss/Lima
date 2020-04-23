@@ -393,12 +393,15 @@ CtControl::~CtControl()
   PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
   pool_thread_mgr.wait();
 
-  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
-      i != m_img_status_thread_list.end();++i)
-    {
-      (*i)->cb()->setImageStatusCallbackGen(NULL);
-      delete *i;
-    }
+  {
+    ReadWriteLock::WriteGuard guard(m_img_status_thread_list_lock);
+    for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+	i != m_img_status_thread_list.end();++i)
+      {
+	(*i)->cb()->setImageStatusCallbackGen(NULL);
+	delete *i;
+      }
+  }
 
   if(m_reconstruction_cbk)
     {
@@ -450,11 +453,14 @@ void CtControl::prepareAcq()
 {
   DEB_MEMBER_FUNCT();
 
-  ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
-  for (i = m_img_status_thread_list.begin(); i != end; ++i)
-    if (!(*i)->waitIdle(m_prepare_timeout))
-      THROW_CTL_ERROR(Error) << "ImageStatusCallback still active after "
-			     << m_prepare_timeout << " sec";
+  {
+    ReadWriteLock::ReadGuard gard(m_img_status_thread_list_lock);
+    ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
+    for (i = m_img_status_thread_list.begin(); i != end; ++i)
+      if (!(*i)->waitIdle(m_prepare_timeout))
+	THROW_CTL_ERROR(Error) << "ImageStatusCallback still active after "
+			       << m_prepare_timeout << " sec";
+  }
 
   Status aStatus;
   getStatus(aStatus);
@@ -728,6 +734,18 @@ void CtControl::stopAcqAsync(AcqStatus acq_status, ErrorCode error_code,
 }
 
 
+/** @brief notify ImageStatusThreads of new ImageCounters.
+ *  If force is true, the event is not ignored
+ */
+void CtControl::_updateImageStatusThreads(bool force)
+{
+  ReadWriteLock::ReadGuard gard(m_img_status_thread_list_lock);
+  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+      i != m_img_status_thread_list.end();++i)
+    (*i)->imageStatusChanged(m_status.ImageCounters, force);
+}
+
+
 /** @brief an event arrived, calc the new status
  */
 void CtControl::_calcAcqStatus()
@@ -761,14 +779,9 @@ void CtControl::_calcAcqStatus()
     acq_status = AcqReady;
   DEB_TRACE() << DEB_VAR1(m_status);
 
-  bool status_threads = !m_img_status_thread_list.empty();
   aLock.unlock();
 
-  if(status_threads) {
-    for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
-	i != m_img_status_thread_list.end();++i)
-      (*i)->imageStatusChanged(img_cntrs, 1);
-  }
+  _updateImageStatusThreads(true);
 }
 
 void CtControl::getImageStatus(ImageStatus& status) const
@@ -1018,13 +1031,11 @@ void CtControl::resetStatus(bool only_acq_status)
   AutoMutex aLock(m_cond.mutex());
   if (only_acq_status) {
     m_status.AcquisitionStatus = AcqReady;
-  } else {
-    m_status.reset();
-    AutoMutexUnlock u(aLock);
-    for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
-	i != m_img_status_thread_list.end();++i)
-      (*i)->imageStatusChanged(m_status.ImageCounters, 1);
+    return;
   }
+  m_status.reset();
+  aLock.unlock();
+  _updateImageStatusThreads(true);
 }
 
 bool CtControl::newFrameReady(Data& fdata)
@@ -1060,9 +1071,7 @@ bool CtControl::newFrameReady(Data& fdata)
   if (!internal_stage)
     newBaseImageReady(fdata);
 
-  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
-      i != m_img_status_thread_list.end();++i)
-    (*i)->imageStatusChanged(m_status.ImageCounters);
+  _updateImageStatusThreads(false);
   _calcAcqStatus();
 
   return true;
@@ -1094,10 +1103,7 @@ void CtControl::newBaseImageReady(Data &aData)
         (source == CtVideo::LAST_IMAGE && !m_op_ext_link_task_active))
     m_ct_video->frameReady(aData);
 
-  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
-      i != m_img_status_thread_list.end();++i)
-      (*i)->imageStatusChanged(m_status.ImageCounters);
-
+  _updateImageStatusThreads(false);
   _calcAcqStatus();
 }
 
@@ -1126,9 +1132,7 @@ void CtControl::newImageReady(Data &aData)
   if(source == CtVideo::LAST_IMAGE)
     m_ct_video->frameReady(aData);
 
-  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
-      i != m_img_status_thread_list.end();++i)
-    (*i)->imageStatusChanged(m_status.ImageCounters);
+  _updateImageStatusThreads(false);
   _calcAcqStatus();
 }
 
@@ -1197,9 +1201,7 @@ void CtControl::newImageSaved(Data &data)
 
   aLock.unlock();
 
-  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
-      i != m_img_status_thread_list.end();++i)
-    (*i)->imageStatusChanged(imgStatus);
+  _updateImageStatusThreads(false);
   _calcAcqStatus();
 }
 
@@ -1225,10 +1227,17 @@ void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
   if(aStatus.AcquisitionStatus == AcqRunning)
     THROW_CTL_ERROR(Error) << "Can't register callback if acquisition is running";
 
-  ImageStatusThread *thread = new ImageStatusThread(m_cond, &cb);
-  AutoMutex aLock(m_cond.mutex());
+  ReadWriteLock::WriteGuard guard(m_img_status_thread_list_lock);
+  bool found = false;
+  ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
+  for(i = m_img_status_thread_list.begin(); !found && (i != end); ++i)
+      found = ((*i)->cb() == &cb);
+  if(found)
+    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
+  AutoPtr<ImageStatusThread> thread = new ImageStatusThread(m_cond, &cb);
   cb.setImageStatusCallbackGen(this);
   m_img_status_thread_list.push_back(thread);
+  thread.forget();
 }
 /** unregisterImageStatusCallback is not thread safe!!!
  */
@@ -1242,18 +1251,17 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
   if(aStatus.AcquisitionStatus != AcqReady)
     THROW_CTL_ERROR(Error) << "Can't unregister callback if acquisition is not idle";
 
-  AutoMutex aLock(m_cond.mutex());
+  ReadWriteLock::WriteGuard guard(m_img_status_thread_list_lock);
   bool found = false;
   ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
   for(i = m_img_status_thread_list.begin(); !found && (i != end); ++i)
       found = ((*i)->cb() == &cb);
-  if (!found)
+  if(!found)
     THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
 
   ImageStatusThread* status_thread = *i;
   m_img_status_thread_list.erase(i);
   cb.setImageStatusCallbackGen(NULL);
-  aLock.unlock();
   delete status_thread;
 }
 
