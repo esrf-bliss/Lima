@@ -297,6 +297,7 @@ namespace lima
     bool		m_display_active_flag;
 #endif
     ImageStatusThreadList m_img_status_thread_list;
+    ReadWriteLock	m_img_status_thread_list_lock;
     SoftOpErrorHandler* m_soft_op_error_handler;
     _ReconstructionChangeCallback* m_reconstruction_cbk;
 
@@ -304,6 +305,7 @@ namespace lima
 
     inline bool _checkOverrun(Data&, AutoMutex&);
     inline void _calcAcqStatus();
+    inline void _updateImageStatusThreads(bool force);
 
     void _stopAcq(bool faulty_acq);
 
