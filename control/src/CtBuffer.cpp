@@ -25,6 +25,8 @@
 
 using namespace lima;
 
+static const double WAIT_BUFFERS_RELEASED_TIMEOUT = 5.0;
+
 class CtBuffer::_DataDestroyCallback : public Buffer::Callback
 {
 public:
@@ -32,7 +34,7 @@ public:
 
   virtual void destroy(void *dataPt)
   {
-    m_buffer.m_hw_buffer_cb->release(dataPt);
+    m_buffer._release(dataPt);
   }
 private:
   CtBuffer& m_buffer;
@@ -268,8 +270,12 @@ void CtBuffer::setup(CtControl *ct)
   registerFrameCallback(ct);
   m_frame_cb->m_ct_accumulation = m_ct_accumulation;
 
-  if(m_hw_buffer_cb)
+  if(m_hw_buffer_cb) {
+    const double& timeout = WAIT_BUFFERS_RELEASED_TIMEOUT;
+    if (!waitBuffersReleased(timeout))
+      THROW_CTL_ERROR(Error) << "Buffers still in use!";
     m_hw_buffer_cb->releaseAll();
+  }
 }
 
 void CtBuffer::transformHwFrameInfoToData(Data &fdata,
@@ -348,9 +354,21 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
     {
       m_hw_buffer_cb->map(frame_info.frame_ptr);
       fdata.buffer->callback = m_data_destroy_callback;
+      AutoMutex l(m_cond.mutex());
+      m_mapped_frames.insert(frame_info.frame_ptr);
     }
   DEB_RETURN() << DEB_VAR1(fdata);
 }
+
+void CtBuffer::_release(void *dataPt)
+{
+  DEB_MEMBER_FUNCT();
+  m_hw_buffer_cb->release(dataPt);
+  AutoMutex l(m_cond.mutex());
+  m_mapped_frames.erase(dataPt);
+  m_cond.signal();
+}
+
 // -----------------
 // struct Parameters
 // -----------------
@@ -377,4 +395,22 @@ void CtBuffer::Parameters::resetNonPersistent()
   nbBuffers= 1;
 
   DEB_TRACE() << *this;
+}
+
+bool CtBuffer::waitBuffersReleased(double timeout)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(timeout);
+
+  if(!m_hw_buffer_cb)
+    return true;
+
+  AutoMutex l(m_cond.mutex());
+  Timestamp end = Timestamp::now() + Timestamp(timeout);
+  double t;
+  while(!m_mapped_frames.empty() && ((t = end - Timestamp::now()) > 0))
+    m_cond.wait(t);
+  bool all_released = m_mapped_frames.empty();
+  DEB_RETURN() << DEB_VAR2(all_released, m_mapped_frames.size());
+  return all_released;
 }

@@ -886,6 +886,8 @@ void SoftBufferCtrlObj::Sync::releaseAll()
 	DEB_MEMBER_FUNCT();
 
 	AutoMutex aLock(m_cond.mutex());
+	if (!m_buffer_in_use.empty())
+		DEB_WARNING() << "Buffers in use when called releaseAll";
 	m_buffer_in_use.clear();
 	m_cond.broadcast();
 }
