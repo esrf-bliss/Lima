@@ -64,4 +64,6 @@ using namespace lima;
 
 	void getDataFromHwFrameInfo(Data& /Out/,const HwFrameInfoType&,
 				    int readBlockLen=1);
+
+	bool waitBuffersReleased(double timeout=-1);
 };
