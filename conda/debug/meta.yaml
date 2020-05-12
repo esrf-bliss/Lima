@@ -29,6 +29,7 @@ requirements:
     - hdf5 1.10*
     - libtiff
     - cbflib        # [linux]
+    - openssl       # [linux]
     - libnuma       # [linux]
   build:
     - git
@@ -45,6 +46,7 @@ requirements:
     - hdf5 1.10*
     - libtiff
     - cbflib        # [linux]
+    - openssl       # [linux]
     - libnuma       # [linux]
 
 test:
