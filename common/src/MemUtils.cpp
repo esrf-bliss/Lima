@@ -20,9 +20,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 #include "lima/MemUtils.h"
-#include "lima/Exceptions.h"
 
-#include <cassert>
 #include <cstdlib>
 #include <sstream>
 #ifdef __unix
@@ -47,11 +45,11 @@ using namespace std;
 void lima::GetSystemMem(int& mem_unit, int& system_mem)
 {
 	if (mem_unit < 0)
-		throw LIMA_HW_EXC(InvalidValue, "Invalid mem_unit value");
+		throw LIMA_COM_EXC(InvalidValue, "Invalid mem_unit value");
 #ifdef __unix
         struct sysinfo s_info;
 	if (sysinfo(&s_info) < 0)
-		throw LIMA_HW_EXC(Error, "Error calling sysinfo");
+		throw LIMA_COM_EXC(Error, "Error calling sysinfo");
 
         long long tot_mem = s_info.totalram;
 	tot_mem *= s_info.mem_unit;
@@ -95,7 +93,7 @@ int lima::GetDefMaxNbBuffers(const FrameDim& frame_dim)
 {
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0)
-		throw LIMA_HW_EXC(InvalidValue, "Invalid FrameDim");
+		throw LIMA_COM_EXC(InvalidValue, "Invalid FrameDim");
 
 	int tot_buffers;
 	GetSystemMem(frame_size, tot_buffers);
@@ -159,14 +157,14 @@ int MMapAllocator::getPageAlignedSize(int size)
 
 // Allocate a buffer of a given size 
 Allocator::DataPtr MMapAllocator::alloc(void* &ptr, size_t& size,
-					size_t alignment/* = 16*/)
+					size_t /*alignment = 16*/)
 {
 	ptr = allocMmap(size);
 	return DataPtr();
 }
 
 // Free a buffer
-void MMapAllocator::release(void* ptr, size_t size, DataPtr alloc_data)
+void MMapAllocator::release(void* ptr, size_t size, DataPtr /*alloc_data*/)
 {
 	size = getPageAlignedSize(size);
 	munmap(ptr, size);
@@ -185,24 +183,24 @@ void *MMapAllocator::allocMmap(size_t& size)
 #endif //__unix
 
 MemBuffer::MemBuffer(Allocator *allocator /*= Allocator::defaultAllocator()*/) :
-	m_ptr(nullptr),
 	m_size(0),
+	m_ptr(nullptr),
 	m_allocator(allocator)
 {
 }
 
 MemBuffer::MemBuffer(int size, Allocator *allocator /*=
 					Allocator::defaultAllocator()*/):
-	m_ptr(nullptr),
 	m_size(0),
+	m_ptr(nullptr),
 	m_allocator(allocator)
 {
 	alloc(size);
 }
 
 MemBuffer::MemBuffer(const MemBuffer& buffer) :
-	m_ptr(nullptr),
 	m_size(0),
+	m_ptr(nullptr),
 	m_allocator(buffer.m_allocator)
 {
 	deepCopy(buffer);
@@ -220,8 +218,8 @@ MemBuffer& MemBuffer::operator =(const MemBuffer& buffer)
 
 // Steal buffer ressource
 MemBuffer::MemBuffer(MemBuffer&& rhs) :
-	m_ptr(move(rhs.m_ptr)),
 	m_size(move(rhs.m_size)),
+	m_ptr(move(rhs.m_ptr)),
 	m_allocator(move(rhs.m_allocator))
 {
 	// Finish resource transfer: remove it from rhs so
@@ -272,7 +270,8 @@ void MemBuffer::clear()
 
 void MemBuffer::uninitializedAlloc(size_t size)
 {
-	assert(m_allocator);
+	if (!m_allocator)
+		throw LIMA_COM_EXC(InvalidValue, "No Allocator was defined");
 
 	if (m_size == size)
 		return;

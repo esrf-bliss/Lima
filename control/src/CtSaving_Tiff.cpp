@@ -57,7 +57,7 @@ SaveContainerTiff::~SaveContainerTiff()
 }
 
 void* SaveContainerTiff::_open(const std::string &filename,
-		std::ios_base::openmode flags)
+			       std::ios_base::openmode /*flags*/)
 {
   DEB_MEMBER_FUNCT();
   return new std::string(filename);
@@ -71,8 +71,8 @@ void SaveContainerTiff::_close(void* f)
 }
 
 long SaveContainerTiff::_writeFile(void* f,Data &aData,
-				  CtSaving::HeaderMap &aHeader,
-				  CtSaving::FileFormat aFormat)
+				   CtSaving::HeaderMap &/*aHeader*/,
+				   CtSaving::FileFormat /*aFormat*/)
 {
     DEB_MEMBER_FUNCT();
 
@@ -92,8 +92,8 @@ long SaveContainerTiff::_writeFile(void* f,Data &aData,
     TIFFSetField(image, TIFFTAG_IMAGEWIDTH, aData.dimensions[0]);
     TIFFSetField(image, TIFFTAG_IMAGELENGTH, aData.dimensions[1]);
 
-    int sampleformat;
-    int bytespersample;
+    int sampleformat = SAMPLEFORMAT_UINT;
+    int bytespersample = 0;
  
     switch(aData.type)
       {

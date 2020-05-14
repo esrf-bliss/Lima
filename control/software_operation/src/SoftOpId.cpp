@@ -801,7 +801,7 @@ SoftOpPeakFinder::~SoftOpPeakFinder()
 {
   m_opt->unref();
 }
-void SoftOpPeakFinder::setMask(Data& aMask)
+void SoftOpPeakFinder::setMask(Data& /*aMask*/)
 {
 }
 

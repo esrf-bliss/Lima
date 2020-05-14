@@ -165,7 +165,7 @@ class CtAccumulation::_CalcEndCBK : public TaskEventCallback
   DEB_CLASS_NAMESPC(DebModControl,"_CalcEndCBK","Control");
 public:
   _CalcEndCBK(CtAccumulation &cnt) : m_cnt(cnt) {}
-  virtual void finished(Data &aData)
+  virtual void finished(Data &/*aData*/)
   {
     AutoMutex Lock(m_cnt.m_cond.mutex());
     if(m_cnt.m_calc_pending_data.empty())

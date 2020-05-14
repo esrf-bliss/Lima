@@ -30,8 +30,12 @@
 	#else
 		#define LIMACORE_API __declspec(dllimport)
 	#endif
+
+		#define LIMA_MAYBE_UNUSED
 #else  /* Unix */
 		#define LIMACORE_API
+
+		#define LIMA_MAYBE_UNUSED [[maybe_unused]]
 #endif
 
 #endif //- LIMACOMPATIBILITY_H

@@ -32,7 +32,7 @@ const int FileZCompression::BUFFER_HELPER_SIZE = 64 * 1024;
 
 FileZCompression::FileZCompression(CtSaving::SaveContainer &save_cnt,
 			   int framesPerFile,const CtSaving::HeaderMap &header) :
-  m_container(save_cnt),m_frame_per_file(framesPerFile)
+  m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header)
 {
   DEB_CONSTRUCTOR();
   
@@ -225,7 +225,7 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
 
   unsigned int bs_block_size= 0;
   unsigned int bs_in_size= (unsigned int)(data_size/data_depth);
-  unsigned int bs_out_size;
+  int64_t bs_out_size;
 
   return_buffers.emplace_back(data_size);
   ZBuffer& newBuffer = return_buffers.back();

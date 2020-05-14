@@ -167,7 +167,7 @@ void Pipe::write(string s)
 		DEB_PARAM() << DEB_VAR1(s);
 
 	int fd = m_stream[WriteFd].getFd();
-	if (::write(fd, s.data(), s.size()) < s.size())
+	if (::write(fd, s.data(), s.size()) < ssize_t(s.size()))
 		THROW_COM_ERROR(Error) << "error writing to pipe";
 }
 

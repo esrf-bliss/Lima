@@ -25,70 +25,70 @@ namespace lima
 {
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwDetInfoCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwDetInfoCtrlObj */*p*/)
 {
 	return DetInfo;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwBufferCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwBufferCtrlObj */*p*/)
 {
 	return Buffer;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwSyncCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwSyncCtrlObj */*p*/)
 {
 	return Sync;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwBinCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwBinCtrlObj */*p*/)
 {
 	return Bin;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwRoiCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwRoiCtrlObj */*p*/)
 {
 	return Roi;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwFlipCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwFlipCtrlObj */*p*/)
 {
 	return Flip;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwShutterCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwShutterCtrlObj */*p*/)
 {
 	return Shutter;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwVideoCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwVideoCtrlObj */*p*/)
 {
 	return Video;
 }
 
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwEventCtrlObj *p)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwEventCtrlObj */*p*/)
 {
 	return Event;
 }
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwSavingCtrlObj*)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwSavingCtrlObj */*p*/)
 {
 	return Saving;
 }
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwConfigCtrlObj*)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwConfigCtrlObj */*p*/)
 {
 	return Config;
 }
 
-HwCap::Type HwCap::getTypeFromCtrlObj(HwReconstructionCtrlObj*)
+HwCap::Type HwCap::getTypeFromCtrlObj(HwReconstructionCtrlObj */*p*/)
 {
 	return Reconstruction;
 }

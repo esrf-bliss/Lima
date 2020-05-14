@@ -110,7 +110,7 @@ void test_regex(const string& re_str, const string& s)
 }
 
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char */*argv*/[])
 {
 	try {
 		test_simple_regex("(b)?ab((ab)(\\3c))?", "abababc.bab");

@@ -171,8 +171,8 @@ namespace lima
       const char *name = "Unknown";
       switch(accTimeMode)
 	{
-	case CtAcquisition::Live: name = "Live";
-	case CtAcquisition::Real: name = "Real";
+	case CtAcquisition::Live: name = "Live"; break;
+	case CtAcquisition::Real: name = "Real"; break;
 	}
       return name;
     }

@@ -157,7 +157,7 @@ void HwBufferSave::writeEdfHeader( const HwFrameInfoType& finfo )
 	long rem = len % EDF_HEADER_LEN;
 	if (rem > 0)
 		len += EDF_HEADER_LEN - rem;
-	p += snprintf(p, sizeof(buffer) - (p - buffer), "%*s}\n", len - (l + 2), "");
+	p += snprintf(p, sizeof(buffer) - (p - buffer), "%*s}\n", int(len - (l + 2)), "");
 	len = long(p - buffer);
 
 	m_fout->write(buffer, len);
