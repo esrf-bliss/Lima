@@ -4,7 +4,64 @@ This is the release notes of LIMA, the library for image acquisition.
 
 You can find information related to new features and bug fixes. The notes are ordered by branch and release number.
 
-Version v1.9.0 released on September 13th 2019
+Version v1.9.4 released on May 25th 2020
+----------------------------------------
+
+New features
+ 
+ * IntTrigMult: fix check of extra calls to CtControl::startAcq()
+ * Protect if detector is Ready but has not injected yet the last image into Lima
+ * HDF5: NXmeasurement does not exist, use NXcollection instead
+
+Bug fixes
+
+ * remove (gcc) compiler warnings 
+ * memory leak in ImageZCompression (HDF5GZ)
+ * CtSaving: fix thread synchronization issues
+ * CtBuffer: wait for processing to finish before releasing all mapped buffers
+ * CtSaving_Compression: refactoring of the ZBufferHelper class
+
+Camera news
+ 
+ * Eiger (v1.9.4): Dectris Eiger camera submodule now support setting for http and 
+   stream port.
+
+Version v1.9.3 released on February 21th 2020
+---------------------------------------------
+
+New features
+
+ * HDF5 schema has been simplified and now fits better with Nexus standard.
+
+Bug fixes
+
+ * Fix HW saving when acq_nb_frames is not a multiple of FramesPerFile.
+ * When stopping the acquisition, update the number of expected frame to save.
+
+camera news
+
+ * Eiger (v1.9.3): Dectris Eiger2 now supported by the eiger camera submodule
+ * Basler (v1.9.3): Fixed segfault with color models, Scout model does not support 
+   AcquisitionFrameCount.
+ * Basler (v1.9.2): Fixed a segmentation fault error when Roi is set and camera 
+   is running in continuous mode (live mode)/
+
+Version v1.9.2 released on February 17th 2020
+---------------------------------------------
+
+New features
+ 
+ * CI pipeline on gitlab.esrf.fr has now downstream test on simulator camera submodule
+
+Bug fixes
+
+ * check if hdf5 attribute exists before creating it
+ * Resolve "saving statistic missed"
+ * Flush statistic log file
+ * Use more explicit variable name in CtControl::newImageSaved
+
+
+Version v1.9.1 released on September 13th 2019
 ----------------------------------------------
 
 New features
