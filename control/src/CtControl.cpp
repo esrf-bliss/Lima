@@ -259,6 +259,7 @@ void CtControl::ImageStatusThread::threadFunction()
 
   while (true) {
     while (m_event_list.empty()) {
+      // only broadcast if m_waiting changed
       if (!m_waiting) {
 	m_waiting = true;
 	m_cond.broadcast();
@@ -288,7 +289,6 @@ void CtControl::ImageStatusThread::threadFunction()
     delete event;
   }
 
-  m_waiting = false;
   m_cond.broadcast();
 }
 
@@ -454,7 +454,7 @@ void CtControl::prepareAcq()
   DEB_MEMBER_FUNCT();
 
   {
-    ReadWriteLock::ReadGuard gard(m_img_status_thread_list_lock);
+    ReadWriteLock::ReadGuard guard(m_img_status_thread_list_lock);
     ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
     for (i = m_img_status_thread_list.begin(); i != end; ++i)
       if (!(*i)->waitIdle(m_prepare_timeout))
@@ -739,7 +739,7 @@ void CtControl::stopAcqAsync(AcqStatus acq_status, ErrorCode error_code,
  */
 void CtControl::_updateImageStatusThreads(bool force)
 {
-  ReadWriteLock::ReadGuard gard(m_img_status_thread_list_lock);
+  ReadWriteLock::ReadGuard guard(m_img_status_thread_list_lock);
   for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
       i != m_img_status_thread_list.end();++i)
     (*i)->imageStatusChanged(m_status.ImageCounters, force);
@@ -1228,11 +1228,10 @@ void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
     THROW_CTL_ERROR(Error) << "Can't register callback if acquisition is running";
 
   ReadWriteLock::WriteGuard guard(m_img_status_thread_list_lock);
-  bool found = false;
   ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
-  for(i = m_img_status_thread_list.begin(); !found && (i != end); ++i)
-      found = ((*i)->cb() == &cb);
-  if(found)
+  i = std::find_if(m_img_status_thread_list.begin(), end,
+		   [&cb] (ImageStatusThread *t) { return t->cb() == &cb; });
+  if(i != end)
     THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
   AutoPtr<ImageStatusThread> thread = new ImageStatusThread(m_cond, &cb);
   cb.setImageStatusCallbackGen(this);
@@ -1246,23 +1245,18 @@ void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(&cb);
 
-  Status aStatus;
-  getStatus(aStatus);
-  if(aStatus.AcquisitionStatus != AcqReady)
-    THROW_CTL_ERROR(Error) << "Can't unregister callback if acquisition is not idle";
-
   ReadWriteLock::WriteGuard guard(m_img_status_thread_list_lock);
-  bool found = false;
   ImageStatusThreadList::iterator i, end = m_img_status_thread_list.end();
-  for(i = m_img_status_thread_list.begin(); !found && (i != end); ++i)
-      found = ((*i)->cb() == &cb);
-  if(!found)
-    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
+  i = std::find_if(m_img_status_thread_list.begin(), end,
+		   [&cb] (ImageStatusThread *t) { return t->cb() == &cb; });
+  if(i == end) {
+    DEB_WARNING() << "Unregistering callback while destroying CtControl";
+    return;
+  }
 
-  ImageStatusThread* status_thread = *i;
+  AutoPtr<ImageStatusThread> thread = *i; 
   m_img_status_thread_list.erase(i);
   cb.setImageStatusCallbackGen(NULL);
-  delete status_thread;
 }
 
 /** @brief this methode check if an overrun 
