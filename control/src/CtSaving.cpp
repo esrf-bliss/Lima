@@ -279,23 +279,48 @@ void CtSaving::Stream::setActive(bool active)
 	m_active = active;
 }
 
-void CtSaving::Stream::prepare(CtControl& ct)
+void CtSaving::Stream::prepare()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (hasAutoSaveMode())
-	{
+	if (m_cnt_status == Open)
 		m_save_cnt->close();
-		updateParameters();
-		checkWriteAccess();
-	}
-	m_save_cnt->prepare(ct);
+
+	m_cnt_status = Init;
+
+	updateParameters();
+
+	if (hasAutoSaveMode())
+		_prepare();
+}
+
+void CtSaving::Stream::_prepare()
+{
+	DEB_MEMBER_FUNCT();
+	checkWriteAccess();
+	m_save_cnt->prepare(m_saving.m_ctrl);
+	m_cnt_status = Prepare;
 }
 
 void CtSaving::Stream::close()
 {
 	m_save_cnt->close();
+	m_cnt_status = Init;
 }
+
+void CtSaving::Stream::clear()
+{
+	m_save_cnt->clear();
+	m_cnt_status = Init;
+}
+
+void CtSaving::Stream::prepareWrittingFrame(long frame_nr)
+{
+	if (m_cnt_status == Init)
+		_prepare();
+	m_save_cnt->prepareWrittingFrame(frame_nr);
+}
+
 void CtSaving::Stream::updateParameters()
 {
 	DEB_MEMBER_FUNCT();
@@ -447,6 +472,8 @@ void CtSaving::Stream::createSaveContainer()
 	if (nb_writing_thread != -1)
 		m_save_cnt->setMaxConcurrentWritingTask(nb_writing_thread);
 	m_save_cnt->setEnableLogStat(enable_log_stat);
+
+	m_cnt_status = Init;
 }
 
 void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
@@ -454,6 +481,7 @@ void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
 	DEB_MEMBER_FUNCT();
 
 	m_save_cnt->writeFile(data, header);
+	m_cnt_status = Open;
 }
 
 
@@ -1707,76 +1735,69 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(aFrameNumber);
-	AutoMutex lock(m_cond.mutex());
 
-	_updateParameters();
-
-	if (!m_saving_error_handler)
-		m_saving_error_handler = new _SavingErrorHandler(*this, *m_ctrl.event());
-
-	SavingMode saving_mode = getAcqSavingMode();
-	ManagedMode managed_mode = getManagedMode();
-
-	_waitWritingThreads();
-
-	for (int s = 0; s < m_nb_stream; ++s)
+	ManagedMode managed_mode;
 	{
+		AutoMutex lock(m_cond.mutex());
 
-		Stream& stream = getStream(s);
-		if (stream.isActive())
-			stream.prepareWrittingFrame(aFrameNumber);
+		if (getAcqSavingMode() != Manual)
+			THROW_CTL_ERROR(Error) << "Manual saving is only permitted when "
+				"saving mode == Manual";
+
+		// wait until the saving is no more used
+		_waitWritingThreads();
+
+		if (!m_saving_error_handler)
+			m_saving_error_handler = new _SavingErrorHandler(*this, *m_ctrl.event());
+
+		managed_mode = getManagedMode();
 	}
-	lock.unlock();
-
-	if (saving_mode != Manual)
-		THROW_CTL_ERROR(Error) << "Manual saving is only permitted when "
-		"saving mode == Manual";
-
-	if (managed_mode == Software)
-	{
-		Data anImage2Save;
-		m_ctrl.ReadImage(anImage2Save, aFrameNumber, aNbFrames);
-
-		// Saving
-		HeaderMap header;
-		FrameHeaderMap::iterator aHeaderIter;
-		aHeaderIter = m_frame_headers.find(anImage2Save.frameNumber);
-		_takeHeader(aHeaderIter, header, false);
-		if (synchronous)
-			_synchronousSaving(anImage2Save, header);
-		else
-		{
-			TaskMgr* aSavingManualMgrPt = new TaskMgr();
-			aSavingManualMgrPt->setEventCallback(m_saving_error_handler);
-			Data copyImage = anImage2Save.copy();
-			aSavingManualMgrPt->setInputData(copyImage);
-			SinkTaskBase* aTaskPt = new CtSaving::_ManualBackgroundSaveTask(*this,
-				header);
-			aSavingManualMgrPt->addSinkTask(0, aTaskPt);
-			aTaskPt->unref();
-
-			PoolThreadMgr::get().addProcess(aSavingManualMgrPt);
-		}
-	}
-	else
-	{
+	
+	if (managed_mode == Hardware) {
 		int hw_cap = m_hwsaving->getCapabilities();
 		if (hw_cap & HwSavingCtrlObj::MANUAL_WRITE)
 			m_hwsaving->writeFrame(aFrameNumber, aNbFrames);
 		else
 			THROW_CTL_ERROR(NotSupported) << "Manual write is not available";
+		return;
 	}
-}
 
-void CtSaving::_updateParameters()
-{
-	// wait until the saving is no more used
-	_waitWritingThreads();
+	Data anImage2Save;
+	m_ctrl.ReadImage(anImage2Save, aFrameNumber, aNbFrames);
+	if (aFrameNumber < 0) {
+		aFrameNumber = anImage2Save.frameNumber;
+		DEB_TRACE() << DEB_VAR1(aFrameNumber);
+	}
 
 	for (int s = 0; s < m_nb_stream; ++s) {
 		Stream& stream = getStream(s);
 		if (stream.isActive())
-			stream.updateParameters();
+			stream.prepareWrittingFrame(aFrameNumber);
+	}
+
+	// Saving
+	HeaderMap header;
+	{
+		AutoMutex lock(m_cond.mutex());
+		FrameHeaderMap::iterator aHeaderIter;
+		aHeaderIter = m_frame_headers.find(anImage2Save.frameNumber);
+		_takeHeader(aHeaderIter, header, false);
+	}
+
+	if (synchronous)
+		_synchronousSaving(anImage2Save, header);
+	else
+	{
+		TaskMgr* aSavingManualMgrPt = new TaskMgr();
+		aSavingManualMgrPt->setEventCallback(m_saving_error_handler);
+		Data copyImage = anImage2Save.copy();
+		aSavingManualMgrPt->setInputData(copyImage);
+		SinkTaskBase* aTaskPt = new CtSaving::_ManualBackgroundSaveTask(*this,
+			header);
+		aSavingManualMgrPt->addSinkTask(0, aTaskPt);
+		aTaskPt->unref();
+
+		PoolThreadMgr::get().addProcess(aSavingManualMgrPt);
 	}
 }
 
@@ -1797,7 +1818,10 @@ void CtSaving::_synchronousSaving(Data& anImage2Save, HeaderMap& header)
 
 		stream.writeFile(anImage2Save, header);
 	}
+
+	_newFrameWrite(anImage2Save.frameNumber);
 }
+
 void CtSaving::_postTaskList(Data& aData,
 	const TaskList& task_list, int priority)
 {
@@ -1930,7 +1954,7 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
 	this methode will resetLastFrameNb if mode is AutoSave
 	and validate the parameter for this new acquisition
  */
-void CtSaving::_prepare(CtControl& ct)
+void CtSaving::_prepare()
 {
 	DEB_MEMBER_FUNCT();
 
@@ -1950,9 +1974,8 @@ void CtSaving::_prepare(CtControl& ct)
 		for (int s = 0; s < m_nb_stream; ++s) {
 			Stream& stream = getStream(s);
 			if (stream.isActive()) {
-				aLock.unlock();
-				stream.prepare(ct);
-				aLock.lock();
+				AutoMutexUnlock u(aLock);
+				stream.prepare();
 				if (stream.needCompression())
 					m_need_compression = true;
 			}
@@ -2007,11 +2030,11 @@ void CtSaving::_prepare(CtControl& ct)
 }
 
 // CtSaving::_stop is only called from CtControl::stopAcq()
-void CtSaving::_stop(CtControl& ct)
+void CtSaving::_stop()
 {
 	// Get the last image acquired counter
 	CtControl::ImageStatus img_status;
-	ct.getImageStatus(img_status);
+	m_ctrl.getImageStatus(img_status);
 
 	for (int s = 0; s < m_nb_stream; ++s)
 	{
