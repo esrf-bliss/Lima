@@ -280,9 +280,19 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	CtSaving::Parameters pars;
 	control.saving()->getParameters(pars);
 	if (m_is_multiset) 
-	  m_nbframes = m_ct_parameters.acq_nbframes;
+	  m_frames_per_file = m_ct_parameters.acq_nbframes;
 	else 
-	  m_nbframes = pars.framesPerFile;
+	  m_frames_per_file = pars.framesPerFile;
+
+	m_acq_nbframes = m_ct_parameters.acq_nbframes;
+
+	// If the acquisition requests less frame than the max per file
+	// we will only create a dataset with size equal to the nb. of acquired frames
+	if (m_frames_per_file > m_acq_nbframes) {
+	  m_frames_per_file = m_acq_nbframes;
+	}
+	m_max_nb_files = (m_acq_nbframes +m_frames_per_file -1)/ m_frames_per_file;
+	m_file_cnt = 0;
 
 }
 void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmode openFlags) {
@@ -502,6 +512,12 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 	      THROW_CTL_ERROR(Error) << "File " << filename << " not opened successfully";
 	}
 
+	// increase file counter to manage multi-files and last file with less than frames_per_file frames
+	m_file_cnt++;
+
+	// reset the frame counter for the dataset
+	m_frame_cnt = 0;
+	
 	return new _File(new_file);
 }
 
@@ -610,7 +626,21 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				hsize_t data_dims[3];
 				data_dims[1] = aData.dimensions[1];
 				data_dims[2] = aData.dimensions[0];
-				data_dims[0] = m_nbframes;
+
+				// check if this is the last file with less frames than m_frames_per_file
+				int nb_frames = m_frames_per_file;
+				
+				if (m_file_cnt == m_max_nb_files && m_max_nb_files !=1)
+				  nb_frames = m_acq_nbframes % m_frames_per_file;
+				
+				data_dims[0] = nb_frames;
+
+				DEB_TRACE() << "m_file_cnt = "<< m_file_cnt;
+				DEB_TRACE() << "m_max_nb_files = "<< m_max_nb_files;
+				DEB_TRACE() << "nb_frames = "<< nb_frames;
+				DEB_TRACE() << "m_acq_nbframes = "<< m_acq_nbframes;
+				DEB_TRACE() << "m_frames_per_file = "<< m_frames_per_file;
+				
 				// Create property list for the dataset and setup chunk size
 				DSetCreatPropList plist;
 				hsize_t chunk_dims[RANK_THREE];
@@ -650,7 +680,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				hsize_t data_dims[3];
 				data_dims[1] = aData.dimensions[1];
 				data_dims[2] = aData.dimensions[0];
-				data_dims[0] = allocated_dims[0] + m_nbframes;
+				data_dims[0] = allocated_dims[0] + m_frames_per_file;
 
 				if (data_dims[1] != allocated_dims[1] && data_dims[2] != allocated_dims[2]) {
 					THROW_CTL_ERROR(Error) << "You are trying to extend the dataset with mismatching image dimensions";
@@ -663,9 +693,10 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_prev_images_written = allocated_dims[0];
 				file->m_dataset_extended = true;
 			}
-			// write the image data
-			hsize_t image_nb = aData.frameNumber % m_nbframes;
-
+			// write the image data, use the local frame number
+			hsize_t image_nb = m_frame_cnt;
+			m_frame_cnt++;
+			
 			// we test direct chunk write
 			hsize_t offset[RANK_THREE] = {image_nb, 0U, 0U};
 			uint32_t filter_mask = 0; 

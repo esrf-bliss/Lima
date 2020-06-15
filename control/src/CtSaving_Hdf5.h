@@ -100,8 +100,12 @@ private:
 	CtAcquisition *m_ct_acq;
 	HwInterface *m_hw_int;
 	bool m_is_multiset;
-	int m_nbframes;
 	int m_compression_level;
+	int m_frames_per_file;
+	int m_acq_nbframes;
+	int m_max_nb_files;
+	int m_file_cnt;
+	int m_frame_cnt;
 };
 
 }
