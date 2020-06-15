@@ -54,7 +54,7 @@ using namespace lima;
 	Event(Layer l, Severity s, Domain d, Code c, const std::string &e);
 	virtual ~Event();
 
-	virtual std::string getMsgStr();
+	virtual std::string getMsgStr() const;
 };
 
 
