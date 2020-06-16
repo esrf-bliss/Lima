@@ -623,7 +623,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				file->m_instrument_detector_header = NULL;
 					
 				// create the image data structure in the file
-				hsize_t data_dims[3];
+				hsize_t data_dims[3], max_dims[3];
 				data_dims[1] = aData.dimensions[1];
 				data_dims[2] = aData.dimensions[0];
 
@@ -634,6 +634,9 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				  nb_frames = m_acq_nbframes % m_frames_per_file;
 				
 				data_dims[0] = nb_frames;
+				max_dims[0] = H5S_UNLIMITED;
+				max_dims[1] = data_dims[1];
+				max_dims[2] = data_dims[2];
 
 				DEB_TRACE() << "m_file_cnt = "<< m_file_cnt;
 				DEB_TRACE() << "m_max_nb_files = "<< m_max_nb_files;
@@ -660,7 +663,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				}
 #endif
 				// create new dspace
-				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, NULL);
+				file->m_image_dataspace = new DataSpace(RANK_THREE, data_dims, max_dims);
 				file->m_image_dataset = 
 				  new DataSet(file->m_instrument_detector->createDataSet(file->m_data_name,
 											  data_type,
