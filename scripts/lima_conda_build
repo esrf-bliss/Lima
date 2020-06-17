@@ -1,0 +1,146 @@
+#!/bin/bash -i
+
+conda_env=""
+camera="simulator"
+native_arch=0
+only_plugin=0
+profile="debug"
+src_dir=""
+
+cmd="build"
+
+function usage()
+{
+    prgname=$(basename $0)
+    echo "Usage: ${prgname} <options> [<cmd>]"
+    echo
+    echo "Options:"
+    echo "  -e <env>     Execute inside conda environment <env>"
+    echo "  -c <camera>  Compiles <camera> plugin (default: simulator)"
+    echo "  -n           Compile for native computer architecture"
+    echo "  -p           Compile only the camera plugin"
+    echo "  -r           Compile the release profile (default: debug)"
+    echo "  -s <dir>     Source directory"
+    echo
+    echo "Cmd: build (default) | clean-sip | clean"
+    echo
+    exit 1
+}
+
+while getopts "e:c:nprs:" opt; do
+    case ${opt} in
+	e) conda_env="${OPTARG}" ;;
+	c) camera="${OPTARG}" ;;
+	n) native_arch=1 ;;
+	p) only_plugin=1 ;;
+	r) profile="release" ;;
+	s) src_dir="${OPTARG}" ;;
+	?) usage
+    esac
+done
+
+if [ $# -gt 0 -a $# -eq ${OPTIND} ]; then
+    cmd=${!OPTIND}
+elif [ $# -gt ${OPTIND} ]; then
+    usage
+fi
+
+if [ -z "${src_dir}" ]; then
+    script_dir="$(dirname $0)"
+    if [ $(basename ${script_dir}) = "scripts" ]; then
+	src_dir=$(dirname ${script_dir})
+    else
+	src_dir="."
+    fi
+fi
+src_dir=$(realpath ${src_dir})
+echo "Source directory: ${src_dir}"
+cd ${src_dir}
+
+if [ -n "${conda_env}" ]; then
+    if ! type conda >& /dev/null; then
+	echo "Error: 'conda' not available. Please check your installation"
+	exit 1
+    fi
+    conda activate ${conda_env}
+elif [ -z "${CONDA_PREFIX}" ]; then
+    echo "Please specify a Conda environment"
+    echo
+    usage
+else
+    conda_env=$(basename ${CONDA_PREFIX})
+fi
+
+processlib_dir="third-party/Processlib"
+tango_dir="applications/tango/python"
+camera_dir="camera/${camera}"
+
+if [ ${only_plugin} -eq 0 ]; then
+    all_dirs="${processlib_dir} . ${tango_dir} ${camera_dir}"
+else
+    if ! python -c "from Lima import Core" 2> /dev/null; then
+	echo "Error: could not find lima-core in ${conda_env} environment"
+	echo ""
+	echo "Please install lima-core (and optionally lima-tango-server)" \
+	     "package(s)"
+	echo "or build the full project (i.e., without -p)"
+	exit 1
+    fi
+    [ -d ${camera_dir} ] || camera_dir="."
+    all_dirs="${camera_dir}"
+fi
+
+for d in ${all_dirs}; do
+    if ! [ -d ${d}/conda ]; then
+	echo "Error: directory ${d}/conda does not exist"
+	exit 1
+    fi
+done
+
+PREFIX=${CONDA_PREFIX}
+SP_DIR=$(python <<'EOF'
+import sysconfig
+print(sysconfig.get_paths().get('platlib'))
+EOF
+)
+export PREFIX SP_DIR
+
+if [ ${native_arch} -ne 0 ]; then
+    CXXFLAGS="${CXXFLAGS} -march=native -mtune=native"
+    export CXXFLAGS
+fi
+
+CPUS=$(lscpu | grep '^CPU(s)' | awk '{print $2}')
+function parallel_cmake
+{
+    sed "s/\(cmake --build build [^\r]\+\)\r\?$/\1 -- -j${CPUS}/" $1 | bash -e;
+}
+
+case ${cmd} in
+build)
+    if [ ${only_plugin} -eq 0 ]; then
+	((cd ${processlib_dir} && parallel_cmake conda/${profile}/build.sh) \
+	    && (cd . && parallel_cmake conda/${profile}/build.sh) \
+	    && (cd ${tango_dir} \
+		  && parallel_cmake conda/build.sh \
+		  && cp scripts/Lima* ${PREFIX}/bin)) || exit
+    fi
+    (cd ${camera_dir} \
+       && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
+       && ([ -d conda/tango ] && parallel_cmake conda/tango/build.sh))
+    ;;
+
+clean-sip)
+    [ ${only_plugin} -eq 0 ] && rm -rf build/sip/*
+    rm -rf ${camera_dir}/build/sip/*
+    ;;
+
+clean)
+    for d in ${all_dirs} ${camera_dir}/tango; do
+	rm -rf ${d}/build/*
+    done
+    ;;
+
+*)
+    echo "Unknown command: ${cmd}" && exit 1
+esac
