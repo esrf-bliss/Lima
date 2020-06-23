@@ -630,7 +630,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				// check if this is the last file with less frames than m_frames_per_file
 				int nb_frames = m_frames_per_file;
 				
-				if (m_file_cnt == m_max_nb_files && m_max_nb_files !=1)
+				if ( m_file_cnt == m_max_nb_files && (m_acq_nbframes % m_frames_per_file) != 0 )
 				  nb_frames = m_acq_nbframes % m_frames_per_file;
 				
 				data_dims[0] = nb_frames;
