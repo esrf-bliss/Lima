@@ -362,6 +362,9 @@ public:
 		int			m_written_frames;
 		Stream& m_stream;
 	private:
+
+		void close(const Params2Handler::iterator& it, AutoMutex& l);
+
 		StatisticsType		m_statistic;
 		int			m_statistic_size;
 		bool                      m_log_stat_enable;
