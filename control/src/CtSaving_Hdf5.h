@@ -33,7 +33,7 @@
 #define BSHUF_H5FILTER	32008
 #define BSHUF_H5_COMPRESS_LZ4	2
 extern "C" {
-  int bshuf_register_h5filter(void);
+	int bshuf_register_h5filter(void);
 }
 #endif
 
@@ -68,30 +68,30 @@ private:
 	int findLastEntry(const _File&);
 
 	struct Parameters{
-	  string det_name;
-	  string instrument_name;
-	  string det_model;
-	  string det_type;
-	  string lima_version;
-	  double pixel_size[2];
-	  Size max_image_size;
-	  ImageType curr_image_type;
-	  AcqMode acq_mode;
-	  double acq_expo_time;
-	  double acq_latency_time;
-	  int acq_nbframes;
-	  TrigMode acq_trigger_mode;
-	  CtAcquisition::AccTimeMode acc_time_mode;
-	  double acc_max_expotime;
-	  double acc_expotime;
-	  double acc_livetime;
-	  double acc_deadtime;
-	  int concat_nbframes;
-	  Bin image_bin;
-	  Roi image_roi;
-	  Flip image_flip;
-	  RotationMode image_rotation;
-	  FrameDim image_dim;
+		string det_name;
+		string instrument_name;
+		string det_model;
+		string det_type;
+		string lima_version;
+		double pixel_size[2];
+		Size max_image_size;
+		ImageType curr_image_type;
+		AcqMode acq_mode;
+		double acq_expo_time;
+		double acq_latency_time;
+		int acq_nbframes;
+		TrigMode acq_trigger_mode;
+		CtAcquisition::AccTimeMode acc_time_mode;
+		double acc_max_expotime;
+		double acc_expotime;
+		double acc_livetime;
+		double acc_deadtime;
+		int concat_nbframes;
+		Bin image_bin;
+		Roi image_roi;
+		Flip image_flip;
+		RotationMode image_rotation;
+		FrameDim image_dim;
 	};
 
 	CtSaving::FileFormat m_format;
@@ -105,7 +105,6 @@ private:
 	int m_acq_nbframes;
 	int m_max_nb_files;
 	int m_file_cnt;
-	int m_frame_cnt;
 };
 
 }
