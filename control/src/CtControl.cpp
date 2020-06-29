@@ -504,7 +504,7 @@ void CtControl::prepareAcq()
   m_ct_accumulation->prepare();
 
   DEB_TRACE() << "Prepare Saving if needed";
-  m_ct_saving->_prepare(*this);
+  m_ct_saving->_prepare();
   m_autosave= m_ct_saving->hasAutoSaveMode();
 
   DEB_TRACE() << "Prepare Hardware for Acquisition";
@@ -654,7 +654,7 @@ void CtControl::_stopAcq(bool faulty_acq)
   }
 
   _calcAcqStatus();
-  m_ct_saving->_stop(*this);
+  m_ct_saving->_stop();
 }
 
 /** @brief stop an acquisition and purge all pending tasks.

@@ -407,7 +407,7 @@ public:
 		void setParameters(const Parameters& pars);
 		void updateParameters();
 
-		void prepare(CtControl& ct);
+		void prepare();
 		void close();
 		void createSaveContainer();
 		void checkWriteAccess();
@@ -483,10 +483,7 @@ public:
 			m_save_cnt->getEnableLogStat(enable);
 		}
 
-		void clear()
-		{
-			m_save_cnt->clear();
-		}
+		void clear();
 
 		bool isReady(long frame_id) const
 		{
@@ -496,10 +493,9 @@ public:
 		{
 			m_save_cnt->setReady(frame_id);
 		}
-		void prepareWrittingFrame(long frame_nr)
-		{
-			m_save_cnt->prepareWrittingFrame(frame_nr);
-		}
+
+		void prepareWrittingFrame(long frame_nr);
+
 		void createStatistic(Data& data)
 		{
 			m_save_cnt->createStatistic(data);
@@ -519,17 +515,24 @@ public:
 		class _SaveTask;
 		class _CompressionCBK;
 
-		CtSaving& m_saving;
+		void _prepare();
+
+		enum ContainerStatus {
+		      Init, Prepare, Open,
+		};
+
+		CtSaving&		m_saving;
 		int			m_idx;
 
-		SaveContainer* m_save_cnt;
-		_SaveCBK* m_saving_cbk;
+		ContainerStatus		m_cnt_status;
+		SaveContainer*		m_save_cnt;
+		_SaveCBK*		m_saving_cbk;
 		Parameters		m_pars;
 		Parameters		m_reference_pars;
 		Parameters		m_acquisition_pars;
 		bool			m_pars_dirty_flag;
 		bool			m_active;
-		_CompressionCBK* m_compression_cbk;
+		_CompressionCBK*	m_compression_cbk;
 	};
 	friend class Stream;
 
@@ -611,8 +614,8 @@ private:
 	}
 
 	// --- internal call
-	void _prepare(CtControl&);
-	void _stop(CtControl&);
+	void _prepare();
+	void _stop();
 	void _close();
 	void _getCommonHeader(HeaderMap&);
 	void _createStatistic(Data&);
@@ -624,7 +627,6 @@ private:
 	void _compressionFinished(Data&, Stream&);
 	void _saveFinished(Data&, Stream&);
 	void _setSavingError(CtControl::ErrorCode);
-	void _updateParameters();
 	void _synchronousSaving(Data&, HeaderMap&);
 	bool _controlIsFault();
 	bool _newFrameWrite(int);
