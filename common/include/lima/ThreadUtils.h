@@ -122,7 +122,6 @@ class LIMACORE_API ReadWriteLock
 		{ m_lock._release(); }
 
 	private:
-		friend class ReadWriteLock;
 		ReadWriteLock& m_lock;
 	};
 
@@ -139,7 +138,6 @@ class LIMACORE_API ReadWriteLock
 		{ m_lock._release(); }
 
 	private:
-		friend class ReadWriteLock;
 		ReadWriteLock& m_lock;
 	};
 
