@@ -348,7 +348,24 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 			write_h5_attribute(file->m_file, "NX_class", nxroot);
 			string nxcreator = "LIMA-"+ m_ct_parameters.lima_version;
 			write_h5_attribute(file->m_file, "creator", nxcreator);
+			// to know where the file comes from, add the filename (path) and creation date
+			string nxfilename = filename;
+			write_h5_attribute(file->m_file, "file_name", nxfilename);
+			// ISO 8601 Time format
 
+			time_t now;
+			time(&now);
+			char buf[sizeof("2011-10-08T07:07:09Z")];
+#ifdef WIN32
+			struct tm gmtime_now;
+			gmtime_s(&gmtime_now, &now);
+			strftime(buf, sizeof(buf), "%FT%TZ", &gmtime_now);
+#else
+			strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
+#endif
+			string stime = string(buf);
+			write_h5_attribute(file->m_file,"file_time",stime);
+			
 			// could be the beamline/instrument name instead
 			Group instrument(file->m_entry.createGroup(m_ct_parameters.instrument_name));
 			string nxinstrument = "NXinstrument";
