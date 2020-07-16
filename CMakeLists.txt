@@ -179,7 +179,7 @@ set(extra_definitions)
 # Optional for libconfig++ support
 if(LIMA_ENABLE_CONFIG)
     find_package(Libconfig)
-    if(${CONFIG_FOUND})
+    if(${LIBCONFIG_FOUND})
         list(APPEND extra_definitions -DWITH_CONFIG)
         list(APPEND extra_libs ${LIBCONFIG_LIBRARIES})
         list(APPEND common_srcs common/src/ConfigUtils.cpp)
