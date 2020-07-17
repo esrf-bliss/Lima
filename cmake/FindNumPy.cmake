@@ -104,7 +104,7 @@ if (NOT NUMPY_FOUND)
     ##__________________________________________________________________________
     ## Actions taken when all components have been found
 
-    find_package_handle_standard_args (NUMPY DEFAULT_MSG NUMPY_INCLUDE_DIRS)
+    find_package_handle_standard_args (NumPy DEFAULT_MSG NUMPY_INCLUDE_DIRS)
 
     if (NUMPY_FOUND)
         if (NOT NUMPY_FIND_QUIETLY)
