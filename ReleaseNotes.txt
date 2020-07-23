@@ -4,6 +4,38 @@ This is the release notes of LIMA, the library for image acquisition.
 
 You can find information related to new features and bug fixes. The notes are ordered by branch and release number.
 
+Version v1.9.5 released on July 23th 2020
+----------------------------------------
+
+New features
+ 
+ * HDF5 container:
+   * new attributes "file_name" and "file_time" to keep track of the original
+     file path and creation date.
+   * adjust the image dataset size to the number of acquired frames
+   * in manual saving, keep a contiguous frame dataset
+   *  Avoid Tango dead-lock timeout due to lengthy memory allocations
+
+Bug fixes
+  * fix cmake find_package_handle_standard_args warning
+  * fix conversion compiler warning when calling import_array macro.
+  * HDF5 container:
+    * Fix parallel saving:
+      * Refactor SaveContainerHdf5::_File:
+      * Add debug information when writing HDF5 Dataset chunk fails
+      * Remove unused variables
+      * Use AutoPtr for dynamically-allocated objects
+      * Simplify initialization at _open
+    * fixed bug with number of frames for last file.
+    * adjust the image dataset to the real number of acquired frames
+    
+  * Fix bug in CtControl::unregisterImageStatusCallback and improve code:
+    * Allow unregisterImageStatusCallback if acq is not Ready
+      * Do not throw exception: it is called from cb destructor
+      * Status can be AcqFault, which is perfectly legal to unregister
+    * Cosmetics
+    * ThreadUtils: remove obsolete declarations in ReadWriteLock
+
 Version v1.9.4 released on May 25th 2020
 ----------------------------------------
 
