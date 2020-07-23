@@ -471,13 +471,17 @@ void CtControl::prepareAcq()
   if(aStatus.AcquisitionStatus == AcqConfig)
     THROW_CTL_ERROR(Error) << "Configuration not finished";
 
-  m_ready= false; // prevent calling startAcq before full preparation
+  {
+    AutoMutex aLock(m_cond.mutex());
+    m_ready= false; // prevent calling startAcq before full preparation
+  }
 
   //Abort previous acquisition tasks
   PoolThreadMgr::get().abort();
   m_ct_saving->_resetReadyFlag();
 
-  resetStatus(false);
+  // reset acq status without notifying callbacks
+  resetStatus(true);
   
   //Clear all re-ordered image counters
   m_images_ready.clear();
@@ -572,6 +576,9 @@ void CtControl::prepareAcq()
       m_ct_video->isActive()))
     THROW_CTL_ERROR(Error) << "Can't have any software operation if Hardware saving is active";
 
+  // reset status and notify callbacks
+  resetStatus(false);
+  
   AutoMutex aLock(m_cond.mutex());
   m_ready= true;
 }
