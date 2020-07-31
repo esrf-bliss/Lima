@@ -692,6 +692,8 @@ void CtControl::getStatus(Status& status) const
     status.AcquisitionStatus = AcqFault;
   else if(status.AcquisitionStatus == AcqReady)
     status.AcquisitionStatus = aHwStatus.acq;
+    
+  DEB_TRACE() << DEB_VAR1(status);
 }
 
 /** @brief This function is DEPRECATED. Use stopAcqAsync instead
@@ -746,6 +748,8 @@ void CtControl::stopAcqAsync(AcqStatus acq_status, ErrorCode error_code,
  */
 void CtControl::_updateImageStatusThreads(bool force)
 {
+  DEB_MEMBER_FUNCT();
+    
   ReadWriteLock::ReadGuard guard(m_img_status_thread_list_lock);
   for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
       i != m_img_status_thread_list.end();++i)
@@ -758,18 +762,25 @@ void CtControl::_updateImageStatusThreads(bool force)
 void CtControl::_calcAcqStatus()
 {
   DEB_MEMBER_FUNCT();
-
+  
   AutoMutex aLock(m_cond.mutex());
 
   AcqStatus& acq_status = m_status.AcquisitionStatus;
   if((acq_status != AcqRunning) && (acq_status != AcqFault))
+  {
+    DEB_TRACE() << DEB_VAR1(acq_status);
     return;
+  }
 
   const ImageStatus& img_cntrs = m_status.ImageCounters;
   int acq_nb_frames;
   m_ct_acq->getAcqNbFrames(acq_nb_frames);
   long last_frame = (m_running ? (acq_nb_frames - 1) :
 				 img_cntrs.LastImageAcquired);
+
+  DEB_TRACE() << DEB_VAR1(last_frame);
+  DEB_TRACE() << DEB_VAR1(img_cntrs);
+
   bool hw_acq_end = (img_cntrs.LastImageAcquired == last_frame);
   bool img_op_end = (img_cntrs.LastImageReady == last_frame);
   bool cnt_op_end = (!m_op_ext_sink_task_active ||
@@ -777,8 +788,8 @@ void CtControl::_calcAcqStatus()
   bool save_end = (!m_autosave || (img_cntrs.LastImageSaved) == last_frame);
   bool acq_end = (hw_acq_end && img_op_end && cnt_op_end && save_end);
 
-  DEB_TRACE() << DEB_VAR5(hw_acq_end, img_op_end, cnt_op_end, save_end,
-			  acq_end);
+  DEB_TRACE() << DEB_VAR5(hw_acq_end, img_op_end, cnt_op_end, save_end, acq_end);
+  
   if(!acq_end)
     return;
   
@@ -1320,10 +1331,15 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
 // ----------------------------------------------------------------------------
 // Struct ImageStatus
 // ----------------------------------------------------------------------------
-CtControl::ImageStatus::ImageStatus()
+CtControl::ImageStatus::ImageStatus() :
+    LastImageAcquired(-1),
+    LastBaseImageReady(-1),
+    LastImageReady(-1),
+    LastImageSaved(-1),
+    LastCounterReady(-1)
 {
   DEB_CONSTRUCTOR();
-  reset();
+  DEB_TRACE() << *this;
 }
 
 CtControl::ImageStatus::ImageStatus(long lastImgAcq, long lastBaseImgReady,
@@ -1333,7 +1349,7 @@ CtControl::ImageStatus::ImageStatus(long lastImgAcq, long lastBaseImgReady,
     LastImageReady(lastImgReady), LastImageSaved(lastImgSaved),
     LastCounterReady(lastCntReady)
 {
-    DEB_CONSTRUCTOR();
+  DEB_CONSTRUCTOR();
 }
 
 void CtControl::ImageStatus::reset()

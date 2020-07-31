@@ -1039,6 +1039,8 @@ void CtSaving::_ReadImage(Data& image, int frameNumber)
 
 bool CtSaving::_allStreamReady(long frame_nr)
 {
+	DEB_MEMBER_FUNCT();
+	
 	bool ready_flag = true;
 	for (int s = 0; ready_flag && s < m_nb_stream; ++s)
 	{
@@ -1046,6 +1048,8 @@ bool CtSaving::_allStreamReady(long frame_nr)
 		if (stream.isActive())
 			ready_flag = stream.isReady(frame_nr);
 	}
+	
+	DEB_RETURN() << DEB_VAR1(ready_flag);	
 	return ready_flag;
 }
 void CtSaving::_waitWritingThreads()
@@ -2029,9 +2033,11 @@ void CtSaving::_prepare()
 	m_saving_stop = false;
 }
 
-// CtSaving::_stop is only called from CtControl::stopAcq()
+// CtSaving::_stop is only called from CtControl::_stopAcq()
 void CtSaving::_stop()
 {
+	DEB_MEMBER_FUNCT();
+	
 	// Get the last image acquired counter
 	CtControl::ImageStatus img_status;
 	m_ctrl.getImageStatus(img_status);
@@ -2055,6 +2061,8 @@ void CtSaving::_stop()
 
 void CtSaving::_close()
 {
+	DEB_MEMBER_FUNCT();
+	
 	if (_allStreamReady(-1))
 	{
 		for (int s = 0; s < m_nb_stream; ++s)
@@ -2481,6 +2489,9 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 
 void CtSaving::SaveContainer::updateNbFrames(long last_acquired_frame_nr)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_TRACE() << DEB_VAR1(last_acquired_frame_nr);
+	
 	AutoMutex lock(m_cond.mutex());
 	m_nb_frames_to_write = last_acquired_frame_nr;
 }
@@ -2490,32 +2501,45 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 	DEB_MEMBER_FUNCT();
 
 	AutoMutex lock(m_cond.mutex());
+	bool ready;
+	
 	// mean all writing task
 	if (frame_nr < 0)
 	{
-		bool ready = m_frame_params.empty();
+		DEB_TRACE() << DEB_VAR1(frame_nr);
+		
+		ready = m_frame_params.empty();
 		for (Frame2Params::const_iterator i = m_frame_params.begin();
 			ready && i != m_frame_params.end(); ++i)
 			ready = !i->second.m_running;
-		return ready;
 	}
-
-	Frame2Params::const_iterator i = m_frame_params.find(frame_nr);
-	if (i == m_frame_params.end())
-		return m_frame_params.empty(); // if no task is running then ready
-
-	if (i->second.m_threadable)
+	else
 	{
-		DEB_TRACE() << DEB_VAR2(m_running_writing_task, m_max_writing_task);
-		return m_running_writing_task + 1 <= m_max_writing_task;
+		Frame2Params::const_iterator it = m_frame_params.find(frame_nr);
+		if (it == m_frame_params.end())
+		{
+			// if no task is running then ready
+			ready =  m_frame_params.empty();
+		}
+		else if (it->second.m_threadable)
+		{
+			DEB_TRACE() << DEB_VAR2(m_running_writing_task, m_max_writing_task);
+			
+			ready = (m_running_writing_task + 1 <= m_max_writing_task);
+		}
+		else
+			// ready if we are the next (the first)
+			ready = (it == m_frame_params.begin());
 	}
 
-	return i == m_frame_params.begin(); // ready if we are the next (the first)
+	DEB_RETURN() << DEB_VAR1(ready);
+	return ready;
 }
 
 void CtSaving::SaveContainer::cleanRemainingFrames(long last_acquired_frame_nr)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_TRACE() << DEB_VAR1(last_acquired_frame_nr);
 
 	AutoMutex lock(m_cond.mutex());
 	m_frame_params.erase(
@@ -2526,6 +2550,7 @@ void CtSaving::SaveContainer::cleanRemainingFrames(long last_acquired_frame_nr)
 void CtSaving::SaveContainer::setReady(long frame_nr)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_TRACE() << DEB_VAR1(frame_nr);
 
 	AutoMutex lock(m_cond.mutex());
 	// mean all frames
@@ -2541,6 +2566,8 @@ void CtSaving::SaveContainer::setReady(long frame_nr)
 
 void CtSaving::SaveContainer::prepareWrittingFrame(long frame_nr)
 {
+	DEB_MEMBER_FUNCT();
+	
 	AutoMutex lock(m_cond.mutex());
 	Frame2Params::iterator i = m_frame_params.find(frame_nr);
 	if (i == m_frame_params.end())
@@ -2741,6 +2768,7 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 	if (m_log_stat_enable)
 		fflush(m_log_stat_file);
 }
+
 void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
 {
 	AutoMutex aLock(m_lock);
