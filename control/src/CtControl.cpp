@@ -775,7 +775,8 @@ void CtControl::_calcAcqStatus()
   const ImageStatus& img_cntrs = m_status.ImageCounters;
   int acq_nb_frames;
   m_ct_acq->getAcqNbFrames(acq_nb_frames);
-  long last_frame = (m_running ? (acq_nb_frames - 1) :
+  
+  long last_frame = (m_running && (acq_nb_frames > 0) ? (acq_nb_frames - 1) :
 				 img_cntrs.LastImageAcquired);
 
   DEB_TRACE() << DEB_VAR1(last_frame);
