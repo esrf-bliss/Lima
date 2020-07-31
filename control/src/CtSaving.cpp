@@ -1871,10 +1871,11 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	FrameHeaderMap::iterator header_it = m_frame_headers.find(frame_nr);
 	_takeHeader(header_it, header, false);
 
+	aLock.unlock();
+	
 	TaskList task_list;
 	_getTaskList(Save, frame_nr, header, task_list);
 
-	aLock.unlock();
 	_postTaskList(aData, task_list, SAVING_PRIORITY);
 }
 
