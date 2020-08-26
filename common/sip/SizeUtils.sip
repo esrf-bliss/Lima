@@ -61,6 +61,14 @@ class Point
 
 };
 
+Point operator +(const Point& p1, const Point& p2);
+Point operator -(const Point& p1, const Point& p2);
+Point operator *(const Point& p1, const Point& p2);
+Point operator /(const Point& p1, const Point& p2);
+Point operator %(const Point& p1, const Point& p2);
+bool operator ==(const Point& p1, const Point& p2);
+bool operator !=(const Point& p1, const Point& p2);
+
 enum XBorder {
 	Left        = 0,
 	Right       = 1,
@@ -141,6 +149,9 @@ using namespace lima;
 	       	               sipCpp->getHeight());
 %End
 };
+
+bool operator ==(const Size& s1, const Size& s2);
+bool operator !=(const Size& s1, const Size& s2);
 
 class Bin
 {
@@ -397,6 +408,9 @@ using namespace lima;
 	       	               sipCpp->getImageType());
 %End
 };
+
+bool operator ==(const FrameDim& f1, const FrameDim& f2);
+bool operator !=(const FrameDim& f1, const FrameDim& f2);
 
 class ArcRoi
 {
