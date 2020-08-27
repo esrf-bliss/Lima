@@ -61,9 +61,11 @@ struct LIMACORE_API Allocator
 
 	~Allocator()
 	{
+#if !defined(NDEBUG)
 		if (m_ref_count != 0)
 			std::cerr << "Error: destroying non-empty Allocator"
 				  << std::endl;
+#endif
 	}
 
 	// Allocate a buffer of a given size and eventually return
