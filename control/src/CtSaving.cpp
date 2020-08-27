@@ -1373,13 +1373,15 @@ void CtSaving::_validateFrameHeader(long frame_nr,
 	bool keep_header = m_need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
+	aLock.unlock();
+
 	TaskType task_type = m_need_compression ? Compression : Save;
 	TaskList task_list;
 	_getTaskList(task_type, frame_nr, task_header, task_list);
 	if (!m_need_compression) {
 		m_frame_datas.erase(frame_iter);
 	}
-	aLock.unlock();
+
 	_postTaskList(aData, task_list,
 		m_need_compression ? COMPRESSION_PRIORITY : SAVING_PRIORITY);
 }
@@ -1559,11 +1561,12 @@ void CtSaving::frameReady(Data& aData)
 	bool keep_header = m_need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
-	TaskType task_type = m_need_compression ? Compression : Save;
-	TaskList task_list;
+	aLock.unlock();
+
+	TaskType task_type = m_need_compression ? Compression : Save;	
+	TaskList task_list;	
 	_getTaskList(task_type, frame_nr, task_header, task_list);
 
-	aLock.unlock();
 	_postTaskList(aData, task_list,
 		m_need_compression ? COMPRESSION_PRIORITY : SAVING_PRIORITY);
 }
@@ -1871,10 +1874,11 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	FrameHeaderMap::iterator header_it = m_frame_headers.find(frame_nr);
 	_takeHeader(header_it, header, false);
 
+	aLock.unlock();
+	
 	TaskList task_list;
 	_getTaskList(Save, frame_nr, header, task_list);
 
-	aLock.unlock();
 	_postTaskList(aData, task_list, SAVING_PRIORITY);
 }
 
@@ -1922,10 +1926,12 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 		HeaderMap task_header;
 		_takeHeader(aHeaderIter, task_header, false);
 
+		aLock.unlock();
+
 		TaskList task_list;
 		_getTaskList(Save, nextDataIter->first, task_header, task_list);
 		m_frame_datas.erase(nextDataIter);
-		aLock.unlock();
+
 		_postTaskList(aNewData, task_list, SAVING_PRIORITY);
 		break;
 	}
