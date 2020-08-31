@@ -27,12 +27,12 @@ rots = [Core.Rotation_0, Core.Rotation_90, Core.Rotation_180, Core.Rotation_270]
 binnings = [Core.Bin(1,1), Core.Bin(1,2), Core.Bin(2,1), Core.Bin(2,2)]
 flips = [Core.Flip(False, False), Core.Flip(False, True), Core.Flip(True, False), Core.Flip(True, True)]
 
-# Python function to print permutations of a given list
+# Python function to print permutations of a given list (from SO)
 def permutation(lst):
     if len(lst) == 0:
         return []
 
-    if len(lst) == 1: 
+    if len(lst) == 1:
         return [lst]
 
     l = []
@@ -47,20 +47,28 @@ def permutation(lst):
 
 permutations = permutation(['b', 'f', 'r'])
 
-# For every permuation of every Bin Rot Flip parameters
+# For every permutation of every Bin Rot Flip parameters applied in any order
 for rot in rots:
     for bin in binnings:
         for flip in flips:
             for perm in permutations:
+
                 try:
                     for op in perm:
-                        if op[0] == 'f':
+                        if op == 'f':
                             img.setFlip(flip)
                         elif op == 'b':
                             img.setBin(bin)
                         elif op == 'r':
                             img.setRotation(rot)
-                            
+
                     #print(perm, flip, rot, bin, img.getRoi(), " - OK")
+
                 except Exception:
                     print(perm, flip, rot, bin, img.getRoi(), " - FAILED")
+
+img.resetBin()
+img.resetFlip()
+img.resetRotation()
+
+assert img.getRoi() == roi

@@ -178,7 +178,8 @@ using namespace lima;
 	Bin& operator *=(const Point& p);
 
 	Bin& operator /=(const Point& p);
-	void swap();
+
+	void swapDimensions();
 
         SIP_PYOBJECT __repr__() const;
 %MethodCode

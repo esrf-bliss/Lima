@@ -28,9 +28,10 @@ using namespace lima;
 
 static const Bin Bin_1x1(1, 1);
 
-Size SwapDimIfRotated(RotationMode rotation, const Size& size)
+template <typename T>
+T SwapDimIfRotated(RotationMode rotation, const T& size)
 {
-	Size res = size;
+	T res = size;
 	if(rotation == Rotation_90 || rotation == Rotation_270)
 		res.swapDimensions();
 	return res;
@@ -77,7 +78,7 @@ void CtSwBinRoiFlip::setMaxSize(Size& size)
 	m_max_size= size;
 
 	// Comppute the full ROI according to the current rotation and binning
-	Roi max_roi(Point(0,0), SwapDimIfRotated(m_rotation, m_max_size) / m_bin);
+	Roi max_roi(Point(0,0), Size(SwapDimIfRotated(m_rotation, m_max_size) / m_bin));
 	DEB_PARAM() << DEB_VAR1(max_roi);
 
 	if (!m_roi.isEmpty()) {
@@ -110,7 +111,7 @@ void CtSwBinRoiFlip::setRoi(const Roi& roi)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(roi);
 
-	Roi max_roi(Point(0,0), SwapDimIfRotated(m_rotation, m_max_size) / m_bin);
+	Roi max_roi(Point(0,0), Size(SwapDimIfRotated(m_rotation, m_max_size) / m_bin));
 	DEB_TRACE() << DEB_VAR1(max_roi);
 
 	if (roi.isEmpty())
@@ -872,9 +873,15 @@ void CtImage::setFlip(Flip &flip)
   RotationMode currentRotation;
   getRotation(currentRotation);
 
-  const Size& max_roi_size = m_hw->getMaxRoiSize();
+  Size hw_max_roi_size = m_hw->getMaxRoiSize();
+  Size max_roi_size = SwapDimIfRotated(currentRotation, Size(hw_max_roi_size / m_sw->getBin()));
+  DEB_TRACE() << DEB_VAR3(currentRoi, max_roi_size, hw_max_roi_size);
+  
   currentRoi = currentRoi.getUnrotated(currentRotation,max_roi_size);
+  DEB_TRACE() << "Unrotated " << DEB_VAR1(currentRoi);
+  
   currentRoi = currentRoi.getFlipped(currentFlip,max_roi_size);
+  DEB_TRACE() << "Unflipped " << DEB_VAR1(currentRoi);
 
   if(!flip.x && ! flip.y)
     _resetFlip();
@@ -912,8 +919,12 @@ void CtImage::setRotation(RotationMode rotation)
   Bin currentBin;
   getBin(currentBin);
 
-  const Size& max_roi_size = m_hw->getMaxRoiSize();
+  Size hw_max_roi_size = m_hw->getMaxRoiSize();
+  Size max_roi_size = SwapDimIfRotated(currentRotation, Size(hw_max_roi_size / m_sw->getBin()));
+  DEB_TRACE() << DEB_VAR3(currentRoi, max_roi_size, hw_max_roi_size);
+  
   currentRoi = currentRoi.getUnrotated(currentRotation,max_roi_size);
+  DEB_TRACE() << "Unrotated " << DEB_VAR1(currentRoi);
 
   m_sw->setRotation(rotation);
 
