@@ -1373,14 +1373,14 @@ void CtSaving::_validateFrameHeader(long frame_nr,
 	bool keep_header = m_need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
+	if (!m_need_compression)
+		m_frame_datas.erase(frame_iter);
+
 	aLock.unlock();
 
 	TaskType task_type = m_need_compression ? Compression : Save;
 	TaskList task_list;
 	_getTaskList(task_type, frame_nr, task_header, task_list);
-	if (!m_need_compression) {
-		m_frame_datas.erase(frame_iter);
-	}
 
 	_postTaskList(aData, task_list,
 		m_need_compression ? COMPRESSION_PRIORITY : SAVING_PRIORITY);
@@ -1914,14 +1914,16 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	for (FrameMap::iterator nextDataIter = m_frame_datas.begin();
 		nextDataIter != m_frame_datas.end(); ++nextDataIter)
 	{
-		FrameHeaderMap::iterator aHeaderIter = m_frame_headers.find(nextDataIter->first);
+		frame_nr = nextDataIter->first;
+		FrameHeaderMap::iterator aHeaderIter = m_frame_headers.find(frame_nr);
 		bool header_available = (aHeaderIter != m_frame_headers.end());
-		bool can_save = _allStreamReady(nextDataIter->first);
+		bool can_save = _allStreamReady(frame_nr);
 		if (!can_save ||
 			((saving_mode == AutoHeader) && !header_available))
 			continue;
 
 		Data aNewData = nextDataIter->second;
+		m_frame_datas.erase(nextDataIter);
 
 		HeaderMap task_header;
 		_takeHeader(aHeaderIter, task_header, false);
@@ -1929,8 +1931,7 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 		aLock.unlock();
 
 		TaskList task_list;
-		_getTaskList(Save, nextDataIter->first, task_header, task_list);
-		m_frame_datas.erase(nextDataIter);
+		_getTaskList(Save, frame_nr, task_header, task_list);
 
 		_postTaskList(aNewData, task_list, SAVING_PRIORITY);
 		break;
@@ -2505,15 +2506,14 @@ void CtSaving::SaveContainer::updateNbFrames(long last_acquired_frame_nr)
 bool CtSaving::SaveContainer::isReady(long frame_nr) const
 {
 	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(frame_nr);
 
 	AutoMutex lock(m_cond.mutex());
 	bool ready;
-	
-	// mean all writing task
+
+	// mean all writing tasks
 	if (frame_nr < 0)
 	{
-		DEB_TRACE() << DEB_VAR1(frame_nr);
-		
 		ready = m_frame_params.empty();
 		for (Frame2Params::const_iterator i = m_frame_params.begin();
 			ready && i != m_frame_params.end(); ++i)
@@ -2545,7 +2545,7 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 void CtSaving::SaveContainer::cleanRemainingFrames(long last_acquired_frame_nr)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_TRACE() << DEB_VAR1(last_acquired_frame_nr);
+	DEB_PARAM() << DEB_VAR1(last_acquired_frame_nr);
 
 	AutoMutex lock(m_cond.mutex());
 	m_frame_params.erase(
@@ -2556,7 +2556,7 @@ void CtSaving::SaveContainer::cleanRemainingFrames(long last_acquired_frame_nr)
 void CtSaving::SaveContainer::setReady(long frame_nr)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_TRACE() << DEB_VAR1(frame_nr);
+	DEB_PARAM() << DEB_VAR1(frame_nr);
 
 	AutoMutex lock(m_cond.mutex());
 	// mean all frames

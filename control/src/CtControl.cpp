@@ -693,7 +693,7 @@ void CtControl::getStatus(Status& status) const
   else if(status.AcquisitionStatus == AcqReady)
     status.AcquisitionStatus = aHwStatus.acq;
     
-  DEB_TRACE() << DEB_VAR1(status);
+  DEB_RETURN() << DEB_VAR1(status);
 }
 
 /** @brief This function is DEPRECATED. Use stopAcqAsync instead
@@ -766,21 +766,18 @@ void CtControl::_calcAcqStatus()
   AutoMutex aLock(m_cond.mutex());
 
   AcqStatus& acq_status = m_status.AcquisitionStatus;
+  DEB_TRACE() << DEB_VAR1(acq_status);
   if((acq_status != AcqRunning) && (acq_status != AcqFault))
-  {
-    DEB_TRACE() << DEB_VAR1(acq_status);
     return;
-  }
 
   const ImageStatus& img_cntrs = m_status.ImageCounters;
   int acq_nb_frames;
   m_ct_acq->getAcqNbFrames(acq_nb_frames);
   
-  long last_frame = (m_running && (acq_nb_frames > 0) ? (acq_nb_frames - 1) :
+  long last_frame = ((m_running && (acq_nb_frames > 0)) ? (acq_nb_frames - 1) :
 				 img_cntrs.LastImageAcquired);
 
-  DEB_TRACE() << DEB_VAR1(last_frame);
-  DEB_TRACE() << DEB_VAR1(img_cntrs);
+  DEB_TRACE() << DEB_VAR2(last_frame, img_cntrs);
 
   bool hw_acq_end = (img_cntrs.LastImageAcquired == last_frame);
   bool img_op_end = (img_cntrs.LastImageReady == last_frame);
@@ -1340,7 +1337,6 @@ CtControl::ImageStatus::ImageStatus() :
     LastCounterReady(-1)
 {
   DEB_CONSTRUCTOR();
-  DEB_TRACE() << *this;
 }
 
 CtControl::ImageStatus::ImageStatus(long lastImgAcq, long lastBaseImgReady,
