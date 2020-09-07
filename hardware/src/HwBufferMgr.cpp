@@ -60,9 +60,9 @@ void BufferAllocMgr::clearAllBuffers()
  *******************************************************************/
 
 SoftBufferAllocMgr::SoftBufferAllocMgr()
+	: m_allocator(Allocator::defaultAllocator())
 {
 	DEB_CONSTRUCTOR();
-	setAllocator(Allocator::defaultAllocator());
 }
 
 SoftBufferAllocMgr::~SoftBufferAllocMgr()
@@ -169,6 +169,7 @@ void *SoftBufferAllocMgr::getBufferPtr(int buffer_nb)
 #ifdef LIMA_USE_NUMA
 
 NumaSoftBufferAllocMgr::NumaSoftBufferAllocMgr()
+	: m_numa_allocator(NULL)
 {
 	DEB_CONSTRUCTOR();
 	setCPUAffinityMask(0);

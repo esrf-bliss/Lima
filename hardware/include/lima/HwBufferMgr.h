@@ -97,7 +97,7 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	typedef BufferList::const_reverse_iterator BufferListCRIt;
 
 	FrameDim m_frame_dim;
-	Allocator *m_allocator;
+	Allocator::Ref m_allocator;
 	BufferList m_buffer_list;
 };
 
@@ -116,7 +116,7 @@ class LIMACORE_API NumaSoftBufferAllocMgr : public SoftBufferAllocMgr
 	void setCPUAffinityMask(unsigned long mask);
 
  protected:
-	AutoPtr<NumaAllocator> m_numa_allocator;
+	NumaAllocator *m_numa_allocator;
 };
 
 #endif //LIMA_USE_NUMA

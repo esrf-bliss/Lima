@@ -59,15 +59,6 @@ struct LIMACORE_API Allocator
 					   "Moved-from Allocator is not empty");
 	}
 
-	~Allocator()
-	{
-#if !defined(NDEBUG)
-		if (m_ref_count != 0)
-			std::cerr << "Error: destroying non-empty Allocator"
-				  << std::endl;
-#endif
-	}
-
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size
 	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16);
@@ -109,11 +100,18 @@ struct LIMACORE_API Allocator
  protected:
 	friend class Ref;
 
+	virtual ~Allocator()
+	{
+		if (m_ref_count != 0)
+			std::cerr << "Error: destroying non-empty Allocator"
+				  << std::endl;
+	}
+
 	// The real resource management counter, triggered by Ref
 	Allocator *get()
 	{ return ++m_ref_count, this; }
 	void put()
-	{ --m_ref_count; }
+	{ if (--m_ref_count == 0) delete this; }
 
 	// Keep track of allocated buffers pointing to this Allocator:
 	// if greather than 0 this object cannot be moved

@@ -108,8 +108,8 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 
 Allocator *Allocator::defaultAllocator()
 {
-	static Allocator allocator;
-	return &allocator;
+	static Allocator::Ref allocator = new Allocator();
+	return allocator;
 }
 
 Allocator::DataPtr Allocator::alloc(void* &ptr, size_t& size, size_t alignment)
