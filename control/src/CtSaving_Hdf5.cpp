@@ -252,11 +252,16 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 
 	m_acq_nbframes = m_ct_parameters.acq_nbframes;
 
-	// If the acquisition requests less frame than the max per file
-	// we will only create a dataset with size equal to the nb. of acquired frames
-	if (m_frames_per_file > m_acq_nbframes)
-		m_frames_per_file = m_acq_nbframes;
-	m_max_nb_files = (m_acq_nbframes + m_frames_per_file - 1)/ m_frames_per_file;
+	// If not a continuous acquisition
+	if (m_acq_nbframes > 0) {
+		// If the acquisition requests less frame than the max per file
+		// we will only create a dataset with size equal to the nb. of acquired frames
+		if (m_frames_per_file > m_acq_nbframes)
+			m_frames_per_file = m_acq_nbframes;
+		m_max_nb_files = (m_acq_nbframes + m_frames_per_file - 1) / m_frames_per_file;
+	}
+	else
+		m_max_nb_files = 0;
 
 	m_file_cnt = 0;
 }
