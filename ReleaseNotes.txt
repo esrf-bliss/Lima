@@ -2,7 +2,57 @@ LIMA Release Notes
 
 This is the release notes of LIMA, the library for image acquisition.
 
-You can find information related to new features and bug fixes. The notes are ordered by branch and release number.
+You can find information related to new features and bug fixes.
+
+Some bug fix on new features can reference gitlab.esrf.fr merge requests as MR-XXX.
+
+
+Version v1.9.6 released on September 25th 2020
+----------------------------------------------
+
+New features
+
+  * lima_conda_build script: local Conda compilation with optimization for native architecture 
+
+Bug fixes
+
+  * MR-131: InvalidValue exception, roi-out-of-limits when applying rotation with an image_roi 
+    already defined
+    fix computation of the max_roi according to the current binning and rotation
+    Add equality operators for Size and their missing python bindings for Point, Size and FrameDim
+    Add test for ROI computation for every bin / flip / rot 
+  * MR-130: continuous acquisition and hdf5 saving broken
+    fix deadlock resulting in saving task stall and consequently AcqStatus being AcqRunning
+    indefinitely
+    fix _calcAcqStatus when acq_nb_frames == 0
+  * MR-120: stopAcq() destroying non empty allocator
+    Do not destroy default Allocator until it's empty
+ 
+Camera updates
+
+  * Maxipix 1.9.1: fixed latency_time calculation when in hardware trigger mode
+  * Pilatus 1.9.1:
+     * Bug Fix: IntTrigMult trigger mode, mode to software trig each image exposing, 
+                has been repaired, and can be use now to have faster software acquisition sequence
+     * New Features:
+       Tango: new properties to run the server on a slave computer, not only on the DCU computer:
+         - tmpfs_path. default = /lima_data
+         - host_name, default = localhost
+         - host_port, default = 41234
+         - config_path, default = /home/det/p2_det/config/cam_data/camera.def
+
+  * Simulator 1.9.2: 
+      * Fix EDF Parser (allow smaller header block of 512Kib)
+      * Fix Prefetch mode (segfault and/or black images with some use cases)
+
+
+New cameras
+
+  * Arinax: The OAV B-ZOOM is an On-Axis Video-microscope with a hybrid zoom system used for
+    parallax free observation of micrometer sized crystals. It is optimized for MX crystallography
+    beamlines and high throughput stations in Synchrotrons.
+  * QHYccd:  high-performance scientific grade CMOS and CCD cameras
+   
 
 Version v1.9.5 released on July 23th 2020
 ----------------------------------------

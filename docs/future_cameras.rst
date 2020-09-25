@@ -20,12 +20,10 @@ Under development
 
 During the coming year, several new detector plugins should be released:
 
-- Hexitec
-- SVCam HR (SVS-Vistek)
-- Vieworks
-- Eiger (PSI)
+- Arinax Bi-zoom  (Arinax ltd.)
+- QHYCCD model Q178-Cool (FRMII)
 
 Foreseen
 ========
 
-- Rashpa
+- Ximea for high resolution, 6kx6k pixel (ESRF)
