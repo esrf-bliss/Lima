@@ -296,6 +296,9 @@ class LIMACORE_API Size
 	static Point checkValid(const Point& p);
 
 	Point m_xy;
+	
+	friend bool operator ==(const Size& s1, const Size& s2);
+	friend bool operator !=(const Size& s1, const Size& s2);
 };
 
 inline bool Size::isValidCoord(int i)
@@ -308,6 +311,16 @@ inline Point Size::checkValid(const Point& p)
 	if (!(isValidCoord(p.x) && isValidCoord(p.y)))
 		throw LIMA_COM_EXC(InvalidValue, "Invalid size");
 	return p;
+}
+
+inline bool operator ==(const Size& s1, const Size& s2)
+{
+	return (s1.m_xy == s2.m_xy);
+}
+
+inline bool operator !=(const Size& s1, const Size& s2)
+{
+	return !(s1 == s2);
 }
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const Size& s);
@@ -351,7 +364,8 @@ class LIMACORE_API Bin
 
 	Bin& operator /=(const Point& p)
 	{ m_xy = checkValid(m_xy / p); return *this; }
-	void swap()
+	
+	void swapDimensions()
 	{ m_xy.swap(); }
  private:
 	static bool isValidCoord(int i);
