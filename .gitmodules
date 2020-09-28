@@ -136,3 +136,6 @@
 [submodule "camera/qhyccd"]
 	path = camera/qhyccd
 	url = ../Lima-camera-qhyccd
+[submodule "camera/arinax"]
+	path = camera/arinax
+	url = ../Lima-camera-arinax
