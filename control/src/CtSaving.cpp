@@ -1230,6 +1230,7 @@ void CtSaving::_getTaskList(TaskType type, long frame_nr,
 	size_t nb_cbk = task_list.size();
 	DEB_TRACE() << DEB_VAR1(nb_cbk);
 	FrameCbkCountMap::value_type map_pair(frame_nr, long(nb_cbk));
+	AutoMutex aLock(m_cond.mutex());
 	m_nb_cbk.insert(map_pair);
 }
 /** @brief clear the common header
