@@ -25,6 +25,8 @@
 #include "lima/CtSaving.h"
 #include "lima/CtSaving_Compression.h"
 
+#include <stack>
+
 namespace lima {
 
   class SaveContainerEdf : public CtSaving::SaveContainer
@@ -49,27 +51,41 @@ namespace lima {
     virtual long _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
-   private:
-     struct MmapInfo
+  private:
+    struct MmapInfo
     {
       MmapInfo() :
 	header_size(0),
 	height_offset(0),
 	size_offset(0),
-	height(0),
-	size(0),
 	mmap_addr(NULL) {}
+
+#ifdef __unix
+      ~MmapInfo();
+
+      void map(const std::string& fname,
+	       long long header_position);
+
+      operator bool()
+      { return mmap_addr; }
+
+      char *sizeLocation()
+      { return (char*) mmap_addr + size_offset; }
+
+      char *heightLocation()
+      { return (char*) mmap_addr + height_offset; }
+#endif
+
       long long header_size;
       long long height_offset;
       long long size_offset;
-      long long height;
-      long long size;
       void* mmap_addr;
     };
     template<class Stream>
       static MmapInfo _writeEdfHeader(Data&,CtSaving::HeaderMap&,
 				      int framesPerFile,Stream&,
 				      int nbCharReserved = 0);
+
 #ifdef WIN32
     class _OfStream
     {
@@ -94,12 +110,41 @@ namespace lima {
       FILE* m_fout;
       int m_exc_flag;
     };
-#else
-    void*                        m_fout_buffer;
 #endif
+
+    struct File
+    {
+#ifdef WIN32
+      typedef _OfStream Stream;
+#else
+      typedef std::ofstream Stream;
+#endif
+
+      File(SaveContainerEdf& cont, const std::string& filename,
+	   std::ios_base::openmode openFlags);
+      virtual ~File();
+
+      SaveContainerEdf&		 m_cont;
+      std::string		 m_filename;
+      Stream			 m_fout;
+
+#ifdef __unix
+      void*			 m_buffer;
+      MmapInfo			 m_mmap_info;
+      long long			 m_height;
+      long long			 m_size;
+#endif
+    };
+
+#ifdef __unix
+    void *getNewBuffer();
+    void releaseBuffer(void *buffer);
+
+    std::stack<void*>		 m_free_buffers;
+    int				 m_nb_buffers;
+#endif
+
     CtSaving::FileFormat	 m_format;
-    MmapInfo			 m_mmap_info;
-    std::string			 m_current_filename;
   };
 
   template<class Stream>
@@ -148,14 +193,14 @@ namespace lima {
 	}
       sout << "DataType = " << aStringType << " ;\n";
       
-      SaveContainerEdf::MmapInfo offset;
-      sout << "Size = "; offset.size_offset = sout.tellp();
+      SaveContainerEdf::MmapInfo mmap_info;
+      sout << "Size = "; mmap_info.size_offset = sout.tellp();
       snprintf(aBuffer,sizeof(aBuffer),"%*s ;\n",nbCharReserved,"");
       sout << aData.size() << aBuffer;
       
       sout << "Dim_1 = " << aData.dimensions[0] << " ;\n";
       
-      sout << "Dim_2 = "; offset.height_offset = sout.tellp();
+      sout << "Dim_2 = "; mmap_info.height_offset = sout.tellp();
       snprintf(aBuffer,sizeof(aBuffer),"%*s ;\n",nbCharReserved,"");
       sout << aData.dimensions[1] << aBuffer;
       
@@ -199,8 +244,8 @@ namespace lima {
       long long finalHeaderLenght = (lenght + 1023) & ~1023; // 1024 alignment
       snprintf(aBuffer,sizeof(aBuffer),"%*s}\n",int(finalHeaderLenght - lenght),"");
       sout << aBuffer;
-      offset.header_size = finalHeaderLenght;
-      return offset;
+      mmap_info.header_size = finalHeaderLenght;
+      return mmap_info;
     }
 
 }
