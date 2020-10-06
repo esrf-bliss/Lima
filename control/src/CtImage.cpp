@@ -77,8 +77,8 @@ void CtSwBinRoiFlip::setMaxSize(Size& size)
 
 	m_max_size= size;
 
-	// Comppute the full ROI according to the current rotation and binning
-	Roi max_roi(Point(0,0), Size(SwapDimIfRotated(m_rotation, m_max_size) / m_bin));
+	// Compute the full ROI according to the current rotation and binning
+	Roi max_roi(Point(0,0), SwapDimIfRotated(m_rotation, Size(m_max_size / m_bin)));
 	DEB_PARAM() << DEB_VAR1(max_roi);
 
 	if (!m_roi.isEmpty()) {
@@ -99,10 +99,10 @@ void CtSwBinRoiFlip::setBin(const Bin& bin)
 	DEB_PARAM() << DEB_VAR1(bin);
 
 	if (bin != m_bin) {
-		m_roi= m_roi.getUnbinned(m_bin);
+		m_roi= m_roi.getUnbinned(SwapDimIfRotated(m_rotation, m_bin));
 		m_bin= bin;
 		if (!m_bin.isOne())
-			m_roi= m_roi.getBinned(m_bin);
+			m_roi= m_roi.getBinned(SwapDimIfRotated(m_rotation, m_bin));
 	}
 }
 
@@ -111,7 +111,7 @@ void CtSwBinRoiFlip::setRoi(const Roi& roi)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(roi);
 
-	Roi max_roi(Point(0,0), Size(SwapDimIfRotated(m_rotation, m_max_size) / m_bin));
+	Roi max_roi(Point(0,0), SwapDimIfRotated(m_rotation, Size(m_max_size / m_bin)));
 	DEB_TRACE() << DEB_VAR1(max_roi);
 
 	if (roi.isEmpty())
@@ -142,7 +142,7 @@ const Size& CtSwBinRoiFlip::getSize() const
 	DEB_TRACE() << DEB_VAR3(m_max_size, m_bin, m_roi);
 
 	if (m_roi.isEmpty())
-		m_size= m_max_size / m_bin;
+		m_size = SwapDimIfRotated(m_rotation, Size(m_max_size / m_bin));
 	else	
 		m_size= m_roi.getSize();
 	
@@ -728,10 +728,10 @@ void CtImage::setRoi(Roi& roi)
 	DEB_PARAM() << DEB_VAR1(roi);
 	Bin bin; getBin(bin);
 	Size full_size = m_max_size / bin;
-	Roi fullRoi(Point(0,0),full_size);
+	Roi full_roi(Point(0,0),full_size);
 	RotationMode aRotation = m_sw->getRotation();
-	fullRoi = fullRoi.getRotated(aRotation,full_size);
-	if (roi.isEmpty() || roi == fullRoi) {
+	full_roi = full_roi.getRotated(aRotation,full_size);
+	if (roi.isEmpty() || roi == full_roi) {
 		resetRoi();
 		return;
 	}
@@ -770,6 +770,7 @@ void CtImage::_setHSBin(const Bin &bin)
 	DEB_PARAM() << DEB_VAR1(bin);
 	Roi user_roi;getRoi(user_roi);
 	Bin user_bin;getBin(user_bin);
+	RotationMode user_rot;getRotation(user_rot);
 
 	if (m_hw->hasBinCapability()) {
 		Bin set_hw_bin = bin;
@@ -781,8 +782,8 @@ void CtImage::_setHSBin(const Bin &bin)
 			Bin set_sw_bin= bin / set_hw_bin;
 			m_sw->setBin(set_sw_bin);
 		}
-		user_roi = user_roi.getUnbinned(user_bin);
-		user_roi = user_roi.getBinned(bin);
+		user_roi = user_roi.getUnbinned(SwapDimIfRotated(user_rot, user_bin));
+		user_roi = user_roi.getBinned(SwapDimIfRotated(user_rot, bin));
 		_completeWithSoftRoi(user_roi,m_hw->getRealRoi());
 	} else {
 		m_sw->setBin(bin);
@@ -835,8 +836,9 @@ void CtImage::_completeWithSoftRoi(Roi roi_set,Roi hw_roi)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(roi_set,hw_roi);
 
-
-  const Size& max_roi_size = m_hw->getMaxRoiSize();
+  Size hw_max_roi_size = m_hw->getMaxRoiSize();
+  const Size& max_roi_size = hw_max_roi_size / m_sw->getBin();
+  DEB_TRACE() << DEB_VAR2(max_roi_size, hw_max_roi_size);
 
   // First flip the hardware roi
   const Flip &aSoftwareFlip = m_sw->getFlip();
@@ -874,7 +876,7 @@ void CtImage::setFlip(Flip &flip)
   getRotation(currentRotation);
 
   Size hw_max_roi_size = m_hw->getMaxRoiSize();
-  Size max_roi_size = SwapDimIfRotated(currentRotation, Size(hw_max_roi_size / m_sw->getBin()));
+  Size max_roi_size = hw_max_roi_size / m_sw->getBin();
   DEB_TRACE() << DEB_VAR3(currentRoi, max_roi_size, hw_max_roi_size);
   
   currentRoi = currentRoi.getUnrotated(currentRotation,max_roi_size);
@@ -920,7 +922,7 @@ void CtImage::setRotation(RotationMode rotation)
   getBin(currentBin);
 
   Size hw_max_roi_size = m_hw->getMaxRoiSize();
-  Size max_roi_size = SwapDimIfRotated(currentRotation, Size(hw_max_roi_size / m_sw->getBin()));
+  Size max_roi_size = hw_max_roi_size / m_sw->getBin();
   DEB_TRACE() << DEB_VAR3(currentRoi, max_roi_size, hw_max_roi_size);
   
   currentRoi = currentRoi.getUnrotated(currentRotation,max_roi_size);
