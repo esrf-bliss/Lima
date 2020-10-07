@@ -30,6 +30,8 @@
 
 namespace lima {
 
+  class SaveContainerEdf;
+
 #ifdef WITH_Z_COMPRESSION 
 #include <zlib.h>
 
@@ -37,14 +39,13 @@ namespace lima {
   {
     DEB_CLASS_NAMESPC(DebModControl,"File Z Compression Task","Control");
 
-    CtSaving::SaveContainer& 	m_container;
-    int 			m_frame_per_file;
+    SaveContainerEdf& 	m_container;
     CtSaving::HeaderMap 	m_header;
     
     z_stream_s		m_compression_struct;
   public:
-    FileZCompression(CtSaving::SaveContainer &save_cnt,
-		 int framesPerFile,const CtSaving::HeaderMap &header);
+    FileZCompression(SaveContainerEdf &save_cnt,
+		     const CtSaving::HeaderMap &header);
      ~FileZCompression();
     virtual void process(Data &aData);
   private:
@@ -83,13 +84,12 @@ static const LZ4F_preferences_t lz4_preferences = {
  {
    DEB_CLASS_NAMESPC(DebModControl,"File Lz4 Compression Task","Control");
    
-   CtSaving::SaveContainer&	m_container;
-   int				m_frame_per_file;
+   SaveContainerEdf&		m_container;
    CtSaving::HeaderMap		m_header;
    LZ4F_compressionContext_t	m_ctx;
  public:
-   FileLz4Compression(CtSaving::SaveContainer &save_cnt,
-		  int framesPerFile,const CtSaving::HeaderMap &header);
+   FileLz4Compression(SaveContainerEdf &save_cnt,
+		      const CtSaving::HeaderMap &header);
    ~FileLz4Compression();
    virtual void process(Data &aData);
    void _compression(const char *src,size_t size,ZBufferList& return_buffers);

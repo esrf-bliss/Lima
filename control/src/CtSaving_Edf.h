@@ -46,11 +46,14 @@ namespace lima {
 
   protected:
     virtual void* _open(const std::string &filename,
-			std::ios_base::openmode flags);
+			std::ios_base::openmode flags,
+			CtSaving::Parameters &pars);
     virtual void _close(void*);
     virtual long _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,
 			    CtSaving::FileFormat);
+    virtual void _prepare(CtControl&);
+
   private:
     struct MmapInfo
     {
@@ -82,9 +85,8 @@ namespace lima {
       void* mmap_addr;
     };
     template<class Stream>
-      static MmapInfo _writeEdfHeader(Data&,CtSaving::HeaderMap&,
-				      int framesPerFile,Stream&,
-				      int nbCharReserved = 0);
+    MmapInfo _writeEdfHeader(Data&,CtSaving::HeaderMap&,
+			     Stream&,int nbCharReserved = 0);
 
 #ifdef WIN32
     class _OfStream
@@ -145,13 +147,13 @@ namespace lima {
 #endif
 
     CtSaving::FileFormat	 m_format;
+    long			 m_frames_per_file;
   };
 
   template<class Stream>
     SaveContainerEdf::MmapInfo
     SaveContainerEdf::_writeEdfHeader(Data &aData,
 				      CtSaving::HeaderMap &aHeader,
-				      int framesPerFile,
 				      Stream &sout,
 				      int nbCharReserved)
     {
@@ -165,7 +167,7 @@ namespace lima {
       ctime_r(&ctime_now, time_str);
       time_str[strlen(time_str) - 1] = '\0';
       
-      int image_nb = aData.frameNumber % framesPerFile;
+      int image_nb = aData.frameNumber % m_frames_per_file;
       
       char aBuffer[2048];
       long long aStartPosition = sout.tellp();

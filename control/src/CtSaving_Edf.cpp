@@ -179,7 +179,7 @@ SaveContainerEdf::SaveContainerEdf(CtSaving::Stream& stream,
 #ifdef __unix
   m_nb_buffers(0),
 #endif
-  m_format(format)
+  m_format(format), m_frames_per_file(0)
 {
   DEB_CONSTRUCTOR();
 }
@@ -188,7 +188,7 @@ SaveContainerEdf::~SaveContainerEdf()
 {
   DEB_DESTRUCTOR();
 #ifdef __unix
-  if(m_free_buffers.size() != m_nb_buffers)
+  if(int(m_free_buffers.size()) != m_nb_buffers)
     DEB_WARNING() << "Missing free buffers: "
 		  << "got " << m_free_buffers.size() << ", "
 		  << "expected " << m_nb_buffers;
@@ -224,8 +224,15 @@ void SaveContainerEdf::releaseBuffer(void *buffer)
 }
 #endif
 
+void SaveContainerEdf::_prepare(CtControl&)
+{
+  const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
+  m_frames_per_file = pars.framesPerFile;
+}
+
 void* SaveContainerEdf::_open(const std::string &filename,
-			      std::ios_base::openmode openFlags)
+			      std::ios_base::openmode openFlags,
+			      CtSaving::Parameters & /*pars*/)
 {
   DEB_MEMBER_FUNCT();
   return new File(*this, filename, openFlags);
@@ -264,9 +271,7 @@ long SaveContainerEdf::_writeFile(void* f,Data &aData,
 
   if(aFormat == CtSaving::EDF)
     {
-      const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
-      MmapInfo info = _writeEdfHeader(aData,aHeader,
-				      pars.framesPerFile,*fout);
+      MmapInfo info = _writeEdfHeader(aData,aHeader,*fout);
       write_size += info.header_size;
     }
 #ifdef __unix
@@ -277,8 +282,7 @@ long SaveContainerEdf::_writeFile(void* f,Data &aData,
       MmapInfo& mmap_info = file->m_mmap_info;
       if(!mmap_info)	// Create header and mmap
 	{
-	  const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
-	  mmap_info = _writeEdfHeader(aData,aHeader,pars.framesPerFile,*fout,8);
+	  mmap_info = _writeEdfHeader(aData,aHeader,*fout,8);
 	  write_size += mmap_info.header_size;
 	  fout->flush();
 	  long long header_position = fout->tellp();
@@ -308,18 +312,15 @@ long SaveContainerEdf::_writeFile(void* f,Data &aData,
 
 SinkTaskBase* SaveContainerEdf::getCompressionTask(const CtSaving::HeaderMap& header)
 {
-#if defined(WITH_Z_COMPRESSION) || defined(WITH_LZ4_COMPRESSION)
-  const CtSaving::Parameters& pars = m_stream.getParameters(CtSaving::Acq);
-#endif
 #ifdef WITH_Z_COMPRESSION
   if(m_format == CtSaving::EDFGZ)
-    return new FileZCompression(*this,pars.framesPerFile,header);
+    return new FileZCompression(*this,header);
   else
 #endif
     
 #ifdef WITH_LZ4_COMPRESSION
   if(m_format == CtSaving::EDFLZ4)
-    return new FileLz4Compression(*this,pars.framesPerFile,header);
+    return new FileLz4Compression(*this,header);
   else
 #endif
   return NULL;
