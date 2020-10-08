@@ -267,10 +267,10 @@ public:
 		typedef std::map<long, FrameParameters> Frame2Params;
 		struct Handler
 		{
-			Handler() : m_handler(NULL) {}
+			Handler() : m_handler(NULL), m_nb_frames(0) {}
 
 			void* m_handler;
-			int			m_nb_frames;
+			int   m_nb_frames;
 		};
 		struct cmpParameters
 		{

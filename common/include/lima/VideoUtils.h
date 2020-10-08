@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "lima/Constants.h"
+#include "lima/Exceptions.h"
 
 #include "processlib/Data.h"
 
@@ -35,7 +36,14 @@ namespace lima
     inline void alloc(int size)
     {
       if(!buffer || double(size) > this->size())
-	buffer = (char*)realloc(buffer,size);
+      {
+        char* tmp = (char*)realloc(buffer,size);
+        if (tmp == NULL)
+          throw LIMA_COM_EXC(Error, "Error in realloc: ")
+            << "NULL pointer returned";
+        else
+            buffer = tmp;
+      }
     }
     inline void setParams(int fNumber,int w,int h,VideoMode m)
     {

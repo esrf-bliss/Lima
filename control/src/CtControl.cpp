@@ -172,6 +172,8 @@ protected:
   
 private:
   struct ChangeEvent {
+
+    ChangeEvent() : force(false), finished(NULL) {}
     ImageStatus status;
     bool force;
     bool *finished;

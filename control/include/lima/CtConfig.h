@@ -103,7 +103,7 @@ namespace lima
 
   private:
     typedef std::map<std::string,ModuleTypeCallback*> ModuleMap;
-    CtConfig(const CtConfig &other): m_ctrl(other.m_ctrl) {}
+    CtConfig(const CtConfig &other): m_ctrl(other.m_ctrl), m_config(NULL) {}
 
     CtControl&		m_ctrl;
     libconfig::Config*	m_config;

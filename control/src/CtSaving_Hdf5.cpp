@@ -43,6 +43,7 @@ struct SaveContainerHdf5::_File
 		m_in_append(false),
 		m_dataset_extended(false),
 		m_entry_index(0),
+		m_nb_frames(0),
 		m_frame_cnt(0)
 	{}
 
