@@ -113,8 +113,8 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 
 	try {
 		BufferList& bl = m_buffer_list;
-		if (to_alloc > 0) {
-			bl.resize(nb_buffers, MemBuffer(m_allocator));
+		bl.resize(nb_buffers, MemBuffer(m_allocator));
+		if (to_alloc > 0) {			
 			DEB_TRACE() << "Allocating " << to_alloc << " buffers";
 			for (int i = curr_nb_buffers; i < nb_buffers; i++)
 				bl[i].alloc(frame_size);
