@@ -518,12 +518,14 @@ public:
 		void _prepare();
 
 		enum ContainerStatus {
-		      Init, Prepare, Open,
+		      Init, Preparing, Prepared, Open,
 		};
 
 		CtSaving&		m_saving;
 		int			m_idx;
 
+		// protect m_cnt_status, ensure atomic Preparing
+		Cond			m_cond;
 		ContainerStatus		m_cnt_status;
 		SaveContainer*		m_save_cnt;
 		_SaveCBK*		m_saving_cbk;
@@ -533,6 +535,7 @@ public:
 		bool			m_pars_dirty_flag;
 		bool			m_active;
 		_CompressionCBK*	m_compression_cbk;
+
 	};
 	friend class Stream;
 
