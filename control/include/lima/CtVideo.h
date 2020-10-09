@@ -72,7 +72,7 @@ namespace lima
       long long		frameNumber()	const;
       
     private:
-      Image(const CtVideo*,VideoImage*);
+      Image(const CtVideo*,VideoImage*,AutoMutex&);
 
       const CtVideo* 	m_video;
       VideoImage* 	m_image;

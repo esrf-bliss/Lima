@@ -36,8 +36,14 @@ public:
     AutoMutex aLock(m_cnt.m_cond.mutex());
     VideoImage *anImage = m_cnt.m_write_image;
     DEB_TRACE() << DEB_VAR1(*anImage);
-    while(anImage->inused)
+    while(anImage->inused) {
       m_cnt.m_cond.wait();
+      if (anImage != m_cnt.m_write_image) {
+	DEB_TRACE() << "Read/write swapped";
+	anImage = m_cnt.m_write_image;
+      }
+    }
+    DEB_TRACE() << DEB_VAR1(*anImage);
     anImage->inused = -1;	// Write Mode
     aLock.unlock();
     
@@ -60,13 +66,14 @@ public:
     // if read Image is not use, swap
     if(!m_cnt.m_read_image->inused)
       {
+	DEB_TRACE() << "swapping read and write";
 	m_cnt.m_write_image = m_cnt.m_read_image;
 	m_cnt.m_write_image->frameNumber = -1;
 	m_cnt.m_read_image = anImage;
 
 	if(m_cnt.m_image_callback)
 	  {
-	    CtVideo::Image anImageWrapper(&m_cnt,anImage);
+	    CtVideo::Image anImageWrapper(&m_cnt,anImage,aLock);
 	    ImageCallback *cb = m_cnt.m_image_callback;
 	    aLock.unlock();
 	    cb->newImage(anImageWrapper);
@@ -194,7 +201,7 @@ bool CtVideo::_InternalImageCBK::newImage(char * data,int width,int height,Video
    
       if(m_video.m_image_callback)
 	{
-	  CtVideo::Image anImageWrapper(&m_video,anImage);
+	  CtVideo::Image anImageWrapper(&m_video,anImage,aLock);
 	  aLock.unlock();
 
 	  SinkTaskBase* cbk_task = new SinkTaskBase();
@@ -309,8 +316,8 @@ CtVideo::Image::~Image()
   if(m_video)
     {
       AutoMutex aLock(m_video->m_cond.mutex());
-      --(m_image->inused);
-      m_video->m_cond.broadcast();
+      if (--(m_image->inused) == 0)
+	m_video->m_cond.broadcast();
     }
 }
 
@@ -338,8 +345,8 @@ CtVideo::Image& CtVideo::Image::operator=(const CtVideo::Image &other)
       if(m_video)
 	{
 	  AutoMutex aLock(m_video->m_cond.mutex());
-	  --(m_image->inused);
-	  m_video->m_cond.broadcast();
+	  if (--(m_image->inused) == 0)
+	    m_video->m_cond.broadcast();
 	}
 
       m_video = other.m_video;
@@ -350,10 +357,12 @@ CtVideo::Image& CtVideo::Image::operator=(const CtVideo::Image &other)
 /** @brief an other contructor
  *  This methode should be call under Lock
  */
-CtVideo::Image::Image(const CtVideo *video,VideoImage *image) :
+CtVideo::Image::Image(const CtVideo *video,VideoImage *image, AutoMutex&l) :
   m_video(video),
   m_image(image)
 {
+  if (!m_video || (&l.mutex() != &m_video->m_cond.mutex()) || !l.locked())
+    throw LIMA_CTL_EXC(InvalidValue, "Invalid video/mutex");
   ++(m_image->inused);
 }
 
@@ -428,6 +437,8 @@ CtVideo::~CtVideo()
 
 void CtVideo::setActive(bool aFlag)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aFlag);
   AutoMutex aLock(m_cond.mutex());
   m_active_flag = aFlag;
 }
@@ -729,19 +740,26 @@ void CtVideo::getBin(Bin &aBin) const
 // --- images
 void CtVideo::getLastImage(CtVideo::Image &anImage) const
 {
+  DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
+  DEB_TRACE() << DEB_VAR3(m_write_image->inused,
+			  m_write_image->frameNumber,
+			  m_read_image->frameNumber);
   if(m_write_image->inused >= 0 && // No writter
      m_write_image->frameNumber >= m_read_image->frameNumber)
     {
+      DEB_TRACE() << "swapping read and write";
       VideoImage *tmp = m_read_image;
       m_read_image = m_write_image;
       m_write_image = tmp;
-      m_write_image->frameNumber = -1;
+      if (!m_read_image->inused)
+	m_write_image->frameNumber = -1;
     }
-  CtVideo::Image tmpImage(this,m_read_image);
+  CtVideo::Image tmpImage(this,m_read_image,aLock);
   aLock.unlock();
   
   anImage = tmpImage;
+  DEB_RETURN() << DEB_VAR1(anImage.m_image->frameNumber);
 }
 
 void CtVideo::getLastImageCounter(long long &anImageCounter) const
