@@ -199,6 +199,9 @@ SaveContainerHdf5::~SaveContainerHdf5() {
 void SaveContainerHdf5::_prepare(CtControl& control) {
 	DEB_MEMBER_FUNCT();
 
+	// HDF5 garbage collecor
+	H5garbage_collect();
+
 	m_ct_image = control.image();
 	m_ct_acq = control.acquisition();
 	m_hw_int = control.hwInterface();
