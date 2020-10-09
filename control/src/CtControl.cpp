@@ -499,8 +499,9 @@ void CtControl::prepareAcq()
   m_images_buffer.clear();
   m_images_saved.clear();
 
-  //Clear common header
+  //Clear saving: common & frame headers, ZBuffers and statistics
   m_ct_saving->resetInternalCommonHeader();
+  m_ct_saving->clear();
 
   DEB_TRACE() << "Apply hardware bin/roi";
   m_ct_image->applyHard();

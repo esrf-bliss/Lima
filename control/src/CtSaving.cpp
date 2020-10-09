@@ -1743,8 +1743,14 @@ void CtSaving::clear()
 	}
 
 	AutoMutex aLock(m_cond.mutex());
+	if (m_frame_headers.size())
+		DEB_WARNING() << DEB_VAR1(m_frame_headers.size());
 	m_frame_headers.clear();
+	if (m_common_header.size())
+		DEB_WARNING() << DEB_VAR1(m_common_header.size());
 	m_common_header.clear();	// @fix Should we clear common header???
+	if (m_frame_datas.size())
+		DEB_WARNING() << DEB_VAR1(m_frame_datas.size());
 	m_frame_datas.clear();
 
 }
@@ -2797,6 +2803,7 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 
 void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
 {
+	DEB_MEMBER_FUNCT();
 	AutoMutex aLock(m_buffers_lock);
 	std::pair<dataId2ZBufferList::iterator, bool> result;
 	result = m_buffers.emplace(std::move(frameNumber), std::move(buffers));
@@ -2806,6 +2813,7 @@ void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
 
 ZBufferList CtSaving::SaveContainer::_takeBuffers(int dataId)
 {
+	DEB_MEMBER_FUNCT();
 	AutoMutex aLock(m_buffers_lock);
 	dataId2ZBufferList::iterator i = m_buffers.find(dataId);
 	ZBufferList aReturnBufferPt(std::move(i->second));
@@ -2815,7 +2823,10 @@ ZBufferList CtSaving::SaveContainer::_takeBuffers(int dataId)
 
 void CtSaving::SaveContainer::_clear()
 {
+	DEB_MEMBER_FUNCT();
 	AutoMutex aLock(m_buffers_lock);
+	if (m_buffers.size())
+		DEB_WARNING() << DEB_VAR1(m_buffers.size());
 	m_buffers.clear();
 }
 
