@@ -390,6 +390,14 @@ CtControl::CtControl(HwInterface *hw) :
 CtControl::~CtControl()
 {
   DEB_DESTRUCTOR();
+  
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus == AcqRunning)
+  {
+    DEB_WARNING() << "Acquisition is still running, stopping acquisition";
+    stopAcq();
+  }
 
   DEB_TRACE() << "Waiting for all threads to finish their tasks";
   PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
