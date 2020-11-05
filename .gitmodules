@@ -139,3 +139,6 @@
 [submodule "camera/arinax"]
 	path = camera/arinax
 	url = ../Lima-camera-arinax
+[submodule "camera/ximea"]
+	path = camera/ximea
+	url = ../Lima-camera-ximea
