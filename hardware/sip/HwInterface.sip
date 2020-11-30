@@ -117,7 +117,7 @@ using namespace lima;
 %End
  public:
         struct StatusType {
-	  enum Basic {Ready,Exposure,Readout,Latency,Config};
+	  enum Basic {Fault,Ready,Exposure,Readout,Latency,Config};
 	  void set(Basic);
 		AcqStatus acq;
 		DetStatus det;
