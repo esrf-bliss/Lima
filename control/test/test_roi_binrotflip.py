@@ -5,8 +5,7 @@ from Lima import Core, Simulator
 
 cam = Simulator.Camera()
 
-#frame_dim = Core.FrameDim(Core.Size(800, 600), Core.Bpp32)
-frame_dim = Core.FrameDim(Core.Size(600, 600), Core.Bpp32)
+frame_dim = Core.FrameDim(Core.Size(600, 300), Core.Bpp32)
 cam = Simulator.Camera()
 getter = cam.getFrameGetter()
 getter.setFrameDim(frame_dim)
@@ -19,8 +18,12 @@ acq.setAcqNbFrames(1)
 acq.setAcqExpoTime(0.001)
 
 img = control.image()
-#roi = Core.Roi(300,50,450,300)
-roi = Core.Roi(160, 60, 120, 200)
+
+print("Attach debugger now")
+input()
+
+roi = Core.Roi(1, 1, 598, 298) # Almost full frame
+#roi = Core.Roi(0, 0, 600, 300) # Full frame
 img.setRoi(roi)
 
 rots = [Core.Rotation_0, Core.Rotation_90, Core.Rotation_180, Core.Rotation_270]
@@ -47,28 +50,29 @@ def permutation(lst):
 
 permutations = permutation(['b', 'f', 'r'])
 
-# For every permutation of every Bin Rot Flip parameters applied in any order
-for rot in rots:
-    for bin in binnings:
-        for flip in flips:
-            for perm in permutations:
+try:
+    # For every permutation of every Bin Rot Flip parameters applied in any order
+    for rot in rots:
+        for bin in binnings:
+            for flip in flips:
+                for perm in permutations:
 
-                try:
-                    for op in perm:
-                        if op == 'f':
-                            img.setFlip(flip)
-                        elif op == 'b':
-                            img.setBin(bin)
-                        elif op == 'r':
-                            img.setRotation(rot)
+                        for op in perm:
+                            if op == 'f':
+                                img.setFlip(flip)
+                            elif op == 'b':
+                                img.setBin(bin)
+                            elif op == 'r':
+                                img.setRotation(rot)
 
-                    #print(perm, flip, rot, bin, img.getRoi(), " - OK")
+                        #print(perm, flip, rot, bin, img.getRoi(), " - OK")
+    print("All permutations tested")
 
-                except Exception:
-                    print(perm, flip, rot, bin, img.getRoi(), " - FAILED")
+    # Final check
+    img.resetBin()
+    img.resetFlip()
+    img.resetRotation()
 
-img.resetBin()
-img.resetFlip()
-img.resetRotation()
-
-assert img.getRoi() == roi
+except Core.Exception as ex:
+    if ex.getErrType() == Core.InvalidValue:
+        print(perm, flip, rot, bin, img.getRoi(), " - FAILED")
