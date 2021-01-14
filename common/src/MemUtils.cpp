@@ -103,7 +103,7 @@ int lima::GetDefMaxNbBuffers(const FrameDim& frame_dim)
 void lima::ClearBuffer(void *ptr, int nb_concat_frames, 
 		       const FrameDim& frame_dim)
 {
-	memset(ptr, 0, nb_concat_frames * frame_dim.getMemSize());
+	memset(ptr, 0, nb_concat_frames * size_t(frame_dim.getMemSize()));
 }
 
 Allocator *Allocator::defaultAllocator()

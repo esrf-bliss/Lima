@@ -70,7 +70,7 @@ namespace lima
 			"Control");
       friend class CtAccumulation;
     public:
-      ThresholdCallback() {};
+      ThresholdCallback() : m_max(0) {};
       virtual ~ThresholdCallback() {};
 
       int m_max;

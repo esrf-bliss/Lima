@@ -172,6 +172,8 @@ protected:
   
 private:
   struct ChangeEvent {
+
+    ChangeEvent() : force(false), finished(NULL) {}
     ImageStatus status;
     bool force;
     bool *finished;
@@ -388,6 +390,14 @@ CtControl::CtControl(HwInterface *hw) :
 CtControl::~CtControl()
 {
   DEB_DESTRUCTOR();
+  
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus == AcqRunning)
+  {
+    DEB_WARNING() << "Acquisition is still running, stopping acquisition";
+    stopAcq();
+  }
 
   DEB_TRACE() << "Waiting for all threads to finish their tasks";
   PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();

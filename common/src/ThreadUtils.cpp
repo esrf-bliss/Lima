@@ -184,7 +184,7 @@ bool Cond::wait(double timeout)
       struct timeval now;
       struct timespec waitTimeout;
       gettimeofday(&now,NULL);
-      waitTimeout.tv_sec = now.tv_sec + long(timeout);
+      waitTimeout.tv_sec = now.tv_sec + time_t(timeout);
       waitTimeout.tv_nsec = (now.tv_usec * 1000) + 
 	long((timeout - long(timeout)) * 1e9);
       if(waitTimeout.tv_nsec >= 1000000000L) // Carry
@@ -241,10 +241,8 @@ Thread::ExceptionCleanUp::~ExceptionCleanUp()
 	m_thread.m_exception_handled = true;
 }
 
-Thread::Thread()
+Thread::Thread() : m_thread(NULL), m_started(false), m_finished(false), m_exception_handled(false), m_tid(0)
 {
-	m_started = m_finished = m_exception_handled = false;
-	m_tid = 0;
 	pthread_attr_init(&m_thread_attr);
 }
 

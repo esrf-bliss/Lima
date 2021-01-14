@@ -92,7 +92,7 @@ static const LZ4F_preferences_t lz4_preferences = {
 		  int framesPerFile,const CtSaving::HeaderMap &header);
    ~FileLz4Compression();
    virtual void process(Data &aData);
-   void _compression(const char *src,int size,ZBufferList& return_buffers);   
+   void _compression(const char *src,size_t size,ZBufferList& return_buffers);
  };
 #endif // WITH_LZ4_COMPRESSION
 

@@ -864,7 +864,7 @@ void SoftOpPeakFinder::setComputingMode(ComputingMode aComputingMode)
 
 void SoftOpPeakFinder::getComputingMode(ComputingMode &aComputingMode) const
 {
-  Tasks::PeakFinderTask::ComputingMode aMode;
+  Tasks::PeakFinderTask::ComputingMode aMode = Tasks::PeakFinderTask::MAXIMUM;
   for(NameMapConstIterator i = m_task_manager.begin(); i != m_task_manager.end();++i) {
     i->second.second->getComputingMode(aMode); 
   }

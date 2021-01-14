@@ -82,6 +82,9 @@ Exception::Exception(Layer layer, ErrorType err_type, const string& err_desc,
 	if (deb_proxy)
 		*deb_proxy << "Exception(" << getErrType() << "): " 
 			   << getErrDesc();
+	else
+		std::cerr << "********* Exception(" << getErrType() << "): " 
+			   << getErrDesc();
 }
 
 Layer Exception::getLayer() const
@@ -146,4 +149,3 @@ ostream& lima::operator <<(ostream& os, const Exception& e)
 {
 	return os << e.getErrMsg();
 }
-

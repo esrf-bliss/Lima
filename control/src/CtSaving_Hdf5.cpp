@@ -43,6 +43,7 @@ struct SaveContainerHdf5::_File
 		m_in_append(false),
 		m_dataset_extended(false),
 		m_entry_index(0),
+		m_nb_frames(0),
 		m_frame_cnt(0)
 	{}
 
@@ -197,6 +198,9 @@ SaveContainerHdf5::~SaveContainerHdf5() {
 
 void SaveContainerHdf5::_prepare(CtControl& control) {
 	DEB_MEMBER_FUNCT();
+
+	// HDF5 garbage collecor
+	H5garbage_collect();
 
 	m_ct_image = control.image();
 	m_ct_acq = control.acquisition();
@@ -361,13 +365,13 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 			time_t now;
 			time(&now);
 			char buf[sizeof("2011-10-08T07:07:09Z")];
-#ifdef WIN32
 			struct tm gmtime_now;
+#ifdef WIN32
 			gmtime_s(&gmtime_now, &now);
-			strftime(buf, sizeof(buf), "%FT%TZ", &gmtime_now);
 #else
-			strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
+			gmtime_r(&now, &gmtime_now);
 #endif
+			strftime(buf, sizeof(buf), "%FT%TZ", &gmtime_now);
 			string stime = string(buf);
 			write_h5_attribute(file->m_file,"file_time",stime);
 			
@@ -526,13 +530,13 @@ void SaveContainerHdf5::_close(void* f) {
 		time_t now;
 		time(&now);
 		char buf[sizeof("2011-10-08T07:07:09Z")];
-#ifdef WIN32
 		struct tm gmtime_now;
+#ifdef WIN32
 		gmtime_s(&gmtime_now, &now);
-		strftime(buf, sizeof(buf), "%FT%TZ", &gmtime_now);
 #else
-		strftime(buf, sizeof(buf), "%FT%TZ", gmtime(&now));
+		gmtime_r(&now, &gmtime_now);
 #endif
+		strftime(buf, sizeof(buf), "%FT%TZ", &gmtime_now);
 		string etime = string(buf);
 		write_h5_dataset(file->m_entry,"end_time",etime);
 	}

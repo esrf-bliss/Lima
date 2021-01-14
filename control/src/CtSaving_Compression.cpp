@@ -158,24 +158,24 @@ void FileLz4Compression::process(Data &aData)
   m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
 }
 
-void FileLz4Compression::_compression(const char *src,int size,
+void FileLz4Compression::_compression(const char *src, size_t size,
 				      ZBufferList& return_buffers)
 {
   DEB_MEMBER_FUNCT();
   
-  int buffer_size = LZ4F_compressFrameBound(size,&lz4_preferences);
+  size_t buffer_size = LZ4F_compressFrameBound(size,&lz4_preferences);
   buffer_size += LZ4_HEADER_SIZE + LZ4_FOOTER_SIZE;
   
   return_buffers.emplace_back(buffer_size);
   ZBuffer& newBuffer = return_buffers.back();
   char* buffer = (char*)newBuffer.ptr();
   
-  int offset = LZ4F_compressBegin(m_ctx,buffer,
+  size_t offset = LZ4F_compressBegin(m_ctx,buffer,
 				  buffer_size,&lz4_preferences);
   if(LZ4F_isError(offset))
     THROW_CTL_ERROR(Error) << "Failed to start compression: " << DEB_VAR1(offset);
 
-  int error_code = LZ4F_compressUpdate(m_ctx,buffer + offset,buffer_size - offset,
+  size_t error_code = LZ4F_compressUpdate(m_ctx,buffer + offset,buffer_size - offset,
 				       src,size,NULL);
   if(LZ4F_isError(error_code))
     THROW_CTL_ERROR(Error) << "Compression Failed: " 

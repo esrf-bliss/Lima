@@ -41,6 +41,8 @@ void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& f
 
 struct LIMACORE_API Allocator
 {
+	DEB_STRUCT_NAMESPC(DebModCommon, "MemUtils", "Allocator");
+
 	struct Data {
 		virtual ~Data() = default;
 	};
@@ -54,9 +56,10 @@ struct LIMACORE_API Allocator
 
 	Allocator(Allocator&& o) : m_ref_count(0)
 	{
+		DEB_MEMBER_FUNCT();
+
 		if (o.m_ref_count != 0)
-			throw LIMA_COM_EXC(InvalidValue,
-					   "Moved-from Allocator is not empty");
+			DEB_ERROR() << "Moved-from Allocator is not empty";
 	}
 
 	// Allocate a buffer of a given size and eventually return
@@ -102,9 +105,10 @@ struct LIMACORE_API Allocator
 
 	virtual ~Allocator()
 	{
+		DEB_MEMBER_FUNCT();
+
 		if (m_ref_count != 0)
-			std::cerr << "Error: destroying non-empty Allocator"
-				  << std::endl;
+			DEB_ERROR() << "Error: destroying non-empty Allocator";
 	}
 
 	// The real resource management counter, triggered by Ref
