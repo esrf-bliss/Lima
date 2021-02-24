@@ -105,5 +105,6 @@ public:
 #include "lima/HwVideoCtrlObj.h"
 #include "lima/HwEventCtrlObj.h"
 #include "lima/HwSavingCtrlObj.h"
+#include "lima/HwReconstructionCtrlObj.h"
 
 #endif // HWCAP_H
