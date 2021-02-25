@@ -277,4 +277,7 @@ using namespace lima;
 
     void getMaxConcurrentWritingTask(int& nb_thread /Out/,int stream_idx = 0) const;
     void setMaxConcurrentWritingTask(int,int stream_idx = 0);
+    
+  private:
+    CtSaving(const CtSaving&);
  };

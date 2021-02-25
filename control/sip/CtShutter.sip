@@ -46,4 +46,7 @@ using namespace lima;
         void getOpenTime (double& shut_open_time /Out/) const;
         void setCloseTime(double  shut_close_time);
         void getCloseTime(double& shut_close_time /Out/) const;
+        
+    private:
+        CtShutter(const CtShutter&);
 };

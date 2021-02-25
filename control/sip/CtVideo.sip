@@ -142,6 +142,9 @@ using namespace lima;
 
     // --- video mode
     void getSupportedVideoMode(std::list<VideoMode> &modeList /Out/) const;
+    
+  private:
+    CtVideo(const CtVideo&);
   };
 
 %MappedType CtVideo::AutoGainModeList

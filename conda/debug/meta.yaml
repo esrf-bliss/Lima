@@ -20,8 +20,8 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip 4.19.8           #For the SIP module
-    - processlib 1.8*
+    - sip
+    - processlib
     - libconfig 1.7*
     # I/O formats
     - zlib
@@ -37,7 +37,7 @@ requirements:
     - {{ compiler('cxx') }}
   run:
     - python
-    - sip >=4.19.4, <=4.19.8 # For compatibility with pyqt 5.9.2
+    - {{ pin_compatible('sip', max_pin='x.x.x') }}
     - {{ pin_compatible('processlib', max_pin='x.x') }}
     - libconfig 1.7*
     # I/O formats
@@ -50,14 +50,8 @@ requirements:
     - libnuma       # [linux]
 
 test:
-  requires:
-    - cmake
-    - python {{ python }}
   imports:
     - Lima.Core
-  #commands:
-  #  - cd build
-  #  - ctest --timeout 10 --output-on-failure
 
 about:
   home: https://github.com/esrf-bliss/Lima

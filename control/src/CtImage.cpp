@@ -315,7 +315,7 @@ void CtHwBinRoiFlip::setRoi(Roi& roi, bool round)
 	if (roi.isEmpty())
 		THROW_CTL_ERROR(InvalidValue) << "Hardware roi is empty";
 	if (!m_max_roi.containsRoi(roi))
-		THROW_CTL_ERROR(InvalidValue) << "Roi out of limts";
+		THROW_CTL_ERROR(InvalidValue) << "Roi out of limits";
 
 	if (!m_has_roi) {
 		if (!round)

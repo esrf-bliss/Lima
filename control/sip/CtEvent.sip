@@ -25,18 +25,20 @@ class CtEvent {
 #include <sstream>
 using namespace lima;
 %End
-    public:
+  public:
 
-        CtEvent(CtControl& ct);
-        ~CtEvent();
+    CtEvent(CtControl& ct);
+    ~CtEvent();
 
-        bool hasCapability() const;
+    bool hasCapability() const;
 
-	void resetEventList();
-	
-	virtual void   registerEventCallback(EventCallback& cb);
-	virtual void unregisterEventCallback(EventCallback& cb);
+    void resetEventList();
 
-	virtual void reportEvent(Event *event /Transfer/);
+    virtual void   registerEventCallback(EventCallback& cb);
+    virtual void unregisterEventCallback(EventCallback& cb);
 
+    virtual void reportEvent(Event *event /Transfer/);
+
+  private:
+    CtEvent(const CtEvent&);
 };
