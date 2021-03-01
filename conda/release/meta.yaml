@@ -18,7 +18,7 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip
+    - sip 4.19* # API v12.7
     - processlib
     - libconfig 1.7*
     # I/O formats
@@ -35,7 +35,7 @@ requirements:
     - {{ compiler('cxx') }}
   run:
     - python
-    - {{ pin_compatible('sip', max_pin='x.x.x') }}
+    - {{ pin_compatible('sip', min_pin='x.x.x', max_pin='x') }}
     - {{ pin_compatible('processlib', max_pin='x.x') }}
     - libconfig 1.7*
     # I/O formats

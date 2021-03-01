@@ -14,8 +14,7 @@ build-linux:
   <<: *build-conda
   script:
     - git submodule update --init --recursive third-party/bitshuffle
-    - conda mambabuild ./conda/debug --prefix-length=80 --output-folder=dist/ -c conda-forge -c http://bcu-ci.esrf.fr/stable
-    - conda mambabuild ./conda/release --prefix-length=80 --output-folder=dist/ -c conda-forge -c http://bcu-ci.esrf.fr/stable
+    - conda build ./conda/release --output-folder=dist/ --channel=http://bcu-ci.esrf.fr/stable
   tags:
     - linux
 
@@ -23,7 +22,6 @@ build-win:
   <<: *build-conda
   script:
     - git submodule update --init --recursive third-party/bitshuffle
-    - call conda build ./conda/debug --prefix-length=80 --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
     - call conda build ./conda/release --prefix-length=80 --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
   tags:
     - win
