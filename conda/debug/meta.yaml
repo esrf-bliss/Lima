@@ -21,7 +21,7 @@ requirements:
   host:
     - python {{ python }}
     - sip 4.19.8           #For the SIP module
-    - processlib
+    - processlib 1.7*
     - libconfig 1.7*
     # I/O formats
     - zlib
