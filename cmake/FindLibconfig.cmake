@@ -1,4 +1,4 @@
-find_library(LIBCONFIG_LIBRARIES libconfig++)
+find_library(LIBCONFIG_LIBRARIES config++)
 find_path(LIBCONFIG_INCLUDE_DIRS libconfig.h++)
 
 include(FindPackageHandleStandardArgs)
