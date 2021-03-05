@@ -4,6 +4,7 @@
 #include "lima/CtAcquisition.h"
 #include "lima/CtImage.h"
 #include "lima/CtBuffer.h"
+#include "lima/SoftOpExternalMgr.h"
 
 #include "processlib/PoolThreadMgr.h"
 #include "processlib/SinkTask.h"
@@ -26,7 +27,8 @@ class CtVideo::_Data2ImageTask : public SinkTaskBase
 {
   DEB_CLASS_NAMESPC(DebModControl,"Data to image","Control");
 public:
-  _Data2ImageTask(CtVideo &cnt) : SinkTaskBase(),m_nb_buffer(0),m_cnt(cnt) {}
+  _Data2ImageTask(CtVideo &cnt) : SinkTaskBase(),m_nb_buffer(0),
+				  m_data_always_available(false),m_cnt(cnt) {}
 
   virtual void process(Data &aData)
   {
@@ -82,13 +84,21 @@ public:
   }
 
   long m_nb_buffer;
+  bool m_data_always_available;
+
 private:
   inline bool _check_available(Data& aData)
   {
+    DEB_MEMBER_FUNCT();
     CtControl::ImageStatus status;
     m_cnt.m_ct.getImageStatus(status);
-    
+
+    if (m_data_always_available)
+      return true;
+
     long offset = status.LastImageAcquired - aData.frameNumber;
+    DEB_TRACE() << DEB_VAR4(status.LastImageAcquired, aData.frameNumber,
+			    offset, m_nb_buffer);
     return offset < m_nb_buffer;
   }
 
@@ -1053,6 +1063,13 @@ void CtVideo::_prepareAcq()
   
   m_read_image->frameNumber = -1;
   m_write_image->frameNumber = -1;
+
+  m_data_2_image_task->m_data_always_available = false;
+  SoftOpExternalMgr* op_ext = m_ct.externalOperation();
+  bool op_ext_link_task_active, op_ext_sink_task_active;
+  op_ext->isTaskActive(op_ext_link_task_active, op_ext_sink_task_active);
+  if ((m_pars.video_source == LAST_IMAGE) && op_ext_link_task_active)
+    m_data_2_image_task->m_data_always_available = true;
 
   CtBuffer* buffer = m_ct.buffer();
   buffer->getNumber(m_data_2_image_task->m_nb_buffer);
