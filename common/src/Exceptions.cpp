@@ -84,7 +84,7 @@ Exception::Exception(Layer layer, ErrorType err_type, const string& err_desc,
 			   << getErrDesc();
 	else
 		std::cerr << "********* Exception(" << getErrType() << "): " 
-			   << getErrDesc();
+			  << getErrDesc() << " *********" << std::endl;
 }
 
 Layer Exception::getLayer() const

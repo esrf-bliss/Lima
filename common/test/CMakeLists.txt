@@ -22,7 +22,7 @@
 
 set(test_src test_membuffer test_ordered_map)
 if (NOT WIN32)
-    list(APPEND test_src test_regex)
+    list(APPEND test_src test_regex test_mutex)
 endif()
 
 limatools_run_camera_tests("${test_src}" ${NAME})
