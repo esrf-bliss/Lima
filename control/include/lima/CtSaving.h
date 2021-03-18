@@ -314,8 +314,7 @@ public:
 			std::list<double>& incoming_speed) const;
 		void getRawStatistic(StatisticsType&) const;
 		
-		void updateNbFrames(long nb_frames);
-		void cleanRemainingFrames(long last_acquired_frame_nr);
+		void updateNbFrames(long nb_acquired_frames);
 
 		void getParameters(CtSaving::Parameters&) const;
 		void clear();
@@ -348,7 +347,8 @@ public:
 
 	protected:
 		virtual void* _open(const std::string& filename,
-			std::ios_base::openmode flags) = 0;
+			std::ios_base::openmode flags,
+			CtSaving::Parameters& pars) = 0;
 		virtual void _close(void*) = 0;
 		virtual long _writeFile(void*, Data& data,
 			CtSaving::HeaderMap& aHeader,
@@ -359,23 +359,28 @@ public:
 		virtual void _setBuffer(int frameNumber, ZBufferList&& buffer);
 		virtual ZBufferList _takeBuffers(int dataId);
 
-		int			m_written_frames;
-		Stream& m_stream;
+		mutable Mutex		m_lock;
+		Stream&			m_stream;
+
+		long			m_frames_to_write;
+		long			m_files_to_write;
+		long			m_written_frames;
+
 	private:
+		void close(const Params2Handler::iterator& it, AutoMutex& l);
+
 		StatisticsType		m_statistic;
 		int			m_statistic_size;
 		bool                      m_log_stat_enable;
 		std::string		m_log_stat_directory;
 		std::string               m_log_stat_filename;
 		FILE* m_log_stat_file;
-		mutable Cond		m_cond;
-		long			m_nb_frames_to_write;
 
 		Frame2Params		m_frame_params;
 		Params2Handler		m_params_handler;
 		int			m_max_writing_task; ///< number of maximum parallel write
 		int			m_running_writing_task; ///< number of concurrent write running
-		Mutex			 m_lock;
+		Mutex			m_buffers_lock;
 		dataId2ZBufferList	m_buffers;
 
 	};
@@ -501,13 +506,9 @@ public:
 			m_save_cnt->createStatistic(data);
 		}
 
-		void updateNbFrames(long last_acquired_frame_nr)
+		void updateNbFrames(long nb_acquired_frames)
 		{
-			m_save_cnt->updateNbFrames(last_acquired_frame_nr);
-		}
-		void cleanRemainingFrames(long last_acquired_frame_nr)
-		{
-			m_save_cnt->cleanRemainingFrames(last_acquired_frame_nr);
+			m_save_cnt->updateNbFrames(nb_acquired_frames);
 		}
 
 	private:

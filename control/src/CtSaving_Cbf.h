@@ -53,7 +53,8 @@ namespace lima {
 
   protected:
     virtual void* _open(const std::string &filename,
-			std::ios_base::openmode flags);
+			std::ios_base::openmode flags,
+			CtSaving::Parameters& pars);
     virtual void _close(void*);
     virtual long _writeFile(void*,Data &data,
 			    CtSaving::HeaderMap &aHeader,

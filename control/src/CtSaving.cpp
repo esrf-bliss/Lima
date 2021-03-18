@@ -1397,8 +1397,7 @@ void CtSaving::_validateFrameHeader(long frame_nr,
 	bool keep_header = m_need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
-	if (!m_need_compression)
-		m_frame_datas.erase(frame_iter);
+	m_frame_datas.erase(frame_iter);
 
 	aLock.unlock();
 
@@ -1744,8 +1743,14 @@ void CtSaving::clear()
 	}
 
 	AutoMutex aLock(m_cond.mutex());
+	if (m_frame_headers.size())
+		DEB_WARNING() << DEB_VAR1(m_frame_headers.size());
 	m_frame_headers.clear();
+	if (m_common_header.size())
+		DEB_WARNING() << DEB_VAR1(m_common_header.size());
 	m_common_header.clear();	// @fix Should we clear common header???
+	if (m_frame_datas.size())
+		DEB_WARNING() << DEB_VAR1(m_frame_datas.size());
 	m_frame_datas.clear();
 
 }
@@ -1886,9 +1891,7 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 		return;
 	m_nb_cbk.erase(count_it);
 
-	bool ready_flag = _allStreamReady(frame_nr);
-
-	if (!ready_flag) {
+	if (!_allStreamReady(frame_nr)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
 		m_frame_datas.insert(map_pair);
 		return;
@@ -1921,9 +1924,8 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 
 	//@todo check if the frame is still available
 	if (m_end_cbk) {
-		aLock.unlock();
+		AutoMutexUnlock u(aLock);
 		m_end_cbk->finished(aData);
-		aLock.lock();
 	}
 
 	SavingMode saving_mode = getAcqSavingMode();
@@ -1934,32 +1936,39 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 		m_cond.signal();
 		return;
 	}
+	aData.releaseBuffer(); // release finished data
 
-	for (FrameMap::iterator nextDataIter = m_frame_datas.begin();
-		nextDataIter != m_frame_datas.end(); ++nextDataIter)
+	// limit search depth to the number of concurrent writing tasks
+	int tasks;
+	stream.getMaxConcurrentWritingTask(tasks);
+	FrameHeaderMap::iterator header_it;
+	FrameMap::iterator data_it, data_end = m_frame_datas.end();
+	for (data_it = m_frame_datas.begin(); tasks && (data_it != data_end); ++data_it, --tasks)
 	{
-		frame_nr = nextDataIter->first;
-		FrameHeaderMap::iterator aHeaderIter = m_frame_headers.find(frame_nr);
-		bool header_available = (aHeaderIter != m_frame_headers.end());
+		frame_nr = data_it->first;
+		header_it = m_frame_headers.find(frame_nr);
+		// sorted frames: if header is not available yet, abort search 
+		if ((saving_mode == AutoHeader) && (header_it == m_frame_headers.end()))
+			return;
 		bool can_save = _allStreamReady(frame_nr);
-		if (!can_save ||
-			((saving_mode == AutoHeader) && !header_available))
-			continue;
-
-		Data aNewData = nextDataIter->second;
-		m_frame_datas.erase(nextDataIter);
-
-		HeaderMap task_header;
-		_takeHeader(aHeaderIter, task_header, false);
-
-		aLock.unlock();
-
-		TaskList task_list;
-		_getTaskList(Save, frame_nr, task_header, task_list);
-
-		_postTaskList(aNewData, task_list, SAVING_PRIORITY);
-		break;
+		if (can_save)
+			break;
 	}
+	if ((data_it == data_end) || !tasks)
+		return;
+
+	aData = data_it->second;
+	m_frame_datas.erase(data_it);
+
+	HeaderMap task_header;
+	_takeHeader(header_it, task_header, false);
+
+	aLock.unlock();
+
+	TaskList task_list;
+	_getTaskList(Save, frame_nr, task_header, task_list);
+
+	_postTaskList(aData, task_list, SAVING_PRIORITY);
 }
 
 /** @brief this methode set the error saving status in CtControl
@@ -1972,16 +1981,14 @@ void CtSaving::_setSavingError(CtControl::ErrorCode anErrorCode)
 	if (saving_mode == Manual)
 		return;
 
-	AutoMutex aLock(m_ctrl.m_cond.mutex());
-	if (m_ctrl.m_status.AcquisitionStatus != AcqFault)
 	{
-		m_ctrl.m_status.AcquisitionStatus = AcqFault;
-		m_ctrl.m_status.Error = anErrorCode;
-
-		DEB_ERROR() << DEB_VAR1(m_ctrl.m_status);
+		AutoMutex aLock(m_ctrl.m_cond.mutex());
+		if (m_ctrl.m_status.AcquisitionStatus != AcqFault) {
+			m_ctrl.m_status.AcquisitionStatus = AcqFault;
+			m_ctrl.m_status.Error = anErrorCode;
+			DEB_ERROR() << DEB_VAR2(m_ctrl.m_status, saving_mode);
+		}
 	}
-
-	aLock.unlock();
 
 	m_ctrl.stopAcq();
 }
@@ -2081,9 +2088,6 @@ void CtSaving::_stop()
 			// Update the number of frames so that SaveContainer::writeFile() will properly
 			// call SaveContainer::close()
 			stream.updateNbFrames(img_status.LastImageAcquired + 1);
-
-			// Clean up the frame parameters so that _allStreamReady() return true
-			stream.cleanRemainingFrames(img_status.LastImageAcquired + 1);
 		}
 	}
 
@@ -2136,15 +2140,15 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	long frameId = aData.frameNumber;
 
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	Frame2Params::iterator fpars = m_frame_params.find(frameId);
 	if (fpars == m_frame_params.end())
 		THROW_CTL_ERROR(Error) << "Can't find saving parameters for frame"
-		<< DEB_VAR1(frameId);
+				       << DEB_VAR1(frameId);
+	lock.unlock();
 
 	FrameParameters& frame_par = fpars->second;
-	const CtSaving::Parameters pars = frame_par.m_pars;
-	lock.unlock();
+	const CtSaving::Parameters& pars = frame_par.m_pars;
 
 	long write_size;
 	Params2Handler::value_type par_handler = open(frame_par);
@@ -2208,13 +2212,10 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	}
 
 	lock.lock();
-	++m_written_frames;
-	bool acq_end = (m_written_frames == m_nb_frames_to_write);
-
-	m_frame_params.erase(frameId);
-	--m_running_writing_task;
+	bool acq_end = (++m_written_frames == m_frames_to_write);
 	lock.unlock();
 
+	// close before marking that we have finished the frame
 	if (pars.overwritePolicy != MultiSet || acq_end) // Close at the end
 	{
 		try {
@@ -2232,6 +2233,9 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	DEB_TRACE() << "Write took : " << diff << "s";
 
 	lock.lock();
+	m_frame_params.erase(fpars);
+	--m_running_writing_task;
+
 	writeFileStat(aData, start_write, end_write, write_size);
 }
 
@@ -2273,7 +2277,7 @@ void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timest
 void CtSaving::SaveContainer::setEnableLogStat(bool enable)
 {
 	// TODO: check that no current saving is active
-	AutoMutex aLock = AutoMutex(m_cond.mutex());
+	AutoMutex aLock = AutoMutex(m_lock);
 	if (m_log_stat_enable && !enable) {
 		fclose(m_log_stat_file);
 		m_log_stat_file = NULL;
@@ -2345,7 +2349,7 @@ void CtSaving::SaveContainer::prepareLogStat(const CtSaving::Parameters& pars)
 
 void CtSaving::SaveContainer::setStatisticSize(int aSize)
 {
-	AutoMutex aLock = AutoMutex(m_cond.mutex());
+	AutoMutex aLock = AutoMutex(m_lock);
 	if (long(m_statistic.size()) > aSize)
 	{
 		size_t aDiffSize = m_statistic.size() - aSize;
@@ -2358,7 +2362,7 @@ void CtSaving::SaveContainer::setStatisticSize(int aSize)
 
 int CtSaving::SaveContainer::getStatisticSize() const
 {
-	AutoMutex aLock(m_cond.mutex());
+	AutoMutex aLock(m_lock);
 	return m_statistic_size;
 }
 
@@ -2377,10 +2381,11 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 {
 
 
-
-	AutoMutex aLock = AutoMutex(m_cond.mutex());
-	StatisticsType copy = m_statistic;
-	aLock.unlock();
+	StatisticsType copy;
+	{
+		AutoMutex aLock = AutoMutex(m_lock);
+		copy = m_statistic;
+	}
 
 	StatisticsType::const_iterator next = copy.begin();
 	if (next != copy.end())
@@ -2467,14 +2472,13 @@ void CtSaving::SaveContainer::getParameters(CtSaving::Parameters& pars) const
 	pars = m_stream.getParameters(Acq);
 }
 
-
 void CtSaving::SaveContainer::clear()
 {
 	DEB_MEMBER_FUNCT();
 
 	this->close();
 
-	AutoMutex aLock(m_cond.mutex());
+	AutoMutex aLock(m_lock);
 	m_statistic.clear();
 	_clear();			// call inheritance if needed
 }
@@ -2485,32 +2489,40 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	int nb_frames;
 	ct.acquisition()->getAcqNbFrames(nb_frames);
 	CtSaving::Parameters pars = m_stream.getParameters(Auto);
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	m_statistic.clear();
-	m_nb_frames_to_write = nb_frames;
+	m_frames_to_write = nb_frames;
+	m_files_to_write = 0;
 	m_written_frames = 0;
-	if (m_nb_frames_to_write && 	// if not live
+	if (m_frames_to_write && 	// if not live
 		pars.savingMode != CtSaving::Manual)
 	{
 		long nextNumber = pars.nextNumber - 1;
-		for (long i = 0; i < nb_frames; ++i)
+		bool multi_set = (pars.overwritePolicy == MultiSet);
+		for (long i = 0; i < m_frames_to_write; ++i)
 		{
 			FrameParameters frame_par(pars);
+			CtSaving::Parameters& file_pars = frame_par.m_pars;
 
-			if (pars.overwritePolicy == MultiSet)
-				frame_par.m_pars.framesPerFile = 1; // force to 1
+			if (multi_set)
+				file_pars.framesPerFile = 1; // force to 1
 			else
 			{
-				bool new_file = !(i % pars.framesPerFile);
+				int idx = i % file_pars.framesPerFile;
+				bool new_file = (idx == 0);
 				if (new_file) ++nextNumber;
-				frame_par.m_pars.nextNumber = nextNumber;
+				file_pars.nextNumber = nextNumber;
 				frame_par.m_threadable = new_file;
+				long first_frame = i - idx;
+				if (first_frame + file_pars.framesPerFile > m_frames_to_write)
+					file_pars.framesPerFile = m_frames_to_write - first_frame;
 			}
 			std::pair<Frame2Params::iterator, bool> result =
 				m_frame_params.insert(Frame2Params::value_type(i, frame_par));
 			if (!result.second)
 				result.first->second = frame_par;
 		}
+		m_files_to_write = multi_set ? 1 : (nextNumber - pars.nextNumber + 1);
 	}
 	m_running_writing_task = 0;
 	prepareLogStat(pars);
@@ -2518,13 +2530,16 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	_prepare(ct);			// call inheritance if needed
 }
 
-void CtSaving::SaveContainer::updateNbFrames(long last_acquired_frame_nr)
+void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_TRACE() << DEB_VAR1(last_acquired_frame_nr);
-
-	AutoMutex lock(m_cond.mutex());
-	m_nb_frames_to_write = last_acquired_frame_nr;
+	DEB_TRACE() << DEB_VAR1(nb_acquired_frames);
+	
+	AutoMutex lock(m_lock);
+	m_frames_to_write = nb_acquired_frames;
+	m_frame_params.erase(
+		m_frame_params.find(nb_acquired_frames),
+		m_frame_params.end());
 }
 
 bool CtSaving::SaveContainer::isReady(long frame_nr) const
@@ -2532,16 +2547,13 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(frame_nr);
 
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	bool ready;
 
 	// mean all writing tasks
 	if (frame_nr < 0)
 	{
 		ready = m_frame_params.empty();
-		for (Frame2Params::const_iterator i = m_frame_params.begin();
-			ready && i != m_frame_params.end(); ++i)
-			ready = !i->second.m_running;
 	}
 	else
 	{
@@ -2549,7 +2561,7 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 		if (it == m_frame_params.end())
 		{
 			// if no task is running then ready
-			ready =  m_frame_params.empty();
+			ready = m_frame_params.empty();
 		}
 		else if (it->second.m_threadable)
 		{
@@ -2566,23 +2578,12 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 	return ready;
 }
 
-void CtSaving::SaveContainer::cleanRemainingFrames(long last_acquired_frame_nr)
-{
-	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(last_acquired_frame_nr);
-
-	AutoMutex lock(m_cond.mutex());
-	m_frame_params.erase(
-		m_frame_params.find(last_acquired_frame_nr),
-		m_frame_params.end());
-}
-
 void CtSaving::SaveContainer::setReady(long frame_nr)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(frame_nr);
 
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	// mean all frames
 	if (frame_nr < 0)
 		m_frame_params.clear();
@@ -2598,7 +2599,7 @@ void CtSaving::SaveContainer::prepareWrittingFrame(long frame_nr)
 {
 	DEB_MEMBER_FUNCT();
 
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	Frame2Params::iterator i = m_frame_params.find(frame_nr);
 	if (i == m_frame_params.end())
 	{
@@ -2614,7 +2615,7 @@ void CtSaving::SaveContainer::prepareWrittingFrame(long frame_nr)
 
 void CtSaving::SaveContainer::createStatistic(Data& data)
 {
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	//Insert statistic
 	StatisticsType::value_type stat_pair(data.frameNumber, Stat());
 	stat_pair.second.incoming_size = data.size();
@@ -2624,7 +2625,7 @@ void CtSaving::SaveContainer::createStatistic(Data& data)
 void CtSaving::SaveContainer::compressionStart(Data& data)
 {
 	Timestamp start = Timestamp::now();
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
 	if (i != m_statistic.end())
 		i->second.compression_start = start;
@@ -2633,7 +2634,7 @@ void CtSaving::SaveContainer::compressionStart(Data& data)
 void CtSaving::SaveContainer::compressionFinished(Data& data)
 {
 	Timestamp end = Timestamp::now();
-	AutoMutex lock(m_cond.mutex());
+	AutoMutex lock(m_lock);
 	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
 	if (i != m_statistic.end())
 		i->second.compression_end = end;
@@ -2657,101 +2658,116 @@ void CtSaving::SaveContainer::setMaxConcurrentWritingTask(int nb_thread)
 		<< DEB_VAR1(nb_thread);
 	m_max_writing_task = nb_thread;
 }
+
 CtSaving::SaveContainer::Params2Handler::value_type
 CtSaving::SaveContainer::open(FrameParameters& fpars)
 {
 	DEB_MEMBER_FUNCT();
 
-	AutoMutex lock(m_cond.mutex());
-
 	CtSaving::Parameters& pars = fpars.m_pars;
-	Params2Handler::iterator handler = m_params_handler.find(pars);
-
-	if (handler != m_params_handler.end())
-		return Params2Handler::value_type(handler->first, handler->second);
-	else
 	{
-		lock.unlock();
+		AutoMutex lock(m_lock);
+		Params2Handler::iterator handler = m_params_handler.find(pars);
+		if (handler != m_params_handler.end())
+			return *handler;
+	}
 
-		std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix;
-		long index = pars.nextNumber;
-		char idx[64];
-		if (index < 0) index = 0;
-		snprintf(idx, sizeof(idx), pars.indexFormat.c_str(), index);
-		aFileName += idx;
-		aFileName += pars.suffix;
+	std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix;
+	long index = pars.nextNumber;
+	char idx[64];
+	if (index < 0) index = 0;
+	snprintf(idx, sizeof(idx), pars.indexFormat.c_str(), index);
+	aFileName += idx;
+	aFileName += pars.suffix;
 
-		DEB_TRACE() << DEB_VAR1(aFileName);
+	DEB_TRACE() << DEB_VAR1(aFileName);
 
-		if (pars.overwritePolicy == Abort &&
-			!access(aFileName.c_str(), R_OK))
-		{
-			m_stream.setSavingError(CtControl::SaveOverwriteError);
-			std::string output;
-			output = "Try to over write file: " + aFileName;
-			THROW_CTL_ERROR(Error) << output;
+	if (pars.overwritePolicy == Abort &&
+		!access(aFileName.c_str(), R_OK))
+	{
+		m_stream.setSavingError(CtControl::SaveOverwriteError);
+		std::string output;
+		output = "Try to over write file: " + aFileName;
+		THROW_CTL_ERROR(Error) << output;
+	}
+	std::ios_base::openmode openFlags = std::ios_base::out | std::ios_base::binary;
+	if (pars.overwritePolicy == Append ||
+		pars.overwritePolicy == MultiSet)
+		openFlags |= std::ios_base::app;
+	else if (pars.overwritePolicy == Overwrite)
+		openFlags |= std::ios_base::trunc;
+
+	std::string error_desc;
+	Handler handler;
+	for (int nbTry = 0; !handler.m_handler && (nbTry < 5); ++nbTry)
+	{
+		try {
+			handler.m_handler = _open(aFileName, openFlags, pars);
 		}
-		std::ios_base::openmode openFlags = std::ios_base::out | std::ios_base::binary;
-		if (pars.overwritePolicy == Append ||
-			pars.overwritePolicy == MultiSet)
-			openFlags |= std::ios_base::app;
-		else if (pars.overwritePolicy == Overwrite)
-			openFlags |= std::ios_base::trunc;
-
-		std::string error_desc;
-		Handler handler;
-		for (int nbTry = 0; nbTry < 5; ++nbTry)
-		{
-			try {
-				handler.m_handler = _open(aFileName, openFlags);
-			}
-			catch (std::ios_base::failure & error) {
-				error_desc = error.what();
-				DEB_WARNING() << "Could not open " << aFileName << ": "
-					<< error_desc;
-			}
-			catch (...) {
-				error_desc = "Unknown error";
-				DEB_WARNING() << "Could not open " << aFileName << ": "
-					<< error_desc;
-			}
-
-			if (!handler.m_handler)
-			{
-				std::string output;
-
-				if (access(pars.directory.c_str(), W_OK))
-				{
-					m_stream.setSavingError(CtControl::SaveAccessError);
-					output = "Can not write in directory: " + pars.directory;
-					THROW_CTL_ERROR(Error) << output;
-				}
-			}
-			else
-			{
-				DEB_TRACE() << "Open file: " << aFileName;
-				handler.m_nb_frames = pars.framesPerFile;
-				lock.lock();
-				Params2Handler::value_type map_pair(pars, handler);
-				std::pair<Params2Handler::iterator, bool> result =
-					m_params_handler.insert(map_pair);
-				return Params2Handler::value_type(result.first->first,
-					result.first->second);
-			}
+		catch (std::ios_base::failure & error) {
+			error_desc = error.what();
+			DEB_WARNING() << "Could not open " << aFileName << ": "
+				<< error_desc;
+		}
+		catch (...) {
+			error_desc = "Unknown error";
+			DEB_WARNING() << "Could not open " << aFileName << ": "
+				<< error_desc;
 		}
 
-		if (!handler.m_handler)
+		if (!handler.m_handler && access(pars.directory.c_str(), W_OK))
 		{
-			m_stream.setSavingError(CtControl::SaveOpenError);
-			std::string output;
-			output = "Failure opening " + aFileName;
-			if (!error_desc.empty())
-				output += ": " + error_desc;
+			m_stream.setSavingError(CtControl::SaveAccessError);
+			std::string output = "Can not write in directory: " + pars.directory;
 			THROW_CTL_ERROR(Error) << output;
 		}
 	}
-	// we can't reach this line (normally) just for compiler
-	return Params2Handler::value_type(CtSaving::Parameters(), Handler());
+
+	if (!handler.m_handler)
+	{
+		m_stream.setSavingError(CtControl::SaveOpenError);
+		std::string output;
+		output = "Failure opening " + aFileName;
+		if (!error_desc.empty())
+			output += ": " + error_desc;
+		THROW_CTL_ERROR(Error) << output;
+	}
+
+	DEB_TRACE() << "Open file: " << aFileName;
+	handler.m_nb_frames = pars.framesPerFile;
+	Params2Handler::value_type map_pair(pars, handler);
+	bool ok;
+	{
+		AutoMutex lock(m_lock);
+		ok = m_params_handler.insert(map_pair).second;
+	}
+	if (!ok) {
+		_close(handler.m_handler);
+		THROW_CTL_ERROR(Error) << "Error inserting handle";
+	}
+	return map_pair;
+}
+
+inline void CtSaving::SaveContainer::close(const Params2Handler::iterator& it, AutoMutex& l)
+{
+	void* raw_handler = it->second.m_handler;
+	if (raw_handler == NULL)
+		return;
+
+	it->second.m_handler = NULL;
+
+	{
+		AutoMutexUnlock u(l);
+		_close(raw_handler);
+	}
+
+	Parameters& pars = m_stream.getParameters(Acq);
+	if ((pars.overwritePolicy != MultiSet) &&
+	    (pars.overwritePolicy != Append)) {
+		int nextNumber = it->first.nextNumber + 1;
+		if (pars.nextNumber < nextNumber)
+			pars.nextNumber = nextNumber;
+	}
 }
 
 void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
@@ -2759,37 +2775,23 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 {
 	DEB_MEMBER_FUNCT();
 
-	AutoMutex aLock(m_cond.mutex());
+	AutoMutex aLock(m_lock);
 	if (!params)			// close all
 	{
-		for (Params2Handler::iterator i = m_params_handler.begin();
-			i != m_params_handler.end(); ++i)
-		{
-			if (i->second.m_handler)
-				_close(i->second.m_handler);
-		}
+		for (Params2Handler::iterator it = m_params_handler.begin();
+			it != m_params_handler.end(); ++it)
+			close(it, aLock);
 		m_params_handler.clear();
 	}
 	else
 	{
-		Params2Handler::iterator handler = m_params_handler.find(*params);
-		if (force_close || !--handler->second.m_nb_frames)
-		{
-			void* raw_handler = handler->second.m_handler;
-			const Parameters frame_pars = handler->first;
-			m_params_handler.erase(handler);
-			aLock.unlock();
-			_close(raw_handler);
-
-			Parameters& pars = m_stream.getParameters(Acq);
-			if (pars.overwritePolicy != MultiSet &&
-				pars.overwritePolicy != Append)
-			{
-				int nextNumber = frame_pars.nextNumber + 1;
-				aLock.lock();
-				if (pars.nextNumber < nextNumber)
-					pars.nextNumber = nextNumber;
-			}
+		Params2Handler::iterator it = m_params_handler.find(*params);
+		if (it == m_params_handler.end())
+			THROW_CTL_ERROR(Error) << "Could not find handle for "
+					       << DEB_VAR1(params);
+		if (force_close || !--it->second.m_nb_frames) {
+			close(it, aLock);
+			m_params_handler.erase(it);
 		}
 	}
 
@@ -2801,7 +2803,8 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 
 void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
 {
-	AutoMutex aLock(m_lock);
+	DEB_MEMBER_FUNCT();
+	AutoMutex aLock(m_buffers_lock);
 	std::pair<dataId2ZBufferList::iterator, bool> result;
 	result = m_buffers.emplace(std::move(frameNumber), std::move(buffers));
 	if (!result.second)
@@ -2810,7 +2813,8 @@ void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
 
 ZBufferList CtSaving::SaveContainer::_takeBuffers(int dataId)
 {
-	AutoMutex aLock(m_lock);
+	DEB_MEMBER_FUNCT();
+	AutoMutex aLock(m_buffers_lock);
 	dataId2ZBufferList::iterator i = m_buffers.find(dataId);
 	ZBufferList aReturnBufferPt(std::move(i->second));
 	m_buffers.erase(i);
@@ -2819,7 +2823,10 @@ ZBufferList CtSaving::SaveContainer::_takeBuffers(int dataId)
 
 void CtSaving::SaveContainer::_clear()
 {
-	AutoMutex aLock(m_lock);
+	DEB_MEMBER_FUNCT();
+	AutoMutex aLock(m_buffers_lock);
+	if (m_buffers.size())
+		DEB_WARNING() << DEB_VAR1(m_buffers.size());
 	m_buffers.clear();
 }
 
@@ -2871,12 +2878,13 @@ void CtSaving::Stream::checkWriteAccess()
 	// test all file is mode == Abort
 	if (m_pars.overwritePolicy == Abort)
 	{
-
 		CtAcquisition* anAcq = m_saving.m_ctrl.acquisition();
-		int nbAcqFrames;
-		anAcq->getAcqNbFrames(nbAcqFrames);
+		int framesToWrite;
+		anAcq->getAcqNbFrames(framesToWrite);
+		if (framesToWrite == 0)
+			framesToWrite = 1;
 		int framesPerFile = m_pars.framesPerFile;
-		int nbFiles = (nbAcqFrames + framesPerFile - 1) / framesPerFile;
+		int nbFiles = (framesToWrite + framesPerFile - 1) / framesPerFile;
 		int firstFileNumber = m_acquisition_pars.nextNumber;
 		int lastFileNumber = m_acquisition_pars.nextNumber + nbFiles - 1;
 

@@ -247,30 +247,13 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	CtSaving::OverwritePolicy overwrite_policy;
 	control.saving()->getOverwritePolicy(overwrite_policy);
 	m_is_multiset = (overwrite_policy == CtSaving::MultiSet);
-	CtSaving::Parameters pars;
-	control.saving()->getParameters(pars);
-	if (m_is_multiset)
-		m_frames_per_file = m_ct_parameters.acq_nbframes;
-	else
-		m_frames_per_file = pars.framesPerFile;
 
-	m_acq_nbframes = m_ct_parameters.acq_nbframes;
-
-	// If not a continuous acquisition
-	if (m_acq_nbframes > 0) {
-		// If the acquisition requests less frame than the max per file
-		// we will only create a dataset with size equal to the nb. of acquired frames
-		if (m_frames_per_file > m_acq_nbframes)
-			m_frames_per_file = m_acq_nbframes;
-		m_max_nb_files = (m_acq_nbframes + m_frames_per_file - 1) / m_frames_per_file;
-	}
-	else
-		m_max_nb_files = 0;
-
+	AutoMutex lock(m_lock);
 	m_file_cnt = 0;
 }
 
-void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmode openFlags) {
+void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openmode openFlags,
+			       CtSaving::Parameters& pars) {
 	DEB_MEMBER_FUNCT();
 
 	AutoPtr<_File> file = new _File();
@@ -500,19 +483,15 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 		THROW_CTL_ERROR(Error) << "File " << filename << " not opened successfully";
 	}
 
-	// increase file counter to manage multi-files and last file with less than frames_per_file frames
-	file->m_file_index = m_file_cnt++;
+	{
+		AutoMutex lock(m_lock);
+		file->m_file_index = m_file_cnt++;
+	}
 
-	// check if this is the last file with less frames than m_frames_per_file
-	file->m_nb_frames = m_frames_per_file;
-	if ((m_file_cnt == m_max_nb_files) && (m_acq_nbframes % m_frames_per_file) != 0)
-		file->m_nb_frames = m_acq_nbframes % m_frames_per_file;
+	file->m_nb_frames = pars.framesPerFile;
 
-	DEB_TRACE() << "m_file_cnt = "<< m_file_cnt;
-	DEB_TRACE() << "m_max_nb_files = "<< m_max_nb_files;
+	DEB_TRACE() << "m_file_cnt = " << m_file_cnt;
 	DEB_TRACE() << "m_nb_frames = "<< file->m_nb_frames;
-	DEB_TRACE() << "m_acq_nbframes = "<< m_acq_nbframes;
-	DEB_TRACE() << "m_frames_per_file = "<< m_frames_per_file;
 
 	return file.forget();
 }

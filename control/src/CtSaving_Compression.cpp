@@ -30,9 +30,9 @@ using namespace lima;
 #ifdef WITH_Z_COMPRESSION
 const int FileZCompression::BUFFER_HELPER_SIZE = 64 * 1024;
 
-FileZCompression::FileZCompression(CtSaving::SaveContainer &save_cnt,
-			   int framesPerFile,const CtSaving::HeaderMap &header) :
-  m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header)
+FileZCompression::FileZCompression(SaveContainerEdf &save_cnt,
+				   const CtSaving::HeaderMap &header) :
+  m_container(save_cnt),m_header(header)
 {
   DEB_CONSTRUCTOR();
   
@@ -65,9 +65,7 @@ void FileZCompression::process(Data &aData)
   ZBufferList aBufferListPt;
 
   std::ostringstream buffer;
-  SaveContainerEdf::_writeEdfHeader(aData,m_header,
-					m_frame_per_file,
-					buffer);
+  m_container._writeEdfHeader(aData,m_header, buffer);
   const std::string& tmpBuffer = buffer.str();
   _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
   _compression((char*)aData.data(),aData.size(),aBufferListPt);
@@ -126,9 +124,9 @@ void FileZCompression::_end_compression(ZBufferList& return_buffers)
 
 
 #ifdef WITH_LZ4_COMPRESSION
-FileLz4Compression::FileLz4Compression(CtSaving::SaveContainer &save_cnt,
-			       int framesPerFile,const CtSaving::HeaderMap &header) :
-  m_container(save_cnt),m_frame_per_file(framesPerFile),m_header(header)
+FileLz4Compression::FileLz4Compression(SaveContainerEdf &save_cnt,
+				       const CtSaving::HeaderMap &header) :
+  m_container(save_cnt),m_header(header)
 {
   DEB_CONSTRUCTOR();
   
@@ -148,9 +146,7 @@ void FileLz4Compression::process(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
   
   std::ostringstream buffer;
-  SaveContainerEdf::_writeEdfHeader(aData,m_header,
-				    m_frame_per_file,
-				    buffer);
+  m_container._writeEdfHeader(aData,m_header,buffer);
   ZBufferList aBufferListPt;
   const std::string& tmpBuffer = buffer.str();
   _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);

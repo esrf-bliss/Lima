@@ -499,8 +499,9 @@ void CtControl::prepareAcq()
   m_images_buffer.clear();
   m_images_saved.clear();
 
-  //Clear common header
+  //Clear saving: common & frame headers, ZBuffers and statistics
   m_ct_saving->resetInternalCommonHeader();
+  m_ct_saving->clear();
 
   DEB_TRACE() << "Apply hardware bin/roi";
   m_ct_image->applyHard();
@@ -1295,11 +1296,18 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
 
   const ImageStatus &imageStatus = m_status.ImageCounters;
 
-  long imageToProcess = imageStatus.LastImageAcquired - 
-    imageStatus.LastBaseImageReady;
+  // ext ops are not in-place, relaxing hw buffer limit is LastImageReady
+  // if no ext ops, full processing chain needs orig hw buffer
+  bool full_chain = !m_op_ext_link_task_active;
 
-  long imageToSave =	imageStatus.LastImageAcquired -
-    imageStatus.LastImageSaved;
+  bool lastProcIsCounter = m_op_ext_sink_task_active && full_chain;
+  long lastProcessed = lastProcIsCounter ? imageStatus.LastCounterReady :
+    imageStatus.LastImageReady;
+  long imageToProcess = imageStatus.LastImageAcquired - lastProcessed;
+
+  long lastUsedForSave = full_chain ? imageStatus.LastImageSaved :
+    imageStatus.LastImageReady;
+  long imageToSave = imageStatus.LastImageAcquired - lastUsedForSave;
 
   long nb_buffers;
   m_ct_buffer->getNumber(nb_buffers);
@@ -1321,7 +1329,7 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
       m_ct_saving->getSaveCounters(first_to_save, last_to_save);
       DEB_ERROR() << DEB_VAR2(first_to_save, last_to_save);
       int frames_to_save = last_to_save - first_to_save + 1;
-      int frames_to_compress = imageStatus.LastBaseImageReady - last_to_save;
+      int frames_to_compress = imageStatus.LastImageReady - last_to_save;
       bool slow_processing = frames_to_compress > frames_to_save;
       DEB_ERROR() << DEB_VAR2(frames_to_compress, frames_to_save);
       error_code = slow_processing ? ProcessingOverun : SaveOverun;

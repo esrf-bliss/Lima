@@ -36,10 +36,20 @@
 
 using namespace lima;
 
+inline void check_error(int ret, const char *desc)
+{
+	if (ret == 0)
+		return;
+	std::ostringstream os;
+	os << desc << ": " << strerror(ret) << " (" << ret << ")";
+	throw LIMA_COM_EXC(Error, os.str());
+}
+
+
 MutexAttr::MutexAttr(Type type)
 {
-	if (pthread_mutexattr_init(&m_mutex_attr) != 0)
-		throw LIMA_COM_EXC(Error, "Error initializing mutex attr");
+	int ret = pthread_mutexattr_init(&m_mutex_attr);
+	check_error(ret, "Error initializing mutex attr");
 
 	try {
 		setType(type);
@@ -76,15 +86,15 @@ void MutexAttr::setType(Type type)
 		throw LIMA_COM_EXC(InvalidValue, "Invalid MutexAttr type");
 	}
 
-	if (pthread_mutexattr_settype(&m_mutex_attr, kind) != 0)
-		throw LIMA_COM_EXC(Error, "Error setting mutex attr");
+	int ret = pthread_mutexattr_settype(&m_mutex_attr, kind);
+	check_error(ret, "Error setting mutex attr");
 }
 
 MutexAttr::Type MutexAttr::getType() const
 {
 	int kind;
-	if (pthread_mutexattr_gettype(&m_mutex_attr, &kind) != 0)
-		throw LIMA_COM_EXC(Error, "Error getting mutex attr");
+	int ret = pthread_mutexattr_gettype(&m_mutex_attr, &kind);
+	check_error(ret, "Error getting mutex attr");
 
 	switch (kind) {
 	case PTHREAD_MUTEX_NORMAL:
@@ -120,8 +130,8 @@ Mutex::Mutex(MutexAttr mutex_attr)
 	: m_mutex_attr(mutex_attr)
 {
 	pthread_mutexattr_t& attr = m_mutex_attr.m_mutex_attr;
-	if (pthread_mutex_init(&m_mutex, &attr) != 0)
-		throw LIMA_COM_EXC(Error, "Error initializing mutex");
+	int ret = pthread_mutex_init(&m_mutex, &attr);
+	check_error(ret, "Error initializing mutex");
 }
 
 Mutex::~Mutex()
@@ -131,14 +141,14 @@ Mutex::~Mutex()
 
 void Mutex::lock()
 {
-	if (pthread_mutex_lock(&m_mutex) != 0)
-		throw LIMA_COM_EXC(Error, "Error locking mutex");
+	int ret = pthread_mutex_lock(&m_mutex);
+	check_error(ret, "Error locking mutex");
 }
 
 void Mutex::unlock()
 {
-	if (pthread_mutex_unlock(&m_mutex) != 0)
-		throw LIMA_COM_EXC(Error, "Error unlocking mutex");
+	int ret = pthread_mutex_unlock(&m_mutex);
+	check_error(ret, "Error unlocking mutex");
 }
 
 bool Mutex::tryLock()
@@ -162,8 +172,8 @@ MutexAttr Mutex::getAttr()
 
 Cond::Cond() : m_mutex(MutexAttr::Normal)
 {
-	if (pthread_cond_init(&m_cond, NULL) != 0)
-		throw LIMA_COM_EXC(Error, "Error initializing condition");
+	int ret = pthread_cond_init(&m_cond, NULL);
+	check_error(ret, "Error initializing condition");
 }
 
 Cond::~Cond()
@@ -194,15 +204,15 @@ bool Cond::wait(double timeout)
   else
       retcode = pthread_cond_wait(&m_cond, &m_mutex.m_mutex);
 	
-  if(retcode && retcode != ETIMEDOUT)
-    throw LIMA_COM_EXC(Error, "Error waiting for condition");
+  if(retcode != ETIMEDOUT)
+    check_error(retcode, "Error waiting for condition");
   return !retcode;
 }
 
 void Cond::signal()
 {
-	if (pthread_cond_signal(&m_cond) != 0)
-		throw LIMA_COM_EXC(Error, "Error signaling condition");
+	int ret = pthread_cond_signal(&m_cond);
+	check_error(ret, "Error signaling condition");
 }
 
 void Cond::acquire()
@@ -217,8 +227,8 @@ void Cond::release()
 
 void Cond::broadcast()
 {
-  if (pthread_cond_broadcast(&m_cond) != 0)
-    throw LIMA_COM_EXC(Error, "Error broadcast condition");
+	int ret = pthread_cond_broadcast(&m_cond);
+	check_error(ret, "Error broadcast condition");
 }
 
 pid_t lima::GetThreadID() {
@@ -241,7 +251,9 @@ Thread::ExceptionCleanUp::~ExceptionCleanUp()
 	m_thread.m_exception_handled = true;
 }
 
-Thread::Thread() : m_thread(NULL), m_started(false), m_finished(false), m_exception_handled(false), m_tid(0)
+Thread::Thread()
+	: m_thread(0), m_started(false), m_finished(false),
+	  m_exception_handled(false), m_tid(0)
 {
 	pthread_attr_init(&m_thread_attr);
 }
@@ -259,8 +271,9 @@ void Thread::start()
 		throw LIMA_COM_EXC(Error, "Thread already started");
 
 	m_finished = false;
-	if (pthread_create(&m_thread, &m_thread_attr, staticThreadFunction, this) != 0)
-		throw LIMA_HW_EXC(Error, "Error creating thread");
+	int ret = pthread_create(&m_thread, &m_thread_attr,
+				 staticThreadFunction, this);
+	check_error(ret, "Error creating thread");
 
 	m_started = true;
 }
@@ -418,7 +431,7 @@ void CmdThread::sendCmdIf(int cmd, bool (*if_test)(int,int))
 void CmdThread::doSendCmd(int cmd)
 {
 	if (m_status == Finished)
-		throw LIMA_HW_EXC(Error, "Thread has Finished");
+		throw LIMA_COM_EXC(Error, "Thread has Finished");
 
 	// Assume that we will have a call to waitStatus somewhere after the new command
 	m_status_history.reset();

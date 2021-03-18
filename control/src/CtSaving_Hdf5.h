@@ -59,7 +59,8 @@ public:
 	virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 protected:
 	virtual void _prepare(CtControl &control);
-	virtual void* _open(const std::string &filename, std::ios_base::openmode flags);
+	virtual void* _open(const std::string &filename, std::ios_base::openmode flags,
+			    CtSaving::Parameters& pars);
 	virtual void _close(void*);
 	virtual long _writeFile(void*,Data &data, CtSaving::HeaderMap &aHeader, CtSaving::FileFormat);
 
@@ -101,9 +102,6 @@ private:
 	HwInterface *m_hw_int;
 	bool m_is_multiset;
 	int m_compression_level;
-	int m_frames_per_file;
-	int m_acq_nbframes;
-	int m_max_nb_files;
 	int m_file_cnt;
 };
 

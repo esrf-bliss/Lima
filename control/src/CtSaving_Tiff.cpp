@@ -57,7 +57,8 @@ SaveContainerTiff::~SaveContainerTiff()
 }
 
 void* SaveContainerTiff::_open(const std::string &filename,
-			       std::ios_base::openmode /*flags*/)
+			       std::ios_base::openmode /*flags*/,
+			       CtSaving::Parameters& /*pars*/)
 {
   DEB_MEMBER_FUNCT();
   return new std::string(filename);
