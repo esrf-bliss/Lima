@@ -128,9 +128,7 @@ build)
     if [ ${only_plugin} -eq 0 ]; then
 	((cd ${processlib_dir} && parallel_cmake conda/${profile}/build.sh) \
 	    && (cd . && parallel_cmake conda/${profile}/build.sh) \
-	    && (cd ${tango_dir} \
-		  && parallel_cmake conda/build.sh \
-		  && cp scripts/Lima* ${PREFIX}/bin)) || exit
+	    && (cd ${tango_dir} && pip install .)) || exit
     fi
     (cd ${camera_dir} \
        && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
