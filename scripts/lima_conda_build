@@ -132,7 +132,7 @@ build)
     fi
     (cd ${camera_dir} \
        && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
-       && ([ -d conda/tango ] && parallel_cmake conda/tango/build.sh))
+       && (if [ -d conda/tango ]; then parallel_cmake conda/tango/build.sh; fi))
     ;;
 
 clean-sip)
