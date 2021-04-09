@@ -142,3 +142,6 @@
 [submodule "camera/ximea"]
 	path = camera/ximea
 	url = ../Lima-camera-ximea
+[submodule "camera/dhyana"]
+	path = camera/dhyana
+	url = ../Lima-camera-dhyana
