@@ -204,7 +204,10 @@ namespace lima {
       
       sout << "Dim_2 = "; mmap_info.height_offset = sout.tellp();
       snprintf(aBuffer,sizeof(aBuffer),"%*s ;\n",nbCharReserved,"");
-      sout << aData.dimensions[1] << aBuffer;
+      int rows = aData.dimensions[1];
+      if (aData.dimensions.size() == 3)
+	rows *= aData.dimensions[2];
+      sout << rows << aBuffer;
       
       sout << "Image = " << image_nb << " ;\n";
       
