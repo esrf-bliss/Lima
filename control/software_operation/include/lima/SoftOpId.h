@@ -408,6 +408,9 @@ namespace lima
     void getBufferSize(int &size) const;
 
     /*override*/ bool isActive() const { return !m_task_manager.empty(); }
+
+    void getOverflowThreshold(unsigned long long& threshold);
+    void setOverflowThreshold(unsigned long long threshold);
     
   protected:
     virtual bool addTo(TaskMgr&,int stage);
@@ -431,6 +434,7 @@ namespace lima
     int				m_history_size;
     Data			m_mask;
     mutable Cond		m_cond;
+    unsigned long long 		m_overflow_threshold;
   };
 
   template <SoftOpRoiCounter::SoftTask::type type, class R>

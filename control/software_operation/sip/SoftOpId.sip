@@ -1000,6 +1000,9 @@ using namespace lima;
 
   void setBufferSize(int size);
   void getBufferSize(int &size /Out/) const;
+
+  void getOverflowThreshold(unsigned long long& threshold /Out/);
+  void setOverflowThreshold(unsigned long long threshold);
 };
 
 class SoftOpRoi2Spectrum
