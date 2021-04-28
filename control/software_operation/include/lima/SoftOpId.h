@@ -379,19 +379,6 @@ namespace lima
     SoftOpRoiCounter();
     virtual ~SoftOpRoiCounter();
 
-#ifdef USE_DEPRECATED
-    /** Old way to manage roi's counters
-     * they are now deprecated, 
-     * please use the new set of methods.
-     * will be removed in version 2.
-     */
-    void add(const std::list<Roi> &rois); 
-    void set(const std::list<Roi> &rois); 
-    void get(std::list<Roi>&) const;
-    void del(const std::list<int> &roiIds);
-    void readCounters(int from,std::list<RoiIdAndResults> &result) const;
-#endif
-    /** New methods set */
     void updateRois(const std::list<RoiNameAndRoi>&);
     void updateArcRois(const std::list<RoiNameAndArcRoi>&);
 
@@ -411,7 +398,6 @@ namespace lima
 
     void removeRois(const std::list<std::string>& names);
     void clearAllRois();		/* clear all roi */
-    /** end of new set */
 
     void clearCounterStatus();
     int  getCounterStatus() const;
@@ -479,85 +465,6 @@ namespace lima
     roi = ArcRoi(x,y,r1,r2,a1,a2);
   }
 
-#ifdef USE_DEPRECATED
-#define ROI_WARNING
-#ifdef WIN32
-#pragma message ("deprecated use new methods set")
-#else
-#warning deprecated use new methods set
-#endif
-  inline void SoftOpRoiCounter::add(const std::list<Roi> &rois)
-  {
-    ROI_WARNING;
-    int nb_rois = m_task_manager.size();
-    std::list<RoiNameAndRoi> local_rois;
-    std::list<Roi>::const_iterator i, end = rois.end();
-    for (i = rois.begin(); i != end; ++i, ++nb_rois)
-      {
-	RoiNameAndRoi roiname_roi(m_task_manager.getCompatName(nb_rois), *i);
-	local_rois.push_back(roiname_roi);
-      }
-    updateRois(local_rois);
-  }
-  inline void SoftOpRoiCounter::set(const std::list<Roi> &rois)
-  {
-    clearAllRois();
-    add(rois);
-  }
-  inline void SoftOpRoiCounter::get(std::list<Roi> &rois) const
-  {
-    ROI_WARNING;
-    DEB_MEMBER_FUNCT();
-    AutoMutex aLock(m_cond.mutex());
-
-    std::list<RoiNameAndRoi> names_rois;
-    getRois(names_rois);
-    if (int(names_rois.size()) != int(m_task_manager.size()))
-      THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
-
-    std::vector<Roi> v_rois;
-    v_rois.resize(names_rois.size());
-    for(std::list<RoiNameAndRoi>::iterator i = names_rois.begin();
-	 i != names_rois.end(); ++i)
-      {
-	int roi_id;
-	if(!m_task_manager.getCompatId(i->first, roi_id))
-	  THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
-	v_rois[roi_id] = i->second;
-      }
-    for(std::vector<Roi>::iterator i = v_rois.begin();
-	i != v_rois.end();++i)
-      rois.push_back(*i);
-  }
-  inline void SoftOpRoiCounter::del(const std::list<int> &roiIds)
-  {
-    ROI_WARNING;
-    AutoMutex aLock(m_cond.mutex());
-    std::list<std::string> rois_names;
-    for(std::list<int>::const_iterator i = roiIds.begin();
-	i != roiIds.end();++i)
-      rois_names.push_back(m_task_manager.getCompatName(*i));
-    removeRois(rois_names);
-  }
-  inline void SoftOpRoiCounter::readCounters(int from,
-					     std::list<RoiIdAndResults> &result) const
-  {
-    ROI_WARNING;
-    DEB_MEMBER_FUNCT();
-    std::list<RoiNameAndResults> tmp_result;
-    readCounters(from,tmp_result);
-    for(std::list<RoiNameAndResults>::iterator i = tmp_result.begin();
-	i != tmp_result.end();++i)
-      {
-	int roi_id;
-	if(!m_task_manager.getCompatId(i->first, roi_id))
-	  THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
-	result.push_back(RoiIdAndResults(roi_id,i->second));
-      }
-  }
-#endif
-
-
   class LIMACORE_API SoftOpRoi2Spectrum : public SoftOpBaseClass
   {
     DEB_CLASS_NAMESPC(DebModControl,"SoftwareOperation","SoftOpRoi2Spectrum");
@@ -573,22 +480,6 @@ namespace lima
     SoftOpRoi2Spectrum();
     virtual ~SoftOpRoi2Spectrum();
 
-#ifdef USE_DEPRECATED
-    /** Old way to manage roi2spectrum counters
-     * they are now deprecated,
-     * please use the new set of methods.
-     * will be removed in version 2.
-     */
-    void add(const std::list<Roi> &rois); 
-    void set(const std::list<Roi> &rois); 
-    void get(std::list<Roi>&) const;
-    void del(const std::list<int> &roiIds);
-    void readCounters(int from,std::list<RoiIdAndResults> &result) const;
-    void createImage(int roiId,int &from,Data &aData) const;
-
-    void getRoiMode(std::list<int>&) const;
-    void setRoiMode(int roiId,int mode);
-#endif
     /** New methods set */
     void updateRois(const std::list<RoiNameAndRoi>&);
     void getRois(std::list<RoiNameAndRoi>&) const;
@@ -635,106 +526,6 @@ namespace lima
     //Data			m_mask;
     mutable Cond		m_cond;
   };
-#ifdef USE_DEPRECATED
-  inline void SoftOpRoi2Spectrum::add(const std::list<Roi> &rois)
-  {
-    ROI_WARNING;
-    int nb_rois = m_task_manager.size();
-    std::list<RoiNameAndRoi> local_rois;
-    for(std::list<Roi>::const_iterator i = rois.begin();
-	i != rois.end();++i,++nb_rois)
-      {
-	RoiNameAndRoi roiname_roi(m_task_manager.getCompatName(nb_rois), *i);
-	local_rois.push_back(roiname_roi);
-      }
-    updateRois(local_rois);
-  }
-  inline void SoftOpRoi2Spectrum::set(const std::list<Roi> &rois)
-  {
-    clearAllRois();
-    add(rois);
-  }
-  inline void SoftOpRoi2Spectrum::get(std::list<Roi> &rois) const
-  {
-    ROI_WARNING;
-    DEB_MEMBER_FUNCT();
-    std::vector<Roi> v_rois;
-    v_rois.resize(m_task_manager.size());
-    for(NameMapConstIterator i = m_task_manager.begin();
-	i != m_task_manager.end();++i)
-      {
-	int roi_id;
-	if(!m_task_manager.getCompatId(i->first, roi_id))
-	  THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
-	int x,y,width,height;
-	i->second.second->getRoi(x,y,width,height);
-	v_rois[roi_id] = Roi(x,y,width,height);
-      }
-    for(std::vector<Roi>::iterator i = v_rois.begin();
-	i != v_rois.end();++i)
-      rois.push_back(*i);
-  }
-  inline void SoftOpRoi2Spectrum::del(const std::list<int> &roiIds)
-  {
-    ROI_WARNING;
-    std::list<std::string> rois_names;
-    for(std::list<int>::const_iterator i = roiIds.begin();
-	i != roiIds.end();++i)
-      rois_names.push_back(m_task_manager.getCompatName(*i));
-    removeRois(rois_names);
-  }
-  inline void SoftOpRoi2Spectrum::readCounters(int from,
-					       std::list<RoiIdAndResults> &result) const
-  {
-    ROI_WARNING;
-    DEB_MEMBER_FUNCT();
-    std::list<RoiNameAndResults> tmp_result;
-    readCounters(from,tmp_result);
-    for(std::list<RoiNameAndResults>::iterator i = tmp_result.begin();
-	i != tmp_result.end();++i)
-      {
-	int roi_id;
-	if(!m_task_manager.getCompatId(i->first, roi_id))
-	  THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
-	result.push_back(RoiIdAndResults(roi_id,i->second));
-      }
-  }
-
-  inline void SoftOpRoi2Spectrum::createImage(int roiId, int& from,
-					      Data& aData) const
-  {
-    ROI_WARNING;
-    createImage(m_task_manager.getCompatName(roiId), from, aData);
-  }
-
-  inline void SoftOpRoi2Spectrum::getRoiMode(std::list<int>& modes) const
-  {
-    ROI_WARNING;
-    DEB_MEMBER_FUNCT();
-    std::vector<int> v_modes;
-    v_modes.resize(m_task_manager.size());
-    for(NameMapConstIterator i = m_task_manager.begin();
-	i != m_task_manager.end();++i)
-      {
-	int roi_id;
-	if(!m_task_manager.getCompatId(i->first, roi_id))
-	  THROW_CTL_ERROR(InvalidValue) << "You can't mixed old and new methods set";
-	v_modes.push_back(i->second.second->getMode());
-      }
-    for(std::vector<int>::iterator i = v_modes.begin();
-	i != v_modes.end();++i)
-      modes.push_back(*i);
-  }
-
-  inline void SoftOpRoi2Spectrum::setRoiMode(int roiId, int mode)
-  {
-    ROI_WARNING;
-    RoiNameAndMode name_mode(m_task_manager.getCompatName(roiId), mode);
-    std::list<RoiNameAndMode> rois_modes(&name_mode, &name_mode + 1);
-    setRoiModes(rois_modes);
-  }
-#endif
-
 
   class LIMACORE_API SoftOpSoftRoi : public SoftOpBaseClass
   {
