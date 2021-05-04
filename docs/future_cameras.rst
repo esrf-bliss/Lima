@@ -21,9 +21,9 @@ Under development
 During the coming year, several new detector plugins should be released:
 
 - Arinax Bi-zoom  (Arinax ltd.)
-- QHYCCD model Q178-Cool (FRMII)
+- Basler SDK Pylon 6.1.X (ESRF)
 
 Foreseen
 ========
 
-- Ximea for high resolution, 6kx6k pixel (ESRF)
+- QHYCCD model Q178-Cool (FRMII)
