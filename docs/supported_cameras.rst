@@ -53,6 +53,12 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | Xh                 | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
+| TUCSEN Dhyana      | Yes   |         |  tucam 1.0.0         |
++--------------------+-------+---------+----------------------+
+| Ximea              | Yes   |         |  ximeas-sdk 4.21.23  |
++--------------------+-------+---------+----------------------+
+| Xspectrum Lambda   | Yes   |         | xsp 1.4.1            |
++--------------------+-------+---------+----------------------+
 
 Windows Only
 ============
@@ -83,6 +89,7 @@ Linux Only
   Dectris Pilatus 2 & 3  <camera/pilatus/doc/index>
   Fli <camera/fli/doc/index>
   ImXpad <camera/imxpad/doc/index>
+  Lambda <camera/lambda/doc/index>
   Merlin <camera/merlin/doc/index>
   Pixirad <camera/pixirad/doc/index>
   PointGrey <camera/pointgrey/doc/index>
@@ -93,6 +100,7 @@ Linux Only
   Ueye <camera/ueye/doc/index>
   Ultra <camera/ultra/doc/index>
   V4l2 <camera/v4l2/doc/index>
+  Ximea <camera/ximea/doc/index>
   Xpad <camera/xpad/doc/index>
   Xspress3 <camera/xspress3/doc/index>
   Xh <camera/xh/doc/index>
@@ -106,5 +114,6 @@ Windows and Linux
 
   Andor SDK2 <camera/andor/doc/index>
   Basler <camera/basler/doc/index>
+  Dhyana <camera/dhyana/doc/index>
   RoperScientific (former Princeton) <camera/roperscientific/doc/index>
   Simulator <camera/simulator/doc/index>
