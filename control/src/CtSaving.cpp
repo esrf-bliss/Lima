@@ -1746,9 +1746,7 @@ void CtSaving::clear()
 	if (m_frame_headers.size())
 		DEB_WARNING() << DEB_VAR1(m_frame_headers.size());
 	m_frame_headers.clear();
-	if (m_common_header.size())
-		DEB_WARNING() << DEB_VAR1(m_common_header.size());
-	m_common_header.clear();	// @fix Should we clear common header???
+
 	if (m_frame_datas.size())
 		DEB_WARNING() << DEB_VAR1(m_frame_datas.size());
 	m_frame_datas.clear();
