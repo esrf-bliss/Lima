@@ -310,7 +310,7 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 {
 	DataPtr alloc_data = MMapAllocator::alloc(ptr, size, alignment);
 
-	if (!m_cpu_mask)
+	if (m_cpu_mask.none())
 		return alloc_data;
 
 	unsigned long node_mask;
@@ -323,7 +323,7 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 	return alloc_data;
 }
 
-void NumaAllocator::getNUMANodeMask(unsigned long cpu_mask,
+void NumaAllocator::getNUMANodeMask(const Mask &cpu_mask,
 					       unsigned long& node_mask,
 					       int& max_node)
 {
@@ -331,8 +331,8 @@ void NumaAllocator::getNUMANodeMask(unsigned long cpu_mask,
 	max_node = nb_nodes + 1;
 
 	node_mask = 0;
-	for (unsigned int i = 0; i < sizeof(cpu_mask) * 8; ++i) {
-		if ((cpu_mask >> i) & 1) {
+	for (unsigned int i = 0; i < MaxNbCPUs; ++i) {
+		if (cpu_mask.test(i)) {
 			unsigned int n = numa_node_of_cpu(i);
 			node_mask |= 1L << n;
 		}

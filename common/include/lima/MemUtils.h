@@ -152,9 +152,12 @@ protected:
 class LIMACORE_API NumaAllocator : public MMapAllocator
 {
 public:
-	NumaAllocator(unsigned long cpu_mask) : m_cpu_mask(cpu_mask) {}
+	static constexpr int MaxNbCPUs = 128;
+	typedef std::bitset<MaxNbCPUs> Mask;
 
-	unsigned long getCPUAffinityMask()
+	NumaAllocator(const Mask& cpu_mask) : m_cpu_mask(cpu_mask) {}
+
+	const Mask &getCPUAffinityMask()
 	{ return m_cpu_mask; }
 
 	// Allocate a buffer and sets the NUMA memory policy with mbind
@@ -164,11 +167,11 @@ public:
 private:
 	// Given a cpu_mask, returns the memory node mask
 	// used by alloc to bind memory with the proper socket
-	void getNUMANodeMask(unsigned long cpu_mask,
+	void getNUMANodeMask(const Mask &cpu_mask,
 				    unsigned long& node_mask,
 				    int& max_node);
 
-	unsigned long m_cpu_mask; //<! if NUMA is used, keep the cpu_mask for later use
+	Mask m_cpu_mask; //<! if NUMA is used, keep the cpu_mask for later use
 };
 #endif
 
