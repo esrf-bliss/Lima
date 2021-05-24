@@ -42,6 +42,7 @@ set(hardware_srcs
     src/HwEventCtrlObj.cpp
     src/HwSavingCtrlObj.cpp
     src/HwReconstructionCtrlObj.cpp
+    src/HwTestApp.cpp
 )
 
 if(UNIX)
