@@ -1,5 +1,5 @@
 find_path(LZ4_INCLUDE_DIRS NAMES lz4.h)
-find_library(LZ4_LIBRARIES NAMES lz4)
+find_library(LZ4_LIBRARIES NAMES lz4 liblz4)
 
 # We require LZ4_compress_default() which was added in v1.8.2
 if (LZ4_LIBRARIES)
