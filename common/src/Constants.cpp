@@ -105,6 +105,14 @@ ostream& lima::operator <<(ostream& os, ImageType image_type)
 	return os << convert_2_string(image_type);
 }
 
+istream& lima::operator >>(istream& is, ImageType& image_type)
+{
+	string s;
+	is >> s;
+	convert_from_string(s, image_type);
+	return is;
+}
+
 const char* lima::convert_2_string(AcqMode acq_mode)
 {
   	const char *name = "Unknown";
@@ -136,6 +144,14 @@ void lima::convert_from_string(const std::string& val,
 ostream& lima::operator <<(ostream& os, AcqMode acq_mode)
 {
 	return os << convert_2_string(acq_mode);
+}
+
+istream& lima::operator >>(istream& is, AcqMode& acq_mode)
+{
+	string s;
+	is >> s;
+	convert_from_string(s, acq_mode);
+	return is;
 }
 
 const char* lima::convert_2_string(TrigMode trig_mode)
@@ -179,6 +195,14 @@ ostream& lima::operator <<(ostream& os, TrigMode trig_mode)
 	return os << convert_2_string(trig_mode);
 }
 
+istream& lima::operator >>(istream& is, TrigMode& trig_mode)
+{
+	string s;
+	is >> s;
+	convert_from_string(s, trig_mode);
+	return is;
+}
+
 ostream& lima::operator <<(ostream& os, BufferMode buffer_mode)
 {
 	const char *name = "Unknown";
@@ -220,6 +244,14 @@ void lima::convert_from_string(const std::string& val,
 ostream& lima::operator <<(ostream& os,ShutterMode shutter_mode)
 {
   return os << convert_2_string(shutter_mode);
+}
+
+istream& lima::operator >>(istream& is, ShutterMode& shutter_mode)
+{
+	string s;
+	is >> s;
+	convert_from_string(s, shutter_mode);
+	return is;
 }
 
 ostream& lima::operator <<(ostream& os, AcqStatus acq_status)
@@ -343,10 +375,18 @@ void lima::convert_from_string(const std::string& val,
       throw LIMA_EXC(Common,InvalidValue,msg.str());
     }
 }
-ostream& lima::operator <<(ostream& os, VideoMode aVideoMode)
+ostream& lima::operator <<(ostream& os, VideoMode videoMode)
 {
-  return os << convert_2_string(aVideoMode);
+  return os << convert_2_string(videoMode);
 }
+istream& lima::operator >>(istream& is, VideoMode& videoMode)
+{
+	string s;
+	is >> s;
+	convert_from_string(s, videoMode);
+	return is;
+}
+
 const char* lima::convert_2_string(RotationMode rotationMode)
 {
   const char *aHumanReadablePt;
@@ -382,4 +422,11 @@ void lima::convert_from_string(const std::string& val,
 ostream& lima::operator <<(ostream& os,RotationMode rotationMode)
 {
   return os << convert_2_string(rotationMode);
+}
+istream& lima::operator >>(istream& is, RotationMode& rotationMode)
+{
+	string s;
+	is >> s;
+	convert_from_string(s, rotationMode);
+	return is;
 }
