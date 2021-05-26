@@ -21,8 +21,67 @@
 //###########################################################################
 #include "lima/SizeUtils.h"
 
+#include <algorithm>
+
 using namespace lima;
 using namespace std;
+
+template <class T, class BinaryFunction>
+static Point decode_pair(istream& is, string sep, BinaryFunction stov)
+{
+	string o;
+	is >> o;
+	string s = o;
+	string::size_type l = s.size(), sl = sep.size();
+	if (!l)
+		throw LIMA_COM_EXC(InvalidValue, "Invalid pair: ") << o;
+	if (s[0] == '<') {
+		if ((l <= 2) || (s[l - 1] != '>'))
+			throw LIMA_COM_EXC(InvalidValue, "Invalid pair: ") << o;
+		l -= 2;
+		s = s.substr(1, l);
+	}
+	string::size_type p;
+	T x = stov(s, &p);
+	if ((p == 0) || ((s = s.substr(p)).find(sep) != 0) || (s.size() == sl))
+		throw LIMA_COM_EXC(InvalidValue, "Invalid pair: ") << o;
+	s = s.substr(sl);
+	T y = stov(s, &p);
+	if (p != s.size())
+		throw LIMA_COM_EXC(InvalidValue, "Invalid pair: ") << o;
+	return Point(x, y);
+}
+
+static Point decode_int_pair(istream& is, string sep = ",")
+{
+	auto f = [](const std::string& str, std::size_t* pos) {
+		return stoi(str, pos);
+	};
+	return decode_pair<int>(is, sep, f);
+}
+
+static bool stob(const string& s, string::size_type* pos)
+{
+	string aux = s;
+	std::transform(aux.begin(), aux.end(), aux.begin(),::tolower);
+	auto f = [&](const string& o) {
+		if (s.find(o) != 0)
+			return false;
+		if (pos)
+			*pos = o.size();
+		return true;
+	};
+	if (f("true") || f("false"))
+		return true;
+	if (pos)
+		*pos = 0;
+	return false;
+}
+
+static Point decode_bool_pair(istream& is, string sep = ",")
+{
+	return decode_pair<bool>(is, sep, stob);
+}
 
 
 /*******************************************************************
@@ -53,15 +112,39 @@ ostream& lima::operator <<(ostream& os, const Point& p)
 	return os << "<" << p.x << "," << p.y << ">";
 }
 
+istream& lima::operator >>(istream& is, Point& p)
+{
+	p = decode_int_pair(is);
+	return is;
+}
 
 ostream& lima::operator <<(ostream& os, const Size& s)
 {
 	return os << "<" << s.getWidth() << "x" << s.getHeight() << ">";
 }
 
+istream& lima::operator >>(istream& is, Size& s)
+{
+	s = decode_int_pair(is, "x");
+	return is;
+}
+
 ostream& lima::operator <<(ostream& os, const Bin& bin)
 {
 	return os << "<" << bin.getX() << "x" << bin.getY() << ">";
+}
+
+istream& lima::operator >>(istream& is, Bin& bin)
+{
+	bin = decode_int_pair(is);
+	return is;
+}
+
+istream& lima::operator >>(istream& is, Flip& flip)
+{
+	Point p = decode_bool_pair(is);
+	flip = Flip(p.x, p.y);
+	return is;
 }
 
 
@@ -89,9 +172,44 @@ ostream& lima::operator <<(ostream& os, YBorder yb)
 	return os << ((yb == Top)  ? "Top" : "Bottom");
 }
 
+istream& lima::operator >>(istream& is, XBorder& xb)
+{
+	string s;
+	is >> s;
+	if (s == "Left")
+		xb = Left;
+	else if (s == "Right")
+		xb = Right;
+	else
+		throw LIMA_COM_EXC(InvalidValue, "Invalid XBorder: ") << s;
+	return is;
+}
+
+istream& lima::operator >>(istream& is, YBorder& yb)
+{
+	string s;
+	is >> s;
+	if (s == "Top")
+		yb = Top;
+	else if (s == "Bottom")
+		yb = Bottom;
+	else
+		throw LIMA_COM_EXC(InvalidValue, "Invalid YBorder: ") << s;
+	return is;
+}
+
 ostream& lima::operator <<(ostream& os, const Corner& c)
 {
 	return os << c.getY() << c.getX();
+}
+
+istream& lima::operator >>(istream& is, Corner& c)
+{
+	XBorder xb;
+	YBorder yb;
+	is >> yb >> xb;
+	c.set(xb, yb);
+	return is;
 }
 
 
@@ -147,6 +265,22 @@ Roi Roi::subRoiAbs2Rel(const Roi& abs_sub_roi) const
 ostream& lima::operator <<(ostream& os, const Roi& roi)
 {
 	return os << roi.getTopLeft() << "-" << roi.getSize();
+}
+
+istream& lima::operator >>(istream& is, Roi& roi)
+{
+	string s;
+	is >> s;
+	string::size_type p = s.find('-');
+	if ((p == 0) || (p == s.size()) || (p == string::npos))
+		throw LIMA_COM_EXC(InvalidValue, "Invalid Roi: ") << s;
+	istringstream tl_is(s.substr(0, p)), size_is(s.substr(p + 1));
+	Point tl;
+	tl_is >> tl;
+	Size size;
+	size_is >> size;
+	roi = Roi(tl, size);
+	return is;
 }
 
 int FrameDim::getImageTypeBpp(ImageType type)
@@ -220,6 +354,36 @@ ostream& lima::operator <<(ostream& os, const FrameDim& fdim)
 	const Size& size = fdim.getSize();
 	return os << "<" << size.getWidth() << "x" << size.getHeight() << "x"
 		  << fdim.getDepth() << "-" << fdim.getImageType() << ">";
+}
+
+istream& lima::operator >>(std::istream& is, FrameDim& fdim)
+{
+	// Decode format: 1024x512x1-Bpp8
+	string s;
+	is >> s;
+	string::size_type sep1 = 0;
+	sep1 = s.find('x', sep1);
+	if ((sep1 == 0) || (sep1 == s.size()) || (sep1 == string::npos))
+		throw LIMA_COM_EXC(InvalidValue, "Invalid FrameDim: ") << s;
+	sep1 = s.find('x', sep1 + 1);
+	if ((sep1 == 0) || (sep1 == s.size()) || (sep1 == string::npos))
+		throw LIMA_COM_EXC(InvalidValue, "Invalid FrameDim: ") << s;
+	string::size_type next1 = sep1 + 1;
+	string::size_type sep2 = s.find('-', next1);
+	if ((sep2 == next1) || (sep2 == s.size()) || (sep2 == string::npos))
+		throw LIMA_COM_EXC(InvalidValue, "Invalid FrameDim: ") << s;
+	string::size_type next2 = sep2 + 1;
+	Size size;
+	istringstream(s.substr(0, sep1)) >> size;
+	int bpp;
+	istringstream(s.substr(next1, sep2)) >> bpp;
+	ImageType type;
+	istringstream(s.substr(next2)) >> type;
+	if (FrameDim::getImageTypeDepth(type) != bpp)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "FrameDim Bpp/ImageType mismatch: ") << s;
+	fdim = FrameDim(size, type);
+	return is;
 }
 
 ostream& lima::operator <<(ostream& os,const ArcRoi& arc)

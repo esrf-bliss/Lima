@@ -145,6 +145,7 @@ inline bool operator !=(const Point& p1, const Point& p2)
 }
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const Point& p);
+LIMACORE_API std::istream& operator >>(std::istream& is, Point& p);
 
 
 
@@ -167,6 +168,8 @@ enum YBorder {
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, XBorder xb);
 LIMACORE_API std::ostream& operator <<(std::ostream& os, YBorder yb);
+LIMACORE_API std::istream& operator >>(std::istream& is, XBorder& xb);
+LIMACORE_API std::istream& operator >>(std::istream& is, YBorder& yb);
 
 class LIMACORE_API Corner
 {
@@ -239,6 +242,7 @@ inline bool Corner::operator ==(const Corner& c)
 extern const Corner TopLeft, TopRight, BottomLeft, BottomRight;
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const Corner& c);
+LIMACORE_API std::istream& operator >>(std::istream& is, Corner& c);
 
 
 /*******************************************************************
@@ -324,6 +328,7 @@ inline bool operator !=(const Size& s1, const Size& s2)
 }
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const Size& s);
+LIMACORE_API std::istream& operator >>(std::istream& is, Size& s);
 
 
 /*******************************************************************
@@ -387,6 +392,7 @@ inline Point Bin::checkValid(const Point& p)
 }
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const Bin& bin);
+LIMACORE_API std::istream& operator >>(std::istream& is, Bin& bin);
 
 
 /*******************************************************************
@@ -431,6 +437,8 @@ inline std::ostream& operator <<(std::ostream& os, const Flip& flip)
      << ">";
   return os;
 }
+
+LIMACORE_API std::istream& operator >>(std::istream& is, Flip& flip);
 
 inline Flip operator-(const Flip &f,const Flip &s)
 {
@@ -718,6 +726,7 @@ inline bool operator !=(const Roi& r1, const Roi& r2)
 }
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const Roi& roi);
+LIMACORE_API std::istream& operator >>(std::istream& is, Roi& roi);
 
 
 /*******************************************************************
@@ -874,6 +883,7 @@ inline FrameDim operator /(const FrameDim& fdim, const Point& point)
 }
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os, const FrameDim& fdim);
+LIMACORE_API std::istream& operator >>(std::istream& is, FrameDim& fdim);
 
 /*******************************************************************
  * \class ArcRoi
