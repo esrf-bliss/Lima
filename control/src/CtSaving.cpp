@@ -1729,7 +1729,6 @@ void CtSaving::setEnableLogStat(bool enable, int stream_idx)
 }
 
 /** @brief clear everything.
-	- all header
 	- all waiting data to be saved
 	- close all stream
 */
@@ -1743,9 +1742,6 @@ void CtSaving::clear()
 	}
 
 	AutoMutex aLock(m_cond.mutex());
-	if (m_frame_headers.size())
-		DEB_WARNING() << DEB_VAR1(m_frame_headers.size());
-	m_frame_headers.clear();
 
 	if (m_frame_datas.size())
 		DEB_WARNING() << DEB_VAR1(m_frame_datas.size());
