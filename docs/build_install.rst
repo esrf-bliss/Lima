@@ -9,8 +9,7 @@ Install binary packages
 We provide Conda_ binary packages for some cameras. This is, by far, the easiest way to get started with LImA! For instance:
 
 ::
-
-  conda install --channel esrf-bcu lima-camera-basler
+  conda install -c conda-forge -c esrf-bcu lima-camera-basler
 
 would install a fully loaded LImA and all its dependencies with the Basler camera plugin and SDK. The camera comes as a python module but is also  C++ development package that includes header files and `CMake package config <https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html>`_ files.
 
@@ -18,7 +17,7 @@ If you need the Tango device server for the camera, run:
 
 ::
 
-  conda install --channel esrf-bcu --channel tango-controls lima-camera-basler-tango
+  conda install -c conda-forge -c esrf-bcu -c tango-controls lima-camera-basler-tango
 
 .. note:: The runtime libraries of the camera's SDK are provided as well but some cameras requires drivers or specific setups than needs to be installed manually.
 
