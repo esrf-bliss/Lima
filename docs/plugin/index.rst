@@ -166,8 +166,17 @@ A good practice would be not to pollute the base environment and work in a dedic
 
 ::
 
-   conda create -n lima python=3
-   source activate lima
+   conda create -n lima
+   conda activate lima
+
+Conda channels must be defined in the proper order with conda-forge first and prepend to the default anaconda channel:
+
+::
+   
+   conda config --env --add channels conda-forge
+   conda config --env --append channels esrf-bcu
+   conda config --env --append channels tango-controls
+   
 
 Then install the build tools:
 
@@ -182,8 +191,8 @@ You might need to leave the `Conda` environment and enter it again so that the e
 
 ::
 
-   source deactivate
-   source activate lima
+   conda deactivate
+   conda activate lima
 
 Finally, install the ``lima-core`` package (and dependencies) with `Conda`:
 
@@ -191,6 +200,12 @@ Finally, install the ``lima-core`` package (and dependencies) with `Conda`:
 
    conda install lima-core
 
+If you want to run the LimaCCDs device server on top of your camera plugin we recommend to install the simulator tango package, then you will get installed all the packages by dependencies:
+
+::
+   
+   conda install lima-camera-simulator-tango
+   
 And you are good to code! A good way to start is to use our seed project at:
 
 ::
@@ -213,14 +228,14 @@ For linux:
 
 ::
 
-  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=$CONDA_PREFIX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DPYTHON_SITE_PACKAGES_DIR=$CONDA_PREFIX/<Python site package location>
+  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=$CONDA_PREFIX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
   cmake --build build --target install
 
 For windows:
 
 ::
 
-  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=%CONDA_PREFIX% -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX% -DPYTHON_SITE_PACKAGES_DIR=%CONDA_PREFIX%/<Python site package location>
+  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=%CONDA_PREFIX% -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX%
   cmake --build build --target install --config Release
 
 
