@@ -152,7 +152,8 @@ void CtBuffer::getMaxNumber(long& nb_buffers) const
 {
   int max_nbuffers;
   m_hw_buffer->getMaxNbBuffers(max_nbuffers);
-  max_nbuffers = int(max_nbuffers * m_pars.maxMemory / 100.);
+  double maxMemory = double(m_pars.maxMemory) / 100.;
+  max_nbuffers = int(double(max_nbuffers) * maxMemory);
   nb_buffers = max_nbuffers;
 }
 
