@@ -44,7 +44,7 @@ CtTestApp::Pars::Pars()
 
 	AddOpt(acq_expo_time, "--acq-expo-time", "exposure time");
 
-	AddOpt(acq_lat_time, "--acq-lat-time", "latency time");
+	AddOpt(acq_lat_time, "--acq-latency-time", "latency time");
 
 	AddOpt(acq_nb_frames, "--acq-nb-frames", "number of frames");
 
@@ -308,8 +308,10 @@ void CtTestApp::runAcq(const index_map& indexes)
 		} else {
 			acq_finished = hw_finished;
 		}
-		if (acq_finished)
+		if (acq_finished) {
+			DEB_ALWAYS() << "acq finished";
 			break;
+		}
 
 		long sleep_us = int(m_pars->test_acq_loop_wait_time * 1e6);
 		if (sleep_us > 0)
