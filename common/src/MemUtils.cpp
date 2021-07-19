@@ -23,6 +23,7 @@
 
 #include <cstdlib>
 #include <sstream>
+#include <iomanip>
 #ifdef __unix
 #include <sys/sysinfo.h>
 #ifdef LIMA_USE_NUMA
@@ -305,6 +306,96 @@ void MemBuffer::deepCopy(const MemBuffer& buffer)
 
 
 #ifdef LIMA_USE_NUMA
+int NumaNodeMask::getMaxNodes()
+{
+	static int max_nb_nodes = numa_max_node() + 1;
+	return  max_nb_nodes;
+}
+
+int NumaNodeMask::getNbItems() { return (getMaxNodes() - 1) / ItemBits + 1; }
+
+inline
+const NumaNodeMask::ItemArray& NumaNodeMask::checkArray(const ItemArray& array)
+{
+	if (array.size() != getNbItems())
+		throw LIMA_COM_EXC(Error, "NumaNodeMask array has bad size");
+	return array;
+}
+
+NumaNodeMask::NumaNodeMask() : m_array(getNbItems(), 0) {}
+
+NumaNodeMask::NumaNodeMask(const ItemArray& array) : m_array(checkArray(array))
+{}
+
+NumaNodeMask::NumaNodeMask(const NumaNodeMask& o) : m_array(o.m_array) {}
+
+NumaNodeMask::NumaNodeMask(NumaNodeMask&& o) : m_array(std::move(o.m_array)) {}
+
+NumaNodeMask& NumaNodeMask::operator =(const ItemArray& array)
+{
+	m_array = checkArray(array);
+	return *this;
+}
+
+NumaNodeMask& NumaNodeMask::operator =(const NumaNodeMask& o)
+{
+	m_array = o.m_array;
+	return *this;
+}
+
+NumaNodeMask& NumaNodeMask::operator =(NumaNodeMask&& o)
+{
+	m_array = std::move(o.m_array);
+	return *this;
+}
+
+NumaNodeMask NumaNodeMask::fromCPUMask(const CPUMask& cpu_mask)
+{
+	typedef std::list<std::pair<CPUMask, NumaNodeMask>> NumaNodeList;
+	static NumaNodeList cpu_numa_node_list;
+	NumaNodeList::iterator it, end = cpu_numa_node_list.end();
+	for (it = cpu_numa_node_list.begin(); it != end; ++it)
+		if (it->first == cpu_mask)
+			return it->second;;
+
+	NumaNodeMask numa_node_mask;
+	ItemArray& node_mask = numa_node_mask.m_array;
+
+	for (unsigned int i = 0; i < MaxNbCPUs; ++i) {
+		if (cpu_mask.test(i)) {
+			unsigned int n = numa_node_of_cpu(i);
+			if (n >= getMaxNodes())
+				throw LIMA_COM_EXC(Error, "Numa node too high");
+			node_mask[n / ItemBits] |= 1L << (n % ItemBits);
+		}
+	}
+	cpu_numa_node_list.emplace_back(std::make_pair(cpu_mask, node_mask));
+	return numa_node_mask;
+}
+
+void NumaNodeMask::bind(void *ptr, size_t size)
+{
+	int max_node = getMaxNodes() + 1; // Linux kernel decrements max_node(?)
+	if (mbind(ptr, size, MPOL_BIND, &m_array[0], max_node, 0) != 0)
+		throw LIMA_COM_EXC(Error, "Error in mbind: ")
+			<< strerror(errno);
+}
+
+std::ostream& lima::operator <<(std::ostream& os, const NumaNodeMask& mask)
+{
+	os << "[" << mask.getMaxNodes() << "-bit]" << hex << setfill('0');
+	bool first = true;
+	int missaligned_bits = mask.getMaxNodes() % mask.ItemBits;
+	int first_bits = missaligned_bits ? missaligned_bits : mask.ItemBits;
+	const NumaNodeMask::ItemArray& array = mask.getArray();
+	NumaNodeMask::ItemArray::const_reverse_iterator it, end = array.rend();
+	for (it = array.rbegin(); it != end; ++it, first = false) {
+		int word_bits = first ? first_bits : mask.ItemBits;
+		os << (!first ? "," : "") << setw(word_bits / 4) << *it;
+	}
+	return os << setfill(' ') << dec;
+}
+
 Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 					size_t alignment)
 {
@@ -313,29 +404,9 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 	if (m_cpu_mask.none())
 		return alloc_data;
 
-	unsigned long node_mask;
-	int max_node;
-	getNUMANodeMask(m_cpu_mask, node_mask, max_node);
-	if (mbind(ptr, size, MPOL_BIND, &node_mask, max_node, 0) != 0)
-		throw LIMA_COM_EXC(Error, "Error in mbind: ")
-			<< strerror(errno);
-
+	NumaNodeMask node_mask = NumaNodeMask::fromCPUMask(m_cpu_mask);
+	node_mask.bind(ptr, size);
 	return alloc_data;
 }
 
-void NumaAllocator::getNUMANodeMask(const Mask &cpu_mask,
-					       unsigned long& node_mask,
-					       int& max_node)
-{
-	int nb_nodes = numa_max_node() + 1;
-	max_node = nb_nodes + 1;
-
-	node_mask = 0;
-	for (unsigned int i = 0; i < MaxNbCPUs; ++i) {
-		if (cpu_mask.test(i)) {
-			unsigned int n = numa_node_of_cpu(i);
-			node_mask |= 1L << n;
-		}
-	}
-}
 #endif //LIMA_USE_NUMA

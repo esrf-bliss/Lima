@@ -194,17 +194,17 @@ NumaSoftBufferAllocMgr::~NumaSoftBufferAllocMgr()
 	setAllocator(Allocator::defaultAllocator());
 }
 
-void NumaSoftBufferAllocMgr::setCPUAffinityMask(const Mask& mask)
+void NumaSoftBufferAllocMgr::setCPUAffinityMask(const CPUMask& mask)
 {
 	DEB_MEMBER_FUNCT();
 	if (DEB_CHECK_ANY(DebTypeParam)) {
 		typedef unsigned long ULong;
-		constexpr Mask ULongMask(std::numeric_limits<ULong>::max());
+		constexpr CPUMask ULongMask(std::numeric_limits<ULong>::max());
 		std::ostringstream os;
 		typedef unsigned long ULong;
 		constexpr int NbULongBits = sizeof(ULong) * 8;
 		for (int i = 0; i < MaxNbCPUs / NbULongBits; ++i) {
-			Mask m = (mask >> (i * NbULongBits)) & ULongMask;
+			CPUMask m = (mask >> (i * NbULongBits)) & ULongMask;
 			ULong val = m.to_ulong();
 			os << std::hex << val;
 		}

@@ -111,12 +111,12 @@ class LIMACORE_API NumaSoftBufferAllocMgr : public SoftBufferAllocMgr
 
  public:
 	static constexpr int MaxNbCPUs = NumaAllocator::MaxNbCPUs;
-	typedef NumaAllocator::Mask Mask;
+	typedef NumaAllocator::CPUMask CPUMask;
 
 	NumaSoftBufferAllocMgr();
 	virtual ~NumaSoftBufferAllocMgr();
 
-	void setCPUAffinityMask(const Mask& mask);
+	void setCPUAffinityMask(const CPUMask& mask);
 
  protected:
 	NumaAllocator *m_numa_allocator;
@@ -386,7 +386,7 @@ protected:
 class LIMACORE_API NumaSoftBufferCtrlObj : public SoftBufferCtrlObj
 {
 public:
-	typedef NumaSoftBufferAllocMgr::Mask Mask;
+	typedef NumaSoftBufferAllocMgr::CPUMask CPUMask;
 
 	NumaSoftBufferCtrlObj()
 		: SoftBufferCtrlObj(new NumaSoftBufferAllocMgr())
@@ -394,7 +394,7 @@ public:
 
 	virtual ~NumaSoftBufferCtrlObj() = default;
 
-	void setCPUAffinityMask(Mask mask)
+	void setCPUAffinityMask(CPUMask mask)
 	{
 		NumaSoftBufferAllocMgr *mgr;
 		mgr = static_cast<NumaSoftBufferAllocMgr *>(m_buffer_alloc_mgr.getPtr());
