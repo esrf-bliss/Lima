@@ -236,7 +236,8 @@ bool SoftOpMask::addTo(TaskMgr &aMgr,int stage)
 
 SoftOpRoiCounter::SoftOpRoiCounter() : 
   SoftOpBaseClass(),
-  m_history_size(DEFAULT_HISTORY_SIZE)
+  m_history_size(DEFAULT_HISTORY_SIZE),
+  m_overflow_threshold(0)
 {
   m_task_manager.setCompatFormat("roi_%d");
 }
@@ -432,6 +433,20 @@ void SoftOpRoiCounter::_get_or_create(const std::string& roi_name,
     aCounterMgrPt = i->second.first;
     aCounterTaskPt = i->second.second;
   }
+}
+
+void SoftOpRoiCounter::getOverflowThreshold(unsigned long long& threshold)
+{
+  threshold = m_overflow_threshold;
+}
+
+void SoftOpRoiCounter::setOverflowThreshold(unsigned long long threshold)
+{
+  AutoMutex aLock(m_cond.mutex());
+  for(auto &i : m_task_manager)
+    i.second.first->setOverflowThreshold(threshold);
+
+  m_overflow_threshold = threshold;
 }
 //-------------------- ROI TO SPECTRUM --------------------
 
