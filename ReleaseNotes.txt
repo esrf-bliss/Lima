@@ -7,6 +7,139 @@ You can find information related to new features and bug fixes.
 Some bug fix on new features can reference gitlab.esrf.fr merge requests as MR-XXX.
 
 
+Version v1.9.10 released on August 13th 2021
+--------------------------------------------
+
+Conda
+
+To install the conda packages and since lima 1.9.8 the conda-forge channel must be set as the main one:
+  * https://lima1.readthedocs.io/en/latest/build_install.html#install-binary-packages
+
+New features
+
+  * RoiCollection new processlib sinktask now available
+  * RoiCollection and RoiCounter accept a overflow threshold value to cut off randomly defective pixel
+
+Bug fixes
+
+  * CtBuffer: An overflow on the max number of buffer
+
+Camera updates
+
+  * Dhyana v1.9.1
+    * Hw Roi do not check supported camera Roi
+      The Dhyana 95 camera only support X offset as multiple of 4 and width (X) as multiple of 8
+    * export Tucam trigger mode and trigger edge
+    * The camera supports as default mode a roller shutter and can be switch to global mode or synchronous mode. In addition the input trigger can be detected on rising or falling edge:
+      * Few fixes as well, the pixelsize in meter now, the firmware version is a string.
+      * Manage the cold start and take a fake acquisition, otherwise the detector does not start on the first trigger.
+      * set the trigger mode in prepareAcq
+    * prepareAcq must not start the acquisition
+    * Some refactoring needed to move the start of the acquisition to startAcq and only prepare buffer or acquisition parameters like trigger mode in prepareAcq
+    * Add ExtTrigSingle
+  * Eiger v1.9.8
+    * workaround for bug in restful api of simplon 1.8 with filewriter "files" command returning a null string instead of a empty string list when there is no file
+    * HW saving: fix setCommonHeader() for eiger2 api pass double value
+    * add threshold_energy2
+    * add threshold_diff_mode
+    * tango:
+      * add detector_ip attribute (ro) to get the ip address of the detector DCU, useful to send curl command to the detector DCU
+      * add threshold_energy2 attribute (rw)
+      * add threshold_diff_mode attribute (rw)
+  * Pilatus
+    * v1.9.5
+      * nb frames max 65535 only for IntTrig trigger mode
+    * v1.9.4
+      * support for live mode (frames = 0)
+      * increase TmpfsBuffer to 95% of the file-system provided (typically a ramdisk)
+    * v1.9.3
+      * Manage S series where hw-roi is not supported: add a camera_s_serie keywork in camera.def
+
+Version v1.9.9 released on June 1st 2021
+----------------------------------------
+
+Bug fixes
+
+  * fix a bug introduced in version 1.9.7: Do not clear frame/common headers in CtSaving::clear(), user can use explicit commands instead
+  * conda CI: conda-forge channel added for windows gitlab CI
+
+Version v1.9.8 released on March 18th 2021
+------------------------------------------
+
+Bug fixes
+
+  * Can compile over processlib v1.7.5 (roicollection)
+  * Fix libconfig find for both windows and linux and using conda-forge new package
+
+New features
+
+  * Pin processlib to 1.7* version 1.8* is sip incompatible and will be used from lima-core 1.10
+  * CtSaving refactoring which manages now frames per file and last file with less frames when total number of frames is not a modulo of the nb_frame_per_file
+
+
+Version v1.9.7 released on January 15th 2021
+-------------------------------------------
+
+New features
+
+  * Conda: stop support for python 2.7 and 3.6
+
+Bug fixes
+
+  * Check whether the acquisition is still running when detructing  CtControl and stop the aquistion accordingly
+  * Call H5garbage_collect at the begin of SaveContainer_Hdf5::_prepare
+  * Fix CtSaving data race conditions
+    * Fix data race in CtSaving::Stream::m_cnt_status
+    * Fix HwBufferMgr when nb of available buffers decreases (e.g. to_alloc is negative)
+    * Fixes some artihmetic overflows, uninitialized variables and throws where code should be noexcept
+  * Fix CtImage (more missing SwapDimIfRotated for binning)
+  * Add missing Fault status to python hardware interface
+
+Camera updates
+
+  * Eiger v1.9.5
+    * http_port property added for Tango device
+    * Add retrigger command
+    * Add high voltage reading (measured and target)
+      add high voltage state reading and reset command
+    * Add Warning message when Command data does not fit in buffer
+    * Use better way to read DETECTOR_READOUT_TIME among different API vesions: 
+      * First try reading min value, use main value if negative
+    * Limit ZMQ poll time to 2 sec after an abort:
+    * Acquisition does not dead-lock if dseries_end header is not received
+     * Correct plugin_status attributes which conflict with standard tango status
+    * Deal with trigger command issues due timeout in lengthy acquisitions (> 5 min)
+    * Identify HTTP response codes in Commands; report error for codes 4xx and 5xx
+    * Fix issues in IntTrigMult:    
+      * Bug incrementing m_frames_triggered
+      * Fix Camera and Interface status when Armed
+      * Remove unnecessary check in Interface::startAcq (improved in CtControl)
+
+  * Pilatus v1.9.2
+    * In Tango plugin fix a host_port misinterpreted type, now accept port number as an integer
+
+  * Lambda v1.9.0
+    * use now X-Spectrum SDK version 1.3.2. A conda package is available for the SDK xspectrum-sdk on esrf-bcu channel
+
+PyTango server updates
+
+ v1.9.9
+  * Bug fixes
+    * shared_memory_ attributes silently ignored in read or write if the Display module is not available
+    * Unused code clean up and python2 backward compatibility restored
+    * acc_saturated_cblevel attribute ignores read/write if no module is loaded
+    * Tango event of last-image-changed fixed to not lost last events before the acquisition finishes
+
+  * New features
+    * RoiCounter and RoiSpectrum mask now support SILX 0.14 file format
+    * BackgroundSubtraction: takeNextAcquisitionAsBackground() command cam be called during an acquisition
+
+ v1.9.8
+  * New features for RoiCounters
+    * makes BufferSize and MaskFile always accessible
+    * added MaskFile Property and Attribute on RoiCounter
+      * raise ValueError in case mask file cannot be read
+
 Version v1.9.6 released on September 25th 2020
 ----------------------------------------------
 
