@@ -86,6 +86,7 @@ class CtTestApp
 		std::string test_post_seq_cmd;
 		double test_acq_loop_wait_time{0.1};
 		double test_acq_loop_display_time{0.1};
+		int test_nb_exec_threads{0};
 
 		Pars();
 	};
@@ -110,6 +111,23 @@ class CtTestApp
 		CtTestApp *m_app;
 	};
 
+	class ExecThread : public Thread
+	{
+		DEB_CLASS_NAMESPC(DebModTest, "CtTestApp::ExecThread", 
+				  "Control");
+	public:
+		ExecThread(CtTestApp *app);
+		~ExecThread();
+		void runAcq(const index_map& indexes);
+	protected:
+		void threadFunction();
+		CtTestApp *m_app;
+		bool m_run;
+		bool m_end{false};
+		Cond m_cond;
+		const index_map *m_indexes{nullptr};
+	};
+
 	virtual void init();
 	virtual Pars *getPars() = 0;
 	virtual void parseArgs();
@@ -126,6 +144,7 @@ class CtTestApp
 	Pars *m_pars;
 	CtControl *m_ct;
 	AutoPtr<ImageStatusCallback> m_img_status_cb;
+	std::vector<AutoPtr<ExecThread>> m_exec_thread_list;
 };
 
 } // namespace lima

@@ -98,6 +98,61 @@ CtTestApp::Pars::Pars()
 
 	AddOpt(test_acq_loop_display_time, "--test-acq-loop-display-time",
 	       "acq loop display time");
+
+	AddOpt(test_nb_exec_threads, "--test-nb-exec-threads",
+	       "nb of threads executing acq commands");
+}
+
+CtTestApp::ExecThread::ExecThread(CtTestApp *app)
+	: m_app(app)
+{
+	DEB_CONSTRUCTOR();
+	m_run = true;
+	start();
+	AutoMutex l(m_cond.mutex());
+	while (m_run)
+		m_cond.wait();
+}
+
+CtTestApp::ExecThread::~ExecThread()
+{
+	DEB_DESTRUCTOR();
+	{
+		AutoMutex l(m_cond.mutex());
+		m_end = true;
+		m_cond.signal();
+	}
+	join();
+}
+
+void CtTestApp::ExecThread::runAcq(const index_map& indexes)
+{
+	DEB_MEMBER_FUNCT();
+	AutoMutex l(m_cond.mutex());
+	m_indexes = &indexes;
+	m_run = true;
+	m_cond.signal();
+	while (m_run)
+		m_cond.wait();
+}
+
+void CtTestApp::ExecThread::threadFunction()
+{
+	DEB_MEMBER_FUNCT();
+	AutoMutex l(m_cond.mutex());
+	while (true) {
+		m_run = false;
+		m_cond.signal();
+		while (!m_run && !m_end)
+			m_cond.wait();
+		if (m_end)
+			break;
+		{
+			AutoMutexUnlock u(l);
+			m_app->runAcq(*m_indexes);
+		}
+		m_indexes = nullptr;
+	}
 }
 
 CtTestApp::CtTestApp(int argc, char *argv[])
@@ -112,13 +167,21 @@ void CtTestApp::run()
 
 	init();
 
+	int thread_i = 0;
+	int nb_exec_threads = m_pars->test_nb_exec_threads;
+
 	index_map indexes;
 	for (int i = 0; i < m_pars->test_nb_seq; ++i) {
 		indexes["acq"] = i;
 		for (int j = 0; j < int(m_pars->acq_nb_frames.size()); ++j) {
 			indexes["nb_frames"] = j;
 			configureAcq(indexes);
-			runAcq(indexes);
+			if (nb_exec_threads) {
+				int t = thread_i++ % nb_exec_threads;
+				m_exec_thread_list[t]->runAcq(indexes);
+			} else {
+				runAcq(indexes);
+			}
 		}
 	}
 }
@@ -190,6 +253,13 @@ void CtTestApp::init()
 
 	PoolThreadMgr& mgr = PoolThreadMgr::get();
 	mgr.setNumberOfThread(m_pars->proc_nb_threads);
+
+	if (m_pars->test_nb_exec_threads == -1)
+		m_pars->test_nb_exec_threads = m_pars->test_nb_seq;
+	int nb_exec_threads = m_pars->test_nb_exec_threads;
+	DEB_ALWAYS() << DEB_VAR1(nb_exec_threads);
+	for (int i = 0; i < nb_exec_threads; ++i)
+		m_exec_thread_list.emplace_back(new ExecThread(this));
 }
 
 void CtTestApp::execCmd(std::string cmd)
@@ -247,6 +317,10 @@ void CtTestApp::runAcq(const index_map& indexes)
 
 	m_ct->prepareAcq();
 	DEB_ALWAYS() << "acq prepared";
+
+	long max_nb_buffers;
+	m_ct->buffer()->getMaxNumber(max_nb_buffers);
+	DEB_ALWAYS() << DEB_VAR1(max_nb_buffers);
 
    	m_ct->startAcq();
 	DEB_ALWAYS() << "acq started";
