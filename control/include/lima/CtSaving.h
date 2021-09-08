@@ -760,6 +760,12 @@ inline std::istream& operator >>(std::istream& is,
 {
 	std::string s;
 	is >> s;
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+	if (s == "auto") {
+		std::string m;
+		is >> m;
+		s += " " + m;
+	}
 	convert_from_string(s, savingMode);
 	return is;
 }
