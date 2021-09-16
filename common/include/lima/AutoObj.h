@@ -337,6 +337,9 @@ private:
 	AutoPtrData *d;
 };
 
+template <class T>
+bool operator <(const AutoPtr<T>& a, const AutoPtr<T>& b)
+{ return a.getPtr() < b.getPtr(); }  
 
 } // namespace lima
 

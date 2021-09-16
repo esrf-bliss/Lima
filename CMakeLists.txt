@@ -108,6 +108,7 @@ set(common_srcs
     common/src/VideoUtils.cpp
     common/src/Event.cpp
     common/src/Timer.cpp
+    common/src/AppPars.cpp
     common/src/DirectoryEventUtils.cpp)
 
 if(UNIX)
@@ -139,6 +140,7 @@ set(hardware_srcs
     hardware/src/HwEventCtrlObj.cpp
     hardware/src/HwSavingCtrlObj.cpp
     hardware/src/HwReconstructionCtrlObj.cpp
+    hardware/src/HwTestApp.cpp
 )
 
 if(UNIX)
@@ -160,6 +162,7 @@ set(control_srcs
     control/src/CtAccumulation.cpp
     control/src/CtVideo.cpp
     control/src/CtEvent.cpp
+    control/src/CtTestApp.cpp
 )
 
 file(GLOB_RECURSE control_incs "control/include/*.h")

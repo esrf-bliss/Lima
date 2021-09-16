@@ -212,6 +212,15 @@ namespace lima
   {
     return os << convert_2_string(mode);
   }
+  inline std::istream& operator>>(std::istream &is,
+				  CtVideo::AutoGainMode& mode)
+  {
+    std::string s;
+    is >> s;
+    convert_from_string(s, mode);
+    return is;
+  }
+
   inline const char* convert_2_string(CtVideo::VideoSource source)
   {
     const char *name;
@@ -246,6 +255,15 @@ namespace lima
   {
     return os << convert_2_string(source);
   }
+  inline std::istream& operator>>(std::istream &is,
+				  CtVideo::VideoSource& source)
+  {
+    std::string s;
+    is >> s;
+    convert_from_string(s, source);
+    return is;
+  }
+
   inline std::ostream& operator<<(std::ostream &os,
 				  const CtVideo::Parameters& params)
     {
