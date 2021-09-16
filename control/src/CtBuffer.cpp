@@ -23,6 +23,10 @@
 #include "lima/CtAccumulation.h"
 #include "lima/CtSaving.h"
 
+#ifdef __unix
+#include <malloc.h>
+#endif
+
 using namespace lima;
 
 static const double WAIT_BUFFERS_RELEASED_TIMEOUT = 5.0;
@@ -277,6 +281,12 @@ void CtBuffer::setup(CtControl *ct)
       THROW_CTL_ERROR(Error) << "Buffers still in use!";
     m_hw_buffer_cb->releaseAll();
   }
+
+#ifdef __unix
+  bool use_malloc_trim = true;
+  if (use_malloc_trim)
+    malloc_trim(0);
+#endif
 }
 
 void CtBuffer::transformHwFrameInfoToData(Data &fdata,
