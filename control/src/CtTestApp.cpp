@@ -23,6 +23,10 @@
 #include "lima/CtTestApp.h"
 
 #include <unistd.h>
+#if defined(_WIN32)
+#include <windows.h> // For Sleep()
+#include <process.h> // For _getpid()
+#endif
 
 using namespace std;
 using namespace lima;
@@ -281,7 +285,11 @@ void CtTestApp::execCmd(std::string cmd)
 			std::string r;
 			switch (it->first) {
 			case PID:
+#if defined(_WIN32)
+				pid_t p = _getpid();
+#else
 				pid_t p = getpid();
+#endif
 				r = std::to_string(p);
 				break;
 			}
@@ -391,7 +399,11 @@ void CtTestApp::runAcq(const index_map& indexes)
 		if (sleep_us > 0)
 			usleep(sleep_us);
 		else
+#if defined(_WIN32)
+			Sleep(0);
+#else
 			pthread_yield();
+#endif
 	}
 
 	Timestamp t = Timestamp::now();
