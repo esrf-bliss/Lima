@@ -113,30 +113,42 @@ class AppPars
 public:
 	std::string prog_name;
 
+	AppPars();
 	virtual ~AppPars() {}
 
 	virtual void parseArgs(AppArgs& args);
+	virtual void printHelp();
 
 protected:
 	class ArgOptBase
 	{
 	public:
 		ArgOptBase(std::string sopt, std::string lopt,
-		   std::string extra = "")
-		: m_sopt(sopt), m_lopt(lopt), m_extra(extra)
+			   std::string extra = "", std::string desc = "")
+			: m_sopt(sopt), m_lopt(lopt), m_extra(extra),
+			  m_desc(desc)
 		{}
 		virtual ~ArgOptBase()
 		{}
 
 		virtual bool check(AppArgs& args) const = 0;
 
+		bool hasShortOpt() const
+		{ return !m_sopt.empty(); }
+		bool hasLongOpt() const
+		{ return !m_lopt.empty(); }
 		bool hasExtra() const
 		{ return !m_extra.empty(); }
+		bool hasDesc() const
+		{ return !m_desc.empty(); }
 
 	protected:
+		friend class AppPars;
+
 		std::string m_sopt;
 		std::string m_lopt;
 		std::string m_extra;
+		std::string m_desc;
 	};
 
 	template <class T>
@@ -148,10 +160,10 @@ protected:
 	{
 	public:
 		ArgOpt(T& var, std::string sopt, std::string lopt,
-		       std::string extra = "")
-			: ArgOptBase(sopt, lopt, extra), m_var(var)
+		       std::string extra = "", std::string desc = "")
+			: ArgOptBase(sopt, lopt, extra, desc), m_var(var)
 		{
-			if (sopt.empty() && lopt.empty())
+			if (!hasShortOpt() && !hasLongOpt())
 				throw LIMA_HW_EXC(InvalidValue,
 						  "ArgOpt: short & long empty");
 			if (!hasExtra())
@@ -199,6 +211,7 @@ protected:
 
 	typedef std::set<AutoPtr<ArgOptBase>> OptList;
 
+	bool m_print_help;
 	OptList m_opt_list;
 };
 

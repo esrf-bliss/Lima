@@ -89,7 +89,7 @@ CtTestApp::Pars::Pars()
 	       "buffer max memory [% of total RAM]");
 
 	AddOpt(proc_nb_threads, "--proc-nb-threads",
-	       "nb of processing threads");
+	       "number of processing threads");
 
 	AddOpt(test_nb_seq, "--test-nb-seq", "number of sequences");
 
@@ -114,7 +114,7 @@ CtTestApp::Pars::Pars()
 	       "acq loop display time");
 
 	AddOpt(test_nb_exec_threads, "--test-nb-exec-threads",
-	       "nb of threads executing acq commands");
+	       "number of threads executing acq commands");
 }
 
 CtTestApp::ExecThread::ExecThread(CtTestApp *app)

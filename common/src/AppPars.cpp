@@ -109,6 +109,13 @@ void AppArgs::update_argc_argv()
 
 // AppPars
 
+AppPars::AppPars()
+	: m_print_help(false)
+{
+	m_opt_list.insert(MakeOpt(m_print_help, "", "--help", "",
+				  "Print this help"));
+}
+
 void AppPars::parseArgs(AppArgs& args)
 {
 	DEB_MEMBER_FUNCT();
@@ -117,14 +124,47 @@ void AppPars::parseArgs(AppArgs& args)
 	if (prog_name.empty())
 		prog_name = n;
 
+	bool had_error = false;
+
 	while (args && (*args[0] == '-')) {
 		OptList::const_iterator it, end = m_opt_list.cend();
 		bool ok = false;
 		for (it = m_opt_list.cbegin(); (it != end) && !ok; ++it)
 			ok = ((*it)->check(args));
 		if (!ok) {
-			cerr << "Unknown option: " << args[0] << endl;
-			exit(1);
+			cerr << "Unknown option: " << args[0] << endl << endl;
+			had_error = true;
+			break;
 		}
 	}
+
+	if (had_error || m_print_help) {
+		printHelp();
+		exit(had_error ? 1 : 0);
+	}
+}
+
+void AppPars::printHelp()
+{
+	DEB_MEMBER_FUNCT();
+	const char *OptIndent = "   ";
+	const char *DescIndent = "        ";
+	cout << "Usage: " << prog_name << " [options]" << endl << endl
+	     << "Options:" << endl;
+	OptList::const_iterator it, end = m_opt_list.cend();
+	for (it = m_opt_list.cbegin(); it != end; ++it) {
+		cout << OptIndent;
+		const ArgOptBase& o = **it;
+		if (o.hasShortOpt())
+			cout << o.m_sopt << (o.hasLongOpt() ? "," : " ");
+		if (o.hasLongOpt())
+			cout << o.m_lopt << (o.hasExtra() ? "=" : "");
+		if (o.hasExtra())
+			cout << "<" << o.m_extra << ">";
+		cout << endl;
+		if (o.hasDesc())
+			cout << DescIndent << o.m_desc;
+		cout << endl;
+	}
+	cout << endl;
 }
