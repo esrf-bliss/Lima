@@ -1,5 +1,6 @@
-#!/bin/bash -i
+#!/bin/bash
 
+conda_base=""
 conda_env=""
 camera="simulator"
 native_arch=0
@@ -15,6 +16,7 @@ function usage()
     echo "Usage: ${prgname} <options> [<cmd>]"
     echo
     echo "Options:"
+    echo "  -b <conda>   Conda base directory"
     echo "  -e <env>     Execute inside conda environment <env>"
     echo "  -c <camera>  Compiles <camera> plugin (default: simulator)"
     echo "  -n           Compile for native computer architecture"
@@ -27,8 +29,9 @@ function usage()
     exit 1
 }
 
-while getopts "e:c:nprs:" opt; do
+while getopts "b:e:c:nprs:" opt; do
     case ${opt} in
+	b) conda_base="${OPTARG}" ;;
 	e) conda_env="${OPTARG}" ;;
 	c) camera="${OPTARG}" ;;
 	n) native_arch=1 ;;
@@ -58,9 +61,13 @@ echo "Source directory: ${src_dir}"
 cd ${src_dir}
 
 if [ -n "${conda_env}" ]; then
-    if ! type conda >& /dev/null; then
-	echo "Error: 'conda' not available. Please check your installation"
-	exit 1
+    if [ "$(type conda | head -n 1)" != "conda is a function" ]; then
+	if [ -z "${conda_base}" ]; then
+	    echo "Must specify the Conda base directory"
+	    echo
+	    usage
+	fi
+	source ${conda_base}/etc/profile.d/conda.sh
     fi
     conda activate ${conda_env}
 elif [ -z "${CONDA_PREFIX}" ]; then
@@ -121,13 +128,11 @@ build)
     if [ ${only_plugin} -eq 0 ]; then
 	((cd ${processlib_dir} && parallel_cmake conda/${profile}/build.sh) \
 	    && (cd . && parallel_cmake conda/${profile}/build.sh) \
-	    && (cd ${tango_dir} \
-		  && parallel_cmake conda/build.sh \
-		  && cp scripts/Lima* ${PREFIX}/bin)) || exit
+	    && (cd ${tango_dir} && pip install .)) || exit
     fi
     (cd ${camera_dir} \
        && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
-       && ([ -d conda/tango ] && parallel_cmake conda/tango/build.sh))
+       && (if [ -d conda/tango ]; then parallel_cmake conda/tango/build.sh; fi))
     ;;
 
 clean-sip)
