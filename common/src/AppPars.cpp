@@ -22,8 +22,42 @@
 
 #include "lima/AppPars.h"
 
+#include <type_traits>
+#include <regex>
+
 using namespace std;
 using namespace lima;
+
+//  vector<int> stream serialization
+
+std::ostream& std::operator <<(std::ostream& os, const std::vector<int>& v)
+{
+	os << "[";
+	const char *sep = "";
+	std::vector<int>::const_iterator it, end = v.end();
+	for (it = v.begin(); it != end; ++it, sep = ",")
+		os << sep << *it;
+	return os << "]";
+}
+
+std::istream& std::operator >>(std::istream& is, std::vector<int>& v)
+{
+	std::string s;
+	is >> s;
+
+	typedef std::regex_iterator<std::string::const_iterator> re_iterator;
+	typedef re_iterator::value_type re_iterated;
+
+	std::regex re("(\\d+)");
+
+	re_iterator rit(s.begin(), s.end(), re);
+	re_iterator rend;
+
+	v.clear();
+	std::transform(rit, rend, std::back_inserter(v),
+		       [](const re_iterated& it ){ return std::stoi(it[1]); });
+	return is;
+}
 
 // AppArgs
 
