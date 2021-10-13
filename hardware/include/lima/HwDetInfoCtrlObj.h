@@ -50,7 +50,7 @@ class LIMACORE_API HwDetInfoCtrlObj
 	virtual void getCurrImageType(ImageType& curr_image_type) = 0;
 	virtual void setCurrImageType(ImageType  curr_image_type) = 0;
 
-	/// Physical size of pixels (in mm)
+	/// Physical size of pixels (in meter)
 	virtual void getPixelSize(double& x_size, double& y_size) = 0;
 	/// Returns the type of the detector (Frelon, Maxipix, …)
 	virtual void getDetectorType(std::string& det_type) = 0;
