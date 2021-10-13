@@ -2272,7 +2272,7 @@ void CtSaving::SaveContainer::setEnableLogStat(bool enable)
 {
 	// TODO: check that no current saving is active
 	AutoMutex aLock = AutoMutex(m_lock);
-	if (m_log_stat_enable && !enable) {
+	if (m_log_stat_enable && !enable && m_log_stat_file != NULL) {
 		fclose(m_log_stat_file);
 		m_log_stat_file = NULL;
 	}
