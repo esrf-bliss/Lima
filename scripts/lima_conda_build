@@ -117,10 +117,22 @@ if [ ${native_arch} -ne 0 ]; then
     export CXXFLAGS
 fi
 
+if [ ${profile} = "debug" ]; then
+    build_type="Debug"
+else
+    build_type="RelWithDebInfo"
+fi
+
 CPUS=$(lscpu | grep '^CPU(s)' | awk '{print $2}')
 function parallel_cmake
 {
-    sed "s/\(cmake --build build [^\r]\+\)\r\?$/\1 -- -j${CPUS}/" $1 | bash -e;
+    configure_flags=""
+    if ! grep -q CMAKE_BUILD_TYPE $1; then
+	configure_flags="${configure_flags} -DCMAKE_BUILD_TYPE=${build_type}"
+    fi	
+    sed -e "s/\(cmake -Bbuild [^\r]\+\)\r\?$/\1 ${configure_flags}/" \
+	-e "s/\(cmake --build build [^\r]\+\)\r\?$/\1 -j ${CPUS}/" $1 | \
+        bash -e;
 }
 
 case ${cmd} in
