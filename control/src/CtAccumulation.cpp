@@ -242,7 +242,8 @@ CtAccumulation::CtAccumulation(CtControl &ct) :
   m_calc_ready(true),
   m_threshold_cb(NULL),
   m_last_acc_frame_nb(-1),
-  m_last_continue_flag(true)
+  m_last_continue_flag(true),
+  m_stopped(false)
 {
   m_calc_end = new _CalcEndCBK(*this);
   m_calc_mgr = new _CalcSaturatedTaskMgr();
@@ -612,7 +613,7 @@ void CtAccumulation::prepare()
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
   m_last_continue_flag = true;
   m_last_acc_frame_nb = -1;
-
+  m_stopped = false;
 }
 /** @brief this is an internal call from CtBuffer in case of accumulation
  */
@@ -622,6 +623,7 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   TaskMgr *mgr = new TaskMgr();
+  mgr->setEventCallback(m_ct.getSoftOpErrorHandler());
   mgr->setInputData(aData);
   int internal_stage = 0;
   m_ct.m_op_int->addTo(*mgr,internal_stage);
@@ -647,8 +649,11 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   int nb_acc_frame;
   acq->getAccNbFrames(nb_acc_frame);
   AutoMutex aLock(m_cond.mutex());
-  while(aData.frameNumber != (m_last_acc_frame_nb + 1))
+  bool miss;
+  while((miss = (aData.frameNumber != (m_last_acc_frame_nb + 1))) && !m_stopped)
     m_cond.wait();
+  if(miss) // stopped
+    return false;
 
   bool active = m_pars.active;
   if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
@@ -719,6 +724,16 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   m_cond.broadcast();
 
   return m_last_continue_flag;
+}
+/** @brief stops the current integration
+ */
+void CtAccumulation::stop()
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  m_stopped = true;
+  m_cond.broadcast();
 }
 /** @brief retrived the image from the buffer
     @param frameNumber == acquisition image id

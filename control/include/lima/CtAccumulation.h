@@ -170,11 +170,13 @@ namespace lima
     ThresholdCallback*			m_threshold_cb;
     int 				m_last_acc_frame_nb;
     bool 				m_last_continue_flag;
+    bool				m_stopped;
 
     // --- Methodes for acquisition
     void prepare();
     bool _newFrameReady(Data&);
     bool _newBaseFrameReady(Data&);
+    void stop();
 
     void getFrame(Data &,int frameNumber);
 
