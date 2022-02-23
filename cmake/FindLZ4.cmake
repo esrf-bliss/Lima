@@ -2,6 +2,7 @@ find_path(LZ4_INCLUDE_DIRS NAMES lz4.h)
 find_library(LZ4_LIBRARIES NAMES lz4 liblz4)
 
 # We require LZ4_compress_default() which was added in v1.8.2
+# But now we request at least version 1.9.1, lastest today is 1.9.3
 if (LZ4_LIBRARIES)
   include(CheckCSourceRuns)
   set(CMAKE_REQUIRED_INCLUDES ${LZ4_INCLUDE_DIRS})
@@ -10,7 +11,7 @@ if (LZ4_LIBRARIES)
 #include <lz4.h>
 int main() {
   int good = (LZ4_VERSION_MAJOR > 1) ||
-    ((LZ4_VERSION_MAJOR == 1) && (LZ4_VERSION_MINOR >= 8) && (LZ4_VERSION_RELEASE >= 2));
+    ((LZ4_VERSION_MAJOR == 1) && (LZ4_VERSION_MINOR >= 9) && (LZ4_VERSION_RELEASE >= 1));
 return !good;
 }" LZ4_GOOD_VERSION)
   set(CMAKE_REQUIRED_INCLUDES)
