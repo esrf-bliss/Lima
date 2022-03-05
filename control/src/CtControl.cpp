@@ -923,6 +923,7 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
 	aReturnData = auxData;
 	Buffer *buffer = new Buffer(imageSize * readBlockLen);
 	aReturnData.setBuffer(buffer);
+	buffer->unref();
 	if (readBlockLen > 1) {
 	  if (aReturnData.dimensions.size() == 2)
 	    aReturnData.dimensions.push_back(readBlockLen);
