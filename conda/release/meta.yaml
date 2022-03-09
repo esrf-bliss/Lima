@@ -23,7 +23,7 @@ requirements:
     - libconfig 1.7*
     # I/O formats
     - zlib
-    - lz4-c 1.8.2
+    - lz4-c >=1.9.1
     - hdf5 1.10*
     - libtiff
     - cbflib        # [linux]
@@ -40,7 +40,7 @@ requirements:
     - libconfig 1.7*
     # I/O formats
     - zlib
-    - lz4-c 1.8.2
+    - lz4-c >=1.9.1
     - hdf5 1.10*
     - libtiff
     - cbflib        # [linux]
