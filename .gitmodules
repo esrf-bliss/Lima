@@ -1,6 +1,6 @@
 [submodule "third-party/Sps"]
 	path = third-party/Sps
-	url = git://github.com/esrf-bliss/Sps
+	url = https://github.com/esrf-bliss/Sps
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
 	url = ../Processlib
@@ -102,7 +102,7 @@
 	url = ../Lima-tango-python
 [submodule "applications/tango/cpp"]
 	path = applications/tango/cpp
-	url = git://github.com/esrf-bliss/Lima-tango-cpp
+	url = https://github.com/esrf-bliss/Lima-tango-cpp
 [submodule "camera/eiger"]
 	path = camera/eiger
 	url = ../Lima-camera-eiger
@@ -117,7 +117,7 @@
 	url = ../Lima-camera-slsdetector
 [submodule "third-party/bitshuffle"]
 	path = third-party/bitshuffle
-	url = git://github.com/kiyo-masui/bitshuffle
+	url = https://github.com/kiyo-masui/bitshuffle
 [submodule "camera/lambda"]
 	path = camera/lambda
 	url = ../Lima-camera-lambda
