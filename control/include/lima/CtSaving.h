@@ -706,6 +706,18 @@ inline void convert_from_string(const std::string& val,
 	}
 
 }
+inline std::ostream& operator <<(std::ostream& os, CtSaving::FileFormat format)
+{
+	return os << convert_2_string(format);
+}
+inline std::istream& operator >>(std::istream& is, CtSaving::FileFormat& format)
+{
+	std::string s;
+	is >> s;
+	convert_from_string(s, format);
+	return is;
+}
+
 inline const char* convert_2_string(CtSaving::SavingMode savingMode)
 {
 	const char* aSavingModeHumanPt;
@@ -738,6 +750,26 @@ inline void convert_from_string(const std::string& val,
 	}
 
 }
+inline std::ostream& operator <<(std::ostream& os,
+				 CtSaving::SavingMode savingMode)
+{
+	return os << convert_2_string(savingMode);
+}
+inline std::istream& operator >>(std::istream& is,
+				 CtSaving::SavingMode& savingMode)
+{
+	std::string s;
+	is >> s;
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+	if (s == "auto") {
+		std::string m;
+		is >> m;
+		s += " " + m;
+	}
+	convert_from_string(s, savingMode);
+	return is;
+}
+
 inline const char* convert_2_string(CtSaving::OverwritePolicy overwritePolicy)
 {
 	const char* anOverwritePolicyHumanPt;
@@ -772,6 +804,20 @@ inline void convert_from_string(const std::string& val,
 		throw LIMA_EXC(Control, InvalidValue, msg.str());
 	}
 }
+inline std::ostream& operator <<(std::ostream& os,
+				 CtSaving::OverwritePolicy overwritePolicy)
+{
+	return os << convert_2_string(overwritePolicy);
+}
+inline std::istream& operator >>(std::istream& is,
+				 CtSaving::OverwritePolicy& overwritePolicy)
+{
+	std::string s;
+	is >> s;
+	convert_from_string(s, overwritePolicy);
+	return is;
+}
+
 inline const char* convert_2_string(CtSaving::ManagedMode manageMode)
 {
 	const char* aManagedModeHumanPt;
@@ -801,6 +847,20 @@ inline void convert_from_string(const std::string& val,
 	}
 
 }
+inline std::ostream& operator <<(std::ostream& os,
+				 CtSaving::ManagedMode managedMode)
+{
+	return os << convert_2_string(managedMode);
+}
+inline std::istream& operator >>(std::istream& is,
+				 CtSaving::ManagedMode& managedMode)
+{
+	std::string s;
+	is >> s;
+	convert_from_string(s, managedMode);
+	return is;
+}
+
 inline std::ostream& operator<<(std::ostream& os, const CtSaving::Parameters& params)
 {
 	const char* aFileFormatHumanPt = convert_2_string(params.fileFormat);

@@ -102,7 +102,9 @@ Exception& Exception::operator <<(const T& o)
 
 	DebProxy *deb_proxy = m_exc_deb_proxy;
 	if (deb_proxy)
-		*deb_proxy << o;
+		*deb_proxy << os.str();
+	else
+		std::cerr << "*********     " << os.str() << std::endl;
 
 	return *this;
 }

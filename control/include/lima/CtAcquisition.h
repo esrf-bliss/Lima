@@ -193,6 +193,19 @@ namespace lima
 	  throw LIMA_EXC(Control,InvalidValue,msg.str());
 	}
     }
+  inline std::ostream& operator<<(std::ostream& os,
+				  const CtAcquisition::AccTimeMode& mode)
+  {
+    return os << convert_2_string(mode);
+  }
+  inline std::istream& operator>>(std::istream& is,
+				  CtAcquisition::AccTimeMode& mode)
+  {
+    std::string s;
+    is >> s;
+    convert_from_string(s, mode);
+    return is;
+  }
   inline std::ostream& operator<<(std::ostream &os,const CtAcquisition::Parameters &params)
   {
     os << "<"
@@ -244,6 +257,14 @@ namespace lima
 				  const CtAcquisition::AutoExposureMode& mode)
   {
     return os << convert_2_string(mode);
+  }
+  inline std::istream& operator>>(std::istream& is,
+				  CtAcquisition::AutoExposureMode& mode)
+  {
+    std::string s;
+    is >> s;
+    convert_from_string(s, mode);
+    return is;
   }
 
   

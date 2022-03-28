@@ -34,7 +34,9 @@ set(control_srcs
     src/CtShutter.cpp
     src/CtAccumulation.cpp
     src/CtVideo.cpp
-    src/CtEvent.cpp)
+    src/CtEvent.cpp
+    src/CtTestApp.cpp
+)
 
 file(GLOB_RECURSE control_incs "include/*.h")
 

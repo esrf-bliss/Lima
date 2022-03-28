@@ -35,6 +35,7 @@ set(common_srcs
     src/Event.cpp
     src/Timer.cpp
     src/DirectoryEventUtils.cpp
+    src/AppPars.cpp
 )
 
 if(UNIX)
