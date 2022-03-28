@@ -22,11 +22,13 @@
 #include "lima/HwBufferMgr.h"
 
 #include <cstring>
+#if !defined(_WIN32)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#endif
 
 using namespace lima;
 
@@ -898,6 +900,7 @@ void SoftBufferCtrlObj::Sync::releaseAll()
 	m_cond.broadcast();
 }
 
+#if !defined(_WIN32)
 /*****************************************************************************
 			MmapFileBufferAllocMgr
 ****************************************************************************/
@@ -979,3 +982,4 @@ int MmapFileBufferAllocMgr::_calc_frame_mem_size(const FrameDim& frame_dim) cons
 {
   return  (frame_dim.getMemSize() + 31) & ~31; // 32 alignment (avx2)
 }
+#endif // !defined(_WIN32)

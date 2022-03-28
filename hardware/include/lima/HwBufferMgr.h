@@ -399,7 +399,7 @@ public:
 
 #endif // LIMA_USE_NUMA
 
-
+#if !defined(_WIN32)
 class LIMACORE_API MmapFileBufferAllocMgr : public BufferAllocMgr
 {
   DEB_CLASS(DebModHardware, "MmapFileBufferAllocMgr");
@@ -428,6 +428,7 @@ class LIMACORE_API MmapFileBufferAllocMgr : public BufferAllocMgr
   FrameDim	m_frame_dim;
   int		m_nb_buffers;
 };
+#endif // !defined(_WIN32)
 
 } // namespace lima
 
