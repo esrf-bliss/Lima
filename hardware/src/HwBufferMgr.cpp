@@ -22,6 +22,13 @@
 #include "lima/HwBufferMgr.h"
 
 #include <cstring>
+#if !defined(_WIN32)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#endif
 
 using namespace lima;
 
@@ -892,3 +899,87 @@ void SoftBufferCtrlObj::Sync::releaseAll()
 	m_buffer_in_use.clear();
 	m_cond.broadcast();
 }
+
+#if !defined(_WIN32)
+/*****************************************************************************
+			MmapFileBufferAllocMgr
+****************************************************************************/
+MmapFileBufferAllocMgr::MmapFileBufferAllocMgr(const char* mapped_file):
+  m_map_mem_base(NULL),
+  m_map_size(0),
+  m_frame_mem_size(-1),
+  m_nb_buffers(-1)
+{
+  DEB_CONSTRUCTOR();
+
+  int fd = ::open(mapped_file,O_RDWR);
+  if(fd < 0)
+    THROW_HW_ERROR(Error) << "Could not open file: "  << mapped_file;
+
+  m_map_size = ::lseek(fd,0,SEEK_END);
+  ::lseek(fd,0,SEEK_SET);
+  m_map_mem_base = mmap(NULL,m_map_size,PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
+  close(fd);
+
+  if(m_map_mem_base == MAP_FAILED)
+    THROW_HW_ERROR(Error) << "Could not map file: "  << mapped_file;
+}
+
+MmapFileBufferAllocMgr::~MmapFileBufferAllocMgr()
+{
+  if(m_map_mem_base)
+    munmap(m_map_mem_base,m_map_size);
+}
+
+int MmapFileBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
+{
+  int frame_mem_size = _calc_frame_mem_size(frame_dim);
+  return m_map_size / frame_mem_size;
+}
+
+void MmapFileBufferAllocMgr::allocBuffers(int nb_buffers,const FrameDim& frame_dim)
+{
+  m_frame_mem_size = _calc_frame_mem_size(frame_dim);
+  m_frame_dim = frame_dim;
+  m_nb_buffers = nb_buffers;
+}
+
+void MmapFileBufferAllocMgr::releaseBuffers()
+{
+  m_frame_mem_size = -1;
+  m_nb_buffers = -1;
+}
+
+void* MmapFileBufferAllocMgr::getBufferPtr(int buffer_nb)
+{
+  DEB_MEMBER_FUNCT();
+
+  if(m_frame_mem_size <= 0)
+    THROW_HW_ERROR(Error) << "Allocation wasn't done";
+
+  unsigned long long offset = buffer_nb;
+  offset *= m_frame_mem_size;  
+  char* start_map = (char*)m_map_mem_base;
+  return start_map + offset;
+}
+
+void MmapFileBufferAllocMgr::clearBuffer(int buffer_nb)
+{
+  if(m_frame_mem_size > 0)
+    {
+      void *ptr = getBufferPtr(buffer_nb);
+      memset(ptr, 0, m_frame_mem_size);
+    }
+}
+
+void MmapFileBufferAllocMgr::clearAllBuffers()
+{
+  if(m_map_size > 0)
+    memset(m_map_mem_base,0,m_map_size);
+}
+
+int MmapFileBufferAllocMgr::_calc_frame_mem_size(const FrameDim& frame_dim) const
+{
+  return  (frame_dim.getMemSize() + 31) & ~31; // 32 alignment (avx2)
+}
+#endif // !defined(_WIN32)

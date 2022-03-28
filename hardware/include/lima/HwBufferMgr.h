@@ -399,6 +399,37 @@ public:
 
 #endif // LIMA_USE_NUMA
 
+#if !defined(_WIN32)
+class LIMACORE_API MmapFileBufferAllocMgr : public BufferAllocMgr
+{
+  DEB_CLASS(DebModHardware, "MmapFileBufferAllocMgr");
+
+ public:
+  MmapFileBufferAllocMgr(const char* mapped_file);
+  virtual ~MmapFileBufferAllocMgr();
+
+  virtual int getMaxNbBuffers(const FrameDim& frame_dim);
+  virtual void allocBuffers(int nb_buffers, 
+			    const FrameDim& frame_dim);
+  virtual const FrameDim& getFrameDim() {return m_frame_dim;}
+  virtual void getNbBuffers(int& nb_buffers) {nb_buffers = m_nb_buffers;}
+  virtual void releaseBuffers();
+
+  virtual void *getBufferPtr(int buffer_nb);
+
+  virtual void clearBuffer(int buffer_nb);
+  virtual void clearAllBuffers();
+ private:
+  int _calc_frame_mem_size(const FrameDim& frame_dim) const;
+
+  void*		m_map_mem_base;
+  off_t		m_map_size;
+  int		m_frame_mem_size;
+  FrameDim	m_frame_dim;
+  int		m_nb_buffers;
+};
+#endif // !defined(_WIN32)
+
 } // namespace lima
 
 #endif // HWBUFFERMGR_H
