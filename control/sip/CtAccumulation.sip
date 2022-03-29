@@ -105,4 +105,7 @@ public:
 
   void registerThresholdCallback(ThresholdCallback &cb);
   void unregisterThresholdCallback(ThresholdCallback &cb);
+  
+private:
+  CtAccumulation(const CtAccumulation&);
 };

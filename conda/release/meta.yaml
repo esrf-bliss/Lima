@@ -18,8 +18,8 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip 4.19.8           #For the SIP module
-    - processlib 1.8*
+    - sip 4.19* # API v12.7
+    - processlib
     - libconfig 1.7*
     # I/O formats
     - zlib
@@ -32,10 +32,11 @@ requirements:
   build:
     - git
     - cmake
+    - ninja
     - {{ compiler('cxx') }}
   run:
     - python
-    - sip >=4.19.4, <=4.19.8 # For compatibility with pyqt 5.9.2
+    - {{ pin_compatible('sip', min_pin='x.x.x', max_pin='x') }}
     - {{ pin_compatible('processlib', max_pin='x.x') }}
     - libconfig 1.7*
     # I/O formats
@@ -48,16 +49,10 @@ requirements:
     - libnuma       # [linux]
 
 test:
-  # requires:
-  #   - cmake
-  #   - python {{ python }}
   imports:
     - Lima.Core
-  downstreams:
-    - lima-camera-simulator
-  # commands:
-  #  - cd build
-  #  - ctest --timeout 10 --output-on-failure
+  #downstreams:
+  # - lima-camera-simulator
 
 about:
   home: https://github.com/esrf-bliss/Lima

@@ -26,7 +26,7 @@ class CtBuffer {
 #include <sstream>
 using namespace lima;
 %End
-    public:
+public:
 	struct Parameters {
 		BufferMode mode;
 		long	nbBuffers;
@@ -66,4 +66,7 @@ using namespace lima;
 				    int readBlockLen=1);
 
 	bool waitBuffersReleased(double timeout=-1);
+
+private:
+	CtBuffer(const CtBuffer&);
 };

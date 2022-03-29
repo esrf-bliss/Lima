@@ -149,4 +149,7 @@ using namespace lima;
 	void getRotation(RotationMode &rotation /Out/) const;
 
 	void reset();
+
+	private:
+	CtImage(const CtImage&);
 };
