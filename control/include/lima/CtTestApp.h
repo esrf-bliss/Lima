@@ -25,6 +25,7 @@
 
 #include "lima/AppPars.h"
 
+#include "lima/LimaCompatibility.h"
 #include "lima/CtControl.h"
 #include "lima/CtAcquisition.h"
 #include "lima/CtSaving.h"
@@ -36,7 +37,7 @@
 namespace lima 
 {
 
-class CtTestApp
+class LIMACORE_API CtTestApp
 {
 	DEB_CLASS_NAMESPC(DebModTest, "CtTestApp", "Control");
 
@@ -45,7 +46,7 @@ class CtTestApp
 	typedef std::vector<int> int_array;
 	typedef std::map<std::string, int> index_map;
 
-	class Pars : public AppPars
+	class LIMACORE_API Pars : public AppPars
 	{
 		DEB_CLASS_NAMESPC(DebModTest, "CtTestApp::Pars", "Control");
 	public:

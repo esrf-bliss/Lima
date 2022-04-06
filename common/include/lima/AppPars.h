@@ -23,6 +23,7 @@
 #ifndef __APP_PARS_H
 #define __APP_PARS_H
 
+#include "lima/LimaCompatibility.h"
 #include "lima/Debug.h"
 #include "lima/AutoObj.h"
 #include "lima/Exceptions.h"
@@ -43,7 +44,7 @@ std::istream& operator >>(std::istream& is, std::vector<int>& v);
 namespace lima 
 {
 
-class AppArgs
+class LIMACORE_API AppArgs
 {
 	DEB_CLASS(DebModCommon, "AppArgs");
 
@@ -80,7 +81,7 @@ private:
 	AutoPtr<char *, true> m_argv;
 };
 
-class AppPars 
+class LIMACORE_API AppPars
 {
 	DEB_CLASS(DebModCommon, "AppPars");
 public:
