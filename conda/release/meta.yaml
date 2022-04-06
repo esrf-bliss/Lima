@@ -26,9 +26,9 @@ requirements:
     - lz4-c >=1.9.1
     - hdf5 1.10*
     - libtiff
-    - cbflib        # [linux]
-    - openssl 1.1.1 # [linux]
-    - libnuma       # [linux]
+    - cbflib         # [linux]
+    - openssl 1.1.1* # [linux]
+    - libnuma        # [linux]
   build:
     - git
     - cmake
