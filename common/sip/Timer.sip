@@ -31,6 +31,8 @@ public:
   enum Stat {DOWN,UP,RISING_EDGE,FALLING_EDGE};
   class Callback
   {
+  public:
+    virtual ~Callback();
   protected:
     virtual void start();
     virtual void risingEdge();
