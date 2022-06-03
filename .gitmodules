@@ -145,6 +145,9 @@
 [submodule "camera/dhyana"]
 	path = camera/dhyana
 	url = ../Lima-camera-dhyana
+[submodule "camera/iris"]
+	path = camera/iris
+	url = ../Lima-camera-iris
 [submodule "camera/template"]
-	path = camera/template
-	url = ../Lima-camera-template
+        path = camera/template
+        url = ../Lima-camera-template
