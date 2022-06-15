@@ -26,12 +26,13 @@
 #include <time_compat.h>
 #endif
 
+#include <cstdint>
+
 #include <iostream>
 #include <memory>
 #include <numeric>
 #include <functional>
 #include <sstream>
-
 
 #include "CtSaving_Tiff.h"
 
@@ -99,27 +100,27 @@ long SaveContainerTiff::_writeFile(void* f,Data &aData,
     switch(aData.type)
       {
       case Data::UINT8:
-	bytespersample = sizeof(uint8);
+	bytespersample = sizeof(std::uint8_t);
 	sampleformat = SAMPLEFORMAT_UINT;
 	break;
       case Data::INT8: 
-	bytespersample = sizeof(int8);
+	bytespersample = sizeof(std::int8_t);
 	sampleformat = SAMPLEFORMAT_INT;
 	break;
       case Data::UINT16:
-	bytespersample = sizeof(uint16);
+	bytespersample = sizeof(std::uint16_t);
 	sampleformat = SAMPLEFORMAT_UINT;
 	break;
       case Data::INT16:	
-	bytespersample = sizeof(int16);
+	bytespersample = sizeof(std::int16_t);
 	sampleformat = SAMPLEFORMAT_INT;
 	break;
       case Data::UINT32:
-	bytespersample = sizeof(uint32);
+	bytespersample = sizeof(std::uint32_t);
 	sampleformat = SAMPLEFORMAT_UINT;
 	break;
       case Data::INT32:	
-	bytespersample = sizeof(int32);
+	bytespersample = sizeof(std::int32_t);
 	sampleformat = SAMPLEFORMAT_INT;
 	break;
       case Data::UINT64:
@@ -166,19 +167,3 @@ long SaveContainerTiff::_writeFile(void* f,Data &aData,
     TIFFClose(image);
     return w_size;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

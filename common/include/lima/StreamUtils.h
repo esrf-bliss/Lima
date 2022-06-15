@@ -30,9 +30,22 @@
 #include <vector>
 
 #include "lima/LimaCompatibility.h"
-#if defined(_WIN32) && _MSC_VER >= 1900
-template class LIMACORE_API std::allocator<char>;
-#endif
+
+// lima/StreamUtils.h(37): warning C4251: '
+//   std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char>>::_Al':
+//      class 'std::allocator<char>' needs to have dll-interface to be used by
+//      clients of class 'std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char>>'
+//
+// From https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-1-c4251
+//
+// C4251 can be ignored if your class is derived from a type in the C++ Standard Library
+//
+// Exporting the std::allocator<char> results in duplicate symbols and linking error downstream
+// error LNK2005: "public: __cdecl std::allocator<char>::allocator<char>(void)" (??0?$allocator@D@std@@QEAA@XZ) already defined
+
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+
 class LIMACORE_API NullStreamBuf : public std::stringbuf
 {
  protected:
@@ -106,5 +119,7 @@ class LIMACORE_API OCopyStream : public std::ostream
  private:
 	CopyStreamBuf sb;
 };
+
+#pragma warning( pop )
 
 #endif // STREAMUTILS_H

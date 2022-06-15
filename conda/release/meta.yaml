@@ -30,7 +30,6 @@ requirements:
     - openssl 1.1.1* # [linux]
     - libnuma        # [linux]
   build:
-    - git
     - cmake
     - ninja
     - {{ compiler('cxx') }}
