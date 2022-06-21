@@ -23,6 +23,7 @@
 #define CTSAVING_HDF5_H
 
 #include "H5Cpp.h"
+#include "H5FaccProp.h"
 #include "hdf5_hl.h"
 #include "lima/CtSaving.h"
 #include "lima/CtAcquisition.h"

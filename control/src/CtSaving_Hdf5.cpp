@@ -266,10 +266,17 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 
 		bool is_hdf5 = false;
 		bool file_exists = true;
+		
+		// prepare access property list to set stdio driver
+		FileAccPropList acc_prop_list;
+		acc_prop_list.setStdio();
 
 		if (openFlags & std::ios_base::trunc) {
 			// overwrite existing file
-			file->m_file = H5File(filename, H5F_ACC_TRUNC);
+		  file->m_file = H5File(filename,
+					H5F_ACC_TRUNC,
+					FileCreatPropList::DEFAULT,
+					acc_prop_list);
 			file->m_entry_index = 0;
 		} else if (openFlags & std::ios_base::app) {
 			// Append if the file exists and it is a HDF5 file
@@ -280,7 +287,9 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 				file_exists = false;
 			}
 			if (file_exists && is_hdf5){
-				file->m_file.openFile(filename, H5F_ACC_RDWR);
+			  file->m_file.openFile(filename,
+						H5F_ACC_RDWR,
+						acc_prop_list);
 				file->m_in_append = true;
 				file->m_entry_index = findLastEntry(*file);
 				if (m_is_multiset) {
@@ -290,7 +299,10 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 				}
 			}  else if (!file_exists){
 				DEB_TRACE() << "append mode but file does not exist, " << filename;
-				file->m_file = H5File(filename, H5F_ACC_EXCL);
+				file->m_file = H5File(filename,
+						      H5F_ACC_EXCL,
+						      FileCreatPropList::DEFAULT,
+						      acc_prop_list);
 				file->m_entry_index = 0;
 			} else {
 				THROW_CTL_ERROR(Error) << "File " << filename
@@ -298,7 +310,10 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 			}
 		} else {
 			// fail if file already exists
-			file->m_file = H5File(filename, H5F_ACC_EXCL);
+		        file->m_file = H5File(filename,
+					      H5F_ACC_EXCL,
+					      FileCreatPropList::DEFAULT,
+					      acc_prop_list);
 			file->m_entry_index = 0;
 		}
 
