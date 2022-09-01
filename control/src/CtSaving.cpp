@@ -2139,14 +2139,16 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	Timestamp start_write = Timestamp::now();
 
-	long frameId = aData.frameNumber;
+	const long frameId = aData.frameNumber;
 
-	AutoMutex lock(m_lock);
-	Frame2Params::iterator fpars = m_frame_params.find(frameId);
-	if (fpars == m_frame_params.end())
-		THROW_CTL_ERROR(Error) << "Can't find saving parameters for frame"
-				       << DEB_VAR1(frameId);
-	lock.unlock();
+	Frame2Params::iterator fpars;
+	{
+		AutoMutex lock(m_lock);
+		fpars = m_frame_params.find(frameId);
+		if (fpars == m_frame_params.end())
+			THROW_CTL_ERROR(Error) << "Can't find saving parameters for frame"
+				<< DEB_VAR1(frameId);
+	}
 
 	FrameParameters& frame_par = fpars->second;
 	const CtSaving::Parameters& pars = frame_par.m_pars;
@@ -2190,9 +2192,8 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 				THROW_CTL_ERROR(Error) << "Disk full!!!";
 			}
 		};
+#endif //__linux__
 
-
-#endif
 		m_stream.setSavingError(CtControl::SaveUnknownError);
 		try {
 			close(&pars);
@@ -2212,9 +2213,13 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		THROW_CTL_ERROR(Error) << "Save unknown error";
 	}
 
-	lock.lock();
-	bool acq_end = (++m_written_frames == m_frames_to_write);
-	lock.unlock();
+	bool acq_end = false;
+	{
+		AutoMutex lock(m_lock);
+		++m_written_frames;
+		acq_end = (m_written_frames == m_frames_to_write);
+		DEB_TRACE() << DEB_VAR3(acq_end, m_written_frames, m_frames_to_write);
+	}
 
 	// close before marking that we have finished the frame
 	if (pars.overwritePolicy != MultiSet || acq_end) // Close at the end
@@ -2233,11 +2238,14 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	Timestamp diff = end_write - start_write;
 	DEB_TRACE() << "Write took : " << diff << "s";
 
-	lock.lock();
-	m_frame_params.erase(fpars);
-	--m_running_writing_task;
+	{
+		AutoMutex lock(m_lock);
+		m_frame_params.erase(fpars);
 
-	writeFileStat(aData, start_write, end_write, write_size);
+		--m_running_writing_task;
+
+		writeFileStat(aData, start_write, end_write, write_size);
+	}
 }
 
 void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timestamp end, long wsize)
