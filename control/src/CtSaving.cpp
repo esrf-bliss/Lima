@@ -2569,6 +2569,12 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 	if (frame_nr < 0)
 	{
 		ready = m_frame_params.empty();
+		// frame_params are added on the go when doing continuous acquisition
+		// so we also need to check m_written_frames
+		// Note that m_frames_to_write == 0 until we call stopAcq that will update
+		// the number of frames to write
+		if (m_frames_to_write)
+			ready &= (m_written_frames == m_frames_to_write);
 	}
 	else
 	{
