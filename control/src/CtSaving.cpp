@@ -2248,7 +2248,8 @@ void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timest
 	long frameId = aData.frameNumber;
 
 	if (long(m_statistic.size()) >= m_statistic_size)
-		m_statistic.erase(m_statistic.begin());
+		if (!m_statistic.empty())
+			m_statistic.erase(m_statistic.begin());
 
 	StatisticsType::iterator i = m_statistic.find(frameId);
 	if (i != m_statistic.end())
