@@ -1532,6 +1532,7 @@ void CtSaving::addToInternalCommonHeader(const HeaderValue& value)
 bool CtSaving::_controlIsFault()
 {
 	DEB_MEMBER_FUNCT();
+	
 	CtControl::Status status;
 	m_ctrl.getStatus(status);
 	bool fault = (status.AcquisitionStatus == AcqFault);
@@ -1541,12 +1542,17 @@ bool CtSaving::_controlIsFault()
 
 bool CtSaving::_newFrameWrite(int frame_id)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(frame_id);
+	
 	if (m_end_cbk)
 	{
 		Data aData;
 		aData.frameNumber = frame_id;
 		m_end_cbk->finished(aData);
-	}
+	} else
+		DEB_WARNING() << "No end callback registered";
+
 	return !!m_end_cbk;
 }
 
@@ -1558,7 +1564,8 @@ void CtSaving::frameReady(Data& aData)
 	if (_controlIsFault()) {
 		DEB_WARNING() << "Skip saving data: " << aData;
 		return;
-	}
+	} else
+		DEB_WARNING() << "No end callback registered";
 
 	AutoMutex aLock(m_cond.mutex());
 
@@ -2132,14 +2139,16 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	Timestamp start_write = Timestamp::now();
 
-	long frameId = aData.frameNumber;
+	const long frameId = aData.frameNumber;
 
-	AutoMutex lock(m_lock);
-	Frame2Params::iterator fpars = m_frame_params.find(frameId);
-	if (fpars == m_frame_params.end())
-		THROW_CTL_ERROR(Error) << "Can't find saving parameters for frame"
-				       << DEB_VAR1(frameId);
-	lock.unlock();
+	Frame2Params::iterator fpars;
+	{
+		AutoMutex lock(m_lock);
+		fpars = m_frame_params.find(frameId);
+		if (fpars == m_frame_params.end())
+			THROW_CTL_ERROR(Error) << "Can't find saving parameters for frame"
+				<< DEB_VAR1(frameId);
+	}
 
 	FrameParameters& frame_par = fpars->second;
 	const CtSaving::Parameters& pars = frame_par.m_pars;
@@ -2183,9 +2192,8 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 				THROW_CTL_ERROR(Error) << "Disk full!!!";
 			}
 		};
+#endif //__linux__
 
-
-#endif
 		m_stream.setSavingError(CtControl::SaveUnknownError);
 		try {
 			close(&pars);
@@ -2205,9 +2213,13 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		THROW_CTL_ERROR(Error) << "Save unknown error";
 	}
 
-	lock.lock();
-	bool acq_end = (++m_written_frames == m_frames_to_write);
-	lock.unlock();
+	bool acq_end = false;
+	{
+		AutoMutex lock(m_lock);
+		++m_written_frames;
+		acq_end = (m_written_frames == m_frames_to_write);
+		DEB_TRACE() << DEB_VAR3(acq_end, m_written_frames, m_frames_to_write);
+	}
 
 	// close before marking that we have finished the frame
 	if (pars.overwritePolicy != MultiSet || acq_end) // Close at the end
@@ -2226,19 +2238,26 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	Timestamp diff = end_write - start_write;
 	DEB_TRACE() << "Write took : " << diff << "s";
 
-	lock.lock();
-	m_frame_params.erase(fpars);
-	--m_running_writing_task;
+	{
+		AutoMutex lock(m_lock);
+		m_frame_params.erase(fpars);
 
-	writeFileStat(aData, start_write, end_write, write_size);
+		--m_running_writing_task;
+
+		writeFileStat(aData, start_write, end_write, write_size);
+	}
 }
 
 void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timestamp end, long wsize)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR4(aData, start, end, wsize);
+
 	long frameId = aData.frameNumber;
 
 	if (long(m_statistic.size()) >= m_statistic_size)
-		m_statistic.erase(m_statistic.begin());
+		if (!m_statistic.empty())
+			m_statistic.erase(m_statistic.begin());
 
 	StatisticsType::iterator i = m_statistic.find(frameId);
 	if (i != m_statistic.end())
@@ -2265,11 +2284,15 @@ void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timest
 				comp_time * 1000.0, comp_rate, comp_ratio, \
 				write_time * 1000.0, write_rate, total_time * 1000.0);
 		}
-	}
+	} else
+		DEB_WARNING() << "Statistic not found for " << DEB_VAR1(frameId);
 }
 
 void CtSaving::SaveContainer::setEnableLogStat(bool enable)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(enable);
+	
 	// TODO: check that no current saving is active
 	AutoMutex aLock = AutoMutex(m_lock);
 	if (m_log_stat_enable && !enable && m_log_stat_file != NULL) {
@@ -2287,10 +2310,10 @@ void CtSaving::SaveContainer::getEnableLogStat(bool& enable) const
 void CtSaving::SaveContainer::prepareLogStat(const CtSaving::Parameters& pars)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_TRACE() << DEB_VAR1(m_log_stat_enable);
 
 	int stream_idx = m_stream.getIndex();
 
+	DEB_TRACE() << DEB_VAR1(m_log_stat_enable);
 	if (m_log_stat_enable) {
 		if (m_log_stat_directory.empty()) {
 			m_log_stat_directory = pars.directory;
@@ -2343,6 +2366,9 @@ void CtSaving::SaveContainer::prepareLogStat(const CtSaving::Parameters& pars)
 
 void CtSaving::SaveContainer::setStatisticSize(int aSize)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(aSize);
+	
 	AutoMutex aLock = AutoMutex(m_lock);
 	if (long(m_statistic.size()) > aSize)
 	{
@@ -2356,6 +2382,8 @@ void CtSaving::SaveContainer::setStatisticSize(int aSize)
 
 int CtSaving::SaveContainer::getStatisticSize() const
 {
+	DEB_MEMBER_FUNCT();
+	
 	AutoMutex aLock(m_lock);
 	return m_statistic_size;
 }
@@ -2366,14 +2394,12 @@ inline bool _sort_stat_timing(const std::pair<Timestamp, CtSaving::SaveContainer
 	return s1.first < s2.first;
 }
 
-
-
 void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 	std::list<double>& compression_speed,
 	std::list<double>& compression_ratio,
 	std::list<double>& incoming_speed) const
 {
-
+	DEB_MEMBER_FUNCT();
 
 	StatisticsType copy;
 	{
@@ -2463,6 +2489,8 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 
 void CtSaving::SaveContainer::getParameters(CtSaving::Parameters& pars) const
 {
+	DEB_MEMBER_FUNCT();
+	
 	pars = m_stream.getParameters(Acq);
 }
 
@@ -2480,6 +2508,7 @@ void CtSaving::SaveContainer::clear()
 void CtSaving::SaveContainer::prepare(CtControl& ct)
 {
 	DEB_MEMBER_FUNCT();
+
 	int nb_frames;
 	ct.acquisition()->getAcqNbFrames(nb_frames);
 	CtSaving::Parameters pars = m_stream.getParameters(Auto);
@@ -2527,7 +2556,7 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_TRACE() << DEB_VAR1(nb_acquired_frames);
+	DEB_PARAM() << DEB_VAR1(nb_acquired_frames);
 	
 	AutoMutex lock(m_lock);
 	m_frames_to_write = nb_acquired_frames;
@@ -2548,6 +2577,12 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 	if (frame_nr < 0)
 	{
 		ready = m_frame_params.empty();
+		// frame_params are added on the go when doing continuous acquisition
+		// so we also need to check m_written_frames
+		// Note that m_frames_to_write == 0 until we call stopAcq that will update
+		// the number of frames to write
+		if (m_frames_to_write)
+			ready &= (m_written_frames == m_frames_to_write);
 	}
 	else
 	{
@@ -2592,6 +2627,7 @@ void CtSaving::SaveContainer::setReady(long frame_nr)
 void CtSaving::SaveContainer::prepareWrittingFrame(long frame_nr)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(frame_nr);
 
 	AutoMutex lock(m_lock);
 	Frame2Params::iterator i = m_frame_params.find(frame_nr);
@@ -2609,6 +2645,9 @@ void CtSaving::SaveContainer::prepareWrittingFrame(long frame_nr)
 
 void CtSaving::SaveContainer::createStatistic(Data& data)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data);
+	
 	AutoMutex lock(m_lock);
 	//Insert statistic
 	StatisticsType::value_type stat_pair(data.frameNumber, Stat());
@@ -2618,6 +2657,9 @@ void CtSaving::SaveContainer::createStatistic(Data& data)
 
 void CtSaving::SaveContainer::compressionStart(Data& data)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data);
+	
 	Timestamp start = Timestamp::now();
 	AutoMutex lock(m_lock);
 	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
@@ -2627,6 +2669,9 @@ void CtSaving::SaveContainer::compressionStart(Data& data)
 
 void CtSaving::SaveContainer::compressionFinished(Data& data)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data);
+	
 	Timestamp end = Timestamp::now();
 	AutoMutex lock(m_lock);
 	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
@@ -2744,6 +2789,8 @@ CtSaving::SaveContainer::open(FrameParameters& fpars)
 
 inline void CtSaving::SaveContainer::close(const Params2Handler::iterator& it, AutoMutex& l)
 {
+	DEB_MEMBER_FUNCT();
+	
 	void* raw_handler = it->second.m_handler;
 	if (raw_handler == NULL)
 		return;
@@ -2768,6 +2815,7 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 	bool force_close)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(force_close);
 
 	AutoMutex aLock(m_lock);
 	if (!params)			// close all

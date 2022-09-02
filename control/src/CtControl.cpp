@@ -794,7 +794,7 @@ void CtControl::_calcAcqStatus()
   bool img_op_end = (img_cntrs.LastImageReady == last_frame);
   bool cnt_op_end = (!m_op_ext_sink_task_active ||
 		     (img_cntrs.LastCounterReady == last_frame));
-  bool save_end = (!m_autosave || (img_cntrs.LastImageSaved) == last_frame);
+  bool save_end = (!m_autosave || (img_cntrs.LastImageSaved == last_frame));
   bool acq_end = (hw_acq_end && img_op_end && cnt_op_end && save_end);
 
   DEB_TRACE() << DEB_VAR5(hw_acq_end, img_op_end, cnt_op_end, save_end, acq_end);
