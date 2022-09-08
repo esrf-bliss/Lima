@@ -1087,6 +1087,7 @@ void CtSaving::_waitWritingThreads()
 	{
 		m_cond.wait();
 		m_ctrl.getStatus(status);
+		DEB_TRACE() << DEB_VAR1(status);
 	}
 
 	if (status.AcquisitionStatus == AcqFault)
@@ -2581,8 +2582,9 @@ bool CtSaving::SaveContainer::isReady(long frame_nr) const
 		// so we also need to check m_written_frames
 		// Note that m_frames_to_write == 0 until we call stopAcq that will update
 		// the number of frames to write
-		if (m_frames_to_write)
-			ready &= (m_written_frames == m_frames_to_write);
+		DEB_TRACE() << DEB_VAR2(m_frames_to_write, m_written_frames);
+		//if (m_frames_to_write)
+		//	ready &= (m_written_frames == m_frames_to_write);
 	}
 	else
 	{
