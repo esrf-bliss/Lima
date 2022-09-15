@@ -25,7 +25,11 @@
 #endif
 
 #include <libconfig.h++>
+#ifdef __unix
 #include <unistd.h>
+#else
+#include <processlib/win/unistd.h>
+#endif
 
 #include "lima/CtAccumulation.h"
 #include "lima/CtAcquisition.h"

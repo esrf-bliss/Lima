@@ -27,7 +27,11 @@
 #include <cmath>
 #include <errno.h>
 #include <stdlib.h>
+#ifdef __unix
 #include <unistd.h>
+#else
+#include <processlib/win/unistd.h>
+#endif
 #include <string.h>
 
 using namespace std;

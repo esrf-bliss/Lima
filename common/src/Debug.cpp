@@ -26,11 +26,12 @@
 #include <ctime>
 #include <iomanip>
 #include <cstring>
-#include <unistd.h>
 #ifdef __unix
+#include <unistd.h>
 #include <sys/time.h>
 #else
-#include <time_compat.h>
+#include <processlib/win/unistd.h>
+#include <processlib/win/time_compat.h>
 #endif
 #include <pthread.h>
 

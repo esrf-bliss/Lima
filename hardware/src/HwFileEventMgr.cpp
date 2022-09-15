@@ -23,7 +23,11 @@
 #include <stdlib.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
+#ifdef __unix
 #include <unistd.h>
+#else
+#include <processlib/win/unistd.h>
+#endif
 #include "lima/HwFileEventMgr.h"
 using namespace lima;
 
