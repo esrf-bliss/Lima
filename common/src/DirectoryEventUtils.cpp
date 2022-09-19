@@ -31,12 +31,7 @@
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
-#ifdef __unix
 #include <unistd.h>
-#else
-#include <processlib/win/unistd.h>
-#else
-#endif
 #include <stdlib.h>
 
 #include "lima/DirectoryEventUtils.h"
