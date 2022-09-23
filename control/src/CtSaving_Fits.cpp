@@ -23,7 +23,7 @@
 #ifdef __unix
 #include <sys/time.h>
 #else
-#include <time_compat.h>
+#include <processlib/win/time_compat.h>
 #endif
 
 #include <iostream>

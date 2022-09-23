@@ -26,11 +26,12 @@
 #include <ctime>
 #include <iomanip>
 #include <cstring>
-#include <unistd.h>
 #ifdef __unix
+#include <unistd.h>
 #include <sys/time.h>
 #else
-#include <time_compat.h>
+#include <processlib/win/unistd.h>
+#include <processlib/win/time_compat.h>
 #endif
 #include <pthread.h>
 
@@ -439,7 +440,12 @@ void DebObj::heading(DebType type, ConstStr funct_name, ConstStr file_name,
 	}
 
 	if (DebHasFlag(flags, DebFmtThread)) {
-		pthread_t thread_id = pthread_self();
+		pthread_t tid = pthread_self();
+#ifdef __unix
+		long long thread_id = (long long)tid;
+#else
+		long long thread_id = (long long)tid.p;
+#endif
 		os << sep << setw(8) << hex << thread_id << setw(w) << dec;
 		sep = " ";
 	}

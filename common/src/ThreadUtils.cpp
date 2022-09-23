@@ -24,11 +24,12 @@
 #include <errno.h>
 #include <iomanip>
 #ifdef __unix
+#include <unistd.h>
 #include <sys/time.h>
 #else
-#include <time_compat.h>
+#include <processlib/win/unistd.h>
+#include <processlib/win/time_compat.h>
 #endif
-#include <unistd.h>
 
 #if !defined(_WIN32)
 #include <sys/syscall.h>
@@ -252,7 +253,7 @@ Thread::ExceptionCleanUp::~ExceptionCleanUp()
 }
 
 Thread::Thread()
-	: m_thread(0), m_started(false), m_finished(false),
+	: m_started(false), m_finished(false),
 	  m_exception_handled(false), m_tid(0)
 {
 	pthread_attr_init(&m_thread_attr);
@@ -314,7 +315,12 @@ void *Thread::staticThreadFunction(void *data)
 	} catch (...) {
 		if (!thread->m_exception_handled) {
 			ostream& os = cerr;
+#ifdef __unix			
 			long long thread_id = (long long) pthread_self();
+#else
+			pthread_t tid =  pthread_self();
+			long long thread_id = (long long)tid.p;
+#endif
 			std::streamsize w = os.width();
 			os << "***** Thread " 
 			   << setw(8) << hex << thread_id << setw(w) << dec

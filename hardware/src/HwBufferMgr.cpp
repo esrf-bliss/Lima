@@ -26,7 +26,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef __unix
 #include <unistd.h>
+#else
+#include <processlib/win/unistd.h>
+#endif
 #include <sys/mman.h>
 #endif
 

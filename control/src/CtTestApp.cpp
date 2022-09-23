@@ -22,8 +22,10 @@
 
 #include "lima/CtTestApp.h"
 
+#ifdef __unix
 #include <unistd.h>
-#if defined(_WIN32)
+#else
+#include <processlib/win/unistd.h>
 #include <windows.h> // For Sleep()
 #include <process.h> // For _getpid()
 #endif

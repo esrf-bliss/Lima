@@ -28,7 +28,8 @@
 #include <fcntl.h>
 static const long int WRITE_BUFFER_SIZE = 64*1024;
 #else
-#include <time_compat.h>
+#include <processlib/win/unistd.h>
+#include <processlib/win/time_compat.h>
 #endif
 
 
