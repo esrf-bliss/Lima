@@ -23,13 +23,14 @@
 #include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <numeric>
 
 #ifdef __linux__
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/statvfs.h>
 #else
+#include <processlib/win/unistd.h>
 #include <direct.h>
 #endif
 

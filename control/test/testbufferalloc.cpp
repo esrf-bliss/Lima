@@ -6,7 +6,11 @@
 #include <cmath>
 
 #include <memory.h>
+#ifdef __unix
 #include <unistd.h>
+#else
+#include <processlib/win/unistd.h>
+#endif
 #include <stdlib.h>
 #include <sys/sysinfo.h>
 #ifdef __SSE2__

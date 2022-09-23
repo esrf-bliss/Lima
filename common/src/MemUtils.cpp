@@ -37,7 +37,11 @@
 #include <windows.h>
 #endif
 #include <limits.h>
+#ifdef __unix
 #include <unistd.h>
+#else
+#include <processlib/win/unistd.h>
+#endif
 
 using namespace lima;
 using namespace std;
