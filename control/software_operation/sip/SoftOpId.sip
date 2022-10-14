@@ -884,7 +884,10 @@ using namespace lima;
   void setMask(Data &aMask); 
   void readPeaks(std::list<Tasks::PeakFinderResult> &result /Out/) const;
   void setComputingMode( SoftOpPeakFinder::ComputingMode );
-  void getComputingMode( SoftOpPeakFinder::ComputingMode& /Out/) const;	   	   
+  void getComputingMode( SoftOpPeakFinder::ComputingMode& /Out/) const;
+
+ private:
+  SoftOpPeakFinder(const SoftOpPeakFinder&);
 };
 
 class SoftOpBinning
@@ -1003,6 +1006,9 @@ using namespace lima;
 
   void getOverflowThreshold(unsigned long long& threshold /Out/);
   void setOverflowThreshold(unsigned long long threshold);
+
+ private:
+  SoftOpRoiCounter(const SoftOpRoiCounter&);
 };
 
 class SoftOpRoi2Spectrum
@@ -1043,6 +1049,9 @@ public:
     
   // probably needed in future
   //void setMask(Data &aMask);
+
+ private:
+  SoftOpRoi2Spectrum(const SoftOpRoi2Spectrum&);
 };
 
 class SoftOpSoftRoi

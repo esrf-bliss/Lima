@@ -60,11 +60,6 @@ MutexAttr::MutexAttr(Type type)
 	}
 }
 
-MutexAttr::MutexAttr(const MutexAttr& mutex_attr)
-	: m_mutex_attr(mutex_attr.m_mutex_attr)
-{
-}
-
 MutexAttr::~MutexAttr()
 {
 	destroy();
@@ -109,29 +104,19 @@ MutexAttr::Type MutexAttr::getType() const
 	}
 }
 
-MutexAttr& MutexAttr::operator =(Type type)
-{
-	setType(type);
-	return *this;
-}
-
-MutexAttr& MutexAttr::operator =(const MutexAttr& mutex_attr)
-{
-	m_mutex_attr = mutex_attr.m_mutex_attr;
-	return *this;
-}
-
 void MutexAttr::destroy()
 {
 	pthread_mutexattr_destroy(&m_mutex_attr);
 }
 
 
-Mutex::Mutex(MutexAttr mutex_attr)
-	: m_mutex_attr(mutex_attr)
+Mutex::Mutex(MutexAttr::Type type)
 {
-	pthread_mutexattr_t& attr = m_mutex_attr.m_mutex_attr;
-	int ret = pthread_mutex_init(&m_mutex, &attr);
+	MutexAttr attr(type);
+	// After a mutex attributes object has been used to initialize one or more mutexes,
+	// any function affecting the attributes object (including destruction)
+	// shall not affect any previously initialized mutexes.
+	int ret = pthread_mutex_init(&m_mutex, &attr.m_mutex_attr);
 	check_error(ret, "Error initializing mutex");
 }
 
@@ -165,10 +150,10 @@ bool Mutex::tryLock()
 	}
 }
 
-MutexAttr Mutex::getAttr()
-{
-	return m_mutex_attr;
-}
+//MutexAttr Mutex::getAttr()
+//{
+//	return m_mutex_attr;
+//}
 
 
 Cond::Cond() : m_mutex(MutexAttr::Normal)

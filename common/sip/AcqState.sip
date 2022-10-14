@@ -40,5 +40,8 @@ public:
 	State get();
 	void wait(State state);
 	void waitNot(State state);
+
+private:
+    AcqState(const AcqState&);
 };
 

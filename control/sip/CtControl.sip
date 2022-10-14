@@ -179,4 +179,7 @@ using namespace lima;
     void newImageReady(Data &data);
     void newCounterReady(Data &data);
     void newImageSaved(Data &data);
+
+  private:
+    CtControl(const CtControl&);
 };

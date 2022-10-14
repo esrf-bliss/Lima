@@ -47,14 +47,14 @@ class LIMACORE_API MutexAttr
 	};
 
 	MutexAttr(Type type = Recursive);
-	MutexAttr(const MutexAttr& mutex_attr);
 	~MutexAttr();
 
 	void setType(Type type);
 	Type getType() const;
 
-	MutexAttr& operator =(Type type);
-	MutexAttr& operator =(const MutexAttr& mutex_attr);
+	// Non-copiable
+	MutexAttr(const MutexAttr& rhs) = delete;
+	MutexAttr& operator =(const MutexAttr& rhs) = delete;
 
  private:
 	void destroy();
@@ -67,19 +67,20 @@ class LIMACORE_API MutexAttr
 class LIMACORE_API Mutex
 {
  public:
-	Mutex(MutexAttr mutex_attr = MutexAttr::Recursive);
+	Mutex(MutexAttr::Type type = MutexAttr::Recursive);
 	~Mutex();
 
 	void lock();
 	void unlock();
 	bool tryLock();
 
-	MutexAttr getAttr();
+	// Non-copiable
+	Mutex(const Mutex& rhs) = delete;
+	Mutex& operator =(const Mutex& rhs) = delete;
 
  private:
 	friend class Cond;
 
-	MutexAttr m_mutex_attr;
 	pthread_mutex_t m_mutex;
 };
 
@@ -100,6 +101,11 @@ class LIMACORE_API Cond
 	bool wait(double timeout = -1.);
 	void signal();
 	void broadcast();
+
+	// Non-copiable
+	Cond(const Cond& rhs) = delete;
+	Cond& operator =(const Cond& rhs) = delete;
+
  private:
 	pthread_cond_t m_cond;
 	Mutex	       m_mutex;
@@ -197,6 +203,10 @@ class LIMACORE_API Thread
 	bool hasFinished();
 
 	pid_t getThreadID();
+
+	// Non-copiable
+	Thread(const Thread& rhs) = delete;
+	Thread& operator =(const Thread& rhs) = delete;
 
  protected:
 	class LIMACORE_API ExceptionCleanUp

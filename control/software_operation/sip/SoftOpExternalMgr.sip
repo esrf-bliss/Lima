@@ -134,4 +134,7 @@ CATCH
     return NULL;					\
     }
 %End
+
+  private:
+    SoftOpExternalMgr(const SoftOpExternalMgr&);
 };
