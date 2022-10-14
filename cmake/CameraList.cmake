@@ -296,6 +296,13 @@ if(WIN32)
 	else()
 		set(LIMACAMERA_PHOTONICSCIENCE OFF CACHE BOOL "compile photonicscience ?")
 	endif()
+
+	#IRIS
+	if(DEFINED ENV{LIMACAMERA_IRIS})
+		set(LIMACAMERA_IRIS "$ENV{LIMACAMERA_IRIS}" CACHE BOOL "compile teledyne photometrics iris ?" FORCE)
+	else()
+		set(LIMACAMERA_IRIS OFF CACHE BOOL "compile teledyne photometrics iris ?")
+	endif()
 endif()
 
 
@@ -508,4 +515,9 @@ if(WIN32)
 	if(LIMACAMERA_PHOTONICSCIENCE)
 		add_subdirectory(camera/photonicscience)
 	endif(LIMACAMERA_PHOTONICSCIENCE)
+
+	#IRIS
+	if(LIMACAMERA_IRIS)
+		add_subdirectory(camera/iris)
+	endif(LIMACAMERA_IRIS)
 endif()
