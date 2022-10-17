@@ -31,11 +31,13 @@ using namespace lima;
 	};
 
 	MutexAttr(Type type = Recursive);
-	MutexAttr(const MutexAttr& mutex_attr);
 	~MutexAttr();
 
 	void setType(Type type);
 	Type getType() const;
+ 
+ private:
+    MutexAttr(const MutexAttr&);
 };
 
 
@@ -46,14 +48,12 @@ class Mutex
 using namespace lima;
 %End
  public:
-	Mutex(MutexAttr mutex_attr = MutexAttr::Recursive);
+	Mutex(MutexAttr::Type type = MutexAttr::Recursive);
 	~Mutex();
 
 	void lock();
 	void unlock();
 	bool tryLock();
-
-	MutexAttr getAttr();
 
 	void __enter__();
 %MethodCode
@@ -64,6 +64,9 @@ using namespace lima;
 %MethodCode
 		sipCpp->unlock();
 %End
+
+ private:
+    Mutex(const Mutex&);
 };
 
 
@@ -94,6 +97,9 @@ using namespace lima;
 %MethodCode
 		sipCpp->release();
 %End
+
+ private:
+    Cond(const Cond&);
 };
 
 

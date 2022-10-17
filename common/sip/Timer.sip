@@ -47,5 +47,8 @@ public:
 		  int nb_iter = 1,double latency = 0.);
   void start(double uptime,int nb_iter = 1,double latency = 0.);
   void stop();
+  
+private:
+  Timer(const Timer&);
 };
 %End
