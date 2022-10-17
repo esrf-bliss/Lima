@@ -70,6 +70,7 @@ Windows Only
   Pco <camera/pco/doc/index>
   PerkinElmer <camera/perkinelmer/doc/index>
   PhotonicScience <camera/photonicscience/doc/index>
+  Princeton <camera/princeton/doc/index>
 
 Linux Only
 ==========

@@ -68,6 +68,13 @@ else()
    set(LIMACAMERA_ROPERSCIENTIFIC OFF CACHE BOOL "compile roperscientific?")
 endif()
 
+#PRINCETON
+if(DEFINED ENV{LIMACAMERA_PRINCETON})
+   set(LIMACAMERA_PRINCETON "$ENV{LIMACAMERA_PRINCETON}" CACHE BOOL "compile photometrics ?" FORCE)
+else()
+   set(LIMACAMERA_PRINCETON OFF CACHE BOOL "compile photometrics?")
+endif()
+
 #CAMERA ONLY WORKING ON LINUX
 if(UNIX)
 	#ANDOR3
@@ -345,6 +352,11 @@ endif(LIMACAMERA_SIMULATOR)
 if(LIMACAMERA_ROPERSCIENTIFIC)
     add_subdirectory(camera/roperscientific)
 endif(LIMACAMERA_ROPERSCIENTIFIC)
+
+#PRINCETON
+if(LIMACAMERA_PRINCETON)
+    add_subdirectory(camera/princeton)
+endif(LIMACAMERA_PRINCETON)
 
 #META
 if(LIMACAMERA_META)

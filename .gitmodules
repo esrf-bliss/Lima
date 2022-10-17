@@ -151,3 +151,6 @@
 [submodule "camera/template"]
         path = camera/template
         url = ../Lima-camera-template
+[submodule "princeton"]
+	path = camera/princeton
+	url = ../Lima-camera-princeton
