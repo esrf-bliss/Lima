@@ -613,8 +613,8 @@ void CtControl::startAcq()
       //First check the detector is in Idle Stat
       HwInterface::Status hwStatus;
       m_hw->getStatus(hwStatus);
-      if(hwStatus.det != DetIdle)
-	THROW_CTL_ERROR(Error) << "Try to restart before detector is ready";
+      if (hwStatus.det != DetIdle)
+        THROW_CTL_ERROR(Error) << "Try to restart before detector is ready. HW status is " << hwStatus;
 
       //m_ready = false after the last image is triggerred
       int nbFrames4Acq;
