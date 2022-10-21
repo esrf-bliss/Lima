@@ -161,7 +161,7 @@ void test_custom_allocator()
 }
 
 
-int main(int /*argc*/, char */*argv*/[])
+int main(int /*argc*/, char * /*argv*/ [])
 {
 	try {
 		test_empty();
