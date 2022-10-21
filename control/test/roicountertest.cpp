@@ -26,7 +26,7 @@
 using namespace std;
 using namespace lima;
 
-int main(int /*argc*/, char */*argv*/[])
+int main(int /*argc*/, char * /*argv*/ [])
 {
 	cout << "Hello!" << endl;
 

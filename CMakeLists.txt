@@ -265,15 +265,15 @@ target_include_directories(limacore PRIVATE ${extra_includes} ${saving_includes}
 target_compile_definitions(limacore PUBLIC ${extra_definitions} ${saving_definitions})
 
 # add libraries
-target_link_libraries(limacore PUBLIC Threads::Threads)
-target_link_libraries(limacore PUBLIC processlib ${saving_libs} ${extra_libs})
+target_link_libraries(limacore PUBLIC Threads::Threads processlib)
+target_link_libraries(limacore PRIVATE ${saving_libs} ${extra_libs})
 target_link_libraries(limacore PRIVATE ${saving_private_libs})
 
 if(UNIX)
     target_compile_definitions(limacore PUBLIC -DHAS_INOTIFY)
-    target_link_libraries(limacore PUBLIC "rt")
+    target_link_libraries(limacore PRIVATE "rt")
     if(LIMA_ENABLE_NUMA)
-        target_link_libraries(limacore PUBLIC ${NUMA_LIBRARY})
+        target_link_libraries(limacore PRIVATE ${NUMA_LIBRARY})
     endif()
 endif()
 

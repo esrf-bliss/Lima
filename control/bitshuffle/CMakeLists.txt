@@ -73,8 +73,8 @@ target_include_directories(h5bshuf PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(h5bshuf PUBLIC ${HDF5_LIBRARIES})
-target_link_libraries(h5bshuf_static PUBLIC ${HDF5_LIBRARIES})
+target_link_libraries(h5bshuf PRIVATE ${HDF5_LIBRARIES})
+target_link_libraries(h5bshuf_static PRIVATE ${HDF5_LIBRARIES})
 
 install(
   TARGETS h5bshuf

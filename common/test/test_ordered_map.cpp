@@ -74,7 +74,7 @@ private:
 	initializer_list<Key> vals;
 };
 
-int main(int /*argc*/, char */*argv*/[])
+int main(int /*argc*/, char * /*argv*/ [])
 {
 	test_ordered_map<int> tint {"int", {2, 1, 0, 4}};
 	test_ordered_map<string> tstr {"string", {"2", "1", "0", "4"}};
