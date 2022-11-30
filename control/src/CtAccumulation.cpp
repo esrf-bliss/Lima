@@ -195,6 +195,7 @@ private:
 //	     ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
   pixelThresholdValue(2^16),
+  pixelOutputType(Data::TYPE::DOUBLE),
   savingFlag(false),
   savePrefix("saturated_"),
   mode(CtAccumulation::Parameters::STANDARD),
@@ -729,70 +730,116 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
 }
 
 
-template <class SrcType, class DstType>
-void accumulateFrame(void *src_ptr,void *dst_ptr,int nb_items)
+
+struct pixel_accumulate
+{
+  template <class SrcType, class DstType>
+  void operator()(SrcType src, DstType & dst) {
+    dst += src;
+  }
+};
+
+struct pixel_accumulate_threshold
+{
+  pixel_accumulate_threshold(long long threshold) :
+    threshold_(threshold) {}
+
+  template <class SrcType, class DstType>
+  void operator()(SrcType src, DstType & dst) {
+    if (src > threshold_)
+      dst += src;
+  }
+
+  long long threshold_ = 0;
+};
+
+struct pixel_accumulate_offset_threshold
+{
+  pixel_accumulate_offset_threshold(long long offset, long long threshold) :
+    offset_(offset), threshold_(threshold) {}
+
+  template <class SrcType, class DstType>
+  void operator()(SrcType src, DstType& dst) {
+    DstType tmp_d = src - offset_;
+    if (tmp_d > threshold_)
+      dst += tmp_d;
+  }
+
+  long long threshold_ = 0;
+  long long offset_ = 0;
+};
+
+
+template <class SrcType, class DstType, class Func>
+void accumulate(void *src_ptr,void *dst_ptr,int nb_items,Func fn)
 {
   SrcType *sp  = (SrcType *) src_ptr;
   DstType *dp = (DstType *) dst_ptr;
 
   for(int i = nb_items;i;--i,++sp,++dp)
-    *dp += *sp;
+    fn(*sp , *dp);
 }
 
-#ifdef __SSE2__
-template<>
-void accumulateFrame<unsigned short,int>(void *src,
-					 void *dst,int nb_items)
+template <class Func>
+void accumulate(Data& src, Data& dst, Func fn)
 {
-  unsigned short *src_ptr = (unsigned short*)src;
-  int *dst_ptr = (int*)dst;
-
-  for(;nb_items >= 8;nb_items -= 8,dst_ptr += 8,src_ptr += 8)
+  int nb_items = src.dimensions[0] * src.dimensions[1];
+  switch (src.type)
+  {
+  case Data::UINT8:
+    switch (dst.type)
     {
-      __m128i src1,src2;
-      __m128i dst1,dst2;
-      src2 = _mm_load_si128((__m128i*)src_ptr);
-      dst1 = _mm_load_si128((__m128i*)dst_ptr);
-      dst2 = _mm_load_si128((__m128i*)(dst_ptr + 4));
-      src1 = _mm_unpacklo_epi16(src2,_mm_setzero_si128());
-      src2 = _mm_unpackhi_epi16(src2,_mm_setzero_si128());
-      dst1 = _mm_add_epi32(src1,dst1);
-      dst2 = _mm_add_epi32(src2,dst2);
-      _mm_store_si128((__m128i*)dst_ptr,dst1);
-      _mm_store_si128((__m128i*)(dst_ptr + 4),dst2);
+    case Data::INT16: 	accumulate<unsigned char, short>(src.data(), dst.data(), nb_items, fn); break;
+    case Data::INT32: 	accumulate<unsigned char, int>(src.data(), dst.data(), nb_items, fn); break;
+    default:
+      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
     }
-  for(;nb_items;--nb_items,++dst_ptr,++src_ptr)
-    *dst_ptr += *src_ptr;
+    break;
+
+  case Data::INT8:
+    switch (dst.type)
+    {
+    case Data::INT16: 	accumulate<char, short>(src.data(), dst.data(), nb_items, fn); break;
+    case Data::INT32: 	accumulate<char, int>(src.data(), dst.data(), nb_items, fn); break;
+    default:
+      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+    }
+    break;
+
+  case Data::UINT16:
+    switch (dst.type)
+    {
+    case Data::UINT16: 	accumulate<unsigned short, unsigned short>(src.data(), dst.data(), nb_items, fn); break;
+    case Data::UINT32: 	accumulate<unsigned short, unsigned int>(src.data(), dst.data(), nb_items, fn); break;
+    default:
+      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+    }
+    break;
+
+  case Data::INT16:
+    switch (dst.type)
+    {
+    case Data::INT16: 	accumulate<short, short>(src.data(), dst.data(), nb_items, fn); break;
+    case Data::INT32: 	accumulate<short, int>(src.data(), dst.data(), nb_items, fn); break;
+    default:
+      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+    }
+    break;
+
+  case Data::UINT32: 	accumulate<unsigned int, unsigned int>(src.data(), dst.data(), nb_items, fn); break;
+  case Data::INT32: 	accumulate<int, int>(src.data(), dst.data(), nb_items, fn); break;
+  default:
+    throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+  }
 }
-#endif
 
 void CtAccumulation::_accFrame(Data &src,Data &dst)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(src,dst);
 
-  int nb_items = src.dimensions[0] * src.dimensions[1];
-  switch(src.type)
-    {
-    case Data::UINT8: 	accumulateFrame<unsigned char,int>	(src.data(),dst.data(),nb_items);break;
-    case Data::INT8: 	accumulateFrame<char,int>		(src.data(),dst.data(),nb_items);break;
-    case Data::UINT16: 	accumulateFrame<unsigned short,int>	(src.data(),dst.data(),nb_items);break;
-    case Data::INT16: 	accumulateFrame<short,int>		(src.data(),dst.data(),nb_items);break;
-    case Data::UINT32: 	accumulateFrame<unsigned int,int>	(src.data(),dst.data(),nb_items);break;
-    case Data::INT32: 	accumulateFrame<int,int>		(src.data(),dst.data(),nb_items);break;
-    default:
-      THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
-    }
-}
-template <class SrcType, class DstType>
-void accumulateFrameThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long threshold)
-{
-  SrcType *sp  = (SrcType *) src_ptr;
-  DstType *dp = (DstType *) dst_ptr;
-
-  for(int i = nb_items;i;--i,++sp,++dp)
-    if(*sp > threshold)
-      *dp += *sp;
+  pixel_accumulate fn;
+  accumulate(src, dst, fn);
 }
 
 void CtAccumulation::_accFrameWithThreshold(Data &src,Data &dst,long long threshold_value)
@@ -800,33 +847,8 @@ void CtAccumulation::_accFrameWithThreshold(Data &src,Data &dst,long long thresh
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(src,dst);
 
-  int nb_items = src.dimensions[0] * src.dimensions[1];
-  switch(src.type)
-    {
-    case Data::UINT8: 	accumulateFrameThreshold<unsigned char,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
-    case Data::INT8: 	accumulateFrameThreshold<char,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
-    case Data::UINT16: 	accumulateFrameThreshold<unsigned short,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
-    case Data::INT16: 	accumulateFrameThreshold<short,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
-    case Data::UINT32: 	accumulateFrameThreshold<unsigned int,int>	(src.data(),dst.data(),nb_items,threshold_value);break;
-    case Data::INT32: 	accumulateFrameThreshold<int,int>		(src.data(),dst.data(),nb_items,threshold_value);break;
-    default:
-      THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
-    }
-}
-
-template <class SrcType, class DstType>
-void accumulateFrameOffsetThenThreshold(void *src_ptr,void *dst_ptr,int nb_items,long long offset, long long threshold)
-{
-  SrcType *sp  = (SrcType *) src_ptr;
-  DstType *dp = (DstType *) dst_ptr;
-  DstType tmp_d;
-
-  for(int i = nb_items;i;--i,++sp,++dp)
-    {
-      tmp_d = DstType(*sp) - offset;
-      if(tmp_d > threshold)
-	*dp += tmp_d;
-    }
+  pixel_accumulate_threshold fn(threshold_value);
+  accumulate(src, dst, fn);
 }
 
 void CtAccumulation::_accFrameWithOffsetThenThreshold(Data &src,Data &dst,long long offset_value, long long threshold_value)
@@ -834,18 +856,8 @@ void CtAccumulation::_accFrameWithOffsetThenThreshold(Data &src,Data &dst,long l
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(src,dst);
 
-  int nb_items = src.dimensions[0] * src.dimensions[1];
-  switch(src.type)
-    {
-    case Data::UINT8: 	accumulateFrameOffsetThenThreshold<unsigned char,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
-    case Data::INT8: 	accumulateFrameOffsetThenThreshold<char,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
-    case Data::UINT16: 	accumulateFrameOffsetThenThreshold<unsigned short,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
-    case Data::INT16: 	accumulateFrameOffsetThenThreshold<short,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
-    case Data::UINT32: 	accumulateFrameOffsetThenThreshold<unsigned int,int>	(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
-    case Data::INT32: 	accumulateFrameOffsetThenThreshold<int,int>		(src.data(),dst.data(),nb_items,offset_value, threshold_value);break;
-    default:
-      THROW_CTL_ERROR(Error) << "Data type for accumulation is not yet managed";
-    }
+  pixel_accumulate_offset_threshold fn(offset_value, threshold_value);
+  accumulate(src, dst, fn);
 }
 
 #ifdef WITH_CONFIG
