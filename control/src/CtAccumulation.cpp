@@ -25,13 +25,8 @@
 #include "processlib/SinkTask.h"
 #include "processlib/SinkTaskMgr.h"
 #include <algorithm>
+#include <type_traits>
 
-using std::min;
-using std::max;
-
-#ifdef __SSE2__
-#include <emmintrin.h>
-#endif
 
 using namespace lima;
 
@@ -195,7 +190,7 @@ private:
 //	     ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
   pixelThresholdValue(2^16),
-  pixelOutputType(Data::TYPE::DOUBLE),
+  pixelOutputType(Bpp32S),
   savingFlag(false),
   savePrefix("saturated_"),
   mode(CtAccumulation::Parameters::STANDARD),
@@ -320,6 +315,24 @@ void CtAccumulation::getPixelThresholdValue(long long &pixelThresholdValue) cons
   AutoMutex aLock(m_cond.mutex());
   pixelThresholdValue = m_pars.pixelThresholdValue;
   DEB_RETURN() << DEB_VAR1(pixelThresholdValue);
+}
+
+void CtAccumulation::setOutputType(ImageType pixelOutputType)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(pixelOutputType);
+
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.pixelOutputType = pixelOutputType;
+}
+
+void CtAccumulation::getOutputType(ImageType& pixelOutputType) const
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  pixelOutputType = m_pars.pixelOutputType;
+  DEB_RETURN() << DEB_VAR1(pixelOutputType);
 }
 
 void CtAccumulation::getBufferSize(int &aBufferSize) const
@@ -571,22 +584,31 @@ void CtAccumulation::prepare()
 {
   DEB_MEMBER_FUNCT();
 
+  //Adjust number of acc image
+  CtImage* image = m_ct.image();
+  FrameDim hw_image_dim;
+  image->getHwImageDim(hw_image_dim);
+  int hw_image_depth = hw_image_dim.getDepth();
+  FrameDim acc_image_dim;
+  image->getImageDim(acc_image_dim);
+  int acc_image_depth = acc_image_dim.getDepth();
+
+  if ((hw_image_depth > acc_image_depth) || (hw_image_dim.isSigned() && !acc_image_dim.isSigned()))
+    throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
+      << "SRC=" << convert_2_string(hw_image_dim.getImageType())
+      << " DST=" << convert_2_string(acc_image_dim.getImageType());
+
   AutoMutex aLock(m_cond.mutex());
   m_datas.clear();
   m_saturated_images.clear();
   CtBuffer *buffer = m_ct.buffer();
   buffer->getNumber(m_buffers_size);
-  //Adjust number of acc image
-  CtImage *image = m_ct.image();
-  FrameDim image_dim;
-  image->getHwImageDim(image_dim);
-  int image_depth = image_dim.getDepth();
   long max_nb_buffers;
   buffer->getMaxNumber(max_nb_buffers);
-  max_nb_buffers = long(max_nb_buffers * double(image_depth) / sizeof(int));
+  max_nb_buffers = long(max_nb_buffers * double(hw_image_depth) / acc_image_depth);
   if(m_pars.active) max_nb_buffers /= 2;
-  m_buffers_size = min(m_buffers_size,max_nb_buffers);
-  m_buffers_size = max(m_buffers_size,16L);
+  m_buffers_size = std::min(m_buffers_size,max_nb_buffers);
+  m_buffers_size = std::max(m_buffers_size,16L);
 
   CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
@@ -644,7 +666,7 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
       nextFrameNumber = m_datas.back().frameNumber + 1;
 
     Data newData;
-    newData.type = Data::INT32;
+    newData.type = convert_imagetype_to_datatype(m_pars.pixelOutputType);
     newData.dimensions = aData.dimensions;
     newData.frameNumber = nextFrameNumber;
     newData.timestamp = aData.timestamp;
@@ -685,15 +707,15 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   if(active)
     _calcSaturatedImageNCounters(aData,saturatedImg);
 
- switch(aMode)
-   {
-   case Parameters::STANDARD:
-     _accFrame(aData,accFrame);break;
-   case Parameters::THRESHOLD_BEFORE:
-     _accFrameWithThreshold(aData,accFrame, threshold_value);break;
-   case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
-     _accFrameWithOffsetThenThreshold(aData,accFrame,offset_value, threshold_value);break;
-   }
+  switch(aMode)
+  {
+  case Parameters::STANDARD:
+    _accFrame(aData,accFrame);break;
+  case Parameters::THRESHOLD_BEFORE:
+    _accFrameWithThreshold(aData,accFrame, threshold_value);break;
+  case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
+    _accFrameWithOffsetThenThreshold(aData,accFrame,offset_value, threshold_value);break;
+  }
 
   if(!((aData.frameNumber + 1) % nb_acc_frame))
     m_last_continue_flag = m_ct.newFrameReady(accFrame);
@@ -760,6 +782,8 @@ struct pixel_accumulate_offset_threshold
   template <class SrcType, class DstType>
   void operator()(SrcType src, DstType& dst) {
     DstType tmp_d = src - offset_;
+    if (std::is_signed<DstType>::value && tmp_d < 0)
+        tmp_d = 0;
     if (tmp_d > threshold_)
       dst += tmp_d;
   }
@@ -788,48 +812,57 @@ void accumulate(Data& src, Data& dst, Func fn)
   case Data::UINT8:
     switch (dst.type)
     {
-    case Data::INT16: 	accumulate<unsigned char, short>(src.data(), dst.data(), nb_items, fn); break;
-    case Data::INT32: 	accumulate<unsigned char, int>(src.data(), dst.data(), nb_items, fn); break;
-    default:
-      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+    case Data::UINT16: 	return accumulate<unsigned char, unsigned short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT16: 	return accumulate<unsigned char, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::UINT32: 	return accumulate<unsigned char, unsigned int>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32: 	return accumulate<unsigned char, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
   case Data::INT8:
     switch (dst.type)
     {
-    case Data::INT16: 	accumulate<char, short>(src.data(), dst.data(), nb_items, fn); break;
-    case Data::INT32: 	accumulate<char, int>(src.data(), dst.data(), nb_items, fn); break;
-    default:
-      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+    case Data::INT16: 	return accumulate<char, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32: 	return accumulate<char, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
   case Data::UINT16:
     switch (dst.type)
     {
-    case Data::UINT16: 	accumulate<unsigned short, unsigned short>(src.data(), dst.data(), nb_items, fn); break;
-    case Data::UINT32: 	accumulate<unsigned short, unsigned int>(src.data(), dst.data(), nb_items, fn); break;
-    default:
-      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+    case Data::UINT16: 	return accumulate<unsigned short, unsigned short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT16: 	return accumulate<unsigned short, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::UINT32: 	return accumulate<unsigned short, unsigned int>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32: 	return accumulate<unsigned short, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
   case Data::INT16:
     switch (dst.type)
     {
-    case Data::INT16: 	accumulate<short, short>(src.data(), dst.data(), nb_items, fn); break;
-    case Data::INT32: 	accumulate<short, int>(src.data(), dst.data(), nb_items, fn); break;
-    default:
-      throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+    case Data::INT16: 	return accumulate<short, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32: 	return accumulate<short, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
-  case Data::UINT32: 	accumulate<unsigned int, unsigned int>(src.data(), dst.data(), nb_items, fn); break;
-  case Data::INT32: 	accumulate<int, int>(src.data(), dst.data(), nb_items, fn); break;
-  default:
-    throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not yet supported");
+  case Data::UINT32:
+    switch (dst.type)
+    {
+    case Data::UINT32:  return accumulate<unsigned int, unsigned int>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32:   return accumulate<unsigned int, int>(src.data(), dst.data(), nb_items, fn);
+    }
+    break;
+
+  case Data::INT32:
+    switch (dst.type)
+    {
+    case Data::INT32:   return accumulate<int, int>(src.data(), dst.data(), nb_items, fn);
+    }
+    break;
   }
+
+  throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
+      << "SRC=" << convert_2_string(src.type) << " DST=" << convert_2_string(dst.type);
 }
 
 void CtAccumulation::_accFrame(Data &src,Data &dst)
@@ -865,3 +898,4 @@ CtConfig::ModuleTypeCallback* CtAccumulation::_getConfigHandler()
   return new _ConfigHandler(*this);
 }
 #endif //WITH_CONFIG
+    

@@ -28,6 +28,72 @@
 using namespace lima;
 using namespace std;
 
+Data::TYPE lima::convert_imagetype_to_datatype(ImageType in)
+{
+	Data::TYPE res = Data::UNDEF;
+
+	switch (in) {
+	case Bpp8:
+		res = Data::UINT8; break;
+	case Bpp8S:
+		res = Data::INT8; break;
+	case Bpp10:
+	case Bpp12:
+	case Bpp14:
+	case Bpp16:
+		res = Data::UINT16; break;
+	case Bpp16S:
+		res = Data::INT16; break;
+	case Bpp32:
+		res = Data::UINT32; break;
+	case Bpp32S:
+		res = Data::INT32; break;
+	case Bpp32F:
+		res = Data::FLOAT; break;
+	case Bpp1:
+	case Bpp4:
+	case Bpp6:
+		res = Data::UINT8; break;
+	case Bpp24:
+		res = Data::UINT32; break;
+	case Bpp24S:
+		res = Data::INT32; break;
+	case Bpp64:
+		res = Data::UINT64; break;
+	case Bpp64S:
+		res = Data::INT64; break;
+	}
+
+	return res;
+}
+
+std::ostream& lima::operator <<(std::ostream& os, Data::TYPE data_type)
+{
+	os << convert_2_string(data_type);
+	return os;
+}
+
+const char* lima::convert_2_string(Data::TYPE data_type)
+{
+	switch (data_type)
+	{
+	case Data::UNDEF: return "UNDEF";
+	case Data::UINT8: return "UINT8";
+	case Data::INT8: return "INT8";
+	case Data::UINT16: return "UINT16";
+	case Data::INT16: return "INT16";
+	case Data::UINT32: return "UINT32";
+	case Data::INT32: return "INT32";
+	case Data::UINT64: return "UINT64";
+	case Data::INT64: return "INT64";
+	case Data::FLOAT: return "FLOAT";
+	case Data::DOUBLE: return "DOUBLE";
+	}
+
+	throw LIMA_COM_EXC(InvalidValue, "ImageType can't be ") << data_type;
+	return nullptr;
+}
+
 ostream& lima::operator <<(ostream& os, AlignDir align_dir)
 {
 	const char *name = "Unknown";

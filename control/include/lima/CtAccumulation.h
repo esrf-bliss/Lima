@@ -54,9 +54,9 @@ namespace lima
       Parameters();
       void reset();
       
-      bool		active;	///< if true do the calculation
-      long long		pixelThresholdValue; ///< value which determine the threshold of the calculation
-      Data::TYPE pixelOutputType; ///< pixel ouptut type
+      bool      active;	///< if true do the calculation
+      long long pixelThresholdValue; ///< value which determine the threshold of the calculation
+      ImageType pixelOutputType; ///< pixel ouptut type
 
       bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
       std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
@@ -92,6 +92,9 @@ namespace lima
 
     void setPixelThresholdValue(long long pixelThresholdValue);
     void getPixelThresholdValue(long long &pixelThresholdValue) const;
+
+    void setOutputType(ImageType pixelOutputType);
+    void getOutputType(ImageType& pixelOutputType) const;
 
     void getBufferSize(int &aBufferSize) const;
 
