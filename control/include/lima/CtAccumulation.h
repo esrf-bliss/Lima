@@ -123,6 +123,7 @@ namespace lima
 
     void registerThresholdCallback(ThresholdCallback &cb);
     void unregisterThresholdCallback(ThresholdCallback &cb);
+
   private:
     struct _CounterResult;
     typedef SinkTaskMgr<_CounterResult> _CalcSaturatedTaskMgr;

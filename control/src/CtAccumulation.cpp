@@ -61,17 +61,17 @@ static long long _calc_saturated_image_n_counter(const Data &src,Data &dst,
   unsigned short *saturatedImagePt = (unsigned short*)dst.data();
   const char *maskPt = (const char*)mask.data();
   while(aSrcPt < aEndPt)
-    {
-      INPUT pixelValue = *aSrcPt;
-      if((!maskPt || *maskPt) &&
-	 pixelValue > pixelThresholdValue)
-	{
-	  ++(*saturatedImagePt);
-	  ++saturatedCounter;
-	}
-      ++aSrcPt,++saturatedImagePt;
-      if(maskPt) ++maskPt;
-    }
+  {
+    INPUT pixelValue = *aSrcPt;
+    if((!maskPt || *maskPt) && pixelValue > pixelThresholdValue)
+	  {
+	    ++(*saturatedImagePt);
+	    ++saturatedCounter;
+	  }
+    ++aSrcPt,++saturatedImagePt;
+    if(maskPt) ++maskPt;
+  }
+
   return saturatedCounter;
 }
 
@@ -169,24 +169,24 @@ public:
   {
     AutoMutex Lock(m_cnt.m_cond.mutex());
     if(m_cnt.m_calc_pending_data.empty())
-      {
-	m_cnt.m_calc_ready = true;
-	m_cnt.m_cond.broadcast(); // in case of waiting for m_calc_ready
-      }
+    {
+	    m_cnt.m_calc_ready = true;
+	    m_cnt.m_cond.broadcast(); // in case of waiting for m_calc_ready
+    }
     else
-      {
-	std::pair<Data,Data> values = m_cnt.m_calc_pending_data.front();
-	m_cnt.m_calc_pending_data.pop_front();
+    {
+	    std::pair<Data,Data> values = m_cnt.m_calc_pending_data.front();
+	    m_cnt.m_calc_pending_data.pop_front();
 
-	_CalcSaturatedTask *calcTaskPt = new _CalcSaturatedTask(*m_cnt.m_calc_mgr,
-								m_cnt,values.second);
-	calcTaskPt->setEventCallback(m_cnt.m_calc_end);
-	TaskMgr *aCalcMgrPt = new TaskMgr();
-	aCalcMgrPt->addSinkTask(0,calcTaskPt);
-	calcTaskPt->unref();
-	aCalcMgrPt->setInputData(values.first);
-	PoolThreadMgr::get().addProcess(aCalcMgrPt);
-      }
+	    _CalcSaturatedTask *calcTaskPt = new _CalcSaturatedTask(*m_cnt.m_calc_mgr,
+								    m_cnt,values.second);
+	    calcTaskPt->setEventCallback(m_cnt.m_calc_end);
+	    TaskMgr *aCalcMgrPt = new TaskMgr();
+	    aCalcMgrPt->addSinkTask(0,calcTaskPt);
+	    calcTaskPt->unref();
+	    aCalcMgrPt->setInputData(values.first);
+	    PoolThreadMgr::get().addProcess(aCalcMgrPt);
+    }
   }
 private:
   CtAccumulation& m_cnt;
@@ -413,12 +413,12 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
 
   AutoMutex aLock(m_cond.mutex());
   if(frameNumber < 0)
-    {
-      if(!m_saturated_images.empty())
-	frameNumber = m_saturated_images.back().frameNumber;
-      else
-	frameNumber = 0;
-    }
+  {
+    if(!m_saturated_images.empty())
+	    frameNumber = m_saturated_images.back().frameNumber;
+    else
+	    frameNumber = 0;
+  }
   aLock.unlock();
 
   //ask the last accumulated frame for a frameNumber
@@ -430,16 +430,16 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
 
   // Counter is available => saturated image calc finnished
   if(result.errorCode == _CalcSaturatedTaskMgr::OK)
-    {
-      aLock.lock();
-      int oldestFrameNumber = m_saturated_images.front().frameNumber;
-      int lastFrameId = m_saturated_images.back().frameNumber;
-      //No more into buffer list
-      if(frameNumber < oldestFrameNumber || frameNumber > lastFrameId)
-	THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not more available";
-      else
-	saturatedImage = m_saturated_images[frameNumber - oldestFrameNumber];
-    }
+  {
+    aLock.lock();
+    int oldestFrameNumber = m_saturated_images.front().frameNumber;
+    int lastFrameId = m_saturated_images.back().frameNumber;
+    //No more into buffer list
+    if(frameNumber < oldestFrameNumber || frameNumber > lastFrameId)
+      THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not more available";
+    else
+	    saturatedImage = m_saturated_images[frameNumber - oldestFrameNumber];
+  }
   DEB_RETURN() << DEB_VAR1(saturatedImage);
 }
 /** @brief read the saturated counters
@@ -456,35 +456,35 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
   int acc_nframes;
   acquisition->getAccNbFrames(acc_nframes);
   if(acc_nframes > 0)
-    {
-      AutoMutex aLock(m_cond.mutex());
-      if(from < 0)
-	{
-	  if(!m_saturated_images.empty())
-	    from = m_saturated_images.back().frameNumber;
-	  else
-	    from = 0;
-	}
-      aLock.unlock();
-      std::list<CtAccumulation::_CounterResult> resultList;
-      int fromCounterId = from * acc_nframes;
-      m_calc_mgr->getHistory(resultList,fromCounterId);
+  {
+    AutoMutex aLock(m_cond.mutex());
+    if(from < 0)
+	  {
+	    if(!m_saturated_images.empty())
+	      from = m_saturated_images.back().frameNumber;
+	    else
+	      from = 0;
+	  }
 
-      for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
-	  i != resultList.end();++i)
-	{
-	  if(!(i->frameNumber % acc_nframes))
-	    result.push_back(std::list<long long>());
+    aLock.unlock();
+    std::list<CtAccumulation::_CounterResult> resultList;
+    int fromCounterId = from * acc_nframes;
+    m_calc_mgr->getHistory(resultList,fromCounterId);
 
-	  std::list<long long> &satImgCounters = result.back();
-	  satImgCounters.push_back(i->value);
-	}
-      /* Check if last image has the same number of counters
-	 if not remove */
-      if(!result.empty() &&
-	 result.front().size() != result.back().size())
-	result.pop_back();
-    }
+    for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
+	      i != resultList.end();++i)
+	  {
+	    if(!(i->frameNumber % acc_nframes))
+	      result.push_back(std::list<long long>());
+
+	    std::list<long long> &satImgCounters = result.back();
+	    satImgCounters.push_back(i->value);
+	  }
+      
+    /* Check if last image has the same number of counters if not remove */
+    if(!result.empty() && result.front().size() != result.back().size())
+	    result.pop_back();
+  }
 }
 
 /** @brief set the mask for saturation calculation
@@ -540,22 +540,22 @@ void CtAccumulation::_calcSaturatedImageNCounters(Data &src,Data &dst)
   Data copiedSrc = src.copy();
   AutoMutex Lock(m_cond.mutex());
   if(m_calc_ready)
-    {
-      m_calc_ready = false;
+  {
+    m_calc_ready = false;
 
-      _CalcSaturatedTask *calcTaskPt = new _CalcSaturatedTask(*m_calc_mgr,*this,dst);
-      calcTaskPt->setEventCallback(m_calc_end);
-      TaskMgr *aCalcMgrPt = new TaskMgr();
-      aCalcMgrPt->addSinkTask(0,calcTaskPt);
-      calcTaskPt->unref();
-      aCalcMgrPt->setInputData(copiedSrc);
-      PoolThreadMgr::get().addProcess(aCalcMgrPt);
-    }
+    _CalcSaturatedTask *calcTaskPt = new _CalcSaturatedTask(*m_calc_mgr,*this,dst);
+    calcTaskPt->setEventCallback(m_calc_end);
+    TaskMgr *aCalcMgrPt = new TaskMgr();
+    aCalcMgrPt->addSinkTask(0,calcTaskPt);
+    calcTaskPt->unref();
+    aCalcMgrPt->setInputData(copiedSrc);
+    PoolThreadMgr::get().addProcess(aCalcMgrPt);
+  }
   else
-    {
-      std::pair<Data,Data> values(copiedSrc,dst);
-      m_calc_pending_data.push_back(values);
-    }
+  {
+    std::pair<Data,Data> values(copiedSrc,dst);
+    m_calc_pending_data.push_back(values);
+  }
 }
 void CtAccumulation::_callIfNeedThresholdCallback(Data &aData,long long value)
 {
@@ -613,10 +613,11 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   if(internal_stage)
     PoolThreadMgr::get().addProcess(mgr);
   else
-    {
-      delete mgr;
-      m_last_continue_flag = m_last_continue_flag && _newBaseFrameReady(aData);
-    }
+  {
+    delete mgr;
+    m_last_continue_flag = m_last_continue_flag && _newBaseFrameReady(aData);
+  }
+
   return m_last_continue_flag;
 }
 /** @brief this is an internal call at the end of internal process or from CtBuffer
@@ -635,42 +636,42 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
 
   bool active = m_pars.active;
   if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
-    {
-      int nextFrameNumber;
-      if(m_datas.empty())	// Init (first Frame)
-	nextFrameNumber = 0;
-      else
-	nextFrameNumber = m_datas.back().frameNumber + 1;
+  {
+    int nextFrameNumber;
+    if(m_datas.empty())	// Init (first Frame)
+      nextFrameNumber = 0;
+    else
+      nextFrameNumber = m_datas.back().frameNumber + 1;
 
-      Data newData;
-      newData.type = Data::INT32;
-      newData.dimensions = aData.dimensions;
-      newData.frameNumber = nextFrameNumber;
-      newData.timestamp = aData.timestamp;
-      newData.buffer = new Buffer(newData.size());
-      memset(newData.data(),0,newData.size());
-      m_datas.push_back(newData);
+    Data newData;
+    newData.type = Data::INT32;
+    newData.dimensions = aData.dimensions;
+    newData.frameNumber = nextFrameNumber;
+    newData.timestamp = aData.timestamp;
+    newData.buffer = new Buffer(newData.size());
+    memset(newData.data(),0,newData.size());
+    m_datas.push_back(newData);
 
-      if(long(m_datas.size()) > m_buffers_size)
-	m_datas.pop_front();
+    if(long(m_datas.size()) > m_buffers_size)
+      m_datas.pop_front();
 
-      // create also the new image for saturated counters
-      if(active)
-	{
-	  Data newSatImg;
-	  newSatImg.type = Data::UINT16;
-	  newSatImg.dimensions = aData.dimensions;
-	  newSatImg.frameNumber = nextFrameNumber;
-	  newSatImg.timestamp = aData.timestamp;
-	  newSatImg.buffer = new Buffer(newSatImg.size());
-	  memset(newSatImg.data(),0,newSatImg.size());
-	  m_saturated_images.push_back(newSatImg);
+    // create also the new image for saturated counters
+    if(active)
+	  {
+	    Data newSatImg;
+	    newSatImg.type = Data::UINT16;
+	    newSatImg.dimensions = aData.dimensions;
+	    newSatImg.frameNumber = nextFrameNumber;
+	    newSatImg.timestamp = aData.timestamp;
+	    newSatImg.buffer = new Buffer(newSatImg.size());
+	    memset(newSatImg.data(),0,newSatImg.size());
+	    m_saturated_images.push_back(newSatImg);
 
-	  if(long(m_saturated_images.size()) > m_buffers_size)
-	    m_saturated_images.pop_front();
-	}
+	    if(long(m_saturated_images.size()) > m_buffers_size)
+	      m_saturated_images.pop_front();
+	  }
+  }
 
-    }
   Data accFrame = m_datas.back();
   Data saturatedImg;
   if(active)
@@ -718,18 +719,16 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
   if(frameNumber < 0)		// means last
     aReturnData = m_datas.back();
   else
-    {
-      int oldestFrameNumber = m_datas.front().frameNumber;
-      int lastFrameId = m_datas.back().frameNumber;
-      // No more into buffer list
-      if(frameNumber < oldestFrameNumber || frameNumber > lastFrameId)
-	THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not available";
-      else
-	aReturnData = m_datas[frameNumber - oldestFrameNumber];
-    }
+  {
+    int oldestFrameNumber = m_datas.front().frameNumber;
+    int lastFrameId = m_datas.back().frameNumber;
+    // No more into buffer list
+    if(frameNumber < oldestFrameNumber || frameNumber > lastFrameId)
+      THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not available";
+    else
+      aReturnData = m_datas[frameNumber - oldestFrameNumber];
+  }
 }
-
-
 
 struct pixel_accumulate
 {
