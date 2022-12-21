@@ -162,11 +162,12 @@ If you don’t have Conda installed, get `Miniconda`_ and follow the `install in
 Create a build environment
 --------------------------
 
-A good practice would be not to pollute the base environment and work in a dedicated ``lima`` environment:
+A good practice would be not to pollute the base environment and work in a dedicated ``lima`` environment.
+Prefer to use mamba tool for package installation rather than the default conda installer, mamba is faster and works better to solve dependencies:
 
 ::
 
-   conda create -n lima
+   conda create -n lima mamba
    conda activate lima
 
 Conda channels must be defined in the proper order with conda-forge first and prepend to the default anaconda channel:
@@ -175,7 +176,6 @@ Conda channels must be defined in the proper order with conda-forge first and pr
    
    conda config --env --add channels conda-forge
    conda config --env --append channels esrf-bcu
-   conda config --env --append channels tango-controls
    
 
 Then install the build tools:
@@ -183,7 +183,7 @@ Then install the build tools:
 For linux
 ::
 
-   conda install cmake gxx_linux-64
+   mamba install cmake gxx_linux-64
 
 For windows, just be sure you have visual studio 2017 x64 installed
 
@@ -198,13 +198,13 @@ Finally, install the ``lima-core`` package (and dependencies) with `Conda`:
 
 ::
 
-   conda install lima-core
+   mamba install lima-core
 
 If you want to run the LimaCCDs device server on top of your camera plugin we recommend to install the simulator tango package, then you will get installed all the packages by dependencies:
 
 ::
    
-   conda install lima-camera-simulator-tango
+   mamba install lima-camera-simulator-tango
    
 And you are good to code! A good way to start is to use our seed project at:
 
