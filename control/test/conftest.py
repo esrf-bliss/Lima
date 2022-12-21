@@ -2,10 +2,25 @@ import pytest
 
 from Lima import Core, Simulator
 
-class UniformCamera(Simulator.Camera):
-    """Derive the camera in order to custom the way to render the frame"""
+
+class ConstantCamera(Simulator.Camera):
+
+    def __init__(self, fill_value):
+        super().__init__(Simulator.Camera.MODE_EXTERNAL)
+        self.fill_value = fill_value
+    
     def fillData(self, data):
-        data.buffer.fill(1)
+        data.buffer.fill(self.fill_value)
+
+
+class UniformCamera(Simulator.Camera):
+
+    def __init__(self):
+        super().__init__(Simulator.Camera.MODE_EXTERNAL)
+
+    def fillData(self, data):
+        data.buffer.fill(data.frameNumber)
+
 
 @pytest.fixture(scope="module")
 def debug():
@@ -19,17 +34,19 @@ def debug():
     Core.DebParams.setModuleFlags(mod_flags)
     Core.DebParams.setTypeFlags(type_flags)
 
-@pytest.fixture(params=[Core.Bpp8, Core.Bpp8S, Core.Bpp16, Core.Bpp16S])
-def simu(request):
 
-    frame_dim = Core.FrameDim(Core.Size(800, 600), request.param)
+
+@pytest.fixture
+def simu(request):
+    frame_dim = Core.FrameDim(Core.Size(10, 10), request.param)
 
     cam = UniformCamera()
+
     getter = cam.getFrameGetter()
     getter.setFrameDim(frame_dim)
     assert getter.getFrameDim() == frame_dim
 
     hw = Simulator.Interface(cam)
     ct = Core.CtControl(hw)
-
+    
     yield ct
