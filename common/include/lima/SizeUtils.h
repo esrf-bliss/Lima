@@ -753,10 +753,12 @@ class LIMACORE_API FrameDim
 	ImageType getImageType() const;
 
 	int getDepth() const;
+	bool isSigned() const;
 	int getMemSize() const;
 
 	static int getImageTypeBpp(ImageType type);
 	static int getImageTypeDepth(ImageType type);
+	static bool isImageTypeSigned(ImageType type);
 
 	FrameDim& operator *=(const Point& point);
 	FrameDim& operator /=(const Point& point);
@@ -819,6 +821,11 @@ inline ImageType FrameDim::getImageType() const
 inline int FrameDim::getDepth() const
 {
 	return m_depth;
+}
+
+inline bool FrameDim::isSigned() const
+{
+	return isImageTypeSigned(m_type);
 }
 
 inline int FrameDim::getMemSize() const
