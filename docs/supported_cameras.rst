@@ -11,9 +11,9 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +====================+=======+=========+======================+
 | Andor              | Yes   | Yes     | linux 2.103 win 2.102|
 +--------------------+-------+---------+----------------------+
-| Andor3             | Yes   |         |  sdk3 3.13           |
+| Andor3             | Yes   |         |  sdk3 3.14           |
 +--------------------+-------+---------+----------------------+
-| Basler             | Yes   | Yes     | Pylon 5.0 / 5.1      |
+| Basler             | Yes   | Yes     | Pylon 6.3            |
 +--------------------+-------+---------+----------------------+
 | Dexela             | Yes   |         | libDexela            |
 +--------------------+-------+---------+----------------------+
@@ -22,6 +22,8 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 | Frelon             | Yes   |         | libEspia  3.10.0     |
 +--------------------+-------+---------+----------------------+
 | ImXPAD             | Yes   |         | n/a                  |
++--------------------+-------+---------+----------------------+
+| Iris               | Yes   | Yes     | PvCam 3.9.10.5       |
 +--------------------+-------+---------+----------------------+
 | Maxipix            | Yes   |         | libEspia  3.10.0     |
 +--------------------+-------+---------+----------------------+
@@ -41,6 +43,8 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | Prosilica          | Yes   |         | PvAPI 1.24           |
 +--------------------+-------+---------+----------------------+
+| RayonixHs          | Yes   |         | n/a                  |
++--------------------+-------+---------+----------------------+
 | Simulator          | Yes   | Yes     | n/a                  |
 +--------------------+-------+---------+----------------------+
 | SLS Detector / PSI | Yes   |         | SlsDetectorPackage v4|
@@ -53,11 +57,11 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | Xh                 | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
-| TUCSEN Dhyana      | Yes   |         |  tucam 1.0.0         |
+| TUCSEN Dhyana      | Yes   |         |  tucam 2.0.0         |
 +--------------------+-------+---------+----------------------+
-| Ximea              | Yes   |         |  ximeas-sdk 4.21.23  |
+| Ximea              | Yes   |         |  ximea-sdk 4.21.23  |
 +--------------------+-------+---------+----------------------+
-| Xspectrum Lambda   | Yes   |         | xsp 1.4.1            |
+| Xspectrum Lambda   | Yes   |         | Xsp 2.0.2            |
 +--------------------+-------+---------+----------------------+
 
 Windows Only
@@ -116,5 +120,6 @@ Windows and Linux
   Andor SDK2 <camera/andor/doc/index>
   Basler <camera/basler/doc/index>
   Dhyana <camera/dhyana/doc/index>
+  Iris <camera/iris/doc/index>
   RoperScientific (former Princeton) <camera/roperscientific/doc/index>
   Simulator <camera/simulator/doc/index>
