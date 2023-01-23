@@ -99,14 +99,14 @@ struct pixel_cast
 
 struct pixel_divide
 {
-    pixel_divide(int denom) : denom_(denom) {}
+    pixel_divide(unsigned int denom) : denom_(denom) {}
 
     template <class DstType>
-    void operator()(int src, DstType& dst) const {
+    void operator()(unsigned int src, DstType& dst) const {
         dst = src / denom_;
     }
 
-    int denom_ = 1;
+    unsigned int denom_ = 1;
 };
 
 template <class SrcType, class DstType, class Func>
@@ -164,14 +164,17 @@ void transform_pixel(Data& src, Data& dst, Func fn)
     case Data::UINT32:
         switch (dst.type)
         {
+        case Data::UINT16: 	return transform_pixel<unsigned int, unsigned short>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT16: 	return transform_pixel<unsigned int, short>(src.data(), dst.data(), nb_items, fn);
         case Data::UINT32:  return transform_pixel<unsigned int, unsigned int>(src.data(), dst.data(), nb_items, fn);
-        case Data::INT32:   return transform_pixel<unsigned int, int>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT32:   return transform_pixel<unsigned int, int>(src.data(), dst.data(), nb_items, fn);        
         }
         break;
 
     case Data::INT32:
         switch (dst.type)
         {
+        case Data::INT16: 	return transform_pixel<int, short>(src.data(), dst.data(), nb_items, fn);
         case Data::INT32:   return transform_pixel<int, int>(src.data(), dst.data(), nb_items, fn);
         }
         break;
@@ -324,12 +327,11 @@ private:
 //       ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
   pixelThresholdValue(2^16),
-  pixelAccType(Bpp32S),
   pixelOutputType(Bpp32S),
   savingFlag(false),
   savePrefix("saturated_"),
   mode(CtAccumulation::Parameters::STANDARD),
-  accumulator(CtAccumulation::ACC_SUM),
+  operation(CtAccumulation::ACC_SUM),
   filter(CtAccumulation::FILTER_NONE),
   thresholdB4Acc(0),
   offsetB4Acc(0)
@@ -523,6 +525,57 @@ void CtAccumulation::setMode(Parameters::Mode mode)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.mode = mode;
+
+  switch (mode)
+  {
+  case Parameters::STANDARD:
+    m_pars.filter = Filter::FILTER_NONE;
+    m_pars.operation = Operation::ACC_SUM;
+    break;
+
+  case Parameters::THRESHOLD_BEFORE:
+    m_pars.filter = Filter::FILTER_THRESHOLD_MIN;
+    m_pars.operation = Operation::ACC_SUM;
+    break;
+
+  case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
+    m_pars.filter = Filter::FILTER_OFFSET_THEN_THRESHOLD_MIN;
+    m_pars.operation = Operation::ACC_SUM;
+    break;
+  }
+}
+
+void CtAccumulation::getFilter(Filter& filter) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  filter = m_pars.filter;
+}
+
+void CtAccumulation::setFilter(Filter filter)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(filter);
+
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.filter = filter;
+}
+
+void CtAccumulation::getOperation(Operation& operation) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  operation = m_pars.operation;
+}
+
+void CtAccumulation::setOperation(Operation operation)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(operation);
+
+  if (operation == ACC_MEDIAN)
+    THROW_CTL_ERROR(Error) << "Median accumulator not implemented";
+
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.operation = operation;
 }
 
 void CtAccumulation::getThresholdBefore(long long& threshold) const
@@ -533,6 +586,9 @@ void CtAccumulation::getThresholdBefore(long long& threshold) const
 
 void CtAccumulation::setThresholdBefore(const long long& threshold)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(threshold);
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.thresholdB4Acc = threshold;
 }
@@ -545,6 +601,9 @@ void CtAccumulation::getOffsetBefore(long long& offset) const
 
 void CtAccumulation::setOffsetBefore(const long long& offset)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(offset);
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.offsetB4Acc = offset;
 }
@@ -766,25 +825,28 @@ void CtAccumulation::prepare()
   acquisition->getAccNbFrames(acc_nframes);
   if(acc_nframes < 0) acc_nframes = 1;
 
-  // Allocate the temporary data
+  // Allocate the temporary data (if needed)
   Size size = hw_image_dim.getSize();
-  m_tmp_data.type = convert_imagetype_to_datatype(m_pars.pixelAccType);
-  m_tmp_data.dimensions.push_back(size.getWidth());
-  m_tmp_data.dimensions.push_back(size.getHeight());
-  m_tmp_data.buffer = new Buffer(m_tmp_data.size());
-  memset(m_tmp_data.data(), 0, m_tmp_data.size());
+  switch (m_pars.operation) {
+  case ACC_SUM:
+      break;
 
-  // Allocate the hw data (if needed)
-  if (m_pars.accumulator == ACC_MEDIAN)
-  {
-      m_hw_datas.resize(acc_nframes);
-      for (Data& hw_data : m_hw_datas)
+  case ACC_MEAN:
+      m_tmp_data.type = hw_image_dim.isSigned() ? Data::INT32 : Data::UINT32;
+      m_tmp_data.dimensions.resize(2);
+      m_tmp_data.dimensions[0] = size.getWidth();
+      m_tmp_data.dimensions[1] = size.getHeight();
       {
-          hw_data.type = convert_imagetype_to_datatype(hw_image_dim.getImageType());
-          hw_data.dimensions.push_back(size.getWidth());
-          hw_data.dimensions.push_back(size.getHeight());
-          hw_data.buffer = new Buffer(hw_data.size());
+      Buffer* buffer = new Buffer(m_tmp_data.size());
+      m_tmp_data.setBuffer(buffer);
+      buffer->unref();
       }
+      memset(m_tmp_data.data(), 0, m_tmp_data.size());
+      break;
+
+  case ACC_MEDIAN:
+      m_tmp_datas.resize(acc_nframes);
+      break;
   }
 
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
@@ -850,7 +912,7 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   bool active = m_pars.active;
   if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
   {
-    // Reset the temporary data
+    // Reset the temporary data (if any)
     memset(m_tmp_data.data(), 0, m_tmp_data.size());
 
     int nextFrameNumber;
@@ -898,30 +960,37 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     _calcSaturatedImageNCounters(aData,saturatedImg);
 
   // Accumulate
-  _accFrame(aData, m_tmp_data);
+  Data output = m_datas.back();
+  switch (m_pars.operation) {
+  case ACC_SUM:
+    _accFrame(aData, output);
+    break;
+
+  case ACC_MEAN:
+    _accFrame(aData, m_tmp_data);
+    break;
+
+  case ACC_MEDIAN:
+    m_tmp_datas.push_back(aData);
+    break;
+  }
 
   // If accumulated frame is cleared for takeoff
   if (!((aData.frameNumber + 1) % nb_acc_frame))
   {
-    Data output = m_datas.back();
-
     // Reduction
-    switch (m_pars.accumulator) {
+    switch (m_pars.operation) {
     case ACC_SUM:
-        if (m_tmp_data.size() == output.size())
-            memcpy(output.data(), m_tmp_data.data(), m_tmp_data.size());
-        else
-            transform_pixel(m_tmp_data, output, pixel_cast());
-        break;
+      break;
 
     case ACC_MEAN:
-        transform_pixel(m_tmp_data, output, pixel_divide(nb_acc_frame));
-        break;
+      transform_pixel(m_tmp_data, output, pixel_divide(nb_acc_frame));
+      break;
+
+    case ACC_MEDIAN:
+      // TODO compute the median from m_tmp_datas
+      break;
     }
-
-
-      
-
 
     m_last_continue_flag = m_ct.newFrameReady(output);
   }
@@ -988,24 +1057,23 @@ inline void acc_frame_with_offset_then_threshold(Data &src,Data &dst,long long o
 
 void CtAccumulation::_accFrame(Data& src, Data& dst) const
 {
-    DEB_MEMBER_FUNCT();
-    DEB_PARAM() << DEB_VAR2(src, dst);
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(src, dst);
 
-    Parameters::Mode aMode = m_pars.mode;
-    long long threshold_value = m_pars.thresholdB4Acc;
-    long long offset_value = m_pars.offsetB4Acc;
+  long long threshold_value = m_pars.thresholdB4Acc;
+  long long offset_value = m_pars.offsetB4Acc;
 
-    DEB_TRACE() << DEB_VAR3(aMode, threshold_value, offset_value);
+  DEB_TRACE() << DEB_VAR3(m_pars.filter, threshold_value, offset_value);
 
-    switch (aMode)
-    {
-    case Parameters::STANDARD:
-        acc_frame(src, dst); break;
-    case Parameters::THRESHOLD_BEFORE:
-        acc_frame_with_threshold(src, dst, threshold_value); break;
-    case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
-        acc_frame_with_offset_then_threshold(src, dst, offset_value, threshold_value); break;
-    }
+  switch (m_pars.filter)
+  {
+  case Filter::FILTER_NONE:
+    acc_frame(src, dst); break;
+  case Filter::FILTER_THRESHOLD_MIN:
+    acc_frame_with_threshold(src, dst, threshold_value); break;
+  case Filter::FILTER_OFFSET_THEN_THRESHOLD_MIN:
+    acc_frame_with_offset_then_threshold(src, dst, offset_value, threshold_value); break;
+  }
 }
 
 #ifdef WITH_CONFIG
