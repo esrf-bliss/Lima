@@ -640,6 +640,21 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
 
+  int nb_frames_in_proc;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    nb_frames_in_proc = aData.frameNumber - 1 - m_last_acc_frame_nb;
+  }
+
+  int nb_hw_buffers = ACC_MIN_BUFFER_SIZE;
+  if (nb_frames_in_proc >= nb_hw_buffers) {
+    DEB_ERROR() << "Accumulation overrun: " << DEB_VAR2(aData,
+							nb_frames_in_proc);
+    m_ct.stopAcqAsync(AcqFault, CtControl::ProcessingOverun, aData);
+    m_last_continue_flag = false;
+    return m_last_continue_flag;
+  }
+
   TaskMgr *mgr = new TaskMgr();
   mgr->setEventCallback(m_ct.getSoftOpErrorHandler());
   mgr->setInputData(aData);
