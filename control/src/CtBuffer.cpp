@@ -252,7 +252,7 @@ void CtBuffer::setup(CtControl *ct)
   case Accumulation:
     concat_nframes= 1;
     m_ct_accumulation = ct->accumulation();
-    hwNbBuffer = 16;
+    hwNbBuffer = CtAccumulation::ACC_MIN_BUFFER_SIZE;
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
