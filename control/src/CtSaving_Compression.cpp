@@ -221,21 +221,26 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
 
   unsigned int bs_block_size= 0;
   unsigned int bs_in_size= (unsigned int)(data_size/data_depth);
-  int64_t bs_out_size;
 
-  return_buffers.emplace_back(data_size);
+  size_t header_size = 8 + 4;
+  size_t bs_out_bound = bshuf_compress_lz4_bound(bs_in_size, data_depth, bs_block_size);
+
+  return_buffers.emplace_back(header_size + bs_out_bound);
   ZBuffer& newBuffer = return_buffers.back();
   char* bs_buffer = (char*)newBuffer.ptr();
 
   bshuf_write_uint64_BE(bs_buffer, data_size);
-  bshuf_write_uint32_BE(bs_buffer+8, bs_block_size);
-  bs_out_size = bshuf_compress_lz4(src, bs_buffer+12, bs_in_size, data_depth, bs_block_size);
+  bs_buffer += 8;
+  bshuf_write_uint32_BE(bs_buffer, bs_block_size);
+  bs_buffer += 4;
+  int64_t bs_out_size = bshuf_compress_lz4(src, bs_buffer, bs_in_size, data_depth, bs_block_size);
   if (bs_out_size < 0)
     THROW_CTL_ERROR(Error) << "BS Compression failed: error code [" << bs_out_size << "]";
-  else
-    DEB_TRACE() << "BitShuffle Compression IN[" << data_size << "] OUT[" << bs_out_size << "]";
 
-  newBuffer.used_size = bs_out_size+12;
+  DEB_TRACE() << "BitShuffle Compression IN[" << data_size << "] OUT[" << bs_out_size << "]";
+  newBuffer.used_size = header_size + bs_out_size;
+  if (newBuffer.used_size > data_size)
+    DEB_WARNING() << "Data would have caused overrun!";
 }
 
 #endif // WITH_BS_COMPRESSION
