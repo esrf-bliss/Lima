@@ -239,8 +239,6 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
 
   DEB_TRACE() << "BitShuffle Compression IN[" << data_size << "] OUT[" << bs_out_size << "]";
   newBuffer.used_size = header_size + bs_out_size;
-  if (newBuffer.used_size > data_size)
-    DEB_WARNING() << "Data would have caused overrun!";
 }
 
 #endif // WITH_BS_COMPRESSION
