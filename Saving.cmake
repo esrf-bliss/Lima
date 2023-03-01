@@ -45,7 +45,7 @@ if(LIMA_ENABLE_EDFLZ4)
     list(APPEND saving_libs ${LZ4_LIBRARIES})
   	list(APPEND saving_includes ${LZ4_INCLUDE_DIRS})
   else()
-    message(FATAL_ERROR "LZ4 library: required version = 1.8.2, please update or switch off LIMA_ENABLE_EDFLZ4")
+    message(FATAL_ERROR "LZ4 library: required version = 1.9.1, please update or switch off LIMA_ENABLE_EDFLZ4")
   endif()
 endif()
 
