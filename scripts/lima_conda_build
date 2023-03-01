@@ -137,7 +137,7 @@ function parallel_cmake
 case ${cmd} in
 build)
     if [ ${only_plugin} -eq 0 ]; then
-	((cd ${processlib_dir} && parallel_cmake conda/${profile}/build.sh) \
+	((cd ${processlib_dir} && parallel_cmake conda/build.sh) \
 	    && (cd . && parallel_cmake conda/${profile}/build.sh) \
 	    && (cd ${tango_dir} && pip install .)) || exit
     fi
