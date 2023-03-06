@@ -31,6 +31,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <memory>
 
 namespace lima {
 
@@ -40,6 +41,7 @@ class ZBuffer
 
 public:
   ZBuffer(int buffer_size);
+  ZBuffer(std::shared_ptr<void> p, int buffer_size);
   ZBuffer(const ZBuffer& o);
   ZBuffer(ZBuffer&& o);
   ~ZBuffer();
@@ -51,8 +53,8 @@ public:
 
   int used_size;
 
-  void *ptr()
-  { return buffer; }
+  void *ptr() const
+  { return buffer.get(); }
 
 private:
   bool _isValid() const;
@@ -60,27 +62,34 @@ private:
   void _alloc(int buffer_size);
   void _deep_copy(const ZBuffer& o);
   void _free();
+  static void _default_free(void *p);
 
   int alloc_size;
-  void *buffer;
+  std::shared_ptr<void> buffer;
 };
 
 inline bool ZBuffer::_isValid() const
 {
-  return buffer;
+  return bool(buffer);
 }
 
 inline void ZBuffer::_setInvalid()
 {
   used_size = 0;
   alloc_size = 0;
-  buffer = NULL;
 }
 
 inline ZBuffer::ZBuffer(int buffer_size)
 {
   DEB_CONSTRUCTOR();
   _alloc(buffer_size);
+}
+
+inline ZBuffer::ZBuffer(std::shared_ptr<void> p, int buffer_size)
+  : buffer(p), used_size(buffer_size), alloc_size(buffer_size)
+{
+  DEB_CONSTRUCTOR();
+  DEB_PARAM() << DEB_VAR1(buffer_size);
 }
 
 inline ZBuffer::ZBuffer(const ZBuffer& o)
@@ -142,6 +151,14 @@ inline ZBuffer::~ZBuffer()
   DEB_DESTRUCTOR();
   if (_isValid())
     _free();
+}
+
+inline void ZBuffer::_free()
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(alloc_size, used_size);
+  buffer.reset();
+  _setInvalid();
 }
 
 typedef std::vector<ZBuffer> ZBufferList;
