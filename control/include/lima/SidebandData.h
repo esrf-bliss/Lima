@@ -23,6 +23,7 @@
 #define SIDEBANDDATA_H
 
 #include "processlib/SidebandData.h"
+#include "processlib/Sideband/CompressedData.h"
 
 namespace Sideband
 {
@@ -32,6 +33,11 @@ namespace Sideband
 	 *
 	 * Internal:
 	 *  zbuffer_list
+	 *
+	 * Compression:
+	 *  comp_gzip
+	 *  comp_lz4
+	 *  comp_bshuffle_lz4
 	 *
 	 */
 

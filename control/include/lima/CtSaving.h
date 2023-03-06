@@ -38,6 +38,7 @@
 #include "lima/HwSavingCtrlObj.h"
 #include "lima/OrderedMap.h"
 
+#include "lima/SidebandData.h"
 #include "lima/CtSaving_ZBuffer.h"
 
 struct Data;
@@ -320,11 +321,17 @@ public:
 		void clear();
 		void prepare(CtControl&);
 		/** @brief should return true if container has compression or
-			*  havy task to do before saving
+			*  heavy task to do before saving
 			*  if return is true, getCompressionTask should return a Task
 			* @see getCompressionTask
 			*/
 		virtual bool needParallelCompression() const { return false; }
+		/** @brief should return true if a compression task is needed for
+		        *  data, or false if blocks are found in sidebandData.
+			*  must call has/useCompressedSidebandData helpers
+			*  @see needParallelCompression
+			*/
+		virtual bool needCompressionTask(Data&);
 		/** @brief get a new compression task at each call.
 			* this method is not call if needParallelCompression return false
 			*  @see needParallelCompression
@@ -335,6 +342,12 @@ public:
 		virtual void setReady(long frame_nr);
 		virtual void prepareWrittingFrame(long frame_nr);
 		void createStatistic(Data&);
+
+		Sideband::BlobList checkCompressedSidebandData(const char *key,
+							       Data& data);
+		void useCompressedSidebandData(Data&, Sideband::BlobList&,
+					       ZBufferList&& zheader = ZBufferList());
+
 		void compressionStart(Data&);
 		void compressionFinished(Data&);
 		void writeFileStat(Data&, Timestamp start, Timestamp end, long wsize);
@@ -356,6 +369,7 @@ public:
 		virtual void _clear();
 		virtual void _prepare(CtControl&) {};
 		// @brief used from compression tasks if any
+		virtual bool _hasBuffers(Data& data);
 		virtual void _setBuffers(Data& data, ZBufferList&& buffer);
 		virtual ZBufferList _takeBuffers(Data& data);
 
@@ -421,12 +435,18 @@ public:
 			return m_save_cnt->needParallelCompression();
 		}
 
+		bool needCompressionTask(Data& data)
+		{
+			return m_save_cnt->needCompressionTask(data);
+		}
+
 		void setSavingError(CtControl::ErrorCode error)
 		{
 			m_saving._setSavingError(error);
 		}
 
-		SinkTaskBase* getTask(TaskType type, const HeaderMap& header, long frame_nr);
+		SinkTaskBase* getTask(TaskType type, const HeaderMap& header,
+				      Data& data, int& priority);
 
 		void compressionStart(Data& data)
 		{
@@ -566,7 +586,6 @@ private:
 	FrameMap			m_frame_datas;
 
 	mutable Cond		m_cond;
-	bool			m_need_compression;
 	FrameCbkCountMap		m_nb_cbk;
 	TaskEventCallback* m_end_cbk;
 	bool			m_has_hwsaving;
@@ -621,10 +640,11 @@ private:
 	void _close();
 	void _getCommonHeader(HeaderMap&);
 	void _createStatistic(Data&);
+	bool _needCompression(Data&);
 	void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		bool keep_in_map);
-	void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header,
-		TaskList& task_list);
+	void _getTaskList(TaskType type, Data& data, const HeaderMap& header,
+		TaskList& task_list, int& priority);
 	void _postTaskList(Data&, const TaskList&, int priority);
 	void _compressionFinished(Data&, Stream&);
 	void _saveFinished(Data&, Stream&);
