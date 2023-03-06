@@ -22,6 +22,8 @@
 #ifndef HWFRAMEINFO_H
 #define HWFRAMEINFO_H
 
+#include "processlib/Sideband/DataContainer.h"
+
 #include "lima/LimaCompatibility.h"
 #include "lima/SizeUtils.h"
 #include "lima/Timestamp.h"
@@ -46,13 +48,15 @@ typedef struct LIMACORE_API HwFrameInfo {
 	Timestamp frame_timestamp;
 	int valid_pixels;
         OwnerShip buffer_owner_ship;
+	Sideband::DataContainer sideband_data;
 
 	HwFrameInfo() 
 		: acq_frame_nb(-1), frame_ptr(NULL), frame_dim(),
 		  frame_timestamp(), valid_pixels(0), buffer_owner_ship(Managed) {}
 
 	HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
-		    Timestamp timestamp, int pixels, OwnerShip owner);
+		    Timestamp timestamp, int pixels, OwnerShip owner,
+		    const Sideband::DataContainer& sideband = {});
   
         HwFrameInfo(const HwFrameInfo &anInfo);
 
@@ -61,6 +65,24 @@ typedef struct LIMACORE_API HwFrameInfo {
 
 LIMACORE_API std::ostream& operator <<(std::ostream& os,
 				       const HwFrameInfoType& info);
+
+// HwFrameInfo API
+template <typename T>
+void HwAddData(const char *key, HwFrameInfo& info, std::shared_ptr<T> sb_data)
+{
+	Sideband::AddContainerData<T>(key, info.sideband_data, sb_data);
+}
+
+template <typename T>
+std::shared_ptr<T> HwGetData(const char *key, HwFrameInfo& info)
+{
+	return Sideband::GetContainerData<T>(key, info.sideband_data);
+}
+
+inline bool HwRemoveData(const char *key, HwFrameInfo& info)
+{
+	return Sideband::RemoveContainerData(key, info.sideband_data);
+}
 
 }
 

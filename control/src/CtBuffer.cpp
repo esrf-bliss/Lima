@@ -22,6 +22,7 @@
 #include "lima/CtBuffer.h"
 #include "lima/CtAccumulation.h"
 #include "lima/CtSaving.h"
+#include "lima/SidebandData.h"
 
 #ifdef __unix
 #include <malloc.h>
@@ -321,6 +322,9 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
 
   fdata.setBuffer(fbuf);
   fbuf->unref();
+
+  if(!frame_info.sideband_data.empty())
+    fdata.sidebandData = frame_info.sideband_data;
 }
 
 void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
