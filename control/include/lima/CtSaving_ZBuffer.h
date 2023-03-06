@@ -30,6 +30,7 @@
 
 #include <vector>
 #include <map>
+#include <algorithm>
 
 namespace lima {
 
@@ -45,6 +46,8 @@ public:
 
   ZBuffer& operator =(const ZBuffer& o);
   ZBuffer& operator =(ZBuffer&& o);
+
+  void swap(ZBuffer& o);
 
   int used_size;
 
@@ -90,11 +93,10 @@ inline ZBuffer::ZBuffer(const ZBuffer& o)
 }
 
 inline ZBuffer::ZBuffer(ZBuffer&& o)
-  : used_size(std::move(o.used_size)), alloc_size(std::move(o.alloc_size)),
-    buffer(std::move(o.buffer))
 {
   DEB_CONSTRUCTOR();
-  o._setInvalid();
+  _setInvalid();
+  swap(o);
 }
 
 inline ZBuffer& ZBuffer::operator =(const ZBuffer& o)
@@ -117,13 +119,22 @@ inline ZBuffer& ZBuffer::operator =(ZBuffer&& o)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
   if (std::addressof(o) == this)
-    THROW_CTL_ERROR(InvalidValue) << "Trying to this to itself";
+    THROW_CTL_ERROR(InvalidValue) << "Trying to move this to itself";
   if (_isValid())
     _free();
-  used_size = std::move(o.used_size);
-  buffer = std::move(o.buffer);
-  o._setInvalid();
+  swap(o);
   return *this;
+}
+
+inline void ZBuffer::swap(ZBuffer& o)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR4(alloc_size, used_size, o.alloc_size, o.used_size);
+  if (std::addressof(o) == this)
+    return;
+  std::swap(used_size, o.used_size);
+  std::swap(alloc_size, o.alloc_size);
+  std::swap(buffer, o.buffer);
 }
 
 inline ZBuffer::~ZBuffer()
