@@ -5,7 +5,7 @@ conda_env=""
 camera="simulator"
 native_arch=0
 only_plugin=0
-profile="debug"
+profile="release"
 src_dir=""
 
 cmd="build"
@@ -21,7 +21,6 @@ function usage()
     echo "  -c <camera>  Compiles <camera> plugin (default: simulator)"
     echo "  -n           Compile for native computer architecture"
     echo "  -p           Compile only the camera plugin"
-    echo "  -r           Compile the release profile (default: debug)"
     echo "  -s <dir>     Source directory"
     echo
     echo "Cmd: build (default) | clean-sip | clean"
@@ -29,14 +28,13 @@ function usage()
     exit 1
 }
 
-while getopts "b:e:c:nprs:" opt; do
+while getopts "b:e:c:nps:" opt; do
     case ${opt} in
 	b) conda_base="${OPTARG}" ;;
 	e) conda_env="${OPTARG}" ;;
 	c) camera="${OPTARG}" ;;
 	n) native_arch=1 ;;
 	p) only_plugin=1 ;;
-	r) profile="release" ;;
 	s) src_dir="${OPTARG}" ;;
 	?) usage
     esac
@@ -117,10 +115,11 @@ if [ ${native_arch} -ne 0 ]; then
     export CXXFLAGS
 fi
 
-if [ ${profile} = "debug" ]; then
-    build_type="Debug"
-else
+if [ ${profile} = "release" ]; then
     build_type="RelWithDebInfo"
+else
+    echo "Error: profile ${profile} not supported"
+    exit 1
 fi
 
 CPUS=$(lscpu | grep '^CPU(s)' | awk '{print $2}')
@@ -138,7 +137,7 @@ function parallel_cmake
 case ${cmd} in
 build)
     if [ ${only_plugin} -eq 0 ]; then
-	((cd ${processlib_dir} && parallel_cmake conda/${profile}/build.sh) \
+	((cd ${processlib_dir} && parallel_cmake conda/build.sh) \
 	    && (cd . && parallel_cmake conda/${profile}/build.sh) \
 	    && (cd ${tango_dir} && pip install .)) || exit
     fi
