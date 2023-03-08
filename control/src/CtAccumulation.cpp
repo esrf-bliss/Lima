@@ -42,11 +42,11 @@ void CtAccumulation::_ImageReady4AccCallback::finished(Data &aData)
 }
 
 /*********************************************************************************
-			   calculation task
+         calculation task
 *********************************************************************************/
 template<class INPUT>
 static long long _calc_saturated_image_n_counter(const Data &src,Data &dst,
-						 const Data &mask,long long pixelThresholdValue)
+             const Data &mask,long long pixelThresholdValue)
 {
   const INPUT *aSrcPt,*aEndPt;
   aSrcPt = (const INPUT*)src.data();
@@ -59,10 +59,10 @@ static long long _calc_saturated_image_n_counter(const Data &src,Data &dst,
   {
     INPUT pixelValue = *aSrcPt;
     if((!maskPt || *maskPt) && pixelValue > pixelThresholdValue)
-	  {
-	    ++(*saturatedImagePt);
-	    ++saturatedCounter;
-	  }
+    {
+      ++(*saturatedImagePt);
+      ++saturatedCounter;
+    }
     ++aSrcPt,++saturatedImagePt;
     if(maskPt) ++maskPt;
   }
@@ -92,67 +92,61 @@ public:
     Data &mask = m_cnt.m_calc_mask;
 
     if(aData.dimensions != m_dst.dimensions)
-      {
-      	DEB_ERROR() << "Saturated image size is != form data src";
-	return;
-      }
+    {
+      DEB_ERROR() << "Saturated image size is != form data src";
+      return;
+    }
 
     if(!mask.empty())
+    {
+      if(mask.depth() != 1)
       {
-	if(mask.depth() != 1)
-	  {
-	    DEB_ERROR() << "mask should by an unsigned/signed char";
-	    return;
-	  }
-	if(mask.dimensions != aData.dimensions)
-	  {
-	    DEB_ERROR() << "mask size is != with data size";
-	    return;
-	  }
+        DEB_ERROR() << "mask should by an unsigned/signed char";
+        return;
       }
+      if(mask.dimensions != aData.dimensions)
+      {
+        DEB_ERROR() << "mask size is != with data size";
+        return;
+      }
+    }
 
     switch(aData.type)
-      {
-      case Data::UINT8:
-	result.value =
-	  _calc_saturated_image_n_counter<unsigned char>(aData,m_dst,
-							  mask,pixelThresholdValue);
-	break;
-      case Data::INT8:
-	result.value =
-	  _calc_saturated_image_n_counter<char>(aData,m_dst,
-						mask,pixelThresholdValue);
-	break;
-      case Data::UINT16:
-	result.value =
-	  _calc_saturated_image_n_counter<unsigned short>(aData,m_dst,
-							  mask,pixelThresholdValue);
-	break;
-      case Data::INT16:
-	result.value =
-	  _calc_saturated_image_n_counter<short>(aData,m_dst,
-						 mask,pixelThresholdValue);
-	break;
-      case Data::UINT32:
-	result.value =
-	  _calc_saturated_image_n_counter<unsigned int>(aData,m_dst,
-							mask,pixelThresholdValue);
-	break;
-      case Data::INT32:
-	result.value =
-	  _calc_saturated_image_n_counter<int>(aData,m_dst,
-					       mask,pixelThresholdValue);
-	break;
-      default:
-	DEB_ERROR() << "Wrong image type to calculate saturated image";
-	return;
-      }
+    {
+    case Data::UINT8:
+      result.value = _calc_saturated_image_n_counter<unsigned char>(
+        aData,m_dst,mask,pixelThresholdValue);
+      break;
+    case Data::INT8:
+      result.value =  _calc_saturated_image_n_counter<char>(
+        aData,m_dst,mask,pixelThresholdValue);
+      break;
+    case Data::UINT16:
+      result.value =  _calc_saturated_image_n_counter<unsigned short>(
+        aData,m_dst,mask,pixelThresholdValue);
+      break;
+    case Data::INT16:
+      result.value = _calc_saturated_image_n_counter<short>(
+        aData,m_dst,mask,pixelThresholdValue);
+      break;
+    case Data::UINT32:
+      result.value = _calc_saturated_image_n_counter<unsigned int>(
+        aData,m_dst,mask,pixelThresholdValue);
+      break;
+    case Data::INT32:
+      result.value = _calc_saturated_image_n_counter<int>(
+        aData,m_dst,mask,pixelThresholdValue);
+      break;
+    default:
+      DEB_ERROR() << "Wrong image type to calculate saturated image";
+      return;
+    }
     _mgr.setResult(result);
     m_cnt._callIfNeedThresholdCallback(aData,result.value);
   }
 private:
-  CtAccumulation& 	m_cnt;
-  Data			m_dst;
+  CtAccumulation& m_cnt;
+  Data            m_dst;
 };
 
 class CtAccumulation::_CalcEndCBK : public TaskEventCallback
@@ -165,29 +159,29 @@ public:
     AutoMutex Lock(m_cnt.m_cond.mutex());
     if(m_cnt.m_calc_pending_data.empty())
     {
-	    m_cnt.m_calc_ready = true;
-	    m_cnt.m_cond.broadcast(); // in case of waiting for m_calc_ready
+      m_cnt.m_calc_ready = true;
+      m_cnt.m_cond.broadcast(); // in case of waiting for m_calc_ready
     }
     else
     {
-	    std::pair<Data,Data> values = m_cnt.m_calc_pending_data.front();
-	    m_cnt.m_calc_pending_data.pop_front();
+      std::pair<Data,Data> values = m_cnt.m_calc_pending_data.front();
+      m_cnt.m_calc_pending_data.pop_front();
 
-	    _CalcSaturatedTask *calcTaskPt = new _CalcSaturatedTask(*m_cnt.m_calc_mgr,
-								    m_cnt,values.second);
-	    calcTaskPt->setEventCallback(m_cnt.m_calc_end);
-	    TaskMgr *aCalcMgrPt = new TaskMgr();
-	    aCalcMgrPt->addSinkTask(0,calcTaskPt);
-	    calcTaskPt->unref();
-	    aCalcMgrPt->setInputData(values.first);
-	    PoolThreadMgr::get().addProcess(aCalcMgrPt);
+      _CalcSaturatedTask *calcTaskPt = new _CalcSaturatedTask(*m_cnt.m_calc_mgr,
+                    m_cnt,values.second);
+      calcTaskPt->setEventCallback(m_cnt.m_calc_end);
+      TaskMgr *aCalcMgrPt = new TaskMgr();
+      aCalcMgrPt->addSinkTask(0,calcTaskPt);
+      calcTaskPt->unref();
+      aCalcMgrPt->setInputData(values.first);
+      PoolThreadMgr::get().addProcess(aCalcMgrPt);
     }
   }
 private:
   CtAccumulation& m_cnt;
 };
 
-//	     ******** CtAccumulation::Parameters ********
+//       ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
   pixelThresholdValue(2^16),
   pixelOutputType(Bpp32S),
@@ -205,7 +199,7 @@ void CtAccumulation::Parameters::reset()
 }
 
 #ifdef WITH_CONFIG
-//		   ******** _ConfigHandler ********
+//       ******** _ConfigHandler ********
 class CtAccumulation::_ConfigHandler : public CtConfig::ModuleTypeCallback
 {
 public:
@@ -230,7 +224,7 @@ public:
 
     accumulation_setting.get("active",pars.active);
     accumulation_setting.get("pixelThresholdValue",
-			     pars.pixelThresholdValue);
+           pars.pixelThresholdValue);
     accumulation_setting.get("savingFlag",pars.savingFlag);
     accumulation_setting.get("savePrefix",pars.savePrefix);
 
@@ -241,7 +235,7 @@ private:
 };
 #endif //WITH_CONFIG
 
-//		   ******** CtAccumulation ********
+//       ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) :
   m_buffers_size(16),
   m_ct(ct),
@@ -428,9 +422,9 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   if(frameNumber < 0)
   {
     if(!m_saturated_images.empty())
-	    frameNumber = m_saturated_images.back().frameNumber;
+      frameNumber = m_saturated_images.back().frameNumber;
     else
-	    frameNumber = 0;
+      frameNumber = 0;
   }
   aLock.unlock();
 
@@ -451,7 +445,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
     if(frameNumber < oldestFrameNumber || frameNumber > lastFrameId)
       THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not more available";
     else
-	    saturatedImage = m_saturated_images[frameNumber - oldestFrameNumber];
+      saturatedImage = m_saturated_images[frameNumber - oldestFrameNumber];
   }
   DEB_RETURN() << DEB_VAR1(saturatedImage);
 }
@@ -472,12 +466,12 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
   {
     AutoMutex aLock(m_cond.mutex());
     if(from < 0)
-	  {
-	    if(!m_saturated_images.empty())
-	      from = m_saturated_images.back().frameNumber;
-	    else
-	      from = 0;
-	  }
+    {
+      if(!m_saturated_images.empty())
+        from = m_saturated_images.back().frameNumber;
+      else
+        from = 0;
+    }
 
     aLock.unlock();
     std::list<CtAccumulation::_CounterResult> resultList;
@@ -485,18 +479,18 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
     m_calc_mgr->getHistory(resultList,fromCounterId);
 
     for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
-	      i != resultList.end();++i)
-	  {
-	    if(!(i->frameNumber % acc_nframes))
-	      result.push_back(std::list<long long>());
+        i != resultList.end();++i)
+    {
+      if(!(i->frameNumber % acc_nframes))
+        result.push_back(std::list<long long>());
 
-	    std::list<long long> &satImgCounters = result.back();
-	    satImgCounters.push_back(i->value);
-	  }
+      std::list<long long> &satImgCounters = result.back();
+      satImgCounters.push_back(i->value);
+    }
       
     /* Check if last image has the same number of counters if not remove */
     if(!result.empty() && result.front().size() != result.back().size())
-	    result.pop_back();
+      result.pop_back();
   }
 }
 
@@ -660,7 +654,7 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
   {
     int nextFrameNumber;
-    if(m_datas.empty())	// Init (first Frame)
+    if(m_datas.empty())  // Init (first Frame)
       nextFrameNumber = 0;
     else
       nextFrameNumber = m_datas.back().frameNumber + 1;
@@ -679,19 +673,19 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
 
     // create also the new image for saturated counters
     if(active)
-	  {
-	    Data newSatImg;
-	    newSatImg.type = Data::UINT16;
-	    newSatImg.dimensions = aData.dimensions;
-	    newSatImg.frameNumber = nextFrameNumber;
-	    newSatImg.timestamp = aData.timestamp;
-	    newSatImg.buffer = new Buffer(newSatImg.size());
-	    memset(newSatImg.data(),0,newSatImg.size());
-	    m_saturated_images.push_back(newSatImg);
+    {
+      Data newSatImg;
+      newSatImg.type = Data::UINT16;
+      newSatImg.dimensions = aData.dimensions;
+      newSatImg.frameNumber = nextFrameNumber;
+      newSatImg.timestamp = aData.timestamp;
+      newSatImg.buffer = new Buffer(newSatImg.size());
+      memset(newSatImg.data(),0,newSatImg.size());
+      m_saturated_images.push_back(newSatImg);
 
-	    if(long(m_saturated_images.size()) > m_buffers_size)
-	      m_saturated_images.pop_front();
-	  }
+      if(long(m_saturated_images.size()) > m_buffers_size)
+        m_saturated_images.pop_front();
+    }
   }
 
   Data accFrame = m_datas.back();
@@ -735,10 +729,10 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
   AutoMutex aLock(m_cond.mutex());
-  if(m_datas.empty())		// something weard append!
+  if(m_datas.empty())    // something weard append!
     THROW_CTL_ERROR(InvalidValue) << "Something weard append should be never in that case";
 
-  if(frameNumber < 0)		// means last
+  if(frameNumber < 0)    // means last
     aReturnData = m_datas.back();
   else
   {
@@ -812,36 +806,36 @@ void accumulate(Data& src, Data& dst, Func fn)
   case Data::UINT8:
     switch (dst.type)
     {
-    case Data::UINT16: 	return accumulate<unsigned char, unsigned short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT16: 	return accumulate<unsigned char, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::UINT32: 	return accumulate<unsigned char, unsigned int>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32: 	return accumulate<unsigned char, int>(src.data(), dst.data(), nb_items, fn);
+    case Data::UINT16:   return accumulate<unsigned char, unsigned short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT16:   return accumulate<unsigned char, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::UINT32:   return accumulate<unsigned char, unsigned int>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32:   return accumulate<unsigned char, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
   case Data::INT8:
     switch (dst.type)
     {
-    case Data::INT16: 	return accumulate<char, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32: 	return accumulate<char, int>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT16:   return accumulate<char, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32:   return accumulate<char, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
   case Data::UINT16:
     switch (dst.type)
     {
-    case Data::UINT16: 	return accumulate<unsigned short, unsigned short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT16: 	return accumulate<unsigned short, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::UINT32: 	return accumulate<unsigned short, unsigned int>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32: 	return accumulate<unsigned short, int>(src.data(), dst.data(), nb_items, fn);
+    case Data::UINT16:   return accumulate<unsigned short, unsigned short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT16:   return accumulate<unsigned short, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::UINT32:   return accumulate<unsigned short, unsigned int>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32:   return accumulate<unsigned short, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
   case Data::INT16:
     switch (dst.type)
     {
-    case Data::INT16: 	return accumulate<short, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32: 	return accumulate<short, int>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT16:   return accumulate<short, short>(src.data(), dst.data(), nb_items, fn);
+    case Data::INT32:   return accumulate<short, int>(src.data(), dst.data(), nb_items, fn);
     }
     break;
 
@@ -898,4 +892,3 @@ CtConfig::ModuleTypeCallback* CtAccumulation::_getConfigHandler()
   return new _ConfigHandler(*this);
 }
 #endif //WITH_CONFIG
-    
