@@ -782,7 +782,7 @@ struct pixel_accumulate_offset_threshold
   template <class SrcType, class DstType>
   void operator()(SrcType src, DstType& dst) {
     DstType tmp_d = src - offset_;
-    if (std::is_signed<DstType>::value && tmp_d < 0)
+    if (!std::is_signed<DstType>::value && (src < offset_))
         tmp_d = 0;
     if (tmp_d > threshold_)
       dst += tmp_d;
