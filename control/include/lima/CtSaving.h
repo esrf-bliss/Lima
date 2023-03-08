@@ -356,8 +356,8 @@ public:
 		virtual void _clear();
 		virtual void _prepare(CtControl&) {};
 		// @brief used from compression tasks if any
-		virtual void _setBuffer(int frameNumber, ZBufferList&& buffer);
-		virtual ZBufferList _takeBuffers(int dataId);
+		virtual void _setBuffers(Data& data, ZBufferList&& buffer);
+		virtual ZBufferList _takeBuffers(Data& data);
 
 		mutable Mutex		m_lock;
 		Stream&			m_stream;
@@ -380,8 +380,6 @@ public:
 		Params2Handler		m_params_handler;
 		int			m_max_writing_task; ///< number of maximum parallel write
 		int			m_running_writing_task; ///< number of concurrent write running
-		Mutex			m_buffers_lock;
-		dataId2ZBufferList	m_buffers;
 
 	};
 	friend class SaveContainer;
@@ -547,6 +545,7 @@ private:
 	friend class _NewFrameSaveCBK;
 	class	_SavingErrorHandler;
 	friend class _SavingErrorHandler;
+	struct  _ZBufferListSidebandData;
 	typedef std::vector<SinkTaskBase*> TaskList;
 	typedef std::map<long, long>	FrameCbkCountMap;
 	typedef std::map<long, HeaderMap>	FrameHeaderMap;

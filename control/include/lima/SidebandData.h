@@ -30,6 +30,9 @@ namespace Sideband
 	/*
 	 * Lima SidebandData keys:
 	 *
+	 * Internal:
+	 *  zbuffer_list
+	 *
 	 */
 
 } // namespace SidebandData

@@ -60,6 +60,8 @@
 #include "CtSaving_Hdf5.h"
 #endif
 
+#include "lima/SidebandData.h"
+
 #include "processlib/TaskMgr.h"
 #include "processlib/SinkTask.h"
 
@@ -175,6 +177,16 @@ private:
 	CtSaving& m_saving;
 	CtEvent& m_event;
 };
+
+struct CtSaving::_ZBufferListSidebandData : Sideband::Data
+{
+	ZBufferList m_buffers;
+
+	_ZBufferListSidebandData(ZBufferList&& buffers)
+		: m_buffers(std::move(buffers))
+	{}
+};
+
 /** @brief Parameters default constructor
  */
 CtSaving::Parameters::Parameters()
@@ -2850,33 +2862,28 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 		fflush(m_log_stat_file);
 }
 
-void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
+void CtSaving::SaveContainer::_setBuffers(Data& data, ZBufferList&& buffers)
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_buffers_lock);
-	std::pair<dataId2ZBufferList::iterator, bool> result;
-	result = m_buffers.emplace(std::move(frameNumber), std::move(buffers));
-	if (!result.second)
-		result.first->second = std::move(buffers);
+	DEB_PARAM() << DEB_VAR2(data.frameNumber, buffers.size());
+	std::shared_ptr<_ZBufferListSidebandData> sb;
+	sb = std::make_shared<_ZBufferListSidebandData>(std::move(buffers));
+	Sideband::AddData("zbuffer_list", data, sb);
 }
 
-ZBufferList CtSaving::SaveContainer::_takeBuffers(int dataId)
+ZBufferList CtSaving::SaveContainer::_takeBuffers(Data& data)
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_buffers_lock);
-	dataId2ZBufferList::iterator i = m_buffers.find(dataId);
-	ZBufferList aReturnBufferPt(std::move(i->second));
-	m_buffers.erase(i);
-	return aReturnBufferPt;
+	DEB_PARAM() << DEB_VAR1(data.frameNumber);
+	std::shared_ptr<_ZBufferListSidebandData> sb;
+	sb = Sideband::GetData<_ZBufferListSidebandData>("zbuffer_list", data);
+	DEB_RETURN() << DEB_VAR1(sb->m_buffers.size());
+	return std::move(sb->m_buffers);
 }
 
 void CtSaving::SaveContainer::_clear()
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_buffers_lock);
-	if (m_buffers.size())
-		DEB_WARNING() << DEB_VAR1(m_buffers.size());
-	m_buffers.clear();
 }
 
 /** @brief check if all file can be written
