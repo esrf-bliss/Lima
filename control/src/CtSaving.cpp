@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <numeric>
+#include <atomic>
 
 #ifdef __linux__
 #include <unistd.h>
@@ -178,14 +179,31 @@ private:
 	CtEvent& m_event;
 };
 
-struct CtSaving::_ZBufferListSidebandData : Sideband::Data
+struct CtSaving::_SavingSidebandData : public Sideband::Data
 {
+	Mutex m_lock;
+	std::atomic<long> m_nb_cbk;
 	ZBufferList m_buffers;
 
-	_ZBufferListSidebandData(ZBufferList&& buffers)
-		: m_buffers(std::move(buffers))
+	_SavingSidebandData() : m_nb_cbk(0)
 	{}
 };
+
+inline CtSaving::_SavingDataPtr CtSaving::_getSavingData(Data& data)
+{
+	return Sideband::GetData<_SavingSidebandData>("saving", data);
+}
+
+inline CtSaving::_SavingDataPtr CtSaving::_createSavingData(Data& data)
+{
+	_SavingDataPtr ptr = _getSavingData(data);
+	if (!bool(ptr)) {
+		ptr = std::make_shared<_SavingSidebandData>();
+		Sideband::AddData("saving", data, ptr);
+	}
+	return ptr;
+}
+
 
 /** @brief Parameters default constructor
  */
@@ -1263,10 +1281,12 @@ void CtSaving::_getTaskList(TaskType type, Data& data, const HeaderMap& header,
 		}
 	}
 	size_t nb_cbk = task_list.size();
+	if (nb_cbk == 0)
+		THROW_CTL_ERROR(Error) << "No saving task for frame "
+				       << data.frameNumber;
 	DEB_TRACE() << DEB_VAR1(nb_cbk);
-	FrameCbkCountMap::value_type map_pair(data.frameNumber, long(nb_cbk));
-	AutoMutex aLock(m_cond.mutex());
-	m_nb_cbk.insert(map_pair);
+	_SavingDataPtr ptr = _createSavingData(data);
+	ptr->m_nb_cbk = nb_cbk;
 }
 /** @brief clear the common header
  */
@@ -1935,14 +1955,15 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, stream.getIndex());
 
-	AutoMutex aLock(m_cond.mutex());
+	_SavingDataPtr ptr = _getSavingData(aData);
+	if (!bool(ptr))
+		THROW_CTL_ERROR(Error) << "Missing saving sideband data";
+	if (--ptr->m_nb_cbk > 0)
+		return;
 
 	long frame_nr = aData.frameNumber;
-	FrameCbkCountMap::iterator count_it = m_nb_cbk.find(frame_nr);
-	if (--count_it->second > 0)
-		return;
-	m_nb_cbk.erase(count_it);
 
+	AutoMutex aLock(m_cond.mutex());
 	if (!_allStreamReady(frame_nr)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
 		m_frame_datas.insert(map_pair);
@@ -1967,19 +1988,17 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, stream.getIndex());
 
-	AutoMutex aLock(m_cond.mutex());
-
-	long frame_nr = aData.frameNumber;
-	FrameCbkCountMap::iterator count_it = m_nb_cbk.find(frame_nr);
-	if (--count_it->second > 0)
+	_SavingDataPtr ptr = _getSavingData(aData);
+	if (!bool(ptr))
+		THROW_CTL_ERROR(Error) << "Missing saving sideband data";
+	if (--ptr->m_nb_cbk > 0)
 		return;
-	m_nb_cbk.erase(count_it);
 
 	//@todo check if the frame is still available
-	if (m_end_cbk) {
-		AutoMutexUnlock u(aLock);
+	if (m_end_cbk)
 		m_end_cbk->finished(aData);
-	}
+
+	AutoMutex aLock(m_cond.mutex());
 
 	SavingMode saving_mode = getAcqSavingMode();
 	bool auto_saving = (saving_mode == AutoFrame) || (saving_mode == AutoHeader);
@@ -1998,7 +2017,7 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	FrameMap::iterator data_it, data_end = m_frame_datas.end();
 	for (data_it = m_frame_datas.begin(); tasks && (data_it != data_end); ++data_it, --tasks)
 	{
-		frame_nr = data_it->first;
+		long frame_nr = data_it->first;
 		header_it = m_frame_headers.find(frame_nr);
 		// sorted frames: if header is not available yet, abort search 
 		if ((saving_mode == AutoHeader) && (header_it == m_frame_headers.end()))
@@ -2072,8 +2091,6 @@ void CtSaving::_prepare()
 				stream.prepare();
 			}
 		}
-
-		m_nb_cbk.clear();
 
 		if (m_has_hwsaving)
 		{
@@ -3021,9 +3038,12 @@ bool CtSaving::SaveContainer::_hasBuffers(Data& data)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(data.frameNumber);
-	std::shared_ptr<_ZBufferListSidebandData> sb;
-	sb = Sideband::GetData<_ZBufferListSidebandData>("zbuffer_list", data);
-	bool ok = bool(sb);
+	_SavingDataPtr ptr = _getSavingData(data);
+	bool ok = false;
+	if (bool(ptr)) {
+		AutoMutex l(ptr->m_lock);
+		ok = !ptr->m_buffers.empty();
+	}
 	DEB_RETURN() << DEB_VAR1(ok);
 	return ok;
 }
@@ -3032,21 +3052,21 @@ void CtSaving::SaveContainer::_setBuffers(Data& data, ZBufferList&& buffers)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(data.frameNumber, buffers.size());
-	std::shared_ptr<_ZBufferListSidebandData> sb;
-	sb = std::make_shared<_ZBufferListSidebandData>(std::move(buffers));
-	Sideband::AddData("zbuffer_list", data, sb);
+	_SavingDataPtr ptr = _createSavingData(data);
+	AutoMutex l(ptr->m_lock);
+	ptr->m_buffers = std::move(buffers);
 }
 
 ZBufferList CtSaving::SaveContainer::_takeBuffers(Data& data)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(data.frameNumber);
-	std::shared_ptr<_ZBufferListSidebandData> sb;
-	sb = Sideband::GetData<_ZBufferListSidebandData>("zbuffer_list", data);
-	if (!bool(sb))
+	_SavingDataPtr ptr = _getSavingData(data);
+	if (!bool(ptr))
 		THROW_CTL_ERROR(Error) << "Missing saving sideband data";
-	DEB_RETURN() << DEB_VAR1(sb->m_buffers.size());
-	return std::move(sb->m_buffers);
+	AutoMutex l(ptr->m_lock);
+	DEB_RETURN() << DEB_VAR1(ptr->m_buffers.size());
+	return std::move(ptr->m_buffers);
 }
 
 void CtSaving::SaveContainer::_clear()

@@ -32,7 +32,7 @@ namespace Sideband
 	 * Lima SidebandData keys:
 	 *
 	 * Internal:
-	 *  zbuffer_list
+	 *  saving
 	 *
 	 * Compression:
 	 *  comp_gzip

@@ -565,9 +565,9 @@ private:
 	friend class _NewFrameSaveCBK;
 	class	_SavingErrorHandler;
 	friend class _SavingErrorHandler;
-	struct  _ZBufferListSidebandData;
+	struct  _SavingSidebandData;
+	typedef std::shared_ptr<_SavingSidebandData> _SavingDataPtr;
 	typedef std::vector<SinkTaskBase*> TaskList;
-	typedef std::map<long, long>	FrameCbkCountMap;
 	typedef std::map<long, HeaderMap>	FrameHeaderMap;
 
 	void _validateFrameHeader(long frame_nr);
@@ -586,7 +586,6 @@ private:
 	FrameMap			m_frame_datas;
 
 	mutable Cond		m_cond;
-	FrameCbkCountMap		m_nb_cbk;
 	TaskEventCallback* m_end_cbk;
 	bool			m_has_hwsaving;
 	HwSavingCtrlObj* m_hwsaving;
@@ -656,6 +655,9 @@ private:
 	void _ReadImage(Data&, int framenb);
 	bool _allStreamReady(long frame_nr);
 	void _waitWritingThreads();
+	static _SavingDataPtr _createSavingData(Data& data);
+	static _SavingDataPtr _getSavingData(Data& data);
+	
 #ifdef WITH_CONFIG
 	class _ConfigHandler;
 	CtConfig::ModuleTypeCallback* _getConfigHandler();
