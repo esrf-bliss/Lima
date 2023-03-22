@@ -1005,7 +1005,7 @@ void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber,
 	TaskMgr mgr;
 	mgr.setInputData(aReturnData);
 	int stage = 0;
-	m_op_int->addTo(mgr,stage,false);
+	m_op_int->addTo(mgr,stage,false,true);
 	if(stage)
 	  aReturnData = mgr.syncProcess();
       }

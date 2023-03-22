@@ -50,7 +50,8 @@ namespace lima
     void setReconstructionTask(LinkTask*);
     bool hasReconstructionTask();
 
-    void addTo(TaskMgr&,int&,bool registerCallback = true) const;
+    void addTo(TaskMgr&,int&,bool registerCallback = true,
+	       bool skipReconstruction = false) const;
 
     void setEndCallback(TaskEventCallback *aCbk)
     {
