@@ -51,9 +51,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC AND MSVC_VERSION GREATER 1500)
-    # Compiler specific (parallel build)
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} /MP")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+    add_compile_definitions(NOMINMAX)
 endif()
 
 # CMake additional macros

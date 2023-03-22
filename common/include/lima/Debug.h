@@ -503,6 +503,19 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 		return DebProxy();
 }
 
+namespace detail {
+
+/// Returns the length of a C style array (that has not decayed into a pointer)
+template <typename T, std::size_t sz>
+inline constexpr std::size_t lengthof(T(&)[sz]) { return sz; }
+
+inline constexpr size_t file_name_offset()
+{
+	return lengthof(__FILE__) - lengthof("common/include/lima/Debug.h");
+}
+
+} // namespace detail
+
 } // namespace lima
 
 /*------------------------------------------------------------------
@@ -556,18 +569,18 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 
 #define DEB_GLOBAL_FUNCT()						\
 	lima::DebObj deb(getDebParams(), false, __FUNCTION__,		\
-		   NULL, __FILE__, __LINE__)
+		   NULL, &__FILE__[::lima::detail::file_name_offset()], __LINE__)
 
 #define DEB_CONSTRUCTOR()						\
 	DEB_MEMBER_FUNCT()
 
 #define DEB_DESTRUCTOR()						\
 	lima::DebObj deb(getDebParams(), true, __FUNCTION__,		\
-		   getDebObjName(), __FILE__, __LINE__)
+		   getDebObjName(), &__FILE__[::lima::detail::file_name_offset()], __LINE__)
 
 #define DEB_MEMBER_FUNCT()						\
 	lima::DebObj deb(getDebParams(), false, __FUNCTION__,		\
-		   getDebObjName(), __FILE__, __LINE__)
+		   getDebObjName(), &__FILE__[::lima::detail::file_name_offset()], __LINE__)
 
 #define DEB_PTR()							\
 	(&deb)
@@ -582,7 +595,7 @@ inline DebProxy DebObj::write(DebType type, ConstStr file_name, int line_nr)
 	setDebObjName(n)
 
 
-#define DEB_MSG(type)		deb.write(type, __FILE__, __LINE__)
+#define DEB_MSG(type)		deb.write(type, &__FILE__[::lima::detail::file_name_offset()], __LINE__)
 
 #define DEB_FATAL()		DEB_MSG(lima::DebTypeFatal)
 #define DEB_ERROR()		DEB_MSG(lima::DebTypeError)

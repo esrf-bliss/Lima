@@ -314,6 +314,36 @@ int FrameDim::getImageTypeBpp(ImageType type)
 	}
 }
 
+bool FrameDim::isImageTypeSigned(ImageType type)
+{
+	switch (type) {
+	case Bpp8S:
+	case Bpp10S:	
+	case Bpp12S:	
+	case Bpp14S:
+	case Bpp16S:
+	case Bpp24S:
+	case Bpp32S:
+	case Bpp32F:
+		return true;
+
+	case Bpp1:
+	case Bpp4:
+	case Bpp6:
+	case Bpp8:
+	case Bpp10:
+	case Bpp12:
+	case Bpp14:
+	case Bpp16:
+	case Bpp24:
+	case Bpp32:
+	case Bpp64:
+		return false;
+	default:
+		throw LIMA_COM_EXC(InvalidValue, "Invalid image type");
+	}
+}
+
 int FrameDim::getImageTypeDepth(ImageType type)
 {
 	switch (type) {

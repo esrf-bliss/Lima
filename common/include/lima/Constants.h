@@ -23,6 +23,8 @@
 #define CONSTANTS_H
 
 #include "lima/LimaCompatibility.h"
+#include "processlib/Data.h"
+
 #include <ostream>
 #include <vector>
 #include <list>
@@ -47,6 +49,11 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os, ImageType image_type);
 LIMACORE_API std::istream& operator >>(std::istream& is, ImageType& image_type);
 LIMACORE_API const char* convert_2_string(ImageType image_type);
 LIMACORE_API void convert_from_string(const std::string&,ImageType&);
+
+LIMACORE_API Data::TYPE convert_imagetype_to_datatype(ImageType in);
+LIMACORE_API std::ostream& operator <<(std::ostream& os, Data::TYPE data_type);
+LIMACORE_API const char* convert_2_string(Data::TYPE data_type);
+
 enum AcqMode {
 	Single, Concatenation, Accumulation,
 };

@@ -54,8 +54,9 @@ namespace lima
       Parameters();
       void reset();
       
-      bool		active;	///< if true do the calculation
-      long long		pixelThresholdValue; ///< value which determine the threshold of the calculation
+      bool      active;	///< if true do the calculation
+      long long pixelThresholdValue; ///< value which determine the threshold of the calculation
+      ImageType pixelOutputType; ///< pixel ouptut type
 
       bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
       std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
@@ -92,6 +93,9 @@ namespace lima
     void setPixelThresholdValue(long long pixelThresholdValue);
     void getPixelThresholdValue(long long &pixelThresholdValue) const;
 
+    void setOutputType(ImageType pixelOutputType);
+    void getOutputType(ImageType& pixelOutputType) const;
+
     void getBufferSize(int &aBufferSize) const;
 
     void setSavingFlag(bool savingFlag);
@@ -122,6 +126,7 @@ namespace lima
 
     void registerThresholdCallback(ThresholdCallback &cb);
     void unregisterThresholdCallback(ThresholdCallback &cb);
+
   private:
     struct _CounterResult;
     typedef SinkTaskMgr<_CounterResult> _CalcSaturatedTaskMgr;

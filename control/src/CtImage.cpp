@@ -22,6 +22,7 @@
 
 #include "lima/CtImage.h"
 #include "lima/CtAcquisition.h"
+#include "lima/CtAccumulation.h"
 #include "lima/CtSaving.h"
 
 using namespace lima;
@@ -629,7 +630,13 @@ void CtImage::getImageType(ImageType& type) const
 	CtAcquisition *acq = m_ct.acquisition();
 	AcqMode mode;
 	acq->getAcqMode(mode);
-	type= mode == Accumulation ? Bpp32S : m_img_type;
+	if (mode == Accumulation)
+	{
+		CtAccumulation* acc = m_ct.accumulation();
+		acc->getOutputType(type);
+	}
+	else
+		type = m_img_type;
 
 	DEB_RETURN() << DEB_VAR1(type);
 }
@@ -646,7 +653,8 @@ void CtImage::getImageDim(FrameDim& dim) const
 	CtAcquisition *acq = m_ct.acquisition();
 	AcqMode mode;
 	acq->getAcqMode(mode);
-	ImageType imageType = mode == Accumulation ? Bpp32S : m_img_type;
+	ImageType imageType;
+	getImageType(imageType);
 	dim= FrameDim(m_sw->getSize(), imageType);
 
 	DEB_RETURN() << DEB_VAR1(dim);

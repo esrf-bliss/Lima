@@ -300,39 +300,9 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
   Size fsize;
 
   ftype= frame_info.frame_dim.getImageType();
-  switch (ftype) {
-  case Bpp8:
-    fdata.type= Data::UINT8; break;
-  case Bpp8S:
-    fdata.type = Data::INT8; break;
-  case Bpp10:
-  case Bpp12:
-  case Bpp14:
-  case Bpp16:
-    fdata.type= Data::UINT16; break;
-  case Bpp16S:
-    fdata.type = Data::INT16; break;
-  case Bpp32:
-    fdata.type= Data::UINT32; break;
-  case Bpp32S:
-    fdata.type = Data::INT32; break;
-  case Bpp32F:
-    fdata.type = Data::FLOAT; break;
-  case Bpp1:
-  case Bpp4:
-  case Bpp6:
-    fdata.type= Data::UINT8; break;
-  case Bpp24:
-    fdata.type= Data::UINT32; break;
-  case Bpp24S:
-    fdata.type = Data::INT32; break;
-  case Bpp64:
-    fdata.type= Data::UINT64; break;
-  case Bpp64S:
-    fdata.type = Data::INT64; break;
-  default:
-    THROW_CTL_ERROR(InvalidValue) << "Data type not yet managed" << DEB_VAR1(ftype);
-  }
+  fdata.type = convert_imagetype_to_datatype(ftype);
+  if (fdata.type == Data::UNDEF)
+    THROW_CTL_ERROR(InvalidValue) << "Data type not yet supported" << DEB_VAR1(ftype);
 
   fsize= frame_info.frame_dim.getSize();
   fdata.dimensions.push_back(fsize.getWidth());
