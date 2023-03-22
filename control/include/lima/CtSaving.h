@@ -551,8 +551,7 @@ private:
 	typedef std::map<long, long>	FrameCbkCountMap;
 	typedef std::map<long, HeaderMap>	FrameHeaderMap;
 
-	void _validateFrameHeader(long frame_nr,
-		AutoMutex&);
+	void _validateFrameHeader(long frame_nr);
 	void _resetReadyFlag();
 
 	CtControl& m_ctrl;
