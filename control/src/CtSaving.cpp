@@ -209,7 +209,7 @@ inline CtSaving::_SavingDataPtr CtSaving::_createSavingData(Data& data)
  */
 CtSaving::Parameters::Parameters()
 	: imageType(Bpp8), nextNumber(0), fileFormat(RAW), savingMode(Manual),
-	overwritePolicy(Abort),
+	overwritePolicy(Abort), useHwComp(false),
 	indexFormat("%04d"), framesPerFile(1),
 	nbframes(0)
 {
@@ -614,6 +614,7 @@ public:
 		saving_setting.set("fileFormat", convert_2_string(pars.fileFormat));
 		saving_setting.set("savingMode", convert_2_string(pars.savingMode));
 		saving_setting.set("overwritePolicy", convert_2_string(pars.overwritePolicy));
+		saving_setting.set("useHwComp", pars.useHwComp);
 		saving_setting.set("indexFormat", pars.indexFormat);
 		saving_setting.set("framesPerFile", pars.framesPerFile);
 		saving_setting.set("nbframes", pars.nbframes);
@@ -651,6 +652,10 @@ public:
 		std::string stroverwritePolicy;
 		if (saving_setting.get("overwritePolicy", stroverwritePolicy))
 			convert_from_string(stroverwritePolicy, pars.overwritePolicy);
+
+		bool useHwComp;
+		if (saving_setting.get("useHwComp", useHwComp))
+			pars.useHwComp = useHwComp;
 
 		saving_setting.get("indexFormat", pars.indexFormat);
 
@@ -1188,6 +1193,34 @@ void CtSaving::getOverwritePolicy(OverwritePolicy& policy,
 
 	DEB_RETURN() << DEB_VAR1(policy);
 }
+/** @brief set the useHwComp active flag for a saving stream
+ */
+void CtSaving::setUseHwComp(bool active, int stream_idx)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(active, stream_idx);
+
+	AutoMutex aLock(m_cond.mutex());
+	Stream& stream = getStream(stream_idx);
+	Parameters pars = stream.getParameters(Auto);
+	pars.useHwComp = active;
+
+	stream.setParameters(pars);
+}
+/** @brief get the useHwComp active flag for a saving stream
+ */
+void CtSaving::getUseHwComp(bool& active, int stream_idx) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(stream_idx);
+
+	AutoMutex aLock(m_cond.mutex());
+	const Stream& stream = getStream(stream_idx);
+	const Parameters& pars = stream.getParameters(Auto);
+	active = pars.useHwComp;
+
+	DEB_RETURN() << DEB_VAR1(active);
+}
 /** @brief set the number of frame saved per file for a saving stream
  */
 void CtSaving::setFramesPerFile(unsigned long frames_per_file, int stream_idx)
@@ -1608,14 +1641,12 @@ void CtSaving::frameReady(Data& aData)
 	if (_controlIsFault()) {
 		DEB_WARNING() << "Skip saving data: " << aData;
 		return;
-	}
+	} else if (!m_end_cbk)
+		DEB_WARNING() << "No end callback registered";
 
 	bool need_compression = _needCompression(aData);
 
 	AutoMutex aLock(m_cond.mutex());
-
-	if (!m_end_cbk)
-		DEB_WARNING() << "No end callback registered";
 
 	_createStatistic(aData);
 
@@ -2925,14 +2956,16 @@ bool CtSaving::SaveContainer::needCompressionTask(Data& data)
 	static const char *bslz4_key = "comp_bshuffle_lz4";
 
 #define RETURN_WITH_DEB(x)			\
-	{					\
+	do {					\
 		bool ok = (x);			\
 		DEB_RETURN() << DEB_VAR1(ok);	\
 		return ok;			\
-	}
+	} while (0)
 
 	if (_hasBuffers(data))
 		RETURN_WITH_DEB(false);
+	else if (!params.useHwComp)
+		RETURN_WITH_DEB(needParallelCompression());
 
 	Sideband::BlobList blob_list;
 
@@ -3001,8 +3034,10 @@ CtSaving::SaveContainer::checkCompressedSidebandData(const char *key, Data& data
 	typedef Sideband::CompressedData CompData;
 	std::shared_ptr<CompData> comp_data = Sideband::GetData<CompData>(key, data);
 	bool ok = bool(comp_data);
-	if (!ok)
+	if (!ok) {
+		DEB_WARNING() << "Missing '" << key << "' in " << data;
 		return {};
+	}
 
 	DEB_TRACE() << DEB_VAR3(comp_data->decomp_dims[0],
 				comp_data->decomp_dims[1],
@@ -3010,12 +3045,12 @@ CtSaving::SaveContainer::checkCompressedSidebandData(const char *key, Data& data
 	// check size & depth
 	ok = ((data.dimensions == comp_data->decomp_dims) &&
 	      (data.depth() == comp_data->pixel_depth));
-	if (!ok)
+	if (!ok) {
+		DEB_WARNING() << "Uncompressed image size/depth mismatch with "
+				      << "'" << key << "' in " << data;
 		return {};
-	// check buffer - external image operations are not in-place
-	ok = (data.data() == comp_data->decomp_buffer);
-	if (!ok)
-		return {};
+	}
+
 	// all ok, return blobs
 	DEB_RETURN() << DEB_VAR1(comp_data->comp_blobs.size());
 	return comp_data->comp_blobs;

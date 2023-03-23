@@ -109,7 +109,8 @@ public:
 		long nextNumber;		///< next file number
 		FileFormat fileFormat;	///< the saving format (EDF,CBF...)
 		SavingMode savingMode;	///< saving mode (automatic,manual...)
-		OverwritePolicy overwritePolicy; ///< how you the saving react it find existing filename
+		OverwritePolicy overwritePolicy; ///< how the saving reacts it find existing filename
+		bool useHwComp;		///< use HW (sideband) compression
 		std::string indexFormat;	///< ie: %.4d if you want 4 digits
 		long framesPerFile;	///< the number of images save in one files
 		long nbframes;
@@ -171,6 +172,9 @@ public:
 
 	void setOverwritePolicy(OverwritePolicy policy, int stream_idx = 0);
 	void getOverwritePolicy(OverwritePolicy& policy, int stream_idx = 0) const;
+
+	void setUseHwComp(bool  active, int stream_idx = 0);
+	void getUseHwComp(bool& active, int stream_idx = 0) const;
 
 	void setFramesPerFile(unsigned long frames_per_file, int stream_idx = 0);
 	void getFramesPerFile(unsigned long& frames_per_file,
@@ -895,6 +899,7 @@ inline std::ostream& operator<<(std::ostream& os, const CtSaving::Parameters& pa
 		<< "fileFormat=" << params.fileFormat << "," << aFileFormatHumanPt << ", "
 		<< "savingMode=" << params.savingMode << "," << aSavingModeHumanPt << ", "
 		<< "overwritePolicy=" << params.overwritePolicy << "," << anOverwritePolicyHumanPt << ", "
+		<< "useHwComp=" << params.useHwComp << ","
 		<< "framesPerFile=" << params.framesPerFile << ", "
 		<< "nbframes=" << params.nbframes
 		<< ">";
@@ -912,6 +917,7 @@ inline bool operator ==(const CtSaving::Parameters& a,
 		(a.fileFormat == b.fileFormat) &&
 		(a.savingMode == b.savingMode) &&
 		(a.overwritePolicy == b.overwritePolicy) &&
+		(a.useHwComp == b.useHwComp) &&
 		(a.indexFormat == b.indexFormat) &&
 		(a.framesPerFile == b.framesPerFile) &&
 		(a.nbframes == b.nbframes));
