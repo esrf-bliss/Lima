@@ -503,14 +503,30 @@ void CtControl::prepareAcq()
   m_ct_saving->resetInternalCommonHeader();
   m_ct_saving->clear();
 
-  DEB_TRACE() << "Apply hardware bin/roi";
-  m_ct_image->applyHard();
+  // Acq params can change Image params (like bit depth) iterate until size invariance
+  const int max_nb_iterations = 3;
+  for (int retry = 0; retry < max_nb_iterations; ++retry) {
+    DEB_TRACE() << "Apply hardware bin/roi";
+    m_ct_image->applyHard();
 
+    FrameDim prev_dim;
+    m_ct_image->getImageDim(prev_dim);
+    
+    DEB_TRACE() << "Apply Acquisition Parameters";
+    m_ct_acq->apply(m_policy, this);
+
+    FrameDim new_dim;
+    m_ct_image->getImageDim(new_dim);
+    
+    if (new_dim == prev_dim)
+      break;
+    else if (retry == max_nb_iterations - 1)
+      THROW_CTL_ERROR(Error) << "CtImage/CtAcquisition did not converge after "
+			     << retry << " retries";
+  }
+  
   DEB_TRACE() << "Setup Acquisition Buffers";
   m_ct_buffer->setup(this);
-
-  DEB_TRACE() << "Apply Acquisition Parameters";
-  m_ct_acq->apply(m_policy, this);
 
   DEB_TRACE() << "Apply Shutter Parameters";
   m_ct_shutter->apply();
