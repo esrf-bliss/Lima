@@ -167,6 +167,7 @@ using namespace lima;
       bool useHwComp;
       std::string indexFormat;
       long framesPerFile;
+      long everyNFrames;
       long nbframes;
 
       Parameters();
@@ -220,8 +221,10 @@ using namespace lima;
     void getUseHwComp(bool& policy /Out/, int stream_idx=0) const;
 
     void setFramesPerFile(unsigned long frames_per_file, int stream_idx=0);
-    void getFramesPerFile(unsigned long& frames_per_file /Out/, 
-                         int stream_idx=0) const;
+    void getFramesPerFile(unsigned long& frames_per_file /Out/, int stream_idx=0) const;
+
+    void setEveryNFrames(unsigned long frames_per_file, int stream_idx=0);
+    void getEveryNFrames(unsigned long& frames_per_file /Out/, int stream_idx=0) const;
 
     void setManagedMode(ManagedMode mode);
     void getManagedMode(ManagedMode &mode /Out/) const;

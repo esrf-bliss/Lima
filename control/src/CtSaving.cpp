@@ -253,7 +253,7 @@ void CtSaving::_createSavingData(Data& data)
 CtSaving::Parameters::Parameters()
 	: imageType(Bpp8), nextNumber(0), fileFormat(RAW), savingMode(Manual),
 	overwritePolicy(Abort), useHwComp(false),
-	indexFormat("%04d"), framesPerFile(1),
+	indexFormat("%04d"), framesPerFile(1), everyNFrames(1),
 	nbframes(0)
 {
 }
@@ -666,6 +666,7 @@ public:
 		saving_setting.set("useHwComp", pars.useHwComp);
 		saving_setting.set("indexFormat", pars.indexFormat);
 		saving_setting.set("framesPerFile", pars.framesPerFile);
+		saving_setting.set("framesPerFile", pars.framesPerFile);
 		saving_setting.set("nbframes", pars.nbframes);
 
 		CtSaving::ManagedMode managedmode;
@@ -711,6 +712,10 @@ public:
 		int framesPerFile;
 		if (saving_setting.get("framesPerFile", framesPerFile))
 			pars.framesPerFile = framesPerFile;
+		
+		int everyNFrames;
+		if (saving_setting.get("everyNFrames", everyNFrames))
+			pars.everyNFrames = everyNFrames;
 
 		int nbframes;
 		if (saving_setting.get("nbframes", nbframes))
@@ -1330,6 +1335,9 @@ void CtSaving::setFramesPerFile(unsigned long frames_per_file, int stream_idx)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(frames_per_file, stream_idx);
 
+	if (frames_per_file <= 0)
+		THROW_CTL_ERROR(InvalidValue) << DEB_VAR1(frames_per_file) << "Not supported";
+
 	AutoMutex aLock(m_cond.mutex());
 	Stream& stream = getStream(stream_idx);
 	Parameters pars = stream.getParameters(Auto);
@@ -1350,6 +1358,37 @@ void CtSaving::getFramesPerFile(unsigned long& frames_per_file,
 	frames_per_file = pars.framesPerFile;
 
 	DEB_RETURN() << DEB_VAR1(frames_per_file);
+}
+/** @brief set the saving period of the subsampled frame for a saving stream
+ */
+void CtSaving::setEveryNFrames(unsigned long every_n_frames, int stream_idx)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(every_n_frames, stream_idx);
+
+	if (every_n_frames <= 0)
+		THROW_CTL_ERROR(InvalidValue) << DEB_VAR1(every_n_frames) << "Not supported";
+
+	AutoMutex aLock(m_cond.mutex());
+	Stream& stream = getStream(stream_idx);
+	Parameters pars = stream.getParameters(Auto);
+	pars.everyNFrames = every_n_frames;
+	stream.setParameters(pars);
+}
+/** @brief get the saving period of the subsampled frame for a saving stream
+ */
+void CtSaving::getEveryNFrames(unsigned long& every_n_frames,
+	int stream_idx) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(stream_idx);
+
+	AutoMutex aLock(m_cond.mutex());
+	const Stream& stream = getStream(stream_idx);
+	const Parameters& pars = stream.getParameters(Auto);
+	every_n_frames = pars.everyNFrames;
+
+	DEB_RETURN() << DEB_VAR1(every_n_frames);
 }
 
 /** @brief set who will manage the saving.
