@@ -2440,11 +2440,15 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 				       << DEB_VAR1(frameId);
 	const CtSaving::Parameters& pars = frame_par.m_pars;
 
-	long write_size;
+	long write_size = 0;
 	Params2Handler::value_type par_handler = open(frame_par);
 	try
 	{
-		write_size = _writeFile(par_handler.second.m_handler, aData, aHeader, pars.fileFormat);
+		if (!(frameId % pars.everyNFrames))
+		{
+			std::cout << "_writeFile - frameId:" << frameId << " pars.everyNFrames: " << pars.everyNFrames << std::endl;
+			write_size = _writeFile(par_handler.second.m_handler, aData, aHeader, pars.fileFormat);
+		}
 	}
 	catch (std::ios_base::failure & error)
 	{
