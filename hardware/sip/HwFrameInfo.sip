@@ -133,6 +133,41 @@ Py_DECREF(tmpObject);
 	  Py_DECREF(tmpObject);
 	}
 %End
+       void copy_data(SIP_PYOBJECT arr);
+%MethodCode
+       PyArrayObject *tmpObject = (PyArrayObject *) PyArray_ContiguousFromObject(a0, NPY_NOTYPE,
+       							                    0, 0);
+	if(tmpObject)
+	{
+	  int nbDim = PyArray_NDIM(tmpObject);
+  	  if(nbDim == 2)
+	  {
+ 	    ImageType image_type;
+    	    switch(PyArray_TYPE(tmpObject))
+    	    {
+	      case NPY_BYTE:	image_type = Bpp8S;  	break;
+    	      case NPY_UBYTE:  	image_type = Bpp8;  	break;
+    	      case NPY_SHORT:	image_type = Bpp16S; 	break;
+    	      case NPY_USHORT: 	image_type = Bpp16; 	break;
+    	      case NPY_INT32:	image_type = Bpp32S; 	break;
+              case NPY_UINT32: 	image_type = Bpp32; 	break;
+    	      default:
+		goto clean;
+            }
+
+	      FrameDim tmpFrameDim(PyArray_DIM(tmpObject,1),
+				   PyArray_DIM(tmpObject,0),
+				   image_type);
+	      memcpy(sipCpp->frame_ptr,PyArray_DATA(tmpObject),tmpFrameDim.getMemSize());
+	  }
+	clean:
+	  Py_DECREF(tmpObject);
+	}
+	else
+	{
+	  sipIsErr = 1;
+	}
+%End
 	SIP_PYOBJECT __repr__() const;
 %MethodCode
         LIMA_REPR_CODE
