@@ -144,10 +144,10 @@ using namespace lima;
  protected:
 	virtual void setFrameCallbackActive(bool cb_active);
  public:
-        void copy_data(acq_frame_nb, SIP_PYOBJECT arr);
+        void copy_data(int frame_nb, SIP_PYOBJECT arr);
 %MethodCode
        PyArrayObject *tmpObject = (PyArrayObject *) PyArray_ContiguousFromObject(a1, NPY_NOTYPE,
-       							                    0, 0);
+						                    0, 0);
 	if(tmpObject)
 	{
 	  int nbDim = PyArray_NDIM(tmpObject);
@@ -169,7 +169,7 @@ using namespace lima;
 	      FrameDim tmpFrameDim(PyArray_DIM(tmpObject,1),
 				   PyArray_DIM(tmpObject,0),
 				   image_type);
-	      void *frame_ptr = sipCpp->getFrameBufferPtr(acq_frame_nb);
+	      void *frame_ptr = sipCpp->getFrameBufferPtr(a0);
 	      memcpy(frame_ptr,PyArray_DATA(tmpObject),tmpFrameDim.getMemSize());
 	  }
 	clean:
