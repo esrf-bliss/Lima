@@ -43,6 +43,8 @@ using namespace lima;
 
  private:
 	BufferAllocMgr(const BufferAllocMgr& o);
+
+
 };
 
 class SoftBufferAllocMgr : BufferAllocMgr
@@ -141,6 +143,44 @@ using namespace lima;
 
  protected:
 	virtual void setFrameCallbackActive(bool cb_active);
+ public:
+        void copy_data(acq_frame_nb, SIP_PYOBJECT arr);
+%MethodCode
+       PyArrayObject *tmpObject = (PyArrayObject *) PyArray_ContiguousFromObject(a1, NPY_NOTYPE,
+       							                    0, 0);
+	if(tmpObject)
+	{
+	  int nbDim = PyArray_NDIM(tmpObject);
+  	  if(nbDim == 2)
+	  {
+ 	    ImageType image_type;
+    	    switch(PyArray_TYPE(tmpObject))
+    	    {
+	      case NPY_BYTE:	image_type = Bpp8S;  	break;
+    	      case NPY_UBYTE:  	image_type = Bpp8;  	break;
+    	      case NPY_SHORT:	image_type = Bpp16S; 	break;
+    	      case NPY_USHORT: 	image_type = Bpp16; 	break;
+    	      case NPY_INT32:	image_type = Bpp32S; 	break;
+              case NPY_UINT32: 	image_type = Bpp32; 	break;
+    	      default:
+		goto clean;
+            }
+
+	      FrameDim tmpFrameDim(PyArray_DIM(tmpObject,1),
+				   PyArray_DIM(tmpObject,0),
+				   image_type);
+	      void *frame_ptr = sipCpp->getFrameBufferPtr(acq_frame_nb);
+	      memcpy(frame_ptr,PyArray_DATA(tmpObject),tmpFrameDim.getMemSize());
+	  }
+	clean:
+	  Py_DECREF(tmpObject);
+	}
+	else
+	{
+	  sipIsErr = 1;
+	}
+%End
+
 };
 
 class BufferCtrlMgr
