@@ -43,8 +43,6 @@ using namespace lima;
 
  private:
 	BufferAllocMgr(const BufferAllocMgr& o);
-
-
 };
 
 class SoftBufferAllocMgr : BufferAllocMgr
@@ -166,14 +164,30 @@ using namespace lima;
 		goto clean;
             }
 
-	      FrameDim tmpFrameDim(PyArray_DIM(tmpObject,1),
-				   PyArray_DIM(tmpObject,0),
-				   image_type);
-	      void *frame_ptr = sipCpp->getFrameBufferPtr(a0);
-	      memcpy(frame_ptr,PyArray_DATA(tmpObject),tmpFrameDim.getMemSize());
-	  }
+	    FrameDim tmpFrameDim(PyArray_DIM(tmpObject,1),
+			   PyArray_DIM(tmpObject,0),
+			   image_type);
+            if (tmpFrameDim.getMemSize() > sipCpp->getFrameDim().getMemSize())
+	    {
+              PyErr_SetString(PyExc_ValueError, "Frame size cannot be bigger than the allocated buffer frame size");
+	      sipIsErr = 1;
+	    }
+	    else
+	    {
+	      void *frame_ptr = NULL;
+	      frame_ptr = sipCpp->getFrameBufferPtr(a0);
+	      if (!frame_ptr)
+	      {
+	        sipIsErr = 1;
+	      }
+	      else
+	      {
+	        memcpy(frame_ptr,PyArray_DATA(tmpObject),tmpFrameDim.getMemSize());
+              }
+	    }
+          }
 	clean:
-	  Py_DECREF(tmpObject);
+	   Py_DECREF(tmpObject);
 	}
 	else
 	{
