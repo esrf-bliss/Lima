@@ -31,6 +31,8 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | Merlin             | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
+| Minipix            | Yes   |         | Pixet 1.7.8          |
++--------------------+-------+---------+----------------------+
 | Mythen3            | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
 | PCO                | Yes   | Yes     | PCO 1.23             |
@@ -86,16 +88,17 @@ Linux Only
   Andor SDK3 <camera/andor3/doc/index>
   Aviex <camera/aviex/doc/index>
   Dexela <camera/dexela/doc/index>
-  Frelon <camera/frelon/doc/index>
-  Maxipix <camera/maxipix/doc/index>
   Dectris Eiger <camera/eiger/doc/index>
   Dectris Mythen <camera/mythen/doc/index>
   Dectris Mythen 3 <camera/mythen3/doc/index>
   Dectris Pilatus 2 & 3  <camera/pilatus/doc/index>
   Fli <camera/fli/doc/index>
+  Frelon <camera/frelon/doc/index>
   ImXpad <camera/imxpad/doc/index>
   Lambda <camera/lambda/doc/index>
+  Maxipix <camera/maxipix/doc/index>
   Merlin <camera/merlin/doc/index>
+  Minipix <camera/minipix/doc/index>
   Pixirad <camera/pixirad/doc/index>
   PointGrey <camera/pointgrey/doc/index>
   Prosilica <camera/prosilica/doc/index>
