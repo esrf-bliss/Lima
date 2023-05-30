@@ -501,9 +501,15 @@ void CtAcquisition::setAcqExpoTime(double acq_time)
     THROW_CTL_ERROR(Error) << "Should disable auto exposure to set exposure time";
 
   if(m_inpars.acqMode != Accumulation)
-    {
-      CHECK_EXPOTIME(acq_time);
-    }
+  {
+    CHECK_EXPOTIME(acq_time);
+  }
+  else if (acq_time < m_valid_ranges.min_exp_time)
+  {
+    THROW_CTL_ERROR(InvalidValue)
+      << "Specified exposure time " << DEB_VAR1(acq_time) << " too short: "
+      << DEB_VAR1(m_valid_ranges.min_exp_time);
+  }
   m_inpars.acqExpoTime= acq_time;
 }
 
