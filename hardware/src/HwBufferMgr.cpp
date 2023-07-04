@@ -552,7 +552,8 @@ void BufferCtrlMgr::setFrameDim(const FrameDim& frame_dim)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(frame_dim, m_frame_dim);
 
-	if (frame_dim == m_frame_dim) {
+	if ((frame_dim == m_frame_dim) &&
+	    (m_frame_dim.getImageType() == frame_dim.getImageType())) {
 		DEB_TRACE() << "Nothing to do";
 		return;
 	}
