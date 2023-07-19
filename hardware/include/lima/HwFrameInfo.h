@@ -68,18 +68,19 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os,
 
 // HwFrameInfo API
 template <typename T>
-void HwAddData(const char *key, HwFrameInfo& info, std::shared_ptr<T> sb_data)
+void HwAddData(const std::string& key, HwFrameInfo& info,
+	       std::shared_ptr<T> sb_data)
 {
 	Sideband::AddContainerData<T>(key, info.sideband_data, sb_data);
 }
 
 template <typename T>
-std::shared_ptr<T> HwGetData(const char *key, HwFrameInfo& info)
+std::shared_ptr<T> HwGetData(const std::string& key, HwFrameInfo& info)
 {
 	return Sideband::GetContainerData<T>(key, info.sideband_data);
 }
 
-inline bool HwRemoveData(const char *key, HwFrameInfo& info)
+inline bool HwRemoveData(const std::string& key, HwFrameInfo& info)
 {
 	return Sideband::RemoveContainerData(key, info.sideband_data);
 }

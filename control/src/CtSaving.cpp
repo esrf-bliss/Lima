@@ -189,9 +189,11 @@ struct CtSaving::_SavingSidebandData : public Sideband::Data
 	{}
 };
 
+const std::string CtSaving::m_saving_data_key = "saving";
+
 inline CtSaving::_SavingDataPtr CtSaving::_getSavingData(Data& data)
 {
-	return Sideband::GetData<_SavingSidebandData>("saving", data);
+	return Sideband::GetData<_SavingSidebandData>(m_saving_data_key, data);
 }
 
 inline CtSaving::_SavingDataPtr CtSaving::_createSavingData(Data& data)
@@ -199,7 +201,7 @@ inline CtSaving::_SavingDataPtr CtSaving::_createSavingData(Data& data)
 	_SavingDataPtr ptr = _getSavingData(data);
 	if (!bool(ptr)) {
 		ptr = std::make_shared<_SavingSidebandData>();
-		Sideband::AddData("saving", data, ptr);
+		Sideband::AddData(m_saving_data_key, data, ptr);
 	}
 	return ptr;
 }
@@ -2951,9 +2953,9 @@ bool CtSaving::SaveContainer::needCompressionTask(Data& data)
 
 	Parameters& params = m_stream.getParameters(Acq);
 
-	static const char *gzip_key = "comp_gzip";
-	static const char *lz4_key = "comp_lz4";
-	static const char *bslz4_key = "comp_bshuffle_lz4";
+	static const std::string gzip_key = "comp_gzip";
+	static const std::string lz4_key = "comp_lz4";
+	static const std::string bslz4_key = "comp_bshuffle_lz4";
 
 #define RETURN_WITH_DEB(x)			\
 	do {					\
@@ -3026,7 +3028,7 @@ bool CtSaving::SaveContainer::needCompressionTask(Data& data)
 }
 
 Sideband::BlobList
-CtSaving::SaveContainer::checkCompressedSidebandData(const char *key, Data& data)
+CtSaving::SaveContainer::checkCompressedSidebandData(const std::string& key, Data& data)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(key, data);

@@ -347,7 +347,7 @@ public:
 		virtual void prepareWrittingFrame(long frame_nr);
 		void createStatistic(Data&);
 
-		Sideband::BlobList checkCompressedSidebandData(const char *key,
+		Sideband::BlobList checkCompressedSidebandData(const std::string& key,
 							       Data& data);
 		void useCompressedSidebandData(Data&, Sideband::BlobList&,
 					       ZBufferList&& zheader = ZBufferList());
@@ -659,6 +659,8 @@ private:
 	void _ReadImage(Data&, int framenb);
 	bool _allStreamReady(long frame_nr);
 	void _waitWritingThreads();
+
+	static const std::string m_saving_data_key;
 	static _SavingDataPtr _createSavingData(Data& data);
 	static _SavingDataPtr _getSavingData(Data& data);
 	
