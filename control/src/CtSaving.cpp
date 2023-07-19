@@ -179,7 +179,7 @@ private:
 	CtEvent& m_event;
 };
 
-struct CtSaving::_SavingSidebandData : public Sideband::Data
+struct CtSaving::_SavingSidebandData : public sideband::Data
 {
 	Mutex m_lock;
 	std::atomic<long> m_nb_cbk;
@@ -193,16 +193,17 @@ const std::string CtSaving::m_saving_data_key = "saving";
 
 inline CtSaving::_SavingDataPtr CtSaving::_getSavingData(Data& data)
 {
-	return Sideband::GetData<_SavingSidebandData>(m_saving_data_key, data);
+	return sideband::GetData<_SavingSidebandData>(m_saving_data_key, data);
 }
 
 inline CtSaving::_SavingDataPtr CtSaving::_createSavingData(Data& data)
 {
-	_SavingDataPtr ptr = _getSavingData(data);
-	if (!bool(ptr)) {
-		ptr = std::make_shared<_SavingSidebandData>();
-		Sideband::AddData(m_saving_data_key, data, ptr);
-	}
+	DEB_STATIC_FUNCT();
+	if (sideband::HasData<_SavingSidebandData>(m_saving_data_key, data))
+		return _getSavingData(data);
+	_SavingDataPtr ptr = std::make_shared<_SavingSidebandData>();
+	if (!sideband::AddData(m_saving_data_key, data, ptr))
+		THROW_CTL_ERROR(Error) << "Saving SidebandData of wrong type";
 	return ptr;
 }
 
@@ -2969,7 +2970,7 @@ bool CtSaving::SaveContainer::needCompressionTask(Data& data)
 	else if (!params.useHwComp)
 		RETURN_WITH_DEB(needParallelCompression());
 
-	Sideband::BlobList blob_list;
+	sideband::BlobList blob_list;
 
 	switch (params.fileFormat) {
 #ifdef WITH_Z_COMPRESSION
@@ -3027,14 +3028,14 @@ bool CtSaving::SaveContainer::needCompressionTask(Data& data)
 	return needParallelCompression();
 }
 
-Sideband::BlobList
+sideband::BlobList
 CtSaving::SaveContainer::checkCompressedSidebandData(const std::string& key, Data& data)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(key, data);
 
-	typedef Sideband::CompressedData CompData;
-	std::shared_ptr<CompData> comp_data = Sideband::GetData<CompData>(key, data);
+	typedef sideband::CompressedData CompData;
+	std::shared_ptr<CompData> comp_data = sideband::GetData<CompData>(key, data);
 	bool ok = bool(comp_data);
 	if (!ok) {
 		DEB_WARNING() << "Missing '" << key << "' in " << data;
@@ -3059,12 +3060,12 @@ CtSaving::SaveContainer::checkCompressedSidebandData(const std::string& key, Dat
 }
 
 void CtSaving::SaveContainer::useCompressedSidebandData(Data& data,
-							Sideband::BlobList& blob_list,
+							sideband::BlobList& blob_list,
 							ZBufferList&& zheader)
 {
 	DEB_MEMBER_FUNCT();
 	ZBufferList buffers(std::move(zheader));
-	Sideband::BlobList::iterator bit, bend = blob_list.end();
+	sideband::BlobList::iterator bit, bend = blob_list.end();
 	for (bit = blob_list.begin(); bit != bend; ++bit)
 		buffers.emplace_back(bit->first, bit->second);
 	DEB_TRACE() << DEB_VAR2(data.frameNumber, buffers.size());

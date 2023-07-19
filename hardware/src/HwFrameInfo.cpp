@@ -52,7 +52,7 @@ ostream& lima::operator <<(ostream& os, const HwFrameInfoType& info)
 	   << "buffer_owner_ship=" << aBufferOwnerShipPt;
 	if (!info.sideband_data.empty()) {
 		os << ", sideband_data=<";
-		typedef Sideband::DataContainer Container;
+		typedef sideband::DataContainer Container;
 		Container::const_iterator it, end = info.sideband_data.end();
 		const char *sep = "";
 		for (it = info.sideband_data.begin(); it != end; ++it, sep = ", ")
@@ -66,7 +66,7 @@ ostream& lima::operator <<(ostream& os, const HwFrameInfoType& info)
 
 HwFrameInfo::HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
 			 Timestamp timestamp, int pixels, OwnerShip owner,
-			 const Sideband::DataContainer& sideband)
+			 const sideband::DataContainer& sideband)
   : acq_frame_nb(frame_nb), frame_ptr(), frame_dim(),
     frame_timestamp(timestamp), valid_pixels(pixels),buffer_owner_ship(owner),
     sideband_data(sideband)

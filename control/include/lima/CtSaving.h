@@ -347,9 +347,9 @@ public:
 		virtual void prepareWrittingFrame(long frame_nr);
 		void createStatistic(Data&);
 
-		Sideband::BlobList checkCompressedSidebandData(const std::string& key,
+		sideband::BlobList checkCompressedSidebandData(const std::string& key,
 							       Data& data);
-		void useCompressedSidebandData(Data&, Sideband::BlobList&,
+		void useCompressedSidebandData(Data&, sideband::BlobList&,
 					       ZBufferList&& zheader = ZBufferList());
 
 		void compressionStart(Data&);

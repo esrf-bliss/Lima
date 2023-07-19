@@ -22,10 +22,10 @@
 #ifndef SIDEBANDDATA_H
 #define SIDEBANDDATA_H
 
-#include "processlib/SidebandData.h"
-#include "processlib/Sideband/CompressedData.h"
+#include "processlib/sideband/SidebandData.h"
+#include "processlib/sideband/CompressedData.h"
 
-namespace Sideband
+namespace sideband
 {
 
 	/*
@@ -41,6 +41,6 @@ namespace Sideband
 	 *
 	 */
 
-} // namespace SidebandData
+} // namespace sideband
 
 #endif // SIDEBANDDATA_H

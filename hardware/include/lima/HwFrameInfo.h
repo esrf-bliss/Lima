@@ -22,7 +22,7 @@
 #ifndef HWFRAMEINFO_H
 #define HWFRAMEINFO_H
 
-#include "processlib/Sideband/DataContainer.h"
+#include "processlib/sideband/DataContainer.h"
 
 #include "lima/LimaCompatibility.h"
 #include "lima/SizeUtils.h"
@@ -48,7 +48,7 @@ typedef struct LIMACORE_API HwFrameInfo {
 	Timestamp frame_timestamp;
 	int valid_pixels;
         OwnerShip buffer_owner_ship;
-	Sideband::DataContainer sideband_data;
+	sideband::DataContainer sideband_data;
 
 	HwFrameInfo() 
 		: acq_frame_nb(-1), frame_ptr(NULL), frame_dim(),
@@ -56,7 +56,7 @@ typedef struct LIMACORE_API HwFrameInfo {
 
 	HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
 		    Timestamp timestamp, int pixels, OwnerShip owner,
-		    const Sideband::DataContainer& sideband = {});
+		    const sideband::DataContainer& sideband = {});
   
         HwFrameInfo(const HwFrameInfo &anInfo);
 
@@ -68,21 +68,34 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os,
 
 // HwFrameInfo API
 template <typename T>
-void HwAddData(const std::string& key, HwFrameInfo& info,
+bool HwHasData(const std::string& key, HwFrameInfo& info)
+{
+	return sideband::HasContainerData<T>(key, info.sideband_data);
+}
+
+template <typename T>
+bool HwAddData(const std::string& key, HwFrameInfo& info,
 	       std::shared_ptr<T> sb_data)
 {
-	Sideband::AddContainerData<T>(key, info.sideband_data, sb_data);
+	return sideband::AddContainerData<T>(key, info.sideband_data, sb_data);
+}
+
+template <typename T>
+void HwSetData(const std::string& key, HwFrameInfo& info,
+	       std::shared_ptr<T> sb_data)
+{
+	sideband::SetContainerData<T>(key, info.sideband_data, sb_data);
 }
 
 template <typename T>
 std::shared_ptr<T> HwGetData(const std::string& key, HwFrameInfo& info)
 {
-	return Sideband::GetContainerData<T>(key, info.sideband_data);
+	return sideband::GetContainerData<T>(key, info.sideband_data);
 }
 
 inline bool HwRemoveData(const std::string& key, HwFrameInfo& info)
 {
-	return Sideband::RemoveContainerData(key, info.sideband_data);
+	return sideband::RemoveContainerData(key, info.sideband_data);
 }
 
 }
