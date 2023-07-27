@@ -324,7 +324,7 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
   fbuf->unref();
 
   if(!frame_info.sideband_data.empty())
-    fdata.sidebandData = frame_info.sideband_data;
+    fdata.sideband = frame_info.sideband_data;
 }
 
 void CtBuffer::getDataFromHwFrameInfo(Data &fdata,

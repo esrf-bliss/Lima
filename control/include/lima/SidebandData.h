@@ -22,7 +22,6 @@
 #ifndef SIDEBANDDATA_H
 #define SIDEBANDDATA_H
 
-#include "processlib/sideband/SidebandData.h"
 #include "processlib/sideband/CompressedData.h"
 
 namespace sideband

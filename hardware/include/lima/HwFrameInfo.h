@@ -22,7 +22,7 @@
 #ifndef HWFRAMEINFO_H
 #define HWFRAMEINFO_H
 
-#include "processlib/sideband/DataContainer.h"
+#include "processlib/Container.h"
 
 #include "lima/LimaCompatibility.h"
 #include "lima/SizeUtils.h"
@@ -39,16 +39,18 @@ namespace lima
  *
  *******************************************************************/
 
-typedef struct LIMACORE_API HwFrameInfo {
+struct LIMACORE_API HwFrameInfo {
 	enum OwnerShip {Managed,Transfer,Shared};
+
+	typedef Container<sideband::DataPtr> SidebandContainer;
 
 	int acq_frame_nb;
 	void *frame_ptr;
 	FrameDim frame_dim;
 	Timestamp frame_timestamp;
 	int valid_pixels;
-        OwnerShip buffer_owner_ship;
-	sideband::DataContainer sideband_data;
+	OwnerShip buffer_owner_ship;
+	SidebandContainer sideband_data;
 
 	HwFrameInfo() 
 		: acq_frame_nb(-1), frame_ptr(NULL), frame_dim(),
@@ -56,48 +58,49 @@ typedef struct LIMACORE_API HwFrameInfo {
 
 	HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
 		    Timestamp timestamp, int pixels, OwnerShip owner,
-		    const sideband::DataContainer& sideband = {});
+		    const SidebandContainer& sideband = {});
   
-        HwFrameInfo(const HwFrameInfo &anInfo);
+	HwFrameInfo(const HwFrameInfo &anInfo);
 
 	bool isValid() const;
-} HwFrameInfoType;
+};
 
-LIMACORE_API std::ostream& operator <<(std::ostream& os,
-				       const HwFrameInfoType& info);
+typedef HwFrameInfo HwFrameInfoType; // For backward compatibility
+
+LIMACORE_API std::ostream& operator <<(std::ostream& os, const HwFrameInfo& info);
 
 // HwFrameInfo API
 template <typename T>
 bool HwHasData(const std::string& key, HwFrameInfo& info)
 {
-	return sideband::HasContainerData<T>(key, info.sideband_data);
+	return info.sideband_data.contains(key);
 }
 
 template <typename T>
 bool HwAddData(const std::string& key, HwFrameInfo& info,
 	       std::shared_ptr<T> sb_data)
 {
-	return sideband::AddContainerData<T>(key, info.sideband_data, sb_data);
+	return info.sideband_data.insert(key, sb_data);
 }
 
 template <typename T>
 void HwSetData(const std::string& key, HwFrameInfo& info,
 	       std::shared_ptr<T> sb_data)
 {
-	sideband::SetContainerData<T>(key, info.sideband_data, sb_data);
+	return info.sideband_data.insert(key, sb_data);
 }
 
 template <typename T>
 std::shared_ptr<T> HwGetData(const std::string& key, HwFrameInfo& info)
 {
-	return sideband::GetContainerData<T>(key, info.sideband_data);
+	return sideband::DataCast<T>(info.sideband_data.get(key));
 }
 
-inline bool HwRemoveData(const std::string& key, HwFrameInfo& info)
+inline void HwRemoveData(const std::string& key, HwFrameInfo& info)
 {
-	return sideband::RemoveContainerData(key, info.sideband_data);
+	info.sideband_data.erase(key);
 }
 
-}
+} //namespace lima
 
 #endif // HWFRAMEINFO_H

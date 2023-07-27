@@ -187,22 +187,33 @@ struct CtSaving::_SavingSidebandData : public sideband::Data
 
 	_SavingSidebandData() : m_nb_cbk(0)
 	{}
+
+	std::string repr() override {
+		std::ostringstream os;
+		os << "zbuffer=" << m_buffers.size();
+		return os.str();
+	}
 };
 
 const std::string CtSaving::m_saving_data_key = "saving";
 
 inline CtSaving::_SavingDataPtr CtSaving::_getSavingData(Data& data)
 {
-	return sideband::GetData<_SavingSidebandData>(m_saving_data_key, data);
+	DEB_STATIC_FUNCT();
+	auto res = data.sideband.get(m_saving_data_key);
+	if (!res)
+		THROW_CTL_ERROR(Error) << "Saving SidebandData not found";
+
+	return sideband::DataCast<_SavingSidebandData>(*res);
 }
 
 inline CtSaving::_SavingDataPtr CtSaving::_createSavingData(Data& data)
 {
 	DEB_STATIC_FUNCT();
-	if (sideband::HasData<_SavingSidebandData>(m_saving_data_key, data))
+	if (data.sideband.contains(m_saving_data_key))
 		return _getSavingData(data);
 	_SavingDataPtr ptr = std::make_shared<_SavingSidebandData>();
-	if (!sideband::AddData(m_saving_data_key, data, ptr))
+	if (!data.sideband.insert(m_saving_data_key, ptr))
 		THROW_CTL_ERROR(Error) << "Saving SidebandData of wrong type";
 	return ptr;
 }
@@ -3034,19 +3045,20 @@ CtSaving::SaveContainer::checkCompressedSidebandData(const std::string& key, Dat
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(key, data);
 
-	typedef sideband::CompressedData CompData;
-	std::shared_ptr<CompData> comp_data = sideband::GetData<CompData>(key, data);
-	bool ok = bool(comp_data);
-	if (!ok) {
+	Data::SidebandContainer::Optional res = data.sideband.get(key);
+	if (!res) {
 		DEB_WARNING() << "Missing '" << key << "' in " << data;
 		return {};
 	}
+
+	typedef sideband::CompressedData CompressedData;
+	std::shared_ptr<CompressedData> comp_data = sideband::DataCast<CompressedData>(*res);
 
 	DEB_TRACE() << DEB_VAR3(comp_data->decomp_dims[0],
 				comp_data->decomp_dims[1],
 				comp_data->pixel_depth);
 	// check size & depth
-	ok = ((data.dimensions == comp_data->decomp_dims) &&
+	bool ok = ((data.dimensions == comp_data->decomp_dims) &&
 	      (data.depth() == comp_data->pixel_depth));
 	if (!ok) {
 		DEB_WARNING() << "Uncompressed image size/depth mismatch with "
