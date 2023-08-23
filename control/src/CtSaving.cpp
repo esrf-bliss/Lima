@@ -1081,17 +1081,14 @@ void CtSaving::_waitWritingThreads()
 	DEB_MEMBER_FUNCT();
 
 	// Waiting all writing thread
-	CtControl::Status status;
-	m_ctrl.getStatus(status);
-	while (status.AcquisitionStatus != AcqFault &&
-		!_allStreamReady(-1))
-	{
+	while (!_controlIsFault()) {
+		AutoMutex aLock(m_cond.mutex());
+		if (_allStreamReady(-1))
+			break;
 		m_cond.wait();
-		m_ctrl.getStatus(status);
-		DEB_TRACE() << DEB_VAR1(status);
 	}
 
-	if (status.AcquisitionStatus == AcqFault)
+	if (_controlIsFault())
 		THROW_CTL_ERROR(Error) << "Acquisition status is in Fault";
 }
 void CtSaving::getHardwareFormat(std::string& format) const
@@ -1534,7 +1531,7 @@ void CtSaving::addToInternalCommonHeader(const HeaderValue& value)
 bool CtSaving::_controlIsFault()
 {
 	DEB_MEMBER_FUNCT();
-	
+
 	CtControl::Status status;
 	m_ctrl.getStatus(status);
 	bool fault = (status.AcquisitionStatus == AcqFault);
@@ -1566,10 +1563,12 @@ void CtSaving::frameReady(Data& aData)
 	if (_controlIsFault()) {
 		DEB_WARNING() << "Skip saving data: " << aData;
 		return;
-	} else
-		DEB_WARNING() << "No end callback registered";
+	}
 
 	AutoMutex aLock(m_cond.mutex());
+
+	if (!m_end_cbk)
+		DEB_WARNING() << "No end callback registered";
 
 	_createStatistic(aData);
 
@@ -1775,20 +1774,21 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(aFrameNumber);
 
-	ManagedMode managed_mode;
 	{
 		AutoMutex lock(m_cond.mutex());
-
 		if (getAcqSavingMode() != Manual)
 			THROW_CTL_ERROR(Error) << "Manual saving is only permitted when "
 				"saving mode == Manual";
+	}
 
-		// wait until the saving is no more used
-		_waitWritingThreads();
+	// wait until the saving is no more used
+	_waitWritingThreads();
 
+	ManagedMode managed_mode;
+	{
+		AutoMutex lock(m_cond.mutex());
 		if (!m_saving_error_handler)
 			m_saving_error_handler = new _SavingErrorHandler(*this, *m_ctrl.event());
-
 		managed_mode = getManagedMode();
 	}
 
