@@ -442,6 +442,11 @@ CtControl::~CtControl()
   delete m_soft_op_error_handler;
 }
 
+TaskMgr::EventCallback *CtControl::getSoftOpErrorHandler()
+{
+  return m_soft_op_error_handler;
+}
+
 void CtControl::setApplyPolicy(ApplyPolicy policy)
 {
   DEB_MEMBER_FUNCT();
@@ -662,6 +667,8 @@ void CtControl::_stopAcq(bool faulty_acq)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(faulty_acq);
+
+  m_ct_accumulation->stop();
 
   {
     AutoMutex aLock(m_cond.mutex());
