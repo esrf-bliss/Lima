@@ -222,17 +222,18 @@ namespace lima {
       
       //@todo sout << "valid_pixels = " << aData.validPixels << " ;\n";
       
-      
-      aData.header.lock();
-      Data::HeaderContainer::Header &aDataHeader = aData.header.header();
-      for(Data::HeaderContainer::Header::iterator i = aDataHeader.begin();i != aDataHeader.end();++i)
-	{
-	  if(!i->second.size())
-	    sout << i->first << " = " << ";\n";
-	  else
-	    sout << i->first << " = " << i->second << " ;\n";
-	}
-      aData.header.unlock();
+      {
+	typedef Data::HeaderContainer::LockedRef LockedRef;
+	LockedRef aLockedRef(aData.header);
+	LockedRef::Header &aDataHeader = aLockedRef.get();
+	for(LockedRef::Header::iterator i = aDataHeader.begin();i != aDataHeader.end();++i)
+	  {
+	    if(!i->second.size())
+	      sout << i->first << " = " << ";\n";
+	    else
+	      sout << i->first << " = " << i->second << " ;\n";
+	  }
+      }
       
       for(CtSaving::HeaderMap::iterator i = aHeader.begin(); i != aHeader.end();++i)
 	{
