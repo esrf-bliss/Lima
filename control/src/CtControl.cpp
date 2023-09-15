@@ -871,8 +871,9 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
 
   int concatNbFrames = 1;
 
-  AutoMutex aLock(m_cond.mutex());
-  ImageStatus &imgStatus = m_status.ImageCounters;
+  ImageStatus imgStatus;
+  getImageStatus(imgStatus);
+
   long lastFrame;
   if (m_op_ext_link_task_active && !baseImage) {
     lastFrame = imgStatus.LastImageReady;
@@ -908,7 +909,6 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
       THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
   } else if (frameNumber + readBlockLen - 1 > lastFrame)
     THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
-  aLock.unlock();
 
   bool one_block = (readBlockLen == 1);
   if (concatNbFrames > 1) {
@@ -1318,6 +1318,18 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
   DEB_MEMBER_FUNCT();
   if(m_status.AcquisitionStatus == AcqFault) return true;
 
+  bool manual_saving;
+  int first_to_save = -1, last_to_save = -1;
+  {
+    AutoMutexUnlock u(l);
+    CtSaving::SavingMode saving_mode;
+    m_ct_saving->getSavingMode(saving_mode);
+    manual_saving = (saving_mode == CtSaving::Manual);
+    if (!manual_saving)
+      m_ct_saving->getSaveCounters(first_to_save, last_to_save);
+
+  }
+
   const ImageStatus &imageStatus = m_status.ImageCounters;
 
   // ext ops are not in-place, relaxing hw buffer limit is LastImageReady
@@ -1336,9 +1348,6 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
   long nb_buffers;
   m_ct_buffer->getNumber(nb_buffers);
   
-  CtSaving::SavingMode mode;
-  m_ct_saving->getSavingMode(mode);
-
   bool overrunFlag = false;
   ErrorCode error_code = NoError;
   if(imageToProcess >= nb_buffers) // Process overrun
@@ -1346,11 +1355,9 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
       overrunFlag = true;
       error_code = ProcessingOverun;
     }
-  else if(mode != CtSaving::Manual && imageToSave >= nb_buffers) // Save overrun
+  else if(!manual_saving && imageToSave >= nb_buffers) // Save overrun
     {
       overrunFlag = true;
-      int first_to_save, last_to_save;
-      m_ct_saving->getSaveCounters(first_to_save, last_to_save);
       DEB_ERROR() << DEB_VAR2(first_to_save, last_to_save);
       int frames_to_save = last_to_save - first_to_save + 1;
       int frames_to_compress = imageStatus.LastImageReady - last_to_save;
