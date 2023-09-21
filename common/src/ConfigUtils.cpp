@@ -224,11 +224,10 @@ void Setting::set(const std::string& alias,
   
   Setting header_setting = data_setting.addChild("header");
   {
-    typedef Data::HeaderContainer::LockedRef LockedRef;
-    LockedRef locked_ref(data.header);
-    const LockedRef::Header &header = locked_ref.get();
-    for(LockedRef::Header::const_iterator i = header.begin();
-	i != header.end();++i)
+    typedef Data::HeaderContainer Header;
+    Header::LockedPtr header_ptr(data.header);
+    for(Header::const_iterator i = header_ptr->begin();
+	i != header_ptr->end();++i)
       header_setting.set(i->first.c_str(),i->second);
   }
 

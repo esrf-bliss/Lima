@@ -82,10 +82,9 @@ class SaveContainerCbf::Compression : public SinkTaskBase
     cbf_failnez(cbf_new_datablock(cbf, "image_0"));
 
     {
-      typedef Data::HeaderContainer::LockedRef LockedRef;
-      LockedRef aLockedRef(aData.header);
-      LockedRef::Header &aDataHeader = aLockedRef.get();
-      aHeader.insert(aDataHeader.begin(),aDataHeader.end());
+      typedef Data::HeaderContainer Header;
+      Header::LockedPtr aLockedPtr(aData.header);
+      aHeader.insert(aLockedPtr->begin(),aLockedPtr->end());
     }
 
     // Here prepare a Ordered HeaderMap, so sort the header values and insert them
