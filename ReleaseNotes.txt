@@ -27,8 +27,6 @@ Camera updates
   * Andor3 v1.11.0 
     * update for sdk 3.15.30092.2, only one with bitflow driver supported by ubuntu 20.04 kernel version
     * Update deps to lima-core>=1.9.20 which introduces a binary incompatibility with AutoMutex class
-
-  * Andor3 v1.10.0
     * Support of MARANA detector
     * Change of camera interface. Andor3 parameters are not fixed enum anymore
     * serial_number can be specified to attach interface to a specific camera. This allow to have two controlled cameras on the same PC.
@@ -76,7 +74,7 @@ Camera updates
   * Minipix v1.9.0
     * First release, camera in production at ESRF beamline ID20
 
-  * Pco v1.9.8
+  * Pco v1.9.10
     * Fix: Dimax timeout (just ignored for now)
     * Add missing support for Edge 5.5 GL
     * Add Edge CL LUT compression support (16 -> 12 bit)
@@ -93,7 +91,7 @@ Camera updates
     * latency_time added to support frame rate setting
     * Fix: Fixed wrong min/max gain
 
-  * Simulator v1.9.9
+  * Simulator v1.9.10
     * Rebuild to sync with processlib 1.8.6 (using external pthread-win21 library)
     * Fix: Invalid max_roi in (prefetched) loader mode
     * Fix: frame dimensions at initialization or when switching simulation mode
