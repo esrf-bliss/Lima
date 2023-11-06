@@ -54,7 +54,8 @@ Camera updates
       * Update the sdk local include files to version 2.0 20220915
       * add a test program for hw trigger mode
 
-  * Eiger v1.9.13 
+  * Eiger v1.9.14 
+    * Filewriter: at prepare delete the remaining files in DCU storage
     * HW roi support added for 9M and 16M models
     * Update deps to lima-core>=1.9.20 which introduces a binary incompatibility with AutoMutex class
     * Camera be initialize with a memory mapped file (e.g ramdisk) to use the new MmapFileBufferAllocMgr buffer manager, 
