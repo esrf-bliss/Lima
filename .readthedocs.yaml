@@ -5,6 +5,52 @@
 # Required
 version: 2
 
+submodules:
+  include:
+    - applications/cli
+    - applications/tango/python
+    - camera/hamamatsu
+    - camera/pco
+    - camera/perkinelmer
+    - camera/photonicscience
+    - camera/princeton
+    - camera/adsc
+    - camera/andor3
+    - camera/aviex
+    - camera/arinax
+    - camera/dexela
+    - camera/eiger
+    - camera/mythen
+    - camera/mythen3
+    - camera/pilatus
+    - camera/fli
+    - camera/frelon
+    - camera/imxpad
+    - camera/lambda
+    - camera/maxipix
+    - camera/merlin
+    - camera/minipix
+    - camera/pixirad
+    - camera/pointgrey
+    - camera/prosilica
+    - camera/marccd
+    - camera/rayonixhs
+    - camera/slsdetector
+    - camera/ueye
+    - camera/ultra
+    - camera/v4l2
+    - camera/ximea
+    - camera/xpad
+    - camera/xspress3
+    - camera/xh
+    - camera/zwo
+    - camera/andor
+    - camera/basler
+    - camera/dhyana
+    - camera/iris
+    - camera/roperscientific
+    - camera/simulator
+
 # Set the version of Python and other tools you might need
 build:
   os: ubuntu-22.04
