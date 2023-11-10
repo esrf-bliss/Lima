@@ -7,7 +7,6 @@ version: 2
 
 submodules:
   include:
-    - applications/cli
     - applications/tango/python
     - camera/hamamatsu
     - camera/pco
