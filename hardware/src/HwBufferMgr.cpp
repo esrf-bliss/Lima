@@ -461,7 +461,7 @@ bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 	int frame_nb = buffer_nb * m_nb_concat_frames + concat_frame_nb;
 	m_info_list[frame_nb] = frame_info;
 	if (!frame_info.sideband_data.empty() && !m_keep_sideband_data)
-		m_info_list[frame_nb].sideband_data.clear();
+		m_info_list[frame_nb].sideband_data.reset();
 
 	if (!m_fcb_act) {
 		DEB_TRACE() << "No cb registered";
