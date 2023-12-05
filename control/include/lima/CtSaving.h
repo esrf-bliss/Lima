@@ -345,6 +345,7 @@ public:
 		virtual bool isReady(long frame_nr) const;
 		virtual void setReady(long frame_nr);
 		virtual void prepareWrittingFrame(long frame_nr);
+		void createSavingData(Data&);
 		void createStatistic(Data&);
 
 		sideband::BlobList checkCompressedSidebandData(const std::string& key,
@@ -523,6 +524,11 @@ public:
 
 		void prepareWrittingFrame(long frame_nr);
 
+		void createSavingData(Data& data)
+		{
+			m_save_cnt->createSavingData(data);
+		}
+
 		void createStatistic(Data& data)
 		{
 			m_save_cnt->createStatistic(data);
@@ -661,7 +667,8 @@ private:
 	void _waitWritingThreads();
 
 	static const std::string m_saving_data_key;
-	static _SavingDataPtr _createSavingData(Data& data);
+	static bool _hasSavingData(Data& data);
+	void _createSavingData(Data& data);
 	static _SavingDataPtr _getSavingData(Data& data);
 	
 #ifdef WITH_CONFIG
