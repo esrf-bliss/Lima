@@ -76,7 +76,8 @@ class LIMACORE_API CtTestApp
 		CtSaving::OverwritePolicy saving_overwrite_policy{
 			CtSaving::Overwrite
 		};
-	
+		int saving_statistics_history{-1};
+
 		bool video_active{false};
 		CtVideo::VideoSource video_source{CtVideo::BASE_IMAGE};
 	

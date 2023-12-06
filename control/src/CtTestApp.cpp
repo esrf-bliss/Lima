@@ -83,6 +83,9 @@ CtTestApp::Pars::Pars()
 	AddOpt(saving_overwrite_policy, "--saving-overwrite-policy",
 	       "saving overwrite policy");
 
+	AddOpt(saving_statistics_history, "--saving-statistics-history",
+	       "saving statistics history size");
+
 	AddOpt(video_active, "--video-active", "video active");
 
 	AddOpt(video_source, "--video-source", "video source");
@@ -346,6 +349,16 @@ void CtTestApp::runAcq(const index_map& indexes)
 	DEB_ALWAYS() << DEB_VAR3(acq_idx, nb_frames_idx, acq_nb_frames);
 	m_ct->acquisition()->setAcqNbFrames(acq_nb_frames);
 
+	bool show_statistics = false;
+	CtSaving *save = m_ct->saving();
+	if (m_pars->saving_mode == CtSaving::AutoFrame) {
+		int statistics_size = m_pars->saving_statistics_history;
+		if (statistics_size == -1)
+			statistics_size = acq_nb_frames;
+		save->setStatisticHistorySize(statistics_size);
+		show_statistics = true;
+	}
+
 	m_ct->prepareAcq();
 	DEB_ALWAYS() << "acq prepared";
 
@@ -436,6 +449,23 @@ void CtTestApp::runAcq(const index_map& indexes)
 	Timestamp t = Timestamp::now();
 	double elapsed = t - t0;
 	DEB_ALWAYS() << DEB_VAR1(elapsed);
+
+	if (show_statistics) {
+		int statistics_size = save->getStatisticHistorySize();
+		double incoming_speed;
+		double compression_speed;
+		double compression_ratio;
+		double saving_speed;
+		save->getStatisticCounters(saving_speed, compression_speed,
+					   compression_ratio, incoming_speed);
+		incoming_speed /= 1e6;
+		compression_speed /= 1e6;
+		saving_speed /= 1e6;
+		DEB_ALWAYS() << "Saving statistics (MByte/s): "
+			     << DEB_VAR5(statistics_size, incoming_speed,
+					 compression_speed, compression_ratio,
+					 saving_speed);
+	}
 
 	if (m_pars->test_seq_lat > 0) {
 		DEB_ALWAYS() << "sleeping " << DEB_VAR1(m_pars->test_seq_lat);
