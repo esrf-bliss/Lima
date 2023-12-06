@@ -1323,18 +1323,6 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
   DEB_MEMBER_FUNCT();
   if(m_status.AcquisitionStatus == AcqFault) return true;
 
-  bool manual_saving;
-  int first_to_save = -1, last_to_save = -1;
-  {
-    AutoMutexUnlock u(l);
-    CtSaving::SavingMode saving_mode;
-    m_ct_saving->getSavingMode(saving_mode);
-    manual_saving = (saving_mode == CtSaving::Manual);
-    if (!manual_saving)
-      m_ct_saving->getSaveCounters(first_to_save, last_to_save);
-
-  }
-
   const ImageStatus &imageStatus = m_status.ImageCounters;
 
   // ext ops are not in-place, relaxing hw buffer limit is LastImageReady
@@ -1360,11 +1348,21 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
       overrunFlag = true;
       error_code = ProcessingOverun;
     }
-  else if(!manual_saving && imageToSave >= nb_buffers) // Save overrun
+  else if(m_autosave && imageToSave >= nb_buffers) // Save overrun
     {
       overrunFlag = true;
+      int first_to_save = -1, last_to_save = -1;
+      if (m_autosave) {
+        AutoMutexUnlock u(l);
+        m_ct_saving->getSaveCounters(first_to_save, last_to_save);
+      }
+
       DEB_ERROR() << DEB_VAR2(first_to_save, last_to_save);
-      int frames_to_save = last_to_save - first_to_save + 1;
+      int frames_to_save;
+      if ((first_to_save == -1) && (last_to_save == -1))
+        frames_to_save = 0;
+      else
+        frames_to_save = last_to_save - first_to_save + 1;
       int frames_to_compress = imageStatus.LastImageReady - last_to_save;
       bool slow_processing = frames_to_compress > frames_to_save;
       DEB_ERROR() << DEB_VAR2(frames_to_compress, frames_to_save);
