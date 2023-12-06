@@ -725,6 +725,7 @@ private:
 CtSaving::CtSaving(CtControl& aCtrl) :
 	m_ctrl(aCtrl),
 	m_stream(NULL),
+	m_frames_to_save(-1, -1),
 	m_end_cbk(NULL),
 	m_managed_mode(Software),
 	m_saving_error_handler(NULL)
@@ -1362,6 +1363,52 @@ void CtSaving::_getTaskList(TaskType type, Data& data, const HeaderMap& header,
 	AutoMutex l(saving->m_lock);
 	saving->m_nb_cbk = nb_cbk;
 }
+
+inline void CtSaving::_insertFrameData(FrameMap::value_type frame_data)
+{
+	DEB_MEMBER_FUNCT();
+
+	const long& frame_nb = frame_data.first;
+	std::pair<FrameMap::iterator, bool> insert;
+	insert = m_frame_datas.insert(frame_data);
+	if (!insert.second)
+		THROW_CTL_ERROR(Error) << "Frame already inserted in "
+				       << "to-save map: " << frame_nb;
+
+	FrameMap::iterator& it = insert.first;
+	if (m_frame_datas.size() == 1)
+		m_frames_to_save.first = m_frames_to_save.second = frame_nb;
+	else if (it == m_frame_datas.begin())
+		m_frames_to_save.first = frame_nb;
+	else if (++it ==  m_frame_datas.end())
+		m_frames_to_save.second = frame_nb;
+}
+
+inline void CtSaving::_eraseFrameData(FrameMap::iterator it)
+{
+	DEB_MEMBER_FUNCT();
+
+	if (m_frame_datas.size() == 1)
+		m_frames_to_save.first = m_frames_to_save.second = -1;
+	else if (it == m_frame_datas.begin()) {
+		FrameMap::iterator aux = it;
+		m_frames_to_save.first = (++aux)->first;
+	} else {
+		FrameMap::iterator aux1 = it, aux2 = it;
+		if (++aux1 ==  m_frame_datas.end())
+			m_frames_to_save.second = (--aux2)->first;
+	}
+
+	m_frame_datas.erase(it);
+}
+
+inline void CtSaving::_clearFrameDatas()
+{
+	DEB_MEMBER_FUNCT();
+	m_frame_datas.clear();
+	m_frames_to_save.first = m_frames_to_save.second = -1;
+}
+
 /** @brief clear the common header
  */
 void CtSaving::resetCommonHeader()
@@ -1515,7 +1562,7 @@ void CtSaving::_validateFrameHeader(long frame_nr)
 	bool keep_header = need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
-	m_frame_datas.erase(frame_iter);
+	_eraseFrameData(frame_iter);
 
 	aLock.unlock();
 
@@ -1705,7 +1752,7 @@ void CtSaving::frameReady(Data& aData)
 	if (!(need_compression || can_save) ||
 		(auto_header && !header_available) || (saving_mode == Manual)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
-		m_frame_datas.insert(map_pair);
+		_insertFrameData(map_pair);
 		return;
 	}
 
@@ -1874,8 +1921,7 @@ void CtSaving::clear()
 
 	if (m_frame_datas.size())
 		DEB_WARNING() << DEB_VAR1(m_frame_datas.size());
-	m_frame_datas.clear();
-
+	_clearFrameDatas();
 }
 
 void CtSaving::close()
@@ -2043,7 +2089,7 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	AutoMutex aLock(m_cond.mutex());
 	if (!_allStreamReady(frame_nr)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
-		m_frame_datas.insert(map_pair);
+		_insertFrameData(map_pair);
 		return;
 	}
 
@@ -2108,7 +2154,7 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 		return;
 
 	aData = data_it->second;
-	m_frame_datas.erase(data_it);
+	_eraseFrameData(data_it);
 
 	HeaderMap task_header;
 	_takeHeader(header_it, task_header, false);
