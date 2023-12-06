@@ -111,7 +111,7 @@ namespace lima {
     CtAccumulation* 		m_ct_accumulation;
     HwBufferCtrlObj::Callback* 	m_hw_buffer_cb;
     Buffer::Callback*		m_data_destroy_callback;
-    std::set<void *>		m_mapped_frames;
+    int				m_mapped_frames;
   };
 
   inline std::ostream& operator<<(std::ostream &os,
