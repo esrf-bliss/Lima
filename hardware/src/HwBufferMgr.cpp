@@ -405,6 +405,10 @@ void StdBufferCbMgr::allocBuffers(int nb_buffers, int nb_concat_frames,
 		DEB_TRACE() << "(Re)allocating frame info list";
 		int nb_frames = nb_buffers * nb_concat_frames;
 		m_info_list.resize(nb_frames);
+
+		DEB_TRACE() << "(Re)allocating frame nb map";
+		for (int i = 0; i < nb_frames; ++i)
+			m_frame_nb_map[getFrameBufferPtr(i)] = i;
 	} catch (...) {
 		releaseBuffers();
 		throw;
@@ -417,6 +421,7 @@ void StdBufferCbMgr::releaseBuffers()
 
 	m_alloc_mgr->releaseBuffers();
 	m_info_list.clear();
+	m_frame_nb_map.clear();
 	m_nb_concat_frames = 1;
 	m_frame_dim = FrameDim();
 }
@@ -507,6 +512,20 @@ void* StdBufferCbMgr::getFrameBufferPtr(int frame_nb)
 	int buffer_nb, concat_frame_nb;
 	acqFrameNb2BufferNb(frame_nb, buffer_nb, concat_frame_nb);
 	return getBufferPtr(buffer_nb, concat_frame_nb);
+}
+
+int StdBufferCbMgr::getFrameBufferNb(void *ptr)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(ptr);
+
+	FrameNbMap::iterator it = m_frame_nb_map.find(ptr);
+	if (it == m_frame_nb_map.end())
+		THROW_HW_ERROR(Error) << "Buffer " << ptr << " not found";
+	
+	int frame_nb = it->second;
+	DEB_RETURN() << DEB_VAR1(frame_nb);
+	return frame_nb;
 }
 
 void StdBufferCbMgr::clearBuffer(int buffer_nb)
@@ -794,6 +813,8 @@ void SoftBufferCtrlObj::getFrameDim(FrameDim& frame_dim)
 void SoftBufferCtrlObj::setNbBuffers(int  nb_buffers) 
 {
 	m_mgr.setNbBuffers(nb_buffers);
+	if (m_buffer_callback)
+		m_buffer_callback->realloc();
 }
 
 void SoftBufferCtrlObj::getNbBuffers(int& nb_buffers)
@@ -804,6 +825,8 @@ void SoftBufferCtrlObj::getNbBuffers(int& nb_buffers)
 void SoftBufferCtrlObj::setNbConcatFrames(int nb_concat_frames) 
 {
 	m_mgr.setNbConcatFrames(nb_concat_frames);
+	if (m_buffer_callback)
+		m_buffer_callback->realloc();
 }
 
 void SoftBufferCtrlObj::getNbConcatFrames(int& nb_concat_frames) 
@@ -869,9 +892,11 @@ HwBufferCtrlObj::Callback *SoftBufferCtrlObj::getBufferCallback()
 }
 
 SoftBufferCtrlObj::Sync::Sync(SoftBufferCtrlObj& buffer_ctrl_obj, Cond& cond) 
-	: m_cond(cond), m_buffer_ctrl_obj(buffer_ctrl_obj)
+	: m_cond(cond), m_buffer_ctrl_obj(buffer_ctrl_obj),
+	  m_total_used_frames(0)
 {
 	DEB_CONSTRUCTOR();
+	realloc();
 }
 
 SoftBufferCtrlObj::Sync::~Sync() 
@@ -885,17 +910,14 @@ SoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
 {
 	DEB_MEMBER_FUNCT();
 
-	StdBufferCbMgr& buffer_mgr = m_buffer_ctrl_obj.getBuffer();
-	void *framePtr = buffer_mgr.getFrameBufferPtr(frame_number);
-	BufferList::iterator it = m_buffer_in_use.find(framePtr);
-	if (it == m_buffer_in_use.end())
+	frame_number %= m_frame_use.size();
+	if (m_frame_use[frame_number] == 0)
 		return AVAILABLE;
 
 	bool okFlag = m_cond.wait(timeout);
 	DEB_TRACE() << DEB_VAR1(okFlag);
 
-	it = m_buffer_in_use.find(framePtr);
-	if (it == m_buffer_in_use.end())
+	if (m_frame_use[frame_number] == 0)
 		return AVAILABLE;
  	else
 		return okFlag ? INTERRUPTED : TIMEOUT;
@@ -905,23 +927,28 @@ void SoftBufferCtrlObj::Sync::map(void *address)
 {
 	DEB_MEMBER_FUNCT();
 
+	StdBufferCbMgr& buffer_mgr = m_buffer_ctrl_obj.getBuffer();
+	int frame_nb = buffer_mgr.getFrameBufferNb(address);
 	AutoMutex aLock(m_cond.mutex());
-	m_buffer_in_use.insert(address);
+	if (m_frame_use[frame_nb]++ == 0)
+		++m_total_used_frames;
 }
 
 void SoftBufferCtrlObj::Sync::release(void *address)
 {
 	DEB_MEMBER_FUNCT();
 
+	StdBufferCbMgr& buffer_mgr = m_buffer_ctrl_obj.getBuffer();
+	int frame_nb = buffer_mgr.getFrameBufferNb(address);
 	AutoMutex aLock(m_cond.mutex());
-	BufferList::iterator it = m_buffer_in_use.find(address);
-	if (it == m_buffer_in_use.end())
+	if (m_frame_use[frame_nb] == 0)
 		THROW_HW_ERROR(Error) << "Internal error: " 
-				      << "releasing buffer not in used list";
+				      << "releasing buffer not in use list";
 
-	m_buffer_in_use.erase(it++);
-	if (it == m_buffer_in_use.end() || *it != address)
+	if (--m_frame_use[frame_nb] == 0) {
+		--m_total_used_frames;
 		m_cond.broadcast();
+	}
 }
 
 void SoftBufferCtrlObj::Sync::releaseAll()
@@ -929,10 +956,40 @@ void SoftBufferCtrlObj::Sync::releaseAll()
 	DEB_MEMBER_FUNCT();
 
 	AutoMutex aLock(m_cond.mutex());
-	if (!m_buffer_in_use.empty())
+	UseCountList::iterator it, end = m_frame_use.end();
+	for (it = m_frame_use.begin(); it != end; ++it)
+		*it = 0;
+	if (m_total_used_frames > 0)
 		DEB_WARNING() << "Buffers in use when called releaseAll";
-	m_buffer_in_use.clear();
+	m_total_used_frames = 0;
 	m_cond.broadcast();
+}
+
+void SoftBufferCtrlObj::Sync::realloc()
+{
+	DEB_MEMBER_FUNCT();
+
+	{
+		AutoMutex aLock(m_cond.mutex());
+		if (m_total_used_frames > 0)
+			THROW_HW_ERROR(Error) << "Buffers in use when called "
+					      << "realloc";
+	}
+
+	int nb_buffers;
+	m_buffer_ctrl_obj.getNbBuffers(nb_buffers);
+	int nb_concat_frames;
+	m_buffer_ctrl_obj.getNbConcatFrames(nb_concat_frames);
+
+	int nb_frames = nb_buffers * nb_concat_frames;
+	if (nb_frames == m_frame_use.size())
+		return;
+
+	m_frame_use.resize(nb_frames);
+
+	UseCountList::iterator it, end = m_frame_use.end();
+	for (it = m_frame_use.begin(); it != end; ++it)
+		*it = 0;
 }
 
 #if !defined(_WIN32)
