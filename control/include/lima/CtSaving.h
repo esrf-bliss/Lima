@@ -590,10 +590,11 @@ private:
 
 	std::list<FileFormat>	m_format_list;
 
-	HeaderMap			m_common_header;
-	HeaderMap			m_internal_common_header;
+	HeaderMap		m_common_header;
+	HeaderMap		m_internal_common_header;
 	FrameHeaderMap		m_frame_headers;
-	FrameMap			m_frame_datas;
+	FrameMap		m_frame_datas;
+	std::pair<long, long>	m_frames_to_save;
 
 	mutable Cond		m_cond;
 	TaskEventCallback* m_end_cbk;
@@ -632,15 +633,9 @@ private:
 	// --- from control
 	void getSaveCounters(int& first_to_save, int& last_to_save)
 	{
-		AutoMutex lock(m_cond.mutex());
-		first_to_save = last_to_save = -1;
-		FrameMap::const_iterator it, end = m_frame_datas.end();
-		for (it = m_frame_datas.begin(); it != end; ++it) {
-			if (it->first > last_to_save)
-				last_to_save = it->first;
-			if ((first_to_save == -1) || (it->first < first_to_save))
-				first_to_save = it->first;
-		}
+		AutoMutex aLock(m_cond.mutex());
+		first_to_save = m_frames_to_save.first;
+		last_to_save = m_frames_to_save.second;
 	}
 
 	// --- internal call
@@ -665,6 +660,10 @@ private:
 	void _ReadImage(Data&, int framenb);
 	bool _allStreamReady(long frame_nr);
 	void _waitWritingThreads();
+
+	void _insertFrameData(FrameMap::value_type frame_data);
+	void _eraseFrameData(FrameMap::iterator it);
+	void _clearFrameDatas();
 
 	static const std::string m_saving_data_key;
 	static bool _hasSavingData(Data& data);
