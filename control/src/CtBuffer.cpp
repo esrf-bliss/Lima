@@ -60,8 +60,7 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 
 CtBuffer::CtBuffer(HwInterface *hw)
   : m_frame_cb(NULL),m_ct_accumulation(NULL),
-    m_data_destroy_callback(NULL)
-
+    m_data_destroy_callback(NULL), m_mapped_frames(0)
 {
   DEB_CONSTRUCTOR();
 
@@ -340,7 +339,7 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
       m_hw_buffer_cb->map(frame_info.frame_ptr);
       fdata.buffer->callback = m_data_destroy_callback;
       AutoMutex l(m_cond.mutex());
-      m_mapped_frames.insert(frame_info.frame_ptr);
+      ++m_mapped_frames;
     }
   DEB_RETURN() << DEB_VAR1(fdata);
 }
@@ -350,8 +349,8 @@ void CtBuffer::_release(void *dataPt)
   DEB_MEMBER_FUNCT();
   m_hw_buffer_cb->release(dataPt);
   AutoMutex l(m_cond.mutex());
-  m_mapped_frames.erase(dataPt);
-  m_cond.signal();
+  if (--m_mapped_frames == 0)
+    m_cond.signal();
 }
 
 // -----------------
@@ -393,9 +392,9 @@ bool CtBuffer::waitBuffersReleased(double timeout)
   AutoMutex l(m_cond.mutex());
   Timestamp end = Timestamp::now() + Timestamp(timeout);
   double t;
-  while(!m_mapped_frames.empty() && ((t = end - Timestamp::now()) > 0))
+  while((m_mapped_frames > 0) && ((t = end - Timestamp::now()) > 0))
     m_cond.wait(t);
-  bool all_released = m_mapped_frames.empty();
-  DEB_RETURN() << DEB_VAR2(all_released, m_mapped_frames.size());
+  bool all_released = (m_mapped_frames == 0);
+  DEB_RETURN() << DEB_VAR2(all_released, m_mapped_frames);
   return all_released;
 }
