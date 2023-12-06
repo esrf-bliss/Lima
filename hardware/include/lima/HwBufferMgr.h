@@ -206,8 +206,9 @@ class LIMACORE_API StdBufferCbMgr : public BufferCbMgr
 	virtual void getNbConcatFrames(int& nb_concat_frames);
 	virtual void releaseBuffers();
 
-	virtual void* getFrameBufferPtr(int frame_nb);
+	virtual void *getFrameBufferPtr(int frame_nb);
 	virtual void *getBufferPtr(int buffer_nb, int concat_frame_nb);
+	int getFrameBufferNb(void *ptr);
 
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
@@ -224,11 +225,13 @@ class LIMACORE_API StdBufferCbMgr : public BufferCbMgr
 	
  private:
 	typedef std::vector<HwFrameInfoType> FrameInfoList;
+	typedef std::map<void *, int> FrameNbMap;
 
 	BufferAllocMgr *m_alloc_mgr;
 	FrameDim m_frame_dim;			  
 	int m_nb_concat_frames;
 	FrameInfoList m_info_list;
+	FrameNbMap m_frame_nb_map;
 	bool m_keep_sideband_data;
 	bool m_fcb_act;
 };
@@ -337,7 +340,7 @@ public:
 	virtual void registerFrameCallback(HwFrameCallback& frame_cb);
 	virtual void unregisterFrameCallback(HwFrameCallback& frame_cb);
 
-	StdBufferCbMgr&  getBuffer();
+	StdBufferCbMgr& getBuffer();
 
 	int getNbAcquiredFrames();
 
@@ -362,12 +365,17 @@ public:
 		virtual void release(void *address);
 		virtual void releaseAll();
 
+		virtual void realloc();
+
 	private:
-		typedef std::multiset<void *> BufferList;
+		friend class SoftBufferCtrlObj;
+
+		typedef std::vector<int> UseCountList;
 
 		Cond&			m_cond;
 		SoftBufferCtrlObj& 	m_buffer_ctrl_obj;
-		BufferList		m_buffer_in_use;
+		UseCountList		m_frame_use;
+		int			m_total_used_frames;
 	};
 
 	Sync *getBufferSync(Cond& cond);
