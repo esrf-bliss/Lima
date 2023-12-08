@@ -184,8 +184,9 @@ struct CtSaving::_SavingSidebandData : public sideband::Data
 	Mutex m_lock;
 	std::atomic<long> m_nb_cbk;
 	ZBufferList m_buffers;
+	SaveContainer::Stat m_stat;
 
-	_SavingSidebandData(::Data& data) : m_nb_cbk(0)
+	_SavingSidebandData(::Data& data) : m_nb_cbk(0), m_stat(data)
 	{}
 
 	std::string repr() override {
@@ -199,6 +200,7 @@ struct CtSaving::_SavingSidebandData : public sideband::Data
 		for (it = m_buffers.begin(); it != end; ++it, first = false)
 			os << (first ? "" : ", ") << it->used_size;
 		os << "]"
+		   << ", stat=" << m_stat
 		   << ">";
 		return os.str();
 	}
@@ -231,8 +233,8 @@ void CtSaving::_createSavingData(Data& data)
 		DEB_ERROR() << "Saving SidebandData already created";
 		return;
 	}
-	_SavingDataPtr ptr = std::make_shared<_SavingSidebandData>(data);
-	if (!data.sideband.insert(m_saving_data_key, ptr))
+	_SavingDataPtr saving = std::make_shared<_SavingSidebandData>(data);
+	if (!data.sideband.insert(m_saving_data_key, saving))
 		THROW_CTL_ERROR(Error) << "Saving SidebandData of wrong type";
 
 	for (int s = 0; s < m_nb_stream; ++s)
@@ -1329,15 +1331,6 @@ void CtSaving::getManagedMode(CtSaving::ManagedMode& mode) const
 	AutoMutex aLock(m_cond.mutex());
 	mode = m_managed_mode;
 }
-void CtSaving::_createStatistic(Data& data)
-{
-	for (int s = 0; s < m_nb_stream; ++s)
-	{
-		Stream& stream = getStream(s);
-		if (stream.isActive())
-			stream.createStatistic(data);
-	}
-}
 
 void CtSaving::_getTaskList(TaskType type, Data& data, const HeaderMap& header,
 			    TaskList& task_list, int& priority)
@@ -1738,8 +1731,6 @@ void CtSaving::frameReady(Data& aData)
 
 	AutoMutex aLock(m_cond.mutex());
 
-	_createStatistic(aData);
-
 	SavingMode saving_mode = getAcqSavingMode();
 	bool auto_header = (saving_mode == AutoHeader);
 	long frame_nr = aData.frameNumber;
@@ -1817,9 +1808,15 @@ void CtSaving::getStatisticCounters(double& saving_speed,
 		compression_ratio_list.end(), 0.);
 	if (!compression_ratio_list.empty()) compression_ratio /= compression_ratio_list.size();
 
-	incoming_speed = std::accumulate(incoming_speed_list.begin(),
-		incoming_speed_list.end(), 0.);
-	if (!incoming_speed_list.empty()) incoming_speed /= incoming_speed_list.size();
+	// Incoming size is constant, average frame period
+	std::vector<double> frame_period_list(incoming_speed_list.size());
+	auto unit_time = [](double s) { return std::isinf(s) ? 0. : (1. / s); };
+	std::transform(incoming_speed_list.begin(), incoming_speed_list.end(),
+		frame_period_list.begin(), unit_time);
+	double frame_period = std::accumulate(frame_period_list.begin(),
+		frame_period_list.end(), 0.);
+	if (!frame_period_list.empty()) frame_period /= frame_period_list.size();
+	incoming_speed = frame_period ? (1. / frame_period) : 0.;
 }
 
 /** @brief set the size of the write time static list
@@ -2327,7 +2324,13 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, aHeader);
 
-	Timestamp start_write = Timestamp::now();
+	_SavingDataPtr saving = _getSavingData(aData);
+	Stat& stat = saving->m_stat;
+
+	{
+		AutoMutex l(saving->m_lock);
+		stat.writing_start = Timestamp::now();
+	}
 
 	const long frameId = aData.frameNumber;
 
@@ -2423,9 +2426,14 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		}
 	}
 
-	Timestamp end_write = Timestamp::now();
+	double diff;
+	{
+		AutoMutex l(saving->m_lock);
+		stat.write_size = write_size;
+		stat.writing_end = Timestamp::now();
+		diff = stat.writing_end - stat.writing_start;
+	}
 
-	Timestamp diff = end_write - start_write;
 	DEB_TRACE() << "Write took : " << diff << "s";
 
 	{
@@ -2433,49 +2441,64 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		m_frame_params.erase(fpars);
 
 		--m_running_writing_task;
-
-		writeFileStat(aData, start_write, end_write, write_size);
 	}
+
+
+	writeFileStat(aData);
 }
 
-void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timestamp end, long wsize)
+void CtSaving::SaveContainer::writeFileStat(Data& aData)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR4(aData, start, end, wsize);
+	DEB_PARAM() << DEB_VAR1(aData);
+
+	_SavingDataPtr saving = _getSavingData(aData);
 
 	long frameId = aData.frameNumber;
 
-	if (long(m_statistic.size()) >= m_statistic_size)
-		if (!m_statistic.empty())
-			m_statistic.erase(m_statistic.begin());
-
-	StatisticsType::iterator i = m_statistic.find(frameId);
-	if (i != m_statistic.end())
+	StatisticsType::value_type stat_pair(frameId, Stat());
 	{
-		i->second.writing_start = start;
-		i->second.writing_end = end;
-		i->second.write_size = wsize;
+		AutoMutex l(saving->m_lock);
+		stat_pair.second = saving->m_stat;
+	}
+
+	{
+		AutoMutex lock(m_lock);
+
+		if (long(m_statistic.size()) >= m_statistic_size)
+			if (!m_statistic.empty())
+				m_statistic.erase(m_statistic.begin());
+		m_statistic.insert(stat_pair);
+
+		if (!m_log_stat_enable || !m_log_stat_file)
+			return;
+	}
+
+	Stat& stat = stat_pair.second;
+
+	double comp_time = 0., comp_rate = 0., comp_ratio = 0.;
+	double write_time, write_rate, total_time;
+
+	if (stat.compression_end.isSet() && stat.compression_start.isSet()) {
+		comp_time = stat.compression_end - stat.compression_start;
+		comp_rate = stat.incoming_size / comp_time / 1024. / 1024.;
+		comp_ratio = stat.incoming_size / stat.write_size;
+	}
+
+	write_time = stat.writing_end - stat.writing_start;
+	write_rate = stat.write_size / write_time / 1024. / 1024.;
+	total_time = stat.writing_end - stat.received_time;
+
+	{
+		AutoMutex lock(m_lock);
+
 		if (m_log_stat_enable && m_log_stat_file) {
-			double comp_time = 0., comp_rate = 0., comp_ratio = 0.;
-			double write_time, write_rate, total_time;
-
-			if (i->second.compression_end.isSet() && i->second.compression_start.isSet()) {
-				comp_time = i->second.compression_end - i->second.compression_start;
-				comp_rate = i->second.incoming_size / comp_time / 1024. / 1024.;
-				comp_ratio = i->second.incoming_size / i->second.write_size;
-			}
-
-			write_time = i->second.writing_end - i->second.writing_start;
-			write_rate = i->second.write_size / write_time / 1024. / 1024.;
-			total_time = i->second.writing_end - i->second.received_time;
-
 			fprintf(m_log_stat_file, "%ld %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", \
-				frameId, (double)i->second.received_time, \
+				frameId, (double)stat.received_time, \
 				comp_time * 1000.0, comp_rate, comp_ratio, \
 				write_time * 1000.0, write_rate, total_time * 1000.0);
 		}
-	} else
-		DEB_WARNING() << "Statistic not found for " << DEB_VAR1(frameId);
+	}
 }
 
 void CtSaving::SaveContainer::setEnableLogStat(bool enable)
@@ -2597,13 +2620,17 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 		copy = m_statistic;
 	}
 
+	if (copy.empty())
+		return;
+
+	//Incoming statistic
 	StatisticsType::const_iterator next = copy.begin();
-	if (next != copy.end())
-		for (StatisticsType::const_iterator prev = next++;
-			next != copy.end(); prev = next++)
-			incoming_speed.push_back(prev->second.incoming_size /
+	for (StatisticsType::const_iterator prev = next++;
+		next != copy.end(); prev = next++)
+		incoming_speed.push_back(prev->second.incoming_size /
 			(next->second.received_time -
-				prev->second.received_time));
+			 prev->second.received_time));
+
 	//Writing/compression statistic
 	typedef std::list<std::pair<Timestamp, Stat*> > Index;
 	Index writing_index;
@@ -2612,26 +2639,21 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 	for (StatisticsType::iterator i = copy.begin();
 		i != copy.end(); ++i)
 	{
-		if (i->second.writing_start.isSet() &&
-			i->second.writing_end.isSet())
+		Stat& stat = i->second;
+		if (stat.writing_start.isSet() && stat.writing_end.isSet())
 		{
-			Index::value_type s(i->second.writing_start,
-				&i->second);
+			Index::value_type s(stat.writing_start, &stat);
 			writing_index.push_back(s);
-			Index::value_type e(i->second.writing_end,
-				&i->second);
+			Index::value_type e(stat.writing_end, &stat);
 			writing_index.push_back(e);
-			compression_ratio.push_back(double(i->second.incoming_size) /
-				i->second.write_size);
+			compression_ratio.push_back(double(stat.incoming_size) /
+						    stat.write_size);
 		}
-		if (i->second.compression_start.isSet() &&
-			i->second.compression_end.isSet())
+		if (stat.compression_start.isSet() && stat.compression_end.isSet())
 		{
-			Index::value_type s(i->second.compression_start,
-				&i->second);
+			Index::value_type s(stat.compression_start, &stat);
 			compression_index.push_back(s);
-			Index::value_type e(i->second.compression_end,
-				&i->second);
+			Index::value_type e(stat.compression_end, &stat);
 			compression_index.push_back(e);
 		}
 	}
@@ -2643,10 +2665,11 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 	for (Index::iterator i = writing_index.begin();
 		i != writing_index.end(); ++i)
 	{
-		if (i->first - i->second->writing_start < 1e-9) // start
-			current.insert(i->second);
+		Stat *stat = i->second;
+		if (i->first - stat->writing_start < 1e-9) // start
+			current.insert(stat);
 		else			// end
-			current.erase(i->second);
+			current.erase(stat);
 
 		if (current.empty()) continue;
 
@@ -2662,10 +2685,11 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 	for (Index::iterator i = compression_index.begin();
 		i != compression_index.end(); ++i)
 	{
-		if (i->first - i->second->compression_start < 1e-9) // start
-			current.insert(i->second);
+		Stat *stat = i->second;
+		if (i->first - stat->compression_start < 1e-9) // start
+			current.insert(stat);
 		else			// end
-			current.erase(i->second);
+			current.erase(stat);
 
 		if (current.empty()) continue;
 
@@ -2840,28 +2864,14 @@ void CtSaving::SaveContainer::createSavingData(Data& data)
 	DEB_PARAM() << DEB_VAR1(data);
 }
 
-void CtSaving::SaveContainer::createStatistic(Data& data)
-{
-	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(data);
-	
-	AutoMutex lock(m_lock);
-	//Insert statistic
-	StatisticsType::value_type stat_pair(data.frameNumber, Stat());
-	stat_pair.second.incoming_size = data.size();
-	m_statistic.insert(stat_pair);
-}
-
 void CtSaving::SaveContainer::compressionStart(Data& data)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(data);
-	
-	Timestamp start = Timestamp::now();
-	AutoMutex lock(m_lock);
-	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
-	if (i != m_statistic.end())
-		i->second.compression_start = start;
+
+	_SavingDataPtr saving = _getSavingData(data);
+	AutoMutex l(saving->m_lock);
+	saving->m_stat.compression_start = Timestamp::now();
 }
 
 void CtSaving::SaveContainer::compressionFinished(Data& data)
@@ -2869,11 +2879,9 @@ void CtSaving::SaveContainer::compressionFinished(Data& data)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(data);
 	
-	Timestamp end = Timestamp::now();
-	AutoMutex lock(m_lock);
-	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
-	if (i != m_statistic.end())
-		i->second.compression_end = end;
+	_SavingDataPtr saving = _getSavingData(data);
+	AutoMutex l(saving->m_lock);
+	saving->m_stat.compression_end = Timestamp::now();
 }
 
 int CtSaving::SaveContainer::getMaxConcurrentWritingTask() const
