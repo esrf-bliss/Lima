@@ -294,6 +294,8 @@ public:
 		{
 			Stat() : received_time(Timestamp::now()), incoming_size(-1), write_size(-1) {}
 
+			Stat(Data& data) : received_time(Timestamp::now()), incoming_size(data.size()), write_size(0) {}
+
 			Timestamp	received_time;
 			Timestamp	compression_start;
 			Timestamp	compression_end;
@@ -346,7 +348,6 @@ public:
 		virtual void setReady(long frame_nr);
 		virtual void prepareWrittingFrame(long frame_nr);
 		void createSavingData(Data&);
-		void createStatistic(Data&);
 
 		sideband::BlobList checkCompressedSidebandData(const std::string& key,
 							       Data& data);
@@ -355,7 +356,7 @@ public:
 
 		void compressionStart(Data&);
 		void compressionFinished(Data&);
-		void writeFileStat(Data&, Timestamp start, Timestamp end, long wsize);
+		void writeFileStat(Data&);
 		void prepareLogStat(const CtSaving::Parameters&);
 		int getMaxConcurrentWritingTask() const;
 		void setMaxConcurrentWritingTask(int nb);
@@ -529,11 +530,6 @@ public:
 			m_save_cnt->createSavingData(data);
 		}
 
-		void createStatistic(Data& data)
-		{
-			m_save_cnt->createStatistic(data);
-		}
-
 		void updateNbFrames(long nb_acquired_frames)
 		{
 			m_save_cnt->updateNbFrames(nb_acquired_frames);
@@ -643,7 +639,6 @@ private:
 	void _stop();
 	void _close();
 	void _getCommonHeader(HeaderMap&);
-	void _createStatistic(Data&);
 	bool _needCompression(Data&);
 	void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		bool keep_in_map);
@@ -943,6 +938,25 @@ inline std::ostream& operator<<(std::ostream& os, const CtSaving::HeaderMap& hea
 inline std::ostream& operator<<(std::ostream& os, const CtSaving::HeaderValue& value)
 {
 	os << "< (" << value.first << "," << value.second << ") >";
+	return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os,
+				const CtSaving::SaveContainer::Stat& stat)
+{
+	auto ts_repr = [](const Timestamp& t) {
+		return t.isSet() ? double(t) : 0.0;
+	};
+
+	os << "<"
+	   << "received_time=" << ts_repr(stat.received_time)
+	   << ", compression_start=" << ts_repr(stat.compression_start)
+	   << ", compression_end=" << ts_repr(stat.compression_end)
+	   << ", writing_start=" << ts_repr(stat.writing_start)
+	   << ", writing_end=" << ts_repr(stat.writing_end)
+	   << ", incoming_size=" << stat.incoming_size
+	   << ", write_size=" << stat.write_size
+	   << ">";
 	return os;
 }
 
