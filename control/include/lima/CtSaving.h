@@ -53,6 +53,10 @@ class LIMACORE_API CtSaving
 	DEB_CLASS_NAMESPC(DebModControl, "Saving", "Control");
 
 	friend class CtControl;
+
+	struct  _SavingSidebandData;
+	typedef std::shared_ptr<_SavingSidebandData> _SavingDataPtr;
+
 public:
 	CtSaving(CtControl&);
 	~CtSaving();
@@ -256,18 +260,27 @@ public:
 		struct FrameParameters
 		{
 			FrameParameters() :
-				m_threadable(false),
-				m_running(false)
+				m_valid(false),
+				m_threadable(false)
 			{}
 			FrameParameters(const CtSaving::Parameters& pars) :
 				m_pars(pars),
-				m_threadable(false),
-				m_running(false)
+				m_valid(true),
+				m_threadable(false)
 			{}
 
+			void setParameters(const CtSaving::Parameters& pars)
+			{
+				m_pars = pars;
+				m_valid = true;
+			}
+
+			bool isValid() const
+			{ return m_valid; }
+
 			CtSaving::Parameters	m_pars;
+			bool			m_valid;
 			bool			m_threadable;
-			bool			m_running;
 		};
 		typedef std::map<long, FrameParameters> Frame2Params;
 		struct Handler
@@ -344,9 +357,10 @@ public:
 			*/
 		virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&) { return NULL; }
 
-		virtual bool isReady(long frame_nr) const;
-		virtual void setReady(long frame_nr);
-		virtual void prepareWrittingFrame(long frame_nr);
+		virtual bool isReady() const;
+		virtual bool isReadyFor(Data& data) const;
+		virtual void setReady();
+		virtual void prepareWritingFrame(Data& data);
 		void createSavingData(Data&);
 
 		sideband::BlobList checkCompressedSidebandData(const std::string& key,
@@ -379,7 +393,8 @@ public:
 		virtual void _setBuffers(Data& data, ZBufferList&& buffer);
 		virtual ZBufferList _takeBuffers(Data& data);
 
-		mutable Mutex		m_lock;
+		mutable Cond		m_cond; // wait if opening same handler
+		Mutex&			m_lock;
 		Stream&			m_stream;
 
 		long			m_frames_to_write;
@@ -387,7 +402,14 @@ public:
 		long			m_written_frames;
 
 	private:
+		friend class _SavingSidebandData;
+
 		void close(const Params2Handler::iterator& it, AutoMutex& l);
+
+		typedef std::map<long, _SavingDataPtr> WritingTasks;
+		typedef std::set<Parameters *> OpeningPars;
+
+		int _getNbRunningTasks() const { return m_running_tasks.size(); }
 
 		StatisticsType		m_statistic;
 		int			m_statistic_size;
@@ -398,9 +420,10 @@ public:
 
 		Frame2Params		m_frame_params;
 		Params2Handler		m_params_handler;
+		OpeningPars		m_opening_handlers;
 		int			m_max_writing_task; ///< number of maximum parallel write
-		int			m_running_writing_task; ///< number of concurrent write running
-
+		WritingTasks		m_waiting_tasks; ///< waiting tasks
+		WritingTasks		m_running_tasks; ///< running tasks
 	};
 	friend class SaveContainer;
 
@@ -514,16 +537,20 @@ public:
 
 		void clear();
 
-		bool isReady(long frame_id) const
+		bool isReady() const
 		{
-			return m_save_cnt->isReady(frame_id);
+			return m_save_cnt->isReady();
 		}
-		void setReady(long frame_id)
+		bool isReadyFor(Data& data) const
 		{
-			m_save_cnt->setReady(frame_id);
+			return m_save_cnt->isReadyFor(data);
+		}
+		void setReady()
+		{
+			m_save_cnt->setReady();
 		}
 
-		void prepareWrittingFrame(long frame_nr);
+		void prepareWritingFrame(Data& data);
 
 		void createSavingData(Data& data)
 		{
@@ -571,8 +598,6 @@ private:
 	friend class _NewFrameSaveCBK;
 	class	_SavingErrorHandler;
 	friend class _SavingErrorHandler;
-	struct  _SavingSidebandData;
-	typedef std::shared_ptr<_SavingSidebandData> _SavingDataPtr;
 	typedef std::vector<SinkTaskBase*> TaskList;
 	typedef std::map<long, HeaderMap>	FrameHeaderMap;
 
@@ -653,7 +678,8 @@ private:
 	bool _newFrameWrite(int);
 	bool _checkHwFileFormat(const std::string&) const;
 	void _ReadImage(Data&, int framenb);
-	bool _allStreamReady(long frame_nr);
+	bool _allStreamsReady();
+	bool _allStreamsReadyFor(Data& data);
 	void _waitWritingThreads();
 
 	void _insertFrameData(FrameMap::value_type frame_data);
