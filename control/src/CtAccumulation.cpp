@@ -27,6 +27,9 @@
 #include <algorithm>
 #include <type_traits>
 
+#ifdef __unix
+#include <malloc.h>
+#endif
 
 using namespace lima;
 
@@ -573,6 +576,21 @@ void CtAccumulation::_callIfNeedThresholdCallback(Data &aData,long long value)
   if(m_threshold_cb && value > m_threshold_cb->m_max)
     m_threshold_cb->aboveMax(aData,value);
 }
+/** @brief clear all buffers
+ */
+void CtAccumulation::clear()
+{
+    AutoMutex aLock(m_cond.mutex());
+    m_datas.clear();
+    m_saturated_images.clear();
+
+#ifdef __unix
+    bool use_malloc_trim = true;
+    if (use_malloc_trim)
+        malloc_trim(0);
+#endif
+}
+
 /** @brief prepare all stuff for a new acquisition
  */
 void CtAccumulation::prepare()
@@ -594,8 +612,6 @@ void CtAccumulation::prepare()
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
 
   AutoMutex aLock(m_cond.mutex());
-  m_datas.clear();
-  m_saturated_images.clear();
   CtBuffer *buffer = m_ct.buffer();
   buffer->getNumber(m_buffers_size);
   long max_nb_buffers;
