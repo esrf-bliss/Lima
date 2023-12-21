@@ -135,6 +135,9 @@ using namespace lima;
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
 
+	void setKeepSidebandData(bool  keep_sideband_data);
+	void getKeepSidebandData(bool& keep_sideband_data /Out/);
+
 	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info /Out/);
 
 	bool newFrameReady(HwFrameInfoType& frame_info);

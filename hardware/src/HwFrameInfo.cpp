@@ -49,16 +49,19 @@ ostream& lima::operator <<(ostream& os, const HwFrameInfoType& info)
 	os << "time_stamp=" << fixed << setprecision(6) 
 	   << info.frame_timestamp << setprecision(orig_prec) << ", "
 	   << "valid_pixels=" << info.valid_pixels << ", "
-	   << "buffer_owner_ship=" << aBufferOwnerShipPt
+	   << "buffer_owner_ship=" << aBufferOwnerShipPt << ", "
+	   << "sideband_data=" << info.sideband_data << ", "
 	   << ">";
 
 	return os;
 }
 
 HwFrameInfo::HwFrameInfo(int frame_nb, void *ptr, const FrameDim *dim, 
-			 Timestamp timestamp, int pixels, OwnerShip owner) 
+			 Timestamp timestamp, int pixels, OwnerShip owner,
+			 const SidebandContainer& sideband)
   : acq_frame_nb(frame_nb), frame_ptr(), frame_dim(),
-    frame_timestamp(timestamp), valid_pixels(pixels),buffer_owner_ship(owner) 
+    frame_timestamp(timestamp), valid_pixels(pixels),buffer_owner_ship(owner),
+    sideband_data(sideband)
 {
   if(dim)
     frame_dim = *dim;
@@ -89,6 +92,7 @@ HwFrameInfo::HwFrameInfo(const HwFrameInfo &aFrameInfo) :
   frame_dim(aFrameInfo.frame_dim),
   frame_timestamp(aFrameInfo.frame_timestamp),
   valid_pixels(aFrameInfo.valid_pixels),
-  buffer_owner_ship(aFrameInfo.buffer_owner_ship)
+  buffer_owner_ship(aFrameInfo.buffer_owner_ship),
+  sideband_data(aFrameInfo.sideband_data)
 {
 }

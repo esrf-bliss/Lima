@@ -258,7 +258,7 @@ long SaveContainerEdf::_writeFile(void* f,Data &aData,
 #if defined(WITH_Z_COMPRESSION) || defined(WITH_LZ4_COMPRESSION)
   if(aFormat == CtSaving::EDFGZ || aFormat == CtSaving::EDFLZ4)
     {
-      ZBufferList buffers = _takeBuffers(aData.frameNumber);
+      ZBufferList buffers = _takeBuffers(aData);
       for(ZBufferList::iterator i = buffers.begin(); i != buffers.end();++i)
 	{
 	  ZBuffer& b = *i;

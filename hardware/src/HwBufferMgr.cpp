@@ -344,6 +344,7 @@ StdBufferCbMgr::StdBufferCbMgr(BufferAllocMgr& alloc_mgr)
 {
 	DEB_CONSTRUCTOR();
 	m_nb_concat_frames = 1;
+	m_keep_sideband_data = false;
 	m_fcb_act = false;
 }
 
@@ -459,6 +460,8 @@ bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 
 	int frame_nb = buffer_nb * m_nb_concat_frames + concat_frame_nb;
 	m_info_list[frame_nb] = frame_info;
+	if (!frame_info.sideband_data.empty() && !m_keep_sideband_data)
+		m_info_list[frame_nb].sideband_data.reset();
 
 	if (!m_fcb_act) {
 		DEB_TRACE() << "No cb registered";
@@ -532,6 +535,20 @@ void StdBufferCbMgr::getFrameInfo(int acq_frame_nb, HwFrameInfo& info)
 
 	info = m_info_list[frame_nb];
 	DEB_RETURN() << DEB_VAR1(info);
+}
+
+void StdBufferCbMgr::setKeepSidebandData(bool keep_sideband_data)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(keep_sideband_data);
+	m_keep_sideband_data = keep_sideband_data;
+}
+
+void StdBufferCbMgr::getKeepSidebandData(bool& keep_sideband_data)
+{
+	DEB_MEMBER_FUNCT();
+	keep_sideband_data = m_keep_sideband_data;
+	DEB_RETURN() << DEB_VAR1(keep_sideband_data);
 }
 
 /*******************************************************************

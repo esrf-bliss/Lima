@@ -212,6 +212,9 @@ class LIMACORE_API StdBufferCbMgr : public BufferCbMgr
 	virtual void clearBuffer(int buffer_nb);
 	virtual void clearAllBuffers();
 
+	void setKeepSidebandData(bool  keep_sideband_data);
+	void getKeepSidebandData(bool& keep_sideband_data);
+
 	virtual void getFrameInfo(int acq_frame_nb, HwFrameInfoType& info);
 
 	bool newFrameReady(HwFrameInfoType& frame_info);
@@ -226,6 +229,7 @@ class LIMACORE_API StdBufferCbMgr : public BufferCbMgr
 	FrameDim m_frame_dim;			  
 	int m_nb_concat_frames;
 	FrameInfoList m_info_list;
+	bool m_keep_sideband_data;
 	bool m_fcb_act;
 };
 

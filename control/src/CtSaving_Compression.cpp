@@ -62,16 +62,30 @@ FileZCompression::~FileZCompression()
 
 void FileZCompression::process(Data &aData)
 {
-  ZBufferList aBufferListPt;
-
-  std::ostringstream buffer;
-  m_container._writeEdfHeader(aData,m_header, buffer);
-  const std::string& tmpBuffer = buffer.str();
-  _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData.frameNumber);
+  ZBufferList aBufferListPt = _compress_header(aData, false);
   _compression((char*)aData.data(),aData.size(),aBufferListPt);
   _end_compression(aBufferListPt);
 
-  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
+  m_container._setBuffers(aData,std::move(aBufferListPt));
+}
+
+ZBufferList FileZCompression::compress_header(Data &aData)
+{
+  return _compress_header(aData, true);
+}
+
+ZBufferList FileZCompression::_compress_header(Data &aData, bool end_stream)
+{
+  ZBufferList aBufferListPt;
+  std::ostringstream buffer;
+  m_container._writeEdfHeader(aData,m_header, buffer);
+  const std::string& tmpBuffer = buffer.str();
+  _compression(tmpBuffer.data(), tmpBuffer.size(), aBufferListPt);
+  if (end_stream)
+    _end_compression(aBufferListPt);
+  return aBufferListPt;
 }
 
 inline void FileZCompression::_test_avail_out(ZBufferList& return_buffers)
@@ -143,6 +157,15 @@ FileLz4Compression::~FileLz4Compression()
 void FileLz4Compression::process(Data &aData)
 {
   DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData.frameNumber);
+  ZBufferList aBufferListPt = compress_header(aData);
+  _compression((char*)aData.data(),aData.size(),aBufferListPt);
+  m_container._setBuffers(aData,std::move(aBufferListPt));
+}
+
+ZBufferList FileLz4Compression::compress_header(Data &aData)
+{
+  DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
   
   std::ostringstream buffer;
@@ -150,8 +173,7 @@ void FileLz4Compression::process(Data &aData)
   ZBufferList aBufferListPt;
   const std::string& tmpBuffer = buffer.str();
   _compression(tmpBuffer.c_str(),tmpBuffer.size(),aBufferListPt);
-  _compression((char*)aData.data(),aData.size(),aBufferListPt);
-  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
+  return aBufferListPt;
 }
 
 void FileLz4Compression::_compression(const char *src, size_t size,
@@ -209,9 +231,11 @@ ImageBsCompression::~ImageBsCompression()
 
 void ImageBsCompression::process(Data &aData)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData.frameNumber);
   ZBufferList aBufferListPt;
   _compression((char*)aData.data(), aData.size(), aData.depth(), aBufferListPt);
-  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
+  m_container._setBuffers(aData,std::move(aBufferListPt));
 }
 
 void ImageBsCompression::_compression(const char *src,int data_size,int data_depth,
@@ -256,9 +280,11 @@ ImageZCompression::~ImageZCompression()
 
 void ImageZCompression::process(Data &aData)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(aData.frameNumber);
   ZBufferList aBufferListPt;
   _compression((char*)aData.data(),aData.size(),aBufferListPt);
-  m_container._setBuffer(aData.frameNumber,std::move(aBufferListPt));
+  m_container._setBuffers(aData,std::move(aBufferListPt));
 }
 
 void ImageZCompression::_compression(const char *src,int size,

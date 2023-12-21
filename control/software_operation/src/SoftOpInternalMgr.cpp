@@ -101,11 +101,12 @@ bool SoftOpInternalMgr::hasReconstructionTask()
 
 void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
 			      int &aLastStage,
-			      bool registerCallback) const
+			      bool registerCallback,
+			      bool skipReconstruction) const
 {
   bool processingInPlace = m_first_processing_in_place;
   aLastStage = 0;
-  if(m_reconstruction_task)
+  if(m_reconstruction_task && !skipReconstruction)
     {
       aTaskMgr.setLinkTask(aLastStage,m_reconstruction_task);
       ++aLastStage;
