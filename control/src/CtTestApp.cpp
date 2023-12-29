@@ -387,7 +387,11 @@ void CtTestApp::runAcq(const index_map& indexes)
 		}
 		bool new_all_acquired = (acq_frame == last_frame);
 		if (new_all_acquired && !all_acquired) {
-			DEB_ALWAYS() << "all frames acquired";
+			Timestamp t = Timestamp::now();
+			double elapsed = t - t0;
+			double frame_rate = (acq_frame + 1) / elapsed;
+			DEB_ALWAYS() << "all frames acquired: "
+				     << DEB_VAR2(elapsed, frame_rate);
 			all_acquired = true;
 		}
 		bool acq_running = (acq_status == AcqRunning);
