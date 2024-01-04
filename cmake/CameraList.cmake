@@ -358,6 +358,11 @@ if(LIMACAMERA_PRINCETON)
     add_subdirectory(camera/princeton)
 endif(LIMACAMERA_PRINCETON)
 
+#IRIS
+if(LIMACAMERA_IRIS)
+    add_subdirectory(camera/iris)
+endif(LIMACAMERA_IRIS)
+
 #META
 if(LIMACAMERA_META)
     add_subdirectory(camera/common/meta)
@@ -527,9 +532,4 @@ if(WIN32)
 	if(LIMACAMERA_PHOTONICSCIENCE)
 		add_subdirectory(camera/photonicscience)
 	endif(LIMACAMERA_PHOTONICSCIENCE)
-
-	#IRIS
-	if(LIMACAMERA_IRIS)
-		add_subdirectory(camera/iris)
-	endif(LIMACAMERA_IRIS)
 endif()
