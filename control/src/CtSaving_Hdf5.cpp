@@ -243,10 +243,13 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image->getRotation(m_ct_parameters.image_rotation);
 	m_ct_image->getImageDim(m_ct_parameters.image_dim);
 
+	const CtSaving::Parameters& saving_pars = m_stream.getParameters(CtSaving::Acq);
+
 	// Check if the overwrite policy  "MultiSet" is activated
-	CtSaving::OverwritePolicy overwrite_policy;
-	control.saving()->getOverwritePolicy(overwrite_policy);
-	m_is_multiset = (overwrite_policy == CtSaving::MultiSet);
+	m_is_multiset = (saving_pars.overwritePolicy == CtSaving::MultiSet);
+
+	// Keep track of number of frames per file for offset calculation
+	m_frames_per_file = saving_pars.framesPerFile;
 
 	AutoMutex lock(m_lock);
 	m_file_cnt = 0;
@@ -652,6 +655,11 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		}
 		// write the image data, use the local frame number
 		hsize_t image_nb = file->m_frame_cnt++;
+		hsize_t expected_nb = aData.frameNumber % m_frames_per_file;
+		if (expected_nb != image_nb)
+			DEB_ERROR() << "Image index mismatch: "
+				    << DEB_VAR5(aData.frameNumber, m_file_cnt,
+						m_frames_per_file, image_nb, expected_nb);
 
 		// we test direct chunk write
 		hsize_t offset[RANK_THREE] = {image_nb, 0U, 0U};
