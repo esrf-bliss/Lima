@@ -2140,6 +2140,8 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	if (m_end_cbk)
 		m_end_cbk->finished(aData);
 
+	aData.releaseBuffer(); // release finished data
+
 	AutoMutex aLock(m_cond.mutex());
 
 	SavingMode saving_mode = getAcqSavingMode();
@@ -2150,7 +2152,6 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 		m_cond.signal();
 		return;
 	}
-	aData.releaseBuffer(); // release finished data
 
 	// limit search depth to the number of concurrent writing tasks
 	int tasks;
@@ -2171,7 +2172,7 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	if ((data_it == data_end) || !tasks)
 		return;
 
-	aData = data_it->second;
+	Data nextData = data_it->second;
 	_eraseFrameData(data_it);
 
 	HeaderMap task_header;
@@ -2181,9 +2182,9 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 
 	TaskList task_list;
 	int priority;
-	_getTaskList(Save, aData, task_header, task_list, priority);
+	_getTaskList(Save, nextData, task_header, task_list, priority);
 
-	_postTaskList(aData, task_list, priority);
+	_postTaskList(nextData, task_list, priority);
 }
 
 /** @brief this methode set the error saving status in CtControl
