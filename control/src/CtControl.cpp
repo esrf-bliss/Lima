@@ -529,6 +529,12 @@ void CtControl::prepareAcq()
       THROW_CTL_ERROR(Error) << "CtImage/CtAcquisition did not converge after "
 			     << retry << " retries";
   }
+
+  AcqMode mode;
+  m_ct_acq->getAcqMode(mode);
+
+  DEB_TRACE() << "Clear Accumulation buffers";
+  m_ct_accumulation->clear();
   
   DEB_TRACE() << "Setup Acquisition Buffers";
   m_ct_buffer->setup(this);

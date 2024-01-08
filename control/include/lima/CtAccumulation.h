@@ -173,6 +173,7 @@ namespace lima
     bool				m_stopped;
 
     // --- Methodes for acquisition
+    void clear();
     void prepare();
     bool _newFrameReady(Data&);
     bool _newBaseFrameReady(Data&);
