@@ -33,6 +33,8 @@
 
 using namespace lima;
 
+const long CtAccumulation::ACC_MIN_BUFFER_SIZE;
+
 /****************************************************************************
 CtAccumulation::_ImageReady4AccCallback
 ****************************************************************************/
@@ -240,7 +242,7 @@ private:
 
 //       ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) :
-  m_buffers_size(16),
+  m_buffers_size(ACC_MIN_BUFFER_SIZE),
   m_ct(ct),
   m_calc_ready(true),
   m_threshold_cb(NULL),
@@ -614,15 +616,15 @@ void CtAccumulation::prepare()
   AutoMutex aLock(m_cond.mutex());
   CtBuffer *buffer = m_ct.buffer();
   buffer->getNumber(m_buffers_size);
-  long max_nb_buffers;
+  long max_nb_buffers = 0;
   buffer->getMaxNumber(max_nb_buffers);
   max_nb_buffers = long(max_nb_buffers * double(hw_image_depth) / acc_image_depth);
   if(m_pars.active) max_nb_buffers /= 2;
-  m_buffers_size = std::min(m_buffers_size,max_nb_buffers);
-  m_buffers_size = std::max(m_buffers_size,16L);
+  m_buffers_size = std::min(m_buffers_size, max_nb_buffers);
+  m_buffers_size = std::max(m_buffers_size, ACC_MIN_BUFFER_SIZE);
 
   CtAcquisition *acquisition = m_ct.acquisition();
-  int acc_nframes;
+  int acc_nframes = 0;
   acquisition->getAccNbFrames(acc_nframes);
   if(acc_nframes < 0) acc_nframes = 1;
 
@@ -637,6 +639,21 @@ bool CtAccumulation::_newFrameReady(Data &aData)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
+
+  int nb_frames_in_proc;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    nb_frames_in_proc = aData.frameNumber - 1 - m_last_acc_frame_nb;
+  }
+
+  int nb_hw_buffers = ACC_MIN_BUFFER_SIZE;
+  if (nb_frames_in_proc >= nb_hw_buffers) {
+    DEB_ERROR() << "Accumulation overrun: " << DEB_VAR2(aData,
+							nb_frames_in_proc);
+    m_ct.stopAcqAsync(AcqFault, CtControl::ProcessingOverun, aData);
+    m_last_continue_flag = false;
+    return m_last_continue_flag;
+  }
 
   TaskMgr *mgr = new TaskMgr();
   mgr->setEventCallback(m_ct.getSoftOpErrorHandler());
@@ -760,8 +777,8 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
   AutoMutex aLock(m_cond.mutex());
-  if(m_datas.empty())    // something weard append!
-    THROW_CTL_ERROR(InvalidValue) << "Something weard append should be never in that case";
+  if(m_datas.empty())
+    THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not available";
 
   if(frameNumber < 0)    // means last
     aReturnData = m_datas.back();

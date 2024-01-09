@@ -46,6 +46,8 @@ namespace lima
 
     typedef std::list<std::list<long long> > saturatedCounterResult;
 
+    static const long ACC_MIN_BUFFER_SIZE = 64L;
+
     struct LIMACORE_API Parameters
     {
       DEB_CLASS_NAMESPC(DebModControl,"Accumulation::Parameters","Control");
