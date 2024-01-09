@@ -326,7 +326,7 @@ private:
 
 //       ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
-  pixelThresholdValue(2^16),
+  pixelThresholdValue(1 << 16),
   pixelOutputType(Bpp32S),
   savingFlag(false),
   savePrefix("saturated_"),
