@@ -553,6 +553,8 @@ void CtControl::prepareAcq()
   m_hw->prepareAcq();
 
   DEB_TRACE() << "Apply software bin/roi";
+  // Disable processing inplace in accumulation, risk of buffer overrun when using internal processing 
+  m_op_int->setFirstProcessingInPlace((mode != AcqMode::Accumulation) && m_hw->firstProcessingInPlace());
   m_op_int_active= (m_ct_image->applySoft(m_op_int) ||
 		    m_op_int->hasReconstructionTask());
   if(m_op_int_active)
