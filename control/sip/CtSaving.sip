@@ -164,6 +164,7 @@ using namespace lima;
       CtSaving::FileFormat fileFormat;
       CtSaving::SavingMode savingMode;
       CtSaving::OverwritePolicy overwritePolicy;
+      bool useHwComp;
       std::string indexFormat;
       long framesPerFile;
       long nbframes;
@@ -214,6 +215,9 @@ using namespace lima;
     void setOverwritePolicy(OverwritePolicy policy, int stream_idx=0);
     void getOverwritePolicy(OverwritePolicy& policy /Out/, 
                             int stream_idx=0) const;
+
+    void setUseHwComp(bool  policy, int stream_idx=0);
+    void getUseHwComp(bool& policy /Out/, int stream_idx=0) const;
 
     void setFramesPerFile(unsigned long frames_per_file, int stream_idx=0);
     void getFramesPerFile(unsigned long& frames_per_file /Out/, 

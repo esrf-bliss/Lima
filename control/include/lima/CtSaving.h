@@ -38,6 +38,7 @@
 #include "lima/HwSavingCtrlObj.h"
 #include "lima/OrderedMap.h"
 
+#include "lima/SidebandData.h"
 #include "lima/CtSaving_ZBuffer.h"
 
 struct Data;
@@ -108,7 +109,8 @@ public:
 		long nextNumber;		///< next file number
 		FileFormat fileFormat;	///< the saving format (EDF,CBF...)
 		SavingMode savingMode;	///< saving mode (automatic,manual...)
-		OverwritePolicy overwritePolicy; ///< how you the saving react it find existing filename
+		OverwritePolicy overwritePolicy; ///< how the saving reacts it find existing filename
+		bool useHwComp;		///< use HW (sideband) compression
 		std::string indexFormat;	///< ie: %.4d if you want 4 digits
 		long framesPerFile;	///< the number of images save in one files
 		long nbframes;
@@ -170,6 +172,9 @@ public:
 
 	void setOverwritePolicy(OverwritePolicy policy, int stream_idx = 0);
 	void getOverwritePolicy(OverwritePolicy& policy, int stream_idx = 0) const;
+
+	void setUseHwComp(bool  active, int stream_idx = 0);
+	void getUseHwComp(bool& active, int stream_idx = 0) const;
 
 	void setFramesPerFile(unsigned long frames_per_file, int stream_idx = 0);
 	void getFramesPerFile(unsigned long& frames_per_file,
@@ -320,11 +325,17 @@ public:
 		void clear();
 		void prepare(CtControl&);
 		/** @brief should return true if container has compression or
-			*  havy task to do before saving
+			*  heavy task to do before saving
 			*  if return is true, getCompressionTask should return a Task
 			* @see getCompressionTask
 			*/
 		virtual bool needParallelCompression() const { return false; }
+		/** @brief should return true if a compression task is needed for
+		        *  data, or false if blocks are found in sidebandData.
+			*  must call has/useCompressedSidebandData helpers
+			*  @see needParallelCompression
+			*/
+		virtual bool needCompressionTask(Data&);
 		/** @brief get a new compression task at each call.
 			* this method is not call if needParallelCompression return false
 			*  @see needParallelCompression
@@ -334,7 +345,14 @@ public:
 		virtual bool isReady(long frame_nr) const;
 		virtual void setReady(long frame_nr);
 		virtual void prepareWrittingFrame(long frame_nr);
+		void createSavingData(Data&);
 		void createStatistic(Data&);
+
+		sideband::BlobList checkCompressedSidebandData(const std::string& key,
+							       Data& data);
+		void useCompressedSidebandData(Data&, sideband::BlobList&,
+					       ZBufferList&& zheader = ZBufferList());
+
 		void compressionStart(Data&);
 		void compressionFinished(Data&);
 		void writeFileStat(Data&, Timestamp start, Timestamp end, long wsize);
@@ -356,8 +374,9 @@ public:
 		virtual void _clear();
 		virtual void _prepare(CtControl&) {};
 		// @brief used from compression tasks if any
-		virtual void _setBuffer(int frameNumber, ZBufferList&& buffer);
-		virtual ZBufferList _takeBuffers(int dataId);
+		virtual bool _hasBuffers(Data& data);
+		virtual void _setBuffers(Data& data, ZBufferList&& buffer);
+		virtual ZBufferList _takeBuffers(Data& data);
 
 		mutable Mutex		m_lock;
 		Stream&			m_stream;
@@ -380,8 +399,6 @@ public:
 		Params2Handler		m_params_handler;
 		int			m_max_writing_task; ///< number of maximum parallel write
 		int			m_running_writing_task; ///< number of concurrent write running
-		Mutex			m_buffers_lock;
-		dataId2ZBufferList	m_buffers;
 
 	};
 	friend class SaveContainer;
@@ -423,12 +440,18 @@ public:
 			return m_save_cnt->needParallelCompression();
 		}
 
+		bool needCompressionTask(Data& data)
+		{
+			return m_save_cnt->needCompressionTask(data);
+		}
+
 		void setSavingError(CtControl::ErrorCode error)
 		{
 			m_saving._setSavingError(error);
 		}
 
-		SinkTaskBase* getTask(TaskType type, const HeaderMap& header, long frame_nr);
+		SinkTaskBase* getTask(TaskType type, const HeaderMap& header,
+				      Data& data, int& priority);
 
 		void compressionStart(Data& data)
 		{
@@ -501,6 +524,11 @@ public:
 
 		void prepareWrittingFrame(long frame_nr);
 
+		void createSavingData(Data& data)
+		{
+			m_save_cnt->createSavingData(data);
+		}
+
 		void createStatistic(Data& data)
 		{
 			m_save_cnt->createStatistic(data);
@@ -547,12 +575,12 @@ private:
 	friend class _NewFrameSaveCBK;
 	class	_SavingErrorHandler;
 	friend class _SavingErrorHandler;
+	struct  _SavingSidebandData;
+	typedef std::shared_ptr<_SavingSidebandData> _SavingDataPtr;
 	typedef std::vector<SinkTaskBase*> TaskList;
-	typedef std::map<long, long>	FrameCbkCountMap;
 	typedef std::map<long, HeaderMap>	FrameHeaderMap;
 
-	void _validateFrameHeader(long frame_nr,
-		AutoMutex&);
+	void _validateFrameHeader(long frame_nr);
 	void _resetReadyFlag();
 
 	CtControl& m_ctrl;
@@ -568,8 +596,6 @@ private:
 	FrameMap			m_frame_datas;
 
 	mutable Cond		m_cond;
-	bool			m_need_compression;
-	FrameCbkCountMap		m_nb_cbk;
 	TaskEventCallback* m_end_cbk;
 	bool			m_has_hwsaving;
 	HwSavingCtrlObj* m_hwsaving;
@@ -623,10 +649,11 @@ private:
 	void _close();
 	void _getCommonHeader(HeaderMap&);
 	void _createStatistic(Data&);
+	bool _needCompression(Data&);
 	void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		bool keep_in_map);
-	void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header,
-		TaskList& task_list);
+	void _getTaskList(TaskType type, Data& data, const HeaderMap& header,
+		TaskList& task_list, int& priority);
 	void _postTaskList(Data&, const TaskList&, int priority);
 	void _compressionFinished(Data&, Stream&);
 	void _saveFinished(Data&, Stream&);
@@ -638,6 +665,12 @@ private:
 	void _ReadImage(Data&, int framenb);
 	bool _allStreamReady(long frame_nr);
 	void _waitWritingThreads();
+
+	static const std::string m_saving_data_key;
+	static bool _hasSavingData(Data& data);
+	void _createSavingData(Data& data);
+	static _SavingDataPtr _getSavingData(Data& data);
+	
 #ifdef WITH_CONFIG
 	class _ConfigHandler;
 	CtConfig::ModuleTypeCallback* _getConfigHandler();
@@ -875,6 +908,7 @@ inline std::ostream& operator<<(std::ostream& os, const CtSaving::Parameters& pa
 		<< "fileFormat=" << params.fileFormat << "," << aFileFormatHumanPt << ", "
 		<< "savingMode=" << params.savingMode << "," << aSavingModeHumanPt << ", "
 		<< "overwritePolicy=" << params.overwritePolicy << "," << anOverwritePolicyHumanPt << ", "
+		<< "useHwComp=" << params.useHwComp << ","
 		<< "framesPerFile=" << params.framesPerFile << ", "
 		<< "nbframes=" << params.nbframes
 		<< ">";
@@ -892,6 +926,7 @@ inline bool operator ==(const CtSaving::Parameters& a,
 		(a.fileFormat == b.fileFormat) &&
 		(a.savingMode == b.savingMode) &&
 		(a.overwritePolicy == b.overwritePolicy) &&
+		(a.useHwComp == b.useHwComp) &&
 		(a.indexFormat == b.indexFormat) &&
 		(a.framesPerFile == b.framesPerFile) &&
 		(a.nbframes == b.nbframes));

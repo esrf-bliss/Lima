@@ -220,6 +220,12 @@ public:
 	AutoPtr(const AutoPtr& o) 
 	{ d = o.getData(); }
 
+	AutoPtr(AutoPtr&& o) 
+	{
+		d = o.d;
+		o.d = new AutoPtrData();
+	}
+
 	~AutoPtr()
 	{ putData(); }
 
@@ -254,7 +260,16 @@ public:
 	AutoPtr& operator =(const AutoPtr& o)
 	{
 		AutoPtrData *od = o.getData(); // protects against "a = a"
-		putData(); 
+		putData();
+		d = od;
+		return *this;
+	}
+
+	AutoPtr& operator =(AutoPtr&& o)
+	{
+		AutoPtrData *od = o.getData(); // protects against "a = a"
+		o.setPtr(NULL);
+		putData();
 		d = od;
 		return *this;
 	}

@@ -30,6 +30,8 @@
 
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <memory>
 
 namespace lima {
 
@@ -39,6 +41,7 @@ class ZBuffer
 
 public:
   ZBuffer(int buffer_size);
+  ZBuffer(std::shared_ptr<void> p, int buffer_size);
   ZBuffer(const ZBuffer& o);
   ZBuffer(ZBuffer&& o);
   ~ZBuffer();
@@ -46,10 +49,12 @@ public:
   ZBuffer& operator =(const ZBuffer& o);
   ZBuffer& operator =(ZBuffer&& o);
 
+  void swap(ZBuffer& o);
+
   int used_size;
 
-  void *ptr()
-  { return buffer; }
+  void *ptr() const
+  { return buffer.get(); }
 
 private:
   bool _isValid() const;
@@ -57,27 +62,34 @@ private:
   void _alloc(int buffer_size);
   void _deep_copy(const ZBuffer& o);
   void _free();
+  static void _default_free(void *p);
 
   int alloc_size;
-  void *buffer;
+  std::shared_ptr<void> buffer;
 };
 
 inline bool ZBuffer::_isValid() const
 {
-  return buffer;
+  return bool(buffer);
 }
 
 inline void ZBuffer::_setInvalid()
 {
   used_size = 0;
   alloc_size = 0;
-  buffer = NULL;
 }
 
 inline ZBuffer::ZBuffer(int buffer_size)
 {
   DEB_CONSTRUCTOR();
   _alloc(buffer_size);
+}
+
+inline ZBuffer::ZBuffer(std::shared_ptr<void> p, int buffer_size)
+  : buffer(p), used_size(buffer_size), alloc_size(buffer_size)
+{
+  DEB_CONSTRUCTOR();
+  DEB_PARAM() << DEB_VAR1(buffer_size);
 }
 
 inline ZBuffer::ZBuffer(const ZBuffer& o)
@@ -90,11 +102,10 @@ inline ZBuffer::ZBuffer(const ZBuffer& o)
 }
 
 inline ZBuffer::ZBuffer(ZBuffer&& o)
-  : used_size(std::move(o.used_size)), alloc_size(std::move(o.alloc_size)),
-    buffer(std::move(o.buffer))
 {
   DEB_CONSTRUCTOR();
-  o._setInvalid();
+  _setInvalid();
+  swap(o);
 }
 
 inline ZBuffer& ZBuffer::operator =(const ZBuffer& o)
@@ -117,13 +128,22 @@ inline ZBuffer& ZBuffer::operator =(ZBuffer&& o)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(o.alloc_size, o.used_size);
   if (std::addressof(o) == this)
-    THROW_CTL_ERROR(InvalidValue) << "Trying to this to itself";
+    THROW_CTL_ERROR(InvalidValue) << "Trying to move this to itself";
   if (_isValid())
     _free();
-  used_size = std::move(o.used_size);
-  buffer = std::move(o.buffer);
-  o._setInvalid();
+  swap(o);
   return *this;
+}
+
+inline void ZBuffer::swap(ZBuffer& o)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR4(alloc_size, used_size, o.alloc_size, o.used_size);
+  if (std::addressof(o) == this)
+    return;
+  std::swap(used_size, o.used_size);
+  std::swap(alloc_size, o.alloc_size);
+  std::swap(buffer, o.buffer);
 }
 
 inline ZBuffer::~ZBuffer()
@@ -131,6 +151,14 @@ inline ZBuffer::~ZBuffer()
   DEB_DESTRUCTOR();
   if (_isValid())
     _free();
+}
+
+inline void ZBuffer::_free()
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(alloc_size, used_size);
+  buffer.reset();
+  _setInvalid();
 }
 
 typedef std::vector<ZBuffer> ZBufferList;

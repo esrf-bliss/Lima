@@ -81,10 +81,11 @@ class SaveContainerCbf::Compression : public SinkTaskBase
     
     cbf_failnez(cbf_new_datablock(cbf, "image_0"));
 
-    aData.header.lock();
-    Data::HeaderContainer::Header &aDataHeader = aData.header.header();
-    aHeader.insert(aDataHeader.begin(),aDataHeader.end());
-    aData.header.unlock();
+    {
+      typedef Data::HeaderContainer Header;
+      Header::LockedPtr aLockedPtr(aData.header);
+      aHeader.insert(aLockedPtr->begin(),aLockedPtr->end());
+    }
 
     // Here prepare a Ordered HeaderMap, so sort the header values and insert them
     // according to some conventions like Dectris Mini CBF:

@@ -27,8 +27,13 @@
 #include <algorithm>
 #include <type_traits>
 
+#ifdef __unix
+#include <malloc.h>
+#endif
 
 using namespace lima;
+
+const long CtAccumulation::ACC_MIN_BUFFER_SIZE;
 
 /****************************************************************************
 CtAccumulation::_ImageReady4AccCallback
@@ -42,7 +47,145 @@ void CtAccumulation::_ImageReady4AccCallback::finished(Data &aData)
 }
 
 /*********************************************************************************
-         calculation task
+Algorithm
+*********************************************************************************/
+struct pixel_accumulate
+{
+    template <class SrcType, class DstType>
+    void operator()(SrcType const& src, DstType& dst) const {
+        dst += src;
+    }
+};
+
+struct pixel_accumulate_threshold
+{
+    pixel_accumulate_threshold(long long threshold) :
+        threshold_(threshold) {}
+
+    template <class SrcType, class DstType>
+    void operator()(SrcType const& src, DstType& dst) const {
+        if (src > threshold_)
+            dst += src;
+    }
+
+    long long threshold_ = 0;
+};
+
+struct pixel_accumulate_offset_threshold
+{
+    pixel_accumulate_offset_threshold(long long offset, long long threshold) :
+        offset_(offset), threshold_(threshold) {}
+
+    template <class SrcType, class DstType>
+    void operator()(SrcType const& src, DstType& dst) const {
+        DstType tmp_d = src - offset_;
+        if (!std::is_signed<DstType>::value && (src < offset_))
+            tmp_d = 0;
+        if (tmp_d > threshold_)
+            dst += tmp_d;
+    }
+
+    long long threshold_ = 0;
+    long long offset_ = 0;
+};
+
+struct pixel_cast
+{
+    template <class SrcType, class DstType>
+    void operator()(SrcType const& src, DstType& dst) const {
+        dst = src;
+    }
+};
+
+struct pixel_divide
+{
+    pixel_divide(unsigned int denom) : denom_(denom) {}
+
+    template <class DstType>
+    void operator()(unsigned int src, DstType& dst) const {
+        dst = src / denom_;
+    }
+
+    unsigned int denom_ = 1;
+};
+
+template <class SrcType, class DstType, class Func>
+void transform_pixel(void const* const src_ptr, void* const dst_ptr, int nb_items, Func fn)
+{
+    SrcType* sp = (SrcType*)src_ptr;
+    DstType* dp = (DstType*)dst_ptr;
+
+    for (int i = nb_items; i; --i, ++sp, ++dp)
+        fn(*sp, *dp);
+}
+
+template <class Func>
+void transform_pixel(Data& src, Data& dst, Func fn)
+{
+    int nb_items = src.dimensions[0] * src.dimensions[1];
+    switch (src.type)
+    {
+    case Data::UINT8:
+        switch (dst.type)
+        {
+        case Data::UINT16: 	return transform_pixel<unsigned char, unsigned short>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT16: 	return transform_pixel<unsigned char, short>(src.data(), dst.data(), nb_items, fn);
+        case Data::UINT32: 	return transform_pixel<unsigned char, unsigned int>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT32: 	return transform_pixel<unsigned char, int>(src.data(), dst.data(), nb_items, fn);
+        }
+        break;
+
+    case Data::INT8:
+        switch (dst.type)
+        {
+        case Data::INT16: 	return transform_pixel<char, short>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT32: 	return transform_pixel<char, int>(src.data(), dst.data(), nb_items, fn);
+        }
+        break;
+
+    case Data::UINT16:
+        switch (dst.type)
+        {
+        case Data::UINT16: 	return transform_pixel<unsigned short, unsigned short>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT16: 	return transform_pixel<unsigned short, short>(src.data(), dst.data(), nb_items, fn);
+        case Data::UINT32: 	return transform_pixel<unsigned short, unsigned int>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT32: 	return transform_pixel<unsigned short, int>(src.data(), dst.data(), nb_items, fn);
+        }
+        break;
+
+    case Data::INT16:
+        switch (dst.type)
+        {
+        case Data::INT16: 	return transform_pixel<short, short>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT32: 	return transform_pixel<short, int>(src.data(), dst.data(), nb_items, fn);
+        }
+        break;
+
+    case Data::UINT32:
+        switch (dst.type)
+        {
+        case Data::UINT16: 	return transform_pixel<unsigned int, unsigned short>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT16: 	return transform_pixel<unsigned int, short>(src.data(), dst.data(), nb_items, fn);
+        case Data::UINT32:  return transform_pixel<unsigned int, unsigned int>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT32:   return transform_pixel<unsigned int, int>(src.data(), dst.data(), nb_items, fn);        
+        }
+        break;
+
+    case Data::INT32:
+        switch (dst.type)
+        {
+        case Data::INT16: 	return transform_pixel<int, short>(src.data(), dst.data(), nb_items, fn);
+        case Data::INT32:   return transform_pixel<int, int>(src.data(), dst.data(), nb_items, fn);
+        }
+        break;
+    }
+
+    throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
+        << "SRC=" << convert_2_string(src.type) << " DST=" << convert_2_string(dst.type);
+}
+
+/*********************************************************************************
+			   calculation task
 *********************************************************************************/
 template<class INPUT>
 static long long _calc_saturated_image_n_counter(const Data &src,Data &dst,
@@ -183,11 +326,13 @@ private:
 
 //       ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
-  pixelThresholdValue(2^16),
+  pixelThresholdValue(1 << 16),
   pixelOutputType(Bpp32S),
   savingFlag(false),
   savePrefix("saturated_"),
   mode(CtAccumulation::Parameters::STANDARD),
+  operation(CtAccumulation::ACC_SUM),
+  filter(CtAccumulation::FILTER_NONE),
   thresholdB4Acc(0),
   offsetB4Acc(0)
 {
@@ -237,12 +382,13 @@ private:
 
 //       ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) :
-  m_buffers_size(16),
+  m_buffers_size(ACC_MIN_BUFFER_SIZE),
   m_ct(ct),
   m_calc_ready(true),
   m_threshold_cb(NULL),
   m_last_acc_frame_nb(-1),
-  m_last_continue_flag(true)
+  m_last_continue_flag(true),
+  m_stopped(false)
 {
   m_calc_end = new _CalcEndCBK(*this);
   m_calc_mgr = new _CalcSaturatedTaskMgr();
@@ -379,6 +525,57 @@ void CtAccumulation::setMode(Parameters::Mode mode)
 {
   AutoMutex aLock(m_cond.mutex());
   m_pars.mode = mode;
+
+  switch (mode)
+  {
+  case Parameters::STANDARD:
+    m_pars.filter = Filter::FILTER_NONE;
+    m_pars.operation = Operation::ACC_SUM;
+    break;
+
+  case Parameters::THRESHOLD_BEFORE:
+    m_pars.filter = Filter::FILTER_THRESHOLD_MIN;
+    m_pars.operation = Operation::ACC_SUM;
+    break;
+
+  case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
+    m_pars.filter = Filter::FILTER_OFFSET_THEN_THRESHOLD_MIN;
+    m_pars.operation = Operation::ACC_SUM;
+    break;
+  }
+}
+
+void CtAccumulation::getFilter(Filter& filter) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  filter = m_pars.filter;
+}
+
+void CtAccumulation::setFilter(Filter filter)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(filter);
+
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.filter = filter;
+}
+
+void CtAccumulation::getOperation(Operation& operation) const
+{
+  AutoMutex aLock(m_cond.mutex());
+  operation = m_pars.operation;
+}
+
+void CtAccumulation::setOperation(Operation operation)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(operation);
+
+  if (operation == ACC_MEDIAN)
+    THROW_CTL_ERROR(Error) << "Median accumulator not implemented";
+
+  AutoMutex aLock(m_cond.mutex());
+  m_pars.operation = operation;
 }
 
 void CtAccumulation::getThresholdBefore(long long& threshold) const
@@ -389,6 +586,9 @@ void CtAccumulation::getThresholdBefore(long long& threshold) const
 
 void CtAccumulation::setThresholdBefore(const long long& threshold)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(threshold);
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.thresholdB4Acc = threshold;
 }
@@ -401,6 +601,9 @@ void CtAccumulation::getOffsetBefore(long long& offset) const
 
 void CtAccumulation::setOffsetBefore(const long long& offset)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(offset);
+
   AutoMutex aLock(m_cond.mutex());
   m_pars.offsetB4Acc = offset;
 }
@@ -572,6 +775,21 @@ void CtAccumulation::_callIfNeedThresholdCallback(Data &aData,long long value)
   if(m_threshold_cb && value > m_threshold_cb->m_max)
     m_threshold_cb->aboveMax(aData,value);
 }
+/** @brief clear all buffers
+ */
+void CtAccumulation::clear()
+{
+    AutoMutex aLock(m_cond.mutex());
+    m_datas.clear();
+    m_saturated_images.clear();
+
+#ifdef __unix
+    bool use_malloc_trim = true;
+    if (use_malloc_trim)
+        malloc_trim(0);
+#endif
+}
+
 /** @brief prepare all stuff for a new acquisition
  */
 void CtAccumulation::prepare()
@@ -593,26 +811,48 @@ void CtAccumulation::prepare()
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
 
   AutoMutex aLock(m_cond.mutex());
-  m_datas.clear();
-  m_saturated_images.clear();
   CtBuffer *buffer = m_ct.buffer();
   buffer->getNumber(m_buffers_size);
-  long max_nb_buffers;
+  long max_nb_buffers = 0;
   buffer->getMaxNumber(max_nb_buffers);
   max_nb_buffers = long(max_nb_buffers * double(hw_image_depth) / acc_image_depth);
   if(m_pars.active) max_nb_buffers /= 2;
-  m_buffers_size = std::min(m_buffers_size,max_nb_buffers);
-  m_buffers_size = std::max(m_buffers_size,16L);
+  m_buffers_size = std::min(m_buffers_size, max_nb_buffers);
+  m_buffers_size = std::max(m_buffers_size, ACC_MIN_BUFFER_SIZE);
 
   CtAcquisition *acquisition = m_ct.acquisition();
-  int acc_nframes;
+  int acc_nframes = 0;
   acquisition->getAccNbFrames(acc_nframes);
   if(acc_nframes < 0) acc_nframes = 1;
+
+  // Allocate the temporary data (if needed)
+  Size size = hw_image_dim.getSize();
+  switch (m_pars.operation) {
+  case ACC_SUM:
+      break;
+
+  case ACC_MEAN:
+      m_tmp_data.type = hw_image_dim.isSigned() ? Data::INT32 : Data::UINT32;
+      m_tmp_data.dimensions.resize(2);
+      m_tmp_data.dimensions[0] = size.getWidth();
+      m_tmp_data.dimensions[1] = size.getHeight();
+      {
+      Buffer* buffer = new Buffer(m_tmp_data.size());
+      m_tmp_data.setBuffer(buffer);
+      buffer->unref();
+      }
+      memset(m_tmp_data.data(), 0, m_tmp_data.size());
+      break;
+
+  case ACC_MEDIAN:
+      m_tmp_datas.resize(acc_nframes);
+      break;
+  }
 
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
   m_last_continue_flag = true;
   m_last_acc_frame_nb = -1;
-
+  m_stopped = false;
 }
 /** @brief this is an internal call from CtBuffer in case of accumulation
  */
@@ -621,7 +861,23 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
 
+  int nb_frames_in_proc;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    nb_frames_in_proc = aData.frameNumber - 1 - m_last_acc_frame_nb;
+  }
+
+  int nb_hw_buffers = ACC_MIN_BUFFER_SIZE;
+  if (nb_frames_in_proc >= nb_hw_buffers) {
+    DEB_ERROR() << "Accumulation overrun: " << DEB_VAR2(aData,
+							nb_frames_in_proc);
+    m_ct.stopAcqAsync(AcqFault, CtControl::ProcessingOverun, aData);
+    m_last_continue_flag = false;
+    return m_last_continue_flag;
+  }
+
   TaskMgr *mgr = new TaskMgr();
+  mgr->setEventCallback(m_ct.getSoftOpErrorHandler());
   mgr->setInputData(aData);
   int internal_stage = 0;
   m_ct.m_op_int->addTo(*mgr,internal_stage);
@@ -647,12 +903,18 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   int nb_acc_frame;
   acq->getAccNbFrames(nb_acc_frame);
   AutoMutex aLock(m_cond.mutex());
-  while(aData.frameNumber != (m_last_acc_frame_nb + 1))
+  bool miss;
+  while((miss = (aData.frameNumber != (m_last_acc_frame_nb + 1))) && !m_stopped)
     m_cond.wait();
+  if(miss) // stopped
+    return false;
 
   bool active = m_pars.active;
   if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
   {
+    // Reset the temporary data (if any)
+    memset(m_tmp_data.data(), 0, m_tmp_data.size());
+
     int nextFrameNumber;
     if(m_datas.empty())  // Init (first Frame)
       nextFrameNumber = 0;
@@ -688,37 +950,66 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     }
   }
 
-  Data accFrame = m_datas.back();
   Data saturatedImg;
   if(active)
     saturatedImg = m_saturated_images.back();
-  Parameters::Mode aMode = m_pars.mode;
-  long long threshold_value = m_pars.thresholdB4Acc;
-  long long offset_value = m_pars.offsetB4Acc;
 
   aLock.unlock();
 
   if(active)
     _calcSaturatedImageNCounters(aData,saturatedImg);
 
-  switch(aMode)
-  {
-  case Parameters::STANDARD:
-    _accFrame(aData,accFrame);break;
-  case Parameters::THRESHOLD_BEFORE:
-    _accFrameWithThreshold(aData,accFrame, threshold_value);break;
-  case Parameters::OFFSET_THEN_THRESHOLD_BEFORE:
-    _accFrameWithOffsetThenThreshold(aData,accFrame,offset_value, threshold_value);break;
+  // Accumulate
+  Data output = m_datas.back();
+  switch (m_pars.operation) {
+  case ACC_SUM:
+    _accFrame(aData, output);
+    break;
+
+  case ACC_MEAN:
+    _accFrame(aData, m_tmp_data);
+    break;
+
+  case ACC_MEDIAN:
+    m_tmp_datas.push_back(aData);
+    break;
   }
 
-  if(!((aData.frameNumber + 1) % nb_acc_frame))
-    m_last_continue_flag = m_ct.newFrameReady(accFrame);
+  // If accumulated frame is cleared for takeoff
+  if (!((aData.frameNumber + 1) % nb_acc_frame))
+  {
+    // Reduction
+    switch (m_pars.operation) {
+    case ACC_SUM:
+      break;
+
+    case ACC_MEAN:
+      transform_pixel(m_tmp_data, output, pixel_divide(nb_acc_frame));
+      break;
+
+    case ACC_MEDIAN:
+      // TODO compute the median from m_tmp_datas
+      break;
+    }
+
+    m_last_continue_flag = m_ct.newFrameReady(output);
+  }
 
   aLock.lock();
   m_last_acc_frame_nb = aData.frameNumber;
   m_cond.broadcast();
 
   return m_last_continue_flag;
+}
+/** @brief stops the current integration
+ */
+void CtAccumulation::stop()
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  m_stopped = true;
+  m_cond.broadcast();
 }
 /** @brief retrived the image from the buffer
     @param frameNumber == acquisition image id
@@ -729,8 +1020,8 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
   AutoMutex aLock(m_cond.mutex());
-  if(m_datas.empty())    // something weard append!
-    THROW_CTL_ERROR(InvalidValue) << "Something weard append should be never in that case";
+  if(m_datas.empty())
+    THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not available";
 
   if(frameNumber < 0)    // means last
     aReturnData = m_datas.back();
@@ -746,144 +1037,43 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
   }
 }
 
-struct pixel_accumulate
+inline void acc_frame(Data &src,Data &dst)
 {
-  template <class SrcType, class DstType>
-  void operator()(SrcType src, DstType & dst) {
-    dst += src;
-  }
-};
-
-struct pixel_accumulate_threshold
-{
-  pixel_accumulate_threshold(long long threshold) :
-    threshold_(threshold) {}
-
-  template <class SrcType, class DstType>
-  void operator()(SrcType src, DstType & dst) {
-    if (src > threshold_)
-      dst += src;
-  }
-
-  long long threshold_ = 0;
-};
-
-struct pixel_accumulate_offset_threshold
-{
-  pixel_accumulate_offset_threshold(long long offset, long long threshold) :
-    offset_(offset), threshold_(threshold) {}
-
-  template <class SrcType, class DstType>
-  void operator()(SrcType src, DstType& dst) {
-    DstType tmp_d = src - offset_;
-    if (!std::is_signed<DstType>::value && (src < offset_))
-        tmp_d = 0;
-    if (tmp_d > threshold_)
-      dst += tmp_d;
-  }
-
-  long long threshold_ = 0;
-  long long offset_ = 0;
-};
-
-
-template <class SrcType, class DstType, class Func>
-void accumulate(void *src_ptr,void *dst_ptr,int nb_items,Func fn)
-{
-  SrcType *sp  = (SrcType *) src_ptr;
-  DstType *dp = (DstType *) dst_ptr;
-
-  for(int i = nb_items;i;--i,++sp,++dp)
-    fn(*sp , *dp);
-}
-
-template <class Func>
-void accumulate(Data& src, Data& dst, Func fn)
-{
-  int nb_items = src.dimensions[0] * src.dimensions[1];
-  switch (src.type)
-  {
-  case Data::UINT8:
-    switch (dst.type)
-    {
-    case Data::UINT16:   return accumulate<unsigned char, unsigned short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT16:   return accumulate<unsigned char, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::UINT32:   return accumulate<unsigned char, unsigned int>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32:   return accumulate<unsigned char, int>(src.data(), dst.data(), nb_items, fn);
-    }
-    break;
-
-  case Data::INT8:
-    switch (dst.type)
-    {
-    case Data::INT16:   return accumulate<char, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32:   return accumulate<char, int>(src.data(), dst.data(), nb_items, fn);
-    }
-    break;
-
-  case Data::UINT16:
-    switch (dst.type)
-    {
-    case Data::UINT16:   return accumulate<unsigned short, unsigned short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT16:   return accumulate<unsigned short, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::UINT32:   return accumulate<unsigned short, unsigned int>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32:   return accumulate<unsigned short, int>(src.data(), dst.data(), nb_items, fn);
-    }
-    break;
-
-  case Data::INT16:
-    switch (dst.type)
-    {
-    case Data::INT16:   return accumulate<short, short>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32:   return accumulate<short, int>(src.data(), dst.data(), nb_items, fn);
-    }
-    break;
-
-  case Data::UINT32:
-    switch (dst.type)
-    {
-    case Data::UINT32:  return accumulate<unsigned int, unsigned int>(src.data(), dst.data(), nb_items, fn);
-    case Data::INT32:   return accumulate<unsigned int, int>(src.data(), dst.data(), nb_items, fn);
-    }
-    break;
-
-  case Data::INT32:
-    switch (dst.type)
-    {
-    case Data::INT32:   return accumulate<int, int>(src.data(), dst.data(), nb_items, fn);
-    }
-    break;
-  }
-
-  throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
-      << "SRC=" << convert_2_string(src.type) << " DST=" << convert_2_string(dst.type);
-}
-
-void CtAccumulation::_accFrame(Data &src,Data &dst)
-{
-  DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(src,dst);
-
   pixel_accumulate fn;
-  accumulate(src, dst, fn);
+  transform_pixel(src, dst, fn);
 }
 
-void CtAccumulation::_accFrameWithThreshold(Data &src,Data &dst,long long threshold_value)
+inline void acc_frame_with_threshold(Data &src,Data &dst,long long threshold_value)
 {
-  DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(src,dst);
-
   pixel_accumulate_threshold fn(threshold_value);
-  accumulate(src, dst, fn);
+  transform_pixel(src, dst, fn);
 }
 
-void CtAccumulation::_accFrameWithOffsetThenThreshold(Data &src,Data &dst,long long offset_value, long long threshold_value)
+inline void acc_frame_with_offset_then_threshold(Data &src,Data &dst,long long offset_value, long long threshold_value)
+{
+  pixel_accumulate_offset_threshold fn(offset_value, threshold_value);
+  transform_pixel(src, dst, fn);
+}
+
+void CtAccumulation::_accFrame(Data& src, Data& dst) const
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(src,dst);
+  DEB_PARAM() << DEB_VAR2(src, dst);
 
-  pixel_accumulate_offset_threshold fn(offset_value, threshold_value);
-  accumulate(src, dst, fn);
+  long long threshold_value = m_pars.thresholdB4Acc;
+  long long offset_value = m_pars.offsetB4Acc;
+
+  DEB_TRACE() << DEB_VAR3(m_pars.filter, threshold_value, offset_value);
+
+  switch (m_pars.filter)
+  {
+  case Filter::FILTER_NONE:
+    acc_frame(src, dst); break;
+  case Filter::FILTER_THRESHOLD_MIN:
+    acc_frame_with_threshold(src, dst, threshold_value); break;
+  case Filter::FILTER_OFFSET_THEN_THRESHOLD_MIN:
+    acc_frame_with_offset_then_threshold(src, dst, offset_value, threshold_value); break;
+  }
 }
 
 #ifdef WITH_CONFIG

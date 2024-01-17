@@ -47,10 +47,14 @@ namespace lima {
     FileZCompression(SaveContainerEdf &save_cnt,
 		     const CtSaving::HeaderMap &header);
      ~FileZCompression();
+
+    ZBufferList compress_header(Data &aData);
     virtual void process(Data &aData);
+
   private:
     static const int BUFFER_HELPER_SIZE;
 
+    ZBufferList _compress_header(Data &aData, bool end_stream);
     void _test_avail_out(ZBufferList& return_buffers);
     void _update_used_size(ZBufferList& return_buffers);
     void _compression(const char *buffer,int size,ZBufferList& return_buffers);
@@ -91,7 +95,10 @@ static const LZ4F_preferences_t lz4_preferences = {
    FileLz4Compression(SaveContainerEdf &save_cnt,
 		      const CtSaving::HeaderMap &header);
    ~FileLz4Compression();
+
+   ZBufferList compress_header(Data &aData);
    virtual void process(Data &aData);
+
    void _compression(const char *src,size_t size,ZBufferList& return_buffers);
  };
 #endif // WITH_LZ4_COMPRESSION

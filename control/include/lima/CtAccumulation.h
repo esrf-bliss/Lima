@@ -46,23 +46,31 @@ namespace lima
 
     typedef std::list<std::list<long long> > saturatedCounterResult;
 
+    enum Filter { FILTER_NONE, FILTER_THRESHOLD_MIN, FILTER_OFFSET_THEN_THRESHOLD_MIN };    ///< Filter pixels that contribute to the accumulation
+    enum Operation { ACC_SUM, ACC_MEAN, ACC_MEDIAN };                                       ///< Type of accumulation
+
+    static const long ACC_MIN_BUFFER_SIZE = 64L;
+
     struct LIMACORE_API Parameters
     {
       DEB_CLASS_NAMESPC(DebModControl,"Accumulation::Parameters","Control");
     public:
-      enum Mode {STANDARD,THRESHOLD_BEFORE, OFFSET_THEN_THRESHOLD_BEFORE};
+      enum Mode {STANDARD, THRESHOLD_BEFORE, OFFSET_THEN_THRESHOLD_BEFORE};
+
       Parameters();
       void reset();
       
-      bool      active;	///< if true do the calculation
+      bool      active;	             ///< if true do the calculation
       long long pixelThresholdValue; ///< value which determine the threshold of the calculation
-      ImageType pixelOutputType; ///< pixel ouptut type
+      ImageType pixelOutputType;     ///< pixel ouptut type (after casting)
 
-      bool	  	savingFlag; ///< saving flag if true save saturatedImageCounter
-      std::string 	savePrefix; ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
-      Mode		mode;
-      long long		thresholdB4Acc; ///< value used in mode THRESHOLD_BEFORE
-      long long         offsetB4Acc; ///< value used in OFFSET_THEN_THRESHOLD_BEFORE
+      bool        savingFlag;     ///< saving flag if true save saturatedImageCounter
+      std::string savePrefix;     ///< prefix filename of saturatedImageCounter (default is saturated_image_counter)
+      Mode        mode;
+      Filter      filter;         ///< Filter pixels that contribute to the accumulation
+      Operation   operation;      ///< Type of accumulation
+      long long   thresholdB4Acc; ///< value used in mode THRESHOLD_BEFORE
+      long long   offsetB4Acc;    ///< value used in OFFSET_THEN_THRESHOLD_BEFORE
     };
     
     class ThresholdCallback
@@ -106,6 +114,12 @@ namespace lima
 
     void getMode(Parameters::Mode& mode) const;
     void setMode(Parameters::Mode mode);
+
+    void getFilter(Filter& filter) const;
+    void setFilter(Filter filter);
+
+    void getOperation(Operation& acc) const;
+    void setOperation(Operation acc);
 
     void getThresholdBefore(long long&) const;
     void setThresholdBefore(const long long&);
@@ -157,9 +171,11 @@ namespace lima
     };
 
     Parameters 				m_pars;
-    long				m_buffers_size;
-    std::deque<Data> 			m_datas;
-    std::deque<Data> 			m_saturated_images;
+    long				    m_buffers_size;
+    Data                    m_tmp_data;  // Temporary data where frames are accumulated before copied to output data
+    std::vector<Data>       m_tmp_datas; // Temporary data where frames are stored to compute the median
+    std::deque<Data>        m_datas;     // Circular buffer of output data (used with getFrame())
+    std::deque<Data>        m_saturated_images;
     CtControl& 				m_ct;
     bool				m_calc_ready;
     std::deque<std::pair<Data,Data> >	m_calc_pending_data;
@@ -170,17 +186,19 @@ namespace lima
     ThresholdCallback*			m_threshold_cb;
     int 				m_last_acc_frame_nb;
     bool 				m_last_continue_flag;
+    bool				m_stopped;
 
     // --- Methodes for acquisition
+    void clear();
     void prepare();
     bool _newFrameReady(Data&);
     bool _newBaseFrameReady(Data&);
+    void stop();
 
     void getFrame(Data &,int frameNumber);
 
-    void _accFrame(Data &src,Data &dst);
-    void _accFrameWithThreshold(Data &src,Data &dst,long long threshold_value);
-    void _accFrameWithOffsetThenThreshold(Data &src,Data &dst,long long offset, long long threshold_value);
+    void _accFrame(Data& src, Data& dst) const;
+
     void _calcSaturatedImageNCounters(Data &src,Data &dst);
 
     inline void _callIfNeedThresholdCallback(Data &aData,long long value);

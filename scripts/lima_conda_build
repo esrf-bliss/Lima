@@ -2,7 +2,7 @@
 
 conda_base=""
 conda_env=""
-camera="simulator"
+camera=""
 native_arch=0
 only_plugin=0
 profile="release"
@@ -78,7 +78,8 @@ fi
 
 processlib_dir="third-party/Processlib"
 tango_dir="applications/tango/python"
-camera_dir="camera/${camera}"
+camera_dir=""
+[ -n "${camera}" ] && camera_dir="camera/${camera}"
 
 if [ ${only_plugin} -eq 0 ]; then
     all_dirs="${processlib_dir} . ${tango_dir} ${camera_dir}"
@@ -91,7 +92,7 @@ else
 	echo "or build the full project (i.e., without -p)"
 	exit 1
     fi
-    [ -d ${camera_dir} ] || camera_dir="."
+    [ -n "{camera_dir}" -a -d ${camera_dir} ] || camera_dir="."
     all_dirs="${camera_dir}"
 fi
 

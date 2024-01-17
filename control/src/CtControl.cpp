@@ -442,6 +442,11 @@ CtControl::~CtControl()
   delete m_soft_op_error_handler;
 }
 
+TaskMgr::EventCallback *CtControl::getSoftOpErrorHandler()
+{
+  return m_soft_op_error_handler;
+}
+
 void CtControl::setApplyPolicy(ApplyPolicy policy)
 {
   DEB_MEMBER_FUNCT();
@@ -503,14 +508,36 @@ void CtControl::prepareAcq()
   m_ct_saving->resetInternalCommonHeader();
   m_ct_saving->clear();
 
-  DEB_TRACE() << "Apply hardware bin/roi";
-  m_ct_image->applyHard();
+  // Acq params can change Image params (like bit depth) iterate until size invariance
+  const int max_nb_iterations = 3;
+  for (int retry = 0; retry < max_nb_iterations; ++retry) {
+    DEB_TRACE() << "Apply hardware bin/roi";
+    m_ct_image->applyHard();
 
+    FrameDim prev_dim;
+    m_ct_image->getImageDim(prev_dim);
+    
+    DEB_TRACE() << "Apply Acquisition Parameters";
+    m_ct_acq->apply(m_policy, this);
+
+    FrameDim new_dim;
+    m_ct_image->getImageDim(new_dim);
+    
+    if (new_dim == prev_dim)
+      break;
+    else if (retry == max_nb_iterations - 1)
+      THROW_CTL_ERROR(Error) << "CtImage/CtAcquisition did not converge after "
+			     << retry << " retries";
+  }
+
+  AcqMode mode;
+  m_ct_acq->getAcqMode(mode);
+
+  DEB_TRACE() << "Clear Accumulation buffers";
+  m_ct_accumulation->clear();
+  
   DEB_TRACE() << "Setup Acquisition Buffers";
   m_ct_buffer->setup(this);
-
-  DEB_TRACE() << "Apply Acquisition Parameters";
-  m_ct_acq->apply(m_policy, this);
 
   DEB_TRACE() << "Apply Shutter Parameters";
   m_ct_shutter->apply();
@@ -526,6 +553,8 @@ void CtControl::prepareAcq()
   m_hw->prepareAcq();
 
   DEB_TRACE() << "Apply software bin/roi";
+  // Disable processing inplace in accumulation, risk of buffer overrun when using internal processing 
+  m_op_int->setFirstProcessingInPlace((mode != AcqMode::Accumulation) && m_hw->firstProcessingInPlace());
   m_op_int_active= (m_ct_image->applySoft(m_op_int) ||
 		    m_op_int->hasReconstructionTask());
   if(m_op_int_active)
@@ -662,6 +691,8 @@ void CtControl::_stopAcq(bool faulty_acq)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(faulty_acq);
+
+  m_ct_accumulation->stop();
 
   {
     AutoMutex aLock(m_cond.mutex());
@@ -848,8 +879,9 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
 
   int concatNbFrames = 1;
 
-  AutoMutex aLock(m_cond.mutex());
-  ImageStatus &imgStatus = m_status.ImageCounters;
+  ImageStatus imgStatus;
+  getImageStatus(imgStatus);
+
   long lastFrame;
   if (m_op_ext_link_task_active && !baseImage) {
     lastFrame = imgStatus.LastImageReady;
@@ -885,7 +917,6 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
       THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
   } else if (frameNumber + readBlockLen - 1 > lastFrame)
     THROW_CTL_ERROR(Error) << "Frame(s) not available yet";
-  aLock.unlock();
 
   bool one_block = (readBlockLen == 1);
   if (concatNbFrames > 1) {
@@ -982,7 +1013,7 @@ void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber,
 	TaskMgr mgr;
 	mgr.setInputData(aReturnData);
 	int stage = 0;
-	m_op_int->addTo(mgr,stage,false);
+	m_op_int->addTo(mgr,stage,false,true);
 	if(stage)
 	  aReturnData = mgr.syncProcess();
       }
@@ -1295,6 +1326,18 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
   DEB_MEMBER_FUNCT();
   if(m_status.AcquisitionStatus == AcqFault) return true;
 
+  bool manual_saving;
+  int first_to_save = -1, last_to_save = -1;
+  {
+    AutoMutexUnlock u(l);
+    CtSaving::SavingMode saving_mode;
+    m_ct_saving->getSavingMode(saving_mode);
+    manual_saving = (saving_mode == CtSaving::Manual);
+    if (!manual_saving)
+      m_ct_saving->getSaveCounters(first_to_save, last_to_save);
+
+  }
+
   const ImageStatus &imageStatus = m_status.ImageCounters;
 
   // ext ops are not in-place, relaxing hw buffer limit is LastImageReady
@@ -1313,9 +1356,6 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
   long nb_buffers;
   m_ct_buffer->getNumber(nb_buffers);
   
-  CtSaving::SavingMode mode;
-  m_ct_saving->getSavingMode(mode);
-
   bool overrunFlag = false;
   ErrorCode error_code = NoError;
   if(imageToProcess >= nb_buffers) // Process overrun
@@ -1323,11 +1363,9 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
       overrunFlag = true;
       error_code = ProcessingOverun;
     }
-  else if(mode != CtSaving::Manual && imageToSave >= nb_buffers) // Save overrun
+  else if(!manual_saving && imageToSave >= nb_buffers) // Save overrun
     {
       overrunFlag = true;
-      int first_to_save, last_to_save;
-      m_ct_saving->getSaveCounters(first_to_save, last_to_save);
       DEB_ERROR() << DEB_VAR2(first_to_save, last_to_save);
       int frames_to_save = last_to_save - first_to_save + 1;
       int frames_to_compress = imageStatus.LastImageReady - last_to_save;
