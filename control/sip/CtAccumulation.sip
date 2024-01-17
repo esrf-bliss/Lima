@@ -29,6 +29,9 @@ using namespace lima;
 public:
   typedef std::list<std::list<long long> > saturatedCounterResult;
 
+  enum Filter { FILTER_NONE, FILTER_THRESHOLD_MIN, FILTER_OFFSET_THEN_THRESHOLD_MIN };
+  enum Operation { ACC_SUM, ACC_MEAN, ACC_MEDIAN };                        
+
   struct Parameters
   {
     enum Mode {STANDARD,THRESHOLD_BEFORE, OFFSET_THEN_THRESHOLD_BEFORE};
@@ -88,6 +91,12 @@ public:
 
   void getMode(Parameters::Mode& mode) const;
   void setMode(Parameters::Mode mode);
+
+  void getFilter(Filter& filter) const;
+  void setFilter(Filter filter);
+
+  void getOperation(Operation& acc) const;
+  void setOperation(Operation acc);
 
   void getThresholdBefore(long long&) const;
   void setThresholdBefore(const long long&);

@@ -149,12 +149,51 @@ protected:
 #endif //__unix
 
 #ifdef LIMA_USE_NUMA
+
+// Structure needed to bind memory to one or more CPU sockets
+class NumaNodeMask
+{
+public:
+	static constexpr int MaxNbCPUs = 128;
+	typedef std::bitset<MaxNbCPUs> CPUMask;
+	typedef std::vector<unsigned long> ItemArray;
+	static constexpr int ItemBits = sizeof(ItemArray::value_type) * 8;
+
+	NumaNodeMask();
+	NumaNodeMask(const ItemArray& array);
+	NumaNodeMask(const NumaNodeMask& o);
+	NumaNodeMask(NumaNodeMask&& o);
+
+	NumaNodeMask& operator =(const ItemArray& array);
+	NumaNodeMask& operator =(const NumaNodeMask& o);
+	NumaNodeMask& operator =(NumaNodeMask&& o);
+
+	static int getMaxNodes();
+	static int getNbItems();
+
+	static NumaNodeMask fromCPUMask(const CPUMask& cpu_mask);
+
+	void bind(void *ptr, size_t size);
+
+	const ItemArray& getArray() const { return m_array; }
+
+private:
+	const ItemArray& checkArray(const ItemArray& array);
+
+	ItemArray m_array;
+};
+
+std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
+
 class LIMACORE_API NumaAllocator : public MMapAllocator
 {
 public:
-	NumaAllocator(unsigned long cpu_mask) : m_cpu_mask(cpu_mask) {}
+	static constexpr int MaxNbCPUs = NumaNodeMask::MaxNbCPUs;	
+	typedef NumaNodeMask::CPUMask CPUMask;
 
-	unsigned long getCPUAffinityMask()
+	NumaAllocator(const CPUMask& cpu_mask) : m_cpu_mask(cpu_mask) {}
+
+	const CPUMask &getCPUAffinityMask()
 	{ return m_cpu_mask; }
 
 	// Allocate a buffer and sets the NUMA memory policy with mbind
@@ -162,13 +201,7 @@ public:
 								override;
 
 private:
-	// Given a cpu_mask, returns the memory node mask
-	// used by alloc to bind memory with the proper socket
-	void getNUMANodeMask(unsigned long cpu_mask,
-				    unsigned long& node_mask,
-				    int& max_node);
-
-	unsigned long m_cpu_mask; //<! if NUMA is used, keep the cpu_mask for later use
+	CPUMask m_cpu_mask; //<! if NUMA is used, keep cpu_mask for later use
 };
 #endif
 

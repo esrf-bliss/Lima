@@ -33,6 +33,7 @@
 #endif
 #include <sys/mman.h>
 #endif
+#include <limits>
 
 using namespace lima;
 
@@ -183,7 +184,7 @@ NumaSoftBufferAllocMgr::NumaSoftBufferAllocMgr()
 	: m_numa_allocator(NULL)
 {
 	DEB_CONSTRUCTOR();
-	setCPUAffinityMask(0);
+	setCPUAffinityMask({});
 }
 
 NumaSoftBufferAllocMgr::~NumaSoftBufferAllocMgr()
@@ -193,10 +194,22 @@ NumaSoftBufferAllocMgr::~NumaSoftBufferAllocMgr()
 	setAllocator(Allocator::defaultAllocator());
 }
 
-void NumaSoftBufferAllocMgr::setCPUAffinityMask(unsigned long mask)
+void NumaSoftBufferAllocMgr::setCPUAffinityMask(const CPUMask& mask)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(DEB_HEX(mask));
+	if (DEB_CHECK_ANY(DebTypeParam)) {
+		typedef unsigned long ULong;
+		constexpr CPUMask ULongMask(std::numeric_limits<ULong>::max());
+		std::ostringstream os;
+		typedef unsigned long ULong;
+		constexpr int NbULongBits = sizeof(ULong) * 8;
+		for (int i = 0; i < MaxNbCPUs / NbULongBits; ++i) {
+			CPUMask m = (mask >> (i * NbULongBits)) & ULongMask;
+			ULong val = m.to_ulong();
+			os << std::hex << val;
+		}
+		DEB_PARAM() << os.str();
+	}
 
 	if (m_numa_allocator &&
 	    (mask == m_numa_allocator->getCPUAffinityMask()))
@@ -331,6 +344,7 @@ StdBufferCbMgr::StdBufferCbMgr(BufferAllocMgr& alloc_mgr)
 {
 	DEB_CONSTRUCTOR();
 	m_nb_concat_frames = 1;
+	m_keep_sideband_data = false;
 	m_fcb_act = false;
 }
 
@@ -446,6 +460,8 @@ bool StdBufferCbMgr::newFrameReady(HwFrameInfoType& frame_info)
 
 	int frame_nb = buffer_nb * m_nb_concat_frames + concat_frame_nb;
 	m_info_list[frame_nb] = frame_info;
+	if (!frame_info.sideband_data.empty() && !m_keep_sideband_data)
+		m_info_list[frame_nb].sideband_data.reset();
 
 	if (!m_fcb_act) {
 		DEB_TRACE() << "No cb registered";
@@ -521,6 +537,20 @@ void StdBufferCbMgr::getFrameInfo(int acq_frame_nb, HwFrameInfo& info)
 	DEB_RETURN() << DEB_VAR1(info);
 }
 
+void StdBufferCbMgr::setKeepSidebandData(bool keep_sideband_data)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(keep_sideband_data);
+	m_keep_sideband_data = keep_sideband_data;
+}
+
+void StdBufferCbMgr::getKeepSidebandData(bool& keep_sideband_data)
+{
+	DEB_MEMBER_FUNCT();
+	keep_sideband_data = m_keep_sideband_data;
+	DEB_RETURN() << DEB_VAR1(keep_sideband_data);
+}
+
 /*******************************************************************
  * BufferCtrlMgr
  *******************************************************************/
@@ -552,7 +582,8 @@ void BufferCtrlMgr::setFrameDim(const FrameDim& frame_dim)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(frame_dim, m_frame_dim);
 
-	if (frame_dim == m_frame_dim) {
+	if ((frame_dim == m_frame_dim) &&
+	    (m_frame_dim.getImageType() == frame_dim.getImageType())) {
 		DEB_TRACE() << "Nothing to do";
 		return;
 	}

@@ -1,12 +1,10 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2023
+// Copyright (C) : 2009-2011
 // European Synchrotron Radiation Facility
-// CS40220 38043 Grenoble Cedex 9 
+// BP 220, Grenoble 38043
 // FRANCE
-//
-// Contact: lima@esrf.fr
 //
 // This is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,3 +19,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+#ifndef SIDEBANDDATA_H
+#define SIDEBANDDATA_H
+
+#include "processlib/sideband/CompressedData.h"
+
+namespace sideband
+{
+
+	/*
+	 * Lima SidebandData keys:
+	 *
+	 * Internal:
+	 *  saving
+	 *
+	 * Compression:
+	 *  comp_gzip
+	 *  comp_lz4
+	 *  comp_bshuffle_lz4
+	 *
+	 */
+
+} // namespace sideband
+
+#endif // SIDEBANDDATA_H

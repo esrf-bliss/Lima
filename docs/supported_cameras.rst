@@ -11,13 +11,15 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +====================+=======+=========+======================+
 | Andor              | Yes   | Yes     | linux 2.103 win 2.102|
 +--------------------+-------+---------+----------------------+
-| Andor3             | Yes   |         |  sdk3 3.14           |
+| Andor3             | Yes   |         |  sdk3 3.15.30092.2   |
 +--------------------+-------+---------+----------------------+
 | Basler             | Yes   | Yes     | Pylon 6.3            |
 +--------------------+-------+---------+----------------------+
 | Dexela             | Yes   |         | libDexela            |
 +--------------------+-------+---------+----------------------+
 | Eiger (Dectris)    | Yes   |         | SIMPLON 1.8          |
++--------------------+-------+---------+----------------------+
+| Fli                | Yes   |         | libfli 1.104         |
 +--------------------+-------+---------+----------------------+
 | Frelon             | Yes   |         | libEspia  3.10.0     |
 +--------------------+-------+---------+----------------------+
@@ -31,6 +33,8 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | Merlin             | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
+| Minipix            | Yes   |         | Pixet 1.7.8          |
++--------------------+-------+---------+----------------------+
 | Mythen3            | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
 | PCO                | Yes   | Yes     | PCO 1.23             |
@@ -42,6 +46,8 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 | Pointgrey          | Yes   |         | FlyCapture 2.3.3     |
 +--------------------+-------+---------+----------------------+
 | Prosilica          | Yes   |         | PvAPI 1.24           |
++--------------------+-------+---------+----------------------+
+| Qhyccd             | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
 | RayonixHs          | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
@@ -59,9 +65,11 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | TUCSEN Dhyana      | Yes   |         |  tucam 2.0.0         |
 +--------------------+-------+---------+----------------------+
-| Ximea              | Yes   |         |  ximea-sdk 4.21.23  |
+| Ximea              | Yes   |         | ximea-sdk 4.21.23    |
 +--------------------+-------+---------+----------------------+
 | Xspectrum Lambda   | Yes   |         | Xsp 2.0.2            |
++--------------------+-------+---------+----------------------+
+| Zwo                | Yes   |         | libASICamera2 1.26   |
 +--------------------+-------+---------+----------------------+
 
 Windows Only
@@ -85,17 +93,19 @@ Linux Only
   Adsc <camera/adsc/doc/index>
   Andor SDK3 <camera/andor3/doc/index>
   Aviex <camera/aviex/doc/index>
+  Arinax <camera/arinax/doc/index>
   Dexela <camera/dexela/doc/index>
-  Frelon <camera/frelon/doc/index>
-  Maxipix <camera/maxipix/doc/index>
   Dectris Eiger <camera/eiger/doc/index>
   Dectris Mythen <camera/mythen/doc/index>
   Dectris Mythen 3 <camera/mythen3/doc/index>
   Dectris Pilatus 2 & 3  <camera/pilatus/doc/index>
   Fli <camera/fli/doc/index>
+  Frelon <camera/frelon/doc/index>
   ImXpad <camera/imxpad/doc/index>
   Lambda <camera/lambda/doc/index>
+  Maxipix <camera/maxipix/doc/index>
   Merlin <camera/merlin/doc/index>
+  Minipix <camera/minipix/doc/index>
   Pixirad <camera/pixirad/doc/index>
   PointGrey <camera/pointgrey/doc/index>
   Prosilica <camera/prosilica/doc/index>

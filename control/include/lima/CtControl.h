@@ -33,6 +33,7 @@
 
 #include "processlib/Data.h"
 #include "processlib/LinkTask.h"
+#include "processlib/TaskMgr.h"
 
 
 namespace lima
@@ -239,6 +240,7 @@ namespace lima
       }
     };
     class SoftOpErrorHandler;
+    TaskMgr::EventCallback *getSoftOpErrorHandler();
 
     class _LastBaseImageReadyCallback;
     friend class _LastBaseImageReadyCallback;

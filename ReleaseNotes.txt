@@ -7,6 +7,223 @@ You can find information related to new features and bug fixes.
 Some bug fix on new features can reference gitlab.esrf.fr merge requests as MR-XXX.
 
 
+
+
+Version v1.9.23 released on November 2nd 2023
+---------------------------------------------
+
+New features
+
+  * CtAccumulation: improve (internal) soft operations' error handling (MR-249)
+  * Support acq. params modify image params (like bit depth) (MR-240)
+
+Bug fixes
+
+  * Avoid dead-locks due to acq. of both CtControl & CtSaving mutexes (MR-248)
+  * Fix BufferCtrlMgr when only image_type signedness changes  (MR-245)
+
+Camera updates
+
+  * Andor3 v1.11.0 
+    * update for sdk 3.15.30092.2, only one with bitflow driver supported by ubuntu 20.04 kernel version
+    * Update deps to lima-core>=1.9.20 which introduces a binary incompatibility with AutoMutex class
+    * Support of MARANA detector
+    * Change of camera interface. Andor3 parameters are not fixed enum anymore
+    * serial_number can be specified to attach interface to a specific camera. This allow to have two controlled cameras on the same PC.
+
+  * Basler from v1.10.1 to v1.10.10  
+    * effective frame rate (tango attr frame_rate) now available 
+    * Hw Roi for camera with increment (e.g acA1920-50gm)
+    * Fix: changing latency_time (to change frame rate) raised an exception
+    * getStatus() returns Ready when in soft/hw trigger mode and camera is ready to receive a new trigger.
+      An optimisation to reduce delay between frame triggering.
+    * used callback instead of acquisition thread.
+    * Wait that camera is ready for trigger
+    * Provide blank image when missing frames
+    * Fix: enforce force_video_mode should be 'false' or 'true'
+    * Fix: revert fixed packet_size @ 1000 and take into account the passed value in the ctor
+    * Add support for ACE2 camera models
+    * Temperature reading now available from PyTango device server
+    * Fix: getGain() did not return percent of the gain range but the raw value instead
+    * Add support for USB3 camera interface
+    * Using new SDK Pylon version 6.3
+
+  * Dhyana v1.9.6
+    * IntTrig is using sequence TUCSEN mode due to synchronization the first frame is corrupted and must be through out.
+    * Fixed issue with hw trigger and long delay when TUCAM_Cap_Stop() is called:
+      * Update the sdk local include files to version 2.0 20220915
+      * add a test program for hw trigger mode
+
+  * Eiger v1.9.14 
+    * Filewriter: at prepare delete the remaining files in DCU storage
+    * HW roi support added for 9M and 16M models
+    * Update deps to lima-core>=1.9.20 which introduces a binary incompatibility with AutoMutex class
+    * Camera be initialize with a memory mapped file (e.g ramdisk) to use the new MmapFileBufferAllocMgr buffer manager, 
+      and have a fixed amount of memory allocated during the whole life of the camera server. This will remove the long 
+      latency which can be observed during start up of an acquisition with a huge amount of frames is requested.
+    * Fix: reading of plugin_status (missing AttrHelper import)
+    * Cache feature for "slow reading" attributes
+    
+  * Imxpad v1.9.5
+    * Fix: Remove setNbBuffers(1) on buffer ctrl obj
+    * Fix: Tango, acquisition modes spelling mistakes (capital letters mandatory)
+    * Fix: G config file saving bug fixe by Frederic Bompard (RebiX ltd.)
+    
+  * Fli v1.9.1
+    First conda package, use SDK 1.104
+
+  * Minipix v1.9.0
+    * First release, camera in production at ESRF beamline ID20
+
+  * Pco v1.9.10
+    * Fix: Dimax timeout (just ignored for now)
+    * Add missing support for Edge 5.5 GL
+    * Add Edge CL LUT compression support (16 -> 12 bit)
+
+  * Pilatus v1.9.8
+    * Fix: min latency time for pilatus3 S model is set to 3ms like for pilatus2
+    * Fix: threshold_gain, AUTOG (pilatus3) is now managed
+    * Add temperature and humidity reading
+
+  * Prosilica v1.9.3
+    * support PvApi SDK 1.28
+    * support Manta camera model
+    * IntTrigMulti tigger mode added
+    * latency_time added to support frame rate setting
+    * Fix: Fixed wrong min/max gain
+
+  * Simulator v1.9.10
+    * Rebuild to sync with processlib 1.8.6 (using external pthread-win21 library)
+    * Fix: Invalid max_roi in (prefetched) loader mode
+    * Fix: frame dimensions at initialization or when switching simulation mode
+    * Custom pixel size
+    * Fill frame in Python
+    * Fix: data race condition in FrameBuilder when used with prefetch
+    * Add external trigger input
+    * Tango: add frame_dim device property and R/Wattribute
+    * Add HW Roi to Simulator::Interface
+    * Improve HW binning check and allow independent Horz/Vert binning
+    * Fix: GENERATOR_PREFETCH with HW bin and/or roi
+
+  * NEW !! Ximea v1.9.1 (since 2021) 
+
+  * NEW !! Zwo, not yet releases, the sdk is not available.
+
+
+Version v1.9.22 released on July 5th 2023
+------------------------------------------
+
+New features
+
+  * New camera plugin for Minipix camera from Advacam company
+  * Accumulation bit-depth can be changed to from 32 to 16
+  * Python camera plugin API enhanced with new sip method on HwBufferMgr class to copy frame data into the hw buffer.
+
+Bug fixes
+
+  * check expotime in accumulation, 0 can kill some cameras (pilatus)
+
+
+Version v1.9.21 released on December 22nd 2022
+----------------------------------------------
+
+Documentation updates
+
+  * Update the docs for conda use and list of supported camera conda packages
+
+CI/CD and build changes
+
+  * Make Lima's dependencies PRIVATE so they are not part of the link interface of downstream projects
+  * Use GIT_SUBMODULE_PATHS to init bitshuffle submodule, to fix a new issue with gitlab runner and permissions
+
+
+Version v1.9.20 released on October 20th 2022
+---------------------------------------------
+
+Bug fixes
+
+  * Heap corruption corrected related to ThreadUtil seen on windows only (more sensitive !!!)
+
+
+Version v1.9.19 released on September 23rd 2022
+-----------------------------------------------
+
+New features
+
+  * recompiled with processlib for win32 using pthreadwin32 library
+
+
+Version v1.9.16 released on April 7th 2022
+------------------------------------------
+
+Bug fixes
+
+  * Pin OpenSSL to 1.1.1* to match Conda Forge global pinning
+  * Add missing virtual destructors
+  * Add missing LIMACORE_API macros on CtTestApp and AppPars
+
+
+Version v1.9.15 released on March 30th 2022
+-------------------------------------------
+
+Conda
+
+  Minor release improving mostly the CI and build process.
+
+  * Update SIP to latest 4.19 version
+  * Build Conda packages for Python 3.7, 3.8, 3.9
+
+
+Version v1.9.14 released on March 29th 2022
+-------------------------------------------
+
+New features
+
+  * New BufferMgr using Memory map: MmapBufferAllocMgr
+
+  * Add generic test application framework for Hw & Control layers:
+    * Import functionality from test Simulator & SlsDetector applications
+    * Formalize command line parameter decoding
+    * Add new functionalty at the Control and Test Application levels:
+       * Implement sequences, each consisting in acqs with different acq-nb-frames
+       * Allow sequential execution of runAcq (prepareAcq) on different threads, emulating a Tango server environment: test-nb-exec-threads
+
+
+
+Version v1.9.13 released on March 10th 2022
+-------------------------------------------
+
+New features
+
+  * Updated bitshutffle to version 0.4.2
+  * Updated lz4 to version 1.9.3
+
+Submodule updates
+
+  * PyTango server v1.9.16
+  * dhyana camera v1.9.2, new sdk 2.0.0
+  * lambda lambda v1.9.2 new sdk 2.0.2
+  * template camera added
+
+
+Version v1.9.12 released on October 19th 2021
+---------------------------------------------
+
+Bug fixes
+
+  * fix bug in setEnableLogStat to not fclose null fd 
+
+
+Version v1.9.11 released on September 29th 2021
+-----------------------------------------------
+
+Bug fixes
+
+  * Fix memory over-consumption:
+
+    CtBuffer: systematically use malloc_trim to return unused memory to OS
+
+
 Version v1.9.10 released on August 13th 2021
 --------------------------------------------
 

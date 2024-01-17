@@ -6,7 +6,7 @@
 ====================================
 LImA : Library for Image Acquisition
 ====================================
-LImA (stands for **L** ibrary for **Im** age **A** cquisition) is a project for the unified control of 2D detectors. It is used in production in `ESRF Beamlines <https://www.esrf.eu/about/synchrotron-science/beamline>`_ and in other places.
+LImA (stands for **L** ibrary for **Im** age **A** cquisition) is a project for the unified control of 2D detectors. It is used in production in `ESRF Beamlines <https://www.esrf.fr/home/UsersAndScience/find-a-beamline.html>`_ and in other places.
 
 The architecture of the library aims at clearly separating hardware specific code from common software configuration and features, like setting standard acquisition parameters (exposure time, external trigger), file saving and image processing.
 

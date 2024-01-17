@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <numeric>
+#include <atomic>
 
 #ifdef __linux__
 #include <unistd.h>
@@ -59,6 +60,8 @@
 #ifdef WITH_HDF5_SAVING
 #include "CtSaving_Hdf5.h"
 #endif
+
+#include "lima/SidebandData.h"
 
 #include "processlib/TaskMgr.h"
 #include "processlib/SinkTask.h"
@@ -175,11 +178,77 @@ private:
 	CtSaving& m_saving;
 	CtEvent& m_event;
 };
+
+struct CtSaving::_SavingSidebandData : public sideband::Data
+{
+	Mutex m_lock;
+	std::atomic<long> m_nb_cbk;
+	ZBufferList m_buffers;
+
+	_SavingSidebandData(::Data& data) : m_nb_cbk(0)
+	{}
+
+	std::string repr() override {
+		std::ostringstream os;
+		AutoMutex l(m_lock);
+		os << "<"
+		   << "nb_cbk=" << m_nb_cbk
+		   << ", zbuffers=[";
+		ZBufferList::const_iterator it, end = m_buffers.end();
+		bool first = true;
+		for (it = m_buffers.begin(); it != end; ++it, first = false)
+			os << (first ? "" : ", ") << it->used_size;
+		os << "]"
+		   << ">";
+		return os.str();
+	}
+};
+
+const std::string CtSaving::m_saving_data_key = "saving";
+
+inline bool CtSaving::_hasSavingData(Data& data)
+{
+	DEB_STATIC_FUNCT();
+	bool res = data.sideband.contains(m_saving_data_key);
+	DEB_RETURN() << DEB_VAR1(res);
+	return res;
+}
+
+inline CtSaving::_SavingDataPtr CtSaving::_getSavingData(Data& data)
+{
+	DEB_STATIC_FUNCT();
+	auto res = data.sideband.get(m_saving_data_key);
+	if (!res)
+		THROW_CTL_ERROR(Error) << "Saving SidebandData not found";
+
+	return sideband::DataCast<_SavingSidebandData>(*res);
+}
+
+void CtSaving::_createSavingData(Data& data)
+{
+	DEB_STATIC_FUNCT();
+	if (_hasSavingData(data)) {
+		DEB_ERROR() << "Saving SidebandData already created";
+		return;
+	}
+	_SavingDataPtr ptr = std::make_shared<_SavingSidebandData>(data);
+	if (!data.sideband.insert(m_saving_data_key, ptr))
+		THROW_CTL_ERROR(Error) << "Saving SidebandData of wrong type";
+
+	for (int s = 0; s < m_nb_stream; ++s)
+	{
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+			stream.createSavingData(data);
+	}
+}
+
+
 /** @brief Parameters default constructor
  */
 CtSaving::Parameters::Parameters()
 	: imageType(Bpp8), nextNumber(0), fileFormat(RAW), savingMode(Manual),
-	overwritePolicy(Abort),
+	overwritePolicy(Abort), useHwComp(false),
 	indexFormat("%04d"), framesPerFile(1),
 	nbframes(0)
 {
@@ -411,13 +480,13 @@ void CtSaving::Stream::createSaveContainer()
 #endif
 		goto common;
 	case HDF5GZ:
-#if !defined  (WITH_HDF5_SAVING) && !defined (WITH_Z_COMPRESSION)
+#if !defined  (WITH_HDF5_SAVING) || !defined (WITH_Z_COMPRESSION)
 		THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 gzip"
 			"saving option, not managed";
 #endif
 		goto common;
 	case HDF5BS:
-#if !defined  (WITH_HDF5_SAVING) && !defined (WITH_BS_COMPRESSION)
+#if !defined  (WITH_HDF5_SAVING) || !defined (WITH_BS_COMPRESSION)
 		THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 bs"
 			"saving option, not managed";
 #endif
@@ -509,23 +578,24 @@ void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
 }
 
 
-SinkTaskBase* CtSaving::Stream::getTask(TaskType type, const HeaderMap& header, long frame_nr)
+SinkTaskBase* CtSaving::Stream::getTask(TaskType type, const HeaderMap& header,
+					Data& data, int& priority)
 {
 	DEB_MEMBER_FUNCT();
 
 	SinkTaskBase* save_task;
 
-	if (type == Compression) {
-		if (!needCompression())
-			return NULL;
+	if ((type == Compression) && needCompressionTask(data)) {
 		save_task = m_save_cnt->getCompressionTask(header);
 		save_task->setEventCallback(m_compression_cbk);
+		priority = COMPRESSION_PRIORITY;
 	}
 	else {
-		_SaveTask* real_task = new _SaveTask(*this, frame_nr);
+		_SaveTask* real_task = new _SaveTask(*this, data.frameNumber);
 		real_task->m_header = header;
 		save_task = real_task;
 		save_task->setEventCallback(m_saving_cbk);
+		priority = SAVING_PRIORITY;
 	}
 
 	return save_task;
@@ -583,6 +653,7 @@ public:
 		saving_setting.set("fileFormat", convert_2_string(pars.fileFormat));
 		saving_setting.set("savingMode", convert_2_string(pars.savingMode));
 		saving_setting.set("overwritePolicy", convert_2_string(pars.overwritePolicy));
+		saving_setting.set("useHwComp", pars.useHwComp);
 		saving_setting.set("indexFormat", pars.indexFormat);
 		saving_setting.set("framesPerFile", pars.framesPerFile);
 		saving_setting.set("nbframes", pars.nbframes);
@@ -621,6 +692,10 @@ public:
 		if (saving_setting.get("overwritePolicy", stroverwritePolicy))
 			convert_from_string(stroverwritePolicy, pars.overwritePolicy);
 
+		bool useHwComp;
+		if (saving_setting.get("useHwComp", useHwComp))
+			pars.useHwComp = useHwComp;
+
 		saving_setting.get("indexFormat", pars.indexFormat);
 
 		int framesPerFile;
@@ -650,7 +725,6 @@ private:
 CtSaving::CtSaving(CtControl& aCtrl) :
 	m_ctrl(aCtrl),
 	m_stream(NULL),
-	m_need_compression(false),
 	m_end_cbk(NULL),
 	m_managed_mode(Software),
 	m_saving_error_handler(NULL)
@@ -1081,17 +1155,14 @@ void CtSaving::_waitWritingThreads()
 	DEB_MEMBER_FUNCT();
 
 	// Waiting all writing thread
-	CtControl::Status status;
-	m_ctrl.getStatus(status);
-	while (status.AcquisitionStatus != AcqFault &&
-		!_allStreamReady(-1))
-	{
+	while (!_controlIsFault()) {
+		AutoMutex aLock(m_cond.mutex());
+		if (_allStreamReady(-1))
+			break;
 		m_cond.wait();
-		m_ctrl.getStatus(status);
-		DEB_TRACE() << DEB_VAR1(status);
 	}
 
-	if (status.AcquisitionStatus == AcqFault)
+	if (_controlIsFault())
 		THROW_CTL_ERROR(Error) << "Acquisition status is in Fault";
 }
 void CtSaving::getHardwareFormat(std::string& format) const
@@ -1160,6 +1231,34 @@ void CtSaving::getOverwritePolicy(OverwritePolicy& policy,
 	policy = pars.overwritePolicy;
 
 	DEB_RETURN() << DEB_VAR1(policy);
+}
+/** @brief set the useHwComp active flag for a saving stream
+ */
+void CtSaving::setUseHwComp(bool active, int stream_idx)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(active, stream_idx);
+
+	AutoMutex aLock(m_cond.mutex());
+	Stream& stream = getStream(stream_idx);
+	Parameters pars = stream.getParameters(Auto);
+	pars.useHwComp = active;
+
+	stream.setParameters(pars);
+}
+/** @brief get the useHwComp active flag for a saving stream
+ */
+void CtSaving::getUseHwComp(bool& active, int stream_idx) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(stream_idx);
+
+	AutoMutex aLock(m_cond.mutex());
+	const Stream& stream = getStream(stream_idx);
+	const Parameters& pars = stream.getParameters(Auto);
+	active = pars.useHwComp;
+
+	DEB_RETURN() << DEB_VAR1(active);
 }
 /** @brief set the number of frame saved per file for a saving stream
  */
@@ -1238,8 +1337,8 @@ void CtSaving::_createStatistic(Data& data)
 	}
 }
 
-void CtSaving::_getTaskList(TaskType type, long frame_nr,
-	const HeaderMap& header, TaskList& task_list)
+void CtSaving::_getTaskList(TaskType type, Data& data, const HeaderMap& header,
+			    TaskList& task_list, int& priority)
 {
 	DEB_MEMBER_FUNCT();
 
@@ -1247,16 +1346,20 @@ void CtSaving::_getTaskList(TaskType type, long frame_nr,
 	for (int s = 0; s < m_nb_stream; ++s) {
 		Stream& stream = getStream(s);
 		if (stream.isActive()) {
-			SinkTaskBase* save_task = stream.getTask(type, header, frame_nr);
+			SinkTaskBase* save_task = stream.getTask(type, header,
+								 data, priority);
 			if (save_task)
 				task_list.push_back(save_task);
 		}
 	}
 	size_t nb_cbk = task_list.size();
+	if (nb_cbk == 0)
+		THROW_CTL_ERROR(Error) << "No saving task for frame "
+				       << data.frameNumber;
 	DEB_TRACE() << DEB_VAR1(nb_cbk);
-	FrameCbkCountMap::value_type map_pair(frame_nr, long(nb_cbk));
-	AutoMutex aLock(m_cond.mutex());
-	m_nb_cbk.insert(map_pair);
+	_SavingDataPtr saving = _getSavingData(data);
+	AutoMutex l(saving->m_lock);
+	saving->m_nb_cbk = nb_cbk;
 }
 /** @brief clear the common header
  */
@@ -1364,7 +1467,9 @@ void CtSaving::updateFrameHeader(long frame_nr, const HeaderMap& header)
 		if (!result.second)
 			result.first->second = i->second;
 	}
-	_validateFrameHeader(frame_nr, aLock);
+	aLock.unlock();
+
+	_validateFrameHeader(frame_nr);
 }
 /** @brief validate a header for a frame.
 	this mean that the header is ready and can now be save.
@@ -1374,41 +1479,51 @@ void CtSaving::validateFrameHeader(long frame_nr)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(frame_nr);
-
-	AutoMutex aLock(m_cond.mutex());
-	_validateFrameHeader(frame_nr, aLock);
+	_validateFrameHeader(frame_nr);
 }
 
-void CtSaving::_validateFrameHeader(long frame_nr,
-	AutoMutex& aLock)
+void CtSaving::_validateFrameHeader(long frame_nr)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(frame_nr);
+
 	SavingMode saving_mode = getAcqSavingMode();
 	if (saving_mode != CtSaving::AutoHeader)
 		return;
 
+	AutoMutex aLock(m_cond.mutex());
+
 	FrameMap::iterator frame_iter = m_frame_datas.find(frame_nr);
-	bool data_available = (frame_iter != m_frame_datas.end());
+	if (frame_iter == m_frame_datas.end())
+		return;
+
+	bool need_compression;
+	{
+		AutoMutexUnlock u(aLock);
+		need_compression = _needCompression(frame_iter->second);
+	}
+
 	bool can_save = _allStreamReady(frame_nr);
-	if (!data_available || !(m_need_compression || can_save))
+	if (!(need_compression || can_save))
 		return;
 	Data aData = frame_iter->second;
 
 	HeaderMap task_header;
 	FrameHeaderMap::iterator aHeaderIter;
 	aHeaderIter = m_frame_headers.find(frame_nr);
-	bool keep_header = m_need_compression;
+	bool keep_header = need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
 	m_frame_datas.erase(frame_iter);
 
 	aLock.unlock();
 
-	TaskType task_type = m_need_compression ? Compression : Save;
+	TaskType task_type = need_compression ? Compression : Save;
 	TaskList task_list;
-	_getTaskList(task_type, frame_nr, task_header, task_list);
+	int priority;
+	_getTaskList(task_type, aData, task_header, task_list, priority);
 
-	_postTaskList(aData, task_list,
-		m_need_compression ? COMPRESSION_PRIORITY : SAVING_PRIORITY);
+	_postTaskList(aData, task_list, priority);
 }
 void CtSaving::_resetReadyFlag()
 {
@@ -1534,7 +1649,7 @@ void CtSaving::addToInternalCommonHeader(const HeaderValue& value)
 bool CtSaving::_controlIsFault()
 {
 	DEB_MEMBER_FUNCT();
-	
+
 	CtControl::Status status;
 	m_ctrl.getStatus(status);
 	bool fault = (status.AcquisitionStatus == AcqFault);
@@ -1566,8 +1681,12 @@ void CtSaving::frameReady(Data& aData)
 	if (_controlIsFault()) {
 		DEB_WARNING() << "Skip saving data: " << aData;
 		return;
-	} else
+	} else if (!m_end_cbk)
 		DEB_WARNING() << "No end callback registered";
+
+	_createSavingData(aData);
+
+	bool need_compression = _needCompression(aData);
 
 	AutoMutex aLock(m_cond.mutex());
 
@@ -1580,9 +1699,9 @@ void CtSaving::frameReady(Data& aData)
 	aHeaderIter = m_frame_headers.find(frame_nr);
 	bool header_available = (aHeaderIter != m_frame_headers.end());
 	bool can_save = _allStreamReady(frame_nr);
-	DEB_TRACE() << DEB_VAR5(saving_mode, m_need_compression, can_save,
+	DEB_TRACE() << DEB_VAR5(saving_mode, need_compression, can_save,
 		auto_header, header_available);
-	if (!(m_need_compression || can_save) ||
+	if (!(need_compression || can_save) ||
 		(auto_header && !header_available) || (saving_mode == Manual)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
 		m_frame_datas.insert(map_pair);
@@ -1590,17 +1709,17 @@ void CtSaving::frameReady(Data& aData)
 	}
 
 	HeaderMap task_header;
-	bool keep_header = m_need_compression;
+	bool keep_header = need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
 	aLock.unlock();
 
-	TaskType task_type = m_need_compression ? Compression : Save;
+	TaskType task_type = need_compression ? Compression : Save;
 	TaskList task_list;
-	_getTaskList(task_type, frame_nr, task_header, task_list);
+	int priority;
+	_getTaskList(task_type, aData, task_header, task_list, priority);
 
-	_postTaskList(aData, task_list,
-		m_need_compression ? COMPRESSION_PRIORITY : SAVING_PRIORITY);
+	_postTaskList(aData, task_list, priority);
 }
 /** @brief get write statistic
  */
@@ -1775,20 +1894,21 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(aFrameNumber);
 
-	ManagedMode managed_mode;
 	{
 		AutoMutex lock(m_cond.mutex());
-
 		if (getAcqSavingMode() != Manual)
 			THROW_CTL_ERROR(Error) << "Manual saving is only permitted when "
 				"saving mode == Manual";
+	}
 
-		// wait until the saving is no more used
-		_waitWritingThreads();
+	// wait until the saving is no more used
+	_waitWritingThreads();
 
+	ManagedMode managed_mode;
+	{
+		AutoMutex lock(m_cond.mutex());
 		if (!m_saving_error_handler)
 			m_saving_error_handler = new _SavingErrorHandler(*this, *m_ctrl.event());
-
 		managed_mode = getManagedMode();
 	}
 
@@ -1807,6 +1927,8 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 		aFrameNumber = anImage2Save.frameNumber;
 		DEB_TRACE() << DEB_VAR1(aFrameNumber);
 	}
+
+	_createSavingData(anImage2Save);
 
 	for (int s = 0; s < m_nb_stream; ++s) {
 		Stream& stream = getStream(s);
@@ -1840,6 +1962,22 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 	}
 }
 
+bool CtSaving::_needCompression(Data& data)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data.frameNumber);
+
+	bool need_compression = false;
+	for (int s = 0; (s < m_nb_stream) && !need_compression; ++s) {
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+			need_compression = stream.needCompressionTask(data);
+	}
+
+	DEB_RETURN() << DEB_VAR1(need_compression);
+	return need_compression;
+}
+
 void CtSaving::_synchronousSaving(Data& anImage2Save, HeaderMap& header)
 {
 	for (int s = 0; s < m_nb_stream; ++s) {
@@ -1847,9 +1985,12 @@ void CtSaving::_synchronousSaving(Data& anImage2Save, HeaderMap& header)
 		if (!stream.isActive())
 			continue;
 
-		if (stream.needCompression()) {
+		if (stream.needCompressionTask(anImage2Save)) {
 			SinkTaskBase* aCompressionTaskPt;
-			aCompressionTaskPt = stream.getTask(Compression, header, anImage2Save.frameNumber);
+			int priority;
+			aCompressionTaskPt = stream.getTask(Compression, header,
+							    anImage2Save,
+							    priority);
 			aCompressionTaskPt->setEventCallback(NULL);
 			aCompressionTaskPt->process(anImage2Save);
 			aCompressionTaskPt->unref();
@@ -1866,6 +2007,9 @@ void CtSaving::_postTaskList(Data& aData,
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, task_list.size());
+
+	if (task_list.empty())
+		THROW_CTL_ERROR(Error) << "Scheduling empty task list";
 
 	TaskMgr* aSavingMgrPt = new TaskMgr(priority);
 	aSavingMgrPt->setEventCallback(m_saving_error_handler);
@@ -1886,14 +2030,16 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, stream.getIndex());
 
-	AutoMutex aLock(m_cond.mutex());
+	_SavingDataPtr saving = _getSavingData(aData);
+	{
+		AutoMutex l(saving->m_lock);
+		if (--saving->m_nb_cbk > 0)
+			return;
+	}
 
 	long frame_nr = aData.frameNumber;
-	FrameCbkCountMap::iterator count_it = m_nb_cbk.find(frame_nr);
-	if (--count_it->second > 0)
-		return;
-	m_nb_cbk.erase(count_it);
 
+	AutoMutex aLock(m_cond.mutex());
 	if (!_allStreamReady(frame_nr)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
 		m_frame_datas.insert(map_pair);
@@ -1907,9 +2053,10 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	aLock.unlock();
 
 	TaskList task_list;
-	_getTaskList(Save, frame_nr, header, task_list);
+	int priority;
+	_getTaskList(Save, aData, header, task_list, priority);
 
-	_postTaskList(aData, task_list, SAVING_PRIORITY);
+	_postTaskList(aData, task_list, priority);
 }
 
 void CtSaving::_saveFinished(Data& aData, Stream& stream)
@@ -1917,19 +2064,18 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, stream.getIndex());
 
-	AutoMutex aLock(m_cond.mutex());
-
-	long frame_nr = aData.frameNumber;
-	FrameCbkCountMap::iterator count_it = m_nb_cbk.find(frame_nr);
-	if (--count_it->second > 0)
-		return;
-	m_nb_cbk.erase(count_it);
+	_SavingDataPtr saving = _getSavingData(aData);
+	{
+		AutoMutex l(saving->m_lock);
+		if (--saving->m_nb_cbk > 0)
+			return;
+	}
 
 	//@todo check if the frame is still available
-	if (m_end_cbk) {
-		AutoMutexUnlock u(aLock);
+	if (m_end_cbk)
 		m_end_cbk->finished(aData);
-	}
+
+	AutoMutex aLock(m_cond.mutex());
 
 	SavingMode saving_mode = getAcqSavingMode();
 	bool auto_saving = (saving_mode == AutoFrame) || (saving_mode == AutoHeader);
@@ -1948,7 +2094,7 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	FrameMap::iterator data_it, data_end = m_frame_datas.end();
 	for (data_it = m_frame_datas.begin(); tasks && (data_it != data_end); ++data_it, --tasks)
 	{
-		frame_nr = data_it->first;
+		long frame_nr = data_it->first;
 		header_it = m_frame_headers.find(frame_nr);
 		// sorted frames: if header is not available yet, abort search 
 		if ((saving_mode == AutoHeader) && (header_it == m_frame_headers.end()))
@@ -1969,9 +2115,10 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	aLock.unlock();
 
 	TaskList task_list;
-	_getTaskList(Save, frame_nr, task_header, task_list);
+	int priority;
+	_getTaskList(Save, aData, task_header, task_list, priority);
 
-	_postTaskList(aData, task_list, SAVING_PRIORITY);
+	_postTaskList(aData, task_list, priority);
 }
 
 /** @brief this methode set the error saving status in CtControl
@@ -2013,20 +2160,14 @@ void CtSaving::_prepare()
 
 	if (m_managed_mode == Software)
 	{
-		m_need_compression = false;
-
 		//prepare all the active streams
 		for (int s = 0; s < m_nb_stream; ++s) {
 			Stream& stream = getStream(s);
 			if (stream.isActive()) {
 				AutoMutexUnlock u(aLock);
 				stream.prepare();
-				if (stream.needCompression())
-					m_need_compression = true;
 			}
 		}
-
-		m_nb_cbk.clear();
 
 		if (m_has_hwsaving)
 		{
@@ -2646,6 +2787,12 @@ void CtSaving::SaveContainer::prepareWrittingFrame(long frame_nr)
 	++m_running_writing_task;
 }
 
+void CtSaving::SaveContainer::createSavingData(Data& data)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data);
+}
+
 void CtSaving::SaveContainer::createStatistic(Data& data)
 {
 	DEB_MEMBER_FUNCT();
@@ -2794,6 +2941,9 @@ inline void CtSaving::SaveContainer::close(const Params2Handler::iterator& it, A
 {
 	DEB_MEMBER_FUNCT();
 	
+	if (!l.locked())
+		THROW_CTL_ERROR(Error) << "Internal error: mutex not locked";
+
 	void* raw_handler = it->second.m_handler;
 	if (raw_handler == NULL)
 		return;
@@ -2846,33 +2996,168 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
 		fflush(m_log_stat_file);
 }
 
-void CtSaving::SaveContainer::_setBuffer(int frameNumber, ZBufferList&& buffers)
+bool CtSaving::SaveContainer::needCompressionTask(Data& data)
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_buffers_lock);
-	std::pair<dataId2ZBufferList::iterator, bool> result;
-	result = m_buffers.emplace(std::move(frameNumber), std::move(buffers));
-	if (!result.second)
-		result.first->second = std::move(buffers);
+	DEB_PARAM() << DEB_VAR1(data.frameNumber);
+
+	Parameters& params = m_stream.getParameters(Acq);
+
+	static const std::string gzip_key = "comp_gzip";
+	static const std::string lz4_key = "comp_lz4";
+	static const std::string bslz4_key = "comp_bshuffle_lz4";
+
+#define RETURN_WITH_DEB(x)			\
+	do {					\
+		bool ok = (x);			\
+		DEB_RETURN() << DEB_VAR1(ok);	\
+		return ok;			\
+	} while (0)
+
+	if (_hasBuffers(data))
+		RETURN_WITH_DEB(false);
+	else if (!params.useHwComp)
+		RETURN_WITH_DEB(needParallelCompression());
+
+	sideband::BlobList blob_list;
+
+	switch (params.fileFormat) {
+#ifdef WITH_Z_COMPRESSION
+	case CtSaving::EDFGZ:
+		blob_list = checkCompressedSidebandData(gzip_key, data);
+		if (!blob_list.empty()) {
+			typedef SaveContainerEdf Edf;
+			// this will not work with AutoHeader
+			FileZCompression comp(dynamic_cast<Edf&>(*this), {});
+			// EDF header is small, can afford compression here
+			ZBufferList zheader = comp.compress_header(data);
+			useCompressedSidebandData(data, blob_list,
+						  std::move(zheader));
+			RETURN_WITH_DEB(false);
+		}
+		RETURN_WITH_DEB(true);
+#endif
+#ifdef WITH_LZ4_COMPRESSION
+	case CtSaving::EDFLZ4:
+		blob_list = checkCompressedSidebandData(lz4_key, data);
+		if (!blob_list.empty()) {
+			typedef SaveContainerEdf Edf;
+			// this will not work with AutoHeader
+			FileLz4Compression comp(dynamic_cast<Edf&>(*this), {});
+			// EDF header is small, can afford compression here
+			ZBufferList zheader = comp.compress_header(data);
+			useCompressedSidebandData(data, blob_list,
+						  std::move(zheader));
+			RETURN_WITH_DEB(false);
+		}
+		RETURN_WITH_DEB(true);
+#endif
+#ifdef WITH_HDF5_SAVING
+#ifdef WITH_Z_COMPRESSION
+	case CtSaving::HDF5GZ:
+		blob_list = checkCompressedSidebandData(gzip_key, data);
+		if (!blob_list.empty()) {
+			useCompressedSidebandData(data, blob_list);
+			RETURN_WITH_DEB(false);
+		}
+		RETURN_WITH_DEB(true);
+#endif
+#ifdef WITH_BS_COMPRESSION
+	case CtSaving::HDF5BS:
+		blob_list = checkCompressedSidebandData(bslz4_key, data);
+		if (!blob_list.empty()) {
+			useCompressedSidebandData(data, blob_list);
+			RETURN_WITH_DEB(false);
+		}
+		RETURN_WITH_DEB(true);
+#endif
+#endif // WITH_HDF5_SAVING
+	}
+
+	return needParallelCompression();
 }
 
-ZBufferList CtSaving::SaveContainer::_takeBuffers(int dataId)
+sideband::BlobList
+CtSaving::SaveContainer::checkCompressedSidebandData(const std::string& key, Data& data)
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_buffers_lock);
-	dataId2ZBufferList::iterator i = m_buffers.find(dataId);
-	ZBufferList aReturnBufferPt(std::move(i->second));
-	m_buffers.erase(i);
-	return aReturnBufferPt;
+	DEB_PARAM() << DEB_VAR2(key, data);
+
+	Data::SidebandContainer::Optional res = data.sideband.get(key);
+	if (!res) {
+		DEB_WARNING() << "Missing '" << key << "' in " << data;
+		return {};
+	}
+
+	typedef sideband::CompressedData CompressedData;
+	std::shared_ptr<CompressedData> comp_data = sideband::DataCast<CompressedData>(*res);
+
+	DEB_TRACE() << DEB_VAR3(comp_data->decomp_dims[0],
+				comp_data->decomp_dims[1],
+				comp_data->pixel_depth);
+	// check size & depth
+	bool ok = ((data.dimensions == comp_data->decomp_dims) &&
+	      (data.depth() == comp_data->pixel_depth));
+	if (!ok) {
+		DEB_WARNING() << "Uncompressed image size/depth mismatch with "
+				      << "'" << key << "' in " << data;
+		return {};
+	}
+
+	// all ok, return blobs
+	DEB_RETURN() << DEB_VAR1(comp_data->comp_blobs.size());
+	return comp_data->comp_blobs;
+}
+
+void CtSaving::SaveContainer::useCompressedSidebandData(Data& data,
+							sideband::BlobList& blob_list,
+							ZBufferList&& zheader)
+{
+	DEB_MEMBER_FUNCT();
+	ZBufferList buffers(std::move(zheader));
+	sideband::BlobList::iterator bit, bend = blob_list.end();
+	for (bit = blob_list.begin(); bit != bend; ++bit)
+		buffers.emplace_back(bit->first, bit->second);
+	DEB_TRACE() << DEB_VAR2(data.frameNumber, buffers.size());
+	_setBuffers(data, std::move(buffers));
+}
+
+bool CtSaving::SaveContainer::_hasBuffers(Data& data)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data.frameNumber);
+	bool ok = _hasSavingData(data);
+	if (ok) {
+		_SavingDataPtr saving = _getSavingData(data);
+		AutoMutex l(saving->m_lock);
+		ok = !saving->m_buffers.empty();
+	}
+	DEB_RETURN() << DEB_VAR1(ok);
+	return ok;
+}
+
+void CtSaving::SaveContainer::_setBuffers(Data& data, ZBufferList&& buffers)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(data.frameNumber, buffers.size());
+	_SavingDataPtr saving = _getSavingData(data);
+	AutoMutex l(saving->m_lock);
+	saving->m_buffers = std::move(buffers);
+}
+
+ZBufferList CtSaving::SaveContainer::_takeBuffers(Data& data)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data.frameNumber);
+	_SavingDataPtr saving = _getSavingData(data);
+	AutoMutex l(saving->m_lock);
+	DEB_RETURN() << DEB_VAR1(saving->m_buffers.size());
+	return std::move(saving->m_buffers);
 }
 
 void CtSaving::SaveContainer::_clear()
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_buffers_lock);
-	if (m_buffers.size())
-		DEB_WARNING() << DEB_VAR1(m_buffers.size());
-	m_buffers.clear();
 }
 
 /** @brief check if all file can be written

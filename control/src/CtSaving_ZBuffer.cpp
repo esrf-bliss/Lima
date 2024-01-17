@@ -39,13 +39,15 @@ void ZBuffer::_alloc(int buffer_size)
     THROW_CTL_ERROR(InvalidValue) << "Invalid NULL buffer_size";
 
   used_size = 0;
+  void *p;
 #ifdef __unix
-  if(posix_memalign(&buffer,4*1024,buffer_size))
+  if (posix_memalign(&p, 4*1024, buffer_size))
 #else
-  buffer = _aligned_malloc(buffer_size,4*1024);
-  if(!buffer)
+  p = _aligned_malloc(buffer_size, 4*1024);
+  if (!p)
 #endif
     THROW_CTL_ERROR(Error) << "Can't allocate buffer";
+  buffer = std::shared_ptr<void>(p, _default_free);
   alloc_size = buffer_size;
 }
 
@@ -56,19 +58,17 @@ void ZBuffer::_deep_copy(const ZBuffer& o)
   if (o.used_size > o.alloc_size)
     THROW_CTL_ERROR(Error) << "Invalid " << DEB_VAR2(o.used_size, o.alloc_size);
   _alloc(o.alloc_size);
-  memcpy(buffer, o.buffer, used_size);
+  memcpy(ptr(), o.ptr(), used_size);
   used_size = o.used_size;
 }
 
-void ZBuffer::_free()
+void ZBuffer::_default_free(void *p)
 {
-  DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(alloc_size, used_size);
+  DEB_STATIC_FUNCT();
 #ifdef __unix
-  free(buffer);
+  free(p);
 #else
-  _aligned_free(buffer);
+  _aligned_free(p);
 #endif
-  _setInvalid();
 }
 

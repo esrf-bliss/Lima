@@ -22,6 +22,7 @@
 #include "lima/CtBuffer.h"
 #include "lima/CtAccumulation.h"
 #include "lima/CtSaving.h"
+#include "lima/SidebandData.h"
 
 #ifdef __unix
 #include <malloc.h>
@@ -251,7 +252,7 @@ void CtBuffer::setup(CtControl *ct)
   case Accumulation:
     concat_nframes= 1;
     m_ct_accumulation = ct->accumulation();
-    hwNbBuffer = 16;
+    hwNbBuffer = CtAccumulation::ACC_MIN_BUFFER_SIZE;
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
@@ -321,6 +322,9 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
 
   fdata.setBuffer(fbuf);
   fbuf->unref();
+
+  if(!frame_info.sideband_data.empty())
+    fdata.sideband = frame_info.sideband_data;
 }
 
 void CtBuffer::getDataFromHwFrameInfo(Data &fdata,

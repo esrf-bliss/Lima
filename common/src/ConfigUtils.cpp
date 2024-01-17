@@ -223,11 +223,14 @@ void Setting::set(const std::string& alias,
     dimensions.append(*i);
   
   Setting header_setting = data_setting.addChild("header");
-  const Data::HeaderContainer::Header &header = data.header.header();
-  for(Data::HeaderContainer::Header::const_iterator i = header.begin();
-      i != header.end();++i)
-    header_setting.set(i->first.c_str(),i->second);
-  
+  {
+    typedef Data::HeaderContainer Header;
+    Header::LockedPtr header_ptr(data.header);
+    for(Header::const_iterator i = header_ptr->begin();
+	i != header_ptr->end();++i)
+      header_setting.set(i->first.c_str(),i->second);
+  }
+
   Setting buffer_setting = data_setting.addArray("buffer");
   switch(data.type)
     {

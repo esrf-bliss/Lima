@@ -32,7 +32,8 @@ if read_the_docs_build:
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.ifconfig',
-    'sphinx.ext.mathjax', 'breathe'
+    'sphinx.ext.mathjax', 'breathe',
+    'sphinx_rtd_theme'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -49,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Lima'
-copyright = u'2019, Lima Team'
+copyright = u'2023, Lima Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -105,10 +106,9 @@ breathe_domain_by_extension = {"h" : "cpp"}
 # -- Options for HTML output ---------------------------------------------------
 
 # only import and set the theme if we're building docs locally
-if not read_the_docs_build:
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+#import sphinx_rtd_theme
+html_theme = 'sphinx_rtd_theme'
+#html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # otherwise, readthedocs.org uses their theme by default, so no need to specify it
 

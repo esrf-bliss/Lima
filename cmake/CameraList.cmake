@@ -175,6 +175,13 @@ if(UNIX)
 		set(LIMACAMERA_MERLIN OFF CACHE BOOL "compile merlin?")
 	endif()
 
+  #MINIPIX
+	if(DEFINED ENV{LIMACAMERA_MINIPIX})
+		set(LIMACAMERA_MINIPIX "$ENV{LIMACAMERA_MINIPIX}" CACHE BOOL "compile minipix?" FORCE)
+	else()
+		set(LIMACAMERA_MINIPIX OFF CACHE BOOL "compile minipix?")
+	endif()
+
 	#MYTHEN
 	if(DEFINED ENV{LIMACAMERA_MYTHEN})
 		set(LIMACAMERA_MYTHEN "$ENV{LIMACAMERA_MYTHEN}" CACHE BOOL "compile mythen ?" FORCE)
@@ -264,6 +271,13 @@ if(UNIX)
 		set(LIMACAMERA_XH "$ENV{LIMACAMERA_XH}" CACHE BOOL "compile xh ?" FORCE)
 	else()
 		set(LIMACAMERA_XH OFF CACHE BOOL "compile xh ?")
+	endif()
+
+  #XIMEA
+	if(DEFINED ENV{LIMACAMERA_XIMEA})
+		set(LIMACAMERA_XIMEA "$ENV{LIMACAMERA_XIMEA}" CACHE BOOL "compile ximea ?" FORCE)
+	else()
+		set(LIMACAMERA_XIMEA OFF CACHE BOOL "compile ximea ?")
 	endif()
 
 	#XSPRESS3
@@ -358,6 +372,11 @@ if(LIMACAMERA_PRINCETON)
     add_subdirectory(camera/princeton)
 endif(LIMACAMERA_PRINCETON)
 
+#IRIS
+if(LIMACAMERA_IRIS)
+    add_subdirectory(camera/iris)
+endif(LIMACAMERA_IRIS)
+
 #META
 if(LIMACAMERA_META)
     add_subdirectory(camera/common/meta)
@@ -434,6 +453,11 @@ if(UNIX)
 	if(LIMACAMERA_MERLIN)
 		add_subdirectory(camera/merlin)
 	endif(LIMACAMERA_MERLIN)
+  
+  #MINIPIX
+	if(LIMACAMERA_MINIPIX)
+		add_subdirectory(camera/minipix)
+	endif(LIMACAMERA_MINIPIX)
 
 	#MYTHEN
 	if(LIMACAMERA_MYTHEN)
@@ -494,6 +518,11 @@ if(UNIX)
 	if(LIMACAMERA_XPAD)
 		add_subdirectory(camera/xpad)
 	endif(LIMACAMERA_XPAD)
+  
+  #XIMEA
+	if(LIMACAMERA_XIMEA)
+		add_subdirectory(camera/ximea)
+	endif(LIMACAMERA_XIMEA)
 
 	#XH
 	if(LIMACAMERA_XH)
@@ -527,9 +556,4 @@ if(WIN32)
 	if(LIMACAMERA_PHOTONICSCIENCE)
 		add_subdirectory(camera/photonicscience)
 	endif(LIMACAMERA_PHOTONICSCIENCE)
-
-	#IRIS
-	if(LIMACAMERA_IRIS)
-		add_subdirectory(camera/iris)
-	endif(LIMACAMERA_IRIS)
 endif()

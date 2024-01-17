@@ -37,7 +37,7 @@ def wait_acq_finished(ct: Core.CtControl, timeout = 5.0):
     assert status.LastImageReady + 1 == ACQ_NB_FRAMES
 
 
-def prepare(ct: Core.CtControl, output_type = None, threshold = None):
+def prepare(ct: Core.CtControl, output_type = None, threshold = None, operation = None):
     acq = ct.acquisition()
     acq.setAcqMode(Core.Accumulation)
     acq.setAcqExpoTime(ACQ_EXPO_TIME)
@@ -50,13 +50,19 @@ def prepare(ct: Core.CtControl, output_type = None, threshold = None):
         acc.setOutputType(output_type)
 
     if threshold:
-        acc.setMode(Core.CtAccumulation.Parameters.THRESHOLD_BEFORE)
+        acc.setFilter(Core.CtAccumulation.FILTER_THRESHOLD_MIN)
         acc.setThresholdBefore(threshold)
-        assert acc.getMode() ==  Core.CtAccumulation.Parameters.THRESHOLD_BEFORE
+        assert acc.getFilter() ==  Core.CtAccumulation.FILTER_THRESHOLD_MIN
         assert acc.getThresholdBefore() == threshold
     else:
-        assert acc.getMode() ==  Core.CtAccumulation.Parameters.STANDARD
+        assert acc.getFilter() ==  Core.CtAccumulation.FILTER_NONE
         assert acc.getThresholdBefore() == 0.
+
+    if operation:
+        acc.setOperation(operation)
+        assert acc.getOperation() ==  operation
+    else:
+        assert acc.getOperation() ==  Core.CtAccumulation.ACC_SUM
 
     class ThresholdCallback(Core.CtAccumulation.ThresholdCallback):
         def aboveMax(self, data, value):
@@ -120,7 +126,6 @@ def image_type_to_dtype(image_type: Core.ImageType):
     indirect=["simu"]
 )
 def test_accumulation_filter_none(simu, output_type, expectation):
-
     with expectation:
         prepare(simu, output_type)
         start(simu)
@@ -208,3 +213,49 @@ def test_accumulation_filter_threshold(simu, output_type, expectation):
             # Check all pixels
             comparison = frm.buffer == np.full(frm.buffer.shape, expected)
             assert comparison.all()
+
+@pytest.mark.parametrize(
+    ("simu, output_type, expectation"),
+    [
+        (Core.Bpp8, None, does_not_raise()),
+        (Core.Bpp8S, None, does_not_raise()),
+        (Core.Bpp16, None, does_not_raise()),
+        (Core.Bpp16S, None, does_not_raise()),
+        (Core.Bpp32, None, does_not_raise()),
+        (Core.Bpp32S, None, does_not_raise()),
+        (Core.Bpp8, Core.Bpp16S, does_not_raise()),
+        (Core.Bpp8S, Core.Bpp16S, does_not_raise()),
+        (Core.Bpp16, Core.Bpp16, does_not_raise()),
+        (Core.Bpp16, Core.Bpp16S, does_not_raise()),
+        (Core.Bpp16S, Core.Bpp16S, does_not_raise()),
+        (Core.Bpp16S, Core.Bpp16, pytest.raises(Core.Exception)),
+        (Core.Bpp32, Core.Bpp16S, does_not_raise()),
+        (Core.Bpp32S, Core.Bpp16S, pytest.raises(Core.Exception)),
+    ],
+    indirect=["simu"]
+)
+def test_accumulation_mean(simu, output_type, expectation):
+    with expectation:
+        prepare(simu, output_type, operation=Core.CtAccumulation.ACC_MEAN)
+        start(simu)
+        wait_acq_finished(simu, timeout = (ACQ_EXPO_TIME * 1.5 * (ACQ_NB_FRAMES + 1)))
+
+        img_size = simu.image().getImageDim().getSize()
+
+        for i in range(0, ACQ_NB_FRAMES):
+            frm = simu.ReadImage(i)
+            assert frm.buffer.shape == (img_size.getHeight(), img_size.getWidth())
+            if output_type is None:
+                assert frm.buffer.dtype == np.int32
+            else:
+                assert frm.buffer.dtype == image_type_to_dtype(output_type)
+
+            # Check upper left corner pixel
+            begin = i * ACC_NB_FRAMES
+            r = np.arange(begin, begin + ACC_NB_FRAMES, dtype = frm.buffer.dtype)
+            expected = int(r.sum() / ACC_NB_FRAMES)
+            assert frm.buffer[0, 0] == expected
+
+            # Check all pixels
+            #comparison = frm.buffer == np.full(frm.buffer.shape, expected)
+            #assert comparison.all()
