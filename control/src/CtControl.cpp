@@ -890,10 +890,10 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
 
       // Only read multiple frames in one block if not software ROI
       if (acqMode == Concatenation) {
-	FrameDim hwImgDim;
-	m_ct_image->getHwImageDim(hwImgDim);
-	if (hwImgDim == imgDim)
-	  m_ct_acq->getConcatNbFrames(concatNbFrames);
+        FrameDim hwImgDim;
+        m_ct_image->getHwImageDim(hwImgDim);
+        if (hwImgDim == imgDim)
+          m_ct_acq->getConcatNbFrames(concatNbFrames);
       }
     }
   }
