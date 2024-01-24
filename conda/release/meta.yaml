@@ -19,7 +19,7 @@ requirements:
   host:
     - python {{ python }}
     - sip 4.19* # API v12.7
-    - processlib
+    - processlib 1.8*
     - libconfig 1.7*
     # I/O formats
     - zlib
