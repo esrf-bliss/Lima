@@ -27,7 +27,7 @@ requirements:
     - hdf5 1.10*
     - libtiff
     - cbflib         # [linux]
-    - openssl 1.1.1* # [linux]
+    - openssl 3*     # [linux]
     - libnuma        # [linux]
   build:
     - cmake
