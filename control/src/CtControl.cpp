@@ -791,7 +791,7 @@ void CtControl::_updateImageStatusThreads(bool force)
 }
 
 
-/** @brief an event arrived, calc the new status
+/** @brief an event arrived, calc the new status and update ImageStatusThreads
  */
 void CtControl::_calcAcqStatus()
 {
@@ -800,20 +800,22 @@ void CtControl::_calcAcqStatus()
   AutoMutex aLock(m_cond.mutex());
 
   AcqStatus& acq_status = m_status.AcquisitionStatus;
-  DEB_TRACE() << DEB_VAR1(acq_status);
+  DEB_TRACE() << DEB_VAR2(acq_status, m_running);
   if((acq_status != AcqRunning) && (acq_status != AcqFault))
     return;
 
   const ImageStatus& img_cntrs = m_status.ImageCounters;
   int acq_nb_frames;
   m_ct_acq->getAcqNbFrames(acq_nb_frames);
-  
-  long last_frame = ((m_running && (acq_nb_frames > 0)) ? (acq_nb_frames - 1) :
+
+  bool endless = (acq_nb_frames == 0);
+  long last_frame = ((m_running && !endless) ? (acq_nb_frames - 1) :
 				 img_cntrs.LastImageAcquired);
 
   DEB_TRACE() << DEB_VAR2(last_frame, img_cntrs);
 
-  bool hw_acq_end = (img_cntrs.LastImageAcquired == last_frame);
+  bool hw_acq_end = (!(endless && m_running) &&
+		     (img_cntrs.LastImageAcquired == last_frame));
   bool img_op_end = (img_cntrs.LastImageReady == last_frame);
   bool cnt_op_end = (!m_op_ext_sink_task_active ||
 		     (img_cntrs.LastCounterReady == last_frame));
@@ -821,17 +823,14 @@ void CtControl::_calcAcqStatus()
   bool acq_end = (hw_acq_end && img_op_end && cnt_op_end && save_end);
 
   DEB_TRACE() << DEB_VAR5(hw_acq_end, img_op_end, cnt_op_end, save_end, acq_end);
-  
-  if(!acq_end)
-    return;
-  
-  if(acq_status == AcqRunning)
+
+  if(acq_end && (acq_status == AcqRunning))
     acq_status = AcqReady;
   DEB_TRACE() << DEB_VAR1(m_status);
 
   aLock.unlock();
 
-  _updateImageStatusThreads(true);
+  _updateImageStatusThreads(acq_end);
 }
 
 void CtControl::getImageStatus(ImageStatus& status) const
