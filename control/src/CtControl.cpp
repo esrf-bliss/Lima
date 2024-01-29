@@ -895,18 +895,13 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
 
       AcqMode acqMode;
       m_ct_acq->getAcqMode(acqMode);
-      //Authorize to read the current frame in Accumulation Mode
-      int acq_nb_frames;
-      m_ct_acq->getAcqNbFrames(acq_nb_frames);
-      if (acqMode == Accumulation && lastFrame < acq_nb_frames - 1)
-	++lastFrame;
 
       // Only read multiple frames in one block if not software ROI
       if (acqMode == Concatenation) {
-	FrameDim hwImgDim;
-	m_ct_image->getHwImageDim(hwImgDim);
-	if (hwImgDim == imgDim)
-	  m_ct_acq->getConcatNbFrames(concatNbFrames);
+        FrameDim hwImgDim;
+        m_ct_image->getHwImageDim(hwImgDim);
+        if (hwImgDim == imgDim)
+          m_ct_acq->getConcatNbFrames(concatNbFrames);
       }
     }
   }
