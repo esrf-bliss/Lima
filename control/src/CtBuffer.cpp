@@ -32,16 +32,18 @@ using namespace lima;
 
 static const double WAIT_BUFFERS_RELEASED_TIMEOUT = 5.0;
 
-class CtBuffer::_DataDestroyCallback : public Buffer::Callback
+class CtBuffer::_DataBuffer : public Buffer
 {
 public:
-  _DataDestroyCallback(CtBuffer &buffer) : m_buffer(buffer) {}
+  _DataBuffer(CtBuffer &buffer) : m_buffer(buffer) {}
 
-  virtual void destroy(void *dataPt)
+  virtual ~_DataBuffer()
   {
-    m_buffer._release(dataPt);
+    m_buffer._release(this);
   }
+
 private:
+  friend class CtBuffer;
   CtBuffer& m_buffer;
 };
 
@@ -59,8 +61,7 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 }
 
 CtBuffer::CtBuffer(HwInterface *hw)
-  : m_frame_cb(NULL),m_ct_accumulation(NULL),
-    m_data_destroy_callback(NULL), m_mapped_frames(0)
+  : m_frame_cb(NULL),m_ct_accumulation(NULL),m_mapped_frames(0)
 {
   DEB_CONSTRUCTOR();
 
@@ -68,8 +69,6 @@ CtBuffer::CtBuffer(HwInterface *hw)
     THROW_CTL_ERROR(Error) <<  "Cannot get hardware buffer object";
 
   m_hw_buffer_cb = m_hw_buffer->getBufferCallback();
-  if(m_hw_buffer_cb)
-    m_data_destroy_callback = new _DataDestroyCallback(*this);
 }
 
 CtBuffer::~CtBuffer()
@@ -77,7 +76,6 @@ CtBuffer::~CtBuffer()
   DEB_DESTRUCTOR();
 
   unregisterFrameCallback();
-  delete m_data_destroy_callback;
 }
 
 void CtBuffer::registerFrameCallback(CtControl *ct) 
@@ -289,9 +287,8 @@ void CtBuffer::setup(CtControl *ct)
 #endif
 }
 
-void CtBuffer::transformHwFrameInfoToData(Data &fdata,
-					  const HwFrameInfoType& frame_info,
-					  int readBlockLen)
+void CtBuffer::_initDataFromHwFrameInfo(Data &fdata, const HwFrameInfoType& frame_info,
+					int readBlockLen)
 {
   DEB_STATIC_FUNCT();
   DEB_PARAM() << DEB_VAR2(frame_info, readBlockLen);
@@ -312,16 +309,6 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
   fdata.frameNumber= frame_info.acq_frame_nb;
   fdata.timestamp = frame_info.frame_timestamp;
 
-  Buffer *fbuf = new Buffer();
-  fbuf->data = frame_info.frame_ptr;
-  if(frame_info.buffer_owner_ship == HwFrameInfoType::Managed)
-    fbuf->owner = Buffer::MAPPED;
-  else
-    fbuf->owner = Buffer::SHARED;
-
-  fdata.setBuffer(fbuf);
-  fbuf->unref();
-
   if(!frame_info.sideband_data.empty())
     fdata.sideband = frame_info.sideband_data;
 }
@@ -332,24 +319,34 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
 {
   DEB_MEMBER_FUNCT();
 
-  transformHwFrameInfoToData(fdata,frame_info,readBlockLen);
+  bool managed= (frame_info.buffer_owner_ship == HwFrameInfoType::Managed);
+  if(!managed || !m_hw_buffer_cb) {
+    getDataFromAnonymousHwFrameInfo(fdata, frame_info, readBlockLen);
+    return;
+  }
+
+  _initDataFromHwFrameInfo(fdata,frame_info,readBlockLen);
+
   // Manage Buffer callback
-  if(m_hw_buffer_cb)
-    {
-      m_hw_buffer_cb->map(frame_info.frame_ptr);
-      fdata.buffer->callback = m_data_destroy_callback;
-      AutoMutex l(m_cond.mutex());
-      ++m_mapped_frames;
-    }
+  _DataBuffer *fbuf= new _DataBuffer(*this);
+  fbuf->data= frame_info.frame_ptr;
+  fbuf->owner= Buffer::MAPPED;
+  fdata.setBuffer(fbuf);
+  fbuf->unref();
+  m_hw_buffer_cb->map(fbuf->data);
+
+  AutoMutex l(m_cond.mutex());
+  ++m_mapped_frames;
+
   DEB_RETURN() << DEB_VAR1(fdata);
 }
 
-void CtBuffer::_release(void *dataPt)
+void CtBuffer::_release(_DataBuffer *fbuf)
 {
   DEB_MEMBER_FUNCT();
-  m_hw_buffer_cb->release(dataPt);
+  m_hw_buffer_cb->release(fbuf->data);
   AutoMutex l(m_cond.mutex());
-  if (--m_mapped_frames == 0)
+  if(--m_mapped_frames == 0)
     m_cond.signal();
 }
 

@@ -1129,7 +1129,8 @@ void CtSaving::_ReadImage(Data& image, int frameNumber)
 	{
 		HwFrameInfoType frame;
 		m_hwsaving->readFrame(frame, frameNumber);
-		CtBuffer::transformHwFrameInfoToData(image, frame);
+		CtBuffer *buffer = m_ctrl.buffer();
+		buffer->getDataFromHwFrameInfo(image, frame);
 	}
 	else
 		THROW_CTL_ERROR(NotSupported) << "Image read is not supported for this hardware";
