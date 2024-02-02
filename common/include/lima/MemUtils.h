@@ -168,7 +168,7 @@ class LIMACORE_API MemBuffer
  public:
 	//By default, construct a MemBuffer with the default allocator
 	MemBuffer(Allocator::Ref allocator = {});
-	MemBuffer(int size, Allocator::Ref allocator = {});
+	MemBuffer(int size, Allocator::Ref allocator = {}, bool init_mem = true);
 	~MemBuffer();
 
 	// MemBuffer are copy constructible (deep copy, no aliasing)
@@ -179,8 +179,8 @@ class LIMACORE_API MemBuffer
 	MemBuffer(MemBuffer&& rhs);
 	MemBuffer& operator =(MemBuffer&& rhs);
 
-	/// Allocate and initialized memory
-	void alloc(size_t size);
+	/// Allocate and initialize memory (if requested)
+	void alloc(size_t size, bool init_mem = true);
 	void deepCopy(const MemBuffer& buffer);
 	void release();
 
@@ -196,12 +196,12 @@ class LIMACORE_API MemBuffer
 	/// Returns the allocator currently associated with MemBuffer
 	Allocator::Ref getAllocator() const { return m_allocator; }
 
+	/// Initialize the memory
+	void initMemory();
+
  private:
 	/// Call the allocator to (eventually) free the current buffer then allocate a new buffer
 	void uninitializedAlloc(size_t size);
-
-	/// Initialize the memory
-	void initMemory();
 
 	size_t m_size;	//!< The size of the buffer in bytes
 	void *m_ptr;	//!< The pointer ot the buffer
