@@ -29,6 +29,7 @@ set(common_srcs
     src/ThreadUtils.cpp
     src/Exceptions.cpp
     src/MemUtils.cpp
+    src/BufferHelper.cpp
     src/AcqState.cpp
     src/Debug.cpp
     src/VideoUtils.cpp
