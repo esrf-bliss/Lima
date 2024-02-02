@@ -237,12 +237,13 @@ MemBuffer::MemBuffer(Allocator::Ref allocator /*= {}*/) :
 {
 }
 
-MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*= {}*/) :
+MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*= {}*/,
+		     bool init_mem /*= true*/) :
 	m_size(0),
 	m_ptr(nullptr),
 	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
 {
-	alloc(size);
+	alloc(size, init_mem);
 }
 
 MemBuffer::MemBuffer(const MemBuffer& buffer) :
@@ -294,10 +295,11 @@ MemBuffer::~MemBuffer()
 	release();
 }
 
-void MemBuffer::alloc(size_t size)
+void MemBuffer::alloc(size_t size, bool init_mem /*= true*/)
 {
 	uninitializedAlloc(size);
-	initMemory();
+	if (init_mem)
+		initMemory();
 }
 
 void MemBuffer::release()
