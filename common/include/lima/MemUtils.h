@@ -26,6 +26,11 @@
 #include "lima/SizeUtils.h"
 #include "lima/Debug.h"
 #include "lima/Exceptions.h"
+#include "lima/ThreadUtils.h"
+
+#include <memory>
+#include <vector>
+#include <queue>
 
 namespace lima
 {
@@ -207,6 +212,46 @@ class LIMACORE_API MemBuffer
 	void *m_ptr;	//!< The pointer ot the buffer
 	Allocator::Ref m_allocator;	//!< The allocator used to alloc and free the buffer
 	Allocator::DataPtr m_alloc_data;
+};
+
+
+class LIMACORE_API BufferPool
+{
+	DEB_CLASS_NAMESPC(DebModCommon, "BufferPool", "MemUtils");
+  
+ public:
+	BufferPool(Allocator::Ref allocator = {}, bool init_mem = true);
+	~BufferPool();
+
+	void setAllocator(Allocator::Ref allocator);
+	Allocator::Ref getAllocator() const { return m_alloc; }
+
+	void setInitMem(bool init_mem);
+	bool getInitMem() const { return m_init_mem; }
+	
+	std::shared_ptr<void> getBuffer();
+
+	void allocBuffers(int nb_buffers, int size);
+	void releaseBuffers();
+	int getNbBuffers() const;
+	int getBufferSize() const;
+
+ private:
+	class DefAllocChangeCb;
+	friend class DefAllocChangeCb;
+	void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+				      Allocator::Ref new_alloc);
+
+	void _allocBuffers(int nb_buffers, int size, AutoMutex& l);
+	void _releaseBuffers(AutoMutex& l);
+
+	Mutex m_mutex;
+	Allocator::Ref m_alloc;
+	bool m_init_mem;
+	std::vector<MemBuffer> m_buffers;
+	std::queue<void *> m_available;
+	int m_buffer_size;  
+	DefAllocChangeCb *m_def_alloc_change_cb;
 };
 
 } // namespace lima
