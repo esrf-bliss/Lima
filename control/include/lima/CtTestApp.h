@@ -46,6 +46,8 @@ class LIMACORE_API CtTestApp
 	typedef std::vector<int> int_array;
 	typedef std::map<std::string, int> index_map;
 
+	typedef BufferHelper::Parameters BufferParameters;
+
 	class LIMACORE_API Pars : public AppPars
 	{
 		DEB_CLASS_NAMESPC(DebModTest, "CtTestApp::Pars", "Control");
@@ -80,8 +82,10 @@ class LIMACORE_API CtTestApp
 
 		bool video_active{false};
 		CtVideo::VideoSource video_source{CtVideo::BASE_IMAGE};
-	
+
+		// Buffer management
 		int buffer_max_memory{70};
+
 		int proc_nb_threads{2};
 
 		int test_nb_seq{1};

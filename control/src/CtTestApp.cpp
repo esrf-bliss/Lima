@@ -279,6 +279,8 @@ void CtTestApp::init()
 	video->setVideoSource(m_pars->video_source);
 	video->setActive(m_pars->video_active);
 
+	// buffer management
+	DEB_ALWAYS() << DEB_VAR1(m_pars->buffer_max_memory);
 	buffer->setMaxMemory(m_pars->buffer_max_memory);
 
 	PoolThreadMgr& mgr = PoolThreadMgr::get();
