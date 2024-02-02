@@ -93,16 +93,16 @@ namespace lima {
 
     void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&,
 				int readBlockLen=1);
-    static void transformHwFrameInfoToData(Data&,const HwFrameInfoType&,
+    void transformHwFrameInfoToData(Data&,const HwFrameInfoType&,
 					   int readBlockLen=1);
 
     bool waitBuffersReleased(double timeout=-1);
 
   private:
-    class _DataDestroyCallback;
-    friend class _DataDestroyCallback;
+    class _DataBuffer;
+    friend class _DataBuffer;
 
-    void _release(void *dataPt);
+    void _release(_DataBuffer *buffer);
 
     Cond			m_cond;
     HwBufferCtrlObj* 		m_hw_buffer;
@@ -110,7 +110,6 @@ namespace lima {
     Parameters			m_pars;
     CtAccumulation* 		m_ct_accumulation;
     HwBufferCtrlObj::Callback* 	m_hw_buffer_cb;
-    Buffer::Callback*		m_data_destroy_callback;
     int				m_mapped_frames;
   };
 
