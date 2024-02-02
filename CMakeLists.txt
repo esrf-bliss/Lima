@@ -101,6 +101,7 @@ set(common_srcs
     common/src/ThreadUtils.cpp
     common/src/Exceptions.cpp
     common/src/MemUtils.cpp
+    common/src/BufferHelper.cpp
     common/src/AcqState.cpp
     common/src/Debug.cpp
     common/src/VideoUtils.cpp
