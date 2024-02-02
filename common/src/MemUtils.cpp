@@ -470,3 +470,163 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 }
 
 #endif //LIMA_USE_NUMA
+
+
+// BufferPool
+
+class BufferPool::DefAllocChangeCb :
+	public Allocator::DefaultChangeCallback
+{
+public:
+	DefAllocChangeCb(BufferPool& pool) : m_pool(pool)
+	{
+		Allocator::registerDefaultChangeCallback(this);
+	}
+
+	~DefAllocChangeCb()
+	{
+		Allocator::unregisterDefaultChangeCallback(this);
+	}
+
+	virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+					      Allocator::Ref new_alloc)
+	{
+		m_pool.onDefaultAllocatorChange(prev_alloc, new_alloc);
+	}
+
+private:
+	BufferPool& m_pool;
+};
+
+
+BufferPool::BufferPool(Allocator::Ref allocator, bool init_mem)
+	: m_alloc(allocator), m_init_mem(init_mem), m_buffer_size(0)
+{
+	DEB_CONSTRUCTOR();
+	DEB_PARAM() << DEB_VAR1(allocator);
+	// can only create the cb once "this" is ready
+	m_def_alloc_change_cb = new DefAllocChangeCb(*this);
+}
+
+BufferPool::~BufferPool()
+{
+	DEB_DESTRUCTOR();
+	releaseBuffers();
+	// destroy cb while "this" is still valid
+	delete m_def_alloc_change_cb;
+}
+
+std::shared_ptr<void> BufferPool::getBuffer()
+{
+	DEB_MEMBER_FUNCT();
+	void *p = NULL;
+	{
+		AutoMutex l(m_mutex);
+		if (m_available.empty())
+			return {};
+		p = m_available.front();
+		m_available.pop();
+	}
+	auto releaser = [&](void *p) {
+		AutoMutex l(m_mutex);
+		m_available.push(p);
+	};
+	return std::shared_ptr<void>(p, releaser);
+}
+
+void BufferPool::setAllocator(Allocator::Ref allocator)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(allocator.get());
+
+	if (allocator == m_alloc)
+		return;
+
+	releaseBuffers();
+	m_alloc = allocator;
+}
+
+void BufferPool::onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+					  Allocator::Ref new_alloc)
+{
+	DEB_MEMBER_FUNCT();
+	if (!m_alloc)
+		releaseBuffers();
+}
+
+void BufferPool::setInitMem(bool init_mem)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(init_mem);
+
+	if ((init_mem == m_init_mem) || m_init_mem)
+		return;
+
+	std::vector<MemBuffer>::iterator it, end = m_buffers.end();
+	for (it = m_buffers.begin(); it != end; ++it)
+		it->initMemory();
+
+	m_init_mem = init_mem;
+}
+
+void BufferPool::allocBuffers(int nb_buffers, int size)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(nb_buffers, size);
+	AutoMutex l(m_mutex);
+	_allocBuffers(nb_buffers, size, l);
+}
+
+int BufferPool::getNbBuffers() const
+{
+	DEB_MEMBER_FUNCT();
+	int nb_buffers =  m_buffers.size();
+	DEB_RETURN() << DEB_VAR1(nb_buffers);
+	return nb_buffers;
+}
+
+int BufferPool::getBufferSize() const
+{
+	DEB_MEMBER_FUNCT();
+	int buffer_size =  m_buffer_size;
+	DEB_RETURN() << DEB_VAR1(buffer_size);
+	return buffer_size;
+}
+
+void BufferPool::releaseBuffers()
+{
+	DEB_MEMBER_FUNCT();
+	AutoMutex l(m_mutex);
+	_releaseBuffers(l);
+}
+
+void BufferPool::_allocBuffers(int nb_buffers, int size, AutoMutex& l)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR4(m_buffers.size(), nb_buffers,
+				m_buffer_size, size);
+	if (size != m_buffer_size)
+		_releaseBuffers(l);
+	if (nb_buffers == m_buffers.size())
+		return;
+	if (m_buffers.capacity() < nb_buffers)
+		m_buffers.reserve(nb_buffers + 128);
+	m_buffer_size = size;
+	DEB_TRACE() << DEB_VAR2(m_buffers.size(), nb_buffers);
+	// TODO: reduce the number of buffers
+	while (m_buffers.size() < nb_buffers) {
+		m_buffers.emplace_back(size, m_alloc, m_init_mem);
+		m_available.push(m_buffers.back().getPtr());
+	}
+}
+
+void BufferPool::_releaseBuffers(AutoMutex& l)
+{
+	DEB_MEMBER_FUNCT();
+	if (m_available.size() != m_buffers.size())
+		DEB_ERROR() << "Buffers still in use";
+	while (m_available.size() > 0)
+		m_available.pop();
+	m_buffers.clear();
+	m_buffer_size = 0;
+}
