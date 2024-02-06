@@ -368,8 +368,10 @@ public:
 		Status wait(int frame_number, double timeout = -1.);
 
 	protected:
-		virtual void map(void *address);
-		virtual void release(void *address);
+		// returns a pointer to internal object that refers to address
+		virtual void *map(void *address);
+		// receives the pointer returned by map
+		virtual void release(void *address_ref);
 		virtual void releaseAll();
 
 		virtual void realloc();
