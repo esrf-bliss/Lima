@@ -113,34 +113,34 @@ struct MockAllocator : lima::Allocator
 		free(ptr);
 	}
 
-	static MockAllocator *getAllocator()
+	static Allocator::Ref getAllocator()
 	{
-		static MockAllocator instance;
-		return &instance;
+		static Allocator::Ref instance = std::make_shared<MockAllocator>();
+		return instance;
 	}
 };
 
 
 void test_custom_allocator()
 {
-	MockAllocator allocator;
+	Allocator::Ref allocator = std::make_shared<MockAllocator>();
 
 	//Default construction
-	MemBuffer b(1, &allocator);
+	MemBuffer b(1, allocator);
 	assert(b.getSize() == 1);
-	assert(b.getAllocator() == &allocator);
+	assert(b.getAllocator() == allocator);
 
 	//Copy construction
 	MemBuffer c(b);
 	assert(c.getSize() == 1);
 	assert(c.getConstPtr() != b.getConstPtr());
-	assert(c.getAllocator() == &allocator);
+	assert(c.getAllocator() == allocator);
 
 	//Copy assignement
 	MemBuffer d = b;
 	assert(d.getSize() == 1);
 	assert(d.getConstPtr() != b.getConstPtr());
-	assert(d.getAllocator() == &allocator);
+	assert(d.getAllocator() == allocator);
 
 	//Move construction
 	LIMA_MAYBE_UNUSED const void *ptr = b.getConstPtr();
@@ -149,7 +149,7 @@ void test_custom_allocator()
 	assert(e.getConstPtr() == ptr);
 	assert(b.getConstPtr() == nullptr);
 	assert(b.getSize() == 0);
-	assert(e.getAllocator() == &allocator);
+	assert(e.getAllocator() == allocator);
 
 	//Move assignement
 	MemBuffer f = std::move(e);
@@ -157,7 +157,7 @@ void test_custom_allocator()
 	assert(f.getConstPtr() == ptr);
 	assert(e.getConstPtr() == nullptr);
 	assert(e.getSize() == 0);
-	assert(f.getAllocator() == &allocator);
+	assert(f.getAllocator() == allocator);
 }
 
 
