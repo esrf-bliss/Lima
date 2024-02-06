@@ -952,29 +952,30 @@ SoftBufferCtrlObj::Sync::wait(int frame_number, double timeout)
 		return okFlag ? INTERRUPTED : TIMEOUT;
 }
 
-void SoftBufferCtrlObj::Sync::map(void *address)
+void *SoftBufferCtrlObj::Sync::map(void *address)
 {
 	DEB_MEMBER_FUNCT();
 
 	StdBufferCbMgr& buffer_mgr = m_buffer_ctrl_obj.getBuffer();
 	int frame_nb = buffer_mgr.getFrameBufferNb(address);
 	AutoMutex aLock(m_cond.mutex());
-	if (m_frame_use[frame_nb]++ == 0)
+	int *frame_use_ptr = &m_frame_use[frame_nb];
+	if ((*frame_use_ptr)++ == 0)
 		++m_total_used_frames;
+	return frame_use_ptr;
 }
 
-void SoftBufferCtrlObj::Sync::release(void *address)
+void SoftBufferCtrlObj::Sync::release(void *address_ref)
 {
 	DEB_MEMBER_FUNCT();
 
-	StdBufferCbMgr& buffer_mgr = m_buffer_ctrl_obj.getBuffer();
-	int frame_nb = buffer_mgr.getFrameBufferNb(address);
+	int *frame_use_ptr = static_cast<int *>(address_ref);
 	AutoMutex aLock(m_cond.mutex());
-	if (m_frame_use[frame_nb] == 0)
+	if (*frame_use_ptr == 0)
 		THROW_HW_ERROR(Error) << "Internal error: " 
 				      << "releasing buffer not in use list";
 
-	if (--m_frame_use[frame_nb] == 0) {
+	if (--(*frame_use_ptr) == 0) {
 		--m_total_used_frames;
 		m_cond.broadcast();
 	}
