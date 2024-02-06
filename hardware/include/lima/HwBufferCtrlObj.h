@@ -69,8 +69,10 @@ public:
 	{
 	public:
 		virtual ~Callback();
-		virtual void map(void *address) = 0;
-		virtual void release(void *address) = 0;
+		// returns a pointer to internal object that refers to address
+		virtual void *map(void *address) = 0;
+		// receives the pointer returned by map
+		virtual void release(void *address_ref) = 0;
 		virtual void releaseAll() = 0;
 	};
 

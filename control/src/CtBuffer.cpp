@@ -36,13 +36,17 @@ class CtBuffer::_DataBuffer : public MappedBuffer
 {
 public:
   _DataBuffer(CtBuffer &buffer, void *p)
-    : MappedBuffer(p, [&](void *) { buffer._release(this); })
+    : MappedBuffer(p, [&](void *) { buffer._release(this); }), m_map_ref(NULL)
   {}
 
   const char *type() const override
   {
     return "Managed";
   }
+
+private:
+  friend class CtBuffer;
+  void *m_map_ref;
 };
 
 bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
@@ -334,7 +338,7 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
   if(managed && m_hw_buffer_cb)
     {
       _DataBuffer *buffer = static_cast<_DataBuffer *>(fdata.buffer);
-      m_hw_buffer_cb->map(buffer->data);
+      buffer->m_map_ref = m_hw_buffer_cb->map(buffer->data);
       AutoMutex l(m_cond.mutex());
       ++m_mapped_frames;
     }
@@ -346,7 +350,7 @@ void CtBuffer::_release(_DataBuffer *buffer)
   DEB_MEMBER_FUNCT();
   if(!m_hw_buffer_cb)
     return;
-  m_hw_buffer_cb->release(buffer->data);
+  m_hw_buffer_cb->release(buffer->m_map_ref);
   AutoMutex l(m_cond.mutex());
   if (--m_mapped_frames == 0)
     m_cond.signal();
