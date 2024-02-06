@@ -83,7 +83,7 @@ SoftBufferAllocMgr::~SoftBufferAllocMgr()
 	releaseBuffers();
 }
 
-void SoftBufferAllocMgr::setAllocator(Allocator *allocator)
+void SoftBufferAllocMgr::setAllocator(Allocator::Ref allocator)
 {
 	DEB_MEMBER_FUNCT();
 	if (!allocator)
@@ -181,7 +181,6 @@ void *SoftBufferAllocMgr::getBufferPtr(int buffer_nb)
 #ifdef LIMA_USE_NUMA
 
 NumaSoftBufferAllocMgr::NumaSoftBufferAllocMgr()
-	: m_numa_allocator(NULL)
 {
 	DEB_CONSTRUCTOR();
 	setCPUAffinityMask({});
@@ -211,8 +210,9 @@ void NumaSoftBufferAllocMgr::setCPUAffinityMask(const CPUMask& mask)
 		DEB_PARAM() << os.str();
 	}
 
-	if (m_numa_allocator &&
-	    (mask == m_numa_allocator->getCPUAffinityMask()))
+	NumaAllocator *numa_allocator = getNumaAllocator();
+	if (numa_allocator &&
+	    (mask == numa_allocator->getCPUAffinityMask()))
 		return;
 
 	FrameDim frame_dim = getFrameDim();
@@ -221,8 +221,8 @@ void NumaSoftBufferAllocMgr::setCPUAffinityMask(const CPUMask& mask)
 	if (nb_buffers > 0)
 		releaseBuffers();
 
-	m_numa_allocator = new NumaAllocator(mask);
-	setAllocator(m_numa_allocator);
+	Allocator::Ref allocator = std::make_shared<NumaAllocator>(mask);
+	setAllocator(allocator);
 
 	if (nb_buffers > 0)
 		allocBuffers(nb_buffers, frame_dim);

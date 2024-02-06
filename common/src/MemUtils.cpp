@@ -111,9 +111,9 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 	memset(ptr, 0, nb_concat_frames * size_t(frame_dim.getMemSize()));
 }
 
-Allocator *Allocator::defaultAllocator()
+Allocator::Ref Allocator::defaultAllocator()
 {
-	static Allocator::Ref allocator = new Allocator();
+	static Allocator::Ref allocator = std::make_shared<Allocator>();
 	return allocator;
 }
 
@@ -187,15 +187,15 @@ void *MMapAllocator::allocMmap(size_t& size)
 }
 #endif //__unix
 
-MemBuffer::MemBuffer(Allocator *allocator /*= Allocator::defaultAllocator()*/) :
+MemBuffer::MemBuffer(Allocator::Ref allocator /*= Allocator::defaultAllocator()*/) :
 	m_size(0),
 	m_ptr(nullptr),
 	m_allocator(allocator)
 {
 }
 
-MemBuffer::MemBuffer(int size, Allocator *allocator /*=
-					Allocator::defaultAllocator()*/):
+MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*=
+					Allocator::defaultAllocator()*/) :
 	m_size(0),
 	m_ptr(nullptr),
 	m_allocator(allocator)

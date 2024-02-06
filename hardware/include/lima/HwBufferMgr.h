@@ -82,7 +82,7 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	SoftBufferAllocMgr();
 	virtual ~SoftBufferAllocMgr();
 
-	void setAllocator(Allocator *allocator);
+	void setAllocator(Allocator::Ref allocator);
 
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
 	virtual void allocBuffers(int nb_buffers, const FrameDim& frame_dim) override;
@@ -119,7 +119,8 @@ class LIMACORE_API NumaSoftBufferAllocMgr : public SoftBufferAllocMgr
 	void setCPUAffinityMask(const CPUMask& mask);
 
  protected:
-	NumaAllocator *m_numa_allocator;
+	NumaAllocator *getNumaAllocator()
+	{ return static_cast<NumaAllocator *>(m_allocator.get()); }
 };
 
 #endif //LIMA_USE_NUMA
