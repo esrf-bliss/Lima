@@ -41,26 +41,13 @@ void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& f
 
 struct LIMACORE_API Allocator
 {
-	DEB_STRUCT_NAMESPC(DebModCommon, "MemUtils", "Allocator");
+	DEB_STRUCT_NAMESPC(DebModCommon, "Allocator", "MemUtils");
 
 	struct Data {
 		virtual ~Data() = default;
 	};
-	typedef AutoPtr<Data> DataPtr;
-
-	Allocator() : m_ref_count(0)
-	{}
-
-	Allocator(const Allocator& /*o*/) : m_ref_count(0)
-	{}
-
-	Allocator(Allocator&& o) : m_ref_count(0)
-	{
-		DEB_MEMBER_FUNCT();
-
-		if (o.m_ref_count != 0)
-			DEB_ERROR() << "Moved-from Allocator is not empty";
-	}
+	typedef std::shared_ptr<Data> DataPtr;
+	typedef std::shared_ptr<Allocator> Ref;
 
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size
@@ -71,59 +58,8 @@ struct LIMACORE_API Allocator
 	virtual void release(void* ptr, size_t size, DataPtr alloc_data);
 
 	// Returns a static instance of the default allocator
-	static Allocator *defaultAllocator();
-
-	// All references to Allocators should be kept with this class
-	class Ref
-	{
-	public:
-		Ref(Allocator *alloc) : m_alloc(alloc->get())
-		{}
-		Ref(const Ref& o) : m_alloc(o.m_alloc->get())
-		{}
-		~Ref()
-		{ m_alloc->put(); }
-
-		Ref& operator =(const Ref& o)
-		{
-			if (m_alloc != o.m_alloc) {
-				m_alloc->put();
-				m_alloc = o.m_alloc->get();
-			}
-			return *this;
-		}
-		operator Allocator *() const
-		{ return m_alloc; }
-		Allocator *operator ->() const
-		{ return m_alloc; }
-	private:
-		Allocator *m_alloc;
-	};
-
- protected:
-	friend class Ref;
-
-	virtual ~Allocator()
-	{
-		DEB_MEMBER_FUNCT();
-
-		if (m_ref_count != 0)
-			DEB_ERROR() << "Error: destroying non-empty Allocator";
-	}
-
-	// The real resource management counter, triggered by Ref
-	Allocator *get()
-	{ return ++m_ref_count, this; }
-	void put()
-	{ if (--m_ref_count == 0) delete this; }
-
-	// Keep track of allocated buffers pointing to this Allocator:
-	// if greather than 0 this object cannot be moved
-	unsigned m_ref_count;
+	static Ref defaultAllocator();
 };
-
-inline bool operator ==(const Allocator::Ref& a, const Allocator::Ref& b)
-{ return (Allocator *) a == (Allocator *) b; }
 
 #ifdef __unix
 // Allocator for virtual address mapping
@@ -210,8 +146,8 @@ class LIMACORE_API MemBuffer
 {
  public:
 	//By default, construct a MemBuffer with the default constructor
-	MemBuffer(Allocator *allocator = Allocator::defaultAllocator());
-	MemBuffer(int size, Allocator *allocator =
+	MemBuffer(Allocator::Ref allocator = Allocator::defaultAllocator());
+	MemBuffer(int size, Allocator::Ref allocator =
 		  				Allocator::defaultAllocator());
 	~MemBuffer();
 
@@ -238,7 +174,7 @@ class LIMACORE_API MemBuffer
 	operator const void *() const { return getConstPtr(); }
 
 	/// Returns the allocator currently associated with MemBuffer
-	Allocator *getAllocator() const { return m_allocator; }
+	Allocator::Ref getAllocator() const { return m_allocator; }
 
  private:
 	/// Call the allocator to (eventually) free the current buffer then allocate a new buffer
