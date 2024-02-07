@@ -71,8 +71,32 @@ void BufferAllocMgr::clearAllBuffers()
  * SoftBufferAllocMgr
  *******************************************************************/
 
+class SoftBufferAllocMgr::DefAllocChangeCb :
+	public Allocator::DefaultChangeCallback
+{
+public:
+	DefAllocChangeCb(SoftBufferAllocMgr& mgr) : m_mgr(mgr)
+	{
+		Allocator::registerDefaultChangeCallback(this);
+	}
+
+	~DefAllocChangeCb()
+	{
+		Allocator::unregisterDefaultChangeCallback(this);
+	}
+
+	virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+					      Allocator::Ref new_alloc)
+	{
+		m_mgr.onDefaultAllocatorChange(prev_alloc, new_alloc);
+	}
+
+private:
+	SoftBufferAllocMgr& m_mgr;
+};
+
 SoftBufferAllocMgr::SoftBufferAllocMgr()
-	: m_allocator(Allocator::defaultAllocator())
+	: m_def_alloc_change_cb(new DefAllocChangeCb(*this))
 {
 	DEB_CONSTRUCTOR();
 }
@@ -86,9 +110,17 @@ SoftBufferAllocMgr::~SoftBufferAllocMgr()
 void SoftBufferAllocMgr::setAllocator(Allocator::Ref allocator)
 {
 	DEB_MEMBER_FUNCT();
-	if (!allocator)
-		THROW_HW_ERROR(InvalidValue) << "Invalid allocator";
+	if (allocator != m_allocator)
+		releaseBuffers();
 	m_allocator = allocator;
+}
+
+void SoftBufferAllocMgr::onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+						  Allocator::Ref new_alloc)
+{
+	DEB_MEMBER_FUNCT();
+	if (!m_allocator)
+		releaseBuffers();
 }
 
 int SoftBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
@@ -189,8 +221,7 @@ NumaSoftBufferAllocMgr::NumaSoftBufferAllocMgr()
 NumaSoftBufferAllocMgr::~NumaSoftBufferAllocMgr()
 {
 	DEB_DESTRUCTOR();
-	releaseBuffers();
-	setAllocator(Allocator::defaultAllocator());
+	setAllocator(Allocator::Ref());
 }
 
 void NumaSoftBufferAllocMgr::setCPUAffinityMask(const CPUMask& mask)
