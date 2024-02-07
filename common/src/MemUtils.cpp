@@ -21,6 +21,7 @@
 //###########################################################################
 #include "lima/MemUtils.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 #include <iomanip>
@@ -111,10 +112,51 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 	memset(ptr, 0, nb_concat_frames * size_t(frame_dim.getMemSize()));
 }
 
-Allocator::Ref Allocator::defaultAllocator()
+
+// The default allocator
+Allocator::Ref Allocator::m_default_allocator;
+
+void Allocator::setDefaultAllocator(Allocator::Ref def_alloc)
 {
-	static Allocator::Ref allocator = std::make_shared<Allocator>();
-	return allocator;
+	if (!def_alloc)
+		throw LIMA_COM_EXC(InvalidValue, "Invalid default allocator");
+	else if (def_alloc == getDefaultAllocator())
+		return;
+
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	for (it = m_change_cb_list.begin(); it != end; ++it)
+		(*it)->onDefaultAllocatorChange(m_default_allocator, def_alloc);
+	
+	m_default_allocator = def_alloc;
+}
+
+Allocator::Ref Allocator::getDefaultAllocator()
+{
+	EXEC_ONCE(m_default_allocator = std::make_shared<Allocator>());
+	return m_default_allocator;
+}
+
+// The DefaultChangeCallback list
+Allocator::ChangeCbList Allocator::m_change_cb_list;
+
+void Allocator::registerDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
+	if (it != end)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "DefaultChangeCallback already registered");
+	m_change_cb_list.push_back(cb);
+}
+
+void Allocator::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
+	if (it == end)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "DefaultChangeCallback not registered");
+	m_change_cb_list.erase(it);
 }
 
 Allocator::DataPtr Allocator::alloc(void* &ptr, size_t& size, size_t alignment)
@@ -187,18 +229,17 @@ void *MMapAllocator::allocMmap(size_t& size)
 }
 #endif //__unix
 
-MemBuffer::MemBuffer(Allocator::Ref allocator /*= Allocator::defaultAllocator()*/) :
+MemBuffer::MemBuffer(Allocator::Ref allocator /*= {}*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator)
+	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
 {
 }
 
-MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*=
-					Allocator::defaultAllocator()*/) :
+MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*= {}*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator)
+	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
 {
 	alloc(size);
 }

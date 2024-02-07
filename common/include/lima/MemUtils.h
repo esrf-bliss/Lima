@@ -49,6 +49,15 @@ struct LIMACORE_API Allocator
 	typedef std::shared_ptr<Data> DataPtr;
 	typedef std::shared_ptr<Allocator> Ref;
 
+	// Callback updating on default allocator change
+	class DefaultChangeCallback
+	{
+	public:
+		virtual ~DefaultChangeCallback() {};
+		virtual void onDefaultAllocatorChange(Ref prev_alloc,
+						      Ref new_alloc) = 0;
+	};
+
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size
 	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16);
@@ -57,8 +66,19 @@ struct LIMACORE_API Allocator
 	// Free a buffer
 	virtual void release(void* ptr, size_t size, DataPtr alloc_data);
 
-	// Returns a static instance of the default allocator
-	static Ref defaultAllocator();
+	// Sets the static instance of the default allocator
+	static void setDefaultAllocator(Ref def_alloc);
+	// Returns the static instance of the default allocator
+	static Ref getDefaultAllocator();
+
+	static void registerDefaultChangeCallback(DefaultChangeCallback *cb);
+	static void unregisterDefaultChangeCallback(DefaultChangeCallback *cb);
+
+private:
+	typedef std::vector<DefaultChangeCallback *> ChangeCbList;
+
+	static Ref m_default_allocator;
+	static ChangeCbList m_change_cb_list;
 };
 
 #ifdef __unix
@@ -145,10 +165,9 @@ private:
 class LIMACORE_API MemBuffer 
 {
  public:
-	//By default, construct a MemBuffer with the default constructor
-	MemBuffer(Allocator::Ref allocator = Allocator::defaultAllocator());
-	MemBuffer(int size, Allocator::Ref allocator =
-		  				Allocator::defaultAllocator());
+	//By default, construct a MemBuffer with the default allocator
+	MemBuffer(Allocator::Ref allocator = {});
+	MemBuffer(int size, Allocator::Ref allocator = {});
 	~MemBuffer();
 
 	// MemBuffer are copy constructible (deep copy, no aliasing)
