@@ -85,6 +85,7 @@ class LIMACORE_API CtTestApp
 
 		// Buffer management
 		int buffer_max_memory{70};
+		BufferParameters saving_zbuffer_params;
 
 		int proc_nb_threads{2};
 

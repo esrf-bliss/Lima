@@ -226,6 +226,13 @@ using namespace lima;
     void setManagedMode(ManagedMode mode);
     void getManagedMode(ManagedMode &mode /Out/) const;
 
+    // --- ZBuffers
+    
+    void setZBufferParameters(const BufferHelper::Parameters& pars,
+                              int stream_idx = 0);
+    void getZBufferParameters(BufferHelper::Parameters& pars /Out/,
+                              int stream_idx = 0);
+
     // --- common headers
 
     void resetCommonHeader();
