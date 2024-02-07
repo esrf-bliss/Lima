@@ -274,6 +274,9 @@ public:
 		return *this;
 	}
 
+	void reset()
+	{ setPtr(NULL); }
+
 	void free()
 	{ d->free(); }
 
