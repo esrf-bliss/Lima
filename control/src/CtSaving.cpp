@@ -436,6 +436,7 @@ void CtSaving::Stream::createSaveContainer()
 	int statistic_size = -1;
 	int nb_writing_thread = -1;
 	bool enable_log_stat = false;
+	BufferHelper::Parameters zbuffer_params;
 
 	switch (m_pars.fileFormat) {
 	case CBFFormat:
@@ -510,8 +511,11 @@ void CtSaving::Stream::createSaveContainer()
 			statistic_size = m_save_cnt->getStatisticSize();
 			nb_writing_thread = m_save_cnt->getMaxConcurrentWritingTask();
 			m_save_cnt->getEnableLogStat(enable_log_stat);
+			BufferHelper& buffer_helper = getZBufferHelper();
+			buffer_helper.getParameters(zbuffer_params);
 			m_save_cnt->close();
 			delete m_save_cnt;
+			m_save_cnt = NULL;
 		}
 		break;
 
@@ -566,6 +570,8 @@ void CtSaving::Stream::createSaveContainer()
 	if (nb_writing_thread != -1)
 		m_save_cnt->setMaxConcurrentWritingTask(nb_writing_thread);
 	m_save_cnt->setEnableLogStat(enable_log_stat);
+	BufferHelper& buffer_helper = getZBufferHelper();
+	buffer_helper.setParameters(zbuffer_params);
 
 	AutoMutex lock(m_cond.mutex());
 	m_cnt_status = Init;
@@ -1124,6 +1130,39 @@ bool CtSaving::_checkHwFileFormat(const std::string& format) const
 		!found && i != format_list.end(); ++i)
 		found = *i == format;
 	return found;
+}
+
+/** @brief set zbuffer parameters for a saving stream
+
+	@param pars zbuffer parameters for the saving stream
+	@param stream_idx the id of the saving stream
+ */
+void CtSaving::setZBufferParameters(const BufferHelper::Parameters& pars,
+				    int stream_idx)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(pars, stream_idx);
+	AutoMutex aLock(m_cond.mutex());
+	Stream& stream = getStream(stream_idx);
+	BufferHelper& buffer_helper = stream.getZBufferHelper();
+	buffer_helper.setParameters(pars);
+}
+
+/** @brief get the zbuffer stream parameters
+
+	@param pars the return zbuffer parameters
+	@param stream_idx the stream id
+ */
+void CtSaving::getZBufferParameters(BufferHelper::Parameters& pars,
+				    int stream_idx)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(stream_idx);
+	AutoMutex aLock(m_cond.mutex());
+	Stream& stream = getStream(stream_idx);
+	BufferHelper& buffer_helper = stream.getZBufferHelper();
+	buffer_helper.getParameters(pars);
+	DEB_RETURN() << DEB_VAR1(pars);
 }
 
 void CtSaving::_ReadImage(Data& image, int frameNumber)
@@ -2781,6 +2820,18 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	}
 	prepareLogStat(pars);
 	lock.unlock();
+
+	// check if ZBuffer pool needs to be allocated
+	FrameDim fdim;
+	ct.image()->getImageDim(fdim);
+	int buffer_size = getCompressedBufferSize(fdim.getMemSize(),
+						  fdim.getDepth());
+	DEB_TRACE() << DEB_VAR2(fdim, buffer_size);
+	if (buffer_size > 0)
+		m_zbuffer_helper.prepareBuffers(nb_frames, buffer_size);
+	else
+		m_zbuffer_helper.releaseBuffers();
+
 	_prepare(ct);			// call inheritance if needed
 }
 

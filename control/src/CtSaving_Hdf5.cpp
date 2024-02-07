@@ -744,3 +744,17 @@ SinkTaskBase* SaveContainerHdf5::getCompressionTask(const CtSaving::HeaderMap& /
 #endif
 	return NULL;
 }
+
+int SaveContainerHdf5::getCompressedBufferSize(int data_size, int data_depth)
+{
+#if defined(WITH_Z_COMPRESSION)
+	if(m_format == CtSaving::HDF5GZ)
+		return ImageZCompression::calcBufferSize(data_size, data_depth);
+#endif
+#if defined(WITH_BS_COMPRESSION)
+	if(m_format == CtSaving::HDF5BS)
+		return ImageBsCompression::calcBufferSize(data_size, data_depth);
+#endif
+	return 0;
+}
+

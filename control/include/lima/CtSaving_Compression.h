@@ -114,6 +114,7 @@ class ImageBsCompression: public SinkTaskBase
  public:
   ImageBsCompression(CtSaving::SaveContainer &save_cnt);
   ~ImageBsCompression();
+  static int calcBufferSize(int data_size, int data_depth);
   virtual void process(Data &aData);
   void _compression(const char *buffer,int size,int depth,ZBufferList& return_buffers);
 };
@@ -131,8 +132,8 @@ class ImageZCompression: public SinkTaskBase
  public:
   ImageZCompression(CtSaving::SaveContainer &save_cnt,
 	       int level);
-  
   ~ImageZCompression();
+  static int calcBufferSize(int data_size, int data_depth);
   virtual void process(Data &aData);
   void _compression(const char *buffer,int size,ZBufferList& return_buffers);
 };

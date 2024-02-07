@@ -39,6 +39,7 @@
 #include "lima/OrderedMap.h"
 
 #include "lima/SidebandData.h"
+#include "lima/BufferHelper.h"
 #include "lima/CtSaving_ZBuffer.h"
 
 struct Data;
@@ -187,6 +188,13 @@ public:
 	void setManagedMode(ManagedMode mode);
 	void getManagedMode(ManagedMode& mode) const;
 	///}
+
+	// --- ZBuffers
+
+	void setZBufferParameters(const BufferHelper::Parameters& pars,
+				  int stream_idx = 0);
+	void getZBufferParameters(BufferHelper::Parameters& pars,
+				  int stream_idx = 0);
 
 	// --- common headers
 
@@ -356,6 +364,9 @@ public:
 			*  @see needParallelCompression
 			*/
 		virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&) { return NULL; }
+		/** @brief get the required ZBuffer size for compression.
+			*/
+		virtual int getCompressedBufferSize(int data_size, int data_depth) { return 0; }
 
 		virtual bool isReady() const;
 		virtual bool isReadyFor(Data& data) const;
@@ -377,6 +388,8 @@ public:
 
 		void setEnableLogStat(bool enable);
 		void getEnableLogStat(bool& enable) const;
+
+		BufferHelper& getZBufferHelper() { return m_zbuffer_helper; }
 
 	protected:
 		virtual void* _open(const std::string& filename,
@@ -424,6 +437,8 @@ public:
 		int			m_max_writing_task; ///< number of maximum parallel write
 		WritingTasks		m_waiting_tasks; ///< waiting tasks
 		WritingTasks		m_running_tasks; ///< running tasks
+
+		BufferHelper		m_zbuffer_helper;
 	};
 	friend class SaveContainer;
 
@@ -467,6 +482,11 @@ public:
 		bool needCompressionTask(Data& data)
 		{
 			return m_save_cnt->needCompressionTask(data);
+		}
+
+		BufferHelper& getZBufferHelper()
+		{
+			return m_save_cnt->getZBufferHelper();
 		}
 
 		void setSavingError(CtControl::ErrorCode error)
