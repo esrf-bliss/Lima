@@ -229,6 +229,17 @@ ImageBsCompression::~ImageBsCompression()
 {
 }
 
+int ImageBsCompression::calcBufferSize(int data_size, int data_depth)
+{
+  unsigned int bs_block_size= 0;
+  unsigned int bs_in_size= (unsigned int)(data_size/data_depth);
+
+  size_t header_size = 8 + 4;
+  size_t bs_out_bound = bshuf_compress_lz4_bound(bs_in_size, data_depth, bs_block_size);
+
+  return int(header_size + bs_out_bound);
+}
+
 void ImageBsCompression::process(Data &aData)
 {
   DEB_MEMBER_FUNCT();
@@ -248,8 +259,14 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
 
   size_t header_size = 8 + 4;
   size_t bs_out_bound = bshuf_compress_lz4_bound(bs_in_size, data_depth, bs_block_size);
+  int buffer_size = header_size + bs_out_bound;
 
-  return_buffers.emplace_back(header_size + bs_out_bound);
+  BufferHelper& buffer_helper = m_container.getZBufferHelper();
+  std::shared_ptr<void> p = buffer_helper.getBuffer(buffer_size);
+  if (!p)
+    THROW_CTL_ERROR(Error) << "BS Compression failed: helper has no buffer";
+  return_buffers.emplace_back(p, buffer_size);
+
   ZBuffer& newBuffer = return_buffers.back();
   char* bs_buffer = (char*)newBuffer.ptr();
 
@@ -278,6 +295,11 @@ ImageZCompression::~ImageZCompression()
 {
 }
 
+int ImageZCompression::calcBufferSize(int data_size, int data_depth)
+{
+  return int(compressBound(data_size));
+}
+
 void ImageZCompression::process(Data &aData)
 {
   DEB_MEMBER_FUNCT();
@@ -291,14 +313,17 @@ void ImageZCompression::_compression(const char *src,int size,
 				     ZBufferList& return_buffers)
 {
   DEB_MEMBER_FUNCT();
-  uLong buffer_size;
-  int status;
-  // cannot know compression ratio in advance so allocate a buffer for full image size
-  buffer_size = compressBound(size);
-  return_buffers.emplace_back(buffer_size);
+  // cannot know compression ratio in advance so allocate a buffer large enough
+  uLong buffer_size = compressBound(size);
+  BufferHelper& buffer_helper = m_container.getZBufferHelper();
+  std::shared_ptr<void> p = buffer_helper.getBuffer(buffer_size);
+  if (!p)
+    THROW_CTL_ERROR(Error) << "[G]Z Compression failed: helper has no buffer";
+  return_buffers.emplace_back(p, buffer_size);
   ZBuffer& newBuffer = return_buffers.back();
   char* buffer = (char*)newBuffer.ptr();
   
+  int status;
   if ((status=compress2((Bytef*)buffer, &buffer_size, (Bytef*)src, size, m_compression_level)) < 0)
     THROW_CTL_ERROR(Error) << "Compression failed: error code " << status;
         
