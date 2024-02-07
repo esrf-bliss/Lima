@@ -57,6 +57,8 @@ public:
 	virtual bool needParallelCompression() const 
 	{return ((m_format == CtSaving::HDF5GZ)||(m_format == CtSaving::HDF5BS));}
 	virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
+	virtual int getCompressedBufferSize(int data_size, int data_depth);
+
 protected:
 	virtual void _prepare(CtControl &control);
 	virtual void* _open(const std::string &filename, std::ios_base::openmode flags,

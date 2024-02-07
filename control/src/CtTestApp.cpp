@@ -93,6 +93,9 @@ CtTestApp::Pars::Pars()
 	AddOpt(buffer_max_memory, "--buffer-max-memory",
 	       "buffer max memory [% of total RAM]");
 
+	AddOpt(saving_zbuffer_params, "--saving-zbuffer-params",
+	       "saving zbuffer allocation parameters");
+
 	AddOpt(proc_nb_threads, "--proc-nb-threads",
 	       "number of processing threads");
 
@@ -282,6 +285,8 @@ void CtTestApp::init()
 	// buffer management
 	DEB_ALWAYS() << DEB_VAR1(m_pars->buffer_max_memory);
 	buffer->setMaxMemory(m_pars->buffer_max_memory);
+	DEB_ALWAYS() << DEB_VAR1(m_pars->saving_zbuffer_params);
+	save->setZBufferParameters(m_pars->saving_zbuffer_params);
 
 	PoolThreadMgr& mgr = PoolThreadMgr::get();
 	mgr.setNumberOfThread(m_pars->proc_nb_threads);
