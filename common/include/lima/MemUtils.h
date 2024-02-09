@@ -140,6 +140,7 @@ private:
 };
 
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
+std::ostream& operator <<(std::ostream& os, const NumaNodeMask::CPUMask& mask);
 
 class LIMACORE_API NumaAllocator : public MMapAllocator
 {
