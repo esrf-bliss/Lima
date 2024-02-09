@@ -326,7 +326,7 @@ if(LIMA_ENABLE_PYTHON)
     if (NOT LIMA_ENABLE_SPS_IMAGE)
       set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_SPS_IMAGE)
     endif()
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip PROPERTIES OBJECT_DEPENDS ${SIP_SOURCES})
+#    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip PROPERTIES OBJECT_DEPENDS ${SIP_SOURCES})
     # Run sip now !
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip FALSE)
 
