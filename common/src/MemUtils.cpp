@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <iomanip>
+#include <limits>
 #ifdef __unix
 #include <sys/sysinfo.h>
 #ifdef LIMA_USE_NUMA
@@ -433,6 +434,22 @@ std::ostream& lima::operator <<(std::ostream& os, const NumaNodeMask& mask)
 	for (it = array.rbegin(); it != end; ++it, first = false) {
 		int word_bits = first ? first_bits : mask.ItemBits;
 		os << (!first ? "," : "") << setw(word_bits / 4) << *it;
+	}
+	return os << setfill(' ') << dec;
+}
+
+std::ostream& lima::operator <<(std::ostream& os,
+				const NumaNodeMask::CPUMask& mask)
+{
+	typedef NumaNodeMask::CPUMask CPUMask;
+	typedef unsigned long ULong;
+	constexpr CPUMask ULongMask(std::numeric_limits<ULong>::max());
+	constexpr int NbULongBits = sizeof(ULong) * 8;
+	constexpr int NbWords = NumaNodeMask::MaxNbCPUs / NbULongBits;
+	os << hex << setfill('0');
+	for (int i = NbWords - 1; i >= 0; --i) {
+		CPUMask m = (mask >> (i * NbULongBits)) & ULongMask;
+		os << setw(NbULongBits / 4) << m.to_ulong();
 	}
 	return os << setfill(' ') << dec;
 }
