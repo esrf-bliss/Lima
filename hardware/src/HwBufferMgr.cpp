@@ -33,7 +33,6 @@
 #endif
 #include <sys/mman.h>
 #endif
-#include <limits>
 
 using namespace lima;
 
@@ -119,6 +118,16 @@ void SoftBufferAllocMgr::onDefaultAllocatorChange(Allocator::Ref prev_alloc,
 						  Allocator::Ref new_alloc)
 {
 	DEB_MEMBER_FUNCT();
+	DEB_ALWAYS() << "SoftBufferAllocmgr: Default allocator changed!";
+#ifdef LIMA_USE_NUMA
+	NumaAllocator *numa_alloc = dynamic_cast<NumaAllocator *>(new_alloc.get());
+	if (numa_alloc) {
+		typedef NumaAllocator::CPUMask CPUMask;
+		CPUMask mask = numa_alloc->getCPUAffinityMask();
+		DEB_ALWAYS() << " CPU mask:  " << mask;
+		DEB_ALWAYS() << " Numa mask: " << NumaNodeMask::fromCPUMask(mask);
+	}
+#endif
 	if (!m_allocator)
 		releaseBuffers();
 }
@@ -227,19 +236,8 @@ NumaSoftBufferAllocMgr::~NumaSoftBufferAllocMgr()
 void NumaSoftBufferAllocMgr::setCPUAffinityMask(const CPUMask& mask)
 {
 	DEB_MEMBER_FUNCT();
-	if (DEB_CHECK_ANY(DebTypeParam)) {
-		typedef unsigned long ULong;
-		constexpr CPUMask ULongMask(std::numeric_limits<ULong>::max());
-		std::ostringstream os;
-		typedef unsigned long ULong;
-		constexpr int NbULongBits = sizeof(ULong) * 8;
-		for (int i = 0; i < MaxNbCPUs / NbULongBits; ++i) {
-			CPUMask m = (mask >> (i * NbULongBits)) & ULongMask;
-			ULong val = m.to_ulong();
-			os << std::hex << val;
-		}
-		DEB_PARAM() << os.str();
-	}
+	if (DEB_CHECK_ANY(DebTypeParam))
+		DEB_PARAM() << mask;
 
 	NumaAllocator *numa_allocator = getNumaAllocator();
 	if (numa_allocator &&
