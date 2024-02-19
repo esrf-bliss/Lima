@@ -26,6 +26,7 @@
 #include <list>
 #include <deque>
 
+#include "lima/BufferHelper.h"
 #include "lima/CtControl.h"
 #include "lima/CtConfig.h"
 #include "processlib/SinkTaskMgr.h"
@@ -127,6 +128,9 @@ namespace lima
     void getOffsetBefore(long long&) const;
     void setOffsetBefore(const long long&);
 
+    void setBufferParameters(const BufferHelper::Parameters &pars);
+    void getBufferParameters(BufferHelper::Parameters& pars) const;
+
     // --- variable and data result of Concatenation or Accumulation
 
     void readSaturatedImageCounter(Data&,long frameNumber = -1);
@@ -173,6 +177,7 @@ namespace lima
     private:
       CtAccumulation &m_acc;
     };
+    class _DataBuffer;
 
     enum ImgType {AccImg, SatImg, TmpImg, NbImgTypes};
     static const char *toString(ImgType type);
@@ -205,6 +210,8 @@ namespace lima
     bool 				m_last_continue_flag;
     int					m_hw_img_depth;
     FrameDim				m_frame_dim[NbImgTypes];
+    BufferHelper::Parameters		m_buffer_params;
+    BufferHelper			m_buffer_helper[NbImgTypes];
 
     // --- Methodes for acquisition
     void clear();
@@ -215,8 +222,10 @@ namespace lima
     void stop();
 
     void _calcImgFrameDims();
+    void _calcBufferHelperParams(BufferHelper::Parameters params[NbImgTypes]);
 
     void getFrame(Data &,int frameNumber);
+    BufferBase *_getDataBuffer(ImgType type, int size);
 
     void _accFrame(Data& src, Data& dst) const;
 
