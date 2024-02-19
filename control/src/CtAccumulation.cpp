@@ -25,6 +25,7 @@
 #include "processlib/SinkTask.h"
 #include "processlib/SinkTaskMgr.h"
 #include <algorithm>
+#include <memory>
 #include <type_traits>
 
 #ifdef __unix
@@ -323,6 +324,27 @@ public:
 private:
   CtAccumulation& m_cnt;
 };
+
+
+/****************************************************************************
+CtAccumulation::_DataBuffer
+****************************************************************************/
+class CtAccumulation::_DataBuffer : public BufferBase
+{
+ public:
+  _DataBuffer(std::shared_ptr<void> buffer)
+    : BufferBase(buffer.get()), m_buffer(buffer)
+  {}
+
+  const char *type() const override
+  {
+    return "Accumulation";
+  }
+
+ private:
+  std::shared_ptr<void> m_buffer;
+};
+
 
 //       ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
@@ -790,6 +812,32 @@ void CtAccumulation::clear()
 #endif
 }
 
+void CtAccumulation::setBufferParameters(const BufferHelper::Parameters &pars)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(pars);
+  m_buffer_helper.setParameters(pars);
+}
+
+void CtAccumulation::getBufferParameters(BufferHelper::Parameters& pars) const
+{
+  DEB_MEMBER_FUNCT();
+  m_buffer_helper.getParameters(pars);
+  DEB_RETURN() << DEB_VAR1(pars);
+}
+    
+/** @brief get Buffer for main acc. Data
+ */
+inline BufferBase *CtAccumulation::getDataBuffer(int size)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(size);
+  std::shared_ptr<void> p = m_buffer_helper.getBuffer(size);
+  if (!p)
+    THROW_CTL_ERROR(Error) << "Cannot get acc. buffer from helper";
+  return new _DataBuffer(p);
+}
+
 /** @brief prepare all stuff for a new acquisition
  */
 void CtAccumulation::prepare()
@@ -825,7 +873,7 @@ void CtAccumulation::prepare()
   acquisition->getAccNbFrames(acc_nframes);
   if(acc_nframes < 0) acc_nframes = 1;
 
-  // Allocate the temporary data (if needed)
+  // allocate the temporary data (if needed)
   Size size = hw_image_dim.getSize();
   switch (m_pars.operation) {
   case ACC_SUM:
@@ -848,6 +896,12 @@ void CtAccumulation::prepare()
       m_tmp_datas.resize(acc_nframes);
       break;
   }
+
+  // Allocate the main data (if needed)
+  int acq_nframes = 0;
+  acquisition->getAcqNbFrames(acq_nframes);
+  FrameDim fdim(size, m_pars.pixelOutputType);
+  m_buffer_helper.prepareBuffers(acq_nframes, fdim.getMemSize());
 
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
   m_last_continue_flag = true;
@@ -926,7 +980,7 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     newData.dimensions = aData.dimensions;
     newData.frameNumber = nextFrameNumber;
     newData.timestamp = aData.timestamp;
-    newData.buffer = new Buffer(newData.size());
+    newData.buffer = getDataBuffer(newData.size());
     memset(newData.data(),0,newData.size());
     m_datas.push_back(newData);
 
