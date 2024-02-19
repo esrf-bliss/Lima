@@ -104,6 +104,8 @@ public:
   void getOffsetBefore(long long&) const;
   void setOffsetBefore(const long long&);
 
+  void setBufferParameters(const BufferHelper::Parameters &pars);
+  void getBufferParameters(BufferHelper::Parameters& pars /Out/) const;
 
   // --- variable and data result of Concatenation or Accumulation
 

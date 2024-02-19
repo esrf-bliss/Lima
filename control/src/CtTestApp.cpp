@@ -93,6 +93,9 @@ CtTestApp::Pars::Pars()
 	AddOpt(buffer_max_memory, "--buffer-max-memory",
 	       "buffer max memory [% of total RAM]");
 
+	AddOpt(acc_buffer_params, "--acc-buffer-params",
+	       "accumulation buffer allocation parameters");
+
 	AddOpt(saving_zbuffer_params, "--saving-zbuffer-params",
 	       "saving zbuffer allocation parameters");
 
@@ -222,6 +225,7 @@ void CtTestApp::init()
 	parseArgs();
 	m_ct = getCtControl();
 	CtAcquisition *acq = m_ct->acquisition();
+	CtAccumulation *acc = m_ct->accumulation();
 	CtSaving *save = m_ct->saving();
 	CtImage *image = m_ct->image();
 	CtBuffer *buffer = m_ct->buffer();
@@ -285,6 +289,8 @@ void CtTestApp::init()
 	// buffer management
 	DEB_ALWAYS() << DEB_VAR1(m_pars->buffer_max_memory);
 	buffer->setMaxMemory(m_pars->buffer_max_memory);
+	DEB_ALWAYS() << DEB_VAR1(m_pars->acc_buffer_params);
+	acc->setBufferParameters(m_pars->acc_buffer_params);
 	DEB_ALWAYS() << DEB_VAR1(m_pars->saving_zbuffer_params);
 	save->setZBufferParameters(m_pars->saving_zbuffer_params);
 
