@@ -25,6 +25,7 @@
 #include "processlib/SinkTask.h"
 #include "processlib/SinkTaskMgr.h"
 #include <algorithm>
+#include <memory>
 #include <type_traits>
 
 #ifdef __unix
@@ -324,6 +325,27 @@ private:
   CtAccumulation& m_cnt;
 };
 
+
+/****************************************************************************
+CtAccumulation::_DataBuffer
+****************************************************************************/
+class CtAccumulation::_DataBuffer : public BufferBase
+{
+ public:
+  _DataBuffer(std::shared_ptr<void> buffer)
+    : BufferBase(buffer.get()), m_buffer(buffer)
+  {}
+
+  const char *type() const override
+  {
+    return "Accumulation";
+  }
+
+ private:
+  std::shared_ptr<void> m_buffer;
+};
+
+
 //       ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
   pixelThresholdValue(1 << 16),
@@ -479,6 +501,9 @@ void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers) const
 {
   DEB_MEMBER_FUNCT();
 
+  BufferHelper::Parameters buffer_params;
+  getBufferParameters(buffer_params);
+
   CtImage* image = m_ct.image();
   FrameDim hw_image_dim;
   image->getHwImageDim(hw_image_dim);
@@ -498,12 +523,22 @@ void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers) const
   DEB_TRACE() << DEB_VAR4(hw_image_dim, acc_image_dim, max_hw_nb_buffers,
 			  is_sat_active);
 
-  int hw_image_depth = hw_image_dim.getDepth();
-  int acc_image_depth = acc_image_dim.getDepth();
-  if(is_sat_active) acc_image_depth += 2;
-  DEB_TRACE() << DEB_VAR2(hw_image_depth, acc_image_depth);
-  max_nb_buffers = long(max_hw_nb_buffers * double(hw_image_depth) /
-			acc_image_depth);
+  if(buffer_params.durationPolicy == BufferHelper::Parameters::Persistent) {
+    int acc_frame_size = acc_image_dim.getMemSize();
+    if(is_sat_active) {
+      FrameDim sat_image_dim(acc_image_dim.getSize(), Bpp16);
+      acc_frame_size += sat_image_dim.getMemSize();
+    }
+    DEB_TRACE() << DEB_VAR1(acc_frame_size);
+    max_nb_buffers = buffer_params.getDefMaxNbBuffers(acc_frame_size);
+  } else {
+    int hw_image_depth = hw_image_dim.getDepth();
+    int acc_image_depth = acc_image_dim.getDepth();
+    if(is_sat_active) acc_image_depth += 2;
+    DEB_TRACE() << DEB_VAR2(hw_image_depth, acc_image_depth);
+    max_nb_buffers = long(max_hw_nb_buffers * double(hw_image_depth) /
+			  acc_image_depth);
+  }
 
   DEB_RETURN() << DEB_VAR1(max_nb_buffers);
 }
@@ -814,6 +849,37 @@ void CtAccumulation::clear()
 #endif
 }
 
+void CtAccumulation::setBufferParameters(const BufferHelper::Parameters &pars)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(pars);
+
+  AutoMutex aLock(m_cond.mutex());
+  m_buffer_helper.setParameters(pars);
+}
+
+void CtAccumulation::getBufferParameters(BufferHelper::Parameters& pars) const
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  m_buffer_helper.getParameters(pars);
+
+  DEB_RETURN() << DEB_VAR1(pars);
+}
+    
+/** @brief get Buffer for main acc. Data
+ */
+inline BufferBase *CtAccumulation::getDataBuffer(int size)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(size);
+  std::shared_ptr<void> p = m_buffer_helper.getBuffer(size);
+  if (!p)
+    THROW_CTL_ERROR(Error) << "Accumulation buffer helper overrun";
+  return new _DataBuffer(p);
+}
+
 /** @brief prepare all stuff for a new acquisition
  */
 void CtAccumulation::prepare()
@@ -828,6 +894,7 @@ void CtAccumulation::prepare()
 
   // Buffer parameters
   CtBuffer *buffer = m_ct.buffer();
+  bool is_acc = buffer->isAccumulationActive();
   long nb_buffers = 0;
   buffer->getNumber(nb_buffers);
 
@@ -871,6 +938,10 @@ void CtAccumulation::prepare()
       m_tmp_datas.resize(acc_nframes);
       break;
   }
+
+  // Allocate the main data (if needed)
+  if(is_acc)
+    m_buffer_helper.prepareBuffers(m_buffers_size, acc_image_dim.getMemSize());
 
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
   m_last_continue_flag = true;
@@ -952,7 +1023,7 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     newData.dimensions = aData.dimensions;
     newData.frameNumber = nextFrameNumber;
     newData.timestamp = aData.timestamp;
-    newData.buffer = new Buffer(newData.size());
+    newData.buffer = getDataBuffer(newData.size());
     memset(newData.data(),0,newData.size());
     m_datas.push_back(newData);
 
