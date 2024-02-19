@@ -27,6 +27,7 @@
 
 #include "lima/LimaCompatibility.h"
 #include "lima/CtControl.h"
+#include "lima/CtAccumulation.h"
 #include "lima/CtAcquisition.h"
 #include "lima/CtSaving.h"
 #include "lima/CtBuffer.h"
@@ -85,6 +86,7 @@ class LIMACORE_API CtTestApp
 
 		// Buffer management
 		int buffer_max_memory{70};
+		BufferParameters acc_buffer_params;
 		BufferParameters saving_zbuffer_params;
 
 		int proc_nb_threads{2};
