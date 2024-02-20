@@ -29,6 +29,10 @@ using namespace lima;
 	BufferAllocMgr();
 	virtual ~BufferAllocMgr();
 
+	virtual void setAllocParameters(const BufferHelper::Parameters& alloc_params);
+	virtual void getAllocParameters(      BufferHelper::Parameters& alloc_params /Out/);
+	virtual void prepareAlloc(int nb_buffers, const FrameDim& frame_dim);
+
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
 	virtual void allocBuffers(int nb_buffers, 
 				  const FrameDim& frame_dim) = 0;
@@ -54,6 +58,10 @@ using namespace lima;
  public:
 	SoftBufferAllocMgr();
 	virtual ~SoftBufferAllocMgr();
+
+	virtual void setAllocParameters(const BufferHelper::Parameters& alloc_params);
+	virtual void getAllocParameters(      BufferHelper::Parameters& alloc_params /Out/);
+	virtual void prepareAlloc(int nb_buffers, const FrameDim& frame_dim);
 
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
 	virtual void allocBuffers(int nb_buffers, 
@@ -251,8 +259,12 @@ using namespace lima;
  public:
 	SoftBufferCtrlObj();
 
+	virtual void setAllocParameters(const BufferHelper::Parameters& alloc_params);
+	virtual void getAllocParameters(      BufferHelper::Parameters& alloc_params /Out/);
 	virtual void setFrameDim(const FrameDim& frame_dim);
 	virtual void getFrameDim(FrameDim& frame_dim /Out/);
+
+	virtual void prepareAlloc(int nb_buffers);
 
 	virtual void setNbBuffers(int  nb_buffers);
 	virtual void getNbBuffers(int& nb_buffers /Out/);

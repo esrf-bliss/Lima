@@ -85,7 +85,7 @@ class LIMACORE_API CtTestApp
 		CtVideo::VideoSource video_source{CtVideo::BASE_IMAGE};
 
 		// Buffer management
-		int buffer_max_memory{70};
+		BufferParameters buffer_alloc_params;
 		BufferParameters acc_buffer_params;
 		BufferParameters saving_zbuffer_params;
 
