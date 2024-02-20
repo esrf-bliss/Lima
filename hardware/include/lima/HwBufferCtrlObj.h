@@ -24,6 +24,7 @@
 
 #include "lima/LimaCompatibility.h"
 #include "lima/HwFrameCallback.h"
+#include "lima/BufferHelper.h"
 
 namespace lima
 {
@@ -38,11 +39,18 @@ class LIMACORE_API HwBufferCtrlObj
 	DEB_CLASS(DebModHardware, "HwBufferCtrlObj");
 
 public:
+	typedef BufferHelper::Parameters AllocParameters;
+
 	HwBufferCtrlObj();
 	virtual ~HwBufferCtrlObj();
 
+	virtual void setAllocParameters(const AllocParameters& alloc_params);
+	virtual void getAllocParameters(      AllocParameters& alloc_params);
+	
 	virtual void setFrameDim(const FrameDim& frame_dim) = 0;
 	virtual void getFrameDim(      FrameDim& frame_dim) = 0;
+
+	virtual void prepareAlloc(int nb_buffers);
 
 	virtual void setNbBuffers(int  nb_buffers) = 0;
 	virtual void getNbBuffers(int& nb_buffers) = 0;
