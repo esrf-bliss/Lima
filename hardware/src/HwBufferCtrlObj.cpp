@@ -41,3 +41,21 @@ HwBufferCtrlObj::Callback *HwBufferCtrlObj::getBufferCallback()
 HwBufferCtrlObj::Callback::~Callback()
 {
 }
+
+void HwBufferCtrlObj::setAllocParameters(const AllocParameters& alloc_params)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(alloc_params);
+}
+
+void HwBufferCtrlObj::getAllocParameters(AllocParameters& alloc_params)
+{
+	DEB_MEMBER_FUNCT();
+	alloc_params = AllocParameters();
+	DEB_RETURN() << DEB_VAR1(alloc_params);
+}
+
+void HwBufferCtrlObj::prepareAlloc(int nb_buffers)
+{
+	DEB_MEMBER_FUNCT();
+}

@@ -52,34 +52,16 @@ namespace lima {
     DEB_CLASS_NAMESPC(DebModControl,"Buffer","Control");
 
   public:
-    struct LIMACORE_API Parameters 
-    {
-      DEB_CLASS_NAMESPC(DebModControl,"Buffer::Parameters","Control");
-    public:
-      Parameters();
-      void reset();
-      void resetNonPersistent();
-      BufferMode mode;
-      long	nbBuffers;
-      short	maxMemory;
-    };
+    typedef BufferHelper::Parameters Parameters;
 
     CtBuffer(HwInterface *hw);
     ~CtBuffer();
 
-    void setPars(Parameters pars);
-    void getPars(Parameters& pars) const;
+    void setAllocParameters(const Parameters& params);
+    void getAllocParameters(Parameters& params) const;
 
-    void setMode(BufferMode mode);
-    void getMode(BufferMode& mode) const;
-
-    void setNumber(long nb_buffers);
     void getNumber(long& nb_buffers) const;
-
     void getMaxNumber(long& nb_buffers) const;
-
-    void setMaxMemory(short max_memory);
-    void getMaxMemory(short& max_memory) const;
 
     void registerFrameCallback(CtControl *ct);
     void unregisterFrameCallback();
@@ -124,22 +106,13 @@ namespace lima {
     Cond			m_cond;
     HwBufferCtrlObj* 		m_hw_buffer;
     CtBufferFrameCB* 		m_frame_cb;
-    Parameters			m_pars;
+    Parameters			m_params;
     CtAccumulation* 		m_ct_accumulation;
     HwBufferCtrlObj::Callback* 	m_hw_buffer_cb;
+    int				m_nb_buffers;
     int				m_mapped_frames;
   };
 
-  inline std::ostream& operator<<(std::ostream &os,
-				  const CtBuffer::Parameters &params)
-  {
-    os << "<"
-       << "mode=" << params.mode << ", "
-       << "nbBuffers=" << params.nbBuffers << ", "
-       << "maxMemory=" << params.maxMemory << ", "
-       << ">";
-    return os;
-  }
 } // namespace lima
 
 #endif // CTBUFFER_H

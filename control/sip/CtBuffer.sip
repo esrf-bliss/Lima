@@ -27,30 +27,14 @@ class CtBuffer {
 using namespace lima;
 %End
 public:
-	struct Parameters {
-		BufferMode mode;
-		long	nbBuffers;
-		short	maxMemory;
-
-		SIP_PYOBJECT __repr__() const;
-%MethodCode
-	LIMA_REPR_CODE
-%End
-	};
-
 	CtBuffer(HwInterface *hw);
 	~CtBuffer();
 
-	void setMode(BufferMode mode);
-	void getMode(BufferMode& mode /Out/) const;
+	void setAllocParameters(const BufferHelper::Parameters& params);
+	void getAllocParameters(BufferHelper::Parameters& params /Out/) const;
 
-	void setNumber(long nb_buffers);
 	void getNumber(long& nb_buffers /Out/) const;
- 
         void getMaxNumber(long& nb_buffers /Out/) const;
-
-	void setMaxMemory(short max_memory);
-	void getMaxMemory(short& max_memory /Out/) const;
 
 	void registerFrameCallback(CtControl *ct);
         void unregisterFrameCallback();
