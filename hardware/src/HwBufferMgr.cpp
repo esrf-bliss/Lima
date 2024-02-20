@@ -50,6 +50,28 @@ BufferAllocMgr::~BufferAllocMgr()
 	DEB_DESTRUCTOR();
 }
 
+void BufferAllocMgr::setAllocParameters(const AllocParameters& alloc_params)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(alloc_params);
+	AllocParameters default_params;
+	if (alloc_params != default_params)
+		THROW_HW_ERROR(NotSupported) << "Setting non-default buffer "
+					     << "alloc params is not supported";
+}
+
+void BufferAllocMgr::getAllocParameters(AllocParameters& alloc_params)
+{
+	DEB_MEMBER_FUNCT();
+	alloc_params = AllocParameters();
+	DEB_RETURN() << DEB_VAR1(alloc_params);
+}
+
+void BufferAllocMgr::prepareAlloc(int nb_buffers, const FrameDim& frame_dim)
+{
+	DEB_MEMBER_FUNCT();
+}
+
 void BufferAllocMgr::clearBuffer(int buffer_nb)
 {
 	ClearBuffer(getBufferPtr(buffer_nb), 1, getFrameDim());
@@ -98,6 +120,9 @@ SoftBufferAllocMgr::SoftBufferAllocMgr()
 	: m_def_alloc_change_cb(new DefAllocChangeCb(*this))
 {
 	DEB_CONSTRUCTOR();
+	AllocParameters params;
+	params.initMem = true;
+	setAllocParameters(params);
 }
 
 SoftBufferAllocMgr::~SoftBufferAllocMgr()
@@ -106,12 +131,26 @@ SoftBufferAllocMgr::~SoftBufferAllocMgr()
 	releaseBuffers();
 }
 
-void SoftBufferAllocMgr::setAllocator(Allocator::Ref allocator)
+void SoftBufferAllocMgr::setAllocParameters(const AllocParameters& params)
 {
 	DEB_MEMBER_FUNCT();
-	if (allocator != m_allocator)
-		releaseBuffers();
-	m_allocator = allocator;
+	DEB_PARAM() << DEB_VAR1(params);
+	if (!params.initMem)
+		DEB_WARNING() << "Memory buffers won't be initialized!";
+	m_buffer_helper.setParameters(params);
+}
+
+void SoftBufferAllocMgr::getAllocParameters(AllocParameters& params)
+{
+	DEB_MEMBER_FUNCT();
+	m_buffer_helper.getParameters(params);
+	DEB_RETURN() << DEB_VAR1(params);
+}
+
+void SoftBufferAllocMgr::prepareAlloc(int nb_buffers, const FrameDim& frame_dim)
+{
+	DEB_MEMBER_FUNCT();
+	m_buffer_helper.prepareBuffers(nb_buffers, frame_dim.getMemSize());
 }
 
 void SoftBufferAllocMgr::onDefaultAllocatorChange(Allocator::Ref prev_alloc,
@@ -128,13 +167,17 @@ void SoftBufferAllocMgr::onDefaultAllocatorChange(Allocator::Ref prev_alloc,
 		DEB_ALWAYS() << " Numa mask: " << NumaNodeMask::fromCPUMask(mask);
 	}
 #endif
-	if (!m_allocator)
+	AllocParameters params;
+	getAllocParameters(params);
+	if (!params.allocator)
 		releaseBuffers();
 }
 
 int SoftBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
 {
-	return GetDefMaxNbBuffers(frame_dim);
+	AllocParameters params;
+	getAllocParameters(params);
+	return params.getDefMaxNbBuffers(frame_dim.getMemSize());
 }
 
 void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
@@ -166,11 +209,11 @@ void SoftBufferAllocMgr::allocBuffers(int nb_buffers,
 
 	try {
 		BufferList& bl = m_buffer_list;
-		bl.resize(nb_buffers, MemBuffer(m_allocator));
+		bl.resize(nb_buffers);
 		if (to_alloc > 0) {			
 			DEB_TRACE() << "Allocating " << to_alloc << " buffers";
 			for (int i = curr_nb_buffers; i < nb_buffers; i++)
-				bl[i].alloc(frame_size);
+				bl[i] = m_buffer_helper.getBuffer(frame_size);
 		} else {
 			DEB_TRACE() << "Releasing " << -to_alloc << " buffers";
 		}
@@ -209,7 +252,7 @@ void SoftBufferAllocMgr::getNbBuffers(int& nb_buffers)
 void *SoftBufferAllocMgr::getBufferPtr(int buffer_nb)
 {
 	DEB_MEMBER_FUNCT();
-	void *ptr = m_buffer_list[buffer_nb].getPtr();
+	void *ptr = m_buffer_list[buffer_nb].get();
 	DEB_RETURN() << DEB_VAR1(ptr);
 	return ptr;
 }
@@ -255,6 +298,23 @@ void NumaSoftBufferAllocMgr::setCPUAffinityMask(const CPUMask& mask)
 
 	if (nb_buffers > 0)
 		allocBuffers(nb_buffers, frame_dim);
+}
+
+void NumaSoftBufferAllocMgr::setAllocator(Allocator::Ref allocator)
+{
+	DEB_MEMBER_FUNCT();
+	AllocParameters params;
+	getAllocParameters(params);
+	params.allocator = allocator;
+	setAllocParameters(params);
+}
+
+Allocator::Ref NumaSoftBufferAllocMgr::getAllocator()
+{
+	DEB_MEMBER_FUNCT();
+	AllocParameters params;
+	getAllocParameters(params);
+	return params.allocator;
 }
 
 #endif
@@ -643,7 +703,7 @@ void BufferCtrlMgr::setFrameDim(const FrameDim& frame_dim)
 void BufferCtrlMgr::getFrameDim(FrameDim& frame_dim)
 {
 	DEB_MEMBER_FUNCT();
-	frame_dim = m_acq_buffer_mgr->getFrameDim();
+	frame_dim = m_frame_dim;
 	DEB_RETURN() << DEB_VAR1(frame_dim);
 }
 
@@ -829,6 +889,16 @@ SoftBufferCtrlObj::SoftBufferCtrlObj(BufferAllocMgrPtr buffer_alloc_mgr)
 {
 }
 
+void SoftBufferCtrlObj::setAllocParameters(const AllocParameters& params)
+{
+	m_buffer_alloc_mgr->setAllocParameters(params);
+}
+
+void SoftBufferCtrlObj::getAllocParameters(AllocParameters& params)
+{
+	m_buffer_alloc_mgr->getAllocParameters(params);
+}
+
 void SoftBufferCtrlObj::setFrameDim(const FrameDim& frame_dim) 
 {
 	m_mgr.setFrameDim(frame_dim);
@@ -837,6 +907,18 @@ void SoftBufferCtrlObj::setFrameDim(const FrameDim& frame_dim)
 void SoftBufferCtrlObj::getFrameDim(FrameDim& frame_dim) 
 {
 	m_mgr.getFrameDim(frame_dim);
+}
+
+void SoftBufferCtrlObj::prepareAlloc(int nb_buffers)
+{
+	int nb_concat_frames;
+	getNbConcatFrames(nb_concat_frames);
+	FrameDim frame_dim;
+	getFrameDim(frame_dim);
+	Size size = frame_dim.getSize();
+	size *= Point(1, nb_concat_frames);
+	frame_dim.setSize(size);
+	m_buffer_alloc_mgr->prepareAlloc(nb_buffers, frame_dim);
 }
 
 void SoftBufferCtrlObj::setNbBuffers(int  nb_buffers) 
