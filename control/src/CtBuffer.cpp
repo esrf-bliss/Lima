@@ -32,19 +32,17 @@ using namespace lima;
 
 static const double WAIT_BUFFERS_RELEASED_TIMEOUT = 5.0;
 
-class CtBuffer::_DataBuffer : public Buffer
+class CtBuffer::_DataBuffer : public MappedBuffer
 {
 public:
-  _DataBuffer(CtBuffer &buffer) : m_buffer(buffer) {}
+  _DataBuffer(CtBuffer &buffer, void *p)
+    : MappedBuffer(p, [&](void *) { buffer._release(this); })
+  {}
 
-  virtual ~_DataBuffer()
+  const char *type() const override
   {
-    m_buffer._release(this);
+    return "Managed";
   }
-
-private:
-  friend class CtBuffer;
-  CtBuffer& m_buffer;
 };
 
 bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
@@ -310,12 +308,12 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
   fdata.frameNumber= frame_info.acq_frame_nb;
   fdata.timestamp = frame_info.frame_timestamp;
 
-  Buffer *fbuf = new _DataBuffer(*this);
-  fbuf->data = frame_info.frame_ptr;
+  BufferBase *fbuf;
+  void *ptr = frame_info.frame_ptr;
   if(frame_info.buffer_owner_ship == HwFrameInfoType::Managed)
-    fbuf->owner = Buffer::MAPPED;
+    fbuf = new _DataBuffer(*this, ptr);
   else
-    fbuf->owner = Buffer::SHARED;
+    fbuf = new Buffer(ptr);
 
   fdata.setBuffer(fbuf);
   fbuf->unref();
@@ -332,7 +330,8 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
 
   transformHwFrameInfoToData(fdata,frame_info,readBlockLen);
   // Manage Buffer callback
-  if(m_hw_buffer_cb)
+  bool managed = (frame_info.buffer_owner_ship == HwFrameInfoType::Managed);
+  if(managed && m_hw_buffer_cb)
     {
       _DataBuffer *buffer = static_cast<_DataBuffer *>(fdata.buffer);
       m_hw_buffer_cb->map(buffer->data);
