@@ -93,17 +93,18 @@ namespace lima {
 
     void getDataFromHwFrameInfo(Data& fdata,const HwFrameInfoType& frame_info,
                                 int readBlockLen=1);
+    template <class D>
     static void getDataFromAnonymousHwFrameInfo(Data& fdata,
                                                 const HwFrameInfoType& frame_info,
-                                                int readBlockLen=1)
+                                                D&& deleter, int readBlockLen=1)
     {
       _initDataFromHwFrameInfo(fdata,frame_info,readBlockLen);
-      Buffer *fbuf= new Buffer();
-      fbuf->data= frame_info.frame_ptr;
+      BufferBase *fbuf;
+      void *ptr= frame_info.frame_ptr;
       if(frame_info.buffer_owner_ship == HwFrameInfoType::Managed)
-        fbuf->owner= Buffer::MAPPED;
+        fbuf= new MappedBuffer(ptr, std::forward<D>(deleter));
       else
-        fbuf->owner= Buffer::SHARED;
+        fbuf= new Buffer(ptr);
       fdata.setBuffer(fbuf);
       fbuf->unref();
     }
