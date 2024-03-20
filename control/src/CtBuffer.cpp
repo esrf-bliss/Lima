@@ -148,15 +148,6 @@ void CtBuffer:: getNumber(long& nb_buffers) const
   DEB_RETURN() << DEB_VAR1(nb_buffers);
 }
 
-void CtBuffer::getMaxNumber(long& nb_buffers) const
-{
-  int max_nbuffers;
-  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
-  double maxMemory = double(m_pars.maxMemory) / 100.;
-  max_nbuffers = int(double(max_nbuffers) * maxMemory);
-  nb_buffers = max_nbuffers;
-}
-
 void CtBuffer:: setMaxMemory(short max_memory)
 {
   DEB_MEMBER_FUNCT();
@@ -175,6 +166,31 @@ void CtBuffer::getMaxMemory(short& max_memory) const
   max_memory= m_pars.maxMemory;
 
   DEB_RETURN() << DEB_VAR1(max_memory);
+}
+
+void CtBuffer::getMaxHwNumber(long& nb_buffers) const
+{
+  int max_nbuffers;
+  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
+  double maxMemory = double(m_pars.maxMemory) / 100.;
+  max_nbuffers = int(double(max_nbuffers) * maxMemory);
+  nb_buffers = max_nbuffers;
+}
+
+void CtBuffer::getMaxAccNumber(long& nb_buffers) const
+{
+  int max_nb_buffers = 0;
+  if(m_ct_accumulation)
+    m_ct_accumulation->getMaxNbBuffers(max_nb_buffers);
+  nb_buffers = max_nb_buffers;
+}
+
+void CtBuffer::getMaxNumber(long& nb_buffers) const
+{
+  if(m_ct_accumulation)
+    getMaxAccNumber(nb_buffers);
+  else
+    getMaxHwNumber(nb_buffers);
 }
 
 void CtBuffer::getFrame(Data &aReturnData,int frameNumber,int readBlockLen)
@@ -229,7 +245,6 @@ void CtBuffer::setup(CtControl *ct)
   CtSaving::ManagedMode saving_mode;
   saving->getManagedMode(saving_mode);
   
-
   img= ct->image();
   img->getHwImageDim(fdim);
 
@@ -259,14 +274,16 @@ void CtBuffer::setup(CtControl *ct)
   m_hw_buffer->setFrameDim(fdim);
   m_hw_buffer->setNbConcatFrames(concat_nframes);
 
-  long max_nbuffers;
-  getMaxNumber(max_nbuffers);
-  if (hwNbBuffer > max_nbuffers)
-    hwNbBuffer = max_nbuffers;
+  long max_hw_nb_buffers, max_nb_buffers;
+  getMaxHwNumber(max_hw_nb_buffers);
+  getMaxNumber(max_nb_buffers);
+
+  if (hwNbBuffer > max_hw_nb_buffers)
+    hwNbBuffer = max_hw_nb_buffers;
   m_hw_buffer->setNbBuffers(hwNbBuffer);
 
-  if(nbuffers > max_nbuffers)
-    nbuffers = max_nbuffers;
+  if(nbuffers > max_nb_buffers)
+    nbuffers = max_nb_buffers;
   m_pars.nbBuffers = nbuffers;
   registerFrameCallback(ct);
   m_frame_cb->m_ct_accumulation = m_ct_accumulation;

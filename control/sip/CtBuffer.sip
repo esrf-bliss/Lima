@@ -47,6 +47,8 @@ public:
 	void setNumber(long nb_buffers);
 	void getNumber(long& nb_buffers /Out/) const;
  
+	void getMaxHwNumber(long& nb_buffers /Out/) const;
+	void getMaxAccNumber(long& nb_buffers /Out/) const;
         void getMaxNumber(long& nb_buffers /Out/) const;
 
 	void setMaxMemory(short max_memory);
