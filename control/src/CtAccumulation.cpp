@@ -475,13 +475,37 @@ void CtAccumulation::getOutputType(ImageType& pixelOutputType) const
   DEB_RETURN() << DEB_VAR1(pixelOutputType);
 }
 
-void CtAccumulation::getBufferSize(int &aBufferSize) const
+void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers) const
 {
   DEB_MEMBER_FUNCT();
 
-  AutoMutex aLock(m_cond.mutex());
-  aBufferSize = m_buffers_size;
-  DEB_RETURN() << DEB_VAR1(aBufferSize);
+  CtImage* image = m_ct.image();
+  FrameDim hw_image_dim;
+  image->getHwImageDim(hw_image_dim);
+  FrameDim acc_image_dim;
+  image->getImageDim(acc_image_dim);
+
+  CtBuffer *buffer = m_ct.buffer();
+  long max_hw_nb_buffers = 0;
+  buffer->getMaxHwNumber(max_hw_nb_buffers);
+
+  bool is_sat_active;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    is_sat_active = m_pars.active;
+  }
+
+  DEB_TRACE() << DEB_VAR4(hw_image_dim, acc_image_dim, max_hw_nb_buffers,
+			  is_sat_active);
+
+  int hw_image_depth = hw_image_dim.getDepth();
+  int acc_image_depth = acc_image_dim.getDepth();
+  if(is_sat_active) acc_image_depth += 2;
+  DEB_TRACE() << DEB_VAR2(hw_image_depth, acc_image_depth);
+  max_nb_buffers = long(max_hw_nb_buffers * double(hw_image_depth) /
+			acc_image_depth);
+
+  DEB_RETURN() << DEB_VAR1(max_nb_buffers);
 }
 
 void CtAccumulation::setSavingFlag(bool savingFlag)
@@ -796,7 +820,18 @@ void CtAccumulation::prepare()
 {
   DEB_MEMBER_FUNCT();
 
-  //Adjust number of acc image
+  // Gather acq. parameters
+  CtAcquisition *acquisition = m_ct.acquisition();
+  int acc_nframes = 0;
+  acquisition->getAccNbFrames(acc_nframes);
+  if(acc_nframes < 0) acc_nframes = 1;
+
+  // Buffer parameters
+  CtBuffer *buffer = m_ct.buffer();
+  long nb_buffers = 0;
+  buffer->getNumber(nb_buffers);
+
+  // Adjust number of acc image
   CtImage* image = m_ct.image();
   FrameDim hw_image_dim;
   image->getHwImageDim(hw_image_dim);
@@ -811,19 +846,7 @@ void CtAccumulation::prepare()
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
 
   AutoMutex aLock(m_cond.mutex());
-  CtBuffer *buffer = m_ct.buffer();
-  buffer->getNumber(m_buffers_size);
-  long max_nb_buffers = 0;
-  buffer->getMaxNumber(max_nb_buffers);
-  max_nb_buffers = long(max_nb_buffers * double(hw_image_depth) / acc_image_depth);
-  if(m_pars.active) max_nb_buffers /= 2;
-  m_buffers_size = std::min(m_buffers_size, max_nb_buffers);
-  m_buffers_size = std::max(m_buffers_size, ACC_MIN_BUFFER_SIZE);
-
-  CtAcquisition *acquisition = m_ct.acquisition();
-  int acc_nframes = 0;
-  acquisition->getAccNbFrames(acc_nframes);
-  if(acc_nframes < 0) acc_nframes = 1;
+  m_buffers_size = nb_buffers;
 
   // Allocate the temporary data (if needed)
   Size size = acc_image_dim.getSize();
@@ -921,6 +944,9 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     else
       nextFrameNumber = m_datas.back().frameNumber + 1;
 
+    if(long(m_datas.size()) == m_buffers_size)
+      m_datas.pop_front();
+
     Data newData;
     newData.type = convert_imagetype_to_datatype(m_pars.pixelOutputType);
     newData.dimensions = aData.dimensions;
@@ -930,12 +956,12 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     memset(newData.data(),0,newData.size());
     m_datas.push_back(newData);
 
-    if(long(m_datas.size()) > m_buffers_size)
-      m_datas.pop_front();
-
     // create also the new image for saturated counters
     if(active)
     {
+      if(long(m_saturated_images.size()) == m_buffers_size)
+        m_saturated_images.pop_front();
+
       Data newSatImg;
       newSatImg.type = Data::UINT16;
       newSatImg.dimensions = aData.dimensions;
@@ -944,9 +970,6 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
       newSatImg.buffer = new Buffer(newSatImg.size());
       memset(newSatImg.data(),0,newSatImg.size());
       m_saturated_images.push_back(newSatImg);
-
-      if(long(m_saturated_images.size()) > m_buffers_size)
-        m_saturated_images.pop_front();
     }
   }
 

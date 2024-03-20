@@ -104,7 +104,7 @@ namespace lima
     void setOutputType(ImageType pixelOutputType);
     void getOutputType(ImageType& pixelOutputType) const;
 
-    void getBufferSize(int &aBufferSize) const;
+    void getMaxNbBuffers(int &max_nb_buffers) const;
 
     void setSavingFlag(bool savingFlag);
     void getSavingFlag(bool &savingFlag) const;
