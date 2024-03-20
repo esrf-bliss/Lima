@@ -81,7 +81,7 @@ public:
   void setOutputType(ImageType pixelOutputType);
   void getOutputType(ImageType &pixelOutputType /Out/) const;
 
-  void getBufferSize(int &aBufferSize /Out/) const;
+  void getMaxNbBuffers(int &max_nb_buffers /Out/) const;
 
   void setSavingFlag(bool savingFlag);
   void getSavingFlag(bool &savingFlag /Out/) const;
