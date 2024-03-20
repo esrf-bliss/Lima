@@ -826,7 +826,7 @@ void CtAccumulation::prepare()
   if(acc_nframes < 0) acc_nframes = 1;
 
   // Allocate the temporary data (if needed)
-  Size size = hw_image_dim.getSize();
+  Size size = acc_image_dim.getSize();
   switch (m_pars.operation) {
   case ACC_SUM:
       break;
