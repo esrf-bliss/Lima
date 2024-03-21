@@ -390,8 +390,7 @@ CtAccumulation::CtAccumulation(CtControl &ct) :
   m_acc_nb_frames(0),
   m_threshold_cb(NULL),
   m_last_acc_frame_nb(-1),
-  m_last_continue_flag(true),
-  m_stopped(false)
+  m_last_continue_flag(true)
 {
   m_calc_end = new _CalcEndCBK(*this);
   m_calc_mgr = new _CalcSaturatedTaskMgr();
@@ -805,6 +804,7 @@ void CtAccumulation::_callIfNeedThresholdCallback(Data &aData,long long value)
 void CtAccumulation::clear()
 {
     AutoMutex aLock(m_cond.mutex());
+    m_new_pending_data.clear();
     m_datas.clear();
     m_saturated_images.clear();
 
@@ -877,7 +877,6 @@ void CtAccumulation::prepare()
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
   m_last_continue_flag = true;
   m_last_acc_frame_nb = -1;
-  m_stopped = false;
 }
 /** @brief this is an internal call from CtBuffer in case of accumulation
  */
@@ -925,14 +924,30 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
-  int nb_acc_frame = m_acc_nb_frames;
-  bool miss;
-  while((miss = (aData.frameNumber != (m_last_acc_frame_nb + 1))) && !m_stopped)
-    m_cond.wait();
-  if(miss) // stopped
-    return false;
+  std::map<int,Data>& pending = m_new_pending_data;
+  if(aData.frameNumber != (m_last_acc_frame_nb + 1)) {
+    pending.insert(std::make_pair(aData.frameNumber, aData));
+    return true;
+  }
 
+  bool cont_flag = _processBaseFrame(aData, aLock);
+
+  std::map<int,Data>::iterator it;
+  while(!pending.empty() &&
+        (it = pending.begin())->first == (m_last_acc_frame_nb + 1))
+  {
+    Data& oData = it->second;
+    cont_flag &= _processBaseFrame(oData, aLock);
+    pending.erase(it);
+  }      
+
+  return cont_flag;
+}
+
+bool CtAccumulation::_processBaseFrame(Data &aData, AutoMutex &aLock)
+{
   bool active = m_pars.active;
+  int nb_acc_frame = m_acc_nb_frames;
   if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
   {
     // Reset the temporary data (if any)
@@ -1025,7 +1040,6 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   }
 
   m_last_acc_frame_nb = aData.frameNumber;
-  m_cond.broadcast();
 
   return m_last_continue_flag;
 }
@@ -1036,8 +1050,7 @@ void CtAccumulation::stop()
   DEB_MEMBER_FUNCT();
 
   AutoMutex aLock(m_cond.mutex());
-  m_stopped = true;
-  m_cond.broadcast();
+  m_new_pending_data.clear();
 }
 /** @brief retrived the image from the buffer
     @param frameNumber == acquisition image id
