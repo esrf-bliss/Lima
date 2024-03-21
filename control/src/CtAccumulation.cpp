@@ -227,9 +227,11 @@ public:
   {
     DEB_MEMBER_FUNCT();
     DEB_PARAM() << DEB_VAR1(aData);
-    AutoMutex aLock(m_cnt.m_cond.mutex());
-    long long pixelThresholdValue = m_cnt.m_pars.pixelThresholdValue;
-    aLock.unlock();
+    long long pixelThresholdValue;
+    {
+      AutoMutex aLock(m_cnt.m_cond.mutex());
+      pixelThresholdValue = m_cnt.m_pars.pixelThresholdValue;
+    }
 
     CtAccumulation::_CounterResult result(aData.frameNumber);
     Data &mask = m_cnt.m_calc_mask;
@@ -645,15 +647,16 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   int acc_nframes;
   acquisition->getAccNbFrames(acc_nframes);
 
-  AutoMutex aLock(m_cond.mutex());
-  if(frameNumber < 0)
   {
-    if(!m_saturated_images.empty())
-      frameNumber = m_saturated_images.back().frameNumber;
-    else
-      frameNumber = 0;
+    AutoMutex aLock(m_cond.mutex());
+    if(frameNumber < 0)
+    {
+      if(!m_saturated_images.empty())
+        frameNumber = m_saturated_images.back().frameNumber;
+      else
+        frameNumber = 0;
+    }
   }
-  aLock.unlock();
 
   //ask the last accumulated frame for a frameNumber
   int counterId = ((frameNumber + 1) * acc_nframes) - 1;
@@ -665,7 +668,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   // Counter is available => saturated image calc finnished
   if(result.errorCode == _CalcSaturatedTaskMgr::OK)
   {
-    aLock.lock();
+    AutoMutex aLock(m_cond.mutex());
     int oldestFrameNumber = m_saturated_images.front().frameNumber;
     int lastFrameId = m_saturated_images.back().frameNumber;
     //No more into buffer list
@@ -689,7 +692,9 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
   CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
   acquisition->getAccNbFrames(acc_nframes);
-  if(acc_nframes > 0)
+  if(acc_nframes <= 0)
+    return;
+
   {
     AutoMutex aLock(m_cond.mutex());
     if(from < 0)
@@ -699,26 +704,25 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
       else
         from = 0;
     }
-
-    aLock.unlock();
-    std::list<CtAccumulation::_CounterResult> resultList;
-    int fromCounterId = from * acc_nframes;
-    m_calc_mgr->getHistory(resultList,fromCounterId);
-
-    for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
-        i != resultList.end();++i)
-    {
-      if(!(i->frameNumber % acc_nframes))
-        result.push_back(std::list<long long>());
-
-      std::list<long long> &satImgCounters = result.back();
-      satImgCounters.push_back(i->value);
-    }
-      
-    /* Check if last image has the same number of counters if not remove */
-    if(!result.empty() && result.front().size() != result.back().size())
-      result.pop_back();
   }
+
+  std::list<CtAccumulation::_CounterResult> resultList;
+  int fromCounterId = from * acc_nframes;
+  m_calc_mgr->getHistory(resultList,fromCounterId);
+
+  for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
+      i != resultList.end();++i)
+  {
+    if(!(i->frameNumber % acc_nframes))
+      result.push_back(std::list<long long>());
+
+    std::list<long long> &satImgCounters = result.back();
+    satImgCounters.push_back(i->value);
+  }
+
+  /* Check if last image has the same number of counters if not remove */
+  if(!result.empty() && result.front().size() != result.back().size())
+    result.pop_back();
 }
 
 /** @brief set the mask for saturation calculation
@@ -977,48 +981,49 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   if(active)
     saturatedImg = m_saturated_images.back();
 
-  aLock.unlock();
-
-  if(active)
-    _calcSaturatedImageNCounters(aData,saturatedImg);
-
-  // Accumulate
-  Data output = m_datas.back();
-  switch (m_pars.operation) {
-  case ACC_SUM:
-    _accFrame(aData, output);
-    break;
-
-  case ACC_MEAN:
-    _accFrame(aData, m_tmp_data);
-    break;
-
-  case ACC_MEDIAN:
-    m_tmp_datas.push_back(aData);
-    break;
-  }
-
-  // If accumulated frame is cleared for takeoff
-  if (!((aData.frameNumber + 1) % nb_acc_frame))
   {
-    // Reduction
+    AutoMutexUnlock u(aLock);
+
+    if(active)
+      _calcSaturatedImageNCounters(aData,saturatedImg);
+
+    // Accumulate
+    Data output = m_datas.back();
     switch (m_pars.operation) {
     case ACC_SUM:
+      _accFrame(aData, output);
       break;
 
     case ACC_MEAN:
-      transform_pixel(m_tmp_data, output, pixel_divide(nb_acc_frame));
+      _accFrame(aData, m_tmp_data);
       break;
 
     case ACC_MEDIAN:
-      // TODO compute the median from m_tmp_datas
+      m_tmp_datas.push_back(aData);
       break;
     }
 
-    m_last_continue_flag = m_ct.newFrameReady(output);
+    // If accumulated frame is cleared for takeoff
+    if (!((aData.frameNumber + 1) % nb_acc_frame))
+    {
+      // Reduction
+      switch (m_pars.operation) {
+      case ACC_SUM:
+        break;
+
+      case ACC_MEAN:
+        transform_pixel(m_tmp_data, output, pixel_divide(nb_acc_frame));
+        break;
+
+      case ACC_MEDIAN:
+        // TODO compute the median from m_tmp_datas
+        break;
+      }
+
+      m_last_continue_flag = m_ct.newFrameReady(output);
+    }
   }
 
-  aLock.lock();
   m_last_acc_frame_nb = aData.frameNumber;
   m_cond.broadcast();
 
