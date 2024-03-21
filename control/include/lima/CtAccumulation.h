@@ -182,18 +182,19 @@ namespace lima
     TaskEventCallback* 			m_calc_end;
     _CalcSaturatedTaskMgr*		m_calc_mgr;
     Data				m_calc_mask;
+    std::map<int,Data>			m_new_pending_data;
     int					m_acc_nb_frames;
     mutable Cond 			m_cond;
     ThresholdCallback*			m_threshold_cb;
     int 				m_last_acc_frame_nb;
     bool 				m_last_continue_flag;
-    bool				m_stopped;
 
     // --- Methodes for acquisition
     void clear();
     void prepare();
     bool _newFrameReady(Data&);
     bool _newBaseFrameReady(Data&);
+    bool _processBaseFrame(Data&,AutoMutex&);
     void stop();
 
     void getFrame(Data &,int frameNumber);
