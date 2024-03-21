@@ -157,6 +157,8 @@ namespace lima
       _CalcSaturatedTaskMgr::ErrorCode 	errorCode;
     };
 
+    class _ProcAccTask;
+    friend class _ProcAccTask;
     class _CalcSaturatedTask;
     friend class _CalcSaturatedTask;
     class _CalcEndCBK;
