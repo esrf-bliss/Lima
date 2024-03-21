@@ -185,6 +185,25 @@ void transform_pixel(Data& src, Data& dst, Func fn)
 }
 
 /*********************************************************************************
+			   accumulation task
+*********************************************************************************/
+class CtAccumulation::_ProcAccTask : public SinkTaskBase
+{
+public:
+  _ProcAccTask(CtAccumulation &acc_cnt) : m_cnt(acc_cnt)
+  {}
+
+  virtual void process(Data &aData)
+  {
+    m_cnt._newBaseFrameReady(aData);
+  }
+
+private:
+  CtAccumulation& m_cnt;
+};
+
+
+/*********************************************************************************
 			   calculation task
 *********************************************************************************/
 template<class INPUT>
@@ -908,16 +927,19 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   TaskMgr *mgr = new TaskMgr();
   mgr->setEventCallback(m_ct.getSoftOpErrorHandler());
   mgr->setInputData(aData);
+
+  // First check for SoftOpInternal (reconstruction, bin/roi/flip/rot)
   int internal_stage = 0;
   m_ct.m_op_int->addTo(*mgr,internal_stage);
 
-  if(internal_stage)
-    PoolThreadMgr::get().addProcess(mgr);
-  else
-  {
-    delete mgr;
-    _newBaseFrameReady(aData);
+  // If nothing is needed, just call the standard Processing
+  if(!internal_stage) {
+    SinkTaskBase *task = new _ProcAccTask(*this);
+    mgr->addSinkTask(internal_stage,task);
+    task->unref();
   }
+
+  PoolThreadMgr::get().addProcess(mgr);
 
   AutoMutex aLock(m_cond.mutex());
   return m_last_continue_flag;
@@ -943,7 +965,7 @@ void CtAccumulation::_newBaseFrameReady(Data &aData)
     Data& oData = it->second;
     _processBaseFrame(oData, aLock);
     pending.erase(it);
-  }      
+  }
 }
 
 void CtAccumulation::_processBaseFrame(Data &aData, AutoMutex &aLock)

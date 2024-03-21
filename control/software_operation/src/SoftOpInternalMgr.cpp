@@ -189,7 +189,7 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     }
   bool removeReconstructionTaskCallback = true;
   //Check now what is the last task to add a callback
-  if(registerCallback)
+  if(registerCallback && aLastStage)
     {
       if(aSoftRoiTaskPt)
 	aSoftRoiTaskPt->setEventCallback(m_end_callback);
