@@ -885,19 +885,24 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
 
-  int nb_frames_in_proc;
+  bool stop = false;
   {
     AutoMutex aLock(m_cond.mutex());
-    nb_frames_in_proc = aData.frameNumber - 1 - m_last_acc_frame_nb;
-  }
+    if(!m_last_continue_flag)
+      return false;
 
-  int nb_hw_buffers = ACC_MIN_BUFFER_SIZE;
-  if (nb_frames_in_proc >= nb_hw_buffers) {
-    DEB_ERROR() << "Accumulation overrun: " << DEB_VAR2(aData,
-                                                        nb_frames_in_proc);
+    int nb_frames_in_proc = aData.frameNumber - 1 - m_last_acc_frame_nb;
+    int nb_hw_buffers = ACC_MIN_BUFFER_SIZE;
+    if (nb_frames_in_proc >= nb_hw_buffers) {
+      DEB_ERROR() << "Accumulation overrun: " << DEB_VAR2(aData,
+                                                          nb_frames_in_proc);
+      m_last_continue_flag = false;
+      stop = true;
+    }
+  }
+  if (stop) {
     m_ct.stopAcqAsync(AcqFault, CtControl::ProcessingOverun, aData);
-    m_last_continue_flag = false;
-    return m_last_continue_flag;
+    return false;
   }
 
   TaskMgr *mgr = new TaskMgr();
@@ -911,40 +916,37 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   else
   {
     delete mgr;
-    m_last_continue_flag = m_last_continue_flag && _newBaseFrameReady(aData);
+    _newBaseFrameReady(aData);
   }
 
+  AutoMutex aLock(m_cond.mutex());
   return m_last_continue_flag;
 }
 /** @brief this is an internal call at the end of internal process or from CtBuffer
  */
-bool CtAccumulation::_newBaseFrameReady(Data &aData)
+void CtAccumulation::_newBaseFrameReady(Data &aData)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
   std::map<int,Data>& pending = m_new_pending_data;
-  if(aData.frameNumber != (m_last_acc_frame_nb + 1)) {
+  if(aData.frameNumber != (m_last_acc_frame_nb + 1))
     pending.insert(std::make_pair(aData.frameNumber, aData));
-    return true;
-  }
 
-  bool cont_flag = _processBaseFrame(aData, aLock);
+  _processBaseFrame(aData, aLock);
 
   std::map<int,Data>::iterator it;
   while(!pending.empty() &&
         (it = pending.begin())->first == (m_last_acc_frame_nb + 1))
   {
     Data& oData = it->second;
-    cont_flag &= _processBaseFrame(oData, aLock);
+    _processBaseFrame(oData, aLock);
     pending.erase(it);
   }      
-
-  return cont_flag;
 }
 
-bool CtAccumulation::_processBaseFrame(Data &aData, AutoMutex &aLock)
+void CtAccumulation::_processBaseFrame(Data &aData, AutoMutex &aLock)
 {
   bool active = m_pars.active;
   int nb_acc_frame = m_acc_nb_frames;
@@ -996,6 +998,7 @@ bool CtAccumulation::_processBaseFrame(Data &aData, AutoMutex &aLock)
   if(active)
     saturatedImg = m_saturated_images.back();
 
+  bool cont_flag = true;
   {
     AutoMutexUnlock u(aLock);
 
@@ -1035,13 +1038,12 @@ bool CtAccumulation::_processBaseFrame(Data &aData, AutoMutex &aLock)
         break;
       }
 
-      m_last_continue_flag = m_ct.newFrameReady(output);
+      cont_flag = m_ct.newFrameReady(output);
     }
   }
 
+  m_last_continue_flag &= cont_flag;
   m_last_acc_frame_nb = aData.frameNumber;
-
-  return m_last_continue_flag;
 }
 /** @brief stops the current integration
  */

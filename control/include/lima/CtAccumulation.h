@@ -193,8 +193,8 @@ namespace lima
     void clear();
     void prepare();
     bool _newFrameReady(Data&);
-    bool _newBaseFrameReady(Data&);
-    bool _processBaseFrame(Data&,AutoMutex&);
+    void _newBaseFrameReady(Data&);
+    void _processBaseFrame(Data&,AutoMutex&);
     void stop();
 
     void getFrame(Data &,int frameNumber);
