@@ -387,6 +387,7 @@ CtAccumulation::CtAccumulation(CtControl &ct) :
   m_buffers_size(1),
   m_ct(ct),
   m_calc_ready(true),
+  m_acc_nb_frames(0),
   m_threshold_cb(NULL),
   m_last_acc_frame_nb(-1),
   m_last_continue_flag(true),
@@ -643,10 +644,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
 
-  CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
-  acquisition->getAccNbFrames(acc_nframes);
-
   {
     AutoMutex aLock(m_cond.mutex());
     if(frameNumber < 0)
@@ -656,6 +654,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
       else
         frameNumber = 0;
     }
+    acc_nframes = m_acc_nb_frames;
   }
 
   //ask the last accumulated frame for a frameNumber
@@ -689,14 +688,11 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(from);
 
-  CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
-  acquisition->getAccNbFrames(acc_nframes);
-  if(acc_nframes <= 0)
-    return;
-
   {
     AutoMutex aLock(m_cond.mutex());
+    if(m_acc_nb_frames <= 0)
+      return;
     if(from < 0)
     {
       if(!m_saturated_images.empty())
@@ -704,6 +700,7 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
       else
         from = 0;
     }
+    acc_nframes = m_acc_nb_frames;
   }
 
   std::list<CtAccumulation::_CounterResult> resultList;
@@ -850,6 +847,7 @@ void CtAccumulation::prepare()
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
 
   AutoMutex aLock(m_cond.mutex());
+  m_acc_nb_frames = acc_nframes;
   m_buffers_size = std::max(1, int(nb_buffers));
 
   // Allocate the temporary data (if needed)
@@ -926,10 +924,8 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
 
-  CtAcquisition *acq = m_ct.acquisition();
-  int nb_acc_frame;
-  acq->getAccNbFrames(nb_acc_frame);
   AutoMutex aLock(m_cond.mutex());
+  int nb_acc_frame = m_acc_nb_frames;
   bool miss;
   while((miss = (aData.frameNumber != (m_last_acc_frame_nb + 1))) && !m_stopped)
     m_cond.wait();
