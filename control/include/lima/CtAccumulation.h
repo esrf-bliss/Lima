@@ -142,6 +142,8 @@ namespace lima
     void unregisterThresholdCallback(ThresholdCallback &cb);
 
   private:
+    static const int ACC_MAX_PARALLEL_PROC = 32;
+
     struct _CounterResult;
     typedef SinkTaskMgr<_CounterResult> _CalcSaturatedTaskMgr;
     struct _CounterResult
@@ -172,9 +174,20 @@ namespace lima
       CtAccumulation &m_acc;
     };
 
+    struct _ProcAccInfo
+    {
+      int				frame_nb;
+      int				acc_frames{0};
+      std::map<int,Data>		new_pending_data;
+      Data				tmp_data;
+      Data				acc_data;
+      Data				sat_data;
+
+      _ProcAccInfo(int frame) : frame_nb(frame) {}
+    };
+      
     Parameters 				m_pars;
     long				    m_buffers_size;
-    Data                    m_tmp_data;  // Temporary data where frames are accumulated before copied to output data
     std::vector<Data>       m_tmp_datas; // Temporary data where frames are stored to compute the median
     std::deque<Data>        m_datas;     // Circular buffer of output data (used with getFrame())
     std::deque<Data>        m_saturated_images;
@@ -184,11 +197,11 @@ namespace lima
     TaskEventCallback* 			m_calc_end;
     _CalcSaturatedTaskMgr*		m_calc_mgr;
     Data				m_calc_mask;
-    std::map<int,Data>			m_new_pending_data;
+    bool				m_signed_data;
+    std::map<int,_ProcAccInfo>		m_proc_info_map;
     int					m_acc_nb_frames;
     mutable Cond 			m_cond;
     ThresholdCallback*			m_threshold_cb;
-    int 				m_last_acc_frame_nb;
     bool 				m_last_continue_flag;
 
     // --- Methodes for acquisition
@@ -196,7 +209,7 @@ namespace lima
     void prepare();
     bool _newFrameReady(Data&);
     void _newBaseFrameReady(Data&);
-    void _processBaseFrame(Data&,AutoMutex&);
+    void _processBaseFrame(_ProcAccInfo&,Data&,AutoMutex&);
     void stop();
 
     void getFrame(Data &,int frameNumber);
