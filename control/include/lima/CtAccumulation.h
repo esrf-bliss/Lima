@@ -182,6 +182,7 @@ namespace lima
     TaskEventCallback* 			m_calc_end;
     _CalcSaturatedTaskMgr*		m_calc_mgr;
     Data				m_calc_mask;
+    int					m_acc_nb_frames;
     mutable Cond 			m_cond;
     ThresholdCallback*			m_threshold_cb;
     int 				m_last_acc_frame_nb;
