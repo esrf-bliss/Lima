@@ -948,33 +948,37 @@ bool CtAccumulation::_newBaseFrameReady(Data &aData)
     else
       nextFrameNumber = m_datas.back().frameNumber + 1;
 
+    // Release old data(s) before crossing the size limit
     if(long(m_datas.size()) == m_buffers_size)
       m_datas.pop_front();
+    if(active && (long(m_saturated_images.size()) == m_buffers_size))
+      m_saturated_images.pop_front();
 
-    Data newData;
-    newData.type = convert_imagetype_to_datatype(m_pars.pixelOutputType);
-    newData.dimensions = aData.dimensions;
-    newData.frameNumber = nextFrameNumber;
-    newData.timestamp = aData.timestamp;
-    newData.buffer = new Buffer(newData.size());
-    memset(newData.data(),0,newData.size());
-    m_datas.push_back(newData);
-
-    // create also the new image for saturated counters
-    if(active)
+    Data newData, newSatImg;
+    ImageType acc_type = m_pars.pixelOutputType;
     {
-      if(long(m_saturated_images.size()) == m_buffers_size)
-        m_saturated_images.pop_front();
+      AutoMutexUnlock u(aLock);
+      newData.type = convert_imagetype_to_datatype(acc_type);
+      newData.dimensions = aData.dimensions;
+      newData.frameNumber = nextFrameNumber;
+      newData.timestamp = aData.timestamp;
+      newData.buffer = new Buffer(newData.size());
+      memset(newData.data(),0,newData.size());
 
-      Data newSatImg;
-      newSatImg.type = Data::UINT16;
-      newSatImg.dimensions = aData.dimensions;
-      newSatImg.frameNumber = nextFrameNumber;
-      newSatImg.timestamp = aData.timestamp;
-      newSatImg.buffer = new Buffer(newSatImg.size());
-      memset(newSatImg.data(),0,newSatImg.size());
-      m_saturated_images.push_back(newSatImg);
+      // create also the new image for saturated counters
+      if(active)
+      {
+        newSatImg.type = Data::UINT16;
+        newSatImg.dimensions = aData.dimensions;
+        newSatImg.frameNumber = nextFrameNumber;
+        newSatImg.timestamp = aData.timestamp;
+        newSatImg.buffer = new Buffer(newSatImg.size());
+        memset(newSatImg.data(),0,newSatImg.size());
+      }
     }
+    m_datas.push_back(newData);
+    if(active)
+      m_saturated_images.push_back(newSatImg);
   }
 
   Data saturatedImg;
