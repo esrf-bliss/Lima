@@ -403,6 +403,16 @@ private:
 };
 #endif //WITH_CONFIG
 
+inline const char *CtAccumulation::toString(ImgType type)
+{
+  switch (type) {
+  case AccImg: return "AccImg";
+  case SatImg: return "SatImg";
+  case TmpImg: return "TmpImg";
+  default: return "Unknown";
+  }
+}
+
 //       ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) :
   m_buffers_size(1),
@@ -497,34 +507,44 @@ void CtAccumulation::getOutputType(ImageType& pixelOutputType) const
   DEB_RETURN() << DEB_VAR1(pixelOutputType);
 }
 
-void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers) const
+void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers)
 {
   DEB_MEMBER_FUNCT();
+
+  _calcImgFrameDims();
 
   CtImage* image = m_ct.image();
   FrameDim hw_image_dim;
   image->getHwImageDim(hw_image_dim);
-  FrameDim acc_image_dim;
-  image->getImageDim(acc_image_dim);
 
   CtBuffer *buffer = m_ct.buffer();
   long max_hw_nb_buffers = 0;
   buffer->getMaxHwNumber(max_hw_nb_buffers);
 
-  bool is_sat_active;
+  bool do_sat;
+  FrameDim acc_image_dim;
+  int tmp_buffers_depth = 0;
+  int max_buffers_depth;
   {
     AutoMutex aLock(m_cond.mutex());
-    is_sat_active = m_pars.active;
+    do_sat = m_pars.active;
+    acc_image_dim = m_frame_dim[AccImg];
+    if(m_pars.operation == ACC_MEAN)
+      tmp_buffers_depth = (m_frame_dim[TmpImg].getDepth() *
+                           ACC_MAX_PARALLEL_PROC);
+    max_buffers_depth = max_hw_nb_buffers * m_hw_img_depth;
+
+    DEB_TRACE() << DEB_VAR2(m_hw_img_depth, m_frame_dim[TmpImg].getDepth());
   }
 
-  DEB_TRACE() << DEB_VAR4(hw_image_dim, acc_image_dim, max_hw_nb_buffers,
-                          is_sat_active);
+  DEB_TRACE() << DEB_VAR3(acc_image_dim, max_hw_nb_buffers, do_sat);
 
-  int hw_image_depth = hw_image_dim.getDepth();
-  int acc_image_depth = acc_image_dim.getDepth();
-  if(is_sat_active) acc_image_depth += 2;
-  DEB_TRACE() << DEB_VAR2(hw_image_depth, acc_image_depth);
-  max_nb_buffers = long(max_hw_nb_buffers * double(hw_image_depth) /
+  double acc_image_depth = acc_image_dim.getDepth();
+  if(do_sat)
+    acc_image_depth += 2;
+  DEB_TRACE() << DEB_VAR3(max_buffers_depth, tmp_buffers_depth,
+                          acc_image_depth);
+  max_nb_buffers = long((max_buffers_depth - tmp_buffers_depth) /
                         acc_image_depth);
 
   DEB_RETURN() << DEB_VAR1(max_nb_buffers);
@@ -835,6 +855,61 @@ void CtAccumulation::clear()
 #endif
 }
 
+/** @brief get dimensions of the different buffer types
+ */
+inline void CtAccumulation::_calcImgFrameDims()
+{
+  DEB_MEMBER_FUNCT();
+
+  // Buffer parameters
+  CtBuffer *buffer = m_ct.buffer();
+  bool do_acc = buffer->isAccumulationActive();
+
+  // Image parameters
+  CtImage* image = m_ct.image();
+  FrameDim hw_image_dim;
+  image->getHwImageDim(hw_image_dim);
+  int hw_image_depth = hw_image_dim.getDepth();
+  FrameDim acc_image_dim;
+  image->getImageDim(acc_image_dim);
+  int acc_image_depth = acc_image_dim.getDepth();
+
+  if ((hw_image_depth > acc_image_depth) || (hw_image_dim.isSigned() && !acc_image_dim.isSigned()))
+    throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
+      << "SRC=" << convert_2_string(hw_image_dim.getImageType())
+      << " DST=" << convert_2_string(acc_image_dim.getImageType());
+
+  AutoMutex aLock(m_cond.mutex());
+
+  m_hw_img_depth = hw_image_depth;
+
+  bool do_sat = m_pars.active;
+  bool do_mean = (m_pars.operation == ACC_MEAN);
+
+  FrameDim empty;
+  if(do_acc) {
+    m_frame_dim[AccImg] = acc_image_dim;
+    Size size = acc_image_dim.getSize();
+
+    if(do_sat) {
+      m_frame_dim[SatImg] = FrameDim(size, Bpp16);
+    } else
+      m_frame_dim[SatImg] = empty;
+
+    if(do_mean) {
+      ImageType tmp_type = hw_image_dim.isSigned() ? Bpp32S : Bpp32;
+      m_frame_dim[TmpImg] = FrameDim(size, tmp_type);
+    } else
+      m_frame_dim[TmpImg] = empty;
+  } else {
+    for (int i = 0; i < NbImgTypes; ++i)
+      m_frame_dim[i] = empty;
+  }
+
+  DEB_RETURN() << DEB_VAR3(m_frame_dim[AccImg], m_frame_dim[SatImg],
+                           m_frame_dim[TmpImg]);
+}
+
 /** @brief prepare all stuff for a new acquisition
  */
 void CtAccumulation::prepare()
@@ -852,26 +927,13 @@ void CtAccumulation::prepare()
   long nb_buffers = 0;
   buffer->getNumber(nb_buffers);
 
-  // Adjust number of acc image
-  CtImage* image = m_ct.image();
-  FrameDim hw_image_dim;
-  image->getHwImageDim(hw_image_dim);
-  int hw_image_depth = hw_image_dim.getDepth();
-  FrameDim acc_image_dim;
-  image->getImageDim(acc_image_dim);
-  int acc_image_depth = acc_image_dim.getDepth();
-
-  if ((hw_image_depth > acc_image_depth) || (hw_image_dim.isSigned() && !acc_image_dim.isSigned()))
-    throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
-      << "SRC=" << convert_2_string(hw_image_dim.getImageType())
-      << " DST=" << convert_2_string(acc_image_dim.getImageType());
+  _calcImgFrameDims();
 
   AutoMutex aLock(m_cond.mutex());
   m_acc_nb_frames = acc_nframes;
   m_buffers_size = std::max(1, int(nb_buffers));
-  m_signed_data = hw_image_dim.isSigned();
 
-  // Allocate the temporary data (if needed)
+  // Check preconditions (if needed)
   switch (m_pars.operation) {
   case ACC_SUM:
     break;
@@ -984,12 +1046,12 @@ void CtAccumulation::_newBaseFrameReady(Data &aData)
 void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
                                        AutoMutex &aLock)
 {
-  bool active = m_pars.active;
+  bool do_sat = m_pars.active;
   int nb_acc_frame = m_acc_nb_frames;
   Operation op = m_pars.operation;
-  Data& acc_data = info.acc_data;
-  Data& sat_data = info.sat_data;
-  Data& tmp_data = info.tmp_data;
+  Data& acc_data = info.data[AccImg];
+  Data& sat_data = info.data[SatImg];
+  Data& tmp_data = info.data[TmpImg];
 
   if(info.acc_frames == 0) // new Data has to be created
   {
@@ -998,13 +1060,15 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
     // Release old data(s) before crossing the size limit
     if(long(m_datas.size()) == m_buffers_size)
       m_datas.pop_front();
-    if(active && (long(m_saturated_images.size()) == m_buffers_size))
+    if(do_sat && (long(m_saturated_images.size()) == m_buffers_size))
       m_saturated_images.pop_front();
 
-    ImageType acc_type = m_pars.pixelOutputType;
+    ImageType pixel_type[NbImgTypes];
+    for (int i = 0; i < NbImgTypes; ++i)
+      pixel_type[i] = m_frame_dim[i].getImageType();
     {
       AutoMutexUnlock u(aLock);
-      acc_data.type = convert_imagetype_to_datatype(acc_type);
+      acc_data.type = convert_imagetype_to_datatype(pixel_type[AccImg]);
       acc_data.dimensions = aData.dimensions;
       acc_data.frameNumber = nextFrameNumber;
       acc_data.timestamp = aData.timestamp;
@@ -1012,9 +1076,9 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
       memset(acc_data.data(),0,acc_data.size());
 
       // create also the new image for saturated counters
-      if(active)
+      if(do_sat)
       {
-        sat_data.type = Data::UINT16;
+        sat_data.type = convert_imagetype_to_datatype(pixel_type[SatImg]);
         sat_data.dimensions = aData.dimensions;
         sat_data.frameNumber = nextFrameNumber;
         sat_data.timestamp = aData.timestamp;
@@ -1023,14 +1087,14 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
       }
 
       if(op == ACC_MEAN) {
-        tmp_data.type = m_signed_data ? Data::INT32 : Data::UINT32;
+        tmp_data.type = convert_imagetype_to_datatype(pixel_type[TmpImg]);
         tmp_data.dimensions = aData.dimensions;
         tmp_data.buffer = new Buffer(tmp_data.size());
         memset(tmp_data.data(), 0, tmp_data.size());
       }
     }
     m_datas.push_back(acc_data);
-    if(active)
+    if(do_sat)
       m_saturated_images.push_back(sat_data);
   }
 
@@ -1038,7 +1102,7 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
   {
     AutoMutexUnlock u(aLock);
 
-    if(active)
+    if(do_sat)
       _calcSaturatedImageNCounters(aData,sat_data);
 
     // Accumulate
