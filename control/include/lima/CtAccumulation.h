@@ -104,7 +104,7 @@ namespace lima
     void setOutputType(ImageType pixelOutputType);
     void getOutputType(ImageType& pixelOutputType) const;
 
-    void getMaxNbBuffers(int &max_nb_buffers) const;
+    void getMaxNbBuffers(int &max_nb_buffers);
 
     void setSavingFlag(bool savingFlag);
     void getSavingFlag(bool &savingFlag) const;
@@ -174,20 +174,21 @@ namespace lima
       CtAccumulation &m_acc;
     };
 
+    enum ImgType {AccImg, SatImg, TmpImg, NbImgTypes};
+    static const char *toString(ImgType type);
+
     struct _ProcAccInfo
     {
       int				frame_nb;
       int				acc_frames{0};
       std::map<int,Data>		new_pending_data;
-      Data				tmp_data;
-      Data				acc_data;
-      Data				sat_data;
+      Data				data[NbImgTypes];
 
       _ProcAccInfo(int frame) : frame_nb(frame) {}
     };
       
     Parameters 				m_pars;
-    long				    m_buffers_size;
+    long				m_buffers_size;
     std::vector<Data>       m_tmp_datas; // Temporary data where frames are stored to compute the median
     std::deque<Data>        m_datas;     // Circular buffer of output data (used with getFrame())
     std::deque<Data>        m_saturated_images;
@@ -197,12 +198,13 @@ namespace lima
     TaskEventCallback* 			m_calc_end;
     _CalcSaturatedTaskMgr*		m_calc_mgr;
     Data				m_calc_mask;
-    bool				m_signed_data;
     std::map<int,_ProcAccInfo>		m_proc_info_map;
     int					m_acc_nb_frames;
     mutable Cond 			m_cond;
     ThresholdCallback*			m_threshold_cb;
     bool 				m_last_continue_flag;
+    int					m_hw_img_depth;
+    FrameDim				m_frame_dim[NbImgTypes];
 
     // --- Methodes for acquisition
     void clear();
@@ -211,6 +213,8 @@ namespace lima
     void _newBaseFrameReady(Data&);
     void _processBaseFrame(_ProcAccInfo&,Data&,AutoMutex&);
     void stop();
+
+    void _calcImgFrameDims();
 
     void getFrame(Data &,int frameNumber);
 
