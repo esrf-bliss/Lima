@@ -40,7 +40,7 @@ CtTestApp::Pars::Pars()
 	DEB_CONSTRUCTOR();
 
 	buffer_alloc_params.initMem = true;
-	buffer_alloc_params.reqMemSizePercent = 70;
+	buffer_alloc_params.reqMemSizePercent = 70.0;
 
 #define AddOpt(var, opt, par) \
 	m_opt_list.insert(MakeOpt(var, "", opt, par))

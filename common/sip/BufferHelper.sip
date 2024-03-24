@@ -45,7 +45,7 @@ public:
     bool initMem;
     DurationPolicy durationPolicy;
     PersistentSizePolicy sizePolicy;
-    int reqMemSizePercent;
+    double reqMemSizePercent;
 
     Parameters();
 
