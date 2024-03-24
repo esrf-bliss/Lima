@@ -978,19 +978,18 @@ void CtAccumulation::_calcBufferHelperParams(
     return;
 
   BufferHelper::Parameters& acc_params = params[AccImg];
-  int& mem_percent = acc_params.reqMemSizePercent;
+  double& mem_percent = acc_params.reqMemSizePercent;
 
   bool do_sat = m_pars.active;
   bool do_mean = (m_pars.operation == ACC_MEAN);
 
   if(do_mean) {
     BufferHelper::Parameters& tmp_params = params[TmpImg];
-    int& tmp_percent = tmp_params.reqMemSizePercent;
-    tmp_percent = 100;
+    double& tmp_percent = tmp_params.reqMemSizePercent;
+    tmp_percent = 100.0;
     int tmp_buffer_size = m_frame_dim[TmpImg].getMemSize();
     int max_tmp_buffers = tmp_params.getDefMaxNbBuffers(tmp_buffer_size);
-    tmp_percent = int(std::ceil(ACC_MAX_PARALLEL_PROC * 100.0 /
-				max_tmp_buffers));
+    tmp_percent = ACC_MAX_PARALLEL_PROC * 100.0 / max_tmp_buffers;
     if (tmp_percent >= mem_percent)
       THROW_HW_ERROR(Error) << "ACC_MEAN tmp buffers require too much memory";
     mem_percent -= tmp_percent;
@@ -999,8 +998,8 @@ void CtAccumulation::_calcBufferHelperParams(
   if(do_sat) {
     int sat_depth = m_frame_dim[SatImg].getDepth();
     int tot_depth = m_frame_dim[AccImg].getDepth() + sat_depth;
-    int& sat_percent = params[SatImg].reqMemSizePercent;
-    sat_percent = int(std::ceil(mem_percent * double(sat_depth) / tot_depth));
+    double& sat_percent = params[SatImg].reqMemSizePercent;
+    sat_percent = mem_percent * sat_depth / tot_depth;
     if (sat_percent >= mem_percent)
       THROW_HW_ERROR(Error) << "Saturated buffers require too much memory";
     mem_percent -= sat_percent;

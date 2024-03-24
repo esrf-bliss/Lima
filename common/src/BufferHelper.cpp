@@ -31,7 +31,7 @@ BufferHelper::Parameters::Parameters()
 	: initMem(false),
 	  durationPolicy(Ephemeral),
 	  sizePolicy(Automatic),
-	  reqMemSizePercent(0)
+	  reqMemSizePercent(0.0)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -39,8 +39,7 @@ BufferHelper::Parameters::Parameters()
 int BufferHelper::Parameters::getDefMaxNbBuffers(int size) const
 {
 	int max_nb_buffers = GetDefMaxNbBuffers(FrameDim(Size(size, 1), Bpp8));
-	float factor = reqMemSizePercent * 1e-2;
-	return std::max(1, int(std::round(max_nb_buffers * factor)));
+	return int(std::round(max_nb_buffers * reqMemSizePercent / 100.0));
 }
 
 BufferHelper::Parameters BufferHelper::Parameters::fromString(std::string s)
@@ -237,10 +236,11 @@ void BufferHelper::setParameters(const Parameters& params)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(params);
-	if ((params.reqMemSizePercent < 0) || (params.reqMemSizePercent >= 100))
+	if ((params.reqMemSizePercent < 0.0) ||
+	    (params.reqMemSizePercent >= 100.0))
 		THROW_COM_ERROR(InvalidValue)
 			<< "Invalid BufferHelper::Parameters: "
-			<< "reqMemSizePercent";
+			<< "reqMemSizePercent outside [0,100) range";
 	Parameters curr_params;
 	getParameters(curr_params);
 	if (params.durationPolicy != curr_params.durationPolicy) {

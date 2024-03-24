@@ -71,7 +71,7 @@ CtBuffer::CtBuffer(HwInterface *hw)
     THROW_CTL_ERROR(Error) <<  "Cannot get hardware buffer object";
 
   m_params.initMem = true;
-  m_params.reqMemSizePercent = 70;
+  m_params.reqMemSizePercent = 70.0;
   m_hw_buffer->setAllocParameters(m_params);
 
   m_hw_buffer_cb = m_hw_buffer->getBufferCallback();
@@ -109,9 +109,9 @@ void CtBuffer::setAllocParameters(const Parameters& params)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(params);
 
-  int max_memory = params.reqMemSizePercent;
-  if ((max_memory < 1) || (max_memory > 100))
-    THROW_CTL_ERROR(InvalidValue) <<  "Max memory usage between 1 and 100";
+  double max_memory = params.reqMemSizePercent;
+  if ((max_memory < 0.0) || (max_memory >= 100.0))
+    THROW_CTL_ERROR(InvalidValue) <<  "Max memory usage outside [0,100) range";
 
   m_hw_buffer->setAllocParameters(params);
   m_params = params;
