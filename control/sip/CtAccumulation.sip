@@ -107,6 +107,9 @@ public:
   void setBufferParameters(const BufferHelper::Parameters &pars);
   void getBufferParameters(BufferHelper::Parameters& pars /Out/) const;
 
+  void setHwNbBuffers(int hw_nb_buffers);
+  void getHwNbBuffers(int& hw_nb_buffers /Out/) const;
+    
   // --- variable and data result of Concatenation or Accumulation
 
   void readSaturatedImageCounter(Data& /Out/,long frameNumber = -1);

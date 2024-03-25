@@ -35,7 +35,8 @@
 
 using namespace lima;
 
-const long CtAccumulation::ACC_MIN_BUFFER_SIZE;
+const int CtAccumulation::ACC_DEF_HW_BUFFERS;
+const int CtAccumulation::ACC_MIN_HW_BUFFERS;
 const int CtAccumulation::ACC_MAX_PARALLEL_PROC;
 
 
@@ -443,7 +444,8 @@ CtAccumulation::CtAccumulation(CtControl &ct) :
   m_calc_ready(true),
   m_acc_nb_frames(0),
   m_threshold_cb(NULL),
-  m_last_continue_flag(true)
+  m_last_continue_flag(true),
+  m_hw_nb_buffers(ACC_DEF_HW_BUFFERS)
 {
   m_calc_end = new _CalcEndCBK(*this);
   m_calc_mgr = new _CalcSaturatedTaskMgr();
@@ -903,7 +905,30 @@ void CtAccumulation::getBufferParameters(BufferHelper::Parameters& pars) const
 
   DEB_RETURN() << DEB_VAR1(pars);
 }
+
+void CtAccumulation::setHwNbBuffers(int hw_nb_buffers)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(hw_nb_buffers);
+
+  if(hw_nb_buffers < ACC_MIN_HW_BUFFERS)
+    THROW_CTL_ERROR(InvalidValue) << "Invalid hw_nb_buffers: min is "
+				  << ACC_MIN_HW_BUFFERS;
     
+  AutoMutex aLock(m_cond.mutex());
+  m_hw_nb_buffers = hw_nb_buffers;
+}
+
+void CtAccumulation::getHwNbBuffers(int& hw_nb_buffers) const
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  hw_nb_buffers = m_hw_nb_buffers;
+
+  DEB_RETURN() << DEB_VAR1(hw_nb_buffers);
+}
+
 /** @brief get dimensions of the different buffer types
  */
 inline void CtAccumulation::_calcImgFrameDims()
