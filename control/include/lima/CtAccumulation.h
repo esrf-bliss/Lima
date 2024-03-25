@@ -50,8 +50,6 @@ namespace lima
     enum Filter { FILTER_NONE, FILTER_THRESHOLD_MIN, FILTER_OFFSET_THEN_THRESHOLD_MIN };    ///< Filter pixels that contribute to the accumulation
     enum Operation { ACC_SUM, ACC_MEAN, ACC_MEDIAN };                                       ///< Type of accumulation
 
-    static const long ACC_MIN_BUFFER_SIZE = 64L;
-
     struct LIMACORE_API Parameters
     {
       DEB_CLASS_NAMESPC(DebModControl,"Accumulation::Parameters","Control");
@@ -131,6 +129,9 @@ namespace lima
     void setBufferParameters(const BufferHelper::Parameters &pars);
     void getBufferParameters(BufferHelper::Parameters& pars) const;
 
+    void setHwNbBuffers(int hw_nb_buffers);
+    void getHwNbBuffers(int& hw_nb_buffers) const;
+    
     // --- variable and data result of Concatenation or Accumulation
 
     void readSaturatedImageCounter(Data&,long frameNumber = -1);
@@ -146,6 +147,8 @@ namespace lima
     void unregisterThresholdCallback(ThresholdCallback &cb);
 
   private:
+    static const int ACC_DEF_HW_BUFFERS = 64;
+    static const int ACC_MIN_HW_BUFFERS = 16;
     static const int ACC_MAX_PARALLEL_PROC = 32;
 
     struct _CounterResult;
@@ -209,6 +212,7 @@ namespace lima
     ThresholdCallback*			m_threshold_cb;
     bool 				m_last_continue_flag;
     int					m_hw_img_depth;
+    int					m_hw_nb_buffers;
     FrameDim				m_frame_dim[NbImgTypes];
     BufferHelper::Parameters		m_buffer_params;
     BufferHelper			m_buffer_helper[NbImgTypes];

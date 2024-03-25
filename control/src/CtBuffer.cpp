@@ -221,7 +221,7 @@ void CtBuffer::setup(CtControl *ct)
   case Accumulation:
     concat_nframes= 1;
     m_ct_accumulation = ct->accumulation();
-    hwNbBuffer = CtAccumulation::ACC_MIN_BUFFER_SIZE;
+    m_ct_accumulation->getHwNbBuffers(hwNbBuffer);
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
@@ -237,8 +237,12 @@ void CtBuffer::setup(CtControl *ct)
   getMaxHwNumber(max_hw_nb_buffers);
   getMaxNumber(max_nb_buffers);
 
-  if (hwNbBuffer > max_hw_nb_buffers)
+  if (hwNbBuffer > max_hw_nb_buffers) {
+    if(m_ct_accumulation)
+      THROW_CTL_ERROR(Error) << "Invalid acc_hw_nb_buffers: max is "
+			     << max_hw_nb_buffers;
     hwNbBuffer = max_hw_nb_buffers;
+  }
   m_hw_buffer->prepareAlloc(hwNbBuffer);
   m_hw_buffer->setNbBuffers(hwNbBuffer);
 
