@@ -253,7 +253,7 @@ Thread::~Thread()
 
 void Thread::start()
 {
-	if (m_started)
+	if (m_started && !m_finished)
 		throw LIMA_COM_EXC(Error, "Thread already started");
 
 	m_finished = false;
