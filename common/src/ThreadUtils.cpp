@@ -253,8 +253,11 @@ Thread::~Thread()
 
 void Thread::start()
 {
-	if (m_started && !m_finished)
-		throw LIMA_COM_EXC(Error, "Thread already started");
+	if (m_started) {
+		if (!m_finished)
+			throw LIMA_COM_EXC(Error, "Thread already started");
+		join();
+	}
 
 	m_finished = false;
 	int ret = pthread_create(&m_thread, &m_thread_attr,
