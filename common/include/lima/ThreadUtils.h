@@ -227,6 +227,8 @@ class LIMACORE_API Thread
  private:
 	friend class ExceptionCleanUp;
 
+	bool isJoinable();
+
 	static void *staticThreadFunction(void *data);
 
 	bool m_started;
