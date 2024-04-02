@@ -274,6 +274,7 @@ void Thread::join()
 
 	pthread_join(m_thread, NULL);
 	m_started = false;
+	m_tid = 0;
 }
 
 bool Thread::hasStarted()
