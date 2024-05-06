@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+#include "lima/Debug.h"
 #include "lima/MemUtils.h"
 
 #include <algorithm>
@@ -48,6 +49,8 @@
 
 using namespace lima;
 using namespace std;
+
+DEB_GLOBAL_NAMESPC(DebModCommon, "MemUtils")
 
 void lima::GetSystemMem(int& mem_unit, int& system_mem)
 {
@@ -98,9 +101,14 @@ void lima::GetPageSize(int& page_size)
 
 int lima::GetDefMaxNbBuffers(const FrameDim& frame_dim)
 {
+	DEB_GLOBAL_FUNCT();
+	
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0)
+	{
+		DEB_ERROR() << "Invalid FrameDim: " << frame_dim;
 		throw LIMA_COM_EXC(InvalidValue, "Invalid FrameDim");
+	}
 
 	int tot_buffers;
 	GetSystemMem(frame_size, tot_buffers);

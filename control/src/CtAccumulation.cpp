@@ -953,6 +953,8 @@ inline void CtAccumulation::_calcImgFrameDims()
       << "SRC=" << convert_2_string(hw_image_dim.getImageType())
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
 
+  DEB_TRACE() << DEB_VAR1(acc_image_dim);
+
   AutoMutex aLock(m_cond.mutex());
 
   m_hw_img_depth = hw_image_depth;
@@ -991,6 +993,10 @@ void CtAccumulation::_calcBufferHelperParams(
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(m_buffer_params);
+  
+  // Buffer parameters
+  CtBuffer *buffer = m_ct.buffer();
+  bool do_acc = buffer->isAccumulationActive();
 
   _calcImgFrameDims();
 
@@ -999,7 +1005,7 @@ void CtAccumulation::_calcBufferHelperParams(
   for (int i = 0; i < NbImgTypes; ++i)
     params[i] = m_buffer_params;
 
-  if(m_buffer_params.reqMemSizePercent == 0)
+  if(!do_acc || (m_buffer_params.reqMemSizePercent == 0))
     return;
 
   BufferHelper::Parameters& acc_params = params[AccImg];

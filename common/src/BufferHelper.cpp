@@ -38,8 +38,15 @@ BufferHelper::Parameters::Parameters()
 
 int BufferHelper::Parameters::getDefMaxNbBuffers(int size) const
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(size);
+	
 	int max_nb_buffers = GetDefMaxNbBuffers(FrameDim(Size(size, 1), Bpp8));
-	return int(std::round(max_nb_buffers * reqMemSizePercent / 100.0));
+	int res = int(std::round(max_nb_buffers * reqMemSizePercent / 100.0));
+	
+	DEB_RETURN() << DEB_VAR1(res);
+	
+	return res;	
 }
 
 BufferHelper::Parameters BufferHelper::Parameters::fromString(std::string s)
