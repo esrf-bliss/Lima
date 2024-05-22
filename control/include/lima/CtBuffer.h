@@ -83,7 +83,7 @@ namespace lima {
 
     void registerFrameCallback(CtControl *ct);
     void unregisterFrameCallback();
-	
+
     void getFrame(Data&,int frameNumber,int readBlockLen=1);
 
     void reset();
@@ -91,18 +91,35 @@ namespace lima {
 
     bool isAccumulationActive() const {return !!m_ct_accumulation;}
 
-    void getDataFromHwFrameInfo(Data&,const HwFrameInfoType&,
-				int readBlockLen=1);
-    static void transformHwFrameInfoToData(Data&,const HwFrameInfoType&,
-					   int readBlockLen=1);
+    void getDataFromHwFrameInfo(Data& fdata,const HwFrameInfoType& frame_info,
+                                int readBlockLen=1);
+    template <class D>
+    static void getDataFromAnonymousHwFrameInfo(Data& fdata,
+                                                const HwFrameInfoType& frame_info,
+                                                D&& deleter, int readBlockLen=1)
+    {
+      _initDataFromHwFrameInfo(fdata,frame_info,readBlockLen);
+      BufferBase *fbuf;
+      void *ptr= frame_info.frame_ptr;
+      if(frame_info.buffer_owner_ship == HwFrameInfoType::Managed)
+        fbuf= new MappedBuffer(ptr, std::forward<D>(deleter));
+      else
+        fbuf= new Buffer(ptr);
+      fdata.setBuffer(fbuf);
+      fbuf->unref();
+    }
 
     bool waitBuffersReleased(double timeout=-1);
 
   private:
-    class _DataDestroyCallback;
-    friend class _DataDestroyCallback;
+    class _DataBuffer;
+    friend class _DataBuffer;
 
-    void _release(void *dataPt);
+    void _release(_DataBuffer *buffer);
+
+    static void _initDataFromHwFrameInfo(Data& fdata,
+					 const HwFrameInfoType& frame_info,
+                                         int readBlockLen);
 
     Cond			m_cond;
     HwBufferCtrlObj* 		m_hw_buffer;
@@ -110,8 +127,7 @@ namespace lima {
     Parameters			m_pars;
     CtAccumulation* 		m_ct_accumulation;
     HwBufferCtrlObj::Callback* 	m_hw_buffer_cb;
-    Buffer::Callback*		m_data_destroy_callback;
-    std::set<void *>		m_mapped_frames;
+    int				m_mapped_frames;
   };
 
   inline std::ostream& operator<<(std::ostream &os,
