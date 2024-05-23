@@ -241,20 +241,34 @@ Thread::Thread()
 	: m_started(false), m_finished(false),
 	  m_exception_handled(false), m_tid(0)
 {
-	pthread_attr_init(&m_thread_attr);
+	int ret = pthread_attr_init(&m_thread_attr);
+	check_error(ret, "Error initializing thread attr");
 }
 
 Thread::~Thread()
 {
-	if (m_started)
-		join();
-	pthread_attr_destroy(&m_thread_attr);
+	using namespace std;
+
+	try {
+		if (m_started)
+			join();
+
+		int ret = pthread_attr_destroy(&m_thread_attr);
+		check_error(ret, "Error destroying thread attr");
+	} catch (Exception& e) {
+		cerr << "Error destroying thread: " << e << endl;
+	}
 }
 
 void Thread::start()
 {
-	if (m_started)
-		throw LIMA_COM_EXC(Error, "Thread already started");
+	if (!isJoinable())
+		throw LIMA_COM_EXC(NotSupported, "Thread must be joinable");
+	else if (m_started) {
+		if (!m_finished)
+			throw LIMA_COM_EXC(Error, "Thread already started");
+		join();
+	}
 
 	m_finished = false;
 	int ret = pthread_create(&m_thread, &m_thread_attr,
@@ -264,13 +278,24 @@ void Thread::start()
 	m_started = true;
 }
 
+bool Thread::isJoinable()
+{
+	int detach_state;
+	int ret = pthread_attr_getdetachstate(&m_thread_attr, &detach_state);
+	check_error(ret, "Error getting thread detach-state");
+	return (detach_state == PTHREAD_CREATE_JOINABLE);
+}
+
 void Thread::join()
 {
 	if (!m_started)
 		throw LIMA_COM_EXC(Error, "Thread not started or joined");
 
-	pthread_join(m_thread, NULL);
+	int ret = pthread_join(m_thread, NULL);
+	check_error(ret, "Error joining thread");
+
 	m_started = false;
+	m_tid = 0;
 }
 
 bool Thread::hasStarted()
