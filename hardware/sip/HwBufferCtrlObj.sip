@@ -28,6 +28,10 @@ public:
 	HwBufferCtrlObj();
 	virtual ~HwBufferCtrlObj();
 
+	virtual void setAllocParameters(const BufferHelper::Parameters& alloc_params);
+	virtual void getAllocParameters(      BufferHelper::Parameters& alloc_params /Out/);
+	virtual void prepareAlloc(int nb_buffers);
+
 	virtual void setFrameDim(const FrameDim& frame_dim) = 0;
 	virtual void getFrameDim(FrameDim& frame_dim /Out/) = 0;
 

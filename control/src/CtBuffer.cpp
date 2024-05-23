@@ -36,13 +36,17 @@ class CtBuffer::_DataBuffer : public MappedBuffer
 {
 public:
   _DataBuffer(CtBuffer &buffer, void *p)
-    : MappedBuffer(p, [&](void *) { buffer._release(this); })
+    : MappedBuffer(p, [&](void *) { buffer._release(this); }), m_map_ref(NULL)
   {}
 
   const char *type() const override
   {
     return "Managed";
   }
+
+private:
+  friend class CtBuffer;
+  void *m_map_ref;
 };
 
 bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
@@ -59,12 +63,16 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 }
 
 CtBuffer::CtBuffer(HwInterface *hw)
-  : m_frame_cb(NULL),m_ct_accumulation(NULL),m_mapped_frames(0)
+  : m_frame_cb(NULL),m_ct_accumulation(NULL),m_nb_buffers(0),m_mapped_frames(0)
 {
   DEB_CONSTRUCTOR();
 
   if (!hw->getHwCtrlObj(m_hw_buffer))
     THROW_CTL_ERROR(Error) <<  "Cannot get hardware buffer object";
+
+  m_params.initMem = true;
+  m_params.reqMemSizePercent = 70.0;
+  m_hw_buffer->setAllocParameters(m_params);
 
   m_hw_buffer_cb = m_hw_buffer->getBufferCallback();
 }
@@ -96,85 +104,38 @@ void CtBuffer::unregisterFrameCallback()
   }
 }
 
-void CtBuffer::setPars(Parameters pars) 
+void CtBuffer::setAllocParameters(const Parameters& params)
 {
   DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(params);
 
-  setMode(pars.mode);
-  setNumber(pars.nbBuffers);
-  setMaxMemory(pars.maxMemory);
+  double max_memory = params.reqMemSizePercent;
+  if ((max_memory < 0.0) || (max_memory >= 100.0))
+    THROW_CTL_ERROR(InvalidValue) <<  "Max memory usage outside [0,100) range";
+
+  m_hw_buffer->setAllocParameters(params);
+  m_params = params;
 }
 
-void CtBuffer:: getPars(Parameters& pars) const
+void CtBuffer::getAllocParameters(Parameters& params) const
 {
   DEB_MEMBER_FUNCT();
-
-  pars= m_pars;
-
-  DEB_RETURN() << DEB_VAR1(pars);
+  params = m_params;
+  DEB_RETURN() << DEB_VAR1(params);
 }
 
-void CtBuffer:: setMode(BufferMode mode)
+void CtBuffer::getNumber(long& nb_buffers) const
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR1(mode);
-
-  m_pars.mode= mode;
-}
-
-void CtBuffer:: getMode(BufferMode& mode) const
-{
-  DEB_MEMBER_FUNCT();
-
-  mode= m_pars.mode;
-
-  DEB_RETURN() << DEB_VAR1(mode);
-}
-
-void CtBuffer:: setNumber(long nb_buffers)
-{
-  DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR1(nb_buffers);
-
-  m_pars.nbBuffers= nb_buffers;
-}
-
-void CtBuffer:: getNumber(long& nb_buffers) const
-{
-  DEB_MEMBER_FUNCT();
-
-  nb_buffers= m_pars.nbBuffers;
-
+  nb_buffers = m_nb_buffers;
   DEB_RETURN() << DEB_VAR1(nb_buffers);
-}
-
-void CtBuffer:: setMaxMemory(short max_memory)
-{
-  DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR1(max_memory);
-
-  if ((max_memory<1)||(max_memory>100))
-    THROW_CTL_ERROR(InvalidValue) <<  "Max memory usage between 1 and 100";
-
-  m_pars.maxMemory= max_memory;
-}
-	
-void CtBuffer::getMaxMemory(short& max_memory) const
-{
-  DEB_MEMBER_FUNCT();
-
-  max_memory= m_pars.maxMemory;
-
-  DEB_RETURN() << DEB_VAR1(max_memory);
 }
 
 void CtBuffer::getMaxHwNumber(long& nb_buffers) const
 {
-  int max_nbuffers;
-  m_hw_buffer->getMaxNbBuffers(max_nbuffers);
-  double maxMemory = double(m_pars.maxMemory) / 100.;
-  max_nbuffers = int(double(max_nbuffers) * maxMemory);
-  nb_buffers = max_nbuffers;
+  int max_nb_buffers;
+  m_hw_buffer->getMaxNbBuffers(max_nb_buffers);
+  nb_buffers = max_nb_buffers;
 }
 
 void CtBuffer::getMaxAccNumber(long& nb_buffers) const
@@ -223,8 +184,6 @@ void CtBuffer::getFrame(Data &aReturnData,int frameNumber,int readBlockLen)
 void CtBuffer::reset()
 {
   DEB_MEMBER_FUNCT();
-
-  m_pars.resetNonPersistent();
 }
 
 void CtBuffer::setup(CtControl *ct)
@@ -262,7 +221,7 @@ void CtBuffer::setup(CtControl *ct)
   case Accumulation:
     concat_nframes= 1;
     m_ct_accumulation = ct->accumulation();
-    hwNbBuffer = CtAccumulation::ACC_MIN_BUFFER_SIZE;
+    m_ct_accumulation->getHwNbBuffers(hwNbBuffer);
     break;
   case Concatenation:
     acq->getConcatNbFrames(concat_nframes);
@@ -278,13 +237,18 @@ void CtBuffer::setup(CtControl *ct)
   getMaxHwNumber(max_hw_nb_buffers);
   getMaxNumber(max_nb_buffers);
 
-  if (hwNbBuffer > max_hw_nb_buffers)
+  if (hwNbBuffer > max_hw_nb_buffers) {
+    if(m_ct_accumulation)
+      THROW_CTL_ERROR(Error) << "Invalid acc_hw_nb_buffers: max is "
+			     << max_hw_nb_buffers;
     hwNbBuffer = max_hw_nb_buffers;
+  }
+  m_hw_buffer->prepareAlloc(hwNbBuffer);
   m_hw_buffer->setNbBuffers(hwNbBuffer);
 
   if(nbuffers > max_nb_buffers)
     nbuffers = max_nb_buffers;
-  m_pars.nbBuffers = nbuffers;
+  m_nb_buffers = nbuffers;
   registerFrameCallback(ct);
   m_frame_cb->m_ct_accumulation = m_ct_accumulation;
 
@@ -347,7 +311,7 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
   _DataBuffer *fbuf= new _DataBuffer(*this,frame_info.frame_ptr);
   fdata.setBuffer(fbuf);
   fbuf->unref();
-  m_hw_buffer_cb->map(fbuf->data);
+  fbuf->m_map_ref= m_hw_buffer_cb->map(fbuf->data);
 
   AutoMutex l(m_cond.mutex());
   ++m_mapped_frames;
@@ -358,38 +322,10 @@ void CtBuffer::getDataFromHwFrameInfo(Data &fdata,
 void CtBuffer::_release(_DataBuffer *fbuf)
 {
   DEB_MEMBER_FUNCT();
-  m_hw_buffer_cb->release(fbuf->data);
+  m_hw_buffer_cb->release(fbuf->m_map_ref);
   AutoMutex l(m_cond.mutex());
   if(--m_mapped_frames == 0)
     m_cond.signal();
-}
-
-// -----------------
-// struct Parameters
-// -----------------
-CtBuffer::Parameters::Parameters()
-{
-  DEB_CONSTRUCTOR();
-
-  reset();
-}
-
-void CtBuffer::Parameters::reset()
-{
-  DEB_MEMBER_FUNCT();
-
-  maxMemory= 70;
-  resetNonPersistent();
-}
-
-void CtBuffer::Parameters::resetNonPersistent()
-{
-  DEB_MEMBER_FUNCT();
-
-  mode= Linear;
-  nbBuffers= 1;
-
-  DEB_TRACE() << *this;
 }
 
 bool CtBuffer::waitBuffersReleased(double timeout)

@@ -25,6 +25,8 @@
 #include "processlib/SinkTask.h"
 #include "processlib/SinkTaskMgr.h"
 #include <algorithm>
+#include <cmath>
+#include <memory>
 #include <type_traits>
 
 #ifdef __unix
@@ -33,7 +35,8 @@
 
 using namespace lima;
 
-const long CtAccumulation::ACC_MIN_BUFFER_SIZE;
+const int CtAccumulation::ACC_DEF_HW_BUFFERS;
+const int CtAccumulation::ACC_MIN_HW_BUFFERS;
 const int CtAccumulation::ACC_MAX_PARALLEL_PROC;
 
 
@@ -347,6 +350,27 @@ private:
   CtAccumulation& m_cnt;
 };
 
+
+/****************************************************************************
+CtAccumulation::_DataBuffer
+****************************************************************************/
+class CtAccumulation::_DataBuffer : public BufferBase
+{
+ public:
+  _DataBuffer(std::shared_ptr<void> buffer)
+    : BufferBase(buffer.get()), m_buffer(buffer)
+  {}
+
+  const char *type() const override
+  {
+    return "Accumulation";
+  }
+
+ private:
+  std::shared_ptr<void> m_buffer;
+};
+
+
 //       ******** CtAccumulation::Parameters ********
 CtAccumulation::Parameters::Parameters() :
   pixelThresholdValue(1 << 16),
@@ -420,7 +444,8 @@ CtAccumulation::CtAccumulation(CtControl &ct) :
   m_calc_ready(true),
   m_acc_nb_frames(0),
   m_threshold_cb(NULL),
-  m_last_continue_flag(true)
+  m_last_continue_flag(true),
+  m_hw_nb_buffers(ACC_DEF_HW_BUFFERS)
 {
   m_calc_end = new _CalcEndCBK(*this);
   m_calc_mgr = new _CalcSaturatedTaskMgr();
@@ -511,7 +536,8 @@ void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers)
 {
   DEB_MEMBER_FUNCT();
 
-  _calcImgFrameDims();
+  BufferHelper::Parameters params[NbImgTypes];
+  _calcBufferHelperParams(params);
 
   CtImage* image = m_ct.image();
   FrameDim hw_image_dim;
@@ -539,13 +565,19 @@ void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers)
 
   DEB_TRACE() << DEB_VAR3(acc_image_dim, max_hw_nb_buffers, do_sat);
 
-  double acc_image_depth = acc_image_dim.getDepth();
-  if(do_sat)
-    acc_image_depth += 2;
-  DEB_TRACE() << DEB_VAR3(max_buffers_depth, tmp_buffers_depth,
+  if(params[AccImg].durationPolicy == BufferHelper::Parameters::Persistent) {
+    int acc_frame_size = acc_image_dim.getMemSize();
+    DEB_TRACE() << DEB_VAR1(acc_frame_size);
+    max_nb_buffers = params[AccImg].getDefMaxNbBuffers(acc_frame_size);
+  } else {
+    double acc_image_depth = acc_image_dim.getDepth();
+    if(do_sat)
+      acc_image_depth += 2;
+    DEB_TRACE() << DEB_VAR3(max_buffers_depth, tmp_buffers_depth,
+                            acc_image_depth);
+    max_nb_buffers = long((max_buffers_depth - tmp_buffers_depth) /
                           acc_image_depth);
-  max_nb_buffers = long((max_buffers_depth - tmp_buffers_depth) /
-                        acc_image_depth);
+  }
 
   DEB_RETURN() << DEB_VAR1(max_nb_buffers);
 }
@@ -855,6 +887,48 @@ void CtAccumulation::clear()
 #endif
 }
 
+void CtAccumulation::setBufferParameters(const BufferHelper::Parameters &pars)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(pars);
+
+  AutoMutex aLock(m_cond.mutex());
+  m_buffer_params = pars;
+}
+
+void CtAccumulation::getBufferParameters(BufferHelper::Parameters& pars) const
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  pars = m_buffer_params;
+
+  DEB_RETURN() << DEB_VAR1(pars);
+}
+
+void CtAccumulation::setHwNbBuffers(int hw_nb_buffers)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(hw_nb_buffers);
+
+  if(hw_nb_buffers < ACC_MIN_HW_BUFFERS)
+    THROW_CTL_ERROR(InvalidValue) << "Invalid hw_nb_buffers: min is "
+				  << ACC_MIN_HW_BUFFERS;
+    
+  AutoMutex aLock(m_cond.mutex());
+  m_hw_nb_buffers = hw_nb_buffers;
+}
+
+void CtAccumulation::getHwNbBuffers(int& hw_nb_buffers) const
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+  hw_nb_buffers = m_hw_nb_buffers;
+
+  DEB_RETURN() << DEB_VAR1(hw_nb_buffers);
+}
+
 /** @brief get dimensions of the different buffer types
  */
 inline void CtAccumulation::_calcImgFrameDims()
@@ -878,6 +952,8 @@ inline void CtAccumulation::_calcImgFrameDims()
     throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
       << "SRC=" << convert_2_string(hw_image_dim.getImageType())
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
+
+  DEB_TRACE() << DEB_VAR1(acc_image_dim);
 
   AutoMutex aLock(m_cond.mutex());
 
@@ -910,6 +986,72 @@ inline void CtAccumulation::_calcImgFrameDims()
                            m_frame_dim[TmpImg]);
 }
 
+/** @brief get Buffer Parameters for each kind of image
+ */
+void CtAccumulation::_calcBufferHelperParams(
+                            BufferHelper::Parameters params[NbImgTypes])
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(m_buffer_params);
+  
+  // Buffer parameters
+  CtBuffer *buffer = m_ct.buffer();
+  bool do_acc = buffer->isAccumulationActive();
+
+  _calcImgFrameDims();
+
+  AutoMutex aLock(m_cond.mutex());
+
+  for (int i = 0; i < NbImgTypes; ++i)
+    params[i] = m_buffer_params;
+
+  if(!do_acc || (m_buffer_params.reqMemSizePercent == 0))
+    return;
+
+  BufferHelper::Parameters& acc_params = params[AccImg];
+  double& mem_percent = acc_params.reqMemSizePercent;
+
+  bool do_sat = m_pars.active;
+  bool do_mean = (m_pars.operation == ACC_MEAN);
+
+  if(do_mean) {
+    BufferHelper::Parameters& tmp_params = params[TmpImg];
+    double& tmp_percent = tmp_params.reqMemSizePercent;
+    tmp_percent = 100.0;
+    int tmp_buffer_size = m_frame_dim[TmpImg].getMemSize();
+    int max_tmp_buffers = tmp_params.getDefMaxNbBuffers(tmp_buffer_size);
+    tmp_percent = ACC_MAX_PARALLEL_PROC * 100.0 / max_tmp_buffers;
+    if (tmp_percent >= mem_percent)
+      THROW_HW_ERROR(Error) << "ACC_MEAN tmp buffers require too much memory";
+    mem_percent -= tmp_percent;
+  }
+
+  if(do_sat) {
+    int sat_depth = m_frame_dim[SatImg].getDepth();
+    int tot_depth = m_frame_dim[AccImg].getDepth() + sat_depth;
+    double& sat_percent = params[SatImg].reqMemSizePercent;
+    sat_percent = mem_percent * sat_depth / tot_depth;
+    if (sat_percent >= mem_percent)
+      THROW_HW_ERROR(Error) << "Saturated buffers require too much memory";
+    mem_percent -= sat_percent;
+  }
+
+  DEB_RETURN() << DEB_VAR3(params[AccImg], params[SatImg], params[TmpImg]);
+}
+
+/** @brief get Buffer for main acc. Data
+ */
+inline BufferBase *CtAccumulation::_getDataBuffer(ImgType type, int size)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(type, size);
+  std::shared_ptr<void> p = m_buffer_helper[type].getBuffer(size);
+  if (!p)
+    THROW_CTL_ERROR(Error) << "Accumulation buffer helper "
+			   << "[" << toString(type) << "] overrun";
+  return new _DataBuffer(p);
+}
+
 /** @brief prepare all stuff for a new acquisition
  */
 void CtAccumulation::prepare()
@@ -927,7 +1069,8 @@ void CtAccumulation::prepare()
   long nb_buffers = 0;
   buffer->getNumber(nb_buffers);
 
-  _calcImgFrameDims();
+  BufferHelper::Parameters params[NbImgTypes];
+  _calcBufferHelperParams(params);
 
   AutoMutex aLock(m_cond.mutex());
   m_acc_nb_frames = acc_nframes;
@@ -943,6 +1086,22 @@ void CtAccumulation::prepare()
 
   case ACC_MEDIAN:
     THROW_CTL_ERROR(NotSupported) << "ACC_MEDIAN mode is not supported yet";
+  }
+
+  // Allocate the main data (if needed)
+  bool do_acc = m_frame_dim[AccImg].isValid();
+  if(do_acc) {
+    for (int i = 0; i < NbImgTypes; ++i) {
+      int nb_buffers = (i == TmpImg) ? ACC_MAX_PARALLEL_PROC : m_buffers_size;
+      BufferHelper& helper = m_buffer_helper[i];
+      int frame_size = m_frame_dim[i].getMemSize();
+      AutoMutexUnlock u(aLock);
+      helper.setParameters(params[i]);
+      if((nb_buffers > 0) && (frame_size >> 0))
+        helper.prepareBuffers(nb_buffers, frame_size);
+      else
+        helper.releaseBuffers();
+    }
   }
 
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
@@ -1072,7 +1231,7 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
       acc_data.dimensions = aData.dimensions;
       acc_data.frameNumber = nextFrameNumber;
       acc_data.timestamp = aData.timestamp;
-      acc_data.buffer = new Buffer(acc_data.size());
+      acc_data.buffer = _getDataBuffer(AccImg, acc_data.size());
       memset(acc_data.data(),0,acc_data.size());
 
       // create also the new image for saturated counters
@@ -1082,14 +1241,14 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
         sat_data.dimensions = aData.dimensions;
         sat_data.frameNumber = nextFrameNumber;
         sat_data.timestamp = aData.timestamp;
-        sat_data.buffer = new Buffer(sat_data.size());
+        sat_data.buffer = _getDataBuffer(SatImg, sat_data.size());
         memset(sat_data.data(),0,sat_data.size());
       }
 
       if(op == ACC_MEAN) {
         tmp_data.type = convert_imagetype_to_datatype(pixel_type[TmpImg]);
         tmp_data.dimensions = aData.dimensions;
-        tmp_data.buffer = new Buffer(tmp_data.size());
+        tmp_data.buffer = _getDataBuffer(TmpImg, tmp_data.size());
         memset(tmp_data.data(), 0, tmp_data.size());
       }
     }

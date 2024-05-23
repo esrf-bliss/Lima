@@ -39,6 +39,9 @@ CtTestApp::Pars::Pars()
 {
 	DEB_CONSTRUCTOR();
 
+	buffer_alloc_params.initMem = true;
+	buffer_alloc_params.reqMemSizePercent = 70.0;
+
 #define AddOpt(var, opt, par) \
 	m_opt_list.insert(MakeOpt(var, "", opt, par))
 
@@ -90,8 +93,14 @@ CtTestApp::Pars::Pars()
 
 	AddOpt(video_source, "--video-source", "video source");
 
-	AddOpt(buffer_max_memory, "--buffer-max-memory",
-	       "buffer max memory [% of total RAM]");
+	AddOpt(buffer_alloc_params, "--buffer-alloc-params",
+	       "buffer allocation parameters");
+
+	AddOpt(acc_buffer_params, "--acc-buffer-params",
+	       "accumulation buffer allocation parameters");
+
+	AddOpt(saving_zbuffer_params, "--saving-zbuffer-params",
+	       "saving zbuffer allocation parameters");
 
 	AddOpt(proc_nb_threads, "--proc-nb-threads",
 	       "number of processing threads");
@@ -219,6 +228,7 @@ void CtTestApp::init()
 	parseArgs();
 	m_ct = getCtControl();
 	CtAcquisition *acq = m_ct->acquisition();
+	CtAccumulation *acc = m_ct->accumulation();
 	CtSaving *save = m_ct->saving();
 	CtImage *image = m_ct->image();
 	CtBuffer *buffer = m_ct->buffer();
@@ -279,7 +289,13 @@ void CtTestApp::init()
 	video->setVideoSource(m_pars->video_source);
 	video->setActive(m_pars->video_active);
 
-	buffer->setMaxMemory(m_pars->buffer_max_memory);
+	// buffer management
+	DEB_ALWAYS() << DEB_VAR1(m_pars->buffer_alloc_params);
+	buffer->setAllocParameters(m_pars->buffer_alloc_params);
+	DEB_ALWAYS() << DEB_VAR1(m_pars->acc_buffer_params);
+	acc->setBufferParameters(m_pars->acc_buffer_params);
+	DEB_ALWAYS() << DEB_VAR1(m_pars->saving_zbuffer_params);
+	save->setZBufferParameters(m_pars->saving_zbuffer_params);
 
 	PoolThreadMgr& mgr = PoolThreadMgr::get();
 	mgr.setNumberOfThread(m_pars->proc_nb_threads);

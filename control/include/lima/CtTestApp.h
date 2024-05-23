@@ -27,6 +27,7 @@
 
 #include "lima/LimaCompatibility.h"
 #include "lima/CtControl.h"
+#include "lima/CtAccumulation.h"
 #include "lima/CtAcquisition.h"
 #include "lima/CtSaving.h"
 #include "lima/CtBuffer.h"
@@ -45,6 +46,8 @@ class LIMACORE_API CtTestApp
 	typedef std::vector<std::string> string_array;
 	typedef std::vector<int> int_array;
 	typedef std::map<std::string, int> index_map;
+
+	typedef BufferHelper::Parameters BufferParameters;
 
 	class LIMACORE_API Pars : public AppPars
 	{
@@ -80,8 +83,12 @@ class LIMACORE_API CtTestApp
 
 		bool video_active{false};
 		CtVideo::VideoSource video_source{CtVideo::BASE_IMAGE};
-	
-		int buffer_max_memory{70};
+
+		// Buffer management
+		BufferParameters buffer_alloc_params;
+		BufferParameters acc_buffer_params;
+		BufferParameters saving_zbuffer_params;
+
 		int proc_nb_threads{2};
 
 		int test_nb_seq{1};

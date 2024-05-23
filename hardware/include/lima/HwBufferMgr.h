@@ -25,7 +25,7 @@
 #include "lima/LimaCompatibility.h"
 #include "lima/HwFrameCallback.h"
 #include "lima/HwBufferCtrlObj.h"
-#include "lima/MemUtils.h"
+#include "lima/BufferHelper.h"
 
 #include <memory>
 #include <vector>
@@ -46,12 +46,19 @@ class LIMACORE_API BufferAllocMgr
 	DEB_CLASS(DebModHardware, "BufferAllocMgr");
 
  public:
+	typedef BufferHelper::Parameters AllocParameters;
+
 	BufferAllocMgr();
 	virtual ~BufferAllocMgr();
 
 	// BufferAllocMgr are **not** copy-constructible nor copy-assignable.
 	BufferAllocMgr(const BufferAllocMgr&) = delete;
 	BufferAllocMgr& operator=(const BufferAllocMgr&) = delete;
+
+	virtual void setAllocParameters(const AllocParameters& alloc_params);
+	virtual void getAllocParameters(      AllocParameters& alloc_params);
+
+	virtual void prepareAlloc(int nb_buffers, const FrameDim& frame_dim);
 
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim) = 0;
 	virtual void allocBuffers(int nb_buffers, 
@@ -82,8 +89,11 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	SoftBufferAllocMgr();
 	virtual ~SoftBufferAllocMgr();
 
-	void setAllocator(Allocator *allocator);
+	virtual void setAllocParameters(const AllocParameters& alloc_params);
+	virtual void getAllocParameters(      AllocParameters& alloc_params);
 
+	virtual void prepareAlloc(int nb_buffers, const FrameDim& frame_dim);
+	
 	virtual int getMaxNbBuffers(const FrameDim& frame_dim);
 	virtual void allocBuffers(int nb_buffers, const FrameDim& frame_dim) override;
 	virtual const FrameDim& getFrameDim();
@@ -93,12 +103,18 @@ class LIMACORE_API SoftBufferAllocMgr : public BufferAllocMgr
 	virtual void *getBufferPtr(int buffer_nb);
 
  protected:
-	typedef std::vector<MemBuffer> BufferList;
+	typedef std::vector<std::shared_ptr<void>> BufferList;
 	typedef BufferList::const_reverse_iterator BufferListCRIt;
 
+	class DefAllocChangeCb;
+	friend class DefAllocChangeCb;
+	void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+				      Allocator::Ref new_alloc);
+
 	FrameDim m_frame_dim;
-	Allocator::Ref m_allocator;
+	BufferHelper m_buffer_helper;
 	BufferList m_buffer_list;
+	AutoPtr<DefAllocChangeCb> m_def_alloc_change_cb;
 };
 
 
@@ -119,7 +135,11 @@ class LIMACORE_API NumaSoftBufferAllocMgr : public SoftBufferAllocMgr
 	void setCPUAffinityMask(const CPUMask& mask);
 
  protected:
-	NumaAllocator *m_numa_allocator;
+	void setAllocator(Allocator::Ref allocator);
+	Allocator::Ref getAllocator();
+
+	NumaAllocator *getNumaAllocator()
+	{ return dynamic_cast<NumaAllocator *>(getAllocator().get()); }
 };
 
 #endif //LIMA_USE_NUMA
@@ -320,9 +340,14 @@ public:
 	SoftBufferCtrlObj(BufferAllocMgrPtr buffer_alloc_mgr = NULL);
 	virtual ~SoftBufferCtrlObj() = default;
 
+	virtual void setAllocParameters(const AllocParameters& alloc_params);
+	virtual void getAllocParameters(      AllocParameters& alloc_params);
+
 	virtual void setFrameDim(const FrameDim& frame_dim);
 	virtual void getFrameDim(FrameDim& frame_dim);
 
+	virtual void prepareAlloc(int nb_buffers);
+	
 	virtual void setNbBuffers(int  nb_buffers);
 	virtual void getNbBuffers(int& nb_buffers);
 
@@ -361,8 +386,10 @@ public:
 		Status wait(int frame_number, double timeout = -1.);
 
 	protected:
-		virtual void map(void *address);
-		virtual void release(void *address);
+		// returns a pointer to internal object that refers to address
+		virtual void *map(void *address);
+		// receives the pointer returned by map
+		virtual void release(void *address_ref);
 		virtual void releaseAll();
 
 		virtual void realloc();

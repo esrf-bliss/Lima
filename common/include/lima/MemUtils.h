@@ -26,6 +26,11 @@
 #include "lima/SizeUtils.h"
 #include "lima/Debug.h"
 #include "lima/Exceptions.h"
+#include "lima/ThreadUtils.h"
+
+#include <memory>
+#include <vector>
+#include <queue>
 
 namespace lima
 {
@@ -41,26 +46,22 @@ void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& f
 
 struct LIMACORE_API Allocator
 {
-	DEB_STRUCT_NAMESPC(DebModCommon, "MemUtils", "Allocator");
+	DEB_STRUCT_NAMESPC(DebModCommon, "Allocator", "MemUtils");
 
 	struct Data {
 		virtual ~Data() = default;
 	};
-	typedef AutoPtr<Data> DataPtr;
+	typedef std::shared_ptr<Data> DataPtr;
+	typedef std::shared_ptr<Allocator> Ref;
 
-	Allocator() : m_ref_count(0)
-	{}
-
-	Allocator(const Allocator& /*o*/) : m_ref_count(0)
-	{}
-
-	Allocator(Allocator&& o) : m_ref_count(0)
+	// Callback updating on default allocator change
+	class DefaultChangeCallback
 	{
-		DEB_MEMBER_FUNCT();
-
-		if (o.m_ref_count != 0)
-			DEB_ERROR() << "Moved-from Allocator is not empty";
-	}
+	public:
+		virtual ~DefaultChangeCallback() {};
+		virtual void onDefaultAllocatorChange(Ref prev_alloc,
+						      Ref new_alloc) = 0;
+	};
 
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size
@@ -70,60 +71,20 @@ struct LIMACORE_API Allocator
 	// Free a buffer
 	virtual void release(void* ptr, size_t size, DataPtr alloc_data);
 
-	// Returns a static instance of the default allocator
-	static Allocator *defaultAllocator();
+	// Sets the static instance of the default allocator
+	static void setDefaultAllocator(Ref def_alloc);
+	// Returns the static instance of the default allocator
+	static Ref getDefaultAllocator();
 
-	// All references to Allocators should be kept with this class
-	class Ref
-	{
-	public:
-		Ref(Allocator *alloc) : m_alloc(alloc->get())
-		{}
-		Ref(const Ref& o) : m_alloc(o.m_alloc->get())
-		{}
-		~Ref()
-		{ m_alloc->put(); }
+	static void registerDefaultChangeCallback(DefaultChangeCallback *cb);
+	static void unregisterDefaultChangeCallback(DefaultChangeCallback *cb);
 
-		Ref& operator =(const Ref& o)
-		{
-			if (m_alloc != o.m_alloc) {
-				m_alloc->put();
-				m_alloc = o.m_alloc->get();
-			}
-			return *this;
-		}
-		operator Allocator *() const
-		{ return m_alloc; }
-		Allocator *operator ->() const
-		{ return m_alloc; }
-	private:
-		Allocator *m_alloc;
-	};
+private:
+	typedef std::vector<DefaultChangeCallback *> ChangeCbList;
 
- protected:
-	friend class Ref;
-
-	virtual ~Allocator()
-	{
-		DEB_MEMBER_FUNCT();
-
-		if (m_ref_count != 0)
-			DEB_ERROR() << "Error: destroying non-empty Allocator";
-	}
-
-	// The real resource management counter, triggered by Ref
-	Allocator *get()
-	{ return ++m_ref_count, this; }
-	void put()
-	{ if (--m_ref_count == 0) delete this; }
-
-	// Keep track of allocated buffers pointing to this Allocator:
-	// if greather than 0 this object cannot be moved
-	unsigned m_ref_count;
+	static Ref m_default_allocator;
+	static ChangeCbList m_change_cb_list;
 };
-
-inline bool operator ==(const Allocator::Ref& a, const Allocator::Ref& b)
-{ return (Allocator *) a == (Allocator *) b; }
 
 #ifdef __unix
 // Allocator for virtual address mapping
@@ -184,6 +145,7 @@ private:
 };
 
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
+std::ostream& operator <<(std::ostream& os, const NumaNodeMask::CPUMask& mask);
 
 class LIMACORE_API NumaAllocator : public MMapAllocator
 {
@@ -209,10 +171,9 @@ private:
 class LIMACORE_API MemBuffer 
 {
  public:
-	//By default, construct a MemBuffer with the default constructor
-	MemBuffer(Allocator *allocator = Allocator::defaultAllocator());
-	MemBuffer(int size, Allocator *allocator =
-		  				Allocator::defaultAllocator());
+	//By default, construct a MemBuffer with the default allocator
+	MemBuffer(Allocator::Ref allocator = {});
+	MemBuffer(int size, Allocator::Ref allocator = {}, bool init_mem = true);
 	~MemBuffer();
 
 	// MemBuffer are copy constructible (deep copy, no aliasing)
@@ -223,8 +184,8 @@ class LIMACORE_API MemBuffer
 	MemBuffer(MemBuffer&& rhs);
 	MemBuffer& operator =(MemBuffer&& rhs);
 
-	/// Allocate and initialized memory
-	void alloc(size_t size);
+	/// Allocate and initialize memory (if requested)
+	void alloc(size_t size, bool init_mem = true);
 	void deepCopy(const MemBuffer& buffer);
 	void release();
 
@@ -238,19 +199,59 @@ class LIMACORE_API MemBuffer
 	operator const void *() const { return getConstPtr(); }
 
 	/// Returns the allocator currently associated with MemBuffer
-	Allocator *getAllocator() const { return m_allocator; }
+	Allocator::Ref getAllocator() const { return m_allocator; }
+
+	/// Initialize the memory
+	void initMemory();
 
  private:
 	/// Call the allocator to (eventually) free the current buffer then allocate a new buffer
 	void uninitializedAlloc(size_t size);
 
-	/// Initialize the memory
-	void initMemory();
-
 	size_t m_size;	//!< The size of the buffer in bytes
 	void *m_ptr;	//!< The pointer ot the buffer
 	Allocator::Ref m_allocator;	//!< The allocator used to alloc and free the buffer
 	Allocator::DataPtr m_alloc_data;
+};
+
+
+class LIMACORE_API BufferPool
+{
+	DEB_CLASS_NAMESPC(DebModCommon, "BufferPool", "MemUtils");
+  
+ public:
+	BufferPool(Allocator::Ref allocator = {}, bool init_mem = true);
+	~BufferPool();
+
+	void setAllocator(Allocator::Ref allocator);
+	Allocator::Ref getAllocator() const { return m_alloc; }
+
+	void setInitMem(bool init_mem);
+	bool getInitMem() const { return m_init_mem; }
+	
+	std::shared_ptr<void> getBuffer();
+
+	void allocBuffers(int nb_buffers, int size);
+	void releaseBuffers();
+	int getNbBuffers() const;
+	int getBufferSize() const;
+
+ private:
+	class DefAllocChangeCb;
+	friend class DefAllocChangeCb;
+	void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+				      Allocator::Ref new_alloc);
+
+	void _allocBuffers(int nb_buffers, int size, AutoMutex& l);
+	void _releaseBuffers(AutoMutex& l);
+
+	Mutex m_mutex;
+	Allocator::Ref m_alloc;
+	bool m_init_mem;
+	std::vector<MemBuffer> m_buffers;
+	std::queue<void *> m_available;
+	int m_buffer_size;  
+	DefAllocChangeCb *m_def_alloc_change_cb;
 };
 
 } // namespace lima

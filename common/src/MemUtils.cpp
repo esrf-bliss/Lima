@@ -19,11 +19,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
+#include "lima/Debug.h"
 #include "lima/MemUtils.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 #include <iomanip>
+#include <limits>
 #ifdef __unix
 #include <sys/sysinfo.h>
 #ifdef LIMA_USE_NUMA
@@ -46,6 +49,8 @@
 
 using namespace lima;
 using namespace std;
+
+DEB_GLOBAL_NAMESPC(DebModCommon, "MemUtils")
 
 void lima::GetSystemMem(int& mem_unit, int& system_mem)
 {
@@ -96,9 +101,14 @@ void lima::GetPageSize(int& page_size)
 
 int lima::GetDefMaxNbBuffers(const FrameDim& frame_dim)
 {
+	DEB_GLOBAL_FUNCT();
+	
 	int frame_size = frame_dim.getMemSize();
 	if (frame_size <= 0)
+	{
+		DEB_ERROR() << "Invalid FrameDim: " << frame_dim;
 		throw LIMA_COM_EXC(InvalidValue, "Invalid FrameDim");
+	}
 
 	int tot_buffers;
 	GetSystemMem(frame_size, tot_buffers);
@@ -111,10 +121,51 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 	memset(ptr, 0, nb_concat_frames * size_t(frame_dim.getMemSize()));
 }
 
-Allocator *Allocator::defaultAllocator()
+
+// The default allocator
+Allocator::Ref Allocator::m_default_allocator;
+
+void Allocator::setDefaultAllocator(Allocator::Ref def_alloc)
 {
-	static Allocator::Ref allocator = new Allocator();
-	return allocator;
+	if (!def_alloc)
+		throw LIMA_COM_EXC(InvalidValue, "Invalid default allocator");
+	else if (def_alloc == getDefaultAllocator())
+		return;
+
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	for (it = m_change_cb_list.begin(); it != end; ++it)
+		(*it)->onDefaultAllocatorChange(m_default_allocator, def_alloc);
+	
+	m_default_allocator = def_alloc;
+}
+
+Allocator::Ref Allocator::getDefaultAllocator()
+{
+	EXEC_ONCE(m_default_allocator = std::make_shared<Allocator>());
+	return m_default_allocator;
+}
+
+// The DefaultChangeCallback list
+Allocator::ChangeCbList Allocator::m_change_cb_list;
+
+void Allocator::registerDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
+	if (it != end)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "DefaultChangeCallback already registered");
+	m_change_cb_list.push_back(cb);
+}
+
+void Allocator::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
+	if (it == end)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "DefaultChangeCallback not registered");
+	m_change_cb_list.erase(it);
 }
 
 Allocator::DataPtr Allocator::alloc(void* &ptr, size_t& size, size_t alignment)
@@ -187,20 +238,20 @@ void *MMapAllocator::allocMmap(size_t& size)
 }
 #endif //__unix
 
-MemBuffer::MemBuffer(Allocator *allocator /*= Allocator::defaultAllocator()*/) :
+MemBuffer::MemBuffer(Allocator::Ref allocator /*= {}*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator)
+	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
 {
 }
 
-MemBuffer::MemBuffer(int size, Allocator *allocator /*=
-					Allocator::defaultAllocator()*/):
+MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*= {}*/,
+		     bool init_mem /*= true*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator)
+	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
 {
-	alloc(size);
+	alloc(size, init_mem);
 }
 
 MemBuffer::MemBuffer(const MemBuffer& buffer) :
@@ -252,10 +303,11 @@ MemBuffer::~MemBuffer()
 	release();
 }
 
-void MemBuffer::alloc(size_t size)
+void MemBuffer::alloc(size_t size, bool init_mem /*= true*/)
 {
 	uninitializedAlloc(size);
-	initMemory();
+	if (init_mem)
+		initMemory();
 }
 
 void MemBuffer::release()
@@ -396,6 +448,22 @@ std::ostream& lima::operator <<(std::ostream& os, const NumaNodeMask& mask)
 	return os << setfill(' ') << dec;
 }
 
+std::ostream& lima::operator <<(std::ostream& os,
+				const NumaNodeMask::CPUMask& mask)
+{
+	typedef NumaNodeMask::CPUMask CPUMask;
+	typedef unsigned long ULong;
+	constexpr CPUMask ULongMask(std::numeric_limits<ULong>::max());
+	constexpr int NbULongBits = sizeof(ULong) * 8;
+	constexpr int NbWords = NumaNodeMask::MaxNbCPUs / NbULongBits;
+	os << hex << setfill('0');
+	for (int i = NbWords - 1; i >= 0; --i) {
+		CPUMask m = (mask >> (i * NbULongBits)) & ULongMask;
+		os << setw(NbULongBits / 4) << m.to_ulong();
+	}
+	return os << setfill(' ') << dec;
+}
+
 Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 					size_t alignment)
 {
@@ -410,3 +478,163 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 }
 
 #endif //LIMA_USE_NUMA
+
+
+// BufferPool
+
+class BufferPool::DefAllocChangeCb :
+	public Allocator::DefaultChangeCallback
+{
+public:
+	DefAllocChangeCb(BufferPool& pool) : m_pool(pool)
+	{
+		Allocator::registerDefaultChangeCallback(this);
+	}
+
+	~DefAllocChangeCb()
+	{
+		Allocator::unregisterDefaultChangeCallback(this);
+	}
+
+	virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+					      Allocator::Ref new_alloc)
+	{
+		m_pool.onDefaultAllocatorChange(prev_alloc, new_alloc);
+	}
+
+private:
+	BufferPool& m_pool;
+};
+
+
+BufferPool::BufferPool(Allocator::Ref allocator, bool init_mem)
+	: m_alloc(allocator), m_init_mem(init_mem), m_buffer_size(0)
+{
+	DEB_CONSTRUCTOR();
+	DEB_PARAM() << DEB_VAR1(allocator);
+	// can only create the cb once "this" is ready
+	m_def_alloc_change_cb = new DefAllocChangeCb(*this);
+}
+
+BufferPool::~BufferPool()
+{
+	DEB_DESTRUCTOR();
+	releaseBuffers();
+	// destroy cb while "this" is still valid
+	delete m_def_alloc_change_cb;
+}
+
+std::shared_ptr<void> BufferPool::getBuffer()
+{
+	DEB_MEMBER_FUNCT();
+	void *p = NULL;
+	{
+		AutoMutex l(m_mutex);
+		if (m_available.empty())
+			return {};
+		p = m_available.front();
+		m_available.pop();
+	}
+	auto releaser = [&](void *p) {
+		AutoMutex l(m_mutex);
+		m_available.push(p);
+	};
+	return std::shared_ptr<void>(p, releaser);
+}
+
+void BufferPool::setAllocator(Allocator::Ref allocator)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(allocator.get());
+
+	if (allocator == m_alloc)
+		return;
+
+	releaseBuffers();
+	m_alloc = allocator;
+}
+
+void BufferPool::onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+					  Allocator::Ref new_alloc)
+{
+	DEB_MEMBER_FUNCT();
+	if (!m_alloc)
+		releaseBuffers();
+}
+
+void BufferPool::setInitMem(bool init_mem)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(init_mem);
+
+	if ((init_mem == m_init_mem) || m_init_mem)
+		return;
+
+	std::vector<MemBuffer>::iterator it, end = m_buffers.end();
+	for (it = m_buffers.begin(); it != end; ++it)
+		it->initMemory();
+
+	m_init_mem = init_mem;
+}
+
+void BufferPool::allocBuffers(int nb_buffers, int size)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(nb_buffers, size);
+	AutoMutex l(m_mutex);
+	_allocBuffers(nb_buffers, size, l);
+}
+
+int BufferPool::getNbBuffers() const
+{
+	DEB_MEMBER_FUNCT();
+	int nb_buffers =  m_buffers.size();
+	DEB_RETURN() << DEB_VAR1(nb_buffers);
+	return nb_buffers;
+}
+
+int BufferPool::getBufferSize() const
+{
+	DEB_MEMBER_FUNCT();
+	int buffer_size =  m_buffer_size;
+	DEB_RETURN() << DEB_VAR1(buffer_size);
+	return buffer_size;
+}
+
+void BufferPool::releaseBuffers()
+{
+	DEB_MEMBER_FUNCT();
+	AutoMutex l(m_mutex);
+	_releaseBuffers(l);
+}
+
+void BufferPool::_allocBuffers(int nb_buffers, int size, AutoMutex& l)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR4(m_buffers.size(), nb_buffers,
+				m_buffer_size, size);
+	if (size != m_buffer_size)
+		_releaseBuffers(l);
+	if (nb_buffers == m_buffers.size())
+		return;
+	if (m_buffers.capacity() < nb_buffers)
+		m_buffers.reserve(nb_buffers + 128);
+	m_buffer_size = size;
+	DEB_TRACE() << DEB_VAR2(m_buffers.size(), nb_buffers);
+	// TODO: reduce the number of buffers
+	while (m_buffers.size() < nb_buffers) {
+		m_buffers.emplace_back(size, m_alloc, m_init_mem);
+		m_available.push(m_buffers.back().getPtr());
+	}
+}
+
+void BufferPool::_releaseBuffers(AutoMutex& l)
+{
+	DEB_MEMBER_FUNCT();
+	if (m_available.size() != m_buffers.size())
+		DEB_ERROR() << "Buffers still in use";
+	while (m_available.size() > 0)
+		m_available.pop();
+	m_buffers.clear();
+	m_buffer_size = 0;
+}

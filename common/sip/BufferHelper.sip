@@ -19,40 +19,51 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-class CtBuffer {
+
+
+class BufferHelper
+{
 %TypeHeaderCode
-#include "lima/CtBuffer.h"
-#include "lima/Constants.h"
-#include <sstream>
+#include "lima/BufferHelper.h"
 using namespace lima;
 %End
 public:
-	CtBuffer(HwInterface *hw);
-	~CtBuffer();
 
-	void setAllocParameters(const BufferHelper::Parameters& params);
-	void getAllocParameters(BufferHelper::Parameters& params /Out/) const;
+  struct Parameters 
+  {
+  public:
+    enum DurationPolicy {
+      Ephemeral,
+      Persistent,
+    };
 
-	void getNumber(long& nb_buffers /Out/) const;
-	void getMaxHwNumber(long& nb_buffers /Out/) const;
-	void getMaxAccNumber(long& nb_buffers /Out/) const;
-        void getMaxNumber(long& nb_buffers /Out/) const;
+    enum PersistentSizePolicy {
+      Automatic,
+      Fixed,
+    };
 
-	void registerFrameCallback(CtControl *ct);
-        void unregisterFrameCallback();
+    bool initMem;
+    DurationPolicy durationPolicy;
+    PersistentSizePolicy sizePolicy;
+    double reqMemSizePercent;
 
-	void getFrame(Data &data /Out/,int frameNumber,int readBlockLen=1);
+    Parameters();
 
-	void reset();
-	void setup(CtControl *ct);
+    int getDefMaxNbBuffers(int size) const;
 
-	bool isAccumulationActive() const;
+    SIP_PYOBJECT __repr__() const;
+%MethodCode
+    LIMA_REPR_CODE
+%End
 
-	void getDataFromHwFrameInfo(Data& /Out/,const HwFrameInfoType&,
-				    int readBlockLen=1);
+    static BufferHelper::Parameters fromString(std::string s);
+    std::string toString() const;
+  };
 
-	bool waitBuffersReleased(double timeout=-1);
+  void setParameters(const BufferHelper::Parameters& params);
+  void getParameters(BufferHelper::Parameters& params /Out/) const;
 
-private:
-	CtBuffer(const CtBuffer&);
+  void prepareBuffers(int nb_buffers, int size);
+  void releaseBuffers();
 };
+
