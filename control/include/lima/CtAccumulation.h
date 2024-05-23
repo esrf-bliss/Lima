@@ -104,7 +104,7 @@ namespace lima
     void setOutputType(ImageType pixelOutputType);
     void getOutputType(ImageType& pixelOutputType) const;
 
-    void getBufferSize(int &aBufferSize) const;
+    void getMaxNbBuffers(int &max_nb_buffers);
 
     void setSavingFlag(bool savingFlag);
     void getSavingFlag(bool &savingFlag) const;
@@ -142,6 +142,8 @@ namespace lima
     void unregisterThresholdCallback(ThresholdCallback &cb);
 
   private:
+    static const int ACC_MAX_PARALLEL_PROC = 32;
+
     struct _CounterResult;
     typedef SinkTaskMgr<_CounterResult> _CalcSaturatedTaskMgr;
     struct _CounterResult
@@ -157,6 +159,8 @@ namespace lima
       _CalcSaturatedTaskMgr::ErrorCode 	errorCode;
     };
 
+    class _ProcAccTask;
+    friend class _ProcAccTask;
     class _CalcSaturatedTask;
     friend class _CalcSaturatedTask;
     class _CalcEndCBK;
@@ -170,9 +174,21 @@ namespace lima
       CtAccumulation &m_acc;
     };
 
+    enum ImgType {AccImg, SatImg, TmpImg, NbImgTypes};
+    static const char *toString(ImgType type);
+
+    struct _ProcAccInfo
+    {
+      int				frame_nb;
+      int				acc_frames{0};
+      std::map<int,Data>		new_pending_data;
+      Data				data[NbImgTypes];
+
+      _ProcAccInfo(int frame) : frame_nb(frame) {}
+    };
+      
     Parameters 				m_pars;
-    long				    m_buffers_size;
-    Data                    m_tmp_data;  // Temporary data where frames are accumulated before copied to output data
+    long				m_buffers_size;
     std::vector<Data>       m_tmp_datas; // Temporary data where frames are stored to compute the median
     std::deque<Data>        m_datas;     // Circular buffer of output data (used with getFrame())
     std::deque<Data>        m_saturated_images;
@@ -182,18 +198,23 @@ namespace lima
     TaskEventCallback* 			m_calc_end;
     _CalcSaturatedTaskMgr*		m_calc_mgr;
     Data				m_calc_mask;
+    std::map<int,_ProcAccInfo>		m_proc_info_map;
+    int					m_acc_nb_frames;
     mutable Cond 			m_cond;
     ThresholdCallback*			m_threshold_cb;
-    int 				m_last_acc_frame_nb;
     bool 				m_last_continue_flag;
-    bool				m_stopped;
+    int					m_hw_img_depth;
+    FrameDim				m_frame_dim[NbImgTypes];
 
     // --- Methodes for acquisition
     void clear();
     void prepare();
     bool _newFrameReady(Data&);
-    bool _newBaseFrameReady(Data&);
+    void _newBaseFrameReady(Data&);
+    void _processBaseFrame(_ProcAccInfo&,Data&,AutoMutex&);
     void stop();
+
+    void _calcImgFrameDims();
 
     void getFrame(Data &,int frameNumber);
 

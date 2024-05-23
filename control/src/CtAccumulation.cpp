@@ -34,6 +34,8 @@
 using namespace lima;
 
 const long CtAccumulation::ACC_MIN_BUFFER_SIZE;
+const int CtAccumulation::ACC_MAX_PARALLEL_PROC;
+
 
 /****************************************************************************
 CtAccumulation::_ImageReady4AccCallback
@@ -185,6 +187,25 @@ void transform_pixel(Data& src, Data& dst, Func fn)
 }
 
 /*********************************************************************************
+			   accumulation task
+*********************************************************************************/
+class CtAccumulation::_ProcAccTask : public SinkTaskBase
+{
+public:
+  _ProcAccTask(CtAccumulation &acc_cnt) : m_cnt(acc_cnt)
+  {}
+
+  virtual void process(Data &aData)
+  {
+    m_cnt._newBaseFrameReady(aData);
+  }
+
+private:
+  CtAccumulation& m_cnt;
+};
+
+
+/*********************************************************************************
 			   calculation task
 *********************************************************************************/
 template<class INPUT>
@@ -227,9 +248,11 @@ public:
   {
     DEB_MEMBER_FUNCT();
     DEB_PARAM() << DEB_VAR1(aData);
-    AutoMutex aLock(m_cnt.m_cond.mutex());
-    long long pixelThresholdValue = m_cnt.m_pars.pixelThresholdValue;
-    aLock.unlock();
+    long long pixelThresholdValue;
+    {
+      AutoMutex aLock(m_cnt.m_cond.mutex());
+      pixelThresholdValue = m_cnt.m_pars.pixelThresholdValue;
+    }
 
     CtAccumulation::_CounterResult result(aData.frameNumber);
     Data &mask = m_cnt.m_calc_mask;
@@ -380,15 +403,24 @@ private:
 };
 #endif //WITH_CONFIG
 
+inline const char *CtAccumulation::toString(ImgType type)
+{
+  switch (type) {
+  case AccImg: return "AccImg";
+  case SatImg: return "SatImg";
+  case TmpImg: return "TmpImg";
+  default: return "Unknown";
+  }
+}
+
 //       ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) :
-  m_buffers_size(ACC_MIN_BUFFER_SIZE),
+  m_buffers_size(1),
   m_ct(ct),
   m_calc_ready(true),
+  m_acc_nb_frames(0),
   m_threshold_cb(NULL),
-  m_last_acc_frame_nb(-1),
-  m_last_continue_flag(true),
-  m_stopped(false)
+  m_last_continue_flag(true)
 {
   m_calc_end = new _CalcEndCBK(*this);
   m_calc_mgr = new _CalcSaturatedTaskMgr();
@@ -475,13 +507,47 @@ void CtAccumulation::getOutputType(ImageType& pixelOutputType) const
   DEB_RETURN() << DEB_VAR1(pixelOutputType);
 }
 
-void CtAccumulation::getBufferSize(int &aBufferSize) const
+void CtAccumulation::getMaxNbBuffers(int &max_nb_buffers)
 {
   DEB_MEMBER_FUNCT();
 
-  AutoMutex aLock(m_cond.mutex());
-  aBufferSize = m_buffers_size;
-  DEB_RETURN() << DEB_VAR1(aBufferSize);
+  _calcImgFrameDims();
+
+  CtImage* image = m_ct.image();
+  FrameDim hw_image_dim;
+  image->getHwImageDim(hw_image_dim);
+
+  CtBuffer *buffer = m_ct.buffer();
+  long max_hw_nb_buffers = 0;
+  buffer->getMaxHwNumber(max_hw_nb_buffers);
+
+  bool do_sat;
+  FrameDim acc_image_dim;
+  int tmp_buffers_depth = 0;
+  int max_buffers_depth;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    do_sat = m_pars.active;
+    acc_image_dim = m_frame_dim[AccImg];
+    if(m_pars.operation == ACC_MEAN)
+      tmp_buffers_depth = (m_frame_dim[TmpImg].getDepth() *
+                           ACC_MAX_PARALLEL_PROC);
+    max_buffers_depth = max_hw_nb_buffers * m_hw_img_depth;
+
+    DEB_TRACE() << DEB_VAR2(m_hw_img_depth, m_frame_dim[TmpImg].getDepth());
+  }
+
+  DEB_TRACE() << DEB_VAR3(acc_image_dim, max_hw_nb_buffers, do_sat);
+
+  double acc_image_depth = acc_image_dim.getDepth();
+  if(do_sat)
+    acc_image_depth += 2;
+  DEB_TRACE() << DEB_VAR3(max_buffers_depth, tmp_buffers_depth,
+                          acc_image_depth);
+  max_nb_buffers = long((max_buffers_depth - tmp_buffers_depth) /
+                        acc_image_depth);
+
+  DEB_RETURN() << DEB_VAR1(max_nb_buffers);
 }
 
 void CtAccumulation::setSavingFlag(bool savingFlag)
@@ -617,19 +683,18 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
 
-  CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
-  acquisition->getAccNbFrames(acc_nframes);
-
-  AutoMutex aLock(m_cond.mutex());
-  if(frameNumber < 0)
   {
-    if(!m_saturated_images.empty())
-      frameNumber = m_saturated_images.back().frameNumber;
-    else
-      frameNumber = 0;
+    AutoMutex aLock(m_cond.mutex());
+    if(frameNumber < 0)
+    {
+      if(!m_saturated_images.empty())
+        frameNumber = m_saturated_images.back().frameNumber;
+      else
+        frameNumber = 0;
+    }
+    acc_nframes = m_acc_nb_frames;
   }
-  aLock.unlock();
 
   //ask the last accumulated frame for a frameNumber
   int counterId = ((frameNumber + 1) * acc_nframes) - 1;
@@ -641,7 +706,7 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   // Counter is available => saturated image calc finnished
   if(result.errorCode == _CalcSaturatedTaskMgr::OK)
   {
-    aLock.lock();
+    AutoMutex aLock(m_cond.mutex());
     int oldestFrameNumber = m_saturated_images.front().frameNumber;
     int lastFrameId = m_saturated_images.back().frameNumber;
     //No more into buffer list
@@ -662,12 +727,11 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(from);
 
-  CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes;
-  acquisition->getAccNbFrames(acc_nframes);
-  if(acc_nframes > 0)
   {
     AutoMutex aLock(m_cond.mutex());
+    if(m_acc_nb_frames <= 0)
+      return;
     if(from < 0)
     {
       if(!m_saturated_images.empty())
@@ -675,26 +739,26 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
       else
         from = 0;
     }
-
-    aLock.unlock();
-    std::list<CtAccumulation::_CounterResult> resultList;
-    int fromCounterId = from * acc_nframes;
-    m_calc_mgr->getHistory(resultList,fromCounterId);
-
-    for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
-        i != resultList.end();++i)
-    {
-      if(!(i->frameNumber % acc_nframes))
-        result.push_back(std::list<long long>());
-
-      std::list<long long> &satImgCounters = result.back();
-      satImgCounters.push_back(i->value);
-    }
-      
-    /* Check if last image has the same number of counters if not remove */
-    if(!result.empty() && result.front().size() != result.back().size())
-      result.pop_back();
+    acc_nframes = m_acc_nb_frames;
   }
+
+  std::list<CtAccumulation::_CounterResult> resultList;
+  int fromCounterId = from * acc_nframes;
+  m_calc_mgr->getHistory(resultList,fromCounterId);
+
+  for(std::list<CtAccumulation::_CounterResult>::iterator i = resultList.begin();
+      i != resultList.end();++i)
+  {
+    if(!(i->frameNumber % acc_nframes))
+      result.push_back(std::list<long long>());
+
+    std::list<long long> &satImgCounters = result.back();
+    satImgCounters.push_back(i->value);
+  }
+
+  /* Check if last image has the same number of counters if not remove */
+  if(!result.empty() && result.front().size() != result.back().size())
+    result.pop_back();
 }
 
 /** @brief set the mask for saturation calculation
@@ -780,6 +844,7 @@ void CtAccumulation::_callIfNeedThresholdCallback(Data &aData,long long value)
 void CtAccumulation::clear()
 {
     AutoMutex aLock(m_cond.mutex());
+    m_proc_info_map.clear();
     m_datas.clear();
     m_saturated_images.clear();
 
@@ -790,13 +855,17 @@ void CtAccumulation::clear()
 #endif
 }
 
-/** @brief prepare all stuff for a new acquisition
+/** @brief get dimensions of the different buffer types
  */
-void CtAccumulation::prepare()
+inline void CtAccumulation::_calcImgFrameDims()
 {
   DEB_MEMBER_FUNCT();
 
-  //Adjust number of acc image
+  // Buffer parameters
+  CtBuffer *buffer = m_ct.buffer();
+  bool do_acc = buffer->isAccumulationActive();
+
+  // Image parameters
   CtImage* image = m_ct.image();
   FrameDim hw_image_dim;
   image->getHwImageDim(hw_image_dim);
@@ -811,48 +880,73 @@ void CtAccumulation::prepare()
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
 
   AutoMutex aLock(m_cond.mutex());
-  CtBuffer *buffer = m_ct.buffer();
-  buffer->getNumber(m_buffers_size);
-  long max_nb_buffers = 0;
-  buffer->getMaxNumber(max_nb_buffers);
-  max_nb_buffers = long(max_nb_buffers * double(hw_image_depth) / acc_image_depth);
-  if(m_pars.active) max_nb_buffers /= 2;
-  m_buffers_size = std::min(m_buffers_size, max_nb_buffers);
-  m_buffers_size = std::max(m_buffers_size, ACC_MIN_BUFFER_SIZE);
 
+  m_hw_img_depth = hw_image_depth;
+
+  bool do_sat = m_pars.active;
+  bool do_mean = (m_pars.operation == ACC_MEAN);
+
+  FrameDim empty;
+  if(do_acc) {
+    m_frame_dim[AccImg] = acc_image_dim;
+    Size size = acc_image_dim.getSize();
+
+    if(do_sat) {
+      m_frame_dim[SatImg] = FrameDim(size, Bpp16);
+    } else
+      m_frame_dim[SatImg] = empty;
+
+    if(do_mean) {
+      ImageType tmp_type = hw_image_dim.isSigned() ? Bpp32S : Bpp32;
+      m_frame_dim[TmpImg] = FrameDim(size, tmp_type);
+    } else
+      m_frame_dim[TmpImg] = empty;
+  } else {
+    for (int i = 0; i < NbImgTypes; ++i)
+      m_frame_dim[i] = empty;
+  }
+
+  DEB_RETURN() << DEB_VAR3(m_frame_dim[AccImg], m_frame_dim[SatImg],
+                           m_frame_dim[TmpImg]);
+}
+
+/** @brief prepare all stuff for a new acquisition
+ */
+void CtAccumulation::prepare()
+{
+  DEB_MEMBER_FUNCT();
+
+  // Gather acq. parameters
   CtAcquisition *acquisition = m_ct.acquisition();
   int acc_nframes = 0;
   acquisition->getAccNbFrames(acc_nframes);
   if(acc_nframes < 0) acc_nframes = 1;
 
-  // Allocate the temporary data (if needed)
-  Size size = hw_image_dim.getSize();
+  // Buffer parameters
+  CtBuffer *buffer = m_ct.buffer();
+  long nb_buffers = 0;
+  buffer->getNumber(nb_buffers);
+
+  _calcImgFrameDims();
+
+  AutoMutex aLock(m_cond.mutex());
+  m_acc_nb_frames = acc_nframes;
+  m_buffers_size = std::max(1, int(nb_buffers));
+
+  // Check preconditions (if needed)
   switch (m_pars.operation) {
   case ACC_SUM:
-      break;
+    break;
 
   case ACC_MEAN:
-      m_tmp_data.type = hw_image_dim.isSigned() ? Data::INT32 : Data::UINT32;
-      m_tmp_data.dimensions.resize(2);
-      m_tmp_data.dimensions[0] = size.getWidth();
-      m_tmp_data.dimensions[1] = size.getHeight();
-      {
-      Buffer* buffer = new Buffer(m_tmp_data.size());
-      m_tmp_data.setBuffer(buffer);
-      buffer->unref();
-      }
-      memset(m_tmp_data.data(), 0, m_tmp_data.size());
-      break;
+    break;
 
   case ACC_MEDIAN:
-      m_tmp_datas.resize(acc_nframes);
-      break;
+    THROW_CTL_ERROR(NotSupported) << "ACC_MEDIAN mode is not supported yet";
   }
 
   m_calc_mgr->resizeHistory(m_buffers_size * acc_nframes);
   m_last_continue_flag = true;
-  m_last_acc_frame_nb = -1;
-  m_stopped = false;
 }
 /** @brief this is an internal call from CtBuffer in case of accumulation
  */
@@ -861,155 +955,207 @@ bool CtAccumulation::_newFrameReady(Data &aData)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
 
-  int nb_frames_in_proc;
+  bool stop = false;
   {
     AutoMutex aLock(m_cond.mutex());
-    nb_frames_in_proc = aData.frameNumber - 1 - m_last_acc_frame_nb;
-  }
+    if(!m_last_continue_flag)
+      return false;
 
-  int nb_hw_buffers = ACC_MIN_BUFFER_SIZE;
-  if (nb_frames_in_proc >= nb_hw_buffers) {
-    DEB_ERROR() << "Accumulation overrun: " << DEB_VAR2(aData,
-							nb_frames_in_proc);
+    if(!m_proc_info_map.empty()) {
+      _ProcAccInfo& old_proc = m_proc_info_map.begin()->second;
+      if(!old_proc.new_pending_data.empty()) {
+        Data& oData = old_proc.new_pending_data.begin()->second;
+        if(aData.data() == oData.data()) {
+          DEB_ERROR() << "Accumulation overrun: " << DEB_VAR2(aData, oData);
+          m_last_continue_flag = false;
+          stop = true;
+        }
+      }
+    }
+  }
+  if (stop) {
     m_ct.stopAcqAsync(AcqFault, CtControl::ProcessingOverun, aData);
-    m_last_continue_flag = false;
-    return m_last_continue_flag;
+    return false;
   }
 
   TaskMgr *mgr = new TaskMgr();
   mgr->setEventCallback(m_ct.getSoftOpErrorHandler());
   mgr->setInputData(aData);
+
+  // First check for SoftOpInternal (reconstruction, bin/roi/flip/rot)
   int internal_stage = 0;
   m_ct.m_op_int->addTo(*mgr,internal_stage);
 
-  if(internal_stage)
-    PoolThreadMgr::get().addProcess(mgr);
-  else
-  {
-    delete mgr;
-    m_last_continue_flag = m_last_continue_flag && _newBaseFrameReady(aData);
+  // If nothing is needed, just call the standard Processing
+  if(!internal_stage) {
+    SinkTaskBase *task = new _ProcAccTask(*this);
+    mgr->addSinkTask(internal_stage,task);
+    task->unref();
   }
 
+  PoolThreadMgr::get().addProcess(mgr);
+
+  AutoMutex aLock(m_cond.mutex());
   return m_last_continue_flag;
 }
 /** @brief this is an internal call at the end of internal process or from CtBuffer
  */
-bool CtAccumulation::_newBaseFrameReady(Data &aData)
+void CtAccumulation::_newBaseFrameReady(Data &aData)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(aData);
 
-  CtAcquisition *acq = m_ct.acquisition();
-  int nb_acc_frame;
-  acq->getAccNbFrames(nb_acc_frame);
   AutoMutex aLock(m_cond.mutex());
-  bool miss;
-  while((miss = (aData.frameNumber != (m_last_acc_frame_nb + 1))) && !m_stopped)
-    m_cond.wait();
-  if(miss) // stopped
-    return false;
 
-  bool active = m_pars.active;
-  if(!(aData.frameNumber % nb_acc_frame)) // new Data has to be created
+  typedef std::map<int,_ProcAccInfo> ProcInfoMap;
+
+  ProcInfoMap& procs = m_proc_info_map;
+  int abs_frame = aData.frameNumber / m_acc_nb_frames;
+  int rel_frame = aData.frameNumber % m_acc_nb_frames;
+  ProcInfoMap::iterator proc_it = procs.find(abs_frame);
+  if(proc_it == procs.end()) {
+    if(procs.size() == ACC_MAX_PARALLEL_PROC)
+      THROW_CTL_ERROR(Error) << "Too many parallel accumulation processings";
+    proc_it = procs.emplace(std::make_pair(abs_frame,
+                                           _ProcAccInfo(abs_frame))).first;
+  }
+  _ProcAccInfo& info = proc_it->second;
+  std::map<int,Data>& pending = info.new_pending_data;
+  
+  if(rel_frame < info.acc_frames) {
+    THROW_CTL_ERROR(Error) << "Frame already accumulated: " << aData;
+  } else if(rel_frame > info.acc_frames) {
+    pending.insert(std::make_pair(rel_frame, aData));
+    return;
+  }
+
+  _processBaseFrame(info, aData, aLock);
+
+  std::map<int,Data>::iterator it;
+  while(!pending.empty() && (it = pending.begin())->first == info.acc_frames)
   {
-    // Reset the temporary data (if any)
-    memset(m_tmp_data.data(), 0, m_tmp_data.size());
+    Data& oData = it->second;
+    _processBaseFrame(info, oData, aLock);
+    pending.erase(it);
+  }
 
-    int nextFrameNumber;
-    if(m_datas.empty())  // Init (first Frame)
-      nextFrameNumber = 0;
-    else
-      nextFrameNumber = m_datas.back().frameNumber + 1;
+  if(info.acc_frames == m_acc_nb_frames)
+    procs.erase(proc_it);
+}
 
-    Data newData;
-    newData.type = convert_imagetype_to_datatype(m_pars.pixelOutputType);
-    newData.dimensions = aData.dimensions;
-    newData.frameNumber = nextFrameNumber;
-    newData.timestamp = aData.timestamp;
-    newData.buffer = new Buffer(newData.size());
-    memset(newData.data(),0,newData.size());
-    m_datas.push_back(newData);
+void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
+                                       AutoMutex &aLock)
+{
+  bool do_sat = m_pars.active;
+  int nb_acc_frame = m_acc_nb_frames;
+  Operation op = m_pars.operation;
+  Data& acc_data = info.data[AccImg];
+  Data& sat_data = info.data[SatImg];
+  Data& tmp_data = info.data[TmpImg];
 
-    if(long(m_datas.size()) > m_buffers_size)
+  if(info.acc_frames == 0) // new Data has to be created
+  {
+    int nextFrameNumber = info.frame_nb;
+
+    // Release old data(s) before crossing the size limit
+    if(long(m_datas.size()) == m_buffers_size)
       m_datas.pop_front();
+    if(do_sat && (long(m_saturated_images.size()) == m_buffers_size))
+      m_saturated_images.pop_front();
 
-    // create also the new image for saturated counters
-    if(active)
+    ImageType pixel_type[NbImgTypes];
+    for (int i = 0; i < NbImgTypes; ++i)
+      pixel_type[i] = m_frame_dim[i].getImageType();
     {
-      Data newSatImg;
-      newSatImg.type = Data::UINT16;
-      newSatImg.dimensions = aData.dimensions;
-      newSatImg.frameNumber = nextFrameNumber;
-      newSatImg.timestamp = aData.timestamp;
-      newSatImg.buffer = new Buffer(newSatImg.size());
-      memset(newSatImg.data(),0,newSatImg.size());
-      m_saturated_images.push_back(newSatImg);
+      AutoMutexUnlock u(aLock);
+      acc_data.type = convert_imagetype_to_datatype(pixel_type[AccImg]);
+      acc_data.dimensions = aData.dimensions;
+      acc_data.frameNumber = nextFrameNumber;
+      acc_data.timestamp = aData.timestamp;
+      acc_data.buffer = new Buffer(acc_data.size());
+      memset(acc_data.data(),0,acc_data.size());
 
-      if(long(m_saturated_images.size()) > m_buffers_size)
-        m_saturated_images.pop_front();
+      // create also the new image for saturated counters
+      if(do_sat)
+      {
+        sat_data.type = convert_imagetype_to_datatype(pixel_type[SatImg]);
+        sat_data.dimensions = aData.dimensions;
+        sat_data.frameNumber = nextFrameNumber;
+        sat_data.timestamp = aData.timestamp;
+        sat_data.buffer = new Buffer(sat_data.size());
+        memset(sat_data.data(),0,sat_data.size());
+      }
+
+      if(op == ACC_MEAN) {
+        tmp_data.type = convert_imagetype_to_datatype(pixel_type[TmpImg]);
+        tmp_data.dimensions = aData.dimensions;
+        tmp_data.buffer = new Buffer(tmp_data.size());
+        memset(tmp_data.data(), 0, tmp_data.size());
+      }
     }
+    m_datas.push_back(acc_data);
+    if(do_sat)
+      m_saturated_images.push_back(sat_data);
   }
 
-  Data saturatedImg;
-  if(active)
-    saturatedImg = m_saturated_images.back();
-
-  aLock.unlock();
-
-  if(active)
-    _calcSaturatedImageNCounters(aData,saturatedImg);
-
-  // Accumulate
-  Data output = m_datas.back();
-  switch (m_pars.operation) {
-  case ACC_SUM:
-    _accFrame(aData, output);
-    break;
-
-  case ACC_MEAN:
-    _accFrame(aData, m_tmp_data);
-    break;
-
-  case ACC_MEDIAN:
-    m_tmp_datas.push_back(aData);
-    break;
-  }
-
-  // If accumulated frame is cleared for takeoff
-  if (!((aData.frameNumber + 1) % nb_acc_frame))
+  bool last = ((info.acc_frames + 1) == nb_acc_frame);
   {
-    // Reduction
-    switch (m_pars.operation) {
+    AutoMutexUnlock u(aLock);
+
+    if(do_sat)
+      _calcSaturatedImageNCounters(aData,sat_data);
+
+    // Accumulate
+    switch (op) {
     case ACC_SUM:
+      _accFrame(aData, acc_data);
       break;
 
     case ACC_MEAN:
-      transform_pixel(m_tmp_data, output, pixel_divide(nb_acc_frame));
+      _accFrame(aData, tmp_data);
       break;
 
     case ACC_MEDIAN:
-      // TODO compute the median from m_tmp_datas
+      m_tmp_datas.push_back(aData);
       break;
     }
 
-    m_last_continue_flag = m_ct.newFrameReady(output);
+    // If accumulated frame is cleared for takeoff
+    if(last)
+    {
+      // Reduction
+      switch (op) {
+      case ACC_SUM:
+        break;
+
+      case ACC_MEAN:
+        transform_pixel(tmp_data, acc_data, pixel_divide(nb_acc_frame));
+        break;
+
+      case ACC_MEDIAN:
+        // TODO compute the median from m_tmp_datas
+        break;
+      }
+    }
   }
 
-  aLock.lock();
-  m_last_acc_frame_nb = aData.frameNumber;
-  m_cond.broadcast();
+  ++info.acc_frames;
+  if(!last)
+    return;
 
-  return m_last_continue_flag;
+  bool cont_flag;
+  {
+    AutoMutexUnlock u(aLock);
+    cont_flag = m_ct.newFrameReady(acc_data);
+  }
+
+  m_last_continue_flag &= cont_flag;
 }
 /** @brief stops the current integration
  */
 void CtAccumulation::stop()
 {
   DEB_MEMBER_FUNCT();
-
-  AutoMutex aLock(m_cond.mutex());
-  m_stopped = true;
-  m_cond.broadcast();
 }
 /** @brief retrived the image from the buffer
     @param frameNumber == acquisition image id
