@@ -102,6 +102,7 @@ private:
 	HwInterface *m_hw_int;
 	bool m_is_multiset;
 	int m_compression_level;
+	int m_frames_per_file;
 	int m_file_cnt;
 };
 

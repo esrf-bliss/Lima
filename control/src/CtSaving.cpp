@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <numeric>
 #include <atomic>
+#include <algorithm>
 
 #ifdef __linux__
 #include <unistd.h>
@@ -77,10 +78,10 @@ class CtSaving::Stream::_SaveTask : public SinkTaskBase
 {
 	DEB_CLASS_NAMESPC(DebModControl, "CtSaving::Stream::_SaveTask", "Control");
 public:
-	_SaveTask(CtSaving::Stream& stream, long frame_nr)
+	_SaveTask(CtSaving::Stream& stream, Data& data)
 		: SinkTaskBase(), m_stream(stream)
 	{
-		m_stream.prepareWrittingFrame(frame_nr);
+		m_stream.prepareWritingFrame(data);
 	}
 
 	virtual void process(Data& aData)
@@ -184,8 +185,10 @@ struct CtSaving::_SavingSidebandData : public sideband::Data
 	Mutex m_lock;
 	std::atomic<long> m_nb_cbk;
 	ZBufferList m_buffers;
+	SaveContainer::FrameParameters m_params;
+	SaveContainer::Stat m_stat;
 
-	_SavingSidebandData(::Data& data) : m_nb_cbk(0)
+	_SavingSidebandData(::Data& data) : m_nb_cbk(0), m_stat(data)
 	{}
 
 	std::string repr() override {
@@ -199,6 +202,7 @@ struct CtSaving::_SavingSidebandData : public sideband::Data
 		for (it = m_buffers.begin(); it != end; ++it, first = false)
 			os << (first ? "" : ", ") << it->used_size;
 		os << "]"
+		   << ", stat=" << m_stat
 		   << ">";
 		return os.str();
 	}
@@ -231,8 +235,8 @@ void CtSaving::_createSavingData(Data& data)
 		DEB_ERROR() << "Saving SidebandData already created";
 		return;
 	}
-	_SavingDataPtr ptr = std::make_shared<_SavingSidebandData>(data);
-	if (!data.sideband.insert(m_saving_data_key, ptr))
+	_SavingDataPtr saving = std::make_shared<_SavingSidebandData>(data);
+	if (!data.sideband.insert(m_saving_data_key, saving))
 		THROW_CTL_ERROR(Error) << "Saving SidebandData of wrong type";
 
 	for (int s = 0; s < m_nb_stream; ++s)
@@ -394,7 +398,7 @@ void CtSaving::Stream::clear()
 	m_cnt_status = Init;
 }
 
-void CtSaving::Stream::prepareWrittingFrame(long frame_nr)
+void CtSaving::Stream::prepareWritingFrame(Data& data)
 {
 	{
 		AutoMutex lock(m_cond.mutex());
@@ -408,7 +412,7 @@ void CtSaving::Stream::prepareWrittingFrame(long frame_nr)
 		} else while (m_cnt_status == Preparing)
 			m_cond.wait();
 	}
-	m_save_cnt->prepareWrittingFrame(frame_nr);
+	m_save_cnt->prepareWritingFrame(data);
 }
 
 void CtSaving::Stream::updateParameters()
@@ -591,7 +595,7 @@ SinkTaskBase* CtSaving::Stream::getTask(TaskType type, const HeaderMap& header,
 		priority = COMPRESSION_PRIORITY;
 	}
 	else {
-		_SaveTask* real_task = new _SaveTask(*this, data.frameNumber);
+		_SaveTask* real_task = new _SaveTask(*this, data);
 		real_task->m_header = header;
 		save_task = real_task;
 		save_task->setEventCallback(m_saving_cbk);
@@ -725,6 +729,7 @@ private:
 CtSaving::CtSaving(CtControl& aCtrl) :
 	m_ctrl(aCtrl),
 	m_stream(NULL),
+	m_frames_to_save(-1, -1),
 	m_end_cbk(NULL),
 	m_managed_mode(Software),
 	m_saving_error_handler(NULL)
@@ -1136,7 +1141,7 @@ void CtSaving::_ReadImage(Data& image, int frameNumber)
 		THROW_CTL_ERROR(NotSupported) << "Image read is not supported for this hardware";
 }
 
-bool CtSaving::_allStreamReady(long frame_nr)
+bool CtSaving::_allStreamsReady()
 {
 	DEB_MEMBER_FUNCT();
 
@@ -1145,12 +1150,30 @@ bool CtSaving::_allStreamReady(long frame_nr)
 	{
 		Stream& stream = getStream(s);
 		if (stream.isActive())
-			ready_flag = stream.isReady(frame_nr);
+			ready_flag = stream.isReady();
 	}
 
 	DEB_RETURN() << DEB_VAR1(ready_flag);
 	return ready_flag;
 }
+
+bool CtSaving::_allStreamsReadyFor(Data& data)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(data.frameNumber);
+
+	bool ready_flag = true;
+	for (int s = 0; ready_flag && s < m_nb_stream; ++s)
+	{
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+			ready_flag = stream.isReadyFor(data);
+	}
+
+	DEB_RETURN() << DEB_VAR1(ready_flag);
+	return ready_flag;
+}
+
 void CtSaving::_waitWritingThreads()
 {
 	DEB_MEMBER_FUNCT();
@@ -1158,7 +1181,7 @@ void CtSaving::_waitWritingThreads()
 	// Waiting all writing thread
 	while (!_controlIsFault()) {
 		AutoMutex aLock(m_cond.mutex());
-		if (_allStreamReady(-1))
+		if (_allStreamsReady())
 			break;
 		m_cond.wait();
 	}
@@ -1328,15 +1351,6 @@ void CtSaving::getManagedMode(CtSaving::ManagedMode& mode) const
 	AutoMutex aLock(m_cond.mutex());
 	mode = m_managed_mode;
 }
-void CtSaving::_createStatistic(Data& data)
-{
-	for (int s = 0; s < m_nb_stream; ++s)
-	{
-		Stream& stream = getStream(s);
-		if (stream.isActive())
-			stream.createStatistic(data);
-	}
-}
 
 void CtSaving::_getTaskList(TaskType type, Data& data, const HeaderMap& header,
 			    TaskList& task_list, int& priority)
@@ -1362,6 +1376,52 @@ void CtSaving::_getTaskList(TaskType type, Data& data, const HeaderMap& header,
 	AutoMutex l(saving->m_lock);
 	saving->m_nb_cbk = nb_cbk;
 }
+
+inline void CtSaving::_insertFrameData(FrameMap::value_type frame_data)
+{
+	DEB_MEMBER_FUNCT();
+
+	const long& frame_nb = frame_data.first;
+	std::pair<FrameMap::iterator, bool> insert;
+	insert = m_frame_datas.insert(frame_data);
+	if (!insert.second)
+		THROW_CTL_ERROR(Error) << "Frame already inserted in "
+				       << "to-save map: " << frame_nb;
+
+	FrameMap::iterator& it = insert.first;
+	if (m_frame_datas.size() == 1)
+		m_frames_to_save.first = m_frames_to_save.second = frame_nb;
+	else if (it == m_frame_datas.begin())
+		m_frames_to_save.first = frame_nb;
+	else if (++it ==  m_frame_datas.end())
+		m_frames_to_save.second = frame_nb;
+}
+
+inline void CtSaving::_eraseFrameData(FrameMap::iterator it)
+{
+	DEB_MEMBER_FUNCT();
+
+	if (m_frame_datas.size() == 1)
+		m_frames_to_save.first = m_frames_to_save.second = -1;
+	else if (it == m_frame_datas.begin()) {
+		FrameMap::iterator aux = it;
+		m_frames_to_save.first = (++aux)->first;
+	} else {
+		FrameMap::iterator aux1 = it, aux2 = it;
+		if (++aux1 ==  m_frame_datas.end())
+			m_frames_to_save.second = (--aux2)->first;
+	}
+
+	m_frame_datas.erase(it);
+}
+
+inline void CtSaving::_clearFrameDatas()
+{
+	DEB_MEMBER_FUNCT();
+	m_frame_datas.clear();
+	m_frames_to_save.first = m_frames_to_save.second = -1;
+}
+
 /** @brief clear the common header
  */
 void CtSaving::resetCommonHeader()
@@ -1498,16 +1558,17 @@ void CtSaving::_validateFrameHeader(long frame_nr)
 	if (frame_iter == m_frame_datas.end())
 		return;
 
+	Data aData = frame_iter->second;
+
 	bool need_compression;
 	{
 		AutoMutexUnlock u(aLock);
-		need_compression = _needCompression(frame_iter->second);
+		need_compression = _needCompression(aData);
 	}
 
-	bool can_save = _allStreamReady(frame_nr);
+	bool can_save = _allStreamsReadyFor(aData);
 	if (!(need_compression || can_save))
 		return;
-	Data aData = frame_iter->second;
 
 	HeaderMap task_header;
 	FrameHeaderMap::iterator aHeaderIter;
@@ -1515,7 +1576,7 @@ void CtSaving::_validateFrameHeader(long frame_nr)
 	bool keep_header = need_compression;
 	_takeHeader(aHeaderIter, task_header, keep_header);
 
-	m_frame_datas.erase(frame_iter);
+	_eraseFrameData(frame_iter);
 
 	aLock.unlock();
 
@@ -1533,7 +1594,7 @@ void CtSaving::_resetReadyFlag()
 	{
 		Stream& stream = getStream(s);
 		if (stream.isActive())
-			stream.setReady(-1);
+			stream.setReady();
 	}
 }
 /** @brief get the frame header.
@@ -1691,21 +1752,19 @@ void CtSaving::frameReady(Data& aData)
 
 	AutoMutex aLock(m_cond.mutex());
 
-	_createStatistic(aData);
-
 	SavingMode saving_mode = getAcqSavingMode();
 	bool auto_header = (saving_mode == AutoHeader);
 	long frame_nr = aData.frameNumber;
 	FrameHeaderMap::iterator aHeaderIter;
 	aHeaderIter = m_frame_headers.find(frame_nr);
 	bool header_available = (aHeaderIter != m_frame_headers.end());
-	bool can_save = _allStreamReady(frame_nr);
+	bool can_save = _allStreamsReadyFor(aData);
 	DEB_TRACE() << DEB_VAR5(saving_mode, need_compression, can_save,
 		auto_header, header_available);
 	if (!(need_compression || can_save) ||
 		(auto_header && !header_available) || (saving_mode == Manual)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
-		m_frame_datas.insert(map_pair);
+		_insertFrameData(map_pair);
 		return;
 	}
 
@@ -1770,9 +1829,15 @@ void CtSaving::getStatisticCounters(double& saving_speed,
 		compression_ratio_list.end(), 0.);
 	if (!compression_ratio_list.empty()) compression_ratio /= compression_ratio_list.size();
 
-	incoming_speed = std::accumulate(incoming_speed_list.begin(),
-		incoming_speed_list.end(), 0.);
-	if (!incoming_speed_list.empty()) incoming_speed /= incoming_speed_list.size();
+	// Incoming size is constant, average frame period
+	std::vector<double> frame_period_list(incoming_speed_list.size());
+	auto unit_time = [](double s) { return std::isinf(s) ? 0. : (1. / s); };
+	std::transform(incoming_speed_list.begin(), incoming_speed_list.end(),
+		frame_period_list.begin(), unit_time);
+	double frame_period = std::accumulate(frame_period_list.begin(),
+		frame_period_list.end(), 0.);
+	if (!frame_period_list.empty()) frame_period /= frame_period_list.size();
+	incoming_speed = frame_period ? (1. / frame_period) : 0.;
 }
 
 /** @brief set the size of the write time static list
@@ -1874,8 +1939,7 @@ void CtSaving::clear()
 
 	if (m_frame_datas.size())
 		DEB_WARNING() << DEB_VAR1(m_frame_datas.size());
-	m_frame_datas.clear();
-
+	_clearFrameDatas();
 }
 
 void CtSaving::close()
@@ -1934,7 +1998,7 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 	for (int s = 0; s < m_nb_stream; ++s) {
 		Stream& stream = getStream(s);
 		if (stream.isActive())
-			stream.prepareWrittingFrame(aFrameNumber);
+			stream.prepareWritingFrame(anImage2Save);
 	}
 
 	// Saving
@@ -2041,9 +2105,9 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	long frame_nr = aData.frameNumber;
 
 	AutoMutex aLock(m_cond.mutex());
-	if (!_allStreamReady(frame_nr)) {
+	if (!_allStreamsReadyFor(aData)) {
 		FrameMap::value_type map_pair(frame_nr, aData);
-		m_frame_datas.insert(map_pair);
+		_insertFrameData(map_pair);
 		return;
 	}
 
@@ -2076,6 +2140,8 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	if (m_end_cbk)
 		m_end_cbk->finished(aData);
 
+	aData.releaseBuffer(); // release finished data
+
 	AutoMutex aLock(m_cond.mutex());
 
 	SavingMode saving_mode = getAcqSavingMode();
@@ -2086,7 +2152,6 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 		m_cond.signal();
 		return;
 	}
-	aData.releaseBuffer(); // release finished data
 
 	// limit search depth to the number of concurrent writing tasks
 	int tasks;
@@ -2100,15 +2165,15 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 		// sorted frames: if header is not available yet, abort search 
 		if ((saving_mode == AutoHeader) && (header_it == m_frame_headers.end()))
 			return;
-		bool can_save = _allStreamReady(frame_nr);
+		bool can_save = _allStreamsReadyFor(data_it->second);
 		if (can_save)
 			break;
 	}
 	if ((data_it == data_end) || !tasks)
 		return;
 
-	aData = data_it->second;
-	m_frame_datas.erase(data_it);
+	Data nextData = data_it->second;
+	_eraseFrameData(data_it);
 
 	HeaderMap task_header;
 	_takeHeader(header_it, task_header, false);
@@ -2117,9 +2182,9 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 
 	TaskList task_list;
 	int priority;
-	_getTaskList(Save, aData, task_header, task_list, priority);
+	_getTaskList(Save, nextData, task_header, task_list, priority);
 
-	_postTaskList(aData, task_list, priority);
+	_postTaskList(nextData, task_list, priority);
 }
 
 /** @brief this methode set the error saving status in CtControl
@@ -2243,7 +2308,7 @@ void CtSaving::_close()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (_allStreamReady(-1))
+	if (_allStreamsReady())
 	{
 		for (int s = 0; s < m_nb_stream; ++s)
 		{
@@ -2264,9 +2329,9 @@ CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 #endif //WITH_CONFIG
 
 CtSaving::SaveContainer::SaveContainer(Stream& stream)
-	: m_stream(stream), m_statistic_size(16),
+	: m_lock(m_cond.mutex()), m_stream(stream), m_statistic_size(16),
 	  m_log_stat_enable(false), m_log_stat_file(NULL),
-	  m_max_writing_task(1), m_running_writing_task(0)
+	  m_max_writing_task(1)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -2281,20 +2346,20 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, aHeader);
 
-	Timestamp start_write = Timestamp::now();
+	_SavingDataPtr saving = _getSavingData(aData);
+	Stat& stat = saving->m_stat;
+
+	{
+		AutoMutex l(saving->m_lock);
+		stat.writing_start = Timestamp::now();
+	}
 
 	const long frameId = aData.frameNumber;
 
-	Frame2Params::iterator fpars;
-	{
-		AutoMutex lock(m_lock);
-		fpars = m_frame_params.find(frameId);
-		if (fpars == m_frame_params.end())
-			THROW_CTL_ERROR(Error) << "Can't find saving parameters for frame"
-				<< DEB_VAR1(frameId);
-	}
-
-	FrameParameters& frame_par = fpars->second;
+	FrameParameters& frame_par = saving->m_params;
+	if (!frame_par.isValid())
+		THROW_CTL_ERROR(Error) << "Can't find saving parameters for frame"
+				       << DEB_VAR1(frameId);
 	const CtSaving::Parameters& pars = frame_par.m_pars;
 
 	long write_size;
@@ -2377,59 +2442,79 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		}
 	}
 
-	Timestamp end_write = Timestamp::now();
+	double diff;
+	{
+		AutoMutex l(saving->m_lock);
+		stat.write_size = write_size;
+		stat.writing_end = Timestamp::now();
+		diff = stat.writing_end - stat.writing_start;
+	}
 
-	Timestamp diff = end_write - start_write;
 	DEB_TRACE() << "Write took : " << diff << "s";
 
 	{
 		AutoMutex lock(m_lock);
-		m_frame_params.erase(fpars);
-
-		--m_running_writing_task;
-
-		writeFileStat(aData, start_write, end_write, write_size);
+		WritingTasks::iterator it = m_running_tasks.find(frameId);
+		if (it == m_running_tasks.end())
+			THROW_CTL_ERROR(Error) << "Could not find running task";
+		m_running_tasks.erase(it);
 	}
+
+	writeFileStat(aData);
 }
 
-void CtSaving::SaveContainer::writeFileStat(Data& aData, Timestamp start, Timestamp end, long wsize)
+void CtSaving::SaveContainer::writeFileStat(Data& aData)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR4(aData, start, end, wsize);
+	DEB_PARAM() << DEB_VAR1(aData);
+
+	_SavingDataPtr saving = _getSavingData(aData);
 
 	long frameId = aData.frameNumber;
 
-	if (long(m_statistic.size()) >= m_statistic_size)
-		if (!m_statistic.empty())
-			m_statistic.erase(m_statistic.begin());
-
-	StatisticsType::iterator i = m_statistic.find(frameId);
-	if (i != m_statistic.end())
+	StatisticsType::value_type stat_pair(frameId, Stat());
 	{
-		i->second.writing_start = start;
-		i->second.writing_end = end;
-		i->second.write_size = wsize;
+		AutoMutex l(saving->m_lock);
+		stat_pair.second = saving->m_stat;
+	}
+
+	{
+		AutoMutex lock(m_lock);
+
+		if (long(m_statistic.size()) >= m_statistic_size)
+			if (!m_statistic.empty())
+				m_statistic.erase(m_statistic.begin());
+		m_statistic.insert(stat_pair);
+
+		if (!m_log_stat_enable || !m_log_stat_file)
+			return;
+	}
+
+	Stat& stat = stat_pair.second;
+
+	double comp_time = 0., comp_rate = 0., comp_ratio = 0.;
+	double write_time, write_rate, total_time;
+
+	if (stat.compression_end.isSet() && stat.compression_start.isSet()) {
+		comp_time = stat.compression_end - stat.compression_start;
+		comp_rate = stat.incoming_size / comp_time / 1024. / 1024.;
+		comp_ratio = stat.incoming_size / stat.write_size;
+	}
+
+	write_time = stat.writing_end - stat.writing_start;
+	write_rate = stat.write_size / write_time / 1024. / 1024.;
+	total_time = stat.writing_end - stat.received_time;
+
+	{
+		AutoMutex lock(m_lock);
+
 		if (m_log_stat_enable && m_log_stat_file) {
-			double comp_time = 0., comp_rate = 0., comp_ratio = 0.;
-			double write_time, write_rate, total_time;
-
-			if (i->second.compression_end.isSet() && i->second.compression_start.isSet()) {
-				comp_time = i->second.compression_end - i->second.compression_start;
-				comp_rate = i->second.incoming_size / comp_time / 1024. / 1024.;
-				comp_ratio = i->second.incoming_size / i->second.write_size;
-			}
-
-			write_time = i->second.writing_end - i->second.writing_start;
-			write_rate = i->second.write_size / write_time / 1024. / 1024.;
-			total_time = i->second.writing_end - i->second.received_time;
-
 			fprintf(m_log_stat_file, "%ld %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", \
-				frameId, (double)i->second.received_time, \
+				frameId, (double)stat.received_time, \
 				comp_time * 1000.0, comp_rate, comp_ratio, \
 				write_time * 1000.0, write_rate, total_time * 1000.0);
 		}
-	} else
-		DEB_WARNING() << "Statistic not found for " << DEB_VAR1(frameId);
+	}
 }
 
 void CtSaving::SaveContainer::setEnableLogStat(bool enable)
@@ -2551,13 +2636,17 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 		copy = m_statistic;
 	}
 
+	if (copy.empty())
+		return;
+
+	//Incoming statistic
 	StatisticsType::const_iterator next = copy.begin();
-	if (next != copy.end())
-		for (StatisticsType::const_iterator prev = next++;
-			next != copy.end(); prev = next++)
-			incoming_speed.push_back(prev->second.incoming_size /
+	for (StatisticsType::const_iterator prev = next++;
+		next != copy.end(); prev = next++)
+		incoming_speed.push_back(prev->second.incoming_size /
 			(next->second.received_time -
-				prev->second.received_time));
+			 prev->second.received_time));
+
 	//Writing/compression statistic
 	typedef std::list<std::pair<Timestamp, Stat*> > Index;
 	Index writing_index;
@@ -2566,26 +2655,21 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 	for (StatisticsType::iterator i = copy.begin();
 		i != copy.end(); ++i)
 	{
-		if (i->second.writing_start.isSet() &&
-			i->second.writing_end.isSet())
+		Stat& stat = i->second;
+		if (stat.writing_start.isSet() && stat.writing_end.isSet())
 		{
-			Index::value_type s(i->second.writing_start,
-				&i->second);
+			Index::value_type s(stat.writing_start, &stat);
 			writing_index.push_back(s);
-			Index::value_type e(i->second.writing_end,
-				&i->second);
+			Index::value_type e(stat.writing_end, &stat);
 			writing_index.push_back(e);
-			compression_ratio.push_back(double(i->second.incoming_size) /
-				i->second.write_size);
+			compression_ratio.push_back(double(stat.incoming_size) /
+						    stat.write_size);
 		}
-		if (i->second.compression_start.isSet() &&
-			i->second.compression_end.isSet())
+		if (stat.compression_start.isSet() && stat.compression_end.isSet())
 		{
-			Index::value_type s(i->second.compression_start,
-				&i->second);
+			Index::value_type s(stat.compression_start, &stat);
 			compression_index.push_back(s);
-			Index::value_type e(i->second.compression_end,
-				&i->second);
+			Index::value_type e(stat.compression_end, &stat);
 			compression_index.push_back(e);
 		}
 	}
@@ -2597,10 +2681,11 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 	for (Index::iterator i = writing_index.begin();
 		i != writing_index.end(); ++i)
 	{
-		if (i->first - i->second->writing_start < 1e-9) // start
-			current.insert(i->second);
+		Stat *stat = i->second;
+		if (i->first - stat->writing_start < 1e-9) // start
+			current.insert(stat);
 		else			// end
-			current.erase(i->second);
+			current.erase(stat);
 
 		if (current.empty()) continue;
 
@@ -2616,10 +2701,11 @@ void CtSaving::SaveContainer::getStatistic(std::list<double>& writing_speed,
 	for (Index::iterator i = compression_index.begin();
 		i != compression_index.end(); ++i)
 	{
-		if (i->first - i->second->compression_start < 1e-9) // start
-			current.insert(i->second);
+		Stat *stat = i->second;
+		if (i->first - stat->compression_start < 1e-9) // start
+			current.insert(stat);
 		else			// end
-			current.erase(i->second);
+			current.erase(stat);
 
 		if (current.empty()) continue;
 
@@ -2688,10 +2774,11 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 				m_frame_params.insert(Frame2Params::value_type(i, frame_par));
 			if (!result.second)
 				result.first->second = frame_par;
+			if (!result.first->second.isValid())
+				THROW_CTL_ERROR(Error) << "Inserted invalid params";
 		}
 		m_files_to_write = multi_set ? 1 : (nextNumber - pars.nextNumber + 1);
 	}
-	m_running_writing_task = 0;
 	prepareLogStat(pars);
 	lock.unlock();
 	_prepare(ct);			// call inheritance if needed
@@ -2704,118 +2791,119 @@ void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
 	
 	AutoMutex lock(m_lock);
 	m_frames_to_write = nb_acquired_frames;
-	m_frame_params.erase(
-		m_frame_params.find(nb_acquired_frames),
-		m_frame_params.end());
+	m_waiting_tasks.erase(
+		m_waiting_tasks.find(nb_acquired_frames),
+		m_waiting_tasks.end());
+	if (m_frame_params.empty())
+		return;
+	long first = max(m_frame_params.begin()->first, nb_acquired_frames);
+	m_frame_params.erase(m_frame_params.find(first), m_frame_params.end());
 }
 
-bool CtSaving::SaveContainer::isReady(long frame_nr) const
+bool CtSaving::SaveContainer::isReady() const
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(frame_nr);
 
 	AutoMutex lock(m_lock);
+
+	DEB_TRACE() << DEB_VAR3(m_running_tasks.size(), m_waiting_tasks.size(),
+				m_frame_params.size());
+	bool ready = (m_running_tasks.empty() && m_waiting_tasks.empty() &&
+		      m_frame_params.empty());
+	DEB_RETURN() << DEB_VAR1(ready);
+	return ready;
+}
+
+bool CtSaving::SaveContainer::isReadyFor(Data& data) const
+{
+	DEB_MEMBER_FUNCT();
+	const long frameId = data.frameNumber;
+	DEB_PARAM() << DEB_VAR1(frameId);
+
 	bool ready;
 
-	// mean all writing tasks
-	if (frame_nr < 0)
-	{
-		ready = m_frame_params.empty();
-		// frame_params are added on the go when doing continuous acquisition
-		// so we also need to check m_written_frames
-		// Note that m_frames_to_write == 0 until we call stopAcq that will update
-		// the number of frames to write
-		DEB_TRACE() << DEB_VAR2(m_frames_to_write, m_written_frames);
-		//if (m_frames_to_write)
-		//	ready &= (m_written_frames == m_frames_to_write);
-	}
-	else
-	{
-		Frame2Params::const_iterator it = m_frame_params.find(frame_nr);
-		if (it == m_frame_params.end())
-		{
-			// if no task is running then ready
-			ready = m_frame_params.empty();
-		}
-		else if (it->second.m_threadable)
-		{
-			DEB_TRACE() << DEB_VAR2(m_running_writing_task, m_max_writing_task);
+	_SavingDataPtr saving = _getSavingData(data);
+	FrameParameters& frame_par = saving->m_params;
 
-			ready = (m_running_writing_task + 1 <= m_max_writing_task);
+	AutoMutex lock(m_lock);
+	int running_tasks = _getNbRunningTasks();
+	if (running_tasks == 0) {
+		long next = -1;
+		// check the first in the list of frames not yet injected
+		if (!m_frame_params.empty())
+			next = m_frame_params.begin()->first;
+		// and also the list of frames waiting to be saved
+		if (!m_waiting_tasks.empty()) {
+			long first = m_waiting_tasks.begin()->first;
+			if ((next == -1) || (first < next))
+				next = first;
 		}
-		else
-			// ready if we are the next (the first)
-			ready = (it == m_frame_params.begin());
-	}
+		// allow only the first to be saved: force sequential ordering
+		ready = ((next == -1) || (frameId == next));
+	} else if (frame_par.m_threadable) {
+		DEB_TRACE() << DEB_VAR2(running_tasks, m_max_writing_task);
+		ready = (running_tasks + 1 <= m_max_writing_task);
+	} else
+		ready = false;
 
 	DEB_RETURN() << DEB_VAR1(ready);
 	return ready;
 }
 
-void CtSaving::SaveContainer::setReady(long frame_nr)
+void CtSaving::SaveContainer::setReady()
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(frame_nr);
 
 	AutoMutex lock(m_lock);
-	// mean all frames
-	if (frame_nr < 0)
-		m_frame_params.clear();
-	else
-	{
-		Frame2Params::iterator i = m_frame_params.find(frame_nr);
-		if (i != m_frame_params.end())
-			m_frame_params.erase(i);
-	}
+	m_waiting_tasks.clear();
+	m_frame_params.clear();
 }
 
-void CtSaving::SaveContainer::prepareWrittingFrame(long frame_nr)
+void CtSaving::SaveContainer::prepareWritingFrame(Data& data)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(frame_nr);
+	const long frameId = data.frameNumber;
+	DEB_PARAM() << DEB_VAR1(frameId);
+
+	_SavingDataPtr saving = _getSavingData(data);
+	FrameParameters& frame_par = saving->m_params;
+	if (!frame_par.isValid()) {
+		CtSaving::Parameters pars = m_stream.getParameters(Acq);
+		frame_par.setParameters(pars);
+	}
 
 	AutoMutex lock(m_lock);
-	Frame2Params::iterator i = m_frame_params.find(frame_nr);
-	if (i == m_frame_params.end())
-	{
-		CtSaving::Parameters pars = m_stream.getParameters(Acq);
-		FrameParameters frame_par(pars);
-		frame_par.m_running = true;
-		m_frame_params.insert(Frame2Params::value_type(frame_nr, frame_par));
-	}
-	else
-		i->second.m_running = true;
-	++m_running_writing_task;
+	WritingTasks::iterator it = m_waiting_tasks.find(frameId);
+	if (it == m_waiting_tasks.end())
+		THROW_CTL_ERROR(Error) << "Frame not in waiting WritingTasks";
+	m_waiting_tasks.erase(it);
+	m_running_tasks.emplace(frameId, saving);
 }
 
 void CtSaving::SaveContainer::createSavingData(Data& data)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(data);
-}
+	const long frameId = data.frameNumber;
+	DEB_PARAM() << DEB_VAR1(frameId);
 
-void CtSaving::SaveContainer::createStatistic(Data& data)
-{
-	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(data);
-	
+	_SavingDataPtr saving = _getSavingData(data);
 	AutoMutex lock(m_lock);
-	//Insert statistic
-	StatisticsType::value_type stat_pair(data.frameNumber, Stat());
-	stat_pair.second.incoming_size = data.size();
-	m_statistic.insert(stat_pair);
+	Frame2Params::iterator fpars = m_frame_params.find(frameId);
+	if (fpars != m_frame_params.end()) {
+		saving->m_params = fpars->second;
+		m_frame_params.erase(fpars);
+	}
+	m_waiting_tasks.emplace(frameId, saving);
 }
 
 void CtSaving::SaveContainer::compressionStart(Data& data)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(data);
-	
-	Timestamp start = Timestamp::now();
-	AutoMutex lock(m_lock);
-	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
-	if (i != m_statistic.end())
-		i->second.compression_start = start;
+
+	_SavingDataPtr saving = _getSavingData(data);
+	AutoMutex l(saving->m_lock);
+	saving->m_stat.compression_start = Timestamp::now();
 }
 
 void CtSaving::SaveContainer::compressionFinished(Data& data)
@@ -2823,11 +2911,9 @@ void CtSaving::SaveContainer::compressionFinished(Data& data)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(data);
 	
-	Timestamp end = Timestamp::now();
-	AutoMutex lock(m_lock);
-	StatisticsType::iterator i = m_statistic.find(data.frameNumber);
-	if (i != m_statistic.end())
-		i->second.compression_end = end;
+	_SavingDataPtr saving = _getSavingData(data);
+	AutoMutex l(saving->m_lock);
+	saving->m_stat.compression_end = Timestamp::now();
 }
 
 int CtSaving::SaveContainer::getMaxConcurrentWritingTask() const
@@ -2855,11 +2941,75 @@ CtSaving::SaveContainer::open(FrameParameters& fpars)
 	DEB_MEMBER_FUNCT();
 
 	CtSaving::Parameters& pars = fpars.m_pars;
+
+	class OpeningMgr {
+		DEB_CLASS_NAMESPC(DebModControl, "OpeningMgr",
+				  "SaveContainer::open");
+	public:
+		OpeningMgr(Cond& c, OpeningPars& o, CtSaving::Parameters& p)
+			: m_cond(c), m_opening(o), m_pars(p), m_in(false)
+		{
+			DEB_CONSTRUCTOR();
+			DEB_PARAM() << DEB_VAR1(m_pars);
+		}
+
+		~OpeningMgr()
+		{
+			DEB_DESTRUCTOR();
+			if (!m_in)
+				return;
+			AutoMutex lock(m_cond.mutex());
+			remove(lock);
+		}
+
+		void wait(AutoMutex& l)
+		{
+			DEB_MEMBER_FUNCT();
+			auto must_wait = [&]() {
+				typedef OpeningPars::const_iterator Iterator;
+				Iterator it, end = m_opening.end();
+				for (it = m_opening.begin(); it != end; ++it)
+					if (**it == m_pars)
+						return true;
+				return false;
+			};
+			while (must_wait()) {
+				DEB_TRACE() << "Waiting";
+				m_cond.wait();
+			}				
+		}
+
+		void add(AutoMutex& l)
+		{
+			DEB_MEMBER_FUNCT();
+			m_opening.insert(&m_pars);
+			m_in = true;
+		}
+
+		void remove(AutoMutex& l)
+		{
+			DEB_MEMBER_FUNCT();
+			m_opening.erase(&m_pars);
+			m_cond.broadcast();
+			m_in = false;
+		}
+		
+	private:
+		Cond& m_cond;
+		OpeningPars& m_opening;
+		CtSaving::Parameters m_pars;
+		bool m_in;
+	} opening(m_cond, m_opening_handlers, pars);
+
 	{
 		AutoMutex lock(m_lock);
+		opening.wait(lock);
+
 		Params2Handler::iterator handler = m_params_handler.find(pars);
 		if (handler != m_params_handler.end())
 			return *handler;
+
+		opening.add(lock);
 	}
 
 	std::string aFileName = pars.directory + DIR_SEPARATOR + pars.prefix;
@@ -2930,6 +3080,7 @@ CtSaving::SaveContainer::open(FrameParameters& fpars)
 	{
 		AutoMutex lock(m_lock);
 		ok = m_params_handler.insert(map_pair).second;
+		opening.remove(lock);
 	}
 	if (!ok) {
 		_close(handler.m_handler);
