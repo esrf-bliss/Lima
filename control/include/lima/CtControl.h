@@ -284,6 +284,7 @@ namespace lima
     bool		m_op_ext_link_task_active;
     bool		m_op_ext_sink_task_active;
 
+    SortedDataType      m_images_acquired;
     SortedDataType      m_base_images_ready;
     SortedDataType      m_images_ready;
     SortedDataType	m_images_saved;

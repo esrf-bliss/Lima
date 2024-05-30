@@ -316,6 +316,7 @@ CtControl::CtControl(HwInterface *hw) :
   m_op_int_active(false),
   m_op_ext_link_task_active(false),
   m_op_ext_sink_task_active(false),
+  m_images_acquired(CtControl::ltData()),
   m_base_images_ready(CtControl::ltData()),
   m_images_ready(CtControl::ltData()),
   m_images_saved(CtControl::ltData()),
@@ -499,10 +500,11 @@ void CtControl::prepareAcq()
   resetStatus(true);
   
   //Clear all re-ordered image counters
-  m_images_ready.clear();
+  m_images_acquired.clear();
   m_base_images_ready.clear();
-  m_images_buffer.clear();
+  m_images_ready.clear();
   m_images_saved.clear();
+  m_images_buffer.clear();
 
   //Clear saving: common & frame headers, ZBuffers and statistics
   m_ct_saving->resetInternalCommonHeader();
@@ -1104,7 +1106,10 @@ bool CtControl::newFrameReady(Data& fdata)
     if(_checkOverrun(fdata, aLock))
       return false;// Stop Acquisition on overun
 
-    m_status.ImageCounters.LastImageAcquired= fdata.frameNumber;
+    ImageStatus &imgStatus = m_status.ImageCounters;
+    imgStatus.LastImageAcquired = _increment_image_cnt(fdata,
+						       imgStatus.LastImageAcquired,
+						       m_images_acquired);
   }
 
   TaskMgr *mgr = new TaskMgr();
