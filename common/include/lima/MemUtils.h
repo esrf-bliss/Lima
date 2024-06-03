@@ -63,6 +63,8 @@ struct LIMACORE_API Allocator
 						      Ref new_alloc) = 0;
 	};
 
+	virtual ~Allocator();
+
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size
 	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16);
@@ -71,6 +73,9 @@ struct LIMACORE_API Allocator
 	// Free a buffer
 	virtual void release(void* ptr, size_t size, DataPtr alloc_data);
 
+	// Get the Allocator class singleton
+	static Ref getAllocatorSingleton();
+
 	// Sets the static instance of the default allocator
 	static void setDefaultAllocator(Ref def_alloc);
 	// Returns the static instance of the default allocator
@@ -78,6 +83,10 @@ struct LIMACORE_API Allocator
 
 	static void registerDefaultChangeCallback(DefaultChangeCallback *cb);
 	static void unregisterDefaultChangeCallback(DefaultChangeCallback *cb);
+
+	// string representation for serialization
+	static Ref fromString(std::string s);
+	virtual std::string toString() const;
 
 private:
 	typedef std::vector<DefaultChangeCallback *> ChangeCbList;
@@ -101,6 +110,9 @@ public:
 
 	// Returns the size of a page aligned buffer (multiple of page size)
 	static int getPageAlignedSize(int size);
+
+	// string representation for serialization
+	std::string toString() const override;
 
 protected:
 	// Allocate a buffer with mmap (virtual address mapping)
@@ -161,6 +173,9 @@ public:
 	// Allocate a buffer and sets the NUMA memory policy with mbind
 	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16)
 								override;
+
+	// string representation for serialization
+	std::string toString() const override;
 
 private:
 	CPUMask m_cpu_mask; //<! if NUMA is used, keep cpu_mask for later use

@@ -122,6 +122,17 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 }
 
 
+Allocator::~Allocator()
+{
+}
+
+// The allocator singleton
+Allocator::Ref Allocator::getAllocatorSingleton()
+{
+	static Ref singleton = std::make_shared<Allocator>();
+	return singleton;
+}
+
 // The default allocator
 Allocator::Ref Allocator::m_default_allocator;
 
@@ -141,7 +152,7 @@ void Allocator::setDefaultAllocator(Allocator::Ref def_alloc)
 
 Allocator::Ref Allocator::getDefaultAllocator()
 {
-	EXEC_ONCE(m_default_allocator = std::make_shared<Allocator>());
+	EXEC_ONCE(m_default_allocator = getAllocatorSingleton());
 	return m_default_allocator;
 }
 
@@ -199,6 +210,20 @@ void Allocator::release(void* ptr, size_t /*size*/, DataPtr /*alloc_data*/)
 #endif
 }
 
+Allocator::Ref Allocator::fromString(std::string s)
+{
+	Allocator::Ref singleton = getAllocatorSingleton();
+	if (s == singleton->toString())
+		return singleton;
+	throw LIMA_COM_EXC(NotSupported, "Allocator::fromString: ")
+		<< "only Allocator() is supported";
+}
+
+std::string Allocator::toString() const
+{
+	return "Allocator()";
+}
+
 #ifdef __unix
 
 int MMapAllocator::getPageAlignedSize(int size)
@@ -236,6 +261,12 @@ void *MMapAllocator::allocMmap(size_t& size)
 			<< strerror(errno);
 	return ptr;
 }
+
+std::string MMapAllocator::toString() const
+{
+	return "MMapAllocator()";
+}
+
 #endif //__unix
 
 MemBuffer::MemBuffer(Allocator::Ref allocator /*= {}*/) :
@@ -475,6 +506,13 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 	NumaNodeMask node_mask = NumaNodeMask::fromCPUMask(m_cpu_mask);
 	node_mask.bind(ptr, size);
 	return alloc_data;
+}
+
+std::string NumaAllocator::toString() const
+{
+	std::ostringstream os;
+	os << "NumaAllocator(0x" << m_cpu_mask << ")";
+	return os.str();
 }
 
 #endif //LIMA_USE_NUMA
