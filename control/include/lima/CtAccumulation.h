@@ -185,11 +185,41 @@ namespace lima
     enum ImgType {AccImg, SatImg, TmpImg, NbImgTypes};
     static const char *toString(ImgType type);
 
+    // This helper class implements a circular buffer for asynchronous readout
+    // It provides two main functionalities:
+    //  * An ordered, sequential queue of frames. Non-sequential frames are
+    //    kept in an auxiliary container until the missing frames are inserted
+    //  * Ensure that a maximum capacity is always respected, requiring the
+    //    removal of the oldest frame (if already full) before next insert.
+    //    The rationale behind is to guarantee that there is always one
+    //    available frame in the memory allocation subsystem if the
+    //    reqMemSizePercent was fixed in the BufferHelper::Parameters
+
+    class _SortedDataQueue
+    {
+      DEB_CLASS_NAMESPC(DebModControl,"Accumulation::_SortedDataQueue", 
+			"Control");
+    public:
+      void setMaxSize(long max_size);
+      void removeOldestIfFull();
+      void insert(const Data& data);
+      void clear();
+
+      const std::deque<Data>& getSequentialQueue() const { return m_sequential; }
+
+    private:
+      std::deque<Data>			m_sequential;
+      CtControl::SortedDataType		m_non_sequential;
+      long				m_max_size{1};
+    };
+
     struct _ProcAccInfo
     {
       int				frame_nb;
       int				acc_frames{0};
       std::map<int,Data>		new_pending_data;
+      // Temporary data where frames are stored to compute the median
+      // std::vector<Data>		tmp_datas;
       Data				data[NbImgTypes];
 
       _ProcAccInfo(int frame) : frame_nb(frame) {}
@@ -197,9 +227,10 @@ namespace lima
       
     Parameters 				m_pars;
     long				m_buffers_size;
-    std::vector<Data>       m_tmp_datas; // Temporary data where frames are stored to compute the median
-    std::deque<Data>        m_datas;     // Circular buffer of output data (used with getFrame())
-    std::deque<Data>        m_saturated_images;
+    // Circular buffer of output data (used by getFrame)
+    _SortedDataQueue			m_datas;
+    // Circular buffer of saturated images (used by readSaturatedImageCounter)
+    _SortedDataQueue		        m_saturated_images;
     CtControl& 				m_ct;
     bool				m_calc_ready;
     std::deque<std::pair<Data,Data> >	m_calc_pending_data;
