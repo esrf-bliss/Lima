@@ -453,6 +453,10 @@ void CtAccumulation::_SortedDataQueue::removeOldestIfFull()
 {
   DEB_MEMBER_FUNCT();
   long size = m_sequential.size() + m_non_sequential.size();
+  // this method can be called multiple times (by parallel tasks)
+  // before their corresponding insert calls arrive. must accumulate
+  // the requests so the max capacity limit is globally respected
+  size += m_pending_inserts++;
   DEB_TRACE() << DEB_VAR2(size, m_max_size);
   if(size < m_max_size)
     return;
@@ -469,6 +473,7 @@ void CtAccumulation::_SortedDataQueue::insert(const Data& data)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(data.frameNumber);
+  --m_pending_inserts;
   std::deque<Data>& seq = m_sequential;
   CtControl::SortedDataType& non_seq = m_non_sequential;
   long frame = data.frameNumber;
@@ -494,6 +499,7 @@ void CtAccumulation::_SortedDataQueue::clear()
   DEB_MEMBER_FUNCT();
   m_sequential.clear();
   m_non_sequential.clear();
+  m_pending_inserts = 0;
 }
 
 

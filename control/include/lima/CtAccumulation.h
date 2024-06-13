@@ -211,6 +211,7 @@ namespace lima
       std::deque<Data>			m_sequential;
       CtControl::SortedDataType		m_non_sequential;
       long				m_max_size{1};
+      long				m_pending_inserts{0};
     };
 
     struct _ProcAccInfo
