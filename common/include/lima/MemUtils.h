@@ -31,9 +31,14 @@
 #include <memory>
 #include <vector>
 #include <queue>
+#include <set>
 
 namespace lima
 {
+
+//--------------------------------------------------------------------
+//  Memory Helper functions
+//--------------------------------------------------------------------
 
 void LIMACORE_API GetSystemMem(int& mem_unit, int& system_mem);
 	
@@ -43,6 +48,10 @@ int LIMACORE_API GetDefMaxNbBuffers(const FrameDim& frame_dim);
 
 void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
 
+
+//--------------------------------------------------------------------
+//  Allocator
+//--------------------------------------------------------------------
 
 struct LIMACORE_API Allocator
 {
@@ -54,15 +63,6 @@ struct LIMACORE_API Allocator
 	typedef std::shared_ptr<Data> DataPtr;
 	typedef std::shared_ptr<Allocator> Ref;
 
-	// Callback updating on default allocator change
-	class DefaultChangeCallback
-	{
-	public:
-		virtual ~DefaultChangeCallback() {};
-		virtual void onDefaultAllocatorChange(Ref prev_alloc,
-						      Ref new_alloc) = 0;
-	};
-
 	virtual ~Allocator();
 
 	// Allocate a buffer of a given size and eventually return
@@ -73,29 +73,69 @@ struct LIMACORE_API Allocator
 	// Free a buffer
 	virtual void release(void* ptr, size_t size, DataPtr alloc_data);
 
-	// Get the Allocator class singleton
-	static Ref getAllocatorSingleton();
+	// string representation for serialization
+	virtual std::string toString() const;
+};
+
+
+//--------------------------------------------------------------------
+//  AllocatorFactory
+//--------------------------------------------------------------------
+
+class LIMACORE_API AllocatorFactory
+{
+public:
+	// Callback updating on default allocator change
+	class DefaultChangeCallback
+	{
+	public:
+		DefaultChangeCallback();
+		DefaultChangeCallback(const DefaultChangeCallback& o) = delete;
+		virtual ~DefaultChangeCallback();
+		virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+						      Allocator::Ref new_alloc) = 0;
+	};
+
+	virtual ~AllocatorFactory();
+
+	// The AllocatorFactory singleton
+	static AllocatorFactory& get();
 
 	// Sets the static instance of the default allocator
-	static void setDefaultAllocator(Ref def_alloc);
+	void setDefaultAllocator(Allocator::Ref def_alloc);
 	// Returns the static instance of the default allocator
-	static Ref getDefaultAllocator();
+	Allocator::Ref getDefaultAllocator();
 
-	static void registerDefaultChangeCallback(DefaultChangeCallback *cb);
-	static void unregisterDefaultChangeCallback(DefaultChangeCallback *cb);
+	void registerDefaultChangeCallback(DefaultChangeCallback *cb);
+	void unregisterDefaultChangeCallback(DefaultChangeCallback *cb);
 
 	// string representation for serialization
-	static Ref fromString(std::string s);
-	virtual std::string toString() const;
+	Allocator::Ref fromString(std::string s);
+
+protected:
+	AllocatorFactory();
+	AllocatorFactory(const AllocatorFactory& o) = delete;
+
+	virtual Allocator::Ref tryFromString(std::string s);
 
 private:
 	typedef std::vector<DefaultChangeCallback *> ChangeCbList;
+	typedef std::set<AllocatorFactory *> FactoryList;
 
-	static Ref m_default_allocator;
-	static ChangeCbList m_change_cb_list;
+	static void initFactoryGlobals();
+
+	static Allocator::Ref m_default_allocator;
+	static ChangeCbList *m_change_cb_list;
+	static FactoryList *m_available_factories;
 };
 
+
 #ifdef __unix
+
+//--------------------------------------------------------------------
+//  MMapAllocator
+//--------------------------------------------------------------------
+
 // Allocator for virtual address mapping
 class LIMACORE_API MMapAllocator : public Allocator
 {
@@ -119,9 +159,14 @@ protected:
 	// The real, page-aligned buffer size, is returned in size arg
 	void *allocMmap(size_t& size);
 };
+
 #endif //__unix
 
 #ifdef LIMA_USE_NUMA
+
+//--------------------------------------------------------------------
+//  NumaNodeMask
+//--------------------------------------------------------------------
 
 // Structure needed to bind memory to one or more CPU sockets
 class NumaNodeMask
@@ -159,6 +204,11 @@ private:
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask::CPUMask& mask);
 
+
+//--------------------------------------------------------------------
+//  NumaAllocator
+//--------------------------------------------------------------------
+
 class LIMACORE_API NumaAllocator : public MMapAllocator
 {
 public:
@@ -183,13 +233,17 @@ private:
 #endif
 
 
+//--------------------------------------------------------------------
+//  MemBuffer
+//--------------------------------------------------------------------
+
 class LIMACORE_API MemBuffer 
 {
  public:
 	//By default, construct a MemBuffer with the default allocator
-	MemBuffer(Allocator::Ref allocator = Allocator::getDefaultAllocator());
+	MemBuffer(Allocator::Ref allocator = AllocatorFactory::get().getDefaultAllocator());
 	MemBuffer(int size,
-		  Allocator::Ref allocator = Allocator::getDefaultAllocator(),
+		  Allocator::Ref allocator = AllocatorFactory::get().getDefaultAllocator(),
 		  bool init_mem = true);
 	~MemBuffer();
 
@@ -222,6 +276,8 @@ class LIMACORE_API MemBuffer
 	void initMemory();
 
  private:
+	/// Return a real allocator, getting the default if needed
+	static Allocator::Ref getEffectiveAllocator(Allocator::Ref allocator);
 	/// Call the allocator to (eventually) free the current buffer then allocate a new buffer
 	void uninitializedAlloc(size_t size);
 
@@ -231,6 +287,10 @@ class LIMACORE_API MemBuffer
 	Allocator::DataPtr m_alloc_data;
 };
 
+
+//--------------------------------------------------------------------
+//  BufferPool
+//--------------------------------------------------------------------
 
 class LIMACORE_API BufferPool
 {

@@ -72,17 +72,31 @@ struct Allocator {
 
 	virtual ~Allocator();
 
-	// Get the Allocator class singleton
-	static Ref getAllocatorSingleton();
-
-	// Sets the static instance of the default allocator
-	static void setDefaultAllocator(Allocator::Ref def_alloc);
-	// Returns the static instance of the default allocator
-	static Allocator::Ref getDefaultAllocator();
-
-	static Allocator::Ref fromString(std::string s);
-
 private:
 	Allocator();
 	Allocator(const Allocator& o);
+};
+
+
+class AllocatorFactory {
+
+public:
+	virtual ~AllocatorFactory();
+
+	// The AllocatorFactory singleton
+	static AllocatorFactory& get();
+
+	// Sets the static instance of the default allocator
+	void setDefaultAllocator(Allocator::Ref def_alloc);
+	// Returns the static instance of the default allocator
+	Allocator::Ref getDefaultAllocator();
+
+	Allocator::Ref fromString(std::string s);
+
+protected:
+	AllocatorFactory();
+	virtual Allocator::Ref tryFromString(std::string s);
+
+private:
+	AllocatorFactory(const AllocatorFactory& o);
 };
