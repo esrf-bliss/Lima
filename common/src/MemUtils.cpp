@@ -52,6 +52,11 @@ using namespace std;
 
 DEB_GLOBAL_NAMESPC(DebModCommon, "MemUtils")
 
+
+//--------------------------------------------------------------------
+//  Memory Helper functions
+//--------------------------------------------------------------------
+
 void lima::GetSystemMem(int& mem_unit, int& system_mem)
 {
 	if (mem_unit < 0)
@@ -122,61 +127,12 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 }
 
 
+//--------------------------------------------------------------------
+//  Allocator
+//--------------------------------------------------------------------
+
 Allocator::~Allocator()
 {
-}
-
-// The allocator singleton
-Allocator::Ref Allocator::getAllocatorSingleton()
-{
-	static Ref singleton = std::make_shared<Allocator>();
-	return singleton;
-}
-
-// The default allocator
-Allocator::Ref Allocator::m_default_allocator;
-
-void Allocator::setDefaultAllocator(Allocator::Ref def_alloc)
-{
-	if (!def_alloc)
-		throw LIMA_COM_EXC(InvalidValue, "Invalid default allocator");
-	else if (def_alloc == getDefaultAllocator())
-		return;
-
-	ChangeCbList::iterator it, end = m_change_cb_list.end();
-	for (it = m_change_cb_list.begin(); it != end; ++it)
-		(*it)->onDefaultAllocatorChange(m_default_allocator, def_alloc);
-	
-	m_default_allocator = def_alloc;
-}
-
-Allocator::Ref Allocator::getDefaultAllocator()
-{
-	EXEC_ONCE(m_default_allocator = getAllocatorSingleton());
-	return m_default_allocator;
-}
-
-// The DefaultChangeCallback list
-Allocator::ChangeCbList Allocator::m_change_cb_list;
-
-void Allocator::registerDefaultChangeCallback(DefaultChangeCallback *cb)
-{
-	ChangeCbList::iterator it, end = m_change_cb_list.end();
-	it = std::find(m_change_cb_list.begin(), end, cb);
-	if (it != end)
-		throw LIMA_COM_EXC(InvalidValue,
-				   "DefaultChangeCallback already registered");
-	m_change_cb_list.push_back(cb);
-}
-
-void Allocator::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
-{
-	ChangeCbList::iterator it, end = m_change_cb_list.end();
-	it = std::find(m_change_cb_list.begin(), end, cb);
-	if (it == end)
-		throw LIMA_COM_EXC(InvalidValue,
-				   "DefaultChangeCallback not registered");
-	m_change_cb_list.erase(it);
 }
 
 Allocator::DataPtr Allocator::alloc(void* &ptr, size_t& size, size_t alignment)
@@ -210,21 +166,127 @@ void Allocator::release(void* ptr, size_t /*size*/, DataPtr /*alloc_data*/)
 #endif
 }
 
-Allocator::Ref Allocator::fromString(std::string s)
-{
-	Allocator::Ref singleton = getAllocatorSingleton();
-	if (s == singleton->toString())
-		return singleton;
-	throw LIMA_COM_EXC(NotSupported, "Allocator::fromString: ")
-		<< "only Allocator() is supported";
-}
-
 std::string Allocator::toString() const
 {
 	return "Allocator()";
 }
 
+
+//--------------------------------------------------------------------
+//  AllocatorFactory::DefaultChangeCallback
+//--------------------------------------------------------------------
+
+AllocatorFactory::DefaultChangeCallback::DefaultChangeCallback()
+{
+	get().registerDefaultChangeCallback(this);
+}
+
+AllocatorFactory::DefaultChangeCallback::~DefaultChangeCallback()
+{
+	get().unregisterDefaultChangeCallback(this);
+}
+
+
+//--------------------------------------------------------------------
+//  AllocatorFactory
+//--------------------------------------------------------------------
+
+// The default allocator
+Allocator::Ref AllocatorFactory::m_default_allocator;
+// The DefaultChangeCallback list
+AllocatorFactory::ChangeCbList *AllocatorFactory::m_change_cb_list = nullptr;
+// The available Factory list
+AllocatorFactory::FactoryList *AllocatorFactory::m_available_factories = nullptr;
+
+// The AllocatorFactory singleton
+AllocatorFactory& AllocatorFactory::get()
+{
+	static AllocatorFactory factory;
+	return factory;
+}
+
+AllocatorFactory::AllocatorFactory()
+{
+	initFactoryGlobals();
+	m_available_factories->insert(this);
+}
+
+AllocatorFactory::~AllocatorFactory()
+{
+	m_available_factories->erase(this);
+}
+
+void AllocatorFactory::initFactoryGlobals()
+{
+	EXEC_ONCE(
+		m_default_allocator = std::make_shared<Allocator>();
+		m_change_cb_list = new std::vector<DefaultChangeCallback *>();
+		m_available_factories = new std::set<AllocatorFactory *>();
+	);
+}
+
+void AllocatorFactory::setDefaultAllocator(Allocator::Ref def_alloc)
+{
+	if (!def_alloc)
+		throw LIMA_COM_EXC(InvalidValue, "Invalid default allocator");
+	else if (def_alloc == getDefaultAllocator())
+		return;
+
+	ChangeCbList::iterator it, end = m_change_cb_list->end();
+	for (it = m_change_cb_list->begin(); it != end; ++it)
+		(*it)->onDefaultAllocatorChange(m_default_allocator, def_alloc);
+	
+	m_default_allocator = def_alloc;
+}
+
+Allocator::Ref AllocatorFactory::getDefaultAllocator()
+{
+	return m_default_allocator;
+}
+
+void AllocatorFactory::registerDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	ChangeCbList::iterator it, end = m_change_cb_list->end();
+	it = std::find(m_change_cb_list->begin(), end, cb);
+	if (it != end)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "DefaultChangeCallback already registered");
+	m_change_cb_list->push_back(cb);
+}
+
+void AllocatorFactory::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	ChangeCbList::iterator it, end = m_change_cb_list->end();
+	it = std::find(m_change_cb_list->begin(), end, cb);
+	if (it == end)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "DefaultChangeCallback not registered");
+	m_change_cb_list->erase(it);
+}
+
+Allocator::Ref AllocatorFactory::fromString(std::string s)
+{
+	FactoryList::iterator it, end = m_available_factories->end();
+	for (it = m_available_factories->begin(); it != end; ++it) {
+		Allocator::Ref alloc = (*it)->tryFromString(s);
+		if (alloc)
+			return alloc;
+	}
+	throw LIMA_COM_EXC(NotSupported, "Allocator::fromString: ")
+		<< "could not build allocator from " << s;
+}
+
+Allocator::Ref AllocatorFactory::tryFromString(std::string s)
+{
+	return (s == "Allocator()") ? std::make_shared<Allocator>() : nullptr;
+}
+
+
 #ifdef __unix
+
+//--------------------------------------------------------------------
+//  MMapAllocator
+//--------------------------------------------------------------------
 
 int MMapAllocator::getPageAlignedSize(int size)
 {
@@ -268,6 +330,11 @@ std::string MMapAllocator::toString() const
 }
 
 #endif //__unix
+
+
+//--------------------------------------------------------------------
+//  MemBuffer
+//--------------------------------------------------------------------
 
 MemBuffer::MemBuffer(Allocator::Ref allocator /*= {}*/) :
 	m_size(0),
@@ -389,6 +456,11 @@ void MemBuffer::deepCopy(const MemBuffer& buffer)
 
 
 #ifdef LIMA_USE_NUMA
+
+//--------------------------------------------------------------------
+//  NumaNodeMask
+//--------------------------------------------------------------------
+
 int NumaNodeMask::getMaxNodes()
 {
 	static int max_nb_nodes = numa_max_node() + 1;
@@ -495,6 +567,10 @@ std::ostream& lima::operator <<(std::ostream& os,
 	return os << setfill(' ') << dec;
 }
 
+//--------------------------------------------------------------------
+//  NumaAllocator
+//--------------------------------------------------------------------
+
 Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 					size_t alignment)
 {
@@ -518,20 +594,16 @@ std::string NumaAllocator::toString() const
 #endif //LIMA_USE_NUMA
 
 
-// BufferPool
+//--------------------------------------------------------------------
+//  BufferPool
+//--------------------------------------------------------------------
 
 class BufferPool::DefAllocChangeCb :
-	public Allocator::DefaultChangeCallback
+	public AllocatorFactory::DefaultChangeCallback
 {
 public:
 	DefAllocChangeCb(BufferPool& pool) : m_pool(pool)
 	{
-		Allocator::registerDefaultChangeCallback(this);
-	}
-
-	~DefAllocChangeCb()
-	{
-		Allocator::unregisterDefaultChangeCallback(this);
 	}
 
 	virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
@@ -565,7 +637,7 @@ BufferPool::~BufferPool()
 std::shared_ptr<void> BufferPool::getBuffer()
 {
 	DEB_MEMBER_FUNCT();
-	void *p = NULL;
+	void *p = nullptr;
 	{
 		AutoMutex l(m_mutex);
 		if (m_available.empty())
@@ -662,7 +734,7 @@ void BufferPool::_allocBuffers(int nb_buffers, int size, AutoMutex& l)
 	// TODO: reduce the number of buffers
 	Allocator::Ref allocator = m_alloc;
 	if (!allocator)
-		allocator = Allocator::getDefaultAllocator();
+		allocator = AllocatorFactory::get().getDefaultAllocator();
 	while (m_buffers.size() < nb_buffers) {
 		m_buffers.emplace_back(size, allocator, m_init_mem);
 		m_available.push(m_buffers.back().getPtr());

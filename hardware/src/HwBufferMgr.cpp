@@ -93,17 +93,11 @@ void BufferAllocMgr::clearAllBuffers()
  *******************************************************************/
 
 class SoftBufferAllocMgr::DefAllocChangeCb :
-	public Allocator::DefaultChangeCallback
+	public AllocatorFactory::DefaultChangeCallback
 {
 public:
 	DefAllocChangeCb(SoftBufferAllocMgr& mgr) : m_mgr(mgr)
 	{
-		Allocator::registerDefaultChangeCallback(this);
-	}
-
-	~DefAllocChangeCb()
-	{
-		Allocator::unregisterDefaultChangeCallback(this);
 	}
 
 	virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
