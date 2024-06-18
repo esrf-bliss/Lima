@@ -437,6 +437,72 @@ inline const char *CtAccumulation::toString(ImgType type)
   }
 }
 
+//       ******** CtAccumulation::_SortedDataQueue ********
+inline
+void CtAccumulation::_SortedDataQueue::setMaxSize(long max_size)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(max_size);
+  if(max_size <= 0)
+    throw LIMA_CTL_EXC(Error, "Invalid _SortedDataQueue max_size");
+  m_max_size = max_size;
+}
+
+inline
+void CtAccumulation::_SortedDataQueue::removeOldestIfFull()
+{
+  DEB_MEMBER_FUNCT();
+  long size = m_sequential.size() + m_non_sequential.size();
+  // this method can be called multiple times (by parallel tasks)
+  // before their corresponding insert calls arrive. must accumulate
+  // the requests so the max capacity limit is globally respected
+  size += m_pending_inserts++;
+  DEB_TRACE() << DEB_VAR2(size, m_max_size);
+  if(size < m_max_size)
+    return;
+  if(!m_sequential.empty())
+    m_sequential.pop_front();
+  else if(!m_non_sequential.empty())
+    m_non_sequential.erase(m_non_sequential.begin());
+  else
+    throw LIMA_CTL_EXC(Error, "Internal _SortedDataQueue error");
+}
+
+inline
+void CtAccumulation::_SortedDataQueue::insert(const Data& data)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(data.frameNumber);
+  --m_pending_inserts;
+  std::deque<Data>& seq = m_sequential;
+  CtControl::SortedDataType& non_seq = m_non_sequential;
+  long frame = data.frameNumber;
+  bool is_next_seq = (seq.empty() || (frame == seq.back().frameNumber + 1));
+  if(((frame > 0) && seq.empty()) || !is_next_seq) {
+    DEB_TRACE() << "Postponing non-sequential data: " << DEB_VAR1(frame);
+    non_seq.insert(data);
+    return;
+  }
+  seq.push_back(data);
+  DEB_TRACE() << "Inserting sequential data: " << DEB_VAR1(frame);
+  CtControl::SortedDataType::iterator it;
+  while(!non_seq.empty() && ((it = non_seq.begin())->frameNumber == ++frame)) {
+    DEB_TRACE() << "Inserting postponed data: " << DEB_VAR1(frame);
+    seq.push_back(*it);
+    non_seq.erase(it);
+  }
+}
+
+inline
+void CtAccumulation::_SortedDataQueue::clear()
+{
+  DEB_MEMBER_FUNCT();
+  m_sequential.clear();
+  m_non_sequential.clear();
+  m_pending_inserts = 0;
+}
+
+
 //       ******** CtAccumulation ********
 CtAccumulation::CtAccumulation(CtControl &ct) :
   m_buffers_size(1),
@@ -715,13 +781,14 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
 
+  const std::deque<Data>& saturated_images = m_saturated_images.getSequentialQueue();
   int acc_nframes;
   {
     AutoMutex aLock(m_cond.mutex());
     if(frameNumber < 0)
     {
-      if(!m_saturated_images.empty())
-        frameNumber = m_saturated_images.back().frameNumber;
+      if(!saturated_images.empty())
+        frameNumber = saturated_images.back().frameNumber;
       else
         frameNumber = 0;
     }
@@ -739,13 +806,13 @@ void CtAccumulation::readSaturatedImageCounter(Data &saturatedImage,long frameNu
   if(result.errorCode == _CalcSaturatedTaskMgr::OK)
   {
     AutoMutex aLock(m_cond.mutex());
-    int oldestFrameNumber = m_saturated_images.front().frameNumber;
-    int lastFrameId = m_saturated_images.back().frameNumber;
+    int oldestFrameNumber = saturated_images.front().frameNumber;
+    int lastFrameId = saturated_images.back().frameNumber;
     //No more into buffer list
     if(frameNumber < oldestFrameNumber || frameNumber > lastFrameId)
       THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not more available";
     else
-      saturatedImage = m_saturated_images[frameNumber - oldestFrameNumber];
+      saturatedImage = saturated_images[frameNumber - oldestFrameNumber];
   }
   DEB_RETURN() << DEB_VAR1(saturatedImage);
 }
@@ -762,12 +829,13 @@ void CtAccumulation::readSaturatedSumCounter(CtAccumulation::saturatedCounterRes
   int acc_nframes;
   {
     AutoMutex aLock(m_cond.mutex());
+    const std::deque<Data>& saturated_images = m_saturated_images.getSequentialQueue();
     if(m_acc_nb_frames <= 0)
       return;
     if(from < 0)
     {
-      if(!m_saturated_images.empty())
-        from = m_saturated_images.back().frameNumber;
+      if(!saturated_images.empty())
+        from = saturated_images.back().frameNumber;
       else
         from = 0;
     }
@@ -949,7 +1017,7 @@ inline void CtAccumulation::_calcImgFrameDims()
   int acc_image_depth = acc_image_dim.getDepth();
 
   if ((hw_image_depth > acc_image_depth) || (hw_image_dim.isSigned() && !acc_image_dim.isSigned()))
-    throw LIMA_CTL_EXC(Error, "Output data type for accumulation is not supported for input type ")
+    THROW_CTL_ERROR(Error) << "Output data type for accumulation is not supported for input type "
       << "SRC=" << convert_2_string(hw_image_dim.getImageType())
       << " DST=" << convert_2_string(acc_image_dim.getImageType());
 
@@ -1075,6 +1143,12 @@ void CtAccumulation::prepare()
   AutoMutex aLock(m_cond.mutex());
   m_acc_nb_frames = acc_nframes;
   m_buffers_size = std::max(1, int(nb_buffers));
+
+  DEB_TRACE() << DEB_VAR2(m_acc_nb_frames, m_buffers_size);
+
+  // Limit the capacity of the circular buffers for asynchronous readout
+  m_datas.setMaxSize(m_buffers_size);
+  m_saturated_images.setMaxSize(m_buffers_size);
 
   // Check preconditions (if needed)
   switch (m_pars.operation) {
@@ -1217,10 +1291,9 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
     int nextFrameNumber = info.frame_nb;
 
     // Release old data(s) before crossing the size limit
-    if(long(m_datas.size()) == m_buffers_size)
-      m_datas.pop_front();
-    if(do_sat && (long(m_saturated_images.size()) == m_buffers_size))
-      m_saturated_images.pop_front();
+    m_datas.removeOldestIfFull();
+    if(do_sat)
+      m_saturated_images.removeOldestIfFull();
 
     ImageType pixel_type[NbImgTypes];
     for (int i = 0; i < NbImgTypes; ++i)
@@ -1252,9 +1325,9 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
         memset(tmp_data.data(), 0, tmp_data.size());
       }
     }
-    m_datas.push_back(acc_data);
+    m_datas.insert(acc_data);
     if(do_sat)
-      m_saturated_images.push_back(sat_data);
+      m_saturated_images.insert(sat_data);
   }
 
   bool last = ((info.acc_frames + 1) == nb_acc_frame);
@@ -1275,7 +1348,7 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
       break;
 
     case ACC_MEDIAN:
-      m_tmp_datas.push_back(aData);
+      // TODO push data into tmp_datas;
       break;
     }
 
@@ -1292,7 +1365,7 @@ void CtAccumulation::_processBaseFrame(_ProcAccInfo &info, Data &aData,
         break;
 
       case ACC_MEDIAN:
-        // TODO compute the median from m_tmp_datas
+        // TODO compute the median from tmp_datas
         break;
       }
     }
@@ -1325,20 +1398,21 @@ void CtAccumulation::getFrame(Data &aReturnData,int frameNumber)
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR1(frameNumber);
   AutoMutex aLock(m_cond.mutex());
-  if(m_datas.empty())
+  const std::deque<Data>& datas = m_datas.getSequentialQueue();
+  if(datas.empty())
     THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not available";
 
   if(frameNumber < 0)    // means last
-    aReturnData = m_datas.back();
+    aReturnData = datas.back();
   else
   {
-    int oldestFrameNumber = m_datas.front().frameNumber;
-    int lastFrameId = m_datas.back().frameNumber;
+    int oldestFrameNumber = datas.front().frameNumber;
+    int lastFrameId = datas.back().frameNumber;
     // No more into buffer list
     if(frameNumber < oldestFrameNumber || frameNumber > lastFrameId)
       THROW_CTL_ERROR(Error) << "Frame " << frameNumber << " not available";
     else
-      aReturnData = m_datas[frameNumber - oldestFrameNumber];
+      aReturnData = datas[frameNumber - oldestFrameNumber];
   }
 }
 
