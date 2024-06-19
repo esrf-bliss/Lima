@@ -255,6 +255,7 @@ private:
 
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask::CPUMask& mask);
+std::istream& operator >>(std::istream& is, NumaNodeMask::CPUMask& mask);
 
 
 //--------------------------------------------------------------------
