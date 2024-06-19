@@ -426,6 +426,39 @@ std::string MMapAllocator::toString() const
 	return "MMapAllocator()";
 }
 
+//--------------------------------------------------------------------
+//  MMapAllocatorFactory
+//--------------------------------------------------------------------
+
+class MMapAllocatorFactory
+{
+	struct Impl : AllocatorFactory::Impl
+	{
+		DEB_STRUCT_NAMESPC(DebModCommon, "MMapAllocatorFactory::Impl",
+				   "MemUtils");
+
+		std::string getName() const override
+		{
+			return "MMapAllocator";
+		}
+
+		Allocator::Ref createFromParams(const ParamList& pars) override
+		{
+			DEB_MEMBER_FUNCT();
+			if (!pars.empty())
+				THROW_COM_ERROR(InvalidValue) <<
+					"Invalid MMapAllocator params";
+			return std::make_shared<MMapAllocator>();
+		}
+	} m_impl;
+
+public:
+	MMapAllocatorFactory()
+	{
+		AllocatorFactory::get().registerImplementation(&m_impl);
+	}
+} mmap_allocator_factory;
+
 #endif //__unix
 
 
@@ -664,6 +697,20 @@ std::ostream& lima::operator <<(std::ostream& os,
 	return os << setfill(' ') << dec;
 }
 
+std::istream& lima::operator >>(std::istream& is,
+				NumaNodeMask::CPUMask& mask)
+{
+	typedef NumaNodeMask::CPUMask CPUMask;
+	typedef unsigned long ULong;
+	constexpr CPUMask ULongMask(std::numeric_limits<ULong>::max());
+	constexpr int NbULongBits = sizeof(ULong) * 8;
+	constexpr int NbWords = NumaNodeMask::MaxNbCPUs / NbULongBits;
+	ULong aux_mask;
+	is >> hex >> aux_mask;
+	mask = CPUMask(aux_mask);
+	return is;
+}
+
 //--------------------------------------------------------------------
 //  NumaAllocator
 //--------------------------------------------------------------------
@@ -687,6 +734,42 @@ std::string NumaAllocator::toString() const
 	os << "NumaAllocator(0x" << m_cpu_mask << ")";
 	return os.str();
 }
+
+
+//--------------------------------------------------------------------
+//  NumaAllocatorFactory
+//--------------------------------------------------------------------
+
+class NumaAllocatorFactory
+{
+	struct Impl : AllocatorFactory::Impl
+	{
+		std::string getName() const override
+		{
+			return "NumaAllocator";
+		}
+
+		Allocator::Ref createFromParams(const ParamList& pars) override
+		{
+			if ((pars.size() != 1) || !pars[0].key.empty())
+				throw LIMA_COM_EXC(InvalidValue, "Invalid "
+						   "NumaAllocator params");
+			NumaAllocator::CPUMask mask;
+			std::istringstream is(pars[0].value);
+			is >> mask;
+			if (!is)
+				throw LIMA_COM_EXC(InvalidValue, "Invalid "
+						   "NumaAllocator mask param");
+			return std::make_shared<NumaAllocator>(mask);
+		}
+	} m_impl;
+
+public:
+	NumaAllocatorFactory()
+	{
+		AllocatorFactory::get().registerImplementation(&m_impl);
+	}
+} numa_allocator_factory;
 
 #endif //LIMA_USE_NUMA
 
