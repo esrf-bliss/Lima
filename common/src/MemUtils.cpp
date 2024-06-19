@@ -188,49 +188,144 @@ AllocatorFactory::DefaultChangeCallback::~DefaultChangeCallback()
 
 
 //--------------------------------------------------------------------
+//  AllocatorFactory::StringDecoder
+//--------------------------------------------------------------------
+
+AllocatorFactory::StringDecoder::StringDecoder()
+	: m_name_re("(?P<name>[A-Za-z0-9_]+)"),
+	  m_param_token_re("((?P<key>[A-Za-z0-9_]+)=)?(?P<value>[^,)]+)"),
+	  m_params_re(getImplParamsRe(m_param_token_re)),
+	  m_full_re(m_name_re + m_params_re)
+
+{
+	DEB_CONSTRUCTOR();
+
+	DEB_TRACE() << "m_name_re=" << m_name_re.getRegExStr();
+	DEB_TRACE() << "m_param_token_re=" << m_param_token_re.getRegExStr();
+	DEB_TRACE() << "m_params_re=" << m_params_re.getRegExStr();
+	DEB_TRACE() << "m_full_re=" << m_full_re.getRegExStr();
+}
+
+bool AllocatorFactory::StringDecoder::checkName(std::string name) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(name);
+	RegEx::FullMatchType m;
+	return getExactMatchRe(m_name_re).match(name, m);
+}
+
+RegEx AllocatorFactory::StringDecoder::getExactMatchRe(const RegEx& re)
+{
+	return "^" + re.getRegExStr() + "$";
+}
+
+RegEx AllocatorFactory::StringDecoder::getImplParamsRe(const RegEx& token_re)
+{
+	std::string unnamed_token = token_re.getSimpleRegEx().getRegExStr();
+	std::string all_tokens = unnamed_token + "(," + unnamed_token + ")*";
+	return "\\((?P<params>" + all_tokens + ")?\\)";
+}
+
+AllocatorFactory::StringDecoder::NameParams
+AllocatorFactory::StringDecoder::decode(std::string s) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(s);
+	RegEx::FullNameMatchType m;
+	RegEx full_exact_re = getExactMatchRe(m_full_re);
+	if (!full_exact_re.matchName(s, m))
+		THROW_COM_ERROR(NotSupported)
+			<< "AllocatorFactory::StringDecoder::decode: "
+			<< "could not parse \"" << s << "\"";
+	std::string name = m["name"];
+	DEB_TRACE() << DEB_VAR2(name, m["params"].str());
+	ParamList params;
+	if (m["params"].found()) {
+		RegEx::NameMatchListType ml;
+		std::string param_str = m["params"];
+		m_param_token_re.multiSearchName(param_str, ml);
+		bool named_args = false;
+		for (auto& m: ml) {
+			if (m["key"].found())
+				named_args = true;
+			else if (named_args)
+				THROW_COM_ERROR(InvalidValue)
+					<< "Positional arg. after named ones";
+			params.emplace_back(Impl::Param{m["key"], m["value"]});
+		}
+	}
+	if (DEB_CHECK_ANY(DebTypeReturn)) {
+		DEB_RETURN() << DEB_VAR2(name, params.size());
+		int i = 0;
+		for (auto& par: params)
+			DEB_RETURN() << i++ << ": "
+				     << DEB_VAR2(par.key, par.value);
+			
+	}
+	return std::make_pair(name, params);
+}
+
+//--------------------------------------------------------------------
 //  AllocatorFactory
 //--------------------------------------------------------------------
 
 // The AllocatorFactory singleton
 AllocatorFactory& AllocatorFactory::get()
 {
+	DEB_STATIC_FUNCT();
 	static AllocatorFactory factory;
 	return factory;
 }
 
 AllocatorFactory::AllocatorFactory()
 {
+	DEB_CONSTRUCTOR();
+
 	registerImplementation(&m_default_impl);
 	m_default_allocator = fromString("Allocator()");
 }
 
 AllocatorFactory::~AllocatorFactory()
 {
+	DEB_DESTRUCTOR();
 	unregisterImplementation(&m_default_impl);
 }
 
 void AllocatorFactory::registerImplementation(Impl *impl)
 {
-	auto res = m_available_impls.insert(std::make_pair(impl->getName(),
-							   impl));
+	DEB_MEMBER_FUNCT();
+	std::string name = impl->getName();
+	DEB_PARAM() << DEB_VAR1(name);
+	if (!m_string_decoder.checkName(name))
+		THROW_COM_ERROR(InvalidValue)
+			<< "Invalid AllocatorFactory::Impl name: " << name;
+	auto res = m_available_impls.insert(std::make_pair(name, impl));
 	if (!res.second)
-		throw LIMA_COM_EXC(InvalidValue,
-				   "AllocatorFactory::Impl already registered");
+		THROW_COM_ERROR(InvalidValue)
+			<< "AllocatorFactory::Impl already registered";
 }
 
 void AllocatorFactory::unregisterImplementation(Impl *impl)
 {
-	auto it = m_available_impls.find(impl->getName());
+	DEB_MEMBER_FUNCT();
+	std::string name = impl->getName();
+	DEB_PARAM() << DEB_VAR1(name);
+	auto it = m_available_impls.find(name);
 	if (it != m_available_impls.end())
 		m_available_impls.erase(it);
 }
 
 void AllocatorFactory::setDefaultAllocator(Allocator::Ref def_alloc)
 {
+	DEB_MEMBER_FUNCT();
 	if (!def_alloc)
-		throw LIMA_COM_EXC(InvalidValue, "Invalid default allocator");
+		THROW_COM_ERROR(InvalidValue) << "Invalid default allocator";
 	else if (def_alloc == getDefaultAllocator())
 		return;
+
+	DEB_TRACE() << "Changing default Allocator: "
+		    << "prev=" << m_default_allocator->toString() << ", "
+		    << "new=" << def_alloc->toString();
 
 	for (auto cb: m_change_cb_list)
 		cb->onDefaultAllocatorChange(m_default_allocator, def_alloc);
@@ -245,42 +340,42 @@ Allocator::Ref AllocatorFactory::getDefaultAllocator()
 
 void AllocatorFactory::registerDefaultChangeCallback(DefaultChangeCallback *cb)
 {
+	DEB_MEMBER_FUNCT();
 	ChangeCbList::iterator it, end = m_change_cb_list.end();
 	it = std::find(m_change_cb_list.begin(), end, cb);
 	if (it != end)
-		throw LIMA_COM_EXC(InvalidValue,
-				   "DefaultChangeCallback already registered");
+		THROW_COM_ERROR(InvalidValue)
+			<< "DefaultChangeCallback already registered";
 	m_change_cb_list.push_back(cb);
 }
 
 void AllocatorFactory::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
 {
+	DEB_MEMBER_FUNCT();
 	ChangeCbList::iterator it, end = m_change_cb_list.end();
 	it = std::find(m_change_cb_list.begin(), end, cb);
 	if (it == end)
-		throw LIMA_COM_EXC(InvalidValue,
-				   "DefaultChangeCallback not registered");
+		THROW_COM_ERROR(InvalidValue)
+			<< "DefaultChangeCallback not registered";
 	m_change_cb_list.erase(it);
 }
 
 Allocator::Ref AllocatorFactory::fromString(std::string s)
 {
-	NameParams name_params = decodeString(s);
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(s);
+	StringDecoder::NameParams name_params = m_string_decoder.decode(s);
 	ImplMap::iterator it = m_available_impls.find(name_params.first);
 	if (it == m_available_impls.end())
-		throw LIMA_COM_EXC(NotSupported, "Allocator::fromString: ")
-			<< "could not find allocator " << name_params.first;
-	return it->second->createFromParams(name_params.second);
-}
-
-AllocatorFactory::NameParams AllocatorFactory::decodeString(std::string s)
-{
-	// TODO: add RegEx parsing ...
-	std::string default_name = m_default_impl.getName();
-	if (s == default_name + "()")
-		return std::make_pair(default_name, Params());
-	throw LIMA_COM_EXC(NotSupported, "Allocator::decodeString: ")
-		<< "could not parse \"" << s << "\"";
+		THROW_COM_ERROR(NotSupported)
+			<< "AllocatorFactory::fromString: could not find "
+			<< "allocator " << name_params.first;
+	Allocator::Ref alloc = it->second->createFromParams(name_params.second);
+	if (!alloc)
+		THROW_COM_ERROR(InvalidValue) << it->first << " returned"
+					      << "empty Allocator::Ref";
+	DEB_RETURN() << DEB_VAR1(alloc->toString());
+	return alloc;
 }
 
 

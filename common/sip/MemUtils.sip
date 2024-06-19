@@ -93,4 +93,5 @@ public:
 
 private:
 	AllocatorFactory();
+	AllocatorFactory(const AllocatorFactory& o);
 };

@@ -58,6 +58,11 @@ SimpleRegEx::SingleMatch::operator string() const
 	return string(start, end); 
 }
 
+string SimpleRegEx::SingleMatch::str() const
+{ 
+	return *this;
+}
+
 
 SimpleRegEx::SimpleRegEx()
 {
@@ -351,6 +356,11 @@ void RegEx::set(const string& regex_str)
 const string& RegEx::getRegExStr() const
 {
 	return m_str;
+}
+
+const SimpleRegEx& RegEx::getSimpleRegEx() const
+{
+	return m_regex;
 }
 
 int RegEx::getNbGroups() const
