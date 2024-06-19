@@ -191,13 +191,6 @@ AllocatorFactory::DefaultChangeCallback::~DefaultChangeCallback()
 //  AllocatorFactory
 //--------------------------------------------------------------------
 
-// The default allocator
-Allocator::Ref AllocatorFactory::m_default_allocator;
-// The DefaultChangeCallback list
-AllocatorFactory::ChangeCbList *AllocatorFactory::m_change_cb_list = nullptr;
-// The available Factory list
-AllocatorFactory::FactoryList *AllocatorFactory::m_available_factories = nullptr;
-
 // The AllocatorFactory singleton
 AllocatorFactory& AllocatorFactory::get()
 {
@@ -207,22 +200,29 @@ AllocatorFactory& AllocatorFactory::get()
 
 AllocatorFactory::AllocatorFactory()
 {
-	initFactoryGlobals();
-	m_available_factories->insert(this);
+	registerImplementation(&m_default_impl);
+	m_default_allocator = fromString("Allocator()");
 }
 
 AllocatorFactory::~AllocatorFactory()
 {
-	m_available_factories->erase(this);
+	unregisterImplementation(&m_default_impl);
 }
 
-void AllocatorFactory::initFactoryGlobals()
+void AllocatorFactory::registerImplementation(Impl *impl)
 {
-	EXEC_ONCE(
-		m_default_allocator = std::make_shared<Allocator>();
-		m_change_cb_list = new std::vector<DefaultChangeCallback *>();
-		m_available_factories = new std::set<AllocatorFactory *>();
-	);
+	auto res = m_available_impls.insert(std::make_pair(impl->getName(),
+							   impl));
+	if (!res.second)
+		throw LIMA_COM_EXC(InvalidValue,
+				   "AllocatorFactory::Impl already registered");
+}
+
+void AllocatorFactory::unregisterImplementation(Impl *impl)
+{
+	auto it = m_available_impls.find(impl->getName());
+	if (it != m_available_impls.end())
+		m_available_impls.erase(it);
 }
 
 void AllocatorFactory::setDefaultAllocator(Allocator::Ref def_alloc)
@@ -232,9 +232,8 @@ void AllocatorFactory::setDefaultAllocator(Allocator::Ref def_alloc)
 	else if (def_alloc == getDefaultAllocator())
 		return;
 
-	ChangeCbList::iterator it, end = m_change_cb_list->end();
-	for (it = m_change_cb_list->begin(); it != end; ++it)
-		(*it)->onDefaultAllocatorChange(m_default_allocator, def_alloc);
+	for (auto cb: m_change_cb_list)
+		cb->onDefaultAllocatorChange(m_default_allocator, def_alloc);
 	
 	m_default_allocator = def_alloc;
 }
@@ -246,39 +245,42 @@ Allocator::Ref AllocatorFactory::getDefaultAllocator()
 
 void AllocatorFactory::registerDefaultChangeCallback(DefaultChangeCallback *cb)
 {
-	ChangeCbList::iterator it, end = m_change_cb_list->end();
-	it = std::find(m_change_cb_list->begin(), end, cb);
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
 	if (it != end)
 		throw LIMA_COM_EXC(InvalidValue,
 				   "DefaultChangeCallback already registered");
-	m_change_cb_list->push_back(cb);
+	m_change_cb_list.push_back(cb);
 }
 
 void AllocatorFactory::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
 {
-	ChangeCbList::iterator it, end = m_change_cb_list->end();
-	it = std::find(m_change_cb_list->begin(), end, cb);
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
 	if (it == end)
 		throw LIMA_COM_EXC(InvalidValue,
 				   "DefaultChangeCallback not registered");
-	m_change_cb_list->erase(it);
+	m_change_cb_list.erase(it);
 }
 
 Allocator::Ref AllocatorFactory::fromString(std::string s)
 {
-	FactoryList::iterator it, end = m_available_factories->end();
-	for (it = m_available_factories->begin(); it != end; ++it) {
-		Allocator::Ref alloc = (*it)->tryFromString(s);
-		if (alloc)
-			return alloc;
-	}
-	throw LIMA_COM_EXC(NotSupported, "Allocator::fromString: ")
-		<< "could not build allocator from " << s;
+	NameParams name_params = decodeString(s);
+	ImplMap::iterator it = m_available_impls.find(name_params.first);
+	if (it == m_available_impls.end())
+		throw LIMA_COM_EXC(NotSupported, "Allocator::fromString: ")
+			<< "could not find allocator " << name_params.first;
+	return it->second->createFromParams(name_params.second);
 }
 
-Allocator::Ref AllocatorFactory::tryFromString(std::string s)
+AllocatorFactory::NameParams AllocatorFactory::decodeString(std::string s)
 {
-	return (s == "Allocator()") ? std::make_shared<Allocator>() : nullptr;
+	// TODO: add RegEx parsing ...
+	std::string default_name = m_default_impl.getName();
+	if (s == default_name + "()")
+		return std::make_pair(default_name, Params());
+	throw LIMA_COM_EXC(NotSupported, "Allocator::decodeString: ")
+		<< "could not parse \"" << s << "\"";
 }
 
 
