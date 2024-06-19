@@ -241,7 +241,7 @@ void *MMapAllocator::allocMmap(size_t& size)
 MemBuffer::MemBuffer(Allocator::Ref allocator /*= {}*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
+	m_allocator(allocator)
 {
 }
 
@@ -249,7 +249,7 @@ MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*= {}*/,
 		     bool init_mem /*= true*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
+	m_allocator(allocator)
 {
 	alloc(size, init_mem);
 }
@@ -622,8 +622,11 @@ void BufferPool::_allocBuffers(int nb_buffers, int size, AutoMutex& l)
 	m_buffer_size = size;
 	DEB_TRACE() << DEB_VAR2(m_buffers.size(), nb_buffers);
 	// TODO: reduce the number of buffers
+	Allocator::Ref allocator = m_alloc;
+	if (!allocator)
+		allocator = Allocator::getDefaultAllocator();
 	while (m_buffers.size() < nb_buffers) {
-		m_buffers.emplace_back(size, m_alloc, m_init_mem);
+		m_buffers.emplace_back(size, allocator, m_init_mem);
 		m_available.push(m_buffers.back().getPtr());
 	}
 }
