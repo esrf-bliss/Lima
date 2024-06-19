@@ -85,6 +85,25 @@ struct LIMACORE_API Allocator
 class LIMACORE_API AllocatorFactory
 {
 public:
+	typedef std::map<std::string, std::string> Params;
+
+	// The actual factory implementation 
+	struct Impl
+	{
+		virtual std::string getName() const
+		{
+			return "Allocator";
+		}
+
+		virtual Allocator::Ref createFromParams(const Params& params)
+		{
+			if (!params.empty())
+				throw LIMA_COM_EXC(InvalidValue,
+						   "Invalid Allocator params");
+			return std::make_shared<Allocator>();
+		}
+	};
+
 	// Callback updating on default allocator change
 	class DefaultChangeCallback
 	{
@@ -96,10 +115,14 @@ public:
 						      Allocator::Ref new_alloc) = 0;
 	};
 
-	virtual ~AllocatorFactory();
+	~AllocatorFactory();
 
 	// The AllocatorFactory singleton
 	static AllocatorFactory& get();
+
+	// The AllocatorFactory singleton
+	void registerImplementation(Impl *impl);
+	void unregisterImplementation(Impl *impl);
 
 	// Sets the static instance of the default allocator
 	void setDefaultAllocator(Allocator::Ref def_alloc);
@@ -112,21 +135,18 @@ public:
 	// string representation for serialization
 	Allocator::Ref fromString(std::string s);
 
-protected:
-	AllocatorFactory();
-	AllocatorFactory(const AllocatorFactory& o) = delete;
-
-	virtual Allocator::Ref tryFromString(std::string s);
-
 private:
 	typedef std::vector<DefaultChangeCallback *> ChangeCbList;
-	typedef std::set<AllocatorFactory *> FactoryList;
+	typedef std::map<std::string, Impl*> ImplMap;
+	typedef std::pair<std::string, Params> NameParams;
 
-	static void initFactoryGlobals();
+	AllocatorFactory();
+	NameParams decodeString(std::string s);
 
-	static Allocator::Ref m_default_allocator;
-	static ChangeCbList *m_change_cb_list;
-	static FactoryList *m_available_factories;
+	Allocator::Ref m_default_allocator;
+	ChangeCbList m_change_cb_list;
+	ImplMap m_available_impls;
+	Impl m_default_impl;
 };
 
 
@@ -276,8 +296,6 @@ class LIMACORE_API MemBuffer
 	void initMemory();
 
  private:
-	/// Return a real allocator, getting the default if needed
-	static Allocator::Ref getEffectiveAllocator(Allocator::Ref allocator);
 	/// Call the allocator to (eventually) free the current buffer then allocate a new buffer
 	void uninitializedAlloc(size_t size);
 

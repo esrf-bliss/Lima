@@ -81,8 +81,6 @@ private:
 class AllocatorFactory {
 
 public:
-	virtual ~AllocatorFactory();
-
 	// The AllocatorFactory singleton
 	static AllocatorFactory& get();
 
@@ -93,10 +91,6 @@ public:
 
 	Allocator::Ref fromString(std::string s);
 
-protected:
-	AllocatorFactory();
-	virtual Allocator::Ref tryFromString(std::string s);
-
 private:
-	AllocatorFactory(const AllocatorFactory& o);
+	AllocatorFactory();
 };
