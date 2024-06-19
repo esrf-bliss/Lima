@@ -27,6 +27,7 @@
 #include "lima/Debug.h"
 #include "lima/Exceptions.h"
 #include "lima/ThreadUtils.h"
+#include "lima/RegExUtils.h"
 
 #include <memory>
 #include <vector>
@@ -57,6 +58,9 @@ struct LIMACORE_API Allocator
 {
 	DEB_STRUCT_NAMESPC(DebModCommon, "Allocator", "MemUtils");
 
+	// Ancillary data associated to an allocation that may be necessary for
+        // releasing the buffers. For instance, MemBuffers keep a reference to
+        // these data and pass them to release.
 	struct Data {
 		virtual ~Data() = default;
 	};
@@ -84,24 +88,52 @@ struct LIMACORE_API Allocator
 
 class LIMACORE_API AllocatorFactory
 {
+	DEB_CLASS_NAMESPC(DebModCommon, "AllocatorFactory", "MemUtils");
 public:
-	typedef std::map<std::string, std::string> Params;
-
 	// The actual factory implementation 
 	struct Impl
 	{
+		struct Param {
+			std::string key;
+			std::string value;
+		};
+		typedef std::vector<Param> ParamList;
+
 		virtual std::string getName() const
 		{
 			return "Allocator";
 		}
 
-		virtual Allocator::Ref createFromParams(const Params& params)
+		virtual Allocator::Ref createFromParams(const ParamList& pars)
 		{
-			if (!params.empty())
+			if (!pars.empty())
 				throw LIMA_COM_EXC(InvalidValue,
 						   "Invalid Allocator params");
 			return std::make_shared<Allocator>();
 		}
+	};
+	typedef Impl::ParamList ParamList;
+
+	struct StringDecoder
+	{
+		DEB_STRUCT_NAMESPC(DebModCommon,
+				   "AllocatorFactory::StringDecoder",
+				   "MemUtils");
+
+		typedef std::pair<std::string, ParamList> NameParams;
+
+		RegEx m_name_re;
+		RegEx m_param_token_re;
+		RegEx m_params_re;
+		RegEx m_full_re;
+
+		StringDecoder();
+
+		bool checkName(std::string name) const;
+		NameParams decode(std::string s) const;
+
+		static RegEx getExactMatchRe(const RegEx& re);
+		static RegEx getImplParamsRe(const RegEx& token_re);
 	};
 
 	// Callback updating on default allocator change
@@ -135,13 +167,13 @@ public:
 	// string representation for serialization
 	Allocator::Ref fromString(std::string s);
 
+	const StringDecoder m_string_decoder;
+
 private:
 	typedef std::vector<DefaultChangeCallback *> ChangeCbList;
 	typedef std::map<std::string, Impl*> ImplMap;
-	typedef std::pair<std::string, Params> NameParams;
 
 	AllocatorFactory();
-	NameParams decodeString(std::string s);
 
 	Allocator::Ref m_default_allocator;
 	ChangeCbList m_change_cb_list;

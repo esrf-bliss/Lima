@@ -47,6 +47,7 @@ class SimpleRegEx
 
 		bool found() const;
 		operator std::string() const;
+		std::string str() const;
 	} SingleMatchType;
 
 	typedef std::vector<SingleMatchType> FullMatchType;
@@ -109,6 +110,7 @@ class RegEx {
 	RegEx& operator +=(const RegEx& regex);
 
 	const std::string& getRegExStr() const;
+	const SimpleRegEx& getSimpleRegEx() const;
 
 	bool singleSearch(const std::string& str, 
 			  FullMatchType& match, 
