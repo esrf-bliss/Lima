@@ -172,8 +172,10 @@ class LIMACORE_API MemBuffer
 {
  public:
 	//By default, construct a MemBuffer with the default allocator
-	MemBuffer(Allocator::Ref allocator = {});
-	MemBuffer(int size, Allocator::Ref allocator = {}, bool init_mem = true);
+	MemBuffer(Allocator::Ref allocator = Allocator::getDefaultAllocator());
+	MemBuffer(int size,
+		  Allocator::Ref allocator = Allocator::getDefaultAllocator(),
+		  bool init_mem = true);
 	~MemBuffer();
 
 	// MemBuffer are copy constructible (deep copy, no aliasing)
