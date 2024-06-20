@@ -94,6 +94,9 @@ SimpleRegEx& SimpleRegEx::operator +=(const SimpleRegEx& regex)
 
 void SimpleRegEx::set(const string& regex_str)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(regex_str);
+
 	if (regex_str == m_str)
 		return;
 
@@ -101,6 +104,7 @@ void SimpleRegEx::set(const string& regex_str)
 
 	m_str = regex_str;
 	m_nb_groups = m_regex.mark_count();
+	DEB_TRACE() << DEB_VAR1(m_nb_groups);
 }
 
 const string& SimpleRegEx::getRegExStr() const
@@ -131,6 +135,9 @@ bool SimpleRegEx::singleSearch(const string& str, FullMatchType& match,
 void SimpleRegEx::multiSearch(const string& str, MatchListType& match_list,
 			      int nb_groups, int max_nb_match) const
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR3(str, nb_groups, max_nb_match);
+
 	if (m_str.empty())
 		throw LIMA_COM_EXC(InvalidValue, "Regular expression not set");
 
@@ -141,6 +148,7 @@ void SimpleRegEx::multiSearch(const string& str, MatchListType& match_list,
 	StrIt send = str.end();
 
 	nb_groups = (nb_groups > 0) ? nb_groups : (m_nb_groups + 1);
+	DEB_TRACE() << DEB_VAR2(m_str, nb_groups);
 
 	std::smatch match;
 
@@ -152,6 +160,8 @@ void SimpleRegEx::multiSearch(const string& str, MatchListType& match_list,
 		std::regex_constants::match_flag_type flags{};
 		if (it != sbeg)
 			flags |= std::regex_constants::match_not_bol;
+		DEB_TRACE() << DEB_VAR3(i, (it != sbeg), long(flags));
+
 		if (!std::regex_search(it, send, match, m_regex, flags))
 			break;
 
@@ -161,6 +171,19 @@ void SimpleRegEx::multiSearch(const string& str, MatchListType& match_list,
 		match_list.push_back(full_match);
 
 		it = match[0].second;
+	}
+
+	if (DEB_CHECK_ANY(DebTypeReturn)) {
+		DEB_RETURN() << DEB_VAR1(match_list.size());
+		int i = 0;
+		for (auto& fm: match_list) {
+			DEB_RETURN() << "match_list[" << i++ << "]:";
+			int j = 0;
+			for (auto& f: fm)
+				DEB_RETURN() << "  " << j++ << ": "
+					     << (f.found() ? f.str() :
+							     "<Unmatched>");
+		}
 	}
 }
 
@@ -218,6 +241,9 @@ RegEx& RegEx::operator +=(const RegEx& regex)
 
 void RegEx::set(const string& regex_str)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(regex_str);
+
 	if (regex_str == m_str)
 		return;
 
@@ -257,6 +283,7 @@ void RegEx::set(const string& regex_str)
 		sit = grp_start.end;
 	}
 	simple_regex_str += string(sit, regex_str.end());
+	DEB_TRACE() << DEB_VAR1(simple_regex_str);
 	
 	m_str = regex_str;
 	m_regex = simple_regex_str;
