@@ -101,6 +101,7 @@ set(common_srcs
     common/src/ThreadUtils.cpp
     common/src/Exceptions.cpp
     common/src/MemUtils.cpp
+    common/src/RegExUtils.cpp
     common/src/BufferHelper.cpp
     common/src/AcqState.cpp
     common/src/Debug.cpp
@@ -112,7 +113,6 @@ set(common_srcs
 
 if(UNIX)
     list(APPEND common_srcs
-        common/src/RegExUtils.cpp
         common/src/SimplePipe.cpp
     )
 endif()

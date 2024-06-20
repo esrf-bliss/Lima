@@ -28,7 +28,7 @@
 #include <vector>
 #include <map>
 #include <sys/types.h>
-#include <regex.h>
+#include <regex>
 
 namespace lima
 {
@@ -43,7 +43,7 @@ class SimpleRegEx
 		StrIt end;
 
 		SingleMatch();
-		SingleMatch(StrIt it, const regmatch_t& rm);
+		SingleMatch(const std::ssub_match& m);
 
 		bool found() const;
 		operator std::string() const;
@@ -53,10 +53,9 @@ class SimpleRegEx
 	typedef std::vector<SingleMatchType> FullMatchType;
 	typedef std::vector<FullMatchType>   MatchListType;
 
-	SimpleRegEx();
+	SimpleRegEx() = default;
 	SimpleRegEx(const std::string& regex_str);
 	SimpleRegEx(const SimpleRegEx& regex);
-	~SimpleRegEx();
 
 	SimpleRegEx& operator  =(const std::string& regex_str);
 	SimpleRegEx& operator +=(const std::string& regex_str);
@@ -76,15 +75,10 @@ class SimpleRegEx
 
  private:
 	void set(const std::string& regex_str);
-	void free();
-
-	static int findNbGroups(const std::string& regex_str);
-
-	std::string strError(int ret) const;
 
 	std::string m_str;
-	regex_t m_regex;
-	int m_nb_groups;
+	std::regex m_regex;
+	int m_nb_groups{0};
 };
 
 SimpleRegEx operator +(const SimpleRegEx& re1, const SimpleRegEx& re2);
@@ -99,10 +93,9 @@ class RegEx {
 	typedef std::map<std::string, SingleMatchType> FullNameMatchType;
 	typedef std::vector<FullNameMatchType>         NameMatchListType;
 
-	RegEx();
+	RegEx() = default;
 	RegEx(const std::string& regex_str);
 	RegEx(const RegEx& regex);
-	~RegEx();
 
 	RegEx& operator  =(const std::string& regex_str);
 	RegEx& operator +=(const std::string& regex_str);
@@ -138,7 +131,6 @@ class RegEx {
 	typedef std::map<std::string, int> NameMapType;
 
 	void set(const std::string& regex_str);
-	void free();
 	void convertNameMatch(const FullMatchType& match, 
 			      FullNameMatchType& name_match) const;
 
