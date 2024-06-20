@@ -22,6 +22,7 @@
 #ifndef REGEX_H
 #define REGEX_H
 
+#include "lima/Debug.h"
 #include "lima/Exceptions.h"
 
 #include <string>
@@ -35,6 +36,7 @@ namespace lima
 
 class SimpleRegEx
 {
+	DEB_CLASS(DebModCommon, "SimpleRegEx");
  public:
 	typedef struct SingleMatch {
 		typedef std::string::const_iterator StrIt;
@@ -85,6 +87,7 @@ SimpleRegEx operator +(const SimpleRegEx& re1, const SimpleRegEx& re2);
 
 
 class RegEx {
+	DEB_CLASS(DebModCommon, "RegEx");
  public:
 	typedef SimpleRegEx::SingleMatchType           SingleMatchType;
 	typedef SimpleRegEx::FullMatchType             FullMatchType;
