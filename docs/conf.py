@@ -33,7 +33,8 @@ if read_the_docs_build:
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.ifconfig',
     'sphinx.ext.mathjax', 'breathe',
-    'sphinx_rtd_theme'
+    'sphinx_immaterial',
+    'sphinx_immaterial.apidoc.python.apigen',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -107,7 +108,7 @@ breathe_domain_by_extension = {"h" : "cpp"}
 
 # only import and set the theme if we're building docs locally
 #import sphinx_rtd_theme
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_immaterial"
 #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # otherwise, readthedocs.org uses their theme by default, so no need to specify it
@@ -119,7 +120,49 @@ html_theme = 'sphinx_rtd_theme'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+
+html_theme_options = {
+    "site_url": "https://lima1.readthedocs.io/en/latest/",
+    "repo_url": "https://gitlab.esrf.fr/limagroup/lima",
+    "repo_name": "Lima1",
+    "palette": {"primary": "blue", "accent": "light-blue"},
+    "features": [
+        "navigation.expand",
+        # "navigation.tabs",
+        # "toc.integrate",
+        "navigation.sections",
+        # "navigation.instant",
+        # "header.autohide",
+        "navigation.top",
+        # "navigation.tracking",
+        # "search.highlight",
+        "search.share",
+        "toc.follow",
+        "toc.sticky",
+        "content.tabs.link",
+        "announce.dismiss",
+    ],
+    # BEGIN: version_dropdown
+    "version_dropdown": True,
+    "version_info": [
+        {
+            "version": "https://lima1.readthedocs.io",
+            "title": "ReadTheDocs",
+            "aliases": [],
+        },
+        {
+            "version": "https://gitlab.esrf.fr/limagroup/lima",
+            "title": "Github Pages",
+            "aliases": [],
+        },
+    ],
+    # END: version_dropdown
+    "font": {
+        "text": "Roboto",  # used for all the pages' text
+        "code": "Roboto Mono",  # used for literal code blocks
+    },
+    "toc_title_is_page_title": True,
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
