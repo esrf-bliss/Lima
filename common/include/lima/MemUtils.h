@@ -33,6 +33,7 @@
 #include <vector>
 #include <queue>
 #include <set>
+#include <limits>
 
 namespace lima
 {
@@ -220,12 +221,43 @@ protected:
 //  NumaNodeMask
 //--------------------------------------------------------------------
 
+struct CPUMask
+{
+	static constexpr int MaxNbCPUs = 128;
+	typedef std::bitset<MaxNbCPUs> BitMask;
+
+	static constexpr int NbULongBits = sizeof(unsigned long) * 8;
+	static constexpr int NbULongs = MaxNbCPUs / NbULongBits;
+	typedef unsigned long ULongArray[NbULongs];
+
+	static constexpr BitMask ULongMask =
+		std::numeric_limits<unsigned long>::max();
+
+	CPUMask() = default;
+	CPUMask(const CPUMask& o) = default;
+	CPUMask(const BitMask& o) : m_mask(o) {}
+
+	void toULongArray(ULongArray& array) const;
+	static CPUMask fromULongArray(const ULongArray& array);
+
+	std::string toString(int base = 16, bool comma_sep = false) const;
+	static CPUMask fromString(std::string aff_str, int base = 16);
+
+	BitMask m_mask;
+};
+
+inline bool operator ==(const CPUMask& a, const CPUMask& b)
+{
+	return a.m_mask == b.m_mask;
+}
+
+std::ostream& operator <<(std::ostream& os, const CPUMask& mask);
+std::istream& operator >>(std::istream& is, CPUMask& mask);
+
 // Structure needed to bind memory to one or more CPU sockets
 class NumaNodeMask
 {
 public:
-	static constexpr int MaxNbCPUs = 128;
-	typedef std::bitset<MaxNbCPUs> CPUMask;
 	typedef std::vector<unsigned long> ItemArray;
 	static constexpr int ItemBits = sizeof(ItemArray::value_type) * 8;
 
@@ -254,8 +286,6 @@ private:
 };
 
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
-std::ostream& operator <<(std::ostream& os, const NumaNodeMask::CPUMask& mask);
-std::istream& operator >>(std::istream& is, NumaNodeMask::CPUMask& mask);
 
 
 //--------------------------------------------------------------------
@@ -265,9 +295,6 @@ std::istream& operator >>(std::istream& is, NumaNodeMask::CPUMask& mask);
 class LIMACORE_API NumaAllocator : public MMapAllocator
 {
 public:
-	static constexpr int MaxNbCPUs = NumaNodeMask::MaxNbCPUs;	
-	typedef NumaNodeMask::CPUMask CPUMask;
-
 	NumaAllocator(const CPUMask& cpu_mask) : m_cpu_mask(cpu_mask) {}
 
 	const CPUMask &getCPUAffinityMask()
