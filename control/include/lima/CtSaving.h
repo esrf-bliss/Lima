@@ -415,7 +415,7 @@ public:
 		long			m_written_frames;
 
 	private:
-		friend class _SavingSidebandData;
+		friend struct _SavingSidebandData;
 
 		void close(const Params2Handler::iterator& it, AutoMutex& l);
 
