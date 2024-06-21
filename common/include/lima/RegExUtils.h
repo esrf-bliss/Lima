@@ -22,6 +22,7 @@
 #ifndef REGEX_H
 #define REGEX_H
 
+#include "lima/LimaCompatibility.h"
 #include "lima/Debug.h"
 #include "lima/Exceptions.h"
 
@@ -34,11 +35,11 @@
 namespace lima
 {
 
-class SimpleRegEx
+class LIMACORE_API SimpleRegEx
 {
 	DEB_CLASS(DebModCommon, "SimpleRegEx");
  public:
-	typedef struct SingleMatch {
+	typedef struct LIMACORE_API SingleMatch {
 		typedef std::string::const_iterator StrIt;
 
 		StrIt start;
@@ -86,7 +87,7 @@ class SimpleRegEx
 SimpleRegEx operator +(const SimpleRegEx& re1, const SimpleRegEx& re2);
 
 
-class RegEx {
+class LIMACORE_API RegEx {
 	DEB_CLASS(DebModCommon, "RegEx");
  public:
 	typedef SimpleRegEx::SingleMatchType           SingleMatchType;
@@ -142,7 +143,7 @@ class RegEx {
 	NameMapType m_name_map;
 };
 
-RegEx operator +(const RegEx& re1, const RegEx& re2);
+RegEx LIMACORE_API operator +(const RegEx& re1, const RegEx& re2);
 
 } // namespace lima
 
