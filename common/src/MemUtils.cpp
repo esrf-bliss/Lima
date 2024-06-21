@@ -193,7 +193,7 @@ AllocatorFactory::DefaultChangeCallback::~DefaultChangeCallback()
 
 AllocatorFactory::StringDecoder::StringDecoder()
 	: m_name_re("(?P<name>[A-Za-z0-9_]+)"),
-	  m_param_token_re("((?P<key>[A-Za-z0-9_]+)=)?(?P<value>[^,)]+)"),
+	  m_param_token_re("(?P<key>[A-Za-z0-9_]+)=(?P<value>[^,)]+)"),
 	  m_params_re(getImplParamsRe(m_param_token_re)),
 	  m_full_re(m_name_re + m_params_re)
 
@@ -244,15 +244,8 @@ AllocatorFactory::StringDecoder::decode(std::string s) const
 		RegEx::NameMatchListType ml;
 		std::string param_str = m["params"];
 		m_param_token_re.multiSearchName(param_str, ml);
-		bool named_args = false;
-		for (auto& m: ml) {
-			if (m["key"].found())
-				named_args = true;
-			else if (named_args)
-				THROW_COM_ERROR(InvalidValue)
-					<< "Positional arg. after named ones";
+		for (auto& m: ml)
 			params.emplace_back(Impl::Param{m["key"], m["value"]});
-		}
 	}
 	if (DEB_CHECK_ANY(DebTypeReturn)) {
 		DEB_RETURN() << DEB_VAR2(name, params.size());
@@ -731,7 +724,7 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 std::string NumaAllocator::toString() const
 {
 	std::ostringstream os;
-	os << "NumaAllocator(0x" << m_cpu_mask << ")";
+	os << "NumaAllocator(cpu_mask=0x" << m_cpu_mask << ")";
 	return os.str();
 }
 
@@ -744,6 +737,9 @@ class NumaAllocatorFactory
 {
 	struct Impl : AllocatorFactory::Impl
 	{
+		DEB_STRUCT_NAMESPC(DebModCommon, "NumaAllocatorFactory::Impl",
+				   "MemUtils");
+
 		std::string getName() const override
 		{
 			return "NumaAllocator";
@@ -751,15 +747,24 @@ class NumaAllocatorFactory
 
 		Allocator::Ref createFromParams(const ParamList& pars) override
 		{
-			if ((pars.size() != 1) || !pars[0].key.empty())
-				throw LIMA_COM_EXC(InvalidValue, "Invalid "
-						   "NumaAllocator params");
+			DEB_MEMBER_FUNCT();
+
+			if ((pars.size() != 1) || (pars[0].key != "cpu_mask"))
+				THROW_COM_ERROR(InvalidValue)
+					<< "Invalid param(s) string, must be: "
+					<< "NumaAllocator(cpu_mask=0x<mask>)";
+
+			std::string mask_str = pars[0].value;
+			if (mask_str.find("0x") != 0)
+				THROW_COM_ERROR(InvalidValue)
+					<< "Invalid hexadecimal-coded cpu_mask "
+					<< "without explicit 0x prefix";
 			NumaAllocator::CPUMask mask;
-			std::istringstream is(pars[0].value);
+			std::istringstream is(mask_str.substr(2));
 			is >> mask;
 			if (!is)
-				throw LIMA_COM_EXC(InvalidValue, "Invalid "
-						   "NumaAllocator mask param");
+				THROW_COM_ERROR(InvalidValue)
+					<< "Invalid NumaAllocator cpu_mask";
 			return std::make_shared<NumaAllocator>(mask);
 		}
 	} m_impl;
