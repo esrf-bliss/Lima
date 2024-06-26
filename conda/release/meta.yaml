@@ -24,7 +24,7 @@ requirements:
     # I/O formats
     - zlib
     - lz4-c >=1.9.1
-    - hdf5 1.10*
+    - hdf5 1.14.3*
     - libtiff
     - cbflib         # [linux]
     - openssl 3*     # [linux]
@@ -41,7 +41,7 @@ requirements:
     # I/O formats
     - zlib
     - lz4-c >=1.9.1
-    - hdf5 1.10*
+    - hdf5 1.14*
     - libtiff
     - cbflib        # [linux]
     - openssl       # [linux]
