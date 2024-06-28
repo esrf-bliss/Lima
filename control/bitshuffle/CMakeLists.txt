@@ -22,15 +22,15 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 
 project(bitshuffle)
 
 find_package(HDF5 REQUIRED)
 
 set(BS_VERSION_MAJOR "0")
-set(BS_VERSION_MINOR "3")
-set(BS_VERSION_POINT "4")
+set(BS_VERSION_MINOR "5")
+set(BS_VERSION_POINT "1")
 
 set(BITSHUFFLE_DIR ../../third-party/bitshuffle)
 
@@ -59,7 +59,10 @@ target_compile_definitions(h5bshuf_objects PRIVATE
   -DBSHUF_VERSION_POINT=${BS_VERSION_POINT}
 )
 
-target_compile_definitions(h5bshuf_objects PRIVATE ${HDF5_DEFINITIONS})
+target_compile_definitions(h5bshuf_objects PRIVATE ${HDF5_DEFINITIONS} ${HDF5_C_DEFINITIONS})
+if (WIN32)
+  target_compile_definitions(h5bshuf_objects PRIVATE H5_BUILT_AS_DYNAMIC_LIB)
+endif(WIN32)
 
 # shared libraries need PIC
 set_property(TARGET h5bshuf_objects PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -69,8 +72,8 @@ add_library(h5bshuf SHARED $<TARGET_OBJECTS:h5bshuf_objects>)
 add_library(h5bshuf_static STATIC $<TARGET_OBJECTS:h5bshuf_objects>)
 
 target_include_directories(h5bshuf PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${BITSHUFFLE_DIR}/src>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${BITSHUFFLE_DIR}/src>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(h5bshuf PRIVATE ${HDF5_LIBRARIES})
