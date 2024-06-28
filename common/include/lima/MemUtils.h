@@ -27,13 +27,20 @@
 #include "lima/Debug.h"
 #include "lima/Exceptions.h"
 #include "lima/ThreadUtils.h"
+#include "lima/RegExUtils.h"
 
 #include <memory>
 #include <vector>
 #include <queue>
+#include <set>
+#include <limits>
 
 namespace lima
 {
+
+//--------------------------------------------------------------------
+//  Memory Helper functions
+//--------------------------------------------------------------------
 
 void LIMACORE_API GetSystemMem(int& mem_unit, int& system_mem);
 	
@@ -44,24 +51,24 @@ int LIMACORE_API GetDefMaxNbBuffers(const FrameDim& frame_dim);
 void LIMACORE_API ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
 
 
+//--------------------------------------------------------------------
+//  Allocator
+//--------------------------------------------------------------------
+
 struct LIMACORE_API Allocator
 {
 	DEB_STRUCT_NAMESPC(DebModCommon, "Allocator", "MemUtils");
 
+	// Ancillary data associated to an allocation that may be necessary for
+        // releasing the buffers. For instance, MemBuffers keep a reference to
+        // these data and pass them to release.
 	struct Data {
 		virtual ~Data() = default;
 	};
 	typedef std::shared_ptr<Data> DataPtr;
 	typedef std::shared_ptr<Allocator> Ref;
 
-	// Callback updating on default allocator change
-	class DefaultChangeCallback
-	{
-	public:
-		virtual ~DefaultChangeCallback() {};
-		virtual void onDefaultAllocatorChange(Ref prev_alloc,
-						      Ref new_alloc) = 0;
-	};
+	virtual ~Allocator();
 
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size
@@ -71,22 +78,117 @@ struct LIMACORE_API Allocator
 	// Free a buffer
 	virtual void release(void* ptr, size_t size, DataPtr alloc_data);
 
-	// Sets the static instance of the default allocator
-	static void setDefaultAllocator(Ref def_alloc);
-	// Returns the static instance of the default allocator
-	static Ref getDefaultAllocator();
+	// string representation for serialization
+	virtual std::string toString() const;
+};
 
-	static void registerDefaultChangeCallback(DefaultChangeCallback *cb);
-	static void unregisterDefaultChangeCallback(DefaultChangeCallback *cb);
+
+//--------------------------------------------------------------------
+//  AllocatorFactory
+//--------------------------------------------------------------------
+
+class LIMACORE_API AllocatorFactory
+{
+	DEB_CLASS_NAMESPC(DebModCommon, "AllocatorFactory", "MemUtils");
+public:
+	// The actual factory implementation 
+	struct Impl
+	{
+		struct Param {
+			std::string key;
+			std::string value;
+		};
+		typedef std::vector<Param> ParamList;
+
+		virtual std::string getName() const
+		{
+			return "Allocator";
+		}
+
+		virtual Allocator::Ref createFromParams(const ParamList& pars)
+		{
+			if (!pars.empty())
+				throw LIMA_COM_EXC(InvalidValue,
+						   "Invalid Allocator params");
+			return std::make_shared<Allocator>();
+		}
+	};
+	typedef Impl::ParamList ParamList;
+
+	struct StringDecoder
+	{
+		DEB_STRUCT_NAMESPC(DebModCommon,
+				   "AllocatorFactory::StringDecoder",
+				   "MemUtils");
+
+		typedef std::pair<std::string, ParamList> NameParams;
+
+		RegEx m_name_re;
+		RegEx m_param_token_re;
+		RegEx m_params_re;
+		RegEx m_full_re;
+
+		StringDecoder();
+
+		bool checkName(std::string name) const;
+		NameParams decode(std::string s) const;
+
+		static RegEx getExactMatchRe(const RegEx& re);
+		static RegEx getImplParamsRe(const RegEx& token_re);
+	};
+
+	// Callback updating on default allocator change
+	class DefaultChangeCallback
+	{
+	public:
+		DefaultChangeCallback();
+		DefaultChangeCallback(const DefaultChangeCallback& o) = delete;
+		virtual ~DefaultChangeCallback();
+		virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
+						      Allocator::Ref new_alloc) = 0;
+	};
+
+	~AllocatorFactory();
+
+	// The AllocatorFactory singleton
+	static AllocatorFactory& get();
+
+	// The AllocatorFactory singleton
+	void registerImplementation(Impl *impl);
+	void unregisterImplementation(Impl *impl);
+
+	// Sets the static instance of the default allocator
+	void setDefaultAllocator(Allocator::Ref def_alloc);
+	// Returns the static instance of the default allocator
+	Allocator::Ref getDefaultAllocator();
+
+	void registerDefaultChangeCallback(DefaultChangeCallback *cb);
+	void unregisterDefaultChangeCallback(DefaultChangeCallback *cb);
+
+	// string representation for serialization
+	Allocator::Ref fromString(std::string s);
+
+	const StringDecoder m_string_decoder;
 
 private:
 	typedef std::vector<DefaultChangeCallback *> ChangeCbList;
+	typedef std::map<std::string, Impl*> ImplMap;
 
-	static Ref m_default_allocator;
-	static ChangeCbList m_change_cb_list;
+	AllocatorFactory();
+
+	Allocator::Ref m_default_allocator;
+	ChangeCbList m_change_cb_list;
+	ImplMap m_available_impls;
+	Impl m_default_impl;
 };
 
+
 #ifdef __unix
+
+//--------------------------------------------------------------------
+//  MMapAllocator
+//--------------------------------------------------------------------
+
 // Allocator for virtual address mapping
 class LIMACORE_API MMapAllocator : public Allocator
 {
@@ -102,21 +204,60 @@ public:
 	// Returns the size of a page aligned buffer (multiple of page size)
 	static int getPageAlignedSize(int size);
 
+	// string representation for serialization
+	std::string toString() const override;
+
 protected:
 	// Allocate a buffer with mmap (virtual address mapping)
 	// The real, page-aligned buffer size, is returned in size arg
 	void *allocMmap(size_t& size);
 };
+
 #endif //__unix
 
 #ifdef LIMA_USE_NUMA
+
+//--------------------------------------------------------------------
+//  NumaNodeMask
+//--------------------------------------------------------------------
+
+struct CPUMask
+{
+	static constexpr int MaxNbCPUs = 128;
+	typedef std::bitset<MaxNbCPUs> BitMask;
+
+	static constexpr int NbULongBits = sizeof(unsigned long) * 8;
+	static constexpr int NbULongs = MaxNbCPUs / NbULongBits;
+	typedef unsigned long ULongArray[NbULongs];
+
+	static constexpr BitMask ULongMask =
+		std::numeric_limits<unsigned long>::max();
+
+	CPUMask() = default;
+	CPUMask(const CPUMask& o) = default;
+	CPUMask(const BitMask& o) : m_mask(o) {}
+
+	void toULongArray(ULongArray& array) const;
+	static CPUMask fromULongArray(const ULongArray& array);
+
+	std::string toString(int base = 16, bool comma_sep = false) const;
+	static CPUMask fromString(std::string aff_str, int base = 16);
+
+	BitMask m_mask;
+};
+
+inline bool operator ==(const CPUMask& a, const CPUMask& b)
+{
+	return a.m_mask == b.m_mask;
+}
+
+std::ostream& operator <<(std::ostream& os, const CPUMask& mask);
+std::istream& operator >>(std::istream& is, CPUMask& mask);
 
 // Structure needed to bind memory to one or more CPU sockets
 class NumaNodeMask
 {
 public:
-	static constexpr int MaxNbCPUs = 128;
-	typedef std::bitset<MaxNbCPUs> CPUMask;
 	typedef std::vector<unsigned long> ItemArray;
 	static constexpr int ItemBits = sizeof(ItemArray::value_type) * 8;
 
@@ -145,14 +286,15 @@ private:
 };
 
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
-std::ostream& operator <<(std::ostream& os, const NumaNodeMask::CPUMask& mask);
+
+
+//--------------------------------------------------------------------
+//  NumaAllocator
+//--------------------------------------------------------------------
 
 class LIMACORE_API NumaAllocator : public MMapAllocator
 {
 public:
-	static constexpr int MaxNbCPUs = NumaNodeMask::MaxNbCPUs;	
-	typedef NumaNodeMask::CPUMask CPUMask;
-
 	NumaAllocator(const CPUMask& cpu_mask) : m_cpu_mask(cpu_mask) {}
 
 	const CPUMask &getCPUAffinityMask()
@@ -162,18 +304,27 @@ public:
 	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16)
 								override;
 
+	// string representation for serialization
+	std::string toString() const override;
+
 private:
 	CPUMask m_cpu_mask; //<! if NUMA is used, keep cpu_mask for later use
 };
 #endif
 
 
+//--------------------------------------------------------------------
+//  MemBuffer
+//--------------------------------------------------------------------
+
 class LIMACORE_API MemBuffer 
 {
  public:
 	//By default, construct a MemBuffer with the default allocator
-	MemBuffer(Allocator::Ref allocator = {});
-	MemBuffer(int size, Allocator::Ref allocator = {}, bool init_mem = true);
+	MemBuffer(Allocator::Ref allocator = AllocatorFactory::get().getDefaultAllocator());
+	MemBuffer(int size,
+		  Allocator::Ref allocator = AllocatorFactory::get().getDefaultAllocator(),
+		  bool init_mem = true);
 	~MemBuffer();
 
 	// MemBuffer are copy constructible (deep copy, no aliasing)
@@ -214,6 +365,10 @@ class LIMACORE_API MemBuffer
 	Allocator::DataPtr m_alloc_data;
 };
 
+
+//--------------------------------------------------------------------
+//  BufferPool
+//--------------------------------------------------------------------
 
 class LIMACORE_API BufferPool
 {

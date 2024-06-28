@@ -52,6 +52,11 @@ using namespace std;
 
 DEB_GLOBAL_NAMESPC(DebModCommon, "MemUtils")
 
+
+//--------------------------------------------------------------------
+//  Memory Helper functions
+//--------------------------------------------------------------------
+
 void lima::GetSystemMem(int& mem_unit, int& system_mem)
 {
 	if (mem_unit < 0)
@@ -122,50 +127,12 @@ void lima::ClearBuffer(void *ptr, int nb_concat_frames,
 }
 
 
-// The default allocator
-Allocator::Ref Allocator::m_default_allocator;
+//--------------------------------------------------------------------
+//  Allocator
+//--------------------------------------------------------------------
 
-void Allocator::setDefaultAllocator(Allocator::Ref def_alloc)
+Allocator::~Allocator()
 {
-	if (!def_alloc)
-		throw LIMA_COM_EXC(InvalidValue, "Invalid default allocator");
-	else if (def_alloc == getDefaultAllocator())
-		return;
-
-	ChangeCbList::iterator it, end = m_change_cb_list.end();
-	for (it = m_change_cb_list.begin(); it != end; ++it)
-		(*it)->onDefaultAllocatorChange(m_default_allocator, def_alloc);
-	
-	m_default_allocator = def_alloc;
-}
-
-Allocator::Ref Allocator::getDefaultAllocator()
-{
-	EXEC_ONCE(m_default_allocator = std::make_shared<Allocator>());
-	return m_default_allocator;
-}
-
-// The DefaultChangeCallback list
-Allocator::ChangeCbList Allocator::m_change_cb_list;
-
-void Allocator::registerDefaultChangeCallback(DefaultChangeCallback *cb)
-{
-	ChangeCbList::iterator it, end = m_change_cb_list.end();
-	it = std::find(m_change_cb_list.begin(), end, cb);
-	if (it != end)
-		throw LIMA_COM_EXC(InvalidValue,
-				   "DefaultChangeCallback already registered");
-	m_change_cb_list.push_back(cb);
-}
-
-void Allocator::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
-{
-	ChangeCbList::iterator it, end = m_change_cb_list.end();
-	it = std::find(m_change_cb_list.begin(), end, cb);
-	if (it == end)
-		throw LIMA_COM_EXC(InvalidValue,
-				   "DefaultChangeCallback not registered");
-	m_change_cb_list.erase(it);
 }
 
 Allocator::DataPtr Allocator::alloc(void* &ptr, size_t& size, size_t alignment)
@@ -199,7 +166,217 @@ void Allocator::release(void* ptr, size_t /*size*/, DataPtr /*alloc_data*/)
 #endif
 }
 
+std::string Allocator::toString() const
+{
+	return "Allocator()";
+}
+
+
+//--------------------------------------------------------------------
+//  AllocatorFactory::DefaultChangeCallback
+//--------------------------------------------------------------------
+
+AllocatorFactory::DefaultChangeCallback::DefaultChangeCallback()
+{
+	get().registerDefaultChangeCallback(this);
+}
+
+AllocatorFactory::DefaultChangeCallback::~DefaultChangeCallback()
+{
+	get().unregisterDefaultChangeCallback(this);
+}
+
+
+//--------------------------------------------------------------------
+//  AllocatorFactory::StringDecoder
+//--------------------------------------------------------------------
+
+AllocatorFactory::StringDecoder::StringDecoder()
+	: m_name_re("(?P<name>[A-Za-z0-9_]+)"),
+	  m_param_token_re("(?P<key>[A-Za-z0-9_]+)=(?P<value>[^,)]+)"),
+	  m_params_re(getImplParamsRe(m_param_token_re)),
+	  m_full_re(m_name_re + m_params_re)
+
+{
+	DEB_CONSTRUCTOR();
+
+	DEB_TRACE() << "m_name_re=" << m_name_re.getRegExStr();
+	DEB_TRACE() << "m_param_token_re=" << m_param_token_re.getRegExStr();
+	DEB_TRACE() << "m_params_re=" << m_params_re.getRegExStr();
+	DEB_TRACE() << "m_full_re=" << m_full_re.getRegExStr();
+}
+
+bool AllocatorFactory::StringDecoder::checkName(std::string name) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(name);
+	RegEx::FullMatchType m;
+	return getExactMatchRe(m_name_re).match(name, m);
+}
+
+RegEx AllocatorFactory::StringDecoder::getExactMatchRe(const RegEx& re)
+{
+	return "^" + re.getRegExStr() + "$";
+}
+
+RegEx AllocatorFactory::StringDecoder::getImplParamsRe(const RegEx& token_re)
+{
+	std::string unnamed_token = token_re.getSimpleRegEx().getRegExStr();
+	std::string all_tokens = unnamed_token + "(," + unnamed_token + ")*";
+	return "\\((?P<params>" + all_tokens + ")?\\)";
+}
+
+AllocatorFactory::StringDecoder::NameParams
+AllocatorFactory::StringDecoder::decode(std::string s) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(s);
+	RegEx::FullNameMatchType m;
+	RegEx full_exact_re = getExactMatchRe(m_full_re);
+	if (!full_exact_re.matchName(s, m))
+		THROW_COM_ERROR(NotSupported)
+			<< "AllocatorFactory::StringDecoder::decode: "
+			<< "could not parse \"" << s << "\"";
+	std::string name = m["name"];
+	DEB_TRACE() << DEB_VAR2(name, m["params"].str());
+	ParamList params;
+	if (m["params"].found()) {
+		RegEx::NameMatchListType ml;
+		std::string param_str = m["params"];
+		m_param_token_re.multiSearchName(param_str, ml);
+		for (auto& m: ml)
+			params.emplace_back(Impl::Param{m["key"], m["value"]});
+	}
+	if (DEB_CHECK_ANY(DebTypeReturn)) {
+		DEB_RETURN() << DEB_VAR2(name, params.size());
+		int i = 0;
+		for (auto& par: params)
+			DEB_RETURN() << i++ << ": "
+				     << DEB_VAR2(par.key, par.value);
+			
+	}
+	return std::make_pair(name, params);
+}
+
+//--------------------------------------------------------------------
+//  AllocatorFactory
+//--------------------------------------------------------------------
+
+// The AllocatorFactory singleton
+AllocatorFactory& AllocatorFactory::get()
+{
+	DEB_STATIC_FUNCT();
+	static AllocatorFactory factory;
+	return factory;
+}
+
+AllocatorFactory::AllocatorFactory()
+{
+	DEB_CONSTRUCTOR();
+
+	registerImplementation(&m_default_impl);
+	m_default_allocator = fromString("Allocator()");
+}
+
+AllocatorFactory::~AllocatorFactory()
+{
+	DEB_DESTRUCTOR();
+	unregisterImplementation(&m_default_impl);
+}
+
+void AllocatorFactory::registerImplementation(Impl *impl)
+{
+	DEB_MEMBER_FUNCT();
+	std::string name = impl->getName();
+	DEB_PARAM() << DEB_VAR1(name);
+	if (!m_string_decoder.checkName(name))
+		THROW_COM_ERROR(InvalidValue)
+			<< "Invalid AllocatorFactory::Impl name: " << name;
+	auto res = m_available_impls.insert(std::make_pair(name, impl));
+	if (!res.second)
+		THROW_COM_ERROR(InvalidValue)
+			<< "AllocatorFactory::Impl already registered";
+}
+
+void AllocatorFactory::unregisterImplementation(Impl *impl)
+{
+	DEB_MEMBER_FUNCT();
+	std::string name = impl->getName();
+	DEB_PARAM() << DEB_VAR1(name);
+	auto it = m_available_impls.find(name);
+	if (it != m_available_impls.end())
+		m_available_impls.erase(it);
+}
+
+void AllocatorFactory::setDefaultAllocator(Allocator::Ref def_alloc)
+{
+	DEB_MEMBER_FUNCT();
+	if (!def_alloc)
+		THROW_COM_ERROR(InvalidValue) << "Invalid default allocator";
+	else if (def_alloc == getDefaultAllocator())
+		return;
+
+	DEB_TRACE() << "Changing default Allocator: "
+		    << "prev=" << m_default_allocator->toString() << ", "
+		    << "new=" << def_alloc->toString();
+
+	for (auto cb: m_change_cb_list)
+		cb->onDefaultAllocatorChange(m_default_allocator, def_alloc);
+	
+	m_default_allocator = def_alloc;
+}
+
+Allocator::Ref AllocatorFactory::getDefaultAllocator()
+{
+	return m_default_allocator;
+}
+
+void AllocatorFactory::registerDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	DEB_MEMBER_FUNCT();
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
+	if (it != end)
+		THROW_COM_ERROR(InvalidValue)
+			<< "DefaultChangeCallback already registered";
+	m_change_cb_list.push_back(cb);
+}
+
+void AllocatorFactory::unregisterDefaultChangeCallback(DefaultChangeCallback *cb)
+{
+	DEB_MEMBER_FUNCT();
+	ChangeCbList::iterator it, end = m_change_cb_list.end();
+	it = std::find(m_change_cb_list.begin(), end, cb);
+	if (it == end)
+		THROW_COM_ERROR(InvalidValue)
+			<< "DefaultChangeCallback not registered";
+	m_change_cb_list.erase(it);
+}
+
+Allocator::Ref AllocatorFactory::fromString(std::string s)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(s);
+	StringDecoder::NameParams name_params = m_string_decoder.decode(s);
+	ImplMap::iterator it = m_available_impls.find(name_params.first);
+	if (it == m_available_impls.end())
+		THROW_COM_ERROR(NotSupported)
+			<< "AllocatorFactory::fromString: could not find "
+			<< "allocator " << name_params.first;
+	Allocator::Ref alloc = it->second->createFromParams(name_params.second);
+	if (!alloc)
+		THROW_COM_ERROR(InvalidValue) << it->first << " returned"
+					      << "empty Allocator::Ref";
+	DEB_RETURN() << DEB_VAR1(alloc->toString());
+	return alloc;
+}
+
+
 #ifdef __unix
+
+//--------------------------------------------------------------------
+//  MMapAllocator
+//--------------------------------------------------------------------
 
 int MMapAllocator::getPageAlignedSize(int size)
 {
@@ -236,12 +413,56 @@ void *MMapAllocator::allocMmap(size_t& size)
 			<< strerror(errno);
 	return ptr;
 }
+
+std::string MMapAllocator::toString() const
+{
+	return "MMapAllocator()";
+}
+
+//--------------------------------------------------------------------
+//  MMapAllocatorFactory
+//--------------------------------------------------------------------
+
+class MMapAllocatorFactory
+{
+	struct Impl : AllocatorFactory::Impl
+	{
+		DEB_STRUCT_NAMESPC(DebModCommon, "MMapAllocatorFactory::Impl",
+				   "MemUtils");
+
+		std::string getName() const override
+		{
+			return "MMapAllocator";
+		}
+
+		Allocator::Ref createFromParams(const ParamList& pars) override
+		{
+			DEB_MEMBER_FUNCT();
+			if (!pars.empty())
+				THROW_COM_ERROR(InvalidValue) <<
+					"Invalid MMapAllocator params";
+			return std::make_shared<MMapAllocator>();
+		}
+	} m_impl;
+
+public:
+	MMapAllocatorFactory()
+	{
+		AllocatorFactory::get().registerImplementation(&m_impl);
+	}
+} mmap_allocator_factory;
+
 #endif //__unix
+
+
+//--------------------------------------------------------------------
+//  MemBuffer
+//--------------------------------------------------------------------
 
 MemBuffer::MemBuffer(Allocator::Ref allocator /*= {}*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
+	m_allocator(allocator)
 {
 }
 
@@ -249,7 +470,7 @@ MemBuffer::MemBuffer(int size, Allocator::Ref allocator /*= {}*/,
 		     bool init_mem /*= true*/) :
 	m_size(0),
 	m_ptr(nullptr),
-	m_allocator(allocator ? allocator : Allocator::getDefaultAllocator())
+	m_allocator(allocator)
 {
 	alloc(size, init_mem);
 }
@@ -358,6 +579,123 @@ void MemBuffer::deepCopy(const MemBuffer& buffer)
 
 
 #ifdef LIMA_USE_NUMA
+
+//--------------------------------------------------------------------
+//  CPUMask
+//--------------------------------------------------------------------
+
+constexpr CPUMask::BitMask CPUMask::ULongMask;
+
+void CPUMask::toULongArray(ULongArray& array) const
+{
+	for (int i = 0; i < NbULongs; ++i)
+		array[i] = ((m_mask >> (i * NbULongBits)) & ULongMask).to_ulong();
+}
+
+CPUMask CPUMask::fromULongArray(const ULongArray& array)
+{
+	BitMask mask;
+	for (int i = 0; i < NbULongs; ++i)
+		mask |= BitMask(array[i]) << (i * NbULongBits);
+	return mask;
+}
+
+string CPUMask::toString(int base, bool comma_sep) const
+{
+	if (base == 2)
+		return m_mask.to_string();
+	else if (base != 16)
+		throw LIMA_COM_EXC(InvalidValue, "Invalid base: ") << base;
+
+	ostringstream os;
+	ULongArray array;
+	toULongArray(array);
+	os << hex << setfill('0');
+	string sep;
+	for (int i = NbULongs - 1; i >= 0; --i) {
+		unsigned long ul_val = array[i];
+		constexpr int NbULongInts = NbULongBits / 32;
+		for (int j = NbULongInts - 1; j >= 0; --j) {
+			uint32_t ui_val = (ul_val >> (j * 32)) & 0xffffffff;
+			os << sep << setw(32 / 4) << ui_val;
+			if (sep.empty() && comma_sep)
+				sep = ",";
+		}
+	}
+	return os.str();
+}
+
+CPUMask CPUMask::fromString(string aff_str, int base)
+{
+	if ((base != 2) && (base != 16))
+		throw LIMA_COM_EXC(InvalidValue, "Invalid base: ") << base;
+	
+	if (!aff_str.empty() && (base == 16) && (aff_str.find("0x") == 0))
+		aff_str.erase(0, 2);
+	size_t len = aff_str.size();
+	if (len && (aff_str.rfind('L') == len - 1))
+		aff_str.erase(len - 1);
+
+#define convert_to_ulong(s, v)						\
+	do {								\
+		size_t pos;						\
+		v = stoul(s, &pos, base);				\
+		if (pos != s.size())					\
+			throw LIMA_COM_EXC(InvalidValue, "Invalid mask: ") \
+						<< aff_str;		\
+	} while (0)
+
+	ULongArray array;
+	const size_t bits_per_char = (base == 16) ? 4 : 1;
+	const size_t chars_per_ulong = NbULongBits / bits_per_char;
+	int idx = 0;
+	string val;
+	string::const_reverse_iterator it, end = aff_str.rend();
+	for (it = aff_str.rbegin(); it != end; ++it) {
+		if (*it == ',')
+			continue;
+		else if (idx == NbULongs)
+			throw LIMA_COM_EXC(InvalidValue, "Invalid mask: ")
+							<< aff_str;
+		val.insert(0, 1, *it);
+		if (val.size() == chars_per_ulong) {
+			convert_to_ulong(val, array[idx++]);
+			val.clear();
+		}
+	}
+	if (!val.empty())
+		convert_to_ulong(val, array[idx++]);
+	while (idx < NbULongs)
+		array[idx++] = 0;
+
+#undef convert_to_ulong
+
+	return fromULongArray(array);
+}
+
+std::ostream& lima::operator <<(std::ostream& os, const CPUMask& mask)
+{
+	return os << mask.toString();
+}
+
+std::istream& lima::operator >>(std::istream& is, CPUMask& mask)
+{
+	string s;
+	is >> s;
+	if (!is)
+		return is;
+	try {
+		mask = CPUMask::fromString(s);
+	} catch (...) {
+		is.setstate(std::ios_base::failbit);
+	}
+	return is;
+}
+
+//--------------------------------------------------------------------
+//  NumaNodeMask
+//--------------------------------------------------------------------
+
 int NumaNodeMask::getMaxNodes()
 {
 	static int max_nb_nodes = numa_max_node() + 1;
@@ -413,8 +751,8 @@ NumaNodeMask NumaNodeMask::fromCPUMask(const CPUMask& cpu_mask)
 	NumaNodeMask numa_node_mask;
 	ItemArray& node_mask = numa_node_mask.m_array;
 
-	for (unsigned int i = 0; i < MaxNbCPUs; ++i) {
-		if (cpu_mask.test(i)) {
+	for (unsigned int i = 0; i < CPUMask::MaxNbCPUs; ++i) {
+		if (cpu_mask.m_mask.test(i)) {
 			unsigned int n = numa_node_of_cpu(i);
 			if (n >= getMaxNodes())
 				throw LIMA_COM_EXC(Error, "Numa node too high");
@@ -448,28 +786,17 @@ std::ostream& lima::operator <<(std::ostream& os, const NumaNodeMask& mask)
 	return os << setfill(' ') << dec;
 }
 
-std::ostream& lima::operator <<(std::ostream& os,
-				const NumaNodeMask::CPUMask& mask)
-{
-	typedef NumaNodeMask::CPUMask CPUMask;
-	typedef unsigned long ULong;
-	constexpr CPUMask ULongMask(std::numeric_limits<ULong>::max());
-	constexpr int NbULongBits = sizeof(ULong) * 8;
-	constexpr int NbWords = NumaNodeMask::MaxNbCPUs / NbULongBits;
-	os << hex << setfill('0');
-	for (int i = NbWords - 1; i >= 0; --i) {
-		CPUMask m = (mask >> (i * NbULongBits)) & ULongMask;
-		os << setw(NbULongBits / 4) << m.to_ulong();
-	}
-	return os << setfill(' ') << dec;
-}
+
+//--------------------------------------------------------------------
+//  NumaAllocator
+//--------------------------------------------------------------------
 
 Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 					size_t alignment)
 {
 	DataPtr alloc_data = MMapAllocator::alloc(ptr, size, alignment);
 
-	if (m_cpu_mask.none())
+	if (m_cpu_mask.m_mask.none())
 		return alloc_data;
 
 	NumaNodeMask node_mask = NumaNodeMask::fromCPUMask(m_cpu_mask);
@@ -477,23 +804,74 @@ Allocator::DataPtr NumaAllocator::alloc(void* &ptr, size_t& size,
 	return alloc_data;
 }
 
+std::string NumaAllocator::toString() const
+{
+	std::ostringstream os;
+	os << "NumaAllocator(cpu_mask=0x" << m_cpu_mask << ")";
+	return os.str();
+}
+
+
+//--------------------------------------------------------------------
+//  NumaAllocatorFactory
+//--------------------------------------------------------------------
+
+class NumaAllocatorFactory
+{
+	struct Impl : AllocatorFactory::Impl
+	{
+		DEB_STRUCT_NAMESPC(DebModCommon, "NumaAllocatorFactory::Impl",
+				   "MemUtils");
+
+		std::string getName() const override
+		{
+			return "NumaAllocator";
+		}
+
+		Allocator::Ref createFromParams(const ParamList& pars) override
+		{
+			DEB_MEMBER_FUNCT();
+
+			if ((pars.size() != 1) || (pars[0].key != "cpu_mask"))
+				THROW_COM_ERROR(InvalidValue)
+					<< "Invalid param(s) string, must be: "
+					<< "NumaAllocator(cpu_mask=0x<mask>)";
+
+			std::string mask_str = pars[0].value;
+			if (mask_str.find("0x") != 0)
+				THROW_COM_ERROR(InvalidValue)
+					<< "Invalid hexadecimal-coded cpu_mask "
+					<< "without explicit 0x prefix";
+			CPUMask mask;
+			std::istringstream is(mask_str.substr(2));
+			is >> mask;
+			if (!is)
+				THROW_COM_ERROR(InvalidValue)
+					<< "Invalid NumaAllocator cpu_mask";
+			return std::make_shared<NumaAllocator>(mask);
+		}
+	} m_impl;
+
+public:
+	NumaAllocatorFactory()
+	{
+		AllocatorFactory::get().registerImplementation(&m_impl);
+	}
+} numa_allocator_factory;
+
 #endif //LIMA_USE_NUMA
 
 
-// BufferPool
+//--------------------------------------------------------------------
+//  BufferPool
+//--------------------------------------------------------------------
 
 class BufferPool::DefAllocChangeCb :
-	public Allocator::DefaultChangeCallback
+	public AllocatorFactory::DefaultChangeCallback
 {
 public:
 	DefAllocChangeCb(BufferPool& pool) : m_pool(pool)
 	{
-		Allocator::registerDefaultChangeCallback(this);
-	}
-
-	~DefAllocChangeCb()
-	{
-		Allocator::unregisterDefaultChangeCallback(this);
 	}
 
 	virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
@@ -527,7 +905,7 @@ BufferPool::~BufferPool()
 std::shared_ptr<void> BufferPool::getBuffer()
 {
 	DEB_MEMBER_FUNCT();
-	void *p = NULL;
+	void *p = nullptr;
 	{
 		AutoMutex l(m_mutex);
 		if (m_available.empty())
@@ -622,8 +1000,11 @@ void BufferPool::_allocBuffers(int nb_buffers, int size, AutoMutex& l)
 	m_buffer_size = size;
 	DEB_TRACE() << DEB_VAR2(m_buffers.size(), nb_buffers);
 	// TODO: reduce the number of buffers
+	Allocator::Ref allocator = m_alloc;
+	if (!allocator)
+		allocator = AllocatorFactory::get().getDefaultAllocator();
 	while (m_buffers.size() < nb_buffers) {
-		m_buffers.emplace_back(size, m_alloc, m_init_mem);
+		m_buffers.emplace_back(size, allocator, m_init_mem);
 		m_available.push(m_buffers.back().getPtr());
 	}
 }

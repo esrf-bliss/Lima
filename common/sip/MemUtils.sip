@@ -30,3 +30,68 @@ void GetPageSize(int& page_size);
 int GetDefMaxNbBuffers(const FrameDim& frame_dim);
 
 void ClearBuffer(void *ptr, int nb_concat_frames, const FrameDim& frame_dim);
+
+
+struct Allocator {
+
+        class Ref {
+	public:
+		std::string toString() const;
+%MethodCode
+        Py_BEGIN_ALLOW_THREADS
+	try {
+		Allocator *alloc = sipCpp->get();
+		if (!alloc)
+			throw LIMA_COM_EXC(InvalidValue,
+					   "De-referencing empty Allocator::Ref");
+		sipRes = new std::string(alloc->toString());
+        } catch (Exception &sipExceptionRef) {
+                Py_BLOCK_THREADS
+		const std::string& tmpString = sipExceptionRef.getErrMsg();
+		const char *detail = tmpString.c_str();
+		PyErr_SetString(sipException_Exception, detail);
+                return SIP_NULLPTR;
+	} catch (...) {
+                Py_BLOCK_THREADS
+                sipRaiseUnknownException();
+                return SIP_NULLPTR;
+	}
+        Py_END_ALLOW_THREADS
+%End
+
+		bool __eq__(const Allocator::Ref& o) const;
+%MethodCode
+	sipRes = (*sipCpp == *a0);
+%End
+
+		int __bool__() const;
+%MethodCode
+	sipRes = bool(*sipCpp);
+%End
+        };
+
+	virtual ~Allocator();
+
+private:
+	Allocator();
+	Allocator(const Allocator& o);
+};
+
+
+class AllocatorFactory {
+
+public:
+	// The AllocatorFactory singleton
+	static AllocatorFactory& get();
+
+	// Sets the static instance of the default allocator
+	void setDefaultAllocator(Allocator::Ref def_alloc);
+	// Returns the static instance of the default allocator
+	Allocator::Ref getDefaultAllocator();
+
+	Allocator::Ref fromString(std::string s);
+
+private:
+	AllocatorFactory();
+	AllocatorFactory(const AllocatorFactory& o);
+};

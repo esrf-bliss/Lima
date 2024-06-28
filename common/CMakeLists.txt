@@ -32,6 +32,7 @@ set(common_srcs
     src/BufferHelper.cpp
     src/AcqState.cpp
     src/Debug.cpp
+    src/RegExUtils.cpp
     src/VideoUtils.cpp
     src/Event.cpp
     src/Timer.cpp
@@ -41,7 +42,6 @@ set(common_srcs
 
 if(UNIX)
     list(INSERT common_srcs
-        src/RegExUtils.cpp
         src/SimplePipe.cpp
     )
 endif()

@@ -24,27 +24,19 @@
 using namespace lima;
 using namespace std;
 
-#define CHECK_CALL(ret)							\
-	{								\
-		int aux_ret = (ret);					\
-		if (aux_ret != 0)					\
-			throw LIMA_COM_EXC(Error, "regex: ") 		\
-				<< strError(aux_ret);			\
-	}
-
 
 SimpleRegEx::SingleMatch::SingleMatch()
 {
-	start = end;
+	start = end = {};
 }
 
-SimpleRegEx::SingleMatch::SingleMatch(StrIt it, const regmatch_t& rm)
+SimpleRegEx::SingleMatch::SingleMatch(const std::ssub_match& m)
 {
-	if ((rm.rm_so != -1) && (rm.rm_eo != -1)) {
-		start = it + rm.rm_so;
-		end   = it + rm.rm_eo;
+	if (m.length() > 0) {
+		start = m.first;
+		end   = m.second;
 	} else
-		start = end = it;
+		start = end = {};
 }
 
 bool SimpleRegEx::SingleMatch::found() const
@@ -58,11 +50,11 @@ SimpleRegEx::SingleMatch::operator string() const
 	return string(start, end); 
 }
 
-
-SimpleRegEx::SimpleRegEx()
-{
-	set("");
+string SimpleRegEx::SingleMatch::str() const
+{ 
+	return *this;
 }
+
 
 SimpleRegEx::SimpleRegEx(const string& regex_str)
 {
@@ -75,11 +67,6 @@ SimpleRegEx::SimpleRegEx(const SimpleRegEx& regex)
 	set(regex.m_str);
 }
 
-
-SimpleRegEx::~SimpleRegEx()
-{
-	free();
-}
 
 SimpleRegEx& SimpleRegEx::operator =(const string& regex_str)
 {
@@ -107,49 +94,18 @@ SimpleRegEx& SimpleRegEx::operator +=(const SimpleRegEx& regex)
 
 void SimpleRegEx::set(const string& regex_str)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(regex_str);
+
 	if (regex_str == m_str)
 		return;
 
-	free();
-
-	if (!regex_str.empty())
-		CHECK_CALL(regcomp(&m_regex, regex_str.c_str(), REG_EXTENDED));
+	m_regex.assign(regex_str, std::regex_constants::extended);
 
 	m_str = regex_str;
-	m_nb_groups = findNbGroups(regex_str);
+	m_nb_groups = m_regex.mark_count();
+	DEB_TRACE() << DEB_VAR1(m_nb_groups);
 }
-
-int SimpleRegEx::findNbGroups(const string& regex_str)
-{
-	int nb_groups = 0;
-	string::const_iterator it, end = regex_str.end();
-	bool in_escape = false;
-	for (it = regex_str.begin(); it != end; ++it) {
-		switch (*it) {
-		case '\\':
-			in_escape = !in_escape;
-			break;
-		case '(':
-			if (!in_escape)
-				nb_groups++;
-			[[fallthrough]];
-		default:
-			in_escape = false;
-		}
-	}
-
-	return nb_groups;
-}
-
-void SimpleRegEx::free()
-{
-	if (m_str.empty())
-		return;
-
-	regfree(&m_regex);
-	m_str.clear();
-}
-
 
 const string& SimpleRegEx::getRegExStr() const
 {
@@ -179,6 +135,9 @@ bool SimpleRegEx::singleSearch(const string& str, FullMatchType& match,
 void SimpleRegEx::multiSearch(const string& str, MatchListType& match_list,
 			      int nb_groups, int max_nb_match) const
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR3(str, nb_groups, max_nb_match);
+
 	if (m_str.empty())
 		throw LIMA_COM_EXC(InvalidValue, "Regular expression not set");
 
@@ -189,31 +148,42 @@ void SimpleRegEx::multiSearch(const string& str, MatchListType& match_list,
 	StrIt send = str.end();
 
 	nb_groups = (nb_groups > 0) ? nb_groups : (m_nb_groups + 1);
+	DEB_TRACE() << DEB_VAR2(m_str, nb_groups);
 
-	regmatch_t reg_match[nb_groups];
-	regmatch_t *mend = reg_match + nb_groups;
+	std::smatch match;
 
 	StrIt it = sbeg; 
 	for (int i = 0; it != send; i++) {
 		if ((max_nb_match > 0) && (i == max_nb_match))
 			break;
 
-		string aux(it, send);
-		int flags = (it != sbeg) ? REG_NOTBOL : 0;
-		int ret = regexec(&m_regex, aux.c_str(), nb_groups, reg_match, 
-				  flags);
-		if (ret == REG_NOMATCH)
+		std::regex_constants::match_flag_type flags{};
+		if (it != sbeg)
+			flags |= std::regex_constants::match_not_bol;
+		DEB_TRACE() << DEB_VAR3(i, (it != sbeg), long(flags));
+
+		if (!std::regex_search(it, send, match, m_regex, flags))
 			break;
-		CHECK_CALL(ret);
 
 		FullMatchType full_match;
-		for (regmatch_t *m = reg_match; m != mend; ++m) {
-			SingleMatchType match(it, *m);
-			full_match.push_back(match);
-		}		
+		for (int g = 0; g < nb_groups; ++g)
+			full_match.emplace_back(match[g]);
 		match_list.push_back(full_match);
 
-		it += reg_match[0].rm_eo;
+		it = match[0].second;
+	}
+
+	if (DEB_CHECK_ANY(DebTypeReturn)) {
+		DEB_RETURN() << DEB_VAR1(match_list.size());
+		int i = 0;
+		for (auto& fm: match_list) {
+			DEB_RETURN() << "match_list[" << i++ << "]:";
+			int j = 0;
+			for (auto& f: fm)
+				DEB_RETURN() << "  " << j++ << ": "
+					     << (f.found() ? f.str() :
+							     "<Unmatched>");
+		}
 	}
 }
 
@@ -226,15 +196,6 @@ bool SimpleRegEx::match(const string& str, FullMatchType& match,
 	return (match[0].start == str.begin());
 }
 
-string SimpleRegEx::strError(int ret) const
-{
-	size_t len = regerror(ret, &m_regex, NULL, 0);
-	string regerr(len, '\0');
-	char *data = (char *) regerr.data();
-	regerror(ret, &m_regex, data, regerr.size());
-	return regerr;
-}
-
 SimpleRegEx lima::operator +(const SimpleRegEx& re1, const SimpleRegEx& re2)
 {
 	SimpleRegEx re = re1;
@@ -244,11 +205,6 @@ SimpleRegEx lima::operator +(const SimpleRegEx& re1, const SimpleRegEx& re2)
 
 
 
-RegEx::RegEx()
-{
-	set("");
-}
-
 RegEx::RegEx(const string& regex_str)
 {
 	set(regex_str);
@@ -257,11 +213,6 @@ RegEx::RegEx(const string& regex_str)
 RegEx::RegEx(const RegEx& regex)
 {
 	set(regex.m_str);
-}
-
-RegEx::~RegEx()
-{
-	free();
 }
 
 RegEx& RegEx::operator =(const string& regex_str)
@@ -288,22 +239,16 @@ RegEx& RegEx::operator +=(const RegEx& regex)
 	return *this;
 }
 
-void RegEx::free()
-{
-	m_name_map.clear();
-	m_regex = "";
-	m_str.clear();
-}
-
 void RegEx::set(const string& regex_str)
 {
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(regex_str);
+
 	if (regex_str == m_str)
 		return;
 
-	free();
-
-	string re = "([^(])?(\\()(\\?P<([A-Za-z][A-Za-z0-9_]*)>)?[^\\(]*";
-	SimpleRegEx grp_start_re(re);
+	static string re = "([^(])?(\\()(\\?P<([A-Za-z][A-Za-z0-9_]*)>)?[^\\(]*";
+	static SimpleRegEx grp_start_re(re);
 
 	typedef SimpleRegEx::SingleMatchType SingleMatchType;
 	typedef SimpleRegEx::FullMatchType   FullMatchType;
@@ -316,9 +261,7 @@ void RegEx::set(const string& regex_str)
 	int grp_nb = 0;
 	string simple_regex_str;
 
-	MatchListType::const_iterator mit, mend = grp_list.end();
-	for (mit = grp_list.begin(); mit != mend; ++mit) {
-		const FullMatchType& fm = *mit;
+	for (auto& fm: grp_list) {
 		const SingleMatchType& grp_start   = fm[0];
 		const SingleMatchType& pre_grp_chr = fm[1];
 		const SingleMatchType& grp_open    = fm[2];
@@ -340,6 +283,7 @@ void RegEx::set(const string& regex_str)
 		sit = grp_start.end;
 	}
 	simple_regex_str += string(sit, regex_str.end());
+	DEB_TRACE() << DEB_VAR1(simple_regex_str);
 	
 	m_str = regex_str;
 	m_regex = simple_regex_str;
@@ -351,6 +295,11 @@ void RegEx::set(const string& regex_str)
 const string& RegEx::getRegExStr() const
 {
 	return m_str;
+}
+
+const SimpleRegEx& RegEx::getSimpleRegEx() const
+{
+	return m_regex;
 }
 
 int RegEx::getNbGroups() const
@@ -386,12 +335,9 @@ bool RegEx::singleSearchName(const string& str,
 void RegEx::convertNameMatch(const FullMatchType& full_match, 
 			     FullNameMatchType& name_match) const
 {
-	NameMapType::const_iterator it, end = m_name_map.end();
-	for (it = m_name_map.begin(); it != end; ++it) {
-		const string& name  = it->first;
-		int group_nb = it->second;
-		const SingleMatchType& match = full_match[group_nb];
-		name_match[name] = match;
+	for (auto& m: m_name_map) {
+		const SingleMatchType& match = full_match[m.second];
+		name_match[m.first] = match;
 	}
 }
 
@@ -410,10 +356,9 @@ void RegEx::multiSearchName(const string& str,
 	MatchListType match_list;
 	multiSearch(str, match_list, 0, max_nb_match);
 
-	MatchListType::const_iterator it, end = match_list.end();
-	for (it = match_list.begin(); it != end; ++it) {
+	for (auto& m: match_list) {
 		FullNameMatchType name_match;
-		convertNameMatch(*it, name_match);
+		convertNameMatch(m, name_match);
 		name_match_list.push_back(name_match);
 	}
 }

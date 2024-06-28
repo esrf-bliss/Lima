@@ -170,9 +170,11 @@ class _BufferHelper_DefaultImpl : public BufferHelper::_Impl
 	{
 		DEB_MEMBER_FUNCT();
 		DEB_PARAM() << DEB_VAR1(size);
+		Allocator::Ref allocator = m_parameters.allocator;
+		if (!allocator)
+			allocator = AllocatorFactory::get().getDefaultAllocator();
 		typedef std::shared_ptr<MemBuffer> Ptr;
-		Ptr buffer = std::make_shared<MemBuffer>(size,
-							 m_parameters.allocator,
+		Ptr buffer = std::make_shared<MemBuffer>(size, allocator,
 							 m_parameters.initMem);
 		return std::shared_ptr<void>(buffer, buffer->getPtr());
 	}

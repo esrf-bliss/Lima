@@ -93,17 +93,11 @@ void BufferAllocMgr::clearAllBuffers()
  *******************************************************************/
 
 class SoftBufferAllocMgr::DefAllocChangeCb :
-	public Allocator::DefaultChangeCallback
+	public AllocatorFactory::DefaultChangeCallback
 {
 public:
 	DefAllocChangeCb(SoftBufferAllocMgr& mgr) : m_mgr(mgr)
 	{
-		Allocator::registerDefaultChangeCallback(this);
-	}
-
-	~DefAllocChangeCb()
-	{
-		Allocator::unregisterDefaultChangeCallback(this);
 	}
 
 	virtual void onDefaultAllocatorChange(Allocator::Ref prev_alloc,
@@ -158,12 +152,13 @@ void SoftBufferAllocMgr::onDefaultAllocatorChange(Allocator::Ref prev_alloc,
 {
 	DEB_MEMBER_FUNCT();
 	DEB_ALWAYS() << "SoftBufferAllocmgr: Default allocator changed!";
+	DEB_ALWAYS() << "prev_alloc: " << prev_alloc->toString();
+	DEB_ALWAYS() << "new_alloc:  " << new_alloc->toString();
+
 #ifdef LIMA_USE_NUMA
 	NumaAllocator *numa_alloc = dynamic_cast<NumaAllocator *>(new_alloc.get());
 	if (numa_alloc) {
-		typedef NumaAllocator::CPUMask CPUMask;
 		CPUMask mask = numa_alloc->getCPUAffinityMask();
-		DEB_ALWAYS() << " CPU mask:  " << mask;
 		DEB_ALWAYS() << " Numa mask: " << NumaNodeMask::fromCPUMask(mask);
 	}
 #endif
