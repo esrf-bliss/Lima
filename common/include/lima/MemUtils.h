@@ -290,6 +290,7 @@ public:
 	static int getNbItems();
 
 	static NumaNodeMask fromCPUMask(const CPUMask& cpu_mask);
+	CPUMask toCPUMask() const;
 
 	std::string toString(bool comma_sep = false) const;
 	static NumaNodeMask fromString(std::string node_str);
@@ -327,6 +328,8 @@ class LIMACORE_API NumaAllocator : public MMapAllocator
 {
 public:
 	NumaAllocator(const CPUMask& cpu_mask) : m_cpu_mask(cpu_mask) {}
+	NumaAllocator(const NumaNodeMask& node_mask)
+		: m_cpu_mask(node_mask.toCPUMask()) {}
 
 	const CPUMask &getCPUAffinityMask()
 	{ return m_cpu_mask; }

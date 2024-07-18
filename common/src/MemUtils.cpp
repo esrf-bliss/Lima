@@ -813,6 +813,31 @@ NumaNodeMask NumaNodeMask::fromCPUMask(const CPUMask& cpu_mask)
 	return numa_node_mask;
 }
 
+CPUMask NumaNodeMask::toCPUMask() const
+{
+	typedef std::list<std::pair<CPUMask, NumaNodeMask>> NumaNodeList;
+	static NumaNodeList cpu_numa_node_list;
+	NumaNodeList::iterator it, end = cpu_numa_node_list.end();
+	for (it = cpu_numa_node_list.begin(); it != end; ++it)
+		if (it->second == *this)
+			return it->first;
+
+	CPUMask cpu_mask;
+	const ItemArray& node_mask = m_array;
+
+	for (unsigned int i = 0; i < CPUMask::MaxNbCPUs; ++i) {
+		int n = numa_node_of_cpu(i);
+		if (n < 0)
+			continue;
+		else if (n >= getMaxNodes())
+			throw LIMA_COM_EXC(Error, "Numa node too high");
+		if (node_mask[n / ItemBits] & (1L << (n % ItemBits)))
+			cpu_mask.m_mask.set(i);
+	}
+	cpu_numa_node_list.emplace_back(std::make_pair(cpu_mask, node_mask));
+	return cpu_mask;
+}
+
 std::string NumaNodeMask::toString(bool comma_sep) const
 {
 	return convert_2_string(getArray().data(), getMaxNodes(), comma_sep);
@@ -892,27 +917,44 @@ class NumaAllocatorFactory
 			return "NumaAllocator";
 		}
 
-		Allocator::Ref createFromParams(const ParamList& pars) override
+		template <class Mask>
+		Allocator::Ref fromMaskStr(const std::string& mask_str)
 		{
 			DEB_MEMBER_FUNCT();
 
-			if ((pars.size() != 1) || (pars[0].key != "cpu_mask"))
-				THROW_COM_ERROR(InvalidValue)
-					<< "Invalid param(s) string, must be: "
-					<< "NumaAllocator(cpu_mask=0x<mask>)";
-
-			std::string mask_str = pars[0].value;
 			if (mask_str.find("0x") != 0)
 				THROW_COM_ERROR(InvalidValue)
-					<< "Invalid hexadecimal-coded cpu_mask "
+					<< "Invalid hexadecimal-coded mask "
 					<< "without explicit 0x prefix";
-			CPUMask mask;
+			Mask mask;
 			std::istringstream is(mask_str.substr(2));
 			is >> mask;
 			if (!is)
 				THROW_COM_ERROR(InvalidValue)
-					<< "Invalid NumaAllocator cpu_mask";
+					<< "Invalid NumaAllocator mask: "
+					<< mask_str;
 			return std::make_shared<NumaAllocator>(mask);
+		}
+
+		Allocator::Ref createFromParams(const ParamList& pars) override
+		{
+			DEB_MEMBER_FUNCT();
+
+			bool ok = (pars.size() == 1);
+			bool is_cpu = (ok && (pars[0].key == "cpu_mask"));
+			bool is_node = (ok && (pars[0].key == "node_mask"));
+			if (!is_cpu && !is_node)
+				THROW_COM_ERROR(InvalidValue)
+					<< "Invalid param(s) string, must be: "
+					<< "NumaAllocator(cpu_mask=0x<mask>) or "
+					<< "NumaAllocator(node_mask=0x<mask>)";
+
+			const std::string& mask_str = pars[0].value;
+			if (is_cpu)
+				return fromMaskStr<CPUMask>(mask_str);
+			else
+				return fromMaskStr<NumaNodeMask>(mask_str);
+
 		}
 	} m_impl;
 
