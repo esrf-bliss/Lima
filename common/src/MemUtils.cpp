@@ -578,6 +578,89 @@ void MemBuffer::deepCopy(const MemBuffer& buffer)
 }
 
 
+//--------------------------------------------------------------------
+//  Local helper
+//--------------------------------------------------------------------
+
+template <typename X, typename Y>
+static unsigned int ceiling_div(X x, Y y)
+{
+	return (x - 1) / y + 1;
+}
+
+//--------------------------------------------------------------------
+//  Variable-length array hexadecimal string CODEC helpers
+//--------------------------------------------------------------------
+
+std::string lima::convert_2_string(const unsigned long *array, int nb_bits,
+				   bool comma_sep)
+{
+	constexpr int NbULongBits = sizeof(unsigned long) * 8;
+	constexpr int NbUIntBits = 32;
+	constexpr int NbULongInts = NbULongBits / NbUIntBits;
+
+	int nb_items = ceiling_div(nb_bits, NbULongBits);
+	int missaligned_bits = nb_bits % NbULongBits;
+	int first_bits = missaligned_bits ? missaligned_bits : NbULongBits;
+	ostringstream os;
+	os << hex << setfill('0');
+	string sep;
+	bool first = true;
+	for (int i = nb_items - 1; i >= 0; --i) {
+		unsigned long ul_val = array[i];
+		int item_bits = first ? first_bits : NbULongBits;
+		int nb_ints = ceiling_div(item_bits, NbUIntBits);
+		first_bits %= NbUIntBits;
+		for (int j = nb_ints - 1; j >= 0; --j, first = false) {
+			uint32_t ui_val = (ul_val >> (j * NbUIntBits)) & 0xffffffff;
+			int word_bits = first ? first_bits : NbUIntBits;
+			os << sep << setw(ceiling_div(word_bits, 4)) << ui_val;
+			if (sep.empty() && comma_sep)
+				sep = ",";
+		}
+	}
+	return os.str();
+}
+
+void lima::convert_from_string(const std::string& s, unsigned long *array,
+			       int nb_bits)
+{
+	constexpr int NbULongBits = sizeof(unsigned long) * 8;
+	constexpr int base = 16;
+
+	auto convert_to_ulong = [&](const string& s) {
+		size_t pos;
+		unsigned long v = stoul(s, &pos, base);
+		if (pos != s.size())
+			throw LIMA_COM_EXC(InvalidValue, "Invalid mask: ") << s;
+		return v;
+	};
+
+	int nb_items = ceiling_div(nb_bits, NbULongBits);
+	const size_t bits_per_char = (base == 16) ? 4 : 1;
+	const size_t chars_per_ulong = NbULongBits / bits_per_char;
+	int idx = 0;
+	string val;
+	string::const_reverse_iterator it, end = s.rend();
+	for (it = s.rbegin(); it != end; ++it) {
+		if (*it == ',')
+			continue;
+		else if (idx == nb_items)
+			throw LIMA_COM_EXC(InvalidValue, "Invalid mask: ")
+							<< s;
+		val.insert(0, 1, *it);
+		if (val.size() == chars_per_ulong) {
+			array[idx++] = convert_to_ulong(val);
+			val.clear();
+		}
+	}
+	if (!val.empty())
+		array[idx++] = convert_to_ulong(val);
+	while (idx < nb_items)
+		array[idx++] = 0;
+}
+
+
 #ifdef LIMA_USE_NUMA
 
 //--------------------------------------------------------------------
@@ -607,22 +690,9 @@ string CPUMask::toString(int base, bool comma_sep) const
 	else if (base != 16)
 		throw LIMA_COM_EXC(InvalidValue, "Invalid base: ") << base;
 
-	ostringstream os;
 	ULongArray array;
 	toULongArray(array);
-	os << hex << setfill('0');
-	string sep;
-	for (int i = NbULongs - 1; i >= 0; --i) {
-		unsigned long ul_val = array[i];
-		constexpr int NbULongInts = NbULongBits / 32;
-		for (int j = NbULongInts - 1; j >= 0; --j) {
-			uint32_t ui_val = (ul_val >> (j * 32)) & 0xffffffff;
-			os << sep << setw(32 / 4) << ui_val;
-			if (sep.empty() && comma_sep)
-				sep = ",";
-		}
-	}
-	return os.str();
+	return convert_2_string(array, MaxNbCPUs, comma_sep);
 }
 
 CPUMask CPUMask::fromString(string aff_str, int base)
@@ -635,42 +705,22 @@ CPUMask CPUMask::fromString(string aff_str, int base)
 	size_t len = aff_str.size();
 	if (len && (aff_str.rfind('L') == len - 1))
 		aff_str.erase(len - 1);
+	if (aff_str.empty())
+		throw LIMA_COM_EXC(InvalidValue, "Invalid mask stripped str");
 
-#define convert_to_ulong(s, v)						\
-	do {								\
-		size_t pos;						\
-		v = stoul(s, &pos, base);				\
-		if (pos != s.size())					\
-			throw LIMA_COM_EXC(InvalidValue, "Invalid mask: ") \
-						<< aff_str;		\
-	} while (0)
-
-	ULongArray array;
-	const size_t bits_per_char = (base == 16) ? 4 : 1;
-	const size_t chars_per_ulong = NbULongBits / bits_per_char;
-	int idx = 0;
-	string val;
-	string::const_reverse_iterator it, end = aff_str.rend();
-	for (it = aff_str.rbegin(); it != end; ++it) {
-		if (*it == ',')
-			continue;
-		else if (idx == NbULongs)
-			throw LIMA_COM_EXC(InvalidValue, "Invalid mask: ")
-							<< aff_str;
-		val.insert(0, 1, *it);
-		if (val.size() == chars_per_ulong) {
-			convert_to_ulong(val, array[idx++]);
-			val.clear();
-		}
+	if (base == 2) {
+		istringstream is(aff_str);
+		BitMask mask;
+		is >> mask;
+		if (is.fail())
+			throw LIMA_COM_EXC(InvalidValue, "Invalid base-2 mask: ")
+				<< aff_str;
+		return CPUMask(mask);
+	} else {
+		ULongArray array;
+		convert_from_string(aff_str, array, MaxNbCPUs);
+		return fromULongArray(array);
 	}
-	if (!val.empty())
-		convert_to_ulong(val, array[idx++]);
-	while (idx < NbULongs)
-		array[idx++] = 0;
-
-#undef convert_to_ulong
-
-	return fromULongArray(array);
 }
 
 std::ostream& lima::operator <<(std::ostream& os, const CPUMask& mask)
@@ -702,7 +752,7 @@ int NumaNodeMask::getMaxNodes()
 	return  max_nb_nodes;
 }
 
-int NumaNodeMask::getNbItems() { return (getMaxNodes() - 1) / ItemBits + 1; }
+int NumaNodeMask::getNbItems() { return ceiling_div(getMaxNodes(), ItemBits); }
 
 inline
 const NumaNodeMask::ItemArray& NumaNodeMask::checkArray(const ItemArray& array)
@@ -746,7 +796,7 @@ NumaNodeMask NumaNodeMask::fromCPUMask(const CPUMask& cpu_mask)
 	NumaNodeList::iterator it, end = cpu_numa_node_list.end();
 	for (it = cpu_numa_node_list.begin(); it != end; ++it)
 		if (it->first == cpu_mask)
-			return it->second;;
+			return it->second;
 
 	NumaNodeMask numa_node_mask;
 	ItemArray& node_mask = numa_node_mask.m_array;
@@ -763,6 +813,18 @@ NumaNodeMask NumaNodeMask::fromCPUMask(const CPUMask& cpu_mask)
 	return numa_node_mask;
 }
 
+std::string NumaNodeMask::toString(bool comma_sep) const
+{
+	return convert_2_string(getArray().data(), getMaxNodes(), comma_sep);
+}
+
+NumaNodeMask NumaNodeMask::fromString(std::string node_str)
+{
+	NumaNodeMask mask;
+	convert_from_string(node_str, mask.getArray().data(), getMaxNodes());
+	return mask;
+}
+
 void NumaNodeMask::bind(void *ptr, size_t size)
 {
 	int max_node = getMaxNodes() + 1; // Linux kernel decrements max_node(?)
@@ -773,17 +835,19 @@ void NumaNodeMask::bind(void *ptr, size_t size)
 
 std::ostream& lima::operator <<(std::ostream& os, const NumaNodeMask& mask)
 {
-	os << "[" << mask.getMaxNodes() << "-bit]" << hex << setfill('0');
-	bool first = true;
-	int missaligned_bits = mask.getMaxNodes() % mask.ItemBits;
-	int first_bits = missaligned_bits ? missaligned_bits : mask.ItemBits;
-	const NumaNodeMask::ItemArray& array = mask.getArray();
-	NumaNodeMask::ItemArray::const_reverse_iterator it, end = array.rend();
-	for (it = array.rbegin(); it != end; ++it, first = false) {
-		int word_bits = first ? first_bits : mask.ItemBits;
-		os << (!first ? "," : "") << setw(word_bits / 4) << *it;
+	return os << "[" << mask.getMaxNodes() << "-bit]" << mask.toString(true);
+}
+
+std::istream& lima::operator >>(std::istream& is, NumaNodeMask& mask)
+{
+	string s;
+	is >> s;
+	try {
+		mask = NumaNodeMask::fromString(s);
+	} catch (...) {
+		is.setstate(std::ios_base::failbit);
 	}
-	return os << setfill(' ') << dec;
+	return is;
 }
 
 
