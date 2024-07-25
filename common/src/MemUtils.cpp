@@ -793,6 +793,8 @@ NumaNodeMask NumaNodeMask::fromCPUMask(const CPUMask& cpu_mask)
 {
 	typedef std::list<std::pair<CPUMask, NumaNodeMask>> NumaNodeList;
 	static NumaNodeList cpu_numa_node_list;
+	static Mutex mutex;
+	AutoMutex l(mutex);
 	NumaNodeList::iterator it, end = cpu_numa_node_list.end();
 	for (it = cpu_numa_node_list.begin(); it != end; ++it)
 		if (it->first == cpu_mask)
@@ -817,6 +819,8 @@ CPUMask NumaNodeMask::toCPUMask() const
 {
 	typedef std::list<std::pair<CPUMask, NumaNodeMask>> NumaNodeList;
 	static NumaNodeList cpu_numa_node_list;
+	static Mutex mutex;
+	AutoMutex l(mutex);
 	NumaNodeList::iterator it, end = cpu_numa_node_list.end();
 	for (it = cpu_numa_node_list.begin(); it != end; ++it)
 		if (it->second == *this)
