@@ -215,6 +215,17 @@ protected:
 
 #endif //__unix
 
+
+//--------------------------------------------------------------------
+//  Variable-length array hexadecimal string CODEC helpers
+//--------------------------------------------------------------------
+
+std::string convert_2_string(const unsigned long *array, int nb_bits,
+			     bool comma_sep = false);
+void convert_from_string(const std::string& s, unsigned long *array,
+			 int nb_bits);
+
+
 #ifdef LIMA_USE_NUMA
 
 //--------------------------------------------------------------------
@@ -251,6 +262,11 @@ inline bool operator ==(const CPUMask& a, const CPUMask& b)
 	return a.m_mask == b.m_mask;
 }
 
+inline bool operator !=(const CPUMask& a, const CPUMask& b)
+{
+	return !(a == b);
+}
+
 std::ostream& operator <<(std::ostream& os, const CPUMask& mask);
 std::istream& operator >>(std::istream& is, CPUMask& mask);
 
@@ -274,10 +290,15 @@ public:
 	static int getNbItems();
 
 	static NumaNodeMask fromCPUMask(const CPUMask& cpu_mask);
+	CPUMask toCPUMask() const;
+
+	std::string toString(bool comma_sep = false) const;
+	static NumaNodeMask fromString(std::string node_str);
 
 	void bind(void *ptr, size_t size);
 
 	const ItemArray& getArray() const { return m_array; }
+	ItemArray& getArray() { return m_array; }
 
 private:
 	const ItemArray& checkArray(const ItemArray& array);
@@ -285,7 +306,18 @@ private:
 	ItemArray m_array;
 };
 
+inline bool operator ==(const NumaNodeMask& a, const NumaNodeMask& b)
+{
+	return a.getArray() == b.getArray();
+}
+
+inline bool operator !=(const NumaNodeMask& a, const NumaNodeMask& b)
+{
+	return !(a == b);
+}
+
 std::ostream& operator <<(std::ostream& os, const NumaNodeMask& mask);
+std::istream& operator >>(std::istream& is, NumaNodeMask& mask);
 
 
 //--------------------------------------------------------------------
@@ -296,6 +328,8 @@ class LIMACORE_API NumaAllocator : public MMapAllocator
 {
 public:
 	NumaAllocator(const CPUMask& cpu_mask) : m_cpu_mask(cpu_mask) {}
+	NumaAllocator(const NumaNodeMask& node_mask)
+		: m_cpu_mask(node_mask.toCPUMask()) {}
 
 	const CPUMask &getCPUAffinityMask()
 	{ return m_cpu_mask; }
