@@ -61,6 +61,8 @@ struct SaveContainerHdf5::_File
 	Group m_instrument_detector_plot;
 	DataSpace m_image_dataspace;
 	DataSet m_image_dataset;
+        DataSpace m_timestamps_dataspace;
+        DataSet m_timestamps_dataset;
 	int m_file_index;
 	int m_nb_frames;
 	int m_frame_cnt;
@@ -635,6 +637,15 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			string image = "image";
 			write_h5_attribute(file->m_image_dataset, "interpretation", image);
 			file->m_format_written = true;
+
+			//Image timestamps
+			hsize_t timestamps_dims[] = {hsize_t(file->m_nb_frames)};
+			
+			file->m_timestamps_dataspace = DataSpace(RANK_ONE, timestamps_dims);
+			file->m_timestamps_dataset = DataSet(file->m_instrument_detector.createDataSet("time_of_frame",
+												       PredType::NATIVE_DOUBLE,
+												       file->m_timestamps_dataspace));
+
 		} else if (file->m_in_append && !m_is_multiset && !file->m_dataset_extended) {
 			hsize_t allocated_dims[3];
 			file->m_image_dataset = DataSet(file->m_instrument_detector.
@@ -689,6 +700,27 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		if (status<0)
 			THROW_CTL_ERROR(Error) << "H5DOwrite_chunk() failed"
 					       << DEB_VAR5(aData.frameNumber, m_file_cnt, file->m_file_index, offset[0], buf_size);
+
+		if(file->m_timestamps_dataset.getHDFObjType() >= 0) // not initialized
+		  {
+		    hsize_t timestamps_offset[] = {image_nb};
+		    hsize_t timestamps_stride[] = {1};
+		    hsize_t timestamps_count[] = {1};
+
+		    auto file_dspace= H5Dget_space(file->m_timestamps_dataset.getId());
+		    hsize_t dim1[] = {1};
+		    auto mem_dspace = H5Screate_simple(RANK_ONE, dim1, NULL);
+
+		    H5Sselect_hyperslab(file_dspace, H5S_SELECT_SET,
+					timestamps_offset, timestamps_stride,
+					timestamps_count, NULL);
+		    
+		    H5Dwrite(file->m_timestamps_dataset.getId(), H5T_NATIVE_DOUBLE,
+			     mem_dspace, file_dspace, H5P_DEFAULT, &aData.timestamp);
+
+		    H5Sclose(file_dspace);
+		    H5Sclose(mem_dspace);
+		  }
 	// catch failure caused by the DataSet operations
 	} catch (DataSetIException& error) {
 		THROW_CTL_ERROR(Error) << "DataSet not created successfully " << error.getCDetailMsg();
