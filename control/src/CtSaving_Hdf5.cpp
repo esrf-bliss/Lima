@@ -263,10 +263,11 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 
 	try
 	{
+#ifndef DEBUG
 		// Turn off the auto-printing when failure occurs so that we can
 		// handle the errors appropriately
 		H5::Exception::dontPrint();
-
+#endif
 		bool is_hdf5 = false;
 		bool file_exists = true;
 
