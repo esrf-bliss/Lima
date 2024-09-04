@@ -2847,7 +2847,7 @@ void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
 		m_waiting_tasks.end());
 	if (m_frame_params.empty())
 		return;
-	long first = max(m_frame_params.begin()->first, nb_acquired_frames);
+	long first = std::max(m_frame_params.begin()->first, nb_acquired_frames);
 	m_frame_params.erase(m_frame_params.find(first), m_frame_params.end());
 }
 
