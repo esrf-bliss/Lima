@@ -19,7 +19,7 @@ New features
   * Better handling of memory buffers at various stages of the system (hardware, accumulation, saving compression)
   * Better overall performance of the saving and limit saving impact on newFrameReady that could lead to frame drop
   * Add allocator factory, available from Python
-  * Numa allocator NumaAllocator now handles up to 128 cores/threads
+  * NumaAllocator now handles up to 128 cores/threads and can be constructed from NumaNodeMask
   * Accumulation now provides two reduction operation: SUM or MEAN. MEAN computes the arithmetic mean over the subframes.
 
 Bug fixes
