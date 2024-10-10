@@ -8,6 +8,63 @@ Some bug fix on new features can reference gitlab.esrf.fr merge requests as MR-X
 
 
 
+Version v1.10.0 released on June 28th 2024
+------------------------------------------
+
+New features
+
+  * Added support for per-frame binary sideband data, the binary complement to the text-only header
+  * Allow reusing compressed image blob injected by the (Eiger) HW plugin for (HDF5) saving
+  * Better overall performance of accumulation, now parallelize using Processlib threadpool
+  * Better handling of memory buffers at various stages of the system (hardware, accumulation, saving compression)
+  * Better overall performance of the saving and limit saving impact on newFrameReady that could lead to frame drop
+  * Add allocator factory, available from Python
+  * NumaAllocator now handles up to 128 cores/threads and can be constructed from NumaNodeMask
+  * Accumulation now provides two reduction operation: SUM or MEAN. MEAN computes the arithmetic mean over the subframes.
+
+Bug fixes
+
+  * Remove Allocator move constructor
+  * Reading the latest image with readImage(-1) now works properly in accumulation
+  * Memory allocation properly handled when switching from SINGLE to ACCUMULATION or the other way around (would run out of memory)
+
+Camera updates
+
+  * Eiger v1.10.0
+    * Add sideband compressed blob from ZMQ stream so it can be reused by the saving subsystem
+    * Add dynamic_pixel_depth in order to avoid expanding data and ensure reusing compressed blob for saving
+
+  * Hamamatsu v1.10.0
+    * Remove SDK from repository due to license constrains
+
+  * Iris v1.10.0
+    * Fix dead lock when stopping acquisition and improve reliability
+    * Port to Linux SDK
+    * Enable Embedded Frame Metadata
+    * Implement frame queue and improve performance with realtime scheduling priority (SCHED_FIFO)
+    * Fix endless acquisitions
+    * Improve frame timeout management
+
+  * Simulator v1.10.0
+    * Bug-fixes in test_simulator application
+
+  * SlsDetector v1.10.0
+    * Port to slsDetectorPackage 6.0.0
+    * Implement passive slsReceiver mode and move geometry reconstruction to sls::FrameAssembler
+    * Improve performance, reliability and tolerance to packets loss
+    * Add Jungfrau detector support, including advanced img_proc like average and gain/pedestal correction
+
+PyTango server updates v1.10.0
+
+  * New DATA_ARRAY v4 header, including acq_tag field with the value of the corresponding R/W attribute
+  * Set the default verbose (debug) level to 2 (Fatal, Error & Warning)
+  * Improve doc and fix related issues
+
+
+CppTango server udpate
+
+  * Update repository with changes from ICA @ SOLEIL
+
 
 Version v1.9.23 released on November 2nd 2023
 ---------------------------------------------
