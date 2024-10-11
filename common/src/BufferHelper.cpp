@@ -153,6 +153,9 @@ class BufferHelper::_Impl
 	virtual void releaseBuffers()
 	{}
 
+	virtual std::map<int, int> getSize2NbAllocBuffersMap() const
+	{ return {}; }
+
 	virtual std::shared_ptr<void> getBuffer(int size) = 0;
 
  protected:
@@ -214,6 +217,12 @@ class _BufferHelper_PoolImpl : public BufferHelper::_Impl
 	{
 		DEB_MEMBER_FUNCT();
 		m_pool.releaseBuffers();
+	}
+
+	std::map<int, int> getSize2NbAllocBuffersMap() const override
+	{
+		DEB_MEMBER_FUNCT();
+		return {{m_pool.getBufferSize(), m_pool.getNbBuffers()}};
 	}
 
 	std::shared_ptr<void> getBuffer(int size) override
@@ -280,6 +289,25 @@ void BufferHelper::releaseBuffers()
 {
 	DEB_MEMBER_FUNCT();
 	m_impl->releaseBuffers();
+}
+
+std::map<int, int> BufferHelper::getSize2NbAllocBuffersMap() const
+{
+	DEB_MEMBER_FUNCT();
+	auto size_2_buffers = m_impl->getSize2NbAllocBuffersMap();
+	if (DEB_CHECK_ANY(DebTypeReturn)) {
+		std::ostringstream os;
+		os << "<";
+		bool first = true;
+		for (auto& it : size_2_buffers) {
+			os << (first ? "" : ", ") << it.first << ": "
+			   << it.second;
+			first = false;
+		}
+		os << ">";
+		DEB_RETURN() << "size_2_buffers=" << os.str();
+	}
+	return size_2_buffers;
 }
 
 std::shared_ptr<void> BufferHelper::getBuffer(int size)

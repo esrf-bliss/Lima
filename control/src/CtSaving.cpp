@@ -2822,17 +2822,52 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	lock.unlock();
 
 	// check if ZBuffer pool needs to be allocated
+	prepareCompressionBuffers(ct);
+
+	_prepare(ct);			// call inheritance if needed
+}
+
+void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
+{
+	DEB_MEMBER_FUNCT();
+
 	FrameDim fdim;
 	ct.image()->getImageDim(fdim);
 	int buffer_size = getCompressedBufferSize(fdim.getMemSize(),
 						  fdim.getDepth());
 	DEB_TRACE() << DEB_VAR2(fdim, buffer_size);
-	if (buffer_size > 0)
-		m_zbuffer_helper.prepareBuffers(nb_frames, buffer_size);
-	else
+	if (buffer_size <= 0) {
 		m_zbuffer_helper.releaseBuffers();
+		return;
+	}
 
-	_prepare(ct);			// call inheritance if needed
+	int nb_frames;
+	ct.acquisition()->getAcqNbFrames(nb_frames);
+	m_zbuffer_helper.prepareBuffers(nb_frames, buffer_size);
+
+	auto size_2_buffers = m_zbuffer_helper.getSize2NbAllocBuffersMap();
+
+	const char *error_header = "Saving compression buffers: unexpected ";
+
+	if (size_2_buffers.empty())
+		return;
+	else if (size_2_buffers.size() != 1)
+		THROW_CTL_ERROR(Error) << error_header
+				       << DEB_VAR1(size_2_buffers.size());
+
+	auto it = size_2_buffers.begin();
+	int alloc_size = it->first, alloc_nb = it->second;
+	if (alloc_size != buffer_size)
+		THROW_CTL_ERROR(Error) << error_header
+				       << DEB_VAR1(alloc_size);
+
+	long required;
+	ct.buffer()->getMaxNumber(required);
+	if (nb_frames < required)
+		required = nb_frames;
+	DEB_TRACE() << DEB_VAR3(nb_frames, required, alloc_nb);
+	if (alloc_nb < required)
+		DEB_WARNING() << error_header << DEB_VAR2(alloc_nb, required);
 }
 
 void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
