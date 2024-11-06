@@ -26,6 +26,7 @@
 #include <numeric>
 #include <atomic>
 #include <algorithm>
+#include <iomanip>
 
 #ifdef __linux__
 #include <unistd.h>
@@ -63,6 +64,7 @@
 #endif
 
 #include "lima/SidebandData.h"
+#include "lima/SoftOpExternalMgr.h"
 
 #include "processlib/TaskMgr.h"
 #include "processlib/SinkTask.h"
@@ -2861,13 +2863,29 @@ void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
 		THROW_CTL_ERROR(Error) << error_header
 				       << DEB_VAR1(alloc_size);
 
+	// If (not in-place) soft ext op link task is active, frame buffers are
+	// allocated on-the-fly, outside CtBuffer, without checking for overrun
+	SoftOpExternalMgr *ext_op = ct.externalOperation();
+	bool ext_link_task, ext_sink_task;
+	ext_op->isTaskActive(ext_link_task, ext_sink_task);
+	if (ext_link_task)
+		return;
+
 	long required;
 	ct.buffer()->getMaxNumber(required);
 	if (nb_frames < required)
 		required = nb_frames;
 	DEB_TRACE() << DEB_VAR3(nb_frames, required, alloc_nb);
-	if (alloc_nb < required)
-		DEB_WARNING() << error_header << DEB_VAR2(alloc_nb, required);
+	if (alloc_nb >= required)
+		return;
+
+	BufferHelper::Parameters params;
+	m_zbuffer_helper.getParameters(params);
+	double min_req_percent = params.reqMemSizePercent * required / alloc_nb;
+	DEB_WARNING() << error_header << DEB_VAR2(alloc_nb, required);
+	DEB_WARNING() << "Should set "
+		      << "SavingZBufferParameters.reqMemSizePercent="
+		      << std::setprecision(2) << min_req_percent << " or higer";
 }
 
 void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
