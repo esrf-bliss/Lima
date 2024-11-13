@@ -2442,7 +2442,7 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	long write_size = 0;
 	Params2Handler::value_type par_handler = open(frame_par);
-	bool inverted = pars.everyNFames < 0;
+	bool inverted = pars.everyNFrames < 0;
 	unsigned long every_n_frames = abs(pars.everyNFrames);
 	try
 	{
