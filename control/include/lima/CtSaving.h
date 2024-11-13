@@ -185,8 +185,8 @@ public:
 	void setFramesPerFile(unsigned long frames_per_file, int stream_idx = 0);
 	void getFramesPerFile(unsigned long& frames_per_file, int stream_idx = 0) const;
 
-	void setEveryNFrames(unsigned long every_n_frames, int stream_idx = 0);
-	void getEveryNFrames(unsigned long& every_n_frames, int stream_idx = 0) const;
+	void setEveryNFrames(long every_n_frames, int stream_idx = 0);
+	void getEveryNFrames(long& every_n_frames, int stream_idx = 0) const;
 
 	void setManagedMode(ManagedMode mode);
 	void getManagedMode(ManagedMode& mode) const;

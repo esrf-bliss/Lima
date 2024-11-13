@@ -1361,13 +1361,10 @@ void CtSaving::getFramesPerFile(unsigned long& frames_per_file,
 }
 /** @brief set the saving period of the subsampled frame for a saving stream
  */
-void CtSaving::setEveryNFrames(unsigned long every_n_frames, int stream_idx)
+void CtSaving::setEveryNFrames(long every_n_frames, int stream_idx)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(every_n_frames, stream_idx);
-
-	if (every_n_frames <= 0)
-		THROW_CTL_ERROR(InvalidValue) << DEB_VAR1(every_n_frames) << "Not supported";
 
 	AutoMutex aLock(m_cond.mutex());
 	Stream& stream = getStream(stream_idx);
@@ -1377,7 +1374,7 @@ void CtSaving::setEveryNFrames(unsigned long every_n_frames, int stream_idx)
 }
 /** @brief get the saving period of the subsampled frame for a saving stream
  */
-void CtSaving::getEveryNFrames(unsigned long& every_n_frames,
+void CtSaving::getEveryNFrames(long& every_n_frames,
 	int stream_idx) const
 {
 	DEB_MEMBER_FUNCT();
@@ -2442,9 +2439,12 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	long write_size = 0;
 	Params2Handler::value_type par_handler = open(frame_par);
+	bool inverted = pars.everyNFrames < 0;
+	unsigned long every_n_frames = abs(pars.everyNFrames);
 	try
 	{
-		if (!(frameId % pars.everyNFrames))
+	  if ((!inverted && !(frameId % pars.everyNFrames)) ||
+	      (inverted && (frameId % pars.everyNFrames)) )
 		{
 			std::cout << "_writeFile - frameId:" << frameId << " pars.everyNFrames: " << pars.everyNFrames << std::endl;
 			write_size = _writeFile(par_handler.second.m_handler, aData, aHeader, pars.fileFormat);

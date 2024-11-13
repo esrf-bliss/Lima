@@ -223,8 +223,8 @@ using namespace lima;
     void setFramesPerFile(unsigned long frames_per_file, int stream_idx=0);
     void getFramesPerFile(unsigned long& frames_per_file /Out/, int stream_idx=0) const;
 
-    void setEveryNFrames(unsigned long frames_per_file, int stream_idx=0);
-    void getEveryNFrames(unsigned long& frames_per_file /Out/, int stream_idx=0) const;
+    void setEveryNFrames(long frames_per_file, int stream_idx=0);
+    void getEveryNFrames(long& frames_per_file /Out/, int stream_idx=0) const;
 
     void setManagedMode(ManagedMode mode);
     void getManagedMode(ManagedMode &mode /Out/) const;
