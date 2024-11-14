@@ -656,7 +656,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		// write the image data, use the local frame number
 		hsize_t image_nb = file->m_frame_cnt++;
 		hsize_t expected_nb = aData.frameNumber % m_frames_per_file;
-		if (if m_every_n_frames != 1 && expected_nb != image_nb)
+		if (m_every_n_frames != 1 && expected_nb != image_nb)
 			DEB_ERROR() << "Image index mismatch: "
 				    << DEB_VAR5(aData.frameNumber, m_file_cnt,
 						m_frames_per_file, image_nb, expected_nb);
