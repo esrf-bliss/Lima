@@ -1366,6 +1366,9 @@ void CtSaving::setEveryNFrames(long every_n_frames, int stream_idx)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(every_n_frames, stream_idx);
 
+	if (every_n_frames == 0)
+		THROW_CTL_ERROR(InvalidValue) << DEB_VAR1(every_n_frames) << "Not supported";
+
 	AutoMutex aLock(m_cond.mutex());
 	Stream& stream = getStream(stream_idx);
 	Parameters pars = stream.getParameters(Auto);
