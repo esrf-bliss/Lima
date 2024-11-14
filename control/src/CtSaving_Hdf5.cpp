@@ -250,7 +250,7 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 
 	// Keep track of number of frames per file for offset calculation
 	m_frames_per_file = saving_pars.framesPerFile;
-
+	m_every_n_frames = saving_pars.everyNFrames;
 	AutoMutex lock(m_lock);
 	m_file_cnt = 0;
 }
@@ -656,7 +656,7 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		// write the image data, use the local frame number
 		hsize_t image_nb = file->m_frame_cnt++;
 		hsize_t expected_nb = aData.frameNumber % m_frames_per_file;
-		if (expected_nb != image_nb)
+		if (if m_every_n_frames != 1 && expected_nb != image_nb)
 			DEB_ERROR() << "Image index mismatch: "
 				    << DEB_VAR5(aData.frameNumber, m_file_cnt,
 						m_frames_per_file, image_nb, expected_nb);
