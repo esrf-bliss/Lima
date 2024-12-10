@@ -72,7 +72,7 @@ struct LIMACORE_API Allocator
 
 	// Allocate a buffer of a given size and eventually return
 	// the associated allocator data and potentially modified size
-	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16);
+	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 32);
 	// Fill buffer with zeros (hot page)
 	virtual void init(void* ptr, size_t size);
 	// Free a buffer
@@ -194,7 +194,7 @@ class LIMACORE_API MMapAllocator : public Allocator
 {
 public:
 	// Allocate a buffer of a given size 
-	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16)
+	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 32)
 								override;
 
 	// Free a buffer
@@ -335,7 +335,7 @@ public:
 	{ return m_cpu_mask; }
 
 	// Allocate a buffer and sets the NUMA memory policy with mbind
-	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 16)
+	virtual DataPtr alloc(void* &ptr, size_t& size, size_t alignment = 32)
 								override;
 
 	// string representation for serialization

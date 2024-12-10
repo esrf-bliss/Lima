@@ -28,7 +28,7 @@ struct thread_data {
 	volatile bool end;
 };
 
-int alignment = 16;
+int alignment = 32;
 int block_size = 1024 * 1024 * 4;
 int min_nb_frames = 3000;
 int max_nb_frames = 6000;

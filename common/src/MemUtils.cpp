@@ -390,7 +390,7 @@ int MMapAllocator::getPageAlignedSize(int size)
 
 // Allocate a buffer of a given size 
 Allocator::DataPtr MMapAllocator::alloc(void* &ptr, size_t& size,
-					size_t /*alignment = 16*/)
+					size_t /*alignment = 32*/)
 {
 	ptr = allocMmap(size);
 	return DataPtr();
