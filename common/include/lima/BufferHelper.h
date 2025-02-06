@@ -26,6 +26,7 @@
 #include "lima/Debug.h"
 
 #include <algorithm>
+#include <map>
 
 namespace lima {
 
@@ -73,6 +74,8 @@ class LIMACORE_API BufferHelper
 
 	void prepareBuffers(int nb_buffers, int size);
 	void releaseBuffers();
+
+	std::map<int, int> getSize2NbAllocBuffersMap() const;
 
 	std::shared_ptr<void> getBuffer(int size);
 

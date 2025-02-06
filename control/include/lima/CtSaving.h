@@ -347,6 +347,8 @@ public:
 		void getParameters(CtSaving::Parameters&) const;
 		void clear();
 		void prepare(CtControl&);
+		void prepareCompressionBuffers(CtControl&);
+
 		/** @brief should return true if container has compression or
 			*  heavy task to do before saving
 			*  if return is true, getCompressionTask should return a Task
