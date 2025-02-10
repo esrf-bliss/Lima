@@ -668,7 +668,7 @@ public:
 		saving_setting.set("useHwComp", pars.useHwComp);
 		saving_setting.set("indexFormat", pars.indexFormat);
 		saving_setting.set("framesPerFile", pars.framesPerFile);
-		saving_setting.set("framesPerFile", pars.framesPerFile);
+		saving_setting.set("everyNFrames", pars.everyNFrames);
 		saving_setting.set("nbframes", pars.nbframes);
 
 		CtSaving::ManagedMode managedmode;
@@ -2450,9 +2450,9 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	{
 	  if ((!inverted && !(frameId % pars.everyNFrames)) ||
 	      (inverted && (frameId % pars.everyNFrames)) )
-		{
-			write_size = _writeFile(par_handler.second.m_handler, aData, aHeader, pars.fileFormat);
-		}
+		write_size = _writeFile(par_handler.second.m_handler, aData, aHeader, pars.fileFormat);
+	  else if (_hasBuffers(aData))
+		_takeBuffers(aData);
 	}
 	catch (std::ios_base::failure & error)
 	{
