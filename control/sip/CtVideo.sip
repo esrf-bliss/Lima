@@ -73,12 +73,10 @@ using namespace lima;
   Py_BEGIN_ALLOW_THREADS
   const char* buffer = sipCpp->buffer();
   SIP_SSIZE_T size = sipCpp->size();
-//PyTango don't manage ByteArray so use string instead
-//#if PY_VERSION_HEX >= 0x02050000
-//  sipRes = PyByteArray_FromStringAndSize(buffer ? buffer : "",size);
-//#else
-  sipRes = PyString_FromStringAndSize(buffer ? buffer : "",size);
-//#endif
+  if (buffer)
+     sipRes = PyBytes_FromStringAndSize(buffer, size);
+  else
+     sipRes = Py_None;
   Py_END_ALLOW_THREADS
 %End
       int 			width() 	const;

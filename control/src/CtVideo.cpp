@@ -398,7 +398,7 @@ VideoMode CtVideo::Image::mode() const
 
 int CtVideo::Image::size() const
 {
-  return m_image ? int(m_image->size() + 0.5) : 0;
+  return (m_image && m_image->buffer) ? int(m_image->size() + 0.5) : 0;
 }
 
 long long CtVideo::Image::frameNumber() const
