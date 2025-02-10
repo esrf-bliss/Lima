@@ -13,7 +13,7 @@ Install first lastest miniconda3 (https://docs.conda.io/en/latest/miniconda.html
 Install mamba package in your "base" environment to speed up your future installations, the default conda installer is very slow, so we prefer to use mamba:
 
 ::
-  conda install mamba
+  conda install mamba -c conda-forge
 
 Install now the Lima camera package (e.g basler) at the same time you create the new environment for your Lima installation:
 
