@@ -175,11 +175,11 @@ if(UNIX)
 		set(LIMACAMERA_MERLIN OFF CACHE BOOL "compile merlin?")
 	endif()
 
-  #MINIPIX
-	if(DEFINED ENV{LIMACAMERA_MINIPIX})
-		set(LIMACAMERA_MINIPIX "$ENV{LIMACAMERA_MINIPIX}" CACHE BOOL "compile minipix?" FORCE)
+	#ADVACAM
+	if(DEFINED ENV{LIMACAMERA_ADVACAM})
+		set(LIMACAMERA_ADVACAM "$ENV{LIMACAMERA_ADVACAM}" CACHE BOOL "compile advacam?" FORCE)
 	else()
-		set(LIMACAMERA_MINIPIX OFF CACHE BOOL "compile minipix?")
+		set(LIMACAMERA_ADVACAM OFF CACHE BOOL "compile advacam?")
 	endif()
 
 	#MYTHEN
@@ -454,10 +454,10 @@ if(UNIX)
 		add_subdirectory(camera/merlin)
 	endif(LIMACAMERA_MERLIN)
   
-  #MINIPIX
-	if(LIMACAMERA_MINIPIX)
-		add_subdirectory(camera/minipix)
-	endif(LIMACAMERA_MINIPIX)
+        #ADVACAM
+	if(LIMACAMERA_ADVACAM)
+		add_subdirectory(camera/advacam)
+	endif(LIMACAMERA_ADVACAM)
 
 	#MYTHEN
 	if(LIMACAMERA_MYTHEN)

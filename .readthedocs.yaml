@@ -14,6 +14,7 @@ submodules:
     - camera/photonicscience
     - camera/princeton
     - camera/adsc
+    - camera/advacam
     - camera/andor3
     - camera/aviex
     - camera/arinax
@@ -28,7 +29,6 @@ submodules:
     - camera/lambda
     - camera/maxipix
     - camera/merlin
-    - camera/minipix
     - camera/pixirad
     - camera/pointgrey
     - camera/prosilica
