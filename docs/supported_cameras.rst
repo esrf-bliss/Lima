@@ -33,7 +33,7 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | Merlin             | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
-| Minipix            | Yes   |         | Pixet 1.7.8          |
+| Advacam            | Yes   |         | Pixet 1.8.3          |
 +--------------------+-------+---------+----------------------+
 | Mythen3            | Yes   |         | n/a                  |
 +--------------------+-------+---------+----------------------+
@@ -92,6 +92,7 @@ Linux Only
 
   Adsc <camera/adsc/doc/index>
   Andor SDK3 <camera/andor3/doc/index>
+  Advacam <camera/advacam/doc/index>
   Aviex <camera/aviex/doc/index>
   Arinax <camera/arinax/doc/index>
   Dexela <camera/dexela/doc/index>
@@ -105,7 +106,6 @@ Linux Only
   Lambda <camera/lambda/doc/index>
   Maxipix <camera/maxipix/doc/index>
   Merlin <camera/merlin/doc/index>
-  Minipix <camera/minipix/doc/index>
   Pixirad <camera/pixirad/doc/index>
   PointGrey <camera/pointgrey/doc/index>
   Prosilica <camera/prosilica/doc/index>
