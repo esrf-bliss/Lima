@@ -154,6 +154,6 @@
 [submodule "princeton"]
 	path = camera/princeton
 	url = ../Lima-camera-princeton
-[submodule "minipix"]
-	path = camera/minipix
-	url = ../Lima-camera-minipix
+[submodule "advacam"]
+	path = camera/advacam
+	url = ../Lima-camera-advacam
