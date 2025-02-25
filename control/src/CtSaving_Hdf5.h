@@ -105,6 +105,7 @@ private:
 	bool m_is_multiset;
 	int m_compression_level;
 	int m_frames_per_file;
+        int m_every_n_frames;     
 	int m_file_cnt;
 };
 

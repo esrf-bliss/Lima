@@ -118,6 +118,7 @@ public:
 		bool useHwComp;		///< use HW (sideband) compression
 		std::string indexFormat;	///< ie: %.4d if you want 4 digits
 		long framesPerFile;	///< the number of images save in one files
+		long everyNFrames; ///< save every N frames (skip the others)
 		long nbframes;
 
 		Parameters();
@@ -182,8 +183,10 @@ public:
 	void getUseHwComp(bool& active, int stream_idx = 0) const;
 
 	void setFramesPerFile(unsigned long frames_per_file, int stream_idx = 0);
-	void getFramesPerFile(unsigned long& frames_per_file,
-		int stream_idx = 0) const;
+	void getFramesPerFile(unsigned long& frames_per_file, int stream_idx = 0) const;
+
+	void setEveryNFrames(long every_n_frames, int stream_idx = 0);
+	void getEveryNFrames(long& every_n_frames, int stream_idx = 0) const;
 
 	void setManagedMode(ManagedMode mode);
 	void getManagedMode(ManagedMode& mode) const;
@@ -952,6 +955,7 @@ inline std::ostream& operator<<(std::ostream& os, const CtSaving::Parameters& pa
 		<< "overwritePolicy=" << params.overwritePolicy << "," << anOverwritePolicyHumanPt << ", "
 		<< "useHwComp=" << params.useHwComp << ","
 		<< "framesPerFile=" << params.framesPerFile << ", "
+		<< "everyNFrames=" << params.everyNFrames << ", "
 		<< "nbframes=" << params.nbframes
 		<< ">";
 	return os;
@@ -971,6 +975,7 @@ inline bool operator ==(const CtSaving::Parameters& a,
 		(a.useHwComp == b.useHwComp) &&
 		(a.indexFormat == b.indexFormat) &&
 		(a.framesPerFile == b.framesPerFile) &&
+		(a.everyNFrames == b.everyNFrames) &&
 		(a.nbframes == b.nbframes));
 }
 
