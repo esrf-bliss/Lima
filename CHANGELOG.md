@@ -1,12 +1,89 @@
-LIMA Release Notes
-
-This is the release notes of LIMA, the library for image acquisition.
-
-You can find information related to new features and bug fixes.
-
-Some bug fix on new features can reference gitlab.esrf.fr merge requests as MR-XXX.
+LIMA CHANGELOG
 
 
+Version v1.10.2 released on February 27th 2025
+----------------------------------------------
+
+New features
+
+  * saving: add partial saving mode and everyNFrames parameter
+  * saving: added **time of frame** dataset in Hdf5 file.
+
+Bug Fixes
+
+  * Very fast acquisition sometimes fails due to no buffer for BS compression, has been fixed
+  * CtVideo::Image buffer python binding with empty buffer segfault, has been fixed
+  * saving: fixed a small compilation error with recent compiler
+
+Camera Updates
+
+  * Andor3 v1.12.0
+    * compiled for lima-core v1.10
+    * update for sdk 3.15.30092.2, only one with bitflow driver supported by ubuntu 20.04 kernel version
+
+  * Basler v1.11.0
+    * compiled for lima-core v1.10
+    * upgrade Bpp10 cameras to use 2-bytes instead of only 1
+
+  * Meta
+    * compiled for lima-core v1.10
+
+  * Iris v1.10.2
+    * compiled for lima-core v1.10
+    * Resolve "Camera get in Fault state if stopped during acquisition"
+    * Resolve "Timeout are not properly reported"
+    * Resolve "Make the acquisition timeout configurable"
+    * Update missing docs
+
+  * Lambda v1.10.1
+    * compile for lima-core v1.10
+    * useless code make 1.10 not working since alloc a buffer is too early
+    * fix pixel size (55x55 um)
+
+  * Maxipix v1.10.0
+    * compiled for lima-core v1.10
+
+  * PhotonicScience v1.10.0
+    * recompiled for v1.10
+    * first conda package with new deps on imagestar-sdk (win only)
+
+  * Pilatus v1.10.0
+    * recompiled for lima-core v1.10
+    * Resolve "stopAcq() let the camera in FAULT state"
+
+  * Prosilica v1.10.0
+    * compiled for lima-core v1.10
+    * Added hardware ROI Capability
+ 
+  * RoperScientific under preparation v1.10 pvcam-rp-sdk
+
+  * Simulator v1.10.1
+    * conda recipe:  add python to run dependencies
+
+  * Template 
+    * add tango python code
+
+  * Xh v1.10.0
+    * compiled for lima-core v1.10
+
+  * xspress3 v1.10.1
+    * compiled for lima-core v1.10
+    * Remove some codes which break lima buffer logic
+ 
+PyTango server updates v1.10.1
+  * new attribute saving_every_n_frames
+  * remove confusing error message printed when reading attr acc_saturated_cblevel
+  * readLastImage command: use a default value which allow to read the very first index
+  * fixed doc mistake for image_roi attribute
+
+
+Version v1.10.1 released on July 25th 2024
+------------------------------------------
+
+New features
+
+  * Allow constructing NumaAllocator from NumaNodeMask
+  * Unify CPUMask & NumaNodeMask conversion to/from hex string
 
 Version v1.10.0 released on June 28th 2024
 ------------------------------------------
