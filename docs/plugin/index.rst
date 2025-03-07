@@ -12,8 +12,8 @@ so the hardware layer functionality is limited to the generation the image frame
 
 The control layer is responsible of:
 
- - Adapting the received image geometry if it does not match the user requests,
- - Executing the frame processing chain.
+- Adapting the received image geometry if it does not match the user requests,
+- Executing the frame processing chain.
 
 Generic Interface
 -----------------
@@ -274,7 +274,7 @@ The source files and documentation of each new plug-in must be located under Lim
 
 To maintain homogeneity between the different plug-ins, each plug-in must have at minimum the following folders:
 
-  - ``/src`` : contains the source files. Plug-ins must be developed in C++. The "src" folder must contain the following files :
+- ``/src`` : contains the source files. Plug-ins must be developed in C++. The "src" folder must contain the following files :
 
     - ``DetectorNameInterface.cpp`` : interface class between detector capabilities from the hardware interface and the control layer **(mandatory)**
     - ``DetectorNameDetInfoCtrObj.cpp`` : capabilities to get static informations about the detector **(mandatory)**
@@ -288,9 +288,9 @@ To maintain homogeneity between the different plug-ins, each plug-in must have a
     - ``DetectorNameEventCtrlObj.cpp`` : capabilities to generate event **(optional)**
     - ``DetectorNameSavingCtrlObj.cpp`` : capabilities to save images in different formats **(optional)**
 
-  - ``/include`` : contains the header files relative to the sources files described before.
-  - ``/doc`` : contains at least ``index.rst`` for plug-in documentation. Other files such as image can be added. The minimum content of the index file is detailed in the documentation section.
-  - Other folders can be added based on need. The contents of this file must be described in the documentation.
+- ``/include`` : contains the header files relative to the sources files described before.
+- ``/doc`` : contains at least ``index.rst`` for plug-in documentation. Other files such as image can be added. The minimum content of the index file is detailed in the documentation section.
+- Other folders can be added based on need. The contents of this file must be described in the documentation.
 
 
 .. note:: If optional capabilities are not defined, they are emulated by the Lima Core.

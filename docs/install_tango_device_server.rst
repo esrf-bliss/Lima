@@ -12,14 +12,15 @@ As PyTango_ (Tango_ for python) server is provided as Python script, you just ha
 - ``doc`` directory: contained plugins camera documentation (exhaustive list of properties, commands and attributes)
 - ``plugins`` directory: contained all plugins device server like:
 
-  - Roi counters
-  - Mask...
+- Roi counters
+- Mask...
 - ``scripts`` directory: contained a script use at ESRF to start Lima device server (can also be removed)
 - ``LimaCCDs.py`` file: python script to start Lima device server
 - ``LimaViewer.py`` file: python script to start LimaViewer device server to get image from Lima device server
 
 
-:: warning: Make sure your environment is properly set for python and library paths, see  :ref:`build_installation` for more information.
+.. warning::
+  Make sure your environment is properly set for python and library paths, see  :ref:`build_installation` for more information.
 
 
 Example of plugin server setup : Basler detector
@@ -34,45 +35,45 @@ Lima device server
 
 1. Run Jive and select "Tools->Server Wizard" menu. You must enter server and instance names
 
-    .. image:: installation/LimaDeviceServer_1.png
+.. image:: installation/LimaDeviceServer_1.png
 
-  Click Next...
+Click Next...
 
 2. Start the Lima device server. Open a terminal and execute the command "server_name  instance_name"
 
-    .. image:: installation/LimaDeviceServer_2.png
+.. image:: installation/LimaDeviceServer_2.png
 
-  Click Next on the "Tango Device Installation Wizard" window
+Click Next on the "Tango Device Installation Wizard" window
 
 3. Declare a Lima device
 
-  The Lima device server, contained several classes. For Basler camera you need to configure LimaCCDs and Basler classes.
+The Lima device server, contained several classes. For Basler camera you need to configure LimaCCDs and Basler classes.
 
-    .. image:: installation/LimaDeviceServer_3.png
+.. image:: installation/LimaDeviceServer_3.png
 
-  Select "LimaCCDs" class and click "Declare device" button. You must enter the device name with a string as "Domain/Family/member".
+Select "LimaCCDs" class and click "Declare device" button. You must enter the device name with a string as "Domain/Family/member".
 
-    .. image:: installation/LimaDeviceServer_4.png
+.. image:: installation/LimaDeviceServer_4.png
 
-  Click Next and configure all the properties. You can let the default property values except for "LimaCameraType". This property must contain the name of the Camera Plugin "Basler".
+Click Next and configure all the properties. You can let the default property values except for "LimaCameraType". This property must contain the name of the Camera Plugin "Basler".
 
-    .. image:: installation/LimaDeviceServer_5.png
+.. image:: installation/LimaDeviceServer_5.png
 
-  At the end of the configuration, click "New Class" button.
+At the end of the configuration, click "New Class" button.
 
-    .. image:: installation/LimaDeviceServer_6.png
+.. image:: installation/LimaDeviceServer_6.png
 
-  Select "Basler" class and click "Declare device" button. You must enter the device name with a string as "Domain/Family/member".
+Select "Basler" class and click "Declare device" button. You must enter the device name with a string as "Domain/Family/member".
 
-    .. image:: installation/LimaDeviceServer_7.png
+.. image:: installation/LimaDeviceServer_7.png
 
-  Click Next and configure all the properties. You can let the default property values except for "cam_ip_adress". This property must contain the IP adress of the Basler camera.
+Click Next and configure all the properties. You can let the default property values except for "cam_ip_adress". This property must contain the IP adress of the Basler camera.
 
-    .. image:: installation/LimaDeviceServer_8.png
+.. image:: installation/LimaDeviceServer_8.png
 
-  Configuration is now ended, click "Finish"
+Configuration is now ended, click "Finish"
 
-    .. image:: installation/LimaDeviceServer_9.png
+.. image:: installation/LimaDeviceServer_9.png
 
 
 Lima Viewer

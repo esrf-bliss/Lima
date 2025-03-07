@@ -12,19 +12,21 @@ Install first lastest miniconda3 (https://docs.conda.io/en/latest/miniconda.html
 
 Install mamba package in your "base" environment to speed up your future installations, the default conda installer is very slow, so we prefer to use mamba:
 
-::
+.. code-block:: bash
+
   conda install mamba -c conda-forge
 
 Install now the Lima camera package (e.g basler) at the same time you create the new environment for your Lima installation:
 
-::
+.. code-block:: bash
+
   mamba create -n basler -c conda-forge -c esrf-bcu lima-camera-basler
 
 would install a fully loaded Lima and all its dependencies with the Basler camera plugin and SDK. The camera comes as a python module but is also  C++ development package that includes header files and `CMake package config <https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html>`_ files.
 
 If you need to run the Python Tango device server you should install the Tango camera package:
 
-::
+.. code-block:: bash
 
   mamba create -n basler -c conda-forge -c esrf-bcu lima-camera-basler-tango
 
@@ -35,8 +37,8 @@ Build from source
 
 First, you need to :ref:`get_source`. Two methods are provided to build LImA from source:
 
- - using our install script that aims to hide the complexity of CMake_;
- - using CMake_ directly for developers who are already acquainted with the tool and need the extra flexibility.
+- using our install script that aims to hide the complexity of CMake_;
+- using CMake_ directly for developers who are already acquainted with the tool and need the extra flexibility.
 
 Using scripts
 """""""""""""
