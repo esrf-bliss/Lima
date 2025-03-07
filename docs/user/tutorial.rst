@@ -5,8 +5,8 @@ In this tutorial, we are going to write a program that prepares the camera and r
 
 First some headers needs to be included :
   
- - The ``simulator/camera.h`` that defines the ``Camera`` class for this specific cameras
- - The ``lima/ctcontrol.h`` that defines the ``CtControl`` class which is the main user interface of LImA
+- The ``simulator/camera.h`` that defines the ``Camera`` class for this specific cameras
+- The ``lima/ctcontrol.h`` that defines the ``CtControl`` class which is the main user interface of LImA
 
 If the library and plugin were not installed in the default locations, make sure to adjust the include search paths of your compiler.
 

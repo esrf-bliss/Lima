@@ -13,9 +13,9 @@ Build dependencies
 
 - A C++ compiler (usually GCC for Linux and Visual Studio for Windows)
 
-  - Visual Studio 2008 for x86 or x64 for python2.7.x
-  - Visual Studio 2008 Express for x86 only for python2.7.x
-  - Visual Studio 2015 or 2017 for x86 and x64 for python >= 3.5
+- Visual Studio 2008 for x86 or x64 for python2.7.x
+- Visual Studio 2008 Express for x86 only for python2.7.x
+- Visual Studio 2015 or 2017 for x86 and x64 for python >= 3.5
 
 - CMake_ >= 3.1
 
