@@ -629,6 +629,12 @@ void CtControl::startAcq()
 
   AutoMutex aLock(m_cond.mutex());
 
+  Status aStatus;
+  getStatus(aStatus);
+
+  if(aStatus.AcquisitionStatus == AcqFault)
+    THROW_CTL_ERROR(Error) << "Can't process startAcq: Acquisition is in fault";
+
   if (!m_ready)
     THROW_CTL_ERROR(Error) << "Run prepareAcq before starting acquisition";
 
