@@ -18,7 +18,7 @@ LImA is a very active project and many developments are ongoing and available fr
 
 If you want to get in touch with the LIMA community, please send an email to lima@esrf.fr. You may also want to subscribe to our mailing list by sending a message to `sympa@esrf.fr <mailto:sympa@esrf.fr?subject=subscribe%20lima>`_ with ``subscribe lima`` as subject.
 
-For the latest changes, refers to the :download:`Release Notes <../ReleaseNotes.txt>`.
+For the latest changes, refers to the :download:`CHANGELOG <../CHANGELOG.md>`.
 
 Note that this documentation is also available in `pdf`_ and `epub`_ format.
 
