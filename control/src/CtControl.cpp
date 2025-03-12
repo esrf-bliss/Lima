@@ -629,11 +629,13 @@ void CtControl::startAcq()
 
   AutoMutex aLock(m_cond.mutex());
 
-  Status aStatus;
-  getStatus(aStatus);
+  HwInterface::Status aHwStatus;
 
-  if(aStatus.AcquisitionStatus == AcqFault)
-    THROW_CTL_ERROR(Error) << "Can't process startAcq: Acquisition is in fault";
+  // In case of multi trigger acquisition (startAcq used as trigger command), the acquisition might have failed
+  // so check Hw status early
+  m_hw->getStatus(aHwStatus);
+  if(aHwStatus.acq == AcqFault)
+      THROW_CTL_ERROR(Error) << "Can't process startAcq: Acquisition is in fault";
 
   if (!m_ready)
     THROW_CTL_ERROR(Error) << "Run prepareAcq before starting acquisition";
@@ -646,10 +648,8 @@ void CtControl::startAcq()
   else
     {
       //First check the detector is in Idle Stat
-      HwInterface::Status hwStatus;
-      m_hw->getStatus(hwStatus);
-      if ((hwStatus.det != DetIdle) && (hwStatus.det & DetWaitForTrigger == 0))
-        THROW_CTL_ERROR(Error) << "Try to restart before detector is ready. HW status is " << hwStatus;
+      if ((aHwStatus.det != DetIdle) && (aHwStatus.det & DetWaitForTrigger == 0))
+        THROW_CTL_ERROR(Error) << "Try to restart before detector is ready. HW status is " << aHwStatus;
 
       //m_ready = false after the last image is triggerred
       int nbFrames4Acq;
