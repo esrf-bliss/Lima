@@ -42,7 +42,7 @@ T SwapDimIfRotated(RotationMode rotation, const T& size)
 // CLASS CtSwBinRoiFlip
 // ----------------------------------------------------------------------------
 CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size) :
-  m_rotation(Rotation_0)
+  m_rotation(Rotation_0), m_bin_mode(Bin_Sum)
 {
 	DEB_CONSTRUCTOR();
 	DEB_PARAM() << DEB_VAR1(size);
@@ -51,8 +51,8 @@ CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size) :
 }
 
 CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size, const Bin& bin, const Roi& roi,
-                               const Flip& flip, RotationMode rotation) :
-  m_rotation(Rotation_0)
+                               const Flip& flip, RotationMode rotation, const BinMode& bin_mode) :
+  m_rotation(Rotation_0), m_bin_mode(Bin_Sum)
 {
 	DEB_CONSTRUCTOR();
 	DEB_PARAM() << DEB_VAR5(size, bin, roi, flip, rotation);
@@ -60,6 +60,7 @@ CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size, const Bin& bin, const Roi& roi,
 	m_max_size= size;
 
 	setBin(bin);
+	setBinMode(bin_mode);
 	if (!roi.isEmpty())
 		setRoi(roi);
 	setFlip(flip);
@@ -104,6 +105,16 @@ void CtSwBinRoiFlip::setBin(const Bin& bin)
 		m_bin= bin;
 		if (!m_bin.isOne())
 			m_roi= m_roi.getBinned(SwapDimIfRotated(m_rotation, m_bin));
+	}
+}
+
+void CtSwBinRoiFlip::setBinMode(const BinMode bin_mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(bin_mode);
+
+	if (bin_mode != m_bin_mode) {
+		m_bin_mode= bin_mode;
 	}
 }
 
@@ -159,6 +170,13 @@ void CtSwBinRoiFlip::resetBin()
 	setBin(Bin_1x1);
 }
 
+void CtSwBinRoiFlip::resetBinMode()
+{
+	DEB_MEMBER_FUNCT();
+
+	setBinMode(BinMode::Bin_Sum);
+}
+
 void CtSwBinRoiFlip::resetRoi()
 {
 	DEB_MEMBER_FUNCT();
@@ -185,6 +203,7 @@ void CtSwBinRoiFlip::reset()
 	DEB_MEMBER_FUNCT();
 
 	resetBin();
+	resetBinMode();
 	resetRoi();
 	resetFlip();
 	resetRotation();
@@ -195,6 +214,7 @@ bool CtSwBinRoiFlip::apply(SoftOpInternalMgr *op)
 	DEB_MEMBER_FUNCT();
 	
 	op->setBin(m_bin);
+	op->setBinMode(m_bin_mode);
 	op->setRoi(m_roi);
 	op->setFlip(m_flip);
 	op->setRotation(m_rotation);
@@ -479,6 +499,11 @@ public:
     bin_setting.set("x",bin.getX());
     bin_setting.set("y",bin.getY());
 
+    // --- Bin Mode
+    BinMode bMode;
+    m_image.getBinMode(bMode);
+    image_setting.set("bin_mode",convert_2_string(bMode));
+
     // --- Flip
     Flip flip;
     m_image.getFlip(flip);
@@ -729,7 +754,16 @@ void CtImage::setBin(Bin& bin)
 			break;
 	}
 }
-		
+
+void CtImage::setBinMode(BinMode bin_mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(bin_mode);
+
+    m_sw->setBinMode(bin_mode);
+}
+
+
 void CtImage::setRoi(Roi& roi)
 {
 	DEB_MEMBER_FUNCT();
@@ -974,6 +1008,14 @@ void CtImage::resetBin()
 	setBin(bin);
 }
 
+void CtImage::resetBinMode()
+{
+	DEB_MEMBER_FUNCT();
+
+	BinMode bin_mode = lima::BinMode::Bin_Sum;
+	setBinMode(bin_mode);
+}
+
 void CtImage::resetRoi() 
 {
 	DEB_MEMBER_FUNCT();
@@ -1030,6 +1072,15 @@ void CtImage::getBin(Bin& bin) const
 		bin= m_sw->getBin();
 
 	DEB_RETURN() << DEB_VAR1(bin);
+}
+
+void CtImage::getBinMode(BinMode &bin_mode) const
+{
+	DEB_MEMBER_FUNCT();
+
+	bin_mode = m_sw->getBinMode();
+
+	DEB_RETURN() << DEB_VAR1(bin_mode);
 }
 
 void CtImage::getRoi(Roi& roi) const

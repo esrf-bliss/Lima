@@ -52,6 +52,16 @@ void SoftOpInternalMgr::getBin(Bin &aBin) const
   aBin = m_bin;
 }
 
+void SoftOpInternalMgr::setBinMode(const BinMode &aBinMode)
+{
+  m_bin_mode = aBinMode;
+}
+
+void SoftOpInternalMgr::getBinMode(BinMode &aBinMode) const
+{
+  aBinMode = m_bin_mode;
+}
+
 void SoftOpInternalMgr::setRoi(const Roi &aRoi)
 {
   m_roi = aRoi;
@@ -117,6 +127,22 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     {
       aBinTaskPt = new Tasks::Binning();
       aBinTaskPt->setProcessingInPlace(processingInPlace);
+
+      Tasks::Binning::Operation aBinOperation;
+      switch(m_bin_mode) {
+        case Bin_Sum:
+          aBinOperation = Tasks::Binning::SUM;
+          break;
+	      case Bin_Mean:
+          aBinOperation = Tasks::Binning::MEAN;
+          break;
+	      default:
+          // FIXME: Would be good to log or raise something here
+          aBinOperation = Tasks::Binning::SUM;
+          break;
+      }
+
+      aBinTaskPt->mOperation = aBinOperation;
       processingInPlace = true;
       if(m_rotation == Rotation_90 || m_rotation == Rotation_270)
         {
