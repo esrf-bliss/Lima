@@ -1,13 +1,15 @@
 LIMA CHANGELOG
 
 
-Version v1.10.2 released on February 27th 2025
+Version v1.10.2 released on March 11th 2025
 ----------------------------------------------
 
 New features
 
   * saving: add partial saving mode and everyNFrames parameter
   * saving: added **time of frame** dataset in Hdf5 file.
+  * acquisition: Raise an exception if the detector is already in failure when 
+    startAcq is requested
 
 Bug Fixes
 
