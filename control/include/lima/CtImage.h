@@ -43,22 +43,25 @@ class LIMACORE_API CtSwBinRoiFlip {
 
 	CtSwBinRoiFlip(const Size& size);
 	CtSwBinRoiFlip(const Size& size, const Bin& bin, const Roi& roi,
-		       const Flip& flip, RotationMode rotation);
+		       const Flip& flip, RotationMode rotation, const BinMode& bin_mode);
 	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);
 	void setBin(const Bin& bin);
+	void setBinMode(BinMode);
 	void setRoi(const Roi& roi);
 	void setFlip(const Flip& flip);
 	void setRotation(RotationMode);
 
 	void resetBin();
+	void resetBinMode();
 	void resetRoi();
 	void resetFlip();
 	void resetRotation();
 	void reset();
 
 	const Bin& 	getBin() 	const {return m_bin;}
+	BinMode 	getBinMode() 	const {return m_bin_mode;}
 	const Roi& 	getRoi() 	const {return m_roi;}
 	const Size& 	getSize()	const;
 	const Flip& 	getFlip() 	const {return m_flip;}
@@ -70,6 +73,7 @@ class LIMACORE_API CtSwBinRoiFlip {
 	Size		m_max_size;
 	mutable Size	m_size;
 	Bin		m_bin;
+	BinMode m_bin_mode;
 	Roi		m_roi;
 	Flip    	m_flip;
 	RotationMode 	m_rotation;
@@ -164,17 +168,20 @@ class LIMACORE_API CtImage {
 
 	void setRoi(Roi& roi);
 	void setBin(Bin& bin);
+	void setBinMode(BinMode bin_mode);
 	void setFlip(Flip &flip);
 	void setRotation(RotationMode rotation);
 
 	void resetRoi();
 	void resetBin();
+	void resetBinMode();
 	void resetFlip();
 	void resetRotation();
 
 	// --- effective
 	void getRoi(Roi& roi) const;
 	void getBin(Bin& bin) const;
+	void getBinMode(BinMode &bin_mode) const;
 	void getFlip(Flip &flip) const;
 	void getRotation(RotationMode &rotation) const;
 

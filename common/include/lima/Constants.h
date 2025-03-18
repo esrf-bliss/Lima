@@ -147,6 +147,10 @@ enum RotationMode {
   Rotation_180,
   Rotation_270
 };
+enum BinMode {
+  Bin_Sum,
+  Bin_Mean
+};
 
 typedef std::list<RotationMode> RotationModeList;
 
@@ -154,6 +158,12 @@ LIMACORE_API std::ostream& operator <<(std::ostream& os, RotationMode rotationMo
 LIMACORE_API std::istream& operator >>(std::istream& is, RotationMode& rotationMode);
 LIMACORE_API const char* convert_2_string(RotationMode rotationMode);
 LIMACORE_API void convert_from_string(const std::string&,RotationMode&);
+
+LIMACORE_API std::ostream& operator <<(std::ostream& os, BinMode binMode);
+LIMACORE_API std::istream& operator >>(std::istream& is, BinMode& binMode);
+LIMACORE_API const char* convert_2_string(BinMode binMode);
+LIMACORE_API void convert_from_string(const std::string&,BinMode&);
+
 } // namespace lima
 
 #endif // CONSTANTS_H

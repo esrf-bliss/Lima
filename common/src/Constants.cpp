@@ -496,3 +496,43 @@ istream& lima::operator >>(istream& is, RotationMode& rotationMode)
 	convert_from_string(s, rotationMode);
 	return is;
 }
+
+const char* lima::convert_2_string(BinMode binMode)
+{
+  const char *aHumanReadablePt;
+  switch(binMode)
+    {
+    case Bin_Sum:   aHumanReadablePt = "Bin_Sum";	break;
+    case Bin_Mean: 	aHumanReadablePt = "Bin_Mean";	break;
+    default:        aHumanReadablePt = "Unknown";		break;
+    }
+  return aHumanReadablePt;
+}
+void lima::convert_from_string(const std::string& val,
+			       BinMode& binMode)
+{
+  std::string buffer = val;
+  std::transform(buffer.begin(),buffer.end(),
+		 buffer.begin(),::tolower);
+
+  if(buffer == "bin_sum")       binMode = Bin_Sum;
+  else if(buffer == "bin_mean") binMode = Bin_Mean;
+  else
+    {
+      std::ostringstream msg;
+      msg << "BinMode can't be:" << DEB_VAR1(val);
+      throw LIMA_EXC(Common,InvalidValue,msg.str());
+    }
+
+}
+ostream& lima::operator <<(ostream& os,BinMode binMode)
+{
+  return os << convert_2_string(binMode);
+}
+istream& lima::operator >>(istream& is, BinMode& binMode)
+{
+	string s;
+	is >> s;
+	convert_from_string(s, binMode);
+	return is;
+}

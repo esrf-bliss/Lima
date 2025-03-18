@@ -52,6 +52,16 @@ void SoftOpInternalMgr::getBin(Bin &aBin) const
   aBin = m_bin;
 }
 
+void SoftOpInternalMgr::setBinMode(const BinMode &aBinMode)
+{
+  m_bin_mode = aBinMode;
+}
+
+void SoftOpInternalMgr::getBinMode(BinMode &aBinMode) const
+{
+  aBinMode = m_bin_mode;
+}
+
 void SoftOpInternalMgr::setRoi(const Roi &aRoi)
 {
   m_roi = aRoi;
@@ -117,17 +127,33 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     {
       aBinTaskPt = new Tasks::Binning();
       aBinTaskPt->setProcessingInPlace(processingInPlace);
+
+      Tasks::Binning::Operation aBinOperation;
+      switch(m_bin_mode) {
+        case Bin_Sum:
+          aBinOperation = Tasks::Binning::SUM;
+          break;
+	      case Bin_Mean:
+          aBinOperation = Tasks::Binning::MEAN;
+          break;
+	      default:
+          // FIXME: Would be good to log or raise something here
+          aBinOperation = Tasks::Binning::SUM;
+          break;
+      }
+
+      aBinTaskPt->mOperation = aBinOperation;
       processingInPlace = true;
       if(m_rotation == Rotation_90 || m_rotation == Rotation_270)
-	{
-	  aBinTaskPt->mXFactor = m_bin.getY();
-	  aBinTaskPt->mYFactor = m_bin.getX();
-	}
+        {
+          aBinTaskPt->mXFactor = m_bin.getY();
+          aBinTaskPt->mYFactor = m_bin.getX();
+        }
       else
-	{
-	  aBinTaskPt->mXFactor = m_bin.getX();
-	  aBinTaskPt->mYFactor = m_bin.getY();
-	}
+        {
+          aBinTaskPt->mXFactor = m_bin.getX();
+          aBinTaskPt->mYFactor = m_bin.getY();
+        }
       aTaskMgr.setLinkTask(aLastStage,aBinTaskPt);
       aBinTaskPt->unref();
       ++aLastStage;
@@ -138,12 +164,12 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
     {
       Tasks::Flip::FLIP_MODE aMode = Tasks::Flip::FLIP_NONE;
       if(m_flip.x && m_flip.y)
-	aMode = Tasks::Flip::FLIP_ALL;
+        aMode = Tasks::Flip::FLIP_ALL;
       else if(m_flip.x)
-	aMode = Tasks::Flip::FLIP_X;
+        aMode = Tasks::Flip::FLIP_X;
       else
-	aMode = Tasks::Flip::FLIP_Y;
-      
+        aMode = Tasks::Flip::FLIP_Y;
+
       aFlipTaskPt = new Tasks::Flip();
       aFlipTaskPt->setProcessingInPlace(processingInPlace);
       processingInPlace = true;
@@ -153,17 +179,17 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
       aFlipTaskPt->unref();
       ++aLastStage;
     }
-  
+
   Tasks::Rotation *aRotationTaskPt = NULL;
   if(m_rotation != Rotation_0)
     {
       Tasks::Rotation::Type aMode;
       switch(m_rotation)
-	{
-	case Rotation_180: aMode = Tasks::Rotation::R_180;break;
-	case Rotation_270: aMode = Tasks::Rotation::R_270;break;
-	default: aMode = Tasks::Rotation::R_90;break;
-	}
+      {
+        case Rotation_180: aMode = Tasks::Rotation::R_180;break;
+        case Rotation_270: aMode = Tasks::Rotation::R_270;break;
+        default: aMode = Tasks::Rotation::R_90;break;
+      }
       aRotationTaskPt = new Tasks::Rotation();
       aRotationTaskPt->setProcessingInPlace(processingInPlace);
       processingInPlace = true;
@@ -192,19 +218,19 @@ void SoftOpInternalMgr::addTo(TaskMgr &aTaskMgr,
   if(registerCallback && aLastStage)
     {
       if(aSoftRoiTaskPt)
-	aSoftRoiTaskPt->setEventCallback(m_end_callback);
+        aSoftRoiTaskPt->setEventCallback(m_end_callback);
       else if(aRotationTaskPt)
-	aRotationTaskPt->setEventCallback(m_end_callback);
+        aRotationTaskPt->setEventCallback(m_end_callback);
       else if(aFlipTaskPt)
-	aFlipTaskPt->setEventCallback(m_end_callback);
+        aFlipTaskPt->setEventCallback(m_end_callback);
       else if(aBinTaskPt)
-	aBinTaskPt->setEventCallback(m_end_callback);
+        aBinTaskPt->setEventCallback(m_end_callback);
       else if(m_reconstruction_task)
-	m_reconstruction_task->setEventCallback(m_end_callback),removeReconstructionTaskCallback = false;
+        m_reconstruction_task->setEventCallback(m_end_callback),removeReconstructionTaskCallback = false;
 
       //Clear eventCallback for reconstruction task
       if(m_reconstruction_task && removeReconstructionTaskCallback)
-	m_reconstruction_task->setEventCallback(NULL);
+        m_reconstruction_task->setEventCallback(NULL);
     }
 }
 

@@ -38,6 +38,9 @@ namespace lima
     void setBin(const Bin &);
     void getBin(Bin &) const;
 
+    void setBinMode(const BinMode &);
+    void getBinMode(BinMode &) const;
+
     void setRoi(const Roi &);
     void getRoi(Roi &) const;
 
@@ -68,6 +71,7 @@ namespace lima
     friend class _EndCbk;
 
     Bin			m_bin;
+    BinMode			m_bin_mode;
     Flip		m_flip;
     Roi			m_roi;
     RotationMode	m_rotation;

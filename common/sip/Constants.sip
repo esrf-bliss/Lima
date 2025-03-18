@@ -207,6 +207,11 @@ enum RotationMode {
   Rotation_270
 };
 
+enum BinMode {
+  Bin_Sum,
+  Bin_Mean
+};
+
 %MappedType RotationModeList
 {
 %TypeHeaderCode

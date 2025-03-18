@@ -28,22 +28,25 @@ using namespace lima;
     public:
 	CtSwBinRoiFlip(Size& size);
 	CtSwBinRoiFlip(Size& size, const Bin& bin, const Roi& roi,
-		       const Flip& flip, RotationMode rotation);
+		       const Flip& flip, RotationMode rotation, const BinMode& bin_mode);
 	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);
 	void setBin(const Bin& bin);
+	void setBinMode(BinMode aBType);
 	void setRoi(const Roi& roi);
 	void setFlip(const Flip& flip);
 	void setRotation(RotationMode aRType);
 
 	void resetBin();
+	void resetBinMode();
 	void resetRoi();
 	void resetFlip();
 	void resetRotation();
 	void reset();
 
 	const Bin&   	getBin() 	const;
+	BinMode 	    getBinMode() 	const;
 	const Roi&   	getRoi() 	const;
 	const Size&  	getSize() 	const;
 	const Flip&  	getFlip() 	const;
@@ -58,6 +61,7 @@ using namespace lima;
 	sipRes = Py_BuildValue("OOOOO",
 		sipConvertFromType((void*)&sipCpp->getSize(), sipType_Size, NULL),
 		sipConvertFromType((void*)&sipCpp->getBin(), sipType_Bin, NULL),
+		sipConvertFromEnum(sipCpp->getBinMode(), sipType_BinMode),
 		sipConvertFromType((void*)&sipCpp->getRoi(), sipType_Roi, NULL),
 		sipConvertFromType((void*)&sipCpp->getFlip(), sipType_Flip, NULL),
 		sipConvertFromEnum(sipCpp->getRotation(), sipType_RotationMode));
@@ -134,17 +138,20 @@ using namespace lima;
 
 	void setRoi(Roi &roi);
 	void setBin(Bin &bin);
+	void setBinMode(BinMode bin_mode);
 	void setFlip(Flip &flip);
 	void setRotation(RotationMode rotation);
 
 	void resetRoi();
 	void resetBin();
+	void resetBinMode();
 	void resetFlip();
 	void resetRotation();
 
 	// --- effective
 	void getRoi(Roi& roi /Out/) const;
 	void getBin(Bin& bin /Out/) const;
+	void getBinMode(BinMode& bin_mode /Out/) const;
 	void getFlip(Flip &flip /Out/) const;
 	void getRotation(RotationMode &rotation /Out/) const;
 
