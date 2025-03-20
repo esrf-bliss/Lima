@@ -1,5 +1,13 @@
 LIMA CHANGELOG
 
+Version v1.10.3 released on March 19th 2025
+----------------------------------------------
+
+New features
+
+  * saving: add time_of_frame dataset
+  * processing: Add a new binning option to average the bin pixel values (instead of summing)
+
 
 Version v1.10.2 released on March 11th 2025
 ----------------------------------------------
