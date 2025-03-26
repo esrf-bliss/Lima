@@ -634,7 +634,7 @@ void CtControl::startAcq()
   // In case of multi trigger acquisition (startAcq used as trigger command), the acquisition might have failed
   // so check Hw status early
   m_hw->getStatus(aHwStatus);
-  if(aHwStatus.acq == AcqFault)
+  if(m_status.AcquisitionStatus == AcqFault || aHwStatus.acq == AcqFault)
       THROW_CTL_ERROR(Error) << "Can't process startAcq: Acquisition is in fault";
 
   if (!m_ready)
