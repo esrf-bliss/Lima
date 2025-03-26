@@ -813,8 +813,9 @@ void CtImage::_setHSBin(const Bin &bin)
 	Roi user_roi;getRoi(user_roi);
 	Bin user_bin;getBin(user_bin);
 	RotationMode user_rot;getRotation(user_rot);
+	BinMode sw_bin_mode;getBinMode(sw_bin_mode);
 
-	if (m_hw->hasBinCapability()) {
+	if (m_hw->hasBinCapability() && sw_bin_mode != BinMode::Bin_Mean) {
 		Bin set_hw_bin = bin;
 		m_hw->setBin(set_hw_bin, true);
 		DEB_TRACE() << DEB_VAR2(bin, set_hw_bin);
