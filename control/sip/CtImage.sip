@@ -28,7 +28,7 @@ using namespace lima;
     public:
 	CtSwBinRoiFlip(Size& size);
 	CtSwBinRoiFlip(Size& size, const Bin& bin, const Roi& roi,
-		       const Flip& flip, RotationMode rotation, const BinMode& bin_mode);
+		       const Flip& flip, RotationMode rotation, BinMode bin_mode);
 	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);

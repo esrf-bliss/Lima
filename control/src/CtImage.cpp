@@ -51,11 +51,11 @@ CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size) :
 }
 
 CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size, const Bin& bin, const Roi& roi,
-                               const Flip& flip, RotationMode rotation, const BinMode& bin_mode) :
+                               const Flip& flip, RotationMode rotation, BinMode bin_mode) :
   m_rotation(Rotation_0), m_bin_mode(Bin_Sum)
 {
 	DEB_CONSTRUCTOR();
-	DEB_PARAM() << DEB_VAR5(size, bin, roi, flip, rotation);
+	DEB_PARAM() << DEB_VAR6(size, bin, roi, flip, rotation, bin_mode);
 
 	m_max_size= size;
 
