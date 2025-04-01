@@ -58,7 +58,10 @@ class MockedCamera:
         trigger_multi: bool = True,
         supports_sum_binning: bool = False,
         supports_roi: bool = False,
+        debug_image: bool = False,
     ):
+        self.debug_image = debug_image
+
         self.name = "mocked"
         self.width = 16
         self.height = 8
@@ -145,6 +148,9 @@ class MockedCamera:
         # Pin a corner
         array[0, 0] = 0
         array[0, width - 1] = 0
+
+        if self.debug_image:
+            print(array)
         return array
 
     def doAcquisition(self):
