@@ -72,7 +72,7 @@ using namespace lima;
 %End
 public:
 	enum Type {
-	        Undef,
+		Undef,
 		DetInfo, Buffer, Sync, 	// Standard: these are mandatory
 		Roi, Bin, Flip,		// Image operations
 		Kinetics, FrameTransfer,// Acquisition modes
@@ -84,7 +84,7 @@ public:
 	};
 	HwCap();
 	HwCap(const HwCap&);
-        HwCap(HwDetInfoCtrlObj*);
+	HwCap(HwDetInfoCtrlObj*);
 	HwCap(HwBufferCtrlObj*);
 	HwCap(HwSyncCtrlObj*);
 	HwCap(HwBinCtrlObj*);
