@@ -46,6 +46,7 @@ class MockedCamera:
         self,
         trigger_multi: bool = True,
         supports_sum_binning: bool = False,
+        supports_roi: bool = False,
     ):
         self.control = None
         self.name = "mocked"
@@ -57,6 +58,7 @@ class MockedCamera:
 
         # For hardware capability
         self.binning: Core.Bin = Core.Bin(1, 1)
+        self.roi: Core.Roi = Core.Roi()
 
         self.trigger_mode: Core.TrigMod
         if trigger_multi:
@@ -65,6 +67,7 @@ class MockedCamera:
             self.trigger_mode = Core.IntTrig
 
         self.supports_sum_binning: bool = supports_sum_binning
+        self.supports_roi: bool = supports_roi
 
         self.__prepared = False
         self.__nb_frames = 1
@@ -117,15 +120,22 @@ class MockedCamera:
             dtype = numpy.uint8
         else:
             raise ValueError(f"Unsupported BPP {self.bpp} as numpy array")
-        h = self.height // self.binning.getY()
-        w = self.width // self.binning.getX()
-        array = numpy.ones((h, w), dtype=dtype)
+
+        roi = self.roi
+        if roi.isEmpty():
+            width = self.width // self.binning.getX()
+            height = self.height // self.binning.getY()
+        else:
+            width = roi.getSize().getWidth()
+            height = roi.getSize().getHeight()
+
+        array = numpy.ones((height, width), dtype=dtype)
         coef = self.binning.getX() * self.binning.getY()
         if coef != 1:
             array *= coef
         # Pin a corner
         array[0, 0] = 0
-        array[0, w - 1] = 0
+        array[0, width - 1] = 0
         return array
 
     def doAcquisition(self):
@@ -328,6 +338,21 @@ class MockedHwBinCtrlObj(Core.HwBinCtrlObj):
         return Core.Bin(bin.getX(), bin.getY())
 
 
+class MockedHwRoiCtrlObj(Core.HwRoiCtrlObj):
+    def __init__(self, camera: MockedCamera):
+        Core.HwRoiCtrlObj.__init__(self)
+        self.__camera: MockedCamera = camera
+
+    def setRoi(self, roi: Core.Roi):
+        self.__camera.roi = roi
+
+    def getRoi(self) -> Core.Roi:
+        return self.__camera.roi
+
+    def checkRoi(self, roi: Core.Roi) -> Core.Roi:
+        return roi
+
+
 class MockedInterface(Core.HwInterface):
     def __init__(self, camera: MockedCamera):
         Core.HwInterface.__init__(self)
@@ -349,6 +374,10 @@ class MockedInterface(Core.HwInterface):
         if self.__camera.supports_sum_binning:
             binCtrlObj = MockedHwBinCtrlObj(self.__camera)
             self.__capabilities.append(binCtrlObj)
+
+        if self.__camera.supports_roi:
+            roiCtrlObj = MockedHwRoiCtrlObj(self.__camera)
+            self.__capabilities.append(roiCtrlObj)
 
     def __del__(self):
         self.__camera.quit()
