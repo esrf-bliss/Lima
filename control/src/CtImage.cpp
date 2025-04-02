@@ -129,7 +129,7 @@ void CtSwBinRoiFlip::setRoi(const Roi& roi)
 	if (roi.isEmpty())
 		THROW_CTL_ERROR(InvalidValue) << "Software roi is empty";
 	if (!max_roi.containsRoi(roi))
-	  THROW_CTL_ERROR(InvalidValue) << "Roi out of limits " << DEB_VAR2(max_roi,roi);
+	  THROW_CTL_ERROR(InvalidValue) << "Software roi out of limits " << DEB_VAR2(max_roi,roi);
 	m_roi= roi;
 }
 
@@ -336,7 +336,7 @@ void CtHwBinRoiFlip::setRoi(Roi& roi, bool round)
 	if (roi.isEmpty())
 		THROW_CTL_ERROR(InvalidValue) << "Hardware roi is empty";
 	if (!m_max_roi.containsRoi(roi))
-		THROW_CTL_ERROR(InvalidValue) << "Roi out of limits";
+		THROW_CTL_ERROR(InvalidValue) << "Hardware roi out of limits";
 
 	if (!m_has_roi) {
 		if (!round)
