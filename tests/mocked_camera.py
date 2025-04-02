@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import weakref
 import enum
+import threading
+import numpy
+import logging
 from Lima import Core
+
+
+_logger = logging.getLogger(__name__)
 
 
 class MockedState(enum.Enum):
@@ -11,12 +17,33 @@ class MockedState(enum.Enum):
     RUNNING = enum.auto()
 
 
+class AcqThread(threading.Thread):
+    def __init__(self, camera: MockedCamera):
+        threading.Thread.__init__(self)
+        self.camera: MockedCamera = camera
+
+    def run(self):
+        try:
+            self._run()
+        except Exception:
+            _logger.error("Error during mocked acquisition", exc_info=True)
+            raise
+
+    def _run(self):
+        if self.camera.buffer_ctrl:
+            buffer_mgr = self.camera.buffer_ctrl.getBuffer()
+            buffer_mgr.setStartTimestamp(Core.Timestamp.now())
+
+        self.camera.doAcquisition()
+
+        self.camera._stopAcq()
+
+
 class MockedCamera:
     Core.DEB_CLASS(Core.DebModCamera, "mocked.Camera")
 
     def __init__(
         self,
-        buffer_ctrl=None,
         trigger_multi: bool = True,
         supports_sum_binning: bool = False,
     ):
@@ -43,9 +70,12 @@ class MockedCamera:
         self.__nb_frames = 1
         self.__expo_time = 1.0
         self.__acquired_frames = 0
-        self.__buffer_ctrl = buffer_ctrl
+        self.__buffer_ctrl: Core.SoftBufferCtrlObj | None = None
         self.__status: MockedState = MockedState.READY
-        self.acqthread = None
+        self.__acq_thread = None
+
+    def _set_buffer_ctrl(self, buffer_ctrl: Core.SoftBufferCtrlObj):
+        self.__buffer_ctrl = buffer_ctrl
 
     def __str__(self):
         result = ""
@@ -53,6 +83,7 @@ class MockedCamera:
         result += f"Width x Height: {self.width} x {self.height}\n"
         result += f"Bit per pixels  {self.bpp}\n"
         result += f"Pixel size:     {self.pixel_size[0] * 1e6:0.3f} x {self.pixel_size[1] * 1e6:0.3f} um\n"
+        result += f"Hard binning:   {self.binning}\n"
         result += f"Trigger mode    {self.trigger_mode}\n"
         result += f"State:          {self.__status}\n"
         return result
@@ -64,40 +95,75 @@ class MockedCamera:
         self.control = None
 
     def prepareAcq(self):
-        if not self.__prepared:
-            if self.buffer_ctrl:
-                # get the buffer mgr here, to be filled in the callback funct
-                self.__buffer_mgr = self.buffer_ctrl.getBuffer()
-            else:
-                self.__buffer_mgr = None
+        if self.__prepared:
+            _logger.warning("Already prepared")
+            return
 
-            self.__prepared = True
-            self.__acquired_frames = 0
+        if self.buffer_ctrl:
+            # get the buffer mgr here, to be filled in the callback funct
+            self.__buffer_mgr = self.buffer_ctrl.getBuffer()
+        else:
+            self.__buffer_mgr = None
+
+        self.__prepared = True
+        self.__acquired_frames = 0
 
     @property
     def status(self):
         return self.__status
 
+    def _create_frame(self) -> numpy.ndarray:
+        if self.bpp == Core.Bpp8:
+            dtype = numpy.uint8
+        else:
+            raise ValueError(f"Unsupported BPP {self.bpp} as numpy array")
+        h = self.height // self.binning.getY()
+        w = self.width // self.binning.getX()
+        array = numpy.ones((h, w), dtype=dtype)
+        coef = self.binning.getX() * self.binning.getY()
+        if coef != 1:
+            array *= coef
+        # Pin a corner
+        array[0, 0] = 0
+        array[0, w - 1] = 0
+        return array
+
+    def doAcquisition(self):
+        if self.__buffer_mgr:
+            frame = self._create_frame()
+            frame_id = self.__acquired_frames
+
+            self.__buffer_mgr.copy_data(frame_id, frame)
+
+            frame_info = Core.HwFrameInfoType()
+            frame_info.acq_frame_nb = frame_id
+            frame_info.frame_timestamp = Core.Timestamp.now()
+            self.__buffer_mgr.newFrameReady(frame_info)
+        else:
+            _logger.warning("No buffer ctrl setup")
+
+        self.__acquired_frames += 1
+
+        if self.trigger_mode == Core.IntTrigMult:
+            self.__status = MockedState.READY
+
     def startAcq(self):
         if self.__acquired_frames == 0:
-            self.acqthread = acqThread(self)
-            self.acqthread.start()
+            self.__acq_thread = AcqThread(self)
+            self.__acq_thread.start()
 
         self.__status = MockedState.RUNNING
-
-        rc = self.detector.doSoftwareTrigger(0)
 
     def stopAcq(self):
         self._stopAcq(abort=True)
 
     def _stopAcq(self, abort=False):
         if abort:
-            self.detector.abortOperation()
-            if self.acqthread:
-                self.acqthread.join()
-                self.acqthread = None
+            if self.__acq_thread:
+                self.__acq_thread.join()
+                self.__acq_thread = None
         self.__prepared = False
-        self.__status = self.READY
+        self.__status = MockedState.READY
 
     @property
     def acq_nb_frames(self):
@@ -121,7 +187,7 @@ class MockedCamera:
 
     @property
     def buffer_ctrl(self):
-        return self.__buffer_ctrl()
+        return self.__buffer_ctrl
 
 
 class DetInfoCtrlObj(Core.HwDetInfoCtrlObj):
@@ -263,15 +329,12 @@ class MockedHwBinCtrlObj(Core.HwBinCtrlObj):
 
 
 class MockedInterface(Core.HwInterface):
-    def __init__(self, camera: MockedCamera | None = None):
+    def __init__(self, camera: MockedCamera):
         Core.HwInterface.__init__(self)
-        self.__buffer = Core.SoftBufferCtrlObj()
+        self.__buffer_ctrl = Core.SoftBufferCtrlObj()
 
-        self.__camera: MockedCamera
-        if camera is None:
-            self.__camera = MockedCamera(self.__buffer)
-        else:
-            self.__camera = camera
+        self.__camera: MockedCamera = camera
+        self.__camera._set_buffer_ctrl(self.__buffer_ctrl)
 
         self.__acquisition_start_flag = False
 
@@ -280,7 +343,7 @@ class MockedInterface(Core.HwInterface):
         self.__capabilities = [
             self.__detInfo,
             self.__syncObj,
-            self.__buffer,
+            self.__buffer_ctrl,
         ]
 
         if self.__camera.supports_sum_binning:
