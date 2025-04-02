@@ -42,6 +42,15 @@ class AcqThread(threading.Thread):
 class MockedCamera:
     Core.DEB_CLASS(Core.DebModCamera, "mocked.Camera")
 
+    BPP_2_NUMPY = {
+        Core.Bpp8: numpy.uint8,
+        Core.Bpp16: numpy.uint16,
+        Core.Bpp32: numpy.uint32,
+        Core.Bpp8S: numpy.int8,
+        Core.Bpp16S: numpy.int16,
+        Core.Bpp32S: numpy.int32,
+    }
+
     def __init__(
         self,
         trigger_multi: bool = True,
@@ -116,9 +125,8 @@ class MockedCamera:
         return self.__status
 
     def _create_frame(self) -> numpy.ndarray:
-        if self.bpp == Core.Bpp8:
-            dtype = numpy.uint8
-        else:
+        dtype = self.BPP_2_NUMPY.get(self.bpp)
+        if dtype is None:
             raise ValueError(f"Unsupported BPP {self.bpp} as numpy array")
 
         roi = self.roi
