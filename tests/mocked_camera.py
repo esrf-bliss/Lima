@@ -58,6 +58,10 @@ class MockedCamera:
         supports_roi: bool = False,
     ):
         self.control = None
+        """Only here to create hardlink to the control. Should not be used."""
+        self.hw_interface = None
+        """Only here to create hardlink to the hw interface. Should not be used."""
+
         self.name = "mocked"
         self.width = 16
         self.height = 8
@@ -105,6 +109,7 @@ class MockedCamera:
 
     def quit(self):
         self.control = None
+        self.hw_interface = None
 
     def prepareAcq(self):
         if self.__prepared:
