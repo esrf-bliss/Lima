@@ -58,13 +58,13 @@ using namespace lima;
 %End
 
 %PickleCode
-	sipRes = Py_BuildValue("OOOOO",
+	sipRes = Py_BuildValue("OOOOOO",
 		sipConvertFromType((void*)&sipCpp->getSize(), sipType_Size, NULL),
 		sipConvertFromType((void*)&sipCpp->getBin(), sipType_Bin, NULL),
-		sipConvertFromEnum(sipCpp->getBinMode(), sipType_BinMode),
 		sipConvertFromType((void*)&sipCpp->getRoi(), sipType_Roi, NULL),
 		sipConvertFromType((void*)&sipCpp->getFlip(), sipType_Flip, NULL),
-		sipConvertFromEnum(sipCpp->getRotation(), sipType_RotationMode));
+		sipConvertFromEnum(sipCpp->getRotation(), sipType_RotationMode),
+		sipConvertFromEnum(sipCpp->getBinMode(), sipType_BinMode));
 %End
 
 };
