@@ -101,6 +101,14 @@ using namespace lima;
 	const Flip& getFlip() const;
 
 	void apply();
+
+	SIP_PYOBJECT __repr__() const;
+%MethodCode
+	LIMA_REPR_CODE
+%End
+
+	private:
+	CtHwBinRoiFlip(const CtHwBinRoiFlip&);
 };
 
 class CtImage {
