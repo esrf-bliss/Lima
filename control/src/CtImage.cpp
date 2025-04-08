@@ -694,20 +694,20 @@ void CtImage::getHwImageDim(FrameDim& dim) const
 	DEB_RETURN() << DEB_VAR1(dim);
 }
 
-void CtImage::getSoft(CtSwBinRoiFlip *& soft) const
+CtSwBinRoiFlip* CtImage::getSoft() const
 {
 	DEB_MEMBER_FUNCT();
+	DEB_RETURN() << DEB_VAR1(m_sw);
 
-	soft= m_sw;
-
-	DEB_RETURN() << DEB_VAR1(soft);
+	return m_sw;
 }
 
-void CtImage::getHard(CtHwBinRoiFlip *& hard) const
+CtHwBinRoiFlip* CtImage::getHard() const
 {
 	DEB_MEMBER_FUNCT();
+	DEB_RETURN() << DEB_VAR1(m_hw);
 
-	hard= m_hw;
+	return m_hw;
 }
 
 void CtImage::setMode(ImageOpMode mode)

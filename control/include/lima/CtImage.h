@@ -161,8 +161,8 @@ class LIMACORE_API CtImage {
 	void getImageDim(FrameDim& dim) const;
 
 	// --- soft
-	void getSoft(CtSwBinRoiFlip *& soft) const;
-	void getHard(CtHwBinRoiFlip *& hard) const;
+	CtSwBinRoiFlip* getSoft() const;
+	CtHwBinRoiFlip* getHard() const;
 
 	// --- wizard
 	void setMode(ImageOpMode mode);

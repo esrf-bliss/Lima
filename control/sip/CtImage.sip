@@ -129,8 +129,8 @@ using namespace lima;
 	void getHwImageDim(FrameDim& dim /Out/) const;
 	void getImageDim(FrameDim& dim /Out/) const;
 	// --- soft
-	void getSoft(CtSwBinRoiFlip *& soft /Out/) const;
-	void getHard(CtHwBinRoiFlip *& hard /Out/) const;
+	CtSwBinRoiFlip* getSoft() const;
+	CtHwBinRoiFlip* getHard() const;
 
 	// --- wizard
 	void setMode(ImageOpMode mode);
