@@ -5,6 +5,7 @@ import enum
 import threading
 import numpy
 import logging
+import time
 from Lima import Core
 
 
@@ -23,6 +24,7 @@ class AcqThread(threading.Thread):
         self.camera: MockedCamera = camera
 
     def run(self):
+        time.sleep(0.1)
         try:
             self._run()
         except Exception:
