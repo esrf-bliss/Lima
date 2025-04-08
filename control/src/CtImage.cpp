@@ -231,11 +231,11 @@ bool CtSwBinRoiFlip::apply(SoftOpInternalMgr *op)
 // CLASS CtHwBinRoiFlip
 // ----------------------------------------------------------------------------
 
-CtHwBinRoiFlip::CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi, Size& size)
-	: m_sw_bin_roi_flip(sw_bin_roi)
+CtHwBinRoiFlip::CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size)
+	: m_sw_bin_roi_flip(sw_bin_roi_flip)
 {
 	DEB_CONSTRUCTOR();
-	DEB_PARAM() << DEB_VAR2(*sw_bin_roi,size);
+	DEB_PARAM() << DEB_VAR2(*sw_bin_roi_flip,size);
 
 	m_has_bin= hw->getHwCtrlObj(m_hw_bin);
 	m_has_roi= hw->getHwCtrlObj(m_hw_roi);

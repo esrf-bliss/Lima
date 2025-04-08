@@ -76,7 +76,7 @@ class CtHwBinRoiFlip
 using namespace lima;
 %End
     public:
-	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi, Size& size);
+	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size);
 	~CtHwBinRoiFlip();
 
 	bool hasBinCapability() const;
