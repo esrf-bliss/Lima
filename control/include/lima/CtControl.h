@@ -292,6 +292,9 @@ namespace lima
     std::map<int,Data>    m_images_buffer;
     int			  m_images_buffer_size;
 
+    FrameDim m_last_frame_dim;  //!< Dimension of the actual acquired image
+    FrameDim m_last_hw_frame_dim;  //!< Dimension of the actual acquired HW image
+
     ApplyPolicy		m_policy;
     bool		m_ready;
     bool		m_autosave;
