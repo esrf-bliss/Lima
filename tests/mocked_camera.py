@@ -59,11 +59,6 @@ class MockedCamera:
         supports_sum_binning: bool = False,
         supports_roi: bool = False,
     ):
-        self.control = None
-        """Only here to create hardlink to the control. Should not be used."""
-        self.hw_interface = None
-        """Only here to create hardlink to the hw interface. Should not be used."""
-
         self.name = "mocked"
         self.width = 16
         self.height = 8
@@ -110,8 +105,7 @@ class MockedCamera:
         pass
 
     def quit(self):
-        self.control = None
-        self.hw_interface = None
+        pass
 
     def prepareAcq(self):
         if self.__prepared:
@@ -395,10 +389,14 @@ class MockedInterface(Core.HwInterface):
             self.__capabilities.append(roiCtrlObj)
 
     def __del__(self):
-        self.__camera.quit()
+        if self.__camera:
+            self.__camera.quit()
+            self.__camera = None
 
     def quit(self):
-        self.__camera.quit()
+        if self.__camera:
+            self.__camera.quit()
+            self.__camera = None
 
     def getCapList(self):
         return [Core.HwCap(x) for x in self.__capabilities]
@@ -421,9 +419,14 @@ class MockedInterface(Core.HwInterface):
         self.__camera.stopAcq()
 
     def getStatus(self):
-        camserverStatus = self.__camera.status
         status = Core.HwInterface.StatusType()
 
+        if self.__camera is None:
+            status.det = Core.DetFault
+            status.acq = Core.AcqFault
+            return status
+
+        camserverStatus = self.__camera.status
         if camserverStatus == MockedState.ERROR:
             status.det = Core.DetFault
             status.acq = Core.AcqFault
