@@ -516,6 +516,11 @@ public:
     RotationMode rMode;
     m_image.getRotation(rMode);
     image_setting.set("rotation",convert_2_string(rMode));
+
+    // --- BinMode
+    BinMode binMode;
+    m_image.getBinMode(binMode);
+    image_setting.set("bin_mode",convert_2_string(binMode));
   }
   virtual void restore(const Setting& image_setting)
   {
@@ -569,6 +574,14 @@ public:
 	RotationMode rMode;
 	convert_from_string(strrMode,rMode);
 	m_image.setRotation(rMode);
+      }
+    // --- BinMode
+    std::string strBinMode;
+    if(image_setting.get("bim_mode",strBinMode))
+      {
+	BinMode binMode;
+	convert_from_string(strBinMode,binMode);
+	m_image.setBinMode(binMode);
       }
   }
 private:
