@@ -99,7 +99,7 @@ class LIMACORE_API HwInterface
 template <class CtrlObj>
 bool HwInterface::getHwCtrlObj(CtrlObj *& ctrl_obj) const
 {
-        CapList cap_list;
+	CapList cap_list;
 	getCapList(cap_list);
 	typedef CapList::const_iterator It;
 	for (It i = cap_list.begin(); i != cap_list.end(); ++i)

@@ -51,11 +51,11 @@ CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size) :
 }
 
 CtSwBinRoiFlip::CtSwBinRoiFlip(const Size& size, const Bin& bin, const Roi& roi,
-                               const Flip& flip, RotationMode rotation, const BinMode& bin_mode) :
+                               const Flip& flip, RotationMode rotation, BinMode bin_mode) :
   m_rotation(Rotation_0), m_bin_mode(Bin_Sum)
 {
 	DEB_CONSTRUCTOR();
-	DEB_PARAM() << DEB_VAR5(size, bin, roi, flip, rotation);
+	DEB_PARAM() << DEB_VAR6(size, bin, roi, flip, rotation, bin_mode);
 
 	m_max_size= size;
 
@@ -129,7 +129,7 @@ void CtSwBinRoiFlip::setRoi(const Roi& roi)
 	if (roi.isEmpty())
 		THROW_CTL_ERROR(InvalidValue) << "Software roi is empty";
 	if (!max_roi.containsRoi(roi))
-	  THROW_CTL_ERROR(InvalidValue) << "Roi out of limits " << DEB_VAR2(max_roi,roi);
+	  THROW_CTL_ERROR(InvalidValue) << "Software roi out of limits " << DEB_VAR2(max_roi,roi);
 	m_roi= roi;
 }
 
@@ -231,11 +231,11 @@ bool CtSwBinRoiFlip::apply(SoftOpInternalMgr *op)
 // CLASS CtHwBinRoiFlip
 // ----------------------------------------------------------------------------
 
-CtHwBinRoiFlip::CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi, Size& size)
-	: m_sw_bin_roi_flip(sw_bin_roi)
+CtHwBinRoiFlip::CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size)
+	: m_sw_bin_roi_flip(sw_bin_roi_flip)
 {
 	DEB_CONSTRUCTOR();
-	DEB_PARAM() << DEB_VAR2(*sw_bin_roi,size);
+	DEB_PARAM() << DEB_VAR2(*sw_bin_roi_flip,size);
 
 	m_has_bin= hw->getHwCtrlObj(m_hw_bin);
 	m_has_roi= hw->getHwCtrlObj(m_hw_roi);
@@ -336,7 +336,7 @@ void CtHwBinRoiFlip::setRoi(Roi& roi, bool round)
 	if (roi.isEmpty())
 		THROW_CTL_ERROR(InvalidValue) << "Hardware roi is empty";
 	if (!m_max_roi.containsRoi(roi))
-		THROW_CTL_ERROR(InvalidValue) << "Roi out of limits";
+		THROW_CTL_ERROR(InvalidValue) << "Hardware roi out of limits";
 
 	if (!m_has_roi) {
 		if (!round)
@@ -694,20 +694,20 @@ void CtImage::getHwImageDim(FrameDim& dim) const
 	DEB_RETURN() << DEB_VAR1(dim);
 }
 
-void CtImage::getSoft(CtSwBinRoiFlip *& soft) const
+CtSwBinRoiFlip* CtImage::getSoft() const
 {
 	DEB_MEMBER_FUNCT();
+	DEB_RETURN() << DEB_VAR1(m_sw);
 
-	soft= m_sw;
-
-	DEB_RETURN() << DEB_VAR1(soft);
+	return m_sw;
 }
 
-void CtImage::getHard(CtHwBinRoiFlip *& hard) const
+CtHwBinRoiFlip* CtImage::getHard() const
 {
 	DEB_MEMBER_FUNCT();
+	DEB_RETURN() << DEB_VAR1(m_hw);
 
-	hard= m_hw;
+	return m_hw;
 }
 
 void CtImage::setMode(ImageOpMode mode)

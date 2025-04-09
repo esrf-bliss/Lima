@@ -43,7 +43,7 @@ class LIMACORE_API CtSwBinRoiFlip {
 
 	CtSwBinRoiFlip(const Size& size);
 	CtSwBinRoiFlip(const Size& size, const Bin& bin, const Roi& roi,
-		       const Flip& flip, RotationMode rotation, const BinMode& bin_mode);
+		       const Flip& flip, RotationMode rotation, BinMode bin_mode);
 	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);
@@ -83,6 +83,8 @@ class LIMACORE_API CtSwBinRoiFlip {
 class LIMACORE_API CtHwBinRoiFlip {
 	DEB_CLASS_NAMESPC(DebModControl,"Hardware BinRoiFlip","Control");
     public:
+	friend std::ostream& operator<<(std::ostream &os,const CtHwBinRoiFlip &binroi);
+
 	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size);
 	~CtHwBinRoiFlip();
 
@@ -159,8 +161,8 @@ class LIMACORE_API CtImage {
 	void getImageDim(FrameDim& dim) const;
 
 	// --- soft
-	void getSoft(CtSwBinRoiFlip *& soft) const;
-	void getHard(CtHwBinRoiFlip *& hard) const;
+	CtSwBinRoiFlip* getSoft() const;
+	CtHwBinRoiFlip* getHard() const;
 
 	// --- wizard
 	void setMode(ImageOpMode mode);
@@ -216,7 +218,7 @@ class LIMACORE_API CtImage {
 	ImageOpMode		m_mode;
 	bool			m_monitor_mode;
 };
- 
+
 inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoiFlip &binroi)
 {
 	os << "<"
@@ -224,6 +226,26 @@ inline std::ostream& operator<<(std::ostream& os,const CtSwBinRoiFlip &binroi)
 	   << "m_size=" << binroi.m_size << ", "
 	   << "m_bin=" << binroi.m_bin << ", "
 	   << "m_roi=" << binroi.m_roi << ", "
+	   << "m_flip=" << binroi.m_flip
+	   << ">";
+	return os;
+}
+inline std::ostream& operator<<(std::ostream& os,const CtHwBinRoiFlip &binroi)
+{
+	os << "<"
+	   << "m_hw_bin=" << binroi.m_hw_bin << ", "
+	   << "m_hw_roi=" << binroi.m_hw_roi << ", "
+	   << "m_hw_flip=" << binroi.m_hw_flip << ", "
+	   << "m_sw_bin_roi_flip=" << binroi.m_sw_bin_roi_flip << ", "
+	   << "m_has_bin=" << binroi.m_has_bin << ", "
+	   << "m_has_roi=" << binroi.m_has_roi << ", "
+	   << "m_has_flip=" << binroi.m_has_flip << ", "
+	   << "m_max_size=" << binroi.m_max_size << ", "
+	   << "m_size=" << binroi.m_size << ", "
+	   << "m_bin=" << binroi.m_bin << ", "
+	   << "m_set_roi=" << binroi.m_set_roi << ", "
+	   << "m_real_roi=" << binroi.m_real_roi << ", "
+	   << "m_max_roi=" << binroi.m_max_roi << ", "
 	   << "m_flip=" << binroi.m_flip
 	   << ">";
 	return os;

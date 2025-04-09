@@ -48,10 +48,15 @@ requirements:
     - libnuma       # [linux]
 
 test:
+  source_files:
+    - tests
+  requires:
+    - pytest
+    - pytest-mock
   imports:
     - Lima.Core
-  #downstreams:
-  # - lima-camera-simulator
+  commands:
+    - pytest -vs -o log_cli=true tests
 
 about:
   home: https://github.com/esrf-bliss/Lima

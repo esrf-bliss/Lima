@@ -28,7 +28,7 @@ using namespace lima;
     public:
 	CtSwBinRoiFlip(Size& size);
 	CtSwBinRoiFlip(Size& size, const Bin& bin, const Roi& roi,
-		       const Flip& flip, RotationMode rotation, const BinMode& bin_mode);
+		       const Flip& flip, RotationMode rotation, BinMode bin_mode);
 	~CtSwBinRoiFlip();
 
 	void setMaxSize(Size& size);
@@ -58,13 +58,13 @@ using namespace lima;
 %End
 
 %PickleCode
-	sipRes = Py_BuildValue("OOOOO",
+	sipRes = Py_BuildValue("OOOOOO",
 		sipConvertFromType((void*)&sipCpp->getSize(), sipType_Size, NULL),
 		sipConvertFromType((void*)&sipCpp->getBin(), sipType_Bin, NULL),
-		sipConvertFromEnum(sipCpp->getBinMode(), sipType_BinMode),
 		sipConvertFromType((void*)&sipCpp->getRoi(), sipType_Roi, NULL),
 		sipConvertFromType((void*)&sipCpp->getFlip(), sipType_Flip, NULL),
-		sipConvertFromEnum(sipCpp->getRotation(), sipType_RotationMode));
+		sipConvertFromEnum(sipCpp->getRotation(), sipType_RotationMode),
+		sipConvertFromEnum(sipCpp->getBinMode(), sipType_BinMode));
 %End
 
 };
@@ -76,7 +76,7 @@ class CtHwBinRoiFlip
 using namespace lima;
 %End
     public:
-	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi, Size& size);
+	CtHwBinRoiFlip(HwInterface *hw, CtSwBinRoiFlip *sw_bin_roi_flip, Size& size);
 	~CtHwBinRoiFlip();
 
 	bool hasBinCapability() const;
@@ -101,6 +101,14 @@ using namespace lima;
 	const Flip& getFlip() const;
 
 	void apply();
+
+	SIP_PYOBJECT __repr__() const;
+%MethodCode
+	LIMA_REPR_CODE
+%End
+
+	private:
+	CtHwBinRoiFlip(const CtHwBinRoiFlip&);
 };
 
 class CtImage {
@@ -129,8 +137,8 @@ using namespace lima;
 	void getHwImageDim(FrameDim& dim /Out/) const;
 	void getImageDim(FrameDim& dim /Out/) const;
 	// --- soft
-	void getSoft(CtSwBinRoiFlip *& soft /Out/) const;
-	void getHard(CtHwBinRoiFlip *& hard /Out/) const;
+	CtSwBinRoiFlip* getSoft() const;
+	CtHwBinRoiFlip* getHard() const;
 
 	// --- wizard
 	void setMode(ImageOpMode mode);

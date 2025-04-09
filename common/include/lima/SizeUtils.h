@@ -377,7 +377,20 @@ class LIMACORE_API Bin
 	static Point checkValid(const Point& p);
 
 	Point m_xy;
+
+	friend bool operator ==(const Bin& s1, const Bin& s2);
+	friend bool operator !=(const Bin& s1, const Bin& s2);
 };
+
+inline bool operator ==(const Bin& s1, const Bin& s2)
+{
+	return (s1.m_xy == s2.m_xy);
+}
+
+inline bool operator !=(const Bin& s1, const Bin& s2)
+{
+	return !(s1 == s2);
+}
 
 inline bool Bin::isValidCoord(int i)
 {

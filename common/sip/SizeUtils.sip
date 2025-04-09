@@ -191,6 +191,9 @@ using namespace lima;
 %End
 };
 
+bool operator ==(const Bin& s1, const Bin& s2);
+bool operator !=(const Bin& s1, const Bin& s2);
+
 class Flip
 {
 %TypeHeaderCode
