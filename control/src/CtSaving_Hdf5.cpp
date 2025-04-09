@@ -244,6 +244,7 @@ void SaveContainerHdf5::_prepare(CtControl& control) {
 	m_ct_image->getFlip(m_ct_parameters.image_flip);
 	m_ct_image->getRotation(m_ct_parameters.image_rotation);
 	m_ct_image->getImageDim(m_ct_parameters.image_dim);
+	m_ct_image->getBinMode(m_ct_parameters.image_bin_mode);
 
 	const CtSaving::Parameters& saving_pars = m_stream.getParameters(CtSaving::Acq);
 
@@ -479,6 +480,8 @@ void* SaveContainerHdf5::_open(const std::string &filename, std::ios_base::openm
 			write_h5_dataset(flipping,"y",m_ct_parameters.image_flip.y);
 			string rot = lima::convert_2_string(m_ct_parameters.image_rotation);
 			write_h5_dataset(image, "rotation", rot);
+			string bin_mode = lima::convert_2_string(m_ct_parameters.image_bin_mode);
+			write_h5_dataset(image, "bin_mode", bin_mode);
 		} else {
 			file->m_entry = Group(file->m_file.openGroup(strname));
 			Group instrument(file->m_entry.openGroup(m_ct_parameters.instrument_name));
