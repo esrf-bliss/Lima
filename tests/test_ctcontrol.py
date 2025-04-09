@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 import time
 import numpy
 from Lima import Core
@@ -88,3 +89,36 @@ def test_acquisition_hard_roi():
     assert array.shape == (4, 8)
     expected_1st_row = [0, 1, 1, 1, 1, 1, 1, 0]
     numpy.testing.assert_allclose(array[0], expected_1st_row)
+
+
+def test_readimage_after_changing_image_dim():
+    cam = MockedCamera()
+    cam_hw = MockedInterface(cam)
+    ct_control = Core.CtControl(cam_hw)
+    ct_image = ct_control.image()
+    process_acquisition(ct_control)
+
+    data = ct_control.ReadImage(0)
+    assert data.buffer.shape == (8, 16)
+
+    ct_image.setRoi(Core.Roi(0, 0, 8, 4))
+
+    # The frame was already aquired, it should not change
+    data = ct_control.ReadImage(0)
+    assert data.buffer.shape == (8, 16)
+
+
+def test_readimage_after_prepare():
+    cam = MockedCamera()
+    cam_hw = MockedInterface(cam)
+    ct_control = Core.CtControl(cam_hw)
+
+    # Do an acquisition so what a frame exists
+    process_acquisition(ct_control)
+
+    # Prepare a new acquisition
+    ct_control.prepareAcq()
+
+    # We are not allowed to read any image
+    with pytest.raises(Core.Exception):
+        ct_control.ReadImage(0)

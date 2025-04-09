@@ -590,14 +590,14 @@ void CtControl::prepareAcq()
   else
     m_op_ext->setEndSinkTaskCallback(NULL);
 
+  m_ct_image->getImageDim(m_last_frame_dim);
+  m_ct_image->getHwImageDim(m_last_hw_frame_dim);
+
 #ifdef WITH_SPS_IMAGE
   m_display_active_flag = m_ct_sps_image->isActive();
   if(m_display_active_flag)
   {
-    FrameDim dim;
-    m_ct_image->getImageDim(dim);
-    
-    m_ct_sps_image->prepare(dim);
+    m_ct_sps_image->prepare(m_last_frame_dim);
   }
 #endif
   m_ct_video->_prepareAcq();
@@ -882,9 +882,6 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR3(frameNumber, readBlockLen, baseImage);
 
-  FrameDim imgDim;
-  m_ct_image->getImageDim(imgDim);
-
   int concatNbFrames = 1;
 
   ImageStatus imgStatus;
@@ -906,9 +903,7 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
 
       // Only read multiple frames in one block if not software ROI
       if (acqMode == Concatenation) {
-        FrameDim hwImgDim;
-        m_ct_image->getHwImageDim(hwImgDim);
-        if (hwImgDim == imgDim)
+        if (m_last_hw_frame_dim == m_last_frame_dim)
           m_ct_acq->getConcatNbFrames(concatNbFrames);
       }
     }
@@ -943,9 +938,9 @@ void CtControl::readBlock(Data &aReturnData,long frameNumber,long readBlockLen,
     Data auxData;
     readOneImageBuffer(auxData, frameNumber, nbFrames, baseImage);
 
-    int imageSize = imgDim.getMemSize();
+    int imageSize = m_last_frame_dim.getMemSize();
     if (imageSize * nbFrames > auxData.size())
-      THROW_CTL_ERROR(Error) << "Roi dim (" << imgDim << ") * "
+      THROW_CTL_ERROR(Error) << "Roi dim (" << m_last_frame_dim << ") * "
 			     << "nbFrames (" << nbFrames << ") > "
 			     << "HwBuffer dim (" << auxData.size() << "): "
 			     << DEB_VAR1(auxData);
@@ -1020,10 +1015,8 @@ void CtControl::readOneImageBuffer(Data &aReturnData,long frameNumber,
 	if(stage)
 	  aReturnData = mgr.syncProcess();
       }
-    FrameDim imgDim;
-    m_ct_image->getImageDim(imgDim);
-    aReturnData.dimensions[0] = imgDim.getSize().getWidth();
-    aReturnData.dimensions[1] = imgDim.getSize().getHeight();
+    aReturnData.dimensions[0] = m_last_frame_dim.getSize().getWidth();
+    aReturnData.dimensions[1] = m_last_frame_dim.getSize().getHeight();
   }
 
   DEB_RETURN() << DEB_VAR1(aReturnData);
