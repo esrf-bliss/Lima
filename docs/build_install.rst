@@ -116,7 +116,6 @@ Run ``cmake`` in the build directory:
   cmake ..
      [-G "Visual Studio 15 2017 Win64" | -G "Visual Studio 15 2017" | -G "Unix Makefiles"]
      [-DCMAKE_INSTALL_PREFIX=<desired installation path>]
-     [-DPYTHON_SITE_PACKAGES_DIR=<desired python installation path>]
      -DLIMA_ENABLE_TIFF=true
      -DLIMACAMERA_BASLER=true
      -DLIMA_ENABLE_PYTANGO_SERVER=true

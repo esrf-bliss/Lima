@@ -1,7 +1,7 @@
 ###########################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-#  Copyright (C) : 2009-2017
+#  Copyright (C) : 2009-2025
 #  European Synchrotron Radiation Facility
 #  CS40220 38043 Grenoble Cedex 9
 #  FRANCE
@@ -61,7 +61,7 @@ function(limatools_run_camera_python_tests test_src camera)
 
   foreach(file ${test_src})
     add_test(NAME ${file}
-      COMMAND ${PYTHON_EXECUTABLE}
+      COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/${file}.py)
     if(WIN32)
         # Add the dlls to the %PATH%
@@ -108,28 +108,13 @@ function(limatools_run_sip_for_camera camera)
   set(SIP_DISABLE_FEATURES ${LIMA_SIP_DISABLE_FEATURES})
 
   add_sip_python_module(${MODULE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/${MODULE_NAME}.sip TRUE)
-  target_include_directories(python_module_${MODULE_NAME} PRIVATE
-    ${PYTHON_INCLUDE_DIRS}
-    ${NUMPY_INCLUDE_DIRS}
-  )
 
-  target_link_libraries(python_module_${MODULE_NAME} PUBLIC ${camera} limacore ${NUMPY_LIBRARIES})
+  target_link_libraries(python_module_${MODULE_NAME} PUBLIC ${camera} limacore Python3::Python Python3::NumPy)
 endfunction()
 
 # this macro check if python, numpy and sip are available to build python modules
 macro (limatools_find_python_and_sip)
-  find_package(PythonInterp REQUIRED)
-  find_package(PythonLibs REQUIRED)
-  # python site-packages folder
-  execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
-    OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-  set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
-
-  # numpy required
-  find_package(NumPy REQUIRED)
+  find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 
   # sip required and some options to be set
   find_package(SIP REQUIRED)
@@ -150,16 +135,8 @@ endmacro()
 # 'files' argument is a string containing files separeted by space i.e:
 # limatols_install_camera_tango("Basler.py Basler_sub.py")
 macro (limatools_install_camera_tango files)
-  if (NOT PYTHONINTERP_FOUND)
-    find_package(PythonInterp REQUIRED)
-    find_package(PythonLibs REQUIRED)
-    # python site-packages folder
-    execute_process(
-      COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())"
-      OUTPUT_VARIABLE _PYTHON_SITE_PACKAGES_DIR
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
-    set(PYTHON_SITE_PACKAGES_DIR ${_PYTHON_SITE_PACKAGES_DIR} CACHE PATH "where should python modules be installed?")
+  if (NOT Python3_Interpreter_FOUND)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
   endif()
 
   set(file_list ${files})
@@ -167,7 +144,7 @@ macro (limatools_install_camera_tango files)
   foreach(file ${file_list})
     install (
       FILES ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-      DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Server/camera"
+      DESTINATION "${Python3_SITEARCH}/Lima/Server/camera"
       )
   endforeach()
 endmacro()
