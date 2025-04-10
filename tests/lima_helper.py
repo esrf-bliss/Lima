@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from Lima import Core
 from .mocked_camera import MockedCamera, MockedInterface
 
@@ -36,3 +37,15 @@ class LimaHelper:
             interface = self.interface(k)
             interface.quit()
         self._hold_objects = {}
+
+    def process_acquisition(self, ct_control: Core.CtControl):
+        ct_control.prepareAcq()
+        ct_control.startAcq()
+        for _ in range(10):
+            status = ct_control.getStatus()
+            if status.AcquisitionStatus == Core.AcqReady:
+                return
+            time.sleep(1.0)
+        else:
+            ct_control.stopAcq()
+            raise TimeoutError("Acquisition not terminated")

@@ -53,6 +53,7 @@ test:
   requires:
     - pytest
     - pytest-mock
+    - h5py  # to check produced HDF5 files
   imports:
     - Lima.Core
   commands:
