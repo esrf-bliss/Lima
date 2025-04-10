@@ -95,6 +95,7 @@ private:
 		Flip image_flip;
 		RotationMode image_rotation;
 		FrameDim image_dim;
+		BinMode image_bin_mode;
 	};
 
 	CtSaving::FileFormat m_format;

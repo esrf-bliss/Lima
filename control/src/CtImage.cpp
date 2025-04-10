@@ -516,6 +516,11 @@ public:
     RotationMode rMode;
     m_image.getRotation(rMode);
     image_setting.set("rotation",convert_2_string(rMode));
+
+    // --- BinMode
+    BinMode binMode;
+    m_image.getBinMode(binMode);
+    image_setting.set("bin_mode",convert_2_string(binMode));
   }
   virtual void restore(const Setting& image_setting)
   {
@@ -569,6 +574,14 @@ public:
 	RotationMode rMode;
 	convert_from_string(strrMode,rMode);
 	m_image.setRotation(rMode);
+      }
+    // --- BinMode
+    std::string strBinMode;
+    if(image_setting.get("bim_mode",strBinMode))
+      {
+	BinMode binMode;
+	convert_from_string(strBinMode,binMode);
+	m_image.setBinMode(binMode);
       }
   }
 private:
@@ -742,17 +755,7 @@ void CtImage::setBin(Bin& bin)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(bin);
 
-	switch (m_mode) {
-		case SoftOnly:
-			m_sw->setBin(bin);
-			break;
-		case HardOnly:
-			m_hw->setBin(bin, false);
-			break;
-		case HardAndSoft:
-			_setHSBin(bin);
-			break;
-	}
+	_setBin(bin, m_sw->getBinMode());
 }
 
 void CtImage::setBinMode(BinMode bin_mode)
@@ -760,9 +763,10 @@ void CtImage::setBinMode(BinMode bin_mode)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(bin_mode);
 
-    m_sw->setBinMode(bin_mode);
+	Bin bin;
+	getBin(bin);
+	_setBin(bin, bin_mode);
 }
-
 
 void CtImage::setRoi(Roi& roi)
 {
@@ -806,7 +810,45 @@ void CtImage::setRoi(Roi& roi)
 	}
 }
 
-void CtImage::_setHSBin(const Bin &bin) 
+void CtImage::_setBin(Bin& bin, BinMode bin_mode)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(bin, bin_mode);
+
+	bool soft_bin = bin_mode == Bin_Mean || m_mode == SoftOnly || !m_hw->hasBinCapability();
+
+	if (soft_bin) {
+		Roi user_roi;getRoi(user_roi);
+		Bin user_bin;getBin(user_bin);
+		RotationMode user_rot;getRotation(user_rot);
+
+		m_sw->setBin(bin);
+		m_sw->setBinMode(bin_mode);
+		m_hw->resetBin();
+
+		user_roi = user_roi.getUnbinned(SwapDimIfRotated(user_rot, user_bin));
+		user_roi = user_roi.getBinned(SwapDimIfRotated(user_rot, bin));
+		_completeWithSoftRoi(user_roi, m_hw->getRealRoi());
+
+		return;
+	}
+
+	switch (m_mode) {
+		case HardOnly:
+			m_hw->setBin(bin, false);
+			m_sw->resetBin();
+			m_sw->setBinMode(Bin_Sum);
+			break;
+		case HardAndSoft:
+			_setHSBin(bin, bin_mode);
+			break;
+		default:
+			DEB_TRACE() << "Unhandled state";
+			break;
+	}
+}
+
+void CtImage::_setHSBin(const Bin &bin, BinMode bin_mode)
 {
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(bin);
@@ -814,22 +856,20 @@ void CtImage::_setHSBin(const Bin &bin)
 	Bin user_bin;getBin(user_bin);
 	RotationMode user_rot;getRotation(user_rot);
 
-	if (m_hw->hasBinCapability()) {
-		Bin set_hw_bin = bin;
-		m_hw->setBin(set_hw_bin, true);
-		DEB_TRACE() << DEB_VAR2(bin, set_hw_bin);
-		if (set_hw_bin == bin) {
-			m_sw->resetBin();
-		} else {
-			Bin set_sw_bin= bin / set_hw_bin;
-			m_sw->setBin(set_sw_bin);
-		}
-		user_roi = user_roi.getUnbinned(SwapDimIfRotated(user_rot, user_bin));
-		user_roi = user_roi.getBinned(SwapDimIfRotated(user_rot, bin));
-		_completeWithSoftRoi(user_roi,m_hw->getRealRoi());
+	m_sw->setBinMode(bin_mode);
+
+	Bin set_hw_bin = bin;
+	m_hw->setBin(set_hw_bin, true);
+	DEB_TRACE() << DEB_VAR2(bin, set_hw_bin);
+	if (set_hw_bin == bin) {
+		m_sw->resetBin();
 	} else {
-		m_sw->setBin(bin);
+		Bin set_sw_bin= bin / set_hw_bin;
+		m_sw->setBin(set_sw_bin);
 	}
+	user_roi = user_roi.getUnbinned(SwapDimIfRotated(user_rot, user_bin));
+	user_roi = user_roi.getBinned(SwapDimIfRotated(user_rot, bin));
+	_completeWithSoftRoi(user_roi, m_hw->getRealRoi());
 }
 
 
