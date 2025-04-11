@@ -1,7 +1,6 @@
-import time
 from Lima import Core, Simulator
 
-#Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
+# Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
 
 cam = Simulator.Camera()
 
@@ -22,16 +21,17 @@ img = control.image()
 print("Attach debugger now")
 input()
 
-roi = Core.Roi(1, 1, 598, 298) # Almost full frame
-#roi = Core.Roi(0, 0, 600, 300) # Full frame
+roi = Core.Roi(1, 1, 598, 298)  # Almost full frame
+# roi = Core.Roi(0, 0, 600, 300) # Full frame
 img.setRoi(roi)
 
 rots = [Core.Rotation_0, Core.Rotation_90, Core.Rotation_180, Core.Rotation_270]
-binnings = [Core.Bin(1,1), Core.Bin(1,2), Core.Bin(2,1), Core.Bin(2,2)]
+binnings = [Core.Bin(1, 1), Core.Bin(1, 2), Core.Bin(2, 1), Core.Bin(2, 2)]
 flips = [Core.Flip(False, False), Core.Flip(False, True), Core.Flip(True, False), Core.Flip(True, True)]
 
-# Python function to print permutations of a given list (from SO)
+
 def permutation(lst):
+    """Print permutations of a given list (from SO)"""
     if len(lst) == 0:
         return []
 
@@ -40,13 +40,14 @@ def permutation(lst):
 
     l = []
     for i in range(len(lst)):
-       m = lst[i]
+        m = lst[i]
 
-       remLst = lst[:i] + lst[i+1:]
+        remLst = lst[:i] + lst[i+1:]
 
-       for p in permutation(remLst):
-           l.append([m] + p)
+        for p in permutation(remLst):
+            l.append([m] + p)
     return l
+
 
 permutations = permutation(['b', 'f', 'r'])
 
@@ -56,16 +57,15 @@ try:
         for bin in binnings:
             for flip in flips:
                 for perm in permutations:
+                    for op in perm:
+                        if op == 'f':
+                            img.setFlip(flip)
+                        elif op == 'b':
+                            img.setBin(bin)
+                        elif op == 'r':
+                            img.setRotation(rot)
 
-                        for op in perm:
-                            if op == 'f':
-                                img.setFlip(flip)
-                            elif op == 'b':
-                                img.setBin(bin)
-                            elif op == 'r':
-                                img.setRotation(rot)
-
-                        #print(perm, flip, rot, bin, img.getRoi(), " - OK")
+                    # print(perm, flip, rot, bin, img.getRoi(), " - OK")
     print("All permutations tested")
 
     # Final check
@@ -74,5 +74,7 @@ try:
     img.resetRotation()
 
 except Core.Exception as ex:
-    if ex.getErrType() == Core.InvalidValue:
+    if "InvalidValue:" in ex.args[0]:
+        print(perm, flip, rot, bin, img.getRoi(), " - FAILED")
+    elif ex.getErrType() == Core.ErrorType.InvalidValue:
         print(perm, flip, rot, bin, img.getRoi(), " - FAILED")
