@@ -19,20 +19,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-from Lima.Core import *
+from Lima import Core
 
 
+myroi = Core.Roi(0, 0, 100, 100)
+my_opt_ext = Core.SoftOpExternalMgr()
 
-myroi=Roi(0,0,100,100)
-my_opt_ext=SoftOpExternalMgr()
-
-roictmgr=my_opt_ext.addOp(ROICOUNTERS,"titi",0)
-
-
-print "ROI before set ", myroi
-roictmgr.set([myroi])
+roictmgr = my_opt_ext.addOp(Core.ROICOUNTERS, "titi", 0)
 
 
-print "ROI from roictmgr.get() ", roictmgr.get()
-roi_check=roictmgr.get()
-print "roi_check=%s" % roi_check
+print("ROI before set ", myroi)
+print(roictmgr)
+print(dir(roictmgr))
+roictmgr.updateRois([("myroi", myroi)])
+
+
+print("ROI from roictmgr.get() ", roictmgr.getRois())
+roi_check = roictmgr.getRois()
+print(f"roi_check={roi_check}")
