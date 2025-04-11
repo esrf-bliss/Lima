@@ -72,7 +72,7 @@ def test_binning_without_hardware_capability(lima_helper: LimaHelper):
     assert soft.getSize() == Core.Size(8, 4)
 
 
-def test_binning_with_hardware_capability(lima_helper: LimaHelper):
+def test_binning_with_binning_capability(lima_helper: LimaHelper):
     cam = MockedCamera(supports_sum_binning=True)
     ct_image = lima_helper.image(cam)
     ct_image.setBin(Core.Bin(2, 2))
@@ -86,6 +86,32 @@ def test_binning_with_hardware_capability(lima_helper: LimaHelper):
     assert soft.getBin() == Core.Bin(1, 1)
     # Final output
     assert soft.getSize() == Core.Size(8, 4)
+
+
+def test_binroi_with_roi_capability(lima_helper: LimaHelper):
+    """
+    Test a binning and ROI when the hardware ony have ROI capability.
+
+    It's like we are about to test the forst part of the `MEAN` binning.
+    """
+    cam = MockedCamera(
+        supports_sum_binning=False,
+        supports_roi=True,
+    )
+
+    ct_image = lima_helper.image(cam)
+    ct_image.setRoi(Core.Roi(4, 0, 8, 8))
+    ct_image.setBin(Core.Bin(2, 2))
+
+    hard = ct_image.getHard()
+    assert hard.getBin() == Core.Bin(1, 1)
+    assert hard.getSize() == Core.Size(8, 8)
+    assert hard.getRealRoi() == Core.Roi(4, 0, 8, 8)
+
+    soft = ct_image.getSoft()
+    assert soft.getBin() == Core.Bin(2, 2)
+    # Final output
+    assert soft.getSize() == Core.Size(4, 4)
 
 
 def test_mean_binning_with_hardware_capability_1(lima_helper: LimaHelper):
@@ -121,14 +147,16 @@ def test_mean_binning_with_hardware_capability_2(lima_helper: LimaHelper):
     ct_image.setBin(Core.Bin(2, 2))
     assert hard.getBin() == Core.Bin(2, 2)
     assert hard.getSize() == Core.Size(8, 4)
-    assert soft.getRoi() == Core.Roi(0, 0, 8, 4)
+    # It's the full frame
+    assert soft.getRoi() in [Core.Roi(0, 0, 8, 4), Core.Roi(0, 0, 0, 0)]
     assert soft.getBin() == Core.Bin(1, 1)
     assert soft.getSize() == Core.Size(8, 4)
 
     ct_image.setBinMode(Core.Bin_Mean)
     assert hard.getBin() == Core.Bin(1, 1)
     assert hard.getSize() == Core.Size(16, 8)
-    assert soft.getRoi() == Core.Roi(0, 0, 8, 4)
+    # It's the full frame
+    assert soft.getRoi() in [Core.Roi(0, 0, 8, 4), Core.Roi(0, 0, 0, 0)]
     assert soft.getBin() == Core.Bin(2, 2)
     # Final output
     assert soft.getSize() == Core.Size(8, 4)
@@ -164,3 +192,34 @@ def test_mean_bin_with_binroi_capability(lima_helper: LimaHelper):
     assert soft.getBinMode() == Core.Bin_Mean
     # Final output
     assert soft.getSize() == Core.Size(8, 2)
+
+
+def test_mean_binning_with_roi(lima_helper: LimaHelper):
+    cam = MockedCamera(
+        supports_sum_binning=True,
+        supports_roi=True,
+    )
+    cam.width = 16
+    cam.height = 8
+
+    ct_image = lima_helper.image(cam)
+
+    ct_image.setRoi(Core.Roi(4, 0, 8, 8))
+    ct_image.setBin(Core.Bin(2, 2))
+    ct_image.setBinMode(Core.Bin_Mean)
+
+
+def test_mean_binning_with_roi_and_flip(lima_helper: LimaHelper):
+    cam = MockedCamera(
+        supports_sum_binning=True,
+        supports_roi=True,
+    )
+    cam.width = 16
+    cam.height = 8
+
+    ct_image = lima_helper.image(cam)
+
+    ct_image.setRoi(Core.Roi(4, 0, 8, 8))
+    ct_image.setBin(Core.Bin(2, 2))
+    ct_image.setFlip(Core.Flip(False, True))
+    ct_image.setBinMode(Core.Bin_Mean)
