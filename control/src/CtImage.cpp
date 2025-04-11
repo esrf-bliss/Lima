@@ -922,10 +922,13 @@ void CtImage::_completeWithSoftRoi(Roi roi_set,Roi hw_roi)
   const Size& max_roi_size = hw_max_roi_size / m_sw->getBin();
   DEB_TRACE() << DEB_VAR2(max_roi_size, hw_max_roi_size);
 
-  // First flip the hardware roi
+  // Remaining binning
+  Roi hw_roi_ref_soft= hw_roi.getBinned(m_sw->getBin());
+
+  // Flip the hardware roi
   const Flip &aSoftwareFlip = m_sw->getFlip();
-  Roi hw_roi_ref_soft= hw_roi.getFlipped(aSoftwareFlip,max_roi_size);
-  
+  hw_roi_ref_soft= hw_roi_ref_soft.getFlipped(aSoftwareFlip,max_roi_size);
+
   // than the rotation if needed to have the same referential than the soft roi
   RotationMode aSoftwareRotation = m_sw->getRotation();
   hw_roi_ref_soft = hw_roi_ref_soft.getRotated(aSoftwareRotation,max_roi_size);
