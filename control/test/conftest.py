@@ -8,7 +8,7 @@ class ConstantCamera(Simulator.Camera):
     def __init__(self, fill_value):
         super().__init__(Simulator.Camera.MODE_EXTERNAL)
         self.fill_value = fill_value
-    
+
     def fillData(self, data):
         data.buffer.fill(self.fill_value)
 
@@ -28,12 +28,11 @@ def debug():
     type_flags = Core.DebParams.getTypeFlags()
 
     Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
-    
+
     yield
 
     Core.DebParams.setModuleFlags(mod_flags)
     Core.DebParams.setTypeFlags(type_flags)
-
 
 
 @pytest.fixture
@@ -48,5 +47,5 @@ def simu(request):
 
     hw = Simulator.Interface(cam)
     ct = Core.CtControl(hw)
-    
+
     yield ct
