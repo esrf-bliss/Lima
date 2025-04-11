@@ -233,7 +233,7 @@ def test_accumulation_filter_threshold(simu, output_type, expectation):
         (Core.Bpp16, Core.Bpp16S, does_not_raise()),
         (Core.Bpp16S, Core.Bpp16S, does_not_raise()),
         (Core.Bpp16S, Core.Bpp16, pytest.raises(Core.Exception)),
-        (Core.Bpp32, Core.Bpp16S, does_not_raise()),
+        (Core.Bpp32, Core.Bpp16S, pytest.raises(Core.Exception)),
         (Core.Bpp32S, Core.Bpp16S, pytest.raises(Core.Exception)),
     ],
     indirect=["simu"]
