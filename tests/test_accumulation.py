@@ -2,15 +2,44 @@ import time
 import numpy as np
 from tempfile import gettempdir
 from contextlib import nullcontext as does_not_raise
-
 import pytest
 
 from Lima import Core
+
+try:
+    from Lima import Simulator
+except ImportError:
+    pytest.skip("Lima Sinulator is not installed", allow_module_level=True)
 
 
 ACQ_EXPO_TIME = 0.1
 ACQ_NB_FRAMES = 5
 ACC_NB_FRAMES = 10  # Number of frames per window
+
+
+class UniformCamera(Simulator.Camera):
+
+    def __init__(self):
+        super().__init__(Simulator.Camera.MODE_GENERATOR)
+
+    def fillData(self, data):
+        data.buffer.fill(data.frameNumber)
+
+
+@pytest.fixture
+def simu(request):
+    frame_dim = Core.FrameDim(Core.Size(10, 10), request.param)
+
+    cam = UniformCamera()
+
+    getter = cam.getFrameGetter()
+    getter.setFrameDim(frame_dim)
+    assert getter.getFrameDim() == frame_dim
+
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+
+    yield ct
 
 
 def wait_acq_finished(ct: Core.CtControl, timeout=5.0):
