@@ -932,7 +932,7 @@ void CtImage::_completeWithSoftRoi(Roi roi_set,Roi hw_roi)
   // than the rotation if needed to have the same referential than the soft roi
   RotationMode aSoftwareRotation = m_sw->getRotation();
   hw_roi_ref_soft = hw_roi_ref_soft.getRotated(aSoftwareRotation,max_roi_size);
-  
+
   if (roi_set.isEmpty() || roi_set==hw_roi_ref_soft) {
     m_sw->resetRoi();
   } else {
