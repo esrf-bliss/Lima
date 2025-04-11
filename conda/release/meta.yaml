@@ -26,7 +26,6 @@ requirements:
     - lz4-c 1.9*
     - hdf5 1.14.3*
     - libtiff
-    - cbflib         # [linux]
     - openssl 3*     # [linux]
     - libnuma        # [linux]
   build:
@@ -43,7 +42,6 @@ requirements:
     - lz4-c 1.9*
     - hdf5 1.14*
     - libtiff
-    - cbflib        # [linux]
     - openssl       # [linux]
     - libnuma       # [linux]
 
