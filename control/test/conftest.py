@@ -6,7 +6,7 @@ from Lima import Core, Simulator
 class ConstantCamera(Simulator.Camera):
 
     def __init__(self, fill_value):
-        super().__init__(Simulator.Camera.MODE_EXTERNAL)
+        super().__init__(Simulator.Camera.MODE_GENERATOR)
         self.fill_value = fill_value
 
     def fillData(self, data):
@@ -16,7 +16,7 @@ class ConstantCamera(Simulator.Camera):
 class UniformCamera(Simulator.Camera):
 
     def __init__(self):
-        super().__init__(Simulator.Camera.MODE_EXTERNAL)
+        super().__init__(Simulator.Camera.MODE_GENERATOR)
 
     def fillData(self, data):
         data.buffer.fill(data.frameNumber)
