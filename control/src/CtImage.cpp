@@ -869,7 +869,7 @@ void CtImage::_setHSBin(const Bin &bin, BinMode bin_mode)
 	}
 	user_roi = user_roi.getUnbinned(SwapDimIfRotated(user_rot, user_bin));
 	user_roi = user_roi.getBinned(SwapDimIfRotated(user_rot, bin));
-	_completeWithSoftRoi(user_roi, m_hw->getRealRoi());
+	setRoi(user_roi);
 }
 
 
