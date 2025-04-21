@@ -5,6 +5,7 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 
 from Lima import Core
+from .lima_helper import LimaHelper
 
 try:
     from Lima import Simulator
@@ -27,7 +28,21 @@ class UniformCamera(Simulator.Camera):
 
 
 @pytest.fixture
-def simu(request):
+def simu(request, lima_helper: LimaHelper, tmp_path):
+    from .mocked_camera import MockedCamera
+    cam = MockedCamera(
+        trigger_multi=True,
+        fill_frame_number=True,
+        pin_corners=False,
+    )
+    cam.bpp = request.param
+    cam.height = 10
+    cam.width = 10
+    return lima_helper.control(cam)
+
+
+@pytest.fixture
+def _simu(request):
     frame_dim = Core.FrameDim(Core.Size(10, 10), request.param)
 
     cam = UniformCamera()
