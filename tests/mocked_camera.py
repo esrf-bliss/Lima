@@ -59,8 +59,12 @@ class MockedCamera:
         supports_sum_binning: bool = False,
         supports_roi: bool = False,
         debug_image: bool = False,
+        fill_frame_number: bool = False,
+        pin_corners: bool = True,
     ):
         self.debug_image = debug_image
+        self.fill_frame_number = fill_frame_number
+        self.pin_corners = pin_corners
 
         self.name = "mocked"
         self.width = 16
@@ -128,7 +132,7 @@ class MockedCamera:
     def status(self):
         return self.__status
 
-    def _create_frame(self) -> numpy.ndarray:
+    def _create_frame(self, frame_id: int) -> numpy.ndarray:
         dtype = self.BPP_2_NUMPY.get(self.bpp)
         if dtype is None:
             raise ValueError(f"Unsupported BPP {self.bpp} as numpy array")
@@ -141,13 +145,18 @@ class MockedCamera:
             width = roi.getSize().getWidth()
             height = roi.getSize().getHeight()
 
-        array = numpy.ones((height, width), dtype=dtype)
         coef = self.binning.getX() * self.binning.getY()
-        if coef != 1:
-            array *= coef
-        # Pin a corner
-        array[0, 0] = 0
-        array[0, width - 1] = 0
+        if self.fill_frame_number:
+            initial_value = frame_id * coef
+        else:
+            initial_value = coef
+
+        array = numpy.full((height, width), initial_value, dtype=dtype)
+
+        if self.pin_corners:
+            # Pin a corner
+            array[0, 0] = 0
+            array[0, width - 1] = 0
 
         if self.debug_image:
             print(array)
