@@ -131,10 +131,15 @@ def image_type_to_dtype(image_type: Core.ImageType):
         return np.uint8
     elif image_type == Core.Bpp8S:
         return np.int8
-    if image_type == Core.Bpp16:
+    elif image_type == Core.Bpp16:
         return np.uint16
     elif image_type == Core.Bpp16S:
         return np.int16
+    elif image_type == Core.Bpp32:
+        return np.uint32
+    elif image_type == Core.Bpp32S:
+        return np.int32
+    raise ValueError(f"image_type {image_type} unsupported")
 
 
 @pytest.mark.parametrize(
