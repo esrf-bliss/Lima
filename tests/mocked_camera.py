@@ -154,23 +154,24 @@ class MockedCamera:
         return array
 
     def doAcquisition(self):
-        if self.__buffer_mgr:
-            frame = self._create_frame()
-            frame_id = self.__acquired_frames
+        for frame in range(self.__nb_frames):
+            if self.__buffer_mgr:
+                frame_id = self.__acquired_frames
+                frame = self._create_frame(frame_id)
 
-            self.__buffer_mgr.copy_data(frame_id, frame)
+                self.__buffer_mgr.copy_data(frame_id, frame)
 
-            frame_info = Core.HwFrameInfoType()
-            frame_info.acq_frame_nb = frame_id
-            frame_info.frame_timestamp = Core.Timestamp.now()
-            self.__buffer_mgr.newFrameReady(frame_info)
-        else:
-            _logger.warning("No buffer ctrl setup")
+                frame_info = Core.HwFrameInfoType()
+                frame_info.acq_frame_nb = frame_id
+                frame_info.frame_timestamp = Core.Timestamp.now()
+                self.__buffer_mgr.newFrameReady(frame_info)
+            else:
+                _logger.warning("No buffer ctrl setup")
 
-        self.__acquired_frames += 1
+            self.__acquired_frames += 1
 
-        if self.trigger_mode == Core.IntTrigMult:
-            self.__status = MockedState.READY
+        # if self.trigger_mode == Core.IntTrigMult:
+        self.__status = MockedState.READY
 
     def startAcq(self):
         if self.__acquired_frames == 0:
