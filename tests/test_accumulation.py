@@ -10,7 +10,7 @@ from .lima_helper import LimaHelper
 try:
     from Lima import Simulator
 except ImportError:
-    pytest.skip("Lima Sinulator is not installed", allow_module_level=True)
+    Simulator = None
 
 
 ACQ_EXPO_TIME = 0.1
@@ -18,32 +18,32 @@ ACQ_NB_FRAMES = 5
 ACC_NB_FRAMES = 10  # Number of frames per window
 
 
-class UniformCamera(Simulator.Camera):
-
-    def __init__(self):
-        super().__init__(Simulator.Camera.MODE_GENERATOR)
-
-    def fillData(self, data):
-        data.buffer.fill(data.frameNumber)
-
-
-@pytest.fixture
-def simu(request, lima_helper: LimaHelper, tmp_path):
+def create_mock(bpp):
     from .mocked_camera import MockedCamera
     cam = MockedCamera(
         trigger_multi=True,
         fill_frame_number=True,
         pin_corners=False,
     )
-    cam.bpp = request.param
+    cam.bpp = bpp
     cam.height = 10
     cam.width = 10
-    return lima_helper.control(cam)
+    return cam
 
 
-@pytest.fixture
-def _simu(request):
-    frame_dim = Core.FrameDim(Core.Size(10, 10), request.param)
+def create_simulator(bpp):
+    if Simulator is None:
+        raise RuntimeError("Lima simulator is not available")
+
+    class UniformCamera(Simulator.Camera):
+
+        def __init__(self):
+            super().__init__(Simulator.Camera.MODE_GENERATOR)
+
+        def fillData(self, data):
+            data.buffer.fill(data.frameNumber)
+
+    frame_dim = Core.FrameDim(Core.Size(10, 10), bpp)
 
     cam = UniformCamera()
 
@@ -51,8 +51,22 @@ def _simu(request):
     getter.setFrameDim(frame_dim)
     assert getter.getFrameDim() == frame_dim
 
-    hw = Simulator.Interface(cam)
-    ct = Core.CtControl(hw)
+    return cam
+
+
+@pytest.fixture
+def simu(request, lima_helper: LimaHelper):
+    use_lima_simulator = request.config.getoption("--lima-simulator")
+
+    bpp = request.param
+    if use_lima_simulator:
+        cam = create_simulator(bpp)
+        hw = Simulator.Interface(cam)
+        ct = Core.CtControl(hw)
+
+    else:
+        cam = create_mock(bpp)
+        ct = lima_helper.control(cam)
 
     yield ct
 
