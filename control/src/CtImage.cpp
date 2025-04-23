@@ -828,7 +828,7 @@ void CtImage::_setBin(Bin& bin, BinMode bin_mode)
 
 		user_roi = user_roi.getUnbinned(SwapDimIfRotated(user_rot, user_bin));
 		user_roi = user_roi.getBinned(SwapDimIfRotated(user_rot, bin));
-		_completeWithSoftRoi(user_roi, m_hw->getRealRoi());
+		setRoi(user_roi);
 
 		return;
 	}
@@ -869,7 +869,7 @@ void CtImage::_setHSBin(const Bin &bin, BinMode bin_mode)
 	}
 	user_roi = user_roi.getUnbinned(SwapDimIfRotated(user_rot, user_bin));
 	user_roi = user_roi.getBinned(SwapDimIfRotated(user_rot, bin));
-	_completeWithSoftRoi(user_roi, m_hw->getRealRoi());
+	setRoi(user_roi);
 }
 
 
@@ -922,14 +922,17 @@ void CtImage::_completeWithSoftRoi(Roi roi_set,Roi hw_roi)
   const Size& max_roi_size = hw_max_roi_size / m_sw->getBin();
   DEB_TRACE() << DEB_VAR2(max_roi_size, hw_max_roi_size);
 
-  // First flip the hardware roi
+  // Remaining binning
+  Roi hw_roi_ref_soft= hw_roi.getBinned(m_sw->getBin());
+
+  // Flip the hardware roi
   const Flip &aSoftwareFlip = m_sw->getFlip();
-  Roi hw_roi_ref_soft= hw_roi.getFlipped(aSoftwareFlip,max_roi_size);
-  
+  hw_roi_ref_soft= hw_roi_ref_soft.getFlipped(aSoftwareFlip,max_roi_size);
+
   // than the rotation if needed to have the same referential than the soft roi
   RotationMode aSoftwareRotation = m_sw->getRotation();
   hw_roi_ref_soft = hw_roi_ref_soft.getRotated(aSoftwareRotation,max_roi_size);
-  
+
   if (roi_set.isEmpty() || roi_set==hw_roi_ref_soft) {
     m_sw->resetRoi();
   } else {
