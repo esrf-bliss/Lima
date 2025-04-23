@@ -1,6 +1,5 @@
 import time
 import numpy as np
-from tempfile import gettempdir
 from contextlib import nullcontext as does_not_raise
 import pytest
 
@@ -95,7 +94,7 @@ def wait_acq_finished(ct: Core.CtControl, timeout=5.0):
     assert status.LastImageReady + 1 == ACQ_NB_FRAMES
 
 
-def prepare(ct: Core.CtControl, output_type=None, threshold=None, operation=None):
+def prepare(tmp_path, ct: Core.CtControl, output_type=None, threshold=None, operation=None):
     acq = ct.acquisition()
     acq.setAcqMode(Core.Accumulation)
     acq.setAcqExpoTime(ACQ_EXPO_TIME)
@@ -133,7 +132,7 @@ def prepare(ct: Core.CtControl, output_type=None, threshold=None, operation=None
     assert acq.getAccExpoTime() == ACQ_EXPO_TIME / ACC_NB_FRAMES
 
     sav = ct.saving()
-    sav.setDirectory(gettempdir())
+    sav.setDirectory(str(tmp_path))
     sav.setPrefix("test_acc")
     sav.setFormat(Core.CtSaving.FileFormat.HDF5)
     sav.setSavingMode(Core.CtSaving.SavingMode.AutoFrame)
@@ -190,9 +189,9 @@ def image_type_to_dtype(image_type: Core.ImageType):
     ],
     indirect=["simu"]
 )
-def test_accumulation_filter_none(simu, output_type, expectation):
+def test_accumulation_filter_none(tmp_path, simu, output_type, expectation):
     with expectation:
-        prepare(simu, output_type)
+        prepare(tmp_path, simu, output_type)
         start(simu)
         wait_acq_finished(simu, timeout=ACQ_EXPO_TIME * ACQ_NB_FRAMES + 1)
 
@@ -236,11 +235,11 @@ def test_accumulation_filter_none(simu, output_type, expectation):
     ],
     indirect=["simu"]
 )
-def test_accumulation_filter_threshold(simu, output_type, expectation):
+def test_accumulation_filter_threshold(tmp_path, simu, output_type, expectation):
     threshold = 5
 
     with expectation:
-        prepare(simu, output_type, threshold)
+        prepare(tmp_path, simu, output_type, threshold)
         start(simu)
         wait_acq_finished(simu, timeout=ACQ_EXPO_TIME * ACQ_NB_FRAMES + 1)
 
@@ -301,9 +300,9 @@ def test_accumulation_filter_threshold(simu, output_type, expectation):
     ],
     indirect=["simu"]
 )
-def test_accumulation_mean(simu, output_type, expectation):
+def test_accumulation_mean(tmp_path, simu, output_type, expectation):
     with expectation:
-        prepare(simu, output_type, operation=Core.CtAccumulation.ACC_MEAN)
+        prepare(tmp_path, simu, output_type, operation=Core.CtAccumulation.ACC_MEAN)
         start(simu)
         wait_acq_finished(simu, timeout=ACQ_EXPO_TIME * 1.5 * (ACQ_NB_FRAMES + 1))
 
