@@ -17,6 +17,12 @@ def pytest_addoption(parser):
         default=False,
         help="Active Lima logging of all debug flags",
     )
+    parser.addoption(
+        "--lima-simulator",
+        action="store_true",
+        default=False,
+        help="Use the lima simulator for testing, instead of a mock (when test was setup for)",
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)

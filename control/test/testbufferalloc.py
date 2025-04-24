@@ -63,7 +63,7 @@ class TestBufferAlloc:
     self.nb_warnings = 0
 
     mega_bytes = self.frame_dim.getMemSize() / 1024.0**2
-    print "Frame dim: %s (%s Mbytes)" % (self.frame_dim, mega_bytes)
+    print("Frame dim: %s (%s Mbytes)" % (self.frame_dim, mega_bytes))
 
   def use_control(self):
     return self.config['use_control']
@@ -114,8 +114,8 @@ class TestBufferAlloc:
     over_mem = used_mem > max_mem_gb
     sign = ("!" if over_mem else "*") * 10
     if over_mem or not only_warn:
-      print "%s Used mem %.1f, expected %.1f %s" % \
-          (sign, used_mem, buffer_mem_gb, sign)
+      print("%s Used mem %.1f, expected %.1f %s" % \
+          (sign, used_mem, buffer_mem_gb, sign))
     if over_mem:
       self.nb_warnings += 1
       if self.nb_warnings == self.config['max_nb_warnings']:
@@ -129,7 +129,7 @@ class TestBufferAlloc:
   def test_buffers(self, nb_frames_list):
     for self.nb_frames in nb_frames_list:
       sync_nb_frames = self.nb_frames
-      print "Starting %s" % self.nb_frames
+      print("Starting %s" % self.nb_frames)
       if self.use_control():
         self.acq.setAcqNbFrames(self.nb_frames)
         self.ct.prepareAcq()
@@ -148,7 +148,7 @@ class TestBufferAlloc:
             self.ct.stopAcq()
           else:
             self.hw_inter.stopAcq()  
-      print "Finished!"
+      print("Finished!")
     self.end = True
 
   def test_threads(self, nb_frames_list):
@@ -176,11 +176,13 @@ class TestBufferAlloc:
     else:
       self.test_buffers(self.nb_frames_list)
 
+
 def main():
   config = TestBufferAlloc.get_default_config()
   hw_inter, deps = TestBufferAlloc.get_simu_hw_inter()
   test = TestBufferAlloc(hw_inter, deps, config)
   test.run()
+
 
 if __name__ == '__main__':
   main()

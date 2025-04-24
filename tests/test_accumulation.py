@@ -1,15 +1,15 @@
 import time
 import numpy as np
-from tempfile import gettempdir
 from contextlib import nullcontext as does_not_raise
 import pytest
 
 from Lima import Core
+from .lima_helper import LimaHelper
 
 try:
     from Lima import Simulator
 except ImportError:
-    pytest.skip("Lima Sinulator is not installed", allow_module_level=True)
+    Simulator = None
 
 
 ACQ_EXPO_TIME = 0.1
@@ -17,18 +17,32 @@ ACQ_NB_FRAMES = 5
 ACC_NB_FRAMES = 10  # Number of frames per window
 
 
-class UniformCamera(Simulator.Camera):
+def create_mock(bpp):
+    from .mocked_camera import MockedCamera
+    cam = MockedCamera(
+        trigger_multi=True,
+        fill_frame_number=True,
+        pin_corners=False,
+    )
+    cam.bpp = bpp
+    cam.height = 10
+    cam.width = 10
+    return cam
 
-    def __init__(self):
-        super().__init__(Simulator.Camera.MODE_GENERATOR)
 
-    def fillData(self, data):
-        data.buffer.fill(data.frameNumber)
+def create_simulator(bpp):
+    if Simulator is None:
+        raise RuntimeError("Lima simulator is not available")
 
+    class UniformCamera(Simulator.Camera):
 
-@pytest.fixture
-def simu(request):
-    frame_dim = Core.FrameDim(Core.Size(10, 10), request.param)
+        def __init__(self):
+            super().__init__(Simulator.Camera.MODE_GENERATOR)
+
+        def fillData(self, data):
+            data.buffer.fill(data.frameNumber)
+
+    frame_dim = Core.FrameDim(Core.Size(10, 10), bpp)
 
     cam = UniformCamera()
 
@@ -36,8 +50,22 @@ def simu(request):
     getter.setFrameDim(frame_dim)
     assert getter.getFrameDim() == frame_dim
 
-    hw = Simulator.Interface(cam)
-    ct = Core.CtControl(hw)
+    return cam
+
+
+@pytest.fixture
+def simu(request, lima_helper: LimaHelper):
+    use_lima_simulator = request.config.getoption("--lima-simulator")
+
+    bpp = request.param
+    if use_lima_simulator:
+        cam = create_simulator(bpp)
+        hw = Simulator.Interface(cam)
+        ct = Core.CtControl(hw)
+
+    else:
+        cam = create_mock(bpp)
+        ct = lima_helper.control(cam)
 
     yield ct
 
@@ -66,7 +94,7 @@ def wait_acq_finished(ct: Core.CtControl, timeout=5.0):
     assert status.LastImageReady + 1 == ACQ_NB_FRAMES
 
 
-def prepare(ct: Core.CtControl, output_type=None, threshold=None, operation=None):
+def prepare(tmp_path, ct: Core.CtControl, output_type=None, threshold=None, operation=None):
     acq = ct.acquisition()
     acq.setAcqMode(Core.Accumulation)
     acq.setAcqExpoTime(ACQ_EXPO_TIME)
@@ -104,7 +132,7 @@ def prepare(ct: Core.CtControl, output_type=None, threshold=None, operation=None
     assert acq.getAccExpoTime() == ACQ_EXPO_TIME / ACC_NB_FRAMES
 
     sav = ct.saving()
-    sav.setDirectory(gettempdir())
+    sav.setDirectory(str(tmp_path))
     sav.setPrefix("test_acc")
     sav.setFormat(Core.CtSaving.FileFormat.HDF5)
     sav.setSavingMode(Core.CtSaving.SavingMode.AutoFrame)
@@ -131,10 +159,15 @@ def image_type_to_dtype(image_type: Core.ImageType):
         return np.uint8
     elif image_type == Core.Bpp8S:
         return np.int8
-    if image_type == Core.Bpp16:
+    elif image_type == Core.Bpp16:
         return np.uint16
     elif image_type == Core.Bpp16S:
         return np.int16
+    elif image_type == Core.Bpp32:
+        return np.uint32
+    elif image_type == Core.Bpp32S:
+        return np.int32
+    raise ValueError(f"image_type {image_type} unsupported")
 
 
 @pytest.mark.parametrize(
@@ -156,9 +189,9 @@ def image_type_to_dtype(image_type: Core.ImageType):
     ],
     indirect=["simu"]
 )
-def test_accumulation_filter_none(simu, output_type, expectation):
+def test_accumulation_filter_none(tmp_path, simu, output_type, expectation):
     with expectation:
-        prepare(simu, output_type)
+        prepare(tmp_path, simu, output_type)
         start(simu)
         wait_acq_finished(simu, timeout=ACQ_EXPO_TIME * ACQ_NB_FRAMES + 1)
 
@@ -202,11 +235,11 @@ def test_accumulation_filter_none(simu, output_type, expectation):
     ],
     indirect=["simu"]
 )
-def test_accumulation_filter_threshold(simu, output_type, expectation):
+def test_accumulation_filter_threshold(tmp_path, simu, output_type, expectation):
     threshold = 5
 
     with expectation:
-        prepare(simu, output_type, threshold)
+        prepare(tmp_path, simu, output_type, threshold)
         start(simu)
         wait_acq_finished(simu, timeout=ACQ_EXPO_TIME * ACQ_NB_FRAMES + 1)
 
@@ -267,9 +300,9 @@ def test_accumulation_filter_threshold(simu, output_type, expectation):
     ],
     indirect=["simu"]
 )
-def test_accumulation_mean(simu, output_type, expectation):
+def test_accumulation_mean(tmp_path, simu, output_type, expectation):
     with expectation:
-        prepare(simu, output_type, operation=Core.CtAccumulation.ACC_MEAN)
+        prepare(tmp_path, simu, output_type, operation=Core.CtAccumulation.ACC_MEAN)
         start(simu)
         wait_acq_finished(simu, timeout=ACQ_EXPO_TIME * 1.5 * (ACQ_NB_FRAMES + 1))
 

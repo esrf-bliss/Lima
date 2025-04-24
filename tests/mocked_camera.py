@@ -59,8 +59,12 @@ class MockedCamera:
         supports_sum_binning: bool = False,
         supports_roi: bool = False,
         debug_image: bool = False,
+        fill_frame_number: bool = False,
+        pin_corners: bool = True,
     ):
         self.debug_image = debug_image
+        self.fill_frame_number = fill_frame_number
+        self.pin_corners = pin_corners
 
         self.name = "mocked"
         self.width = 16
@@ -128,7 +132,7 @@ class MockedCamera:
     def status(self):
         return self.__status
 
-    def _create_frame(self) -> numpy.ndarray:
+    def _create_frame(self, frame_id: int) -> numpy.ndarray:
         dtype = self.BPP_2_NUMPY.get(self.bpp)
         if dtype is None:
             raise ValueError(f"Unsupported BPP {self.bpp} as numpy array")
@@ -141,36 +145,42 @@ class MockedCamera:
             width = roi.getSize().getWidth()
             height = roi.getSize().getHeight()
 
-        array = numpy.ones((height, width), dtype=dtype)
         coef = self.binning.getX() * self.binning.getY()
-        if coef != 1:
-            array *= coef
-        # Pin a corner
-        array[0, 0] = 0
-        array[0, width - 1] = 0
+        if self.fill_frame_number:
+            initial_value = frame_id * coef
+        else:
+            initial_value = coef
+
+        array = numpy.full((height, width), initial_value, dtype=dtype)
+
+        if self.pin_corners:
+            # Pin a corner
+            array[0, 0] = 0
+            array[0, width - 1] = 0
 
         if self.debug_image:
             print(array)
         return array
 
     def doAcquisition(self):
-        if self.__buffer_mgr:
-            frame = self._create_frame()
-            frame_id = self.__acquired_frames
+        for frame in range(self.__nb_frames):
+            if self.__buffer_mgr:
+                frame_id = self.__acquired_frames
+                frame = self._create_frame(frame_id)
 
-            self.__buffer_mgr.copy_data(frame_id, frame)
+                self.__buffer_mgr.copy_data(frame_id, frame)
 
-            frame_info = Core.HwFrameInfoType()
-            frame_info.acq_frame_nb = frame_id
-            frame_info.frame_timestamp = Core.Timestamp.now()
-            self.__buffer_mgr.newFrameReady(frame_info)
-        else:
-            _logger.warning("No buffer ctrl setup")
+                frame_info = Core.HwFrameInfoType()
+                frame_info.acq_frame_nb = frame_id
+                frame_info.frame_timestamp = Core.Timestamp.now()
+                self.__buffer_mgr.newFrameReady(frame_info)
+            else:
+                _logger.warning("No buffer ctrl setup")
 
-        self.__acquired_frames += 1
+            self.__acquired_frames += 1
 
-        if self.trigger_mode == Core.IntTrigMult:
-            self.__status = MockedState.READY
+        # if self.trigger_mode == Core.IntTrigMult:
+        self.__status = MockedState.READY
 
     def startAcq(self):
         if self.__acquired_frames == 0:
