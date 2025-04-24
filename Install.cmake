@@ -77,7 +77,7 @@ if(LIMA_ENABLE_PYTHON)
     install(
          DIRECTORY python/Lima/
          COMPONENT sip
-         DESTINATION "${Python3_SITEARCH}/Lima")
+         DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/Lima>")
 
     file(GLOB SIP_SOURCES
         "${CMAKE_SOURCE_DIR}/common/sip/*.sip"
