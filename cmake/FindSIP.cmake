@@ -24,8 +24,6 @@
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
-
-
 if(SIP_VERSION)
   # Already in cache, be silent
   set(SIP_FOUND TRUE)
@@ -33,7 +31,7 @@ else(SIP_VERSION)
 
   set(find_sip_py ${CMAKE_CURRENT_LIST_DIR}/FindSIP.py)
 
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} ${find_sip_py} OUTPUT_VARIABLE sip_config)
+  execute_process(COMMAND ${Python3_EXECUTABLE} ${find_sip_py} OUTPUT_VARIABLE sip_config)
   if(sip_config)
     string(REGEX REPLACE "^sip_version:([^\n]+).*$" "\\1" SIP_VERSION ${sip_config})
     string(REGEX REPLACE ".*\nsip_version_str:([^\n]+).*$" "\\1" SIP_VERSION_STR ${sip_config})

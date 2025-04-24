@@ -35,6 +35,8 @@
 # SIP_EXTRA_OPTIONS - Extra command line options which should be passed on to
 #     SIP.
 
+find_package(Python3 COMPONENTS Interpreter)
+
 # See https://itk.org/Bug/view.php?id=12265
 get_filename_component(_SIPMACRO_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
 
@@ -98,7 +100,7 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
     if (${RUN_CHECK_SIP_EXC})
     add_custom_command(
         OUTPUT ${_sip_output_files}
-        COMMAND ${PYTHON_EXECUTABLE} "${_SIPMACRO_LIST_DIR}/checksipexc.py" ${_sip_include_dirs} ${_sip_output_files}
+        COMMAND ${Python3_EXECUTABLE} "${_SIPMACRO_LIST_DIR}/checksipexc.py" ${_sip_include_dirs} ${_sip_output_files}
         COMMENT "Running checksipexc.py"
         APPEND
     )
@@ -126,8 +128,8 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
     endif (WIN32)
 
     install(TARGETS ${_logical_name}
-      LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}"
-      RUNTIME DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/${_parent_module_path}"
+      LIBRARY DESTINATION "${Python3_SITEARCH}/${_parent_module_path}"
+      RUNTIME DESTINATION "${Python3_SITEARCH}/${_parent_module_path}"
     )
 
 endmacro(ADD_SIP_PYTHON_MODULE)

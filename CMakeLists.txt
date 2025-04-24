@@ -1,7 +1,7 @@
 ###########################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-#  Copyright (C) : 2009-2017
+#  Copyright (C) : 2009-2025
 #  European Synchrotron Radiation Facility
 #  BP 220, Grenoble 38043
 #  FRANCE
@@ -22,7 +22,7 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.10)
 
 project (Lima)
 include(cmake/project_version.cmake)
@@ -332,12 +332,10 @@ if(LIMA_ENABLE_PYTHON)
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip FALSE)
 
     target_include_directories(python_module_limacore PRIVATE
-        ${PYTHON_INCLUDE_DIRS}
-        ${NUMPY_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/sip
         ${CMAKE_CURRENT_SOURCE_DIR}/sip/core
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip)
-    target_link_libraries(python_module_limacore PRIVATE limacore ${NUMPY_LIBRARIES})
+    target_link_libraries(python_module_limacore PRIVATE limacore Python3::Python Python3::NumPy)
 
     add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python/Lima ${CMAKE_BINARY_DIR}/python/Lima)
 endif()

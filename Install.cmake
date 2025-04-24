@@ -58,7 +58,6 @@ install(
 if(NOT LIMA_BUILD_SUBMODULES)
     install(
         FILES ${CMAKE_SOURCE_DIR}/cmake/checksipexc.py
-              ${CMAKE_SOURCE_DIR}/cmake/FindNumPy.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindSIP.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindSIP.py
               ${CMAKE_SOURCE_DIR}/cmake/SIPMacros.cmake
@@ -78,7 +77,7 @@ if(LIMA_ENABLE_PYTHON)
     install(
          DIRECTORY python/Lima/
          COMPONENT sip
-         DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima")
+         DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/Lima>")
 
     file(GLOB SIP_SOURCES
         "${CMAKE_SOURCE_DIR}/common/sip/*.sip"
