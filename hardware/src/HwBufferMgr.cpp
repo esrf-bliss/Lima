@@ -56,8 +56,7 @@ void BufferAllocMgr::setAllocParameters(const AllocParameters& alloc_params)
 	DEB_PARAM() << DEB_VAR1(alloc_params);
 	AllocParameters default_params;
 	if (alloc_params != default_params)
-		THROW_HW_ERROR(NotSupported) << "Setting non-default buffer "
-					     << "alloc params is not supported";
+		DEB_ERROR() << "Setting non-default buffer alloc params is not supported";
 }
 
 void BufferAllocMgr::getAllocParameters(AllocParameters& alloc_params)
@@ -130,7 +129,7 @@ void SoftBufferAllocMgr::setAllocParameters(const AllocParameters& params)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR1(params);
 	if (!params.initMem)
-		DEB_WARNING() << "Memory buffers won't be initialized!";
+		DEB_ERROR() << "Memory buffers won't be initialized!";
 	m_buffer_helper.setParameters(params);
 }
 
