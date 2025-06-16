@@ -42,6 +42,7 @@
 #endif
 #include <limits.h>
 #ifdef __unix
+#include <cstdint>
 #include <unistd.h>
 #else
 #include <processlib/win/unistd.h>
