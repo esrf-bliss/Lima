@@ -135,14 +135,20 @@ function parallel_cmake
         bash -e;
 }
 
+function vcd()
+{
+    cd $1
+    echo "Processing directory $(pwd) ..."
+}
+
 case ${cmd} in
 build)
     if [ ${only_plugin} -eq 0 ]; then
-	((cd ${processlib_dir} && parallel_cmake conda/build.sh) \
-	    && (cd . && parallel_cmake conda/${profile}/build.sh) \
-	    && (cd ${tango_dir} && pip install .)) || exit
+	((vcd ${processlib_dir} && parallel_cmake conda/build.sh) \
+	    && (vcd . && parallel_cmake conda/${profile}/build.sh) \
+	    && (vcd ${tango_dir} && pip install .)) || exit
     fi
-    (cd ${camera_dir} \
+    (vcd ${camera_dir} \
        && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
        && (if [ -d conda/tango ]; then parallel_cmake conda/tango/build.sh; fi))
     ;;
