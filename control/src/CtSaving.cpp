@@ -185,12 +185,12 @@ private:
 struct CtSaving::_SavingSidebandData : public sideband::Data
 {
 	Mutex m_lock;
-	std::atomic<long> m_nb_cbk;
+	std::atomic<long> m_nb_cbk{0};
 	ZBufferList m_buffers;
 	SaveContainer::FrameParameters m_params;
 	SaveContainer::Stat m_stat;
 
-	_SavingSidebandData(::Data& data) : m_nb_cbk(0), m_stat(data)
+	_SavingSidebandData(::Data& data) : m_stat(data)
 	{}
 
 	std::string repr() override {
@@ -1218,6 +1218,22 @@ bool CtSaving::_allStreamsReadyFor(Data& data)
 
 	DEB_RETURN() << DEB_VAR1(ready_flag);
 	return ready_flag;
+}
+
+bool CtSaving::_allStreamsFinished()
+{
+	DEB_MEMBER_FUNCT();
+
+	bool finished_flag = true;
+	for (int s = 0; finished_flag && s < m_nb_stream; ++s)
+	{
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+			finished_flag = stream.finished();
+	}
+
+	DEB_RETURN() << DEB_VAR1(finished_flag);
+	return finished_flag;
 }
 
 void CtSaving::_waitWritingThreads()
@@ -2391,7 +2407,7 @@ void CtSaving::_close()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (_allStreamsReady())
+	if (_allStreamsFinished())
 	{
 		for (int s = 0; s < m_nb_stream; ++s)
 		{
@@ -2417,7 +2433,7 @@ CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 CtSaving::SaveContainer::SaveContainer(Stream& stream)
 	: m_lock(m_cond.mutex()), m_stream(stream), m_statistic_size(16),
 	  m_log_stat_enable(false), m_log_stat_file(NULL),
-	  m_max_writing_task(1)
+	  m_max_writing_task(1), m_last_task_closes_all(false)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -2455,12 +2471,19 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		void exec()
 		{
 			DEB_MEMBER_FUNCT();
-			AutoMutex lock(m_c.m_lock);
-			WritingTasks& running_tasks = m_c.m_running_tasks;
-			WritingTasks::iterator it = running_tasks.find(m_frameId);
-			if (it == running_tasks.end())
-				THROW_CTL_ERROR(Error) << "Could not find running task";
-			running_tasks.erase(it);
+			bool close_all = false;
+			{
+				AutoMutex lock(m_c.m_lock);
+				WritingTasks& running_tasks = m_c.m_running_tasks;
+				WritingTasks::iterator it = running_tasks.find(m_frameId);
+				if (it == running_tasks.end())
+					THROW_CTL_ERROR(Error) << "Could not find running task";
+				running_tasks.erase(it);
+				if (running_tasks.empty() && m_c.m_last_task_closes_all)
+					close_all = true;
+			}
+			if (close_all)
+				m_c.close();
 			m_done = true;
 		}
 
@@ -2554,7 +2577,7 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	{
 		AutoMutex lock(m_lock);
 		++m_written_frames;
-		acq_end = (m_written_frames == m_frames_to_write);
+		acq_end = _allFramesWritten();
 		DEB_TRACE() << DEB_VAR3(acq_end, m_written_frames, m_frames_to_write);
 	}
 
@@ -2901,6 +2924,7 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 		}
 		m_files_to_write = multi_set ? 1 : (nextNumber - pars.nextNumber + 1);
 	}
+	m_last_task_closes_all = false;
 	prepareLogStat(pars);
 	lock.unlock();
 
@@ -2976,27 +3000,41 @@ void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
 	
 	AutoMutex lock(m_lock);
 	m_frames_to_write = nb_acquired_frames;
+
+	// Remove waiting tasks that will never run
 	m_waiting_tasks.erase(
 		m_waiting_tasks.find(nb_acquired_frames),
 		m_waiting_tasks.end());
+
+	// If running tasks are the last and all the frames were written
+	// ensure to close at end
+	if (m_waiting_tasks.empty() && !m_running_tasks.empty() &&
+	    _allFramesWritten())
+	    m_last_task_closes_all = true;
+
+	// Remove all future frame params
 	if (m_frame_params.empty())
 		return;
 	long first = std::max(m_frame_params.begin()->first, nb_acquired_frames);
 	m_frame_params.erase(m_frame_params.find(first), m_frame_params.end());
 }
 
-bool CtSaving::SaveContainer::isReady() const
+bool CtSaving::SaveContainer::_isReady() const
 {
 	DEB_MEMBER_FUNCT();
-
-	AutoMutex lock(m_lock);
-
 	DEB_TRACE() << DEB_VAR3(m_running_tasks.size(), m_waiting_tasks.size(),
 				m_frame_params.size());
 	bool ready = (m_running_tasks.empty() && m_waiting_tasks.empty() &&
 		      m_frame_params.empty());
 	DEB_RETURN() << DEB_VAR1(ready);
 	return ready;
+}
+
+bool CtSaving::SaveContainer::isReady() const
+{
+	DEB_MEMBER_FUNCT();
+	AutoMutex lock(m_lock);
+	return _isReady();
 }
 
 bool CtSaving::SaveContainer::isReadyFor(Data& data) const
@@ -3033,6 +3071,17 @@ bool CtSaving::SaveContainer::isReadyFor(Data& data) const
 
 	DEB_RETURN() << DEB_VAR1(ready);
 	return ready;
+}
+
+bool CtSaving::SaveContainer::finished() const
+{
+	DEB_MEMBER_FUNCT();
+
+	AutoMutex lock(m_lock);
+	DEB_TRACE() << DEB_VAR2(m_written_frames, m_frames_to_write);
+	bool finished = _isReady() && _allFramesWritten();
+	DEB_RETURN() << DEB_VAR1(finished);
+	return finished;
 }
 
 void CtSaving::SaveContainer::setReady()
