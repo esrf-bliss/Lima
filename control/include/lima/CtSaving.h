@@ -198,6 +198,7 @@ public:
 				  int stream_idx = 0);
 	void getZBufferParameters(BufferHelper::Parameters& pars,
 				  int stream_idx = 0);
+	void getNbZBuffers(int& nb_zbuffers);
 
 	// --- common headers
 
@@ -350,7 +351,6 @@ public:
 		void getParameters(CtSaving::Parameters&) const;
 		void clear();
 		void prepare(CtControl&);
-		void prepareCompressionBuffers(CtControl&);
 
 		/** @brief should return true if container has compression or
 			*  heavy task to do before saving
@@ -395,6 +395,7 @@ public:
 		void getEnableLogStat(bool& enable) const;
 
 		BufferHelper& getZBufferHelper() { return m_zbuffer_helper; }
+		int getNbZBuffers() { return m_nb_zbuffers; }
 
 	protected:
 		virtual void* _open(const std::string& filename,
@@ -429,6 +430,8 @@ public:
 
 		int _getNbRunningTasks() const { return m_running_tasks.size(); }
 
+		void _prepareCompressionBuffers(CtControl&);
+
 		StatisticsType		m_statistic;
 		int			m_statistic_size;
 		bool                      m_log_stat_enable;
@@ -444,6 +447,8 @@ public:
 		WritingTasks		m_running_tasks; ///< running tasks
 
 		BufferHelper		m_zbuffer_helper;
+		int			m_nb_zbuffers;
+
 	};
 	friend class SaveContainer;
 
@@ -492,6 +497,11 @@ public:
 		BufferHelper& getZBufferHelper()
 		{
 			return m_save_cnt->getZBufferHelper();
+		}
+
+		int getNbZBuffers()
+		{
+			return m_save_cnt->getNbZBuffers();
 		}
 
 		void setSavingError(CtControl::ErrorCode error)
@@ -689,6 +699,7 @@ private:
 	void _stop();
 	void _close();
 	void _getCommonHeader(HeaderMap&);
+	bool _needParallelCompression();
 	bool _needCompression(Data&);
 	void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		bool keep_in_map);
@@ -696,6 +707,7 @@ private:
 		TaskList& task_list, int& priority);
 	void _postTaskList(Data&, const TaskList&, int priority);
 	void _compressionFinished(Data&, Stream&);
+	void _newImageCompressed(Data&);
 	void _saveFinished(Data&, Stream&);
 	void _setSavingError(CtControl::ErrorCode);
 	void _synchronousSaving(Data&, HeaderMap&);
