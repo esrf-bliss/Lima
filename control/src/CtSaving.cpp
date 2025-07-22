@@ -2432,6 +2432,44 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, aHeader);
 
+	const long frameId = aData.frameNumber;
+
+	class RunningCleanup {
+		DEB_CLASS_NAMESPC(DebModControl,
+				  "CtSaving::SaveContainer::writeFile::RunningCleanup",
+				  "Control");
+	public:
+		RunningCleanup(SaveContainer& c, long f) :
+			m_c(c), m_frameId(f)
+		{}
+
+		~RunningCleanup()
+		{
+			try {
+				if (!m_done)
+					exec();
+			} catch (...) {
+			}
+		}
+
+		void exec()
+		{
+			DEB_MEMBER_FUNCT();
+			AutoMutex lock(m_c.m_lock);
+			WritingTasks& running_tasks = m_c.m_running_tasks;
+			WritingTasks::iterator it = running_tasks.find(m_frameId);
+			if (it == running_tasks.end())
+				THROW_CTL_ERROR(Error) << "Could not find running task";
+			running_tasks.erase(it);
+			m_done = true;
+		}
+
+	private:
+		SaveContainer& m_c;
+		long m_frameId;
+		bool m_done{false};
+	} running_cleanup(*this, frameId);
+
 	_SavingDataPtr saving = _getSavingData(aData);
 	Stat& stat = saving->m_stat;
 
@@ -2439,8 +2477,6 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		AutoMutex l(saving->m_lock);
 		stat.writing_start = Timestamp::now();
 	}
-
-	const long frameId = aData.frameNumber;
 
 	FrameParameters& frame_par = saving->m_params;
 	if (!frame_par.isValid())
@@ -2544,13 +2580,7 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	DEB_TRACE() << "Write took : " << diff << "s";
 
-	{
-		AutoMutex lock(m_lock);
-		WritingTasks::iterator it = m_running_tasks.find(frameId);
-		if (it == m_running_tasks.end())
-			THROW_CTL_ERROR(Error) << "Could not find running task";
-		m_running_tasks.erase(it);
-	}
+	running_cleanup.exec();
 
 	writeFileStat(aData);
 }
