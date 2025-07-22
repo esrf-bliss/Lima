@@ -144,7 +144,7 @@ macro (limatools_install_camera_tango files)
   foreach(file ${file_list})
     install (
       FILES ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-      DESTINATION "${Python3_SITEARCH}/Lima/Server/camera"
+      DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/Lima/Server/camera>"
       )
   endforeach()
 endmacro()
