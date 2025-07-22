@@ -7,6 +7,7 @@ native_arch=0
 only_plugin=0
 profile="release"
 src_dir=""
+conda_profile_sh=""
 
 cmd="build"
 
@@ -73,14 +74,16 @@ if [ -z "${conda_base}" -a -n "${CONDA_PREFIX}" ]; then
     fi
 fi
 
+[ -n "${conda_base}" ] && conda_profile_sh=${conda_base}/etc/profile.d/conda.sh
+
 if [ -n "${conda_env}" ]; then
     if [ "$(type conda | head -n 1)" != "conda is a function" ]; then
-	if [ -z "${conda_base}" ]; then
+	if [ -z "${conda_profile_sh}" ]; then
 	    echo "Must specify the Conda base directory"
 	    echo
 	    usage
 	fi
-	source ${conda_base}/etc/profile.d/conda.sh
+	source ${conda_profile_sh}
     fi
     conda activate ${conda_env}
 elif [ -z "${CONDA_PREFIX}" ]; then
@@ -145,8 +148,9 @@ function parallel_cmake
     if ! grep -q CMAKE_BUILD_TYPE $1; then
 	configure_flags="${configure_flags} -DCMAKE_BUILD_TYPE=${build_type}"
     fi	
-    sed -e "s/\(cmake -Bbuild [^\r]\+\)\r\?$/\1 ${configure_flags}/" \
-	-e "s/\(cmake --build build [^\r]\+\)\r\?$/\1 -j ${CPUS}/" $1 | \
+    ([ -n "${conda_profile_sh}" ] && echo "source ${conda_profile_sh}"; \
+     sed -e "s/\(cmake -Bbuild [^\r]\+\)\r\?$/\1 ${configure_flags}/" \
+	-e "s/\(cmake --build build [^\r]\+\)\r\?$/\1 -j ${CPUS}/" $1) | \
         bash -e;
 }
 
