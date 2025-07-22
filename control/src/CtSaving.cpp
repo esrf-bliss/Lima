@@ -2182,6 +2182,12 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 			return;
 	}
 
+	// release buffer for uncompressed data
+	if (aData.buffer) {
+		aData.buffer->unref();
+		aData.buffer = NULL;
+	}
+
 	long frame_nr = aData.frameNumber;
 
 	AutoMutex aLock(m_cond.mutex());
