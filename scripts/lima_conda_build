@@ -58,6 +58,21 @@ src_dir=$(realpath ${src_dir})
 echo "Source directory: ${src_dir}"
 cd ${src_dir}
 
+if [ -z "${conda_base}" -a -n "${CONDA_EXE}" ]; then
+    conda_bin=$(dirname ${CONDA_EXE})
+    if [ -n "${conda_bin}" -a $(basename ${conda_bin}) = "bin" ]; then
+	conda_base=$(dirname ${conda_bin})
+    fi
+fi
+if [ -z "${conda_base}" -a -n "${CONDA_PREFIX}" ]; then
+    env_dir=$(dirname ${CONDA_PREFIX})
+    if [ -n "${env_dir}" -a $(basename ${env_dir}) = "envs" ]; then
+	conda_base=$(dirname ${env_dir})
+    else
+	conda_base=${env_dir}
+    fi
+fi
+
 if [ -n "${conda_env}" ]; then
     if [ "$(type conda | head -n 1)" != "conda is a function" ]; then
 	if [ -z "${conda_base}" ]; then
