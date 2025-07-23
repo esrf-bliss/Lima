@@ -7,6 +7,7 @@ native_arch=0
 only_plugin=0
 profile="release"
 src_dir=""
+conda_profile_sh=""
 
 cmd="build"
 
@@ -58,14 +59,31 @@ src_dir=$(realpath ${src_dir})
 echo "Source directory: ${src_dir}"
 cd ${src_dir}
 
+if [ -z "${conda_base}" -a -n "${CONDA_EXE}" ]; then
+    conda_bin=$(dirname ${CONDA_EXE})
+    if [ -n "${conda_bin}" -a $(basename ${conda_bin}) = "bin" ]; then
+	conda_base=$(dirname ${conda_bin})
+    fi
+fi
+if [ -z "${conda_base}" -a -n "${CONDA_PREFIX}" ]; then
+    env_dir=$(dirname ${CONDA_PREFIX})
+    if [ -n "${env_dir}" -a $(basename ${env_dir}) = "envs" ]; then
+	conda_base=$(dirname ${env_dir})
+    else
+	conda_base=${env_dir}
+    fi
+fi
+
+[ -n "${conda_base}" ] && conda_profile_sh=${conda_base}/etc/profile.d/conda.sh
+
 if [ -n "${conda_env}" ]; then
     if [ "$(type conda | head -n 1)" != "conda is a function" ]; then
-	if [ -z "${conda_base}" ]; then
+	if [ -z "${conda_profile_sh}" ]; then
 	    echo "Must specify the Conda base directory"
 	    echo
 	    usage
 	fi
-	source ${conda_base}/etc/profile.d/conda.sh
+	source ${conda_profile_sh}
     fi
     conda activate ${conda_env}
 elif [ -z "${CONDA_PREFIX}" ]; then
@@ -130,19 +148,26 @@ function parallel_cmake
     if ! grep -q CMAKE_BUILD_TYPE $1; then
 	configure_flags="${configure_flags} -DCMAKE_BUILD_TYPE=${build_type}"
     fi	
-    sed -e "s/\(cmake -Bbuild [^\r]\+\)\r\?$/\1 ${configure_flags}/" \
-	-e "s/\(cmake --build build [^\r]\+\)\r\?$/\1 -j ${CPUS}/" $1 | \
+    ([ -n "${conda_profile_sh}" ] && echo "source ${conda_profile_sh}"; \
+     sed -e "s/\(cmake -Bbuild [^\r]\+\)\r\?$/\1 ${configure_flags}/" \
+	-e "s/\(cmake --build build [^\r]\+\)\r\?$/\1 -j ${CPUS}/" $1) | \
         bash -e;
+}
+
+function vcd()
+{
+    cd $1
+    echo "Processing directory $(pwd) ..."
 }
 
 case ${cmd} in
 build)
     if [ ${only_plugin} -eq 0 ]; then
-	((cd ${processlib_dir} && parallel_cmake conda/build.sh) \
-	    && (cd . && parallel_cmake conda/${profile}/build.sh) \
-	    && (cd ${tango_dir} && pip install .)) || exit
+	((vcd ${processlib_dir} && parallel_cmake conda/build.sh) \
+	    && (vcd . && parallel_cmake conda/${profile}/build.sh) \
+	    && (vcd ${tango_dir} && pip install .)) || exit
     fi
-    (cd ${camera_dir} \
+    (vcd ${camera_dir} \
        && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
        && (if [ -d conda/tango ]; then parallel_cmake conda/tango/build.sh; fi))
     ;;
