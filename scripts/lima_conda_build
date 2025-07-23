@@ -2,7 +2,7 @@
 
 conda_base=""
 conda_env=""
-camera=""
+cameras=""
 native_arch=0
 only_plugin=0
 profile="release"
@@ -19,9 +19,10 @@ function usage()
     echo "Options:"
     echo "  -b <conda>   Conda base directory"
     echo "  -e <env>     Execute inside conda environment <env>"
-    echo "  -c <camera>  Compiles <camera> plugin (default: simulator)"
+    echo "  -c <cameras> Compiles comma-separated <cameras> plugin(s)"
+    echo "               Can be specified multiple times"
     echo "  -n           Compile for native computer architecture"
-    echo "  -p           Compile only the camera plugin"
+    echo "  -p           Compile only the camera plugin(s)"
     echo "  -s <dir>     Source directory"
     echo
     echo "Cmd: build (default) | clean-sip | clean"
@@ -30,10 +31,11 @@ function usage()
 }
 
 while getopts "b:e:c:nps:" opt; do
+    camsep="" && [ -n "${cameras}" ] && camsep=","
     case ${opt} in
 	b) conda_base="${OPTARG}" ;;
 	e) conda_env="${OPTARG}" ;;
-	c) camera="${OPTARG}" ;;
+	c) cameras="${cameras}${camsep}${OPTARG}" ;;
 	n) native_arch=1 ;;
 	p) only_plugin=1 ;;
 	s) src_dir="${OPTARG}" ;;
@@ -96,11 +98,16 @@ fi
 
 processlib_dir="third-party/Processlib"
 tango_dir="applications/tango/python"
-camera_dir=""
-[ -n "${camera}" ] && camera_dir="camera/${camera}"
+camera_dirs=""
+if [ -n "${cameras}" ]; then
+    for c in ${cameras/,/ }; do
+	sep="" && [ -n "{camera_dirs}" ] && sep=" "
+	camera_dirs="${camera_dirs}${sep}camera/${c}"
+    done
+fi
 
 if [ ${only_plugin} -eq 0 ]; then
-    all_dirs="${processlib_dir} . ${tango_dir} ${camera_dir}"
+    all_dirs="${processlib_dir} . ${tango_dir} ${camera_dirs}"
 else
     if ! python -c "from Lima import Core" 2> /dev/null; then
 	echo "Error: could not find lima-core in ${conda_env} environment"
@@ -110,8 +117,12 @@ else
 	echo "or build the full project (i.e., without -p)"
 	exit 1
     fi
-    [ -n "{camera_dir}" -a -d ${camera_dir} ] || camera_dir="."
-    all_dirs="${camera_dir}"
+    all_dirs=""
+    for d in ${camera_dirs}; do
+	sep="" && [ -n "{all_dirs}" ] && sep=" "
+	[ -n "{d}" -a -d ${d} ] && all_dir="${all_dirs}${sep}${d}"
+    done
+    [ -z "${all_dirs}" ] && all_dirs="."
 fi
 
 for d in ${all_dirs}; do
@@ -167,19 +178,26 @@ build)
 	    && (vcd . && parallel_cmake conda/${profile}/build.sh) \
 	    && (vcd ${tango_dir} && pip install .)) || exit
     fi
-    (vcd ${camera_dir} \
-       && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
-       && (if [ -d conda/tango ]; then parallel_cmake conda/tango/build.sh; fi))
+    for d in ${camera_dirs}; do
+	(vcd ${d} \
+	     && ([ -d conda/camera ] && parallel_cmake conda/camera/build.sh) \
+	     && (if [ -d conda/tango ]; then parallel_cmake conda/tango/build.sh; fi))
+    done
     ;;
 
 clean-sip)
     [ ${only_plugin} -eq 0 ] && rm -rf build/sip/*
-    rm -rf ${camera_dir}/build/sip/*
+    for d in ${camera_dirs}; do
+	rm -rf ${d}/build/sip/*
+    done
     ;;
 
 clean)
-    for d in ${all_dirs} ${camera_dir}/tango; do
+    for d in ${all_dirs}; do
 	rm -rf ${d}/build/*
+    done
+    for d in ${camera_dirs}; do
+	rm -rf ${d}/tango/build/*
     done
     ;;
 
