@@ -745,6 +745,7 @@ CtSaving::CtSaving(CtControl& aCtrl) :
 	m_frames_to_save(-1, -1),
 	m_end_cbk(NULL),
 	m_managed_mode(Software),
+	m_saving_stop(false),
 	m_saving_error_handler(NULL)
 {
 	DEB_CONSTRUCTOR();

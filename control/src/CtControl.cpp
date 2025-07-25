@@ -1098,6 +1098,16 @@ void CtControl::resetStatus(bool only_acq_status)
   _updateImageStatusThreads(true);
 }
 
+inline bool CtControl::_mustSkipProcessing(Data& data, AutoMutex& l)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(data, m_running);
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  bool skip = !m_running && (data.frameNumber > imgStatus.LastImageAcquired);
+  DEB_RETURN() << DEB_VAR1(skip);
+  return skip;
+}
+
 bool CtControl::newFrameReady(Data& fdata)
 {
   DEB_MEMBER_FUNCT();
@@ -1107,8 +1117,9 @@ bool CtControl::newFrameReady(Data& fdata)
 
   {
     AutoMutex aLock(m_cond.mutex());
-    if(_checkOverrun(fdata, aLock))
-      return false;// Stop Acquisition on overun
+    DEB_TRACE() << DEB_VAR1(m_running);
+    if(_mustSkipProcessing(fdata, aLock) || _checkOverrun(fdata, aLock))
+      return false;// Stop HW Acquisition on stop / overrun
 
     ImageStatus &imgStatus = m_status.ImageCounters;
     imgStatus.LastImageAcquired = _increment_image_cnt(fdata,
@@ -1146,6 +1157,10 @@ void CtControl::newBaseImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
+
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+
   ImageStatus &imgStatus = m_status.ImageCounters;
   imgStatus.LastBaseImageReady = _increment_image_cnt(aData,imgStatus.LastBaseImageReady,
 						      m_base_images_ready);
@@ -1177,6 +1192,9 @@ void CtControl::newImageReady(Data &aData)
 
   AutoMutex aLock(m_cond.mutex());
 
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+
   ImageStatus &imgStatus = m_status.ImageCounters;
   imgStatus.LastImageReady = _increment_image_cnt(aData,imgStatus.LastImageReady,
 						  m_images_ready);
@@ -1199,10 +1217,14 @@ void CtControl::newImageReady(Data &aData)
   _calcAcqStatus();
 }
 
-void CtControl::newCounterReady(Data&)
+void CtControl::newCounterReady(Data& aData)
 {
   DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
+
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+  
   ++m_status.ImageCounters.LastCounterReady;
   aLock.unlock();
   _calcAcqStatus();
