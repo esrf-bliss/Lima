@@ -313,6 +313,8 @@ namespace lima
     inline void _calcAcqStatus();
     inline void _updateImageStatusThreads(bool force);
 
+    inline bool _mustSkipProcessing(Data&, AutoMutex&);
+
     void _stopAcq(bool faulty_acq);
 
     void readBlock(Data&, long frameNumber, long readBlockLen,
