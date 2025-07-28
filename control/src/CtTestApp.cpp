@@ -22,13 +22,20 @@
 
 #include "lima/CtTestApp.h"
 
+#include <iostream>
+
 #ifdef __unix
 #include <unistd.h>
+#include <sys/time.h>
 #else
 #include <processlib/win/unistd.h>
 #include <windows.h> // For Sleep()
 #include <process.h> // For _getpid()
+#include <sysinfoapi.h> // For GetTickCount64
 #endif
+
+#include <math.h>
+#include <stdlib.h>
 
 using namespace std;
 using namespace lima;
@@ -126,6 +133,12 @@ CtTestApp::Pars::Pars()
 
 	AddOpt(test_acq_loop_display_time, "--test-acq-loop-display-time",
 	       "acq loop display time");
+
+	AddOpt(test_acq_stop_policy, "--test-acq-stop-policy",
+	       "acq stop policy: Never | Random | Fixed");
+
+	AddOpt(test_acq_stop_nb_frames, "--test-acq-stop-nb-frames",
+	       "number of frames limit before acq stop");
 
 	AddOpt(test_nb_exec_threads, "--test-nb-exec-threads",
 	       "number of threads executing acq commands");
@@ -234,6 +247,11 @@ void CtTestApp::init()
 	CtBuffer *buffer = m_ct->buffer();
 	CtVideo *video = m_ct->video();
 
+	bool endless_acq = false;
+	for (int i = 0; i < int(m_pars->acq_nb_frames.size()); ++i)
+		if (m_pars->acq_nb_frames[i] == 0)
+			endless_acq = true;
+
 	if (m_pars->saving_managed_mode != CtSaving::Software)
 		THROW_CTL_ERROR(NotSupported)
 			<< "Only Software saving managed mode is supported";
@@ -300,6 +318,28 @@ void CtTestApp::init()
 	PoolThreadMgr& mgr = PoolThreadMgr::get();
 	mgr.setNumberOfThread(m_pars->proc_nb_threads);
 
+	// stop acquisition
+	if (m_pars->test_acq_stop_policy != Never) {
+		if (m_pars->test_acq_stop_nb_frames <= 0)
+			THROW_CTL_ERROR(InvalidValue)
+				<< "Invalid acq stop_nb_frames";
+		if (m_pars->test_acq_stop_policy == Random) {
+			unsigned seed = 0;
+#ifdef __unix
+			struct timeval tv;
+			if (gettimeofday(&tv, NULL) != 0)
+				THROW_CTL_ERROR(Error)
+				<< "Error getting time-of-day";
+			seed = (unsigned) tv.tv_usec;
+#else
+			seed = (unsigned) GetTickCount64();
+#endif
+			srand(seed);
+		}
+	} else if (endless_acq)
+		THROW_CTL_ERROR(NotSupported)
+			<< "Must specify an AcqStopPolicy with endless acqs";
+
 	if (m_pars->test_nb_exec_threads == -1)
 		m_pars->test_nb_exec_threads = m_pars->test_nb_seq;
 	int nb_exec_threads = m_pars->test_nb_exec_threads;
@@ -365,6 +405,19 @@ void CtTestApp::runAcq(const index_map& indexes)
 	DEB_ALWAYS() << DEB_VAR3(acq_idx, nb_frames_idx, acq_nb_frames);
 	m_ct->acquisition()->setAcqNbFrames(acq_nb_frames);
 
+	bool endless_acq = (acq_nb_frames == 0);
+	AcqStopPolicy stop_policy = m_pars->test_acq_stop_policy;
+	bool do_stop = (stop_policy != Never);
+	int stop_nb_frames = m_pars->test_acq_stop_nb_frames;
+	DEB_ALWAYS() << "Requested: " << DEB_VAR2(stop_policy, stop_nb_frames);
+	if (stop_policy == Random) {
+		long nb_random = 1L << 32;
+		double factor = double(stop_nb_frames + 1) / nb_random;
+		stop_nb_frames = int(round(rand() * factor));
+	}
+	if (do_stop)
+		DEB_ALWAYS() << "Effective: " << DEB_VAR2(stop_policy, stop_nb_frames);
+
 	bool show_statistics = false;
 	CtSaving *save = m_ct->saving();
 	if (m_pars->saving_mode == CtSaving::AutoFrame) {
@@ -386,6 +439,7 @@ void CtTestApp::runAcq(const index_map& indexes)
 	DEB_ALWAYS() << "acq started";
 	Timestamp t0 = Timestamp::now();
 
+	bool stopped = false;
 	long acq_frame = -1, saved_frame = -1;
 	long last_frame = acq_nb_frames - 1;
 	bool all_acquired = false;
@@ -450,7 +504,11 @@ void CtTestApp::runAcq(const index_map& indexes)
 			DEB_ALWAYS() << "acq finished";
 			break;
 		}
-
+		if (!stopped && do_stop && (acq_frame >= stop_nb_frames)) {
+			DEB_ALWAYS() << "stopping acquisition ...";
+			m_ct->stopAcq();
+			stopped = true;
+		}
 		long sleep_us = int(m_pars->test_acq_loop_wait_time * 1e6);
 		if (sleep_us > 0)
 			usleep(sleep_us);
@@ -458,7 +516,7 @@ void CtTestApp::runAcq(const index_map& indexes)
 #if defined(_WIN32)
 			Sleep(0);
 #else
-			pthread_yield();
+			sched_yield();
 #endif
 	}
 
@@ -496,3 +554,41 @@ void CtTestApp::imageStatusChanged(const CtControl::ImageStatus& status)
 {
 	DEB_MEMBER_FUNCT();
 }
+
+std::istream& lima::operator >>(std::istream& is,
+				CtTestApp::AcqStopPolicy& stop_policy)
+{
+	typedef CtTestApp::AcqStopPolicy AcqStopPolicy;
+
+	std::string policy;
+	is >> policy;
+	std::transform(policy.begin(), policy.end(), policy.begin(),
+		       [](unsigned char c){ return ::tolower(c); });
+	if (policy == "never")
+		stop_policy = AcqStopPolicy::Never;
+	else if (policy == "random")
+		stop_policy = AcqStopPolicy::Random;
+	else if (policy == "fixed")
+		stop_policy = AcqStopPolicy::Fixed;
+	else {
+		std::ostringstream msg;
+		msg << "AcqStopPolicy can't be: " << DEB_VAR1(policy);
+		throw LIMA_EXC(Control, InvalidValue, msg.str());
+	}
+	return is;
+}
+
+std::ostream& lima::operator <<(std::ostream& os,
+				const CtTestApp::AcqStopPolicy& stop_policy)
+{
+	typedef CtTestApp::AcqStopPolicy AcqStopPolicy;
+
+	const char *policy = "Unknown";
+	switch (stop_policy) {
+	case AcqStopPolicy::Never:  policy = "Never";  break;
+	case AcqStopPolicy::Random: policy = "Random"; break;
+	case AcqStopPolicy::Fixed:  policy = "Fixed";  break;
+	}
+	return os << policy;
+}
+
