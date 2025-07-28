@@ -49,6 +49,13 @@ class LIMACORE_API CtTestApp
 
 	typedef BufferHelper::Parameters BufferParameters;
 
+	enum AcqStopPolicy
+	{
+		Never,
+		Random,
+		Fixed,
+	};
+
 	class LIMACORE_API Pars : public AppPars
 	{
 		DEB_CLASS_NAMESPC(DebModTest, "CtTestApp::Pars", "Control");
@@ -100,6 +107,8 @@ class LIMACORE_API CtTestApp
 		std::string test_post_seq_cmd;
 		double test_acq_loop_wait_time{0.1};
 		double test_acq_loop_display_time{0.1};
+		AcqStopPolicy test_acq_stop_policy{Never};
+		int test_acq_stop_nb_frames{0};
 		int test_nb_exec_threads{0};
 
 		Pars();
@@ -160,6 +169,11 @@ class LIMACORE_API CtTestApp
 	AutoPtr<ImageStatusCallback> m_img_status_cb;
 	std::vector<AutoPtr<ExecThread>> m_exec_thread_list;
 };
+
+LIMACORE_API std::istream& operator >>(std::istream& is,
+				       CtTestApp::AcqStopPolicy& stop_policy);
+LIMACORE_API std::ostream& operator <<(std::ostream& os,
+				       const CtTestApp::AcqStopPolicy& stop_policy);
 
 } // namespace lima
 
