@@ -2025,7 +2025,6 @@ void CtSaving::clear()
 void CtSaving::close()
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_cond.mutex());
 	_close();
 }
 
@@ -2228,7 +2227,11 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	bool auto_saving = (saving_mode == AutoFrame) || (saving_mode == AutoHeader);
 	if (!auto_saving)
 	{
-		if (m_saving_stop) _close();
+		if (m_saving_stop)
+		{
+			AutoMutexUnlock u(aLock);
+			_close();
+		}
 		m_cond.signal();
 		return;
 	}
@@ -2398,7 +2401,10 @@ void CtSaving::_close()
 		}
 	}
 	else
+	{
+		AutoMutex aLock(m_cond.mutex());
 		m_saving_stop = true;
+	}
 }
 
 #ifdef WITH_CONFIG
