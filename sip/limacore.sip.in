@@ -187,13 +187,13 @@ if (sipIsErr == NULL)
 {
 bool aReturnFlag = PyList_Check(sipPy);
 for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-	aReturnFlag = PyInt_Check(PyList_GET_ITEM(sipPy,i));
+	aReturnFlag = PyLong_Check(PyList_GET_ITEM(sipPy,i));
 return aReturnFlag;
 }
 
 *sipCppPtr = new std::vector<int>(PyList_Size(sipPy));
 for(int i = 0;i < PyList_Size(sipPy);++i)
-  (*sipCppPtr)->operator[](i) = PyInt_AS_LONG(PyList_GET_ITEM(sipPy,i));
+  (*sipCppPtr)->operator[](i) = PyLong_AS_LONG(PyList_GET_ITEM(sipPy,i));
 
     return sipGetState(sipTransferObj);
 %End
@@ -203,7 +203,7 @@ PyObject* aReturnListPt = PyList_New(sipCpp->size());
 std::vector<int>::iterator vIter = sipCpp->begin();
 
 for(int i = 0;vIter != sipCpp->end();++vIter,++i)
-  PyList_SET_ITEM(aReturnListPt,i,PyInt_FromLong(*vIter));
+  PyList_SET_ITEM(aReturnListPt,i,PyLong_FromLong(*vIter));
 
 return aReturnListPt;
 %End
@@ -221,13 +221,13 @@ if (sipIsErr == NULL)
 {
 bool aReturnFlag = PyList_Check(sipPy);
 for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-        aReturnFlag = PyInt_Check(PyList_GET_ITEM(sipPy,i));
+        aReturnFlag = PyLong_Check(PyList_GET_ITEM(sipPy,i));
 return aReturnFlag;
 }
 
 *sipCppPtr = new std::vector<long>(PyList_Size(sipPy));
 for(int i = 0;i < PyList_Size(sipPy);++i)
-  (*sipCppPtr)->operator[](i) = PyInt_AS_LONG(PyList_GET_ITEM(sipPy,i));
+  (*sipCppPtr)->operator[](i) = PyLong_AS_LONG(PyList_GET_ITEM(sipPy,i));
 
     return sipGetState(sipTransferObj);
 %End
@@ -237,7 +237,7 @@ PyObject* aReturnListPt = PyList_New(sipCpp->size());
 std::vector<long>::iterator vIter = sipCpp->begin();
 
 for(int i = 0;vIter != sipCpp->end();++vIter,++i)
-  PyList_SET_ITEM(aReturnListPt,i,PyInt_FromLong(*vIter));
+  PyList_SET_ITEM(aReturnListPt,i,PyLong_FromLong(*vIter));
 
 return aReturnListPt;
 %End
@@ -354,13 +354,13 @@ if(sipIsErr == NULL)
 {
 bool aReturnFlag = PyList_Check(sipPy);
 for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
-	aReturnFlag = PyInt_Check(PyList_GET_ITEM(sipPy,i));
+	aReturnFlag = PyLong_Check(PyList_GET_ITEM(sipPy,i));
 return aReturnFlag;
 }
 
 *sipCppPtr = new std::list<int>();
 for(int i = 0;i < PyList_Size(sipPy);++i)
-	(*sipCppPtr)->push_back(PyInt_AS_LONG(PyList_GET_ITEM(sipPy,i)));
+	(*sipCppPtr)->push_back(PyLong_AS_LONG(PyList_GET_ITEM(sipPy,i)));
 return sipGetState(sipTransferObj);
 %End
 
@@ -369,7 +369,7 @@ PyObject* aReturnListPt = PyList_New(sipCpp->size());
 std::list<int>::iterator lIter = sipCpp->begin();
 
 for(int i = 0;lIter != sipCpp->end();++lIter,++i)
-   PyList_SET_ITEM(aReturnListPt,i,PyInt_FromLong(*lIter));
+   PyList_SET_ITEM(aReturnListPt,i,PyLong_FromLong(*lIter));
 return aReturnListPt;
 %End
 };
@@ -391,7 +391,7 @@ if(sipIsErr == NULL)
 
   pos = 0;
   while(aReturnFlag && PyDict_Next(sipPy, &pos, &key, &value))
-     aReturnFlag = PyInt_Check(key) && sipCheckConvertFromPyStr(value);
+     aReturnFlag = PyLong_Check(key) && sipCheckConvertFromPyStr(value);
 
   return aReturnFlag;
 }
@@ -400,7 +400,7 @@ if(sipIsErr == NULL)
 pos = 0;
 while(PyDict_Next(sipPy, &pos, &key, &value))
 {
-  int anIndex = PyInt_AS_LONG(key);
+  int anIndex = PyLong_AS_LONG(key);
   std::pair<int,std::string> item(anIndex, sipConvertFromPyStr(value));
   (*sipCppPtr)->insert(item);
 }
@@ -413,7 +413,7 @@ PyObject* aReturnDictPt = PyDict_New();
 std::map<int,std::string>::iterator mIter, mEnd = sipCpp->end();
 for(mIter = sipCpp->begin(); mIter != mEnd; ++mIter)
    {
-    PyObject *aKeyPt = PyInt_FromLong(mIter->first);
+    PyObject *aKeyPt = PyLong_FromLong(mIter->first);
     PyObject *aValuePt = sipConvertToPyStr(mIter->second);
     PyDict_SetItem(aReturnDictPt,aKeyPt,aValuePt);
     Py_DECREF(aKeyPt);Py_DECREF(aValuePt);
@@ -441,7 +441,7 @@ if(sipIsErr == NULL)
   pos = 0;
   while(aReturnFlag && PyDict_Next(sipPy, &pos, &key, &value))
    {
-     aReturnFlag = PyInt_Check(key) && PyList_Check(value);
+     aReturnFlag = PyLong_Check(key) && PyList_Check(value);
      for(int i = 0;aReturnFlag && i < PyList_Size(value);++i)
 	aReturnFlag = sipCheckConvertFromPyStr(PyList_GET_ITEM(value,i));
    }
@@ -452,7 +452,7 @@ if(sipIsErr == NULL)
 pos = 0;
 while(PyDict_Next(sipPy, &pos, &key, &value))
 {
-  int anIndex = PyInt_AS_LONG(key);
+  int anIndex = PyLong_AS_LONG(key);
   std::pair<std::map<int,std::list<std::string> >::iterator, bool> aResult =
   (*sipCppPtr)->insert(std::pair<int,std::list<std::string> >(anIndex,std::list<std::string>()));
 
@@ -473,7 +473,7 @@ PyObject* aReturnDictPt = PyDict_New();
 for(std::map<int,std::list<std::string> >::iterator mIter = sipCpp->begin();
     mIter != sipCpp->end();++mIter)
    {
-    PyObject *aKeyPt = PyInt_FromLong(mIter->first);
+    PyObject *aKeyPt = PyLong_FromLong(mIter->first);
     PyObject *aValuePt = PyList_New(mIter->second.size());
     PyDict_SetItem(aReturnDictPt,aKeyPt,aValuePt);
     Py_DECREF(aKeyPt);Py_DECREF(aValuePt);
@@ -541,7 +541,7 @@ if(sipIsErr == NULL)
     PyObject *listPt = PyList_GET_ITEM(sipPy,i);
     aReturnFlag = PyList_Check(listPt);
     for(int j = 0;aReturnFlag && j < PyList_Size(listPt);++j)
-      aReturnFlag = PyInt_Check(PyList_GET_ITEM(listPt,j));
+      aReturnFlag = PyLong_Check(PyList_GET_ITEM(listPt,j));
   }
   return aReturnFlag;
 }
@@ -554,7 +554,7 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
   (*sipCppPtr)->push_back(std::list<long long>());
   std::list<long long> &aList = (*sipCppPtr)->back();
   for(int j = 0;j <  PyList_Size(listPt);++j)
-    aList.push_back(PyInt_AS_LONG(PyList_GET_ITEM(listPt,j)));
+    aList.push_back(PyLong_AS_LONG(PyList_GET_ITEM(listPt,j)));
 }
 
 return sipGetState(sipTransferObj);
@@ -571,7 +571,7 @@ for(int i = 0;vIter != sipCpp->end();++vIter,++i)
    PyList_SET_ITEM(aReturnListPt,i,aListPyPt);
    std::list<long long>::iterator sIter = aList.begin();
    for(int j = 0;sIter != aList.end();++sIter,++j)
-     PyList_SET_ITEM(aListPyPt,j,PyInt_FromLong(*sIter));
+     PyList_SET_ITEM(aListPyPt,j,PyLong_FromLong(*sIter));
 }
 return aReturnListPt;
 %End
