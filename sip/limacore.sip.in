@@ -74,7 +74,7 @@ inline PyObject *sipConvertToPyStr(const std::string& s)
     newstring = PyUnicode_DecodeUTF8(s.c_str(), s.length(), NULL);
     if (newstring == NULL) {
         PyErr_Clear();
-        newstring = PyString_FromString(s.c_str());
+        newstring = PyUnicode_FromString(s.c_str());
     }
 #else
     // convert an std::string to a Python string - assume an ASCII string
@@ -86,7 +86,7 @@ inline PyObject *sipConvertToPyStr(const std::string& s)
 
 inline bool sipCheckConvertFromPyStr(PyObject *sipPy)
 {
-    return (PyString_Check(sipPy) || PyUnicode_Check(sipPy));
+    return (PyBytes_Check(sipPy) | PyUnicode_Check(sipPy));
 }
 
 inline std::string sipConvertFromPyStr(PyObject *sipPy)
@@ -98,10 +98,10 @@ inline std::string sipConvertFromPyStr(PyObject *sipPy)
     // If argument is a Python string, assume it's UTF-8
     if (PyUnicode_Check(sipPy)) {
         PyObject *pyS = PyUnicode_AsEncodedString(sipPy, "UTF-8", "");
-        s = PyString_AS_STRING(pyS);
+        s = PyBytes_AS_STRING(pyS);
         Py_DECREF(pyS);
-    } else if (PyString_Check(sipPy)) {
-        s = PyString_AS_STRING(sipPy);
+    } else if (PyBytes_Check(sipPy)) {
+        s = PyBytes_AS_STRING(sipPy);
     } else if (sipPy != Py_None) {
         throw std::exception();
     }
