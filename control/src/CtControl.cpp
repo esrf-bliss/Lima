@@ -154,7 +154,7 @@ class CtControl::ImageStatusThread : public Thread
   DEB_CLASS_NAMESPC(DebModControl, "ImageStatusThread", "CtControl");
 
 public:
-  ImageStatusThread(Cond& cond, ImageStatusCallback *cb);
+  ImageStatusThread(ImageStatusCallback *cb);
   ~ImageStatusThread();
 
   ImageStatusCallback *cb()
@@ -179,16 +179,15 @@ private:
     bool *finished;
   };
   
-  Cond& m_cond;
+  Cond m_cond;
   ImageStatusCallback *m_cb;
   ImageStatus m_last_status;
   std::list<ChangeEvent *> m_event_list;
   bool m_waiting;
 };
 
-CtControl::ImageStatusThread::ImageStatusThread(Cond& cond, 
-						ImageStatusCallback *cb)
-  : m_cond(cond), m_cb(cb), m_waiting(false)
+CtControl::ImageStatusThread::ImageStatusThread(ImageStatusCallback *cb)
+  : m_cb(cb), m_waiting(false)
 {
   DEB_CONSTRUCTOR();
   start();
@@ -797,11 +796,17 @@ void CtControl::stopAcqAsync(AcqStatus acq_status, ErrorCode error_code,
 void CtControl::_updateImageStatusThreads(bool force)
 {
   DEB_MEMBER_FUNCT();
-    
+  
+  ImageStatus status;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    status = m_status.ImageCounters;
+  }
+
   ReadWriteLock::ReadGuard guard(m_img_status_thread_list_lock);
   for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
       i != m_img_status_thread_list.end();++i)
-    (*i)->imageStatusChanged(m_status.ImageCounters, force);
+    (*i)->imageStatusChanged(status, force);
 }
 
 
@@ -1093,6 +1098,16 @@ void CtControl::resetStatus(bool only_acq_status)
   _updateImageStatusThreads(true);
 }
 
+inline bool CtControl::_mustSkipProcessing(Data& data, AutoMutex& l)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(data, m_running);
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  bool skip = !m_running && (data.frameNumber > imgStatus.LastImageAcquired);
+  DEB_RETURN() << DEB_VAR1(skip);
+  return skip;
+}
+
 bool CtControl::newFrameReady(Data& fdata)
 {
   DEB_MEMBER_FUNCT();
@@ -1102,8 +1117,9 @@ bool CtControl::newFrameReady(Data& fdata)
 
   {
     AutoMutex aLock(m_cond.mutex());
-    if(_checkOverrun(fdata, aLock))
-      return false;// Stop Acquisition on overun
+    DEB_TRACE() << DEB_VAR1(m_running);
+    if(_mustSkipProcessing(fdata, aLock) || _checkOverrun(fdata, aLock))
+      return false;// Stop HW Acquisition on stop / overrun
 
     ImageStatus &imgStatus = m_status.ImageCounters;
     imgStatus.LastImageAcquired = _increment_image_cnt(fdata,
@@ -1141,6 +1157,10 @@ void CtControl::newBaseImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
+
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+
   ImageStatus &imgStatus = m_status.ImageCounters;
   imgStatus.LastBaseImageReady = _increment_image_cnt(aData,imgStatus.LastBaseImageReady,
 						      m_base_images_ready);
@@ -1172,6 +1192,9 @@ void CtControl::newImageReady(Data &aData)
 
   AutoMutex aLock(m_cond.mutex());
 
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+
   ImageStatus &imgStatus = m_status.ImageCounters;
   imgStatus.LastImageReady = _increment_image_cnt(aData,imgStatus.LastImageReady,
 						  m_images_ready);
@@ -1194,10 +1217,14 @@ void CtControl::newImageReady(Data &aData)
   _calcAcqStatus();
 }
 
-void CtControl::newCounterReady(Data&)
+void CtControl::newCounterReady(Data& aData)
 {
   DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
+
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+  
   ++m_status.ImageCounters.LastCounterReady;
   aLock.unlock();
   _calcAcqStatus();
@@ -1291,7 +1318,7 @@ void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
 		   [&cb] (ImageStatusThread *t) { return t->cb() == &cb; });
   if(i != end)
     THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
-  AutoPtr<ImageStatusThread> thread = new ImageStatusThread(m_cond, &cb);
+  AutoPtr<ImageStatusThread> thread = new ImageStatusThread(&cb);
   cb.setImageStatusCallbackGen(this);
   m_img_status_thread_list.push_back(thread);
   thread.forget();
