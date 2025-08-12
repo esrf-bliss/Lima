@@ -1106,8 +1106,9 @@ void SoftBufferCtrlObj::Sync::realloc()
 MmapFileBufferAllocMgr::MmapFileBufferAllocMgr(const char* mapped_file):
   m_map_mem_base(NULL),
   m_map_size(0),
-  m_frame_mem_size(-1),
-  m_nb_buffers(-1)
+  m_use_size(0),
+  m_frame_mem_size(0),
+  m_nb_buffers(0)
 {
   DEB_CONSTRUCTOR();
 
@@ -1122,6 +1123,12 @@ MmapFileBufferAllocMgr::MmapFileBufferAllocMgr(const char* mapped_file):
 
   if(m_map_mem_base == MAP_FAILED)
     THROW_HW_ERROR(Error) << "Could not map file: "  << mapped_file;
+
+  m_use_size = m_map_size;
+  off_t tot_mem = _calc_req_mem_size(100);
+  m_alloc_params.reqMemSizePercent = double(m_use_size) / tot_mem;
+
+  DEB_TRACE() << DEB_VAR2(m_map_size, m_alloc_params);
 }
 
 MmapFileBufferAllocMgr::~MmapFileBufferAllocMgr()
@@ -1130,14 +1137,38 @@ MmapFileBufferAllocMgr::~MmapFileBufferAllocMgr()
     munmap(m_map_mem_base,m_map_size);
 }
 
+void MmapFileBufferAllocMgr::setAllocParameters(const AllocParameters& alloc_params)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(alloc_params);
+  m_alloc_params = alloc_params;
+}
+
+void MmapFileBufferAllocMgr::getAllocParameters(AllocParameters& alloc_params)
+{
+  DEB_MEMBER_FUNCT();
+  alloc_params = m_alloc_params;
+  DEB_RETURN() << DEB_VAR1(alloc_params);
+}
+
 int MmapFileBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
 {
   int frame_mem_size = _calc_frame_mem_size(frame_dim);
-  return m_map_size / frame_mem_size;
+  return m_use_size / frame_mem_size;
 }
 
 void MmapFileBufferAllocMgr::allocBuffers(int nb_buffers,const FrameDim& frame_dim)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(nb_buffers, frame_dim);
+
+  off_t req_mem = _calc_req_mem_size(m_alloc_params.reqMemSizePercent);
+  if (req_mem > m_map_size)
+    THROW_HW_ERROR(InvalidValue) << "MmapFile not big enough: "
+				 << DEB_VAR2(req_mem, m_map_size);
+  m_use_size = req_mem;
+  DEB_TRACE() << DEB_VAR2(m_map_size, m_use_size);
+
   m_frame_mem_size = _calc_frame_mem_size(frame_dim);
   m_frame_dim = frame_dim;
   m_nb_buffers = nb_buffers;
@@ -1145,8 +1176,9 @@ void MmapFileBufferAllocMgr::allocBuffers(int nb_buffers,const FrameDim& frame_d
 
 void MmapFileBufferAllocMgr::releaseBuffers()
 {
-  m_frame_mem_size = -1;
-  m_nb_buffers = -1;
+  m_frame_mem_size = 0;
+  m_nb_buffers = 0;
+  m_frame_dim = FrameDim();
 }
 
 void* MmapFileBufferAllocMgr::getBufferPtr(int buffer_nb)
@@ -1173,12 +1205,20 @@ void MmapFileBufferAllocMgr::clearBuffer(int buffer_nb)
 
 void MmapFileBufferAllocMgr::clearAllBuffers()
 {
-  if(m_map_size > 0)
-    memset(m_map_mem_base,0,m_map_size);
+  if(m_use_size > 0)
+    memset(m_map_mem_base,0,m_use_size);
 }
 
 int MmapFileBufferAllocMgr::_calc_frame_mem_size(const FrameDim& frame_dim) const
 {
   return  (frame_dim.getMemSize() + 31) & ~31; // 32 alignment (avx2)
+}
+
+off_t MmapFileBufferAllocMgr::_calc_req_mem_size(double req_mem_size_percent)
+{
+  int mem_unit = 0;
+  int system_mem;
+  GetSystemMem(mem_unit, system_mem);
+  return req_mem_size_percent * mem_unit * system_mem;
 }
 #endif // !defined(_WIN32)
