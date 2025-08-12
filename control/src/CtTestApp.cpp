@@ -105,6 +105,9 @@ CtTestApp::Pars::Pars()
 	AddOpt(proc_nb_threads, "--proc-nb-threads",
 	       "number of processing threads");
 
+	AddOpt(test_attach_debugger, "--test-attach-debugger",
+	       "prompt at start to allow attaching debugger");
+
 	AddOpt(test_nb_seq, "--test-nb-seq", "number of sequences");
 
 	AddOpt(test_seq_lat, "--test-seq-lat", "latency between sequences");
@@ -226,6 +229,13 @@ void CtTestApp::init()
 	DEB_MEMBER_FUNCT();
 	m_pars = getPars();
 	parseArgs();
+
+	if (m_pars->test_attach_debugger) {
+		char buffer[1024];
+		DEB_ALWAYS() << "Press enter to continue";
+		fgets(buffer, sizeof(buffer), stdin);
+	}
+
 	m_ct = getCtControl();
 	CtAcquisition *acq = m_ct->acquisition();
 	CtAccumulation *acc = m_ct->accumulation();
