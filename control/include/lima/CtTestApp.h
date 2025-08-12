@@ -91,6 +91,7 @@ class LIMACORE_API CtTestApp
 
 		int proc_nb_threads{2};
 
+		bool test_attach_debugger{false};
 		int test_nb_seq{1};
 		double test_seq_lat{0};
 		bool test_rm_files_before_acq{false};
