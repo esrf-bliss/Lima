@@ -2955,6 +2955,10 @@ void CtSaving::SaveContainer::_prepareCompressionBuffers(CtControl& ct)
 	ct.acquisition()->getAcqNbFrames(nb_frames);
 	m_zbuffer_helper.prepareBuffers(nb_frames, buffer_size);
 
+	BufferHelper::Parameters zbuffer_params;
+	m_zbuffer_helper.getParameters(zbuffer_params);
+	m_nb_zbuffers = zbuffer_params.getDefMaxNbBuffers(buffer_size);
+
 	auto size_2_buffers = m_zbuffer_helper.getSize2NbAllocBuffersMap();
 
 	const char *error_header = "Saving compression buffers: unexpected ";
@@ -2970,8 +2974,11 @@ void CtSaving::SaveContainer::_prepareCompressionBuffers(CtControl& ct)
 	if (alloc_size != buffer_size)
 		THROW_CTL_ERROR(Error) << error_header
 				       << DEB_VAR1(alloc_size);
-
-	m_nb_zbuffers = alloc_nb;
+	else if (alloc_nb != m_nb_zbuffers) {
+		DEB_WARNING() << error_header
+			      << DEB_VAR2(m_nb_zbuffers, alloc_nb);
+		m_nb_zbuffers = alloc_nb;
+	}
 }
 
 void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
