@@ -24,8 +24,9 @@ requirements:
     # I/O formats
     - zlib
     - lz4-c 1.9*
-    - hdf5 1.14.3*
+    - hdf5 1.14*
     - libtiff
+    - cbflib         # [linux]
     - openssl 3*     # [linux]
     - libnuma        # [linux]
   build:
@@ -42,7 +43,8 @@ requirements:
     - lz4-c 1.9*
     - hdf5 1.14*
     - libtiff
-    - openssl       # [linux]
+    - cbflib        # [linux]
+    - openssl 3*    # [linux]
     - libnuma       # [linux]
 
 test:
