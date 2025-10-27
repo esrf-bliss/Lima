@@ -23,6 +23,8 @@
 #include "lima/CtTestApp.h"
 
 #include <iostream>
+#include <fstream>
+#include <cstring>
 
 #ifdef __unix
 #include <unistd.h>
@@ -36,6 +38,9 @@
 
 #include <math.h>
 #include <stdlib.h>
+
+#include "lima/RegExUtils.h"
+#include "lima/SoftOpExternalMgr.h"
 
 using namespace std;
 using namespace lima;
@@ -111,6 +116,9 @@ CtTestApp::Pars::Pars()
 
 	AddOpt(proc_nb_threads, "--proc-nb-threads",
 	       "number of processing threads");
+
+	AddOpt(proc_mask_file_name, "--proc-mask-file-name",
+	       "name of EDF file with mask image to apply");
 
 	AddOpt(test_attach_debugger, "--test-attach-debugger",
 	       "prompt at start to allow attaching debugger");
@@ -205,6 +213,11 @@ CtTestApp::CtTestApp(int argc, char *argv[])
 	DEB_CONSTRUCTOR();
 }
 
+CtTestApp::~CtTestApp()
+{
+	DEB_DESTRUCTOR();
+}
+
 void CtTestApp::run()
 {
 	DEB_MEMBER_FUNCT();
@@ -256,6 +269,7 @@ void CtTestApp::init()
 	CtImage *image = m_ct->image();
 	CtBuffer *buffer = m_ct->buffer();
 	CtVideo *video = m_ct->video();
+	SoftOpExternalMgr* ext_op = m_ct->externalOperation();
 
 	bool endless_acq = false;
 	for (int i = 0; i < int(m_pars->acq_nb_frames.size()); ++i)
@@ -328,7 +342,17 @@ void CtTestApp::init()
 	PoolThreadMgr& mgr = PoolThreadMgr::get();
 	mgr.setNumberOfThread(m_pars->proc_nb_threads);
 
-	// stop acquisition
+	// mask
+	if (!m_pars->proc_mask_file_name.empty()) {
+		DEB_ALWAYS() << DEB_VAR1(m_pars->proc_mask_file_name);
+		m_mask_data = readEDFFileImage(m_pars->proc_mask_file_name);
+		DEB_ALWAYS() << DEB_VAR1(m_mask_data);
+		SoftOpInstance op;
+		ext_op->addOp(MASK, "MaskTask", 0, op);
+		SoftOpMask *mask_task = static_cast<SoftOpMask*>(op.m_opt);
+		mask_task->setMaskImage(m_mask_data);
+	}
+
 	if (m_pars->test_acq_stop_policy != Never) {
 		if (m_pars->test_acq_stop_nb_frames <= 0)
 			THROW_CTL_ERROR(InvalidValue)
@@ -392,7 +416,7 @@ void CtTestApp::execCmd(std::string cmd)
 	}
 	DEB_ALWAYS() << "executing " << DEB_VAR1(cmd);
 	if (system(cmd.c_str()) != 0)
-		THROW_HW_ERROR(Error) << "Error executing " << DEB_VAR1(cmd);
+		THROW_CTL_ERROR(Error) << "Error executing " << DEB_VAR1(cmd);
 }
 
 void CtTestApp::runAcq(const index_map& indexes)
@@ -563,6 +587,141 @@ void CtTestApp::runAcq(const index_map& indexes)
 void CtTestApp::imageStatusChanged(const CtControl::ImageStatus& status)
 {
 	DEB_MEMBER_FUNCT();
+}
+
+Data CtTestApp::readEDFFileImage(std::string filename)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(filename);
+
+	std::string error_suffix(" EDF file: " + filename);
+
+	std::ifstream ifs(filename, std::ios::binary);
+	if (!ifs)
+		THROW_CTL_ERROR(Error) << "Error opening" << error_suffix;
+
+	EDFHeaderMap header = readEDFHeader(ifs, filename);
+	std::vector<std::string> mandatory_keys = {
+		"ByteOrder", "DataType", "Size", "Dim_1", "Dim_2"
+	};
+	for (auto& key : mandatory_keys)
+		if (header.find(key) == header.end())
+			THROW_CTL_ERROR(Error) << "Key " << key << " missing in"
+					       << error_suffix;
+	if (header["ByteOrder"] != "LowByteFirst")
+		THROW_CTL_ERROR(Error) << "Only Little-Endian supported in"
+				       << error_suffix;
+	Data::TYPE data_type;
+	std::string edf_data_type = header["DataType"];
+	if (edf_data_type == "UnsignedByte")
+		data_type = Data::UINT8;
+	else if (edf_data_type == "SignedByte")
+		data_type = Data::INT8;
+	else if (edf_data_type == "UnsignedShort")
+		data_type = Data::UINT16;
+	else if (edf_data_type == "SignedShort")
+		data_type = Data::INT16;
+	else if (edf_data_type == "UnsignedInteger")
+		data_type = Data::UINT32;
+	else if (edf_data_type == "SignedInteger")
+		data_type = Data::INT32;
+	else if (edf_data_type == "Unsigned64")
+		data_type = Data::UINT64;
+	else if (edf_data_type == "Signed64")
+		data_type = Data::INT64;
+	else if (edf_data_type == "FloatValue")
+		data_type = Data::FLOAT;
+	else if (edf_data_type == "DoubleValue")
+		data_type = Data::DOUBLE;
+	else
+		THROW_CTL_ERROR(Error) << "Unsupported data type "
+				       << edf_data_type << " in"
+				       << error_suffix;
+	auto to_long = [&](std::string s) {
+		try {
+			std::string::size_type end_pos;
+			long v = std::stoi(s, &end_pos);
+			if (end_pos != s.size())
+				throw std::exception();
+			return v;
+		} catch (const std::exception& e) {
+			THROW_CTL_ERROR(Error) << "Error reading number \""
+					       << s << "\" in" << error_suffix;
+		}				       
+	};
+
+	auto size = to_long(header["Size"]);
+	auto width = to_long(header["Dim_1"]);
+	auto height = to_long(header["Dim_2"]);
+
+	Data res;
+	res.type = data_type;
+	res.dimensions = {int(width), int(height)};
+	if (res.size() != size)
+		THROW_CTL_ERROR(Error) << "Data size mismatch: expected="
+				       << res.size() << ", got=" << size
+				       << " in" << error_suffix;
+	res.buffer = new Buffer(size);
+	if (!ifs.read(static_cast<char*>(res.data()), size))
+		THROW_CTL_ERROR(Error) << "Error reading data from" << error_suffix;
+
+	DEB_RETURN() << DEB_VAR1(res);
+	return res;
+}
+
+CtTestApp::EDFHeaderMap CtTestApp::readEDFHeader(std::ifstream& edf_file, std::string filename)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_TRACE() << DEB_VAR1(edf_file.tellg());
+
+	std::string error_suffix(" EDF file: " + filename);
+
+	const int HEADER_BLOCK_LEN = 512;
+	const int MAX_HEADER_LEN = 16 * 1024;
+	AutoPtr<char, true> hbuffer = new char [MAX_HEADER_LEN];
+	char *hptr = hbuffer.getPtr();
+	int hlen = 0;
+	auto header_ok = [&]() {
+		if ((hlen < 4) || (hlen % HEADER_BLOCK_LEN != 0))
+			return false;
+		return (std::strncmp(hptr + hlen - 2, "}\n", 2) == 0);
+	};
+	while (!header_ok()) {
+		int to_read = HEADER_BLOCK_LEN;
+		if (hlen + to_read >= MAX_HEADER_LEN)
+			THROW_CTL_ERROR(Error) << "Header too large in"
+					       << error_suffix;
+		if (!edf_file.read(hptr + hlen, to_read))
+			THROW_CTL_ERROR(Error) << "Error reading header in"
+					       << error_suffix;
+		hlen += edf_file.gcount();
+	}
+	if (std::strncmp(hptr, "{\n", 2) != 0)
+		THROW_CTL_ERROR(Error) << "Invalid header in" << error_suffix;
+	std::string hstr(hptr + 2, hlen - 4);
+	DEB_TRACE() << DEB_VAR2(hstr, edf_file.tellg());
+
+	std::string ws_char = " \t";
+	std::string ws_str = "[" + ws_char + "]*";
+	RegEx hline_re("(?P<key>[^" + ws_char + "]+)" + ws_str + "=" +
+		       ws_str + "(?P<value>[^;]+);\n");
+	RegEx::NameMatchListType name_match_list;
+	hline_re.multiSearchName(hstr, name_match_list);
+	if (name_match_list.size() == 0)
+		THROW_CTL_ERROR(Error) << "Could not decode header in"
+				       << error_suffix;
+
+	EDFHeaderMap res;
+	for (auto& full_match: name_match_list) {
+		std::string value = full_match["value"];
+		auto last = value.find_last_not_of(" \t");
+		if (last != std::string::npos)
+			value.resize(last + 1);
+		res.emplace(full_match["key"], value);
+	}
+	
+	DEB_RETURN() << DEB_VAR1(res);
+	return res;
 }
 
 std::istream& lima::operator >>(std::istream& is,

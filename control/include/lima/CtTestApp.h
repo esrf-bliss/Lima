@@ -96,6 +96,7 @@ class LIMACORE_API CtTestApp
 		BufferParameters acc_buffer_params;
 		BufferParameters saving_zbuffer_params;
 
+		std::string proc_mask_file_name;
 		int proc_nb_threads{2};
 
 		bool test_attach_debugger{false};
@@ -115,11 +116,13 @@ class LIMACORE_API CtTestApp
 	};
 
 	CtTestApp(int argc, char *argv[]);
-	virtual ~CtTestApp() {}
+	virtual ~CtTestApp();
 
 	virtual void run();
 
  protected:
+	typedef std::map<std::string, std::string> EDFHeaderMap;
+
 	class ImageStatusCallback : public CtControl::ImageStatusCallback
 	{
 		DEB_CLASS_NAMESPC(DebModTest, "CtTestApp::ImageStatusCallback", 
@@ -163,8 +166,12 @@ class LIMACORE_API CtTestApp
 
 	void runAcq(const index_map& indexes);
 
+	Data readEDFFileImage(std::string filename);
+	EDFHeaderMap readEDFHeader(std::ifstream& edf_file, std::string filename);
+
 	AppArgs m_args;
 	Pars *m_pars;
+	Data m_mask_data;
 	CtControl *m_ct;
 	AutoPtr<ImageStatusCallback> m_img_status_cb;
 	std::vector<AutoPtr<ExecThread>> m_exec_thread_list;
