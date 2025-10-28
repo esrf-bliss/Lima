@@ -433,6 +433,8 @@ void CtTestApp::runAcq(const index_map& indexes)
 	if (!m_pars->test_pre_seq_cmd.empty())
 		execCmd(m_pars->test_pre_seq_cmd);
 
+	PoolThreadMgr& mgr = PoolThreadMgr::get();
+
 	int acq_idx = indexes.at("acq");
 	int nb_frames_idx = indexes.at("nb_frames");
 	int acq_nb_frames = m_pars->acq_nb_frames[nb_frames_idx];
@@ -474,7 +476,9 @@ void CtTestApp::runAcq(const index_map& indexes)
 	Timestamp t0 = Timestamp::now();
 
 	bool stopped = false;
-	long acq_frame = -1, saved_frame = -1;
+	long acq_frame = -1;
+	long ready_frame = -1;
+	long saved_frame = -1;
 	long last_frame = acq_nb_frames - 1;
 	bool all_acquired = false;
 	bool acq_interrupted = false;
@@ -492,14 +496,17 @@ void CtTestApp::runAcq(const index_map& indexes)
 		bool changed = false;
 		if ((ts - last_display_ts) > display_time) {
 			changed = ((acq_frame != img_status.LastImageAcquired) ||
+				   (ready_frame != img_status.LastImageReady) ||
 				   (saved_frame != img_status.LastImageSaved));
 			last_display_ts = ts;
 		}
 		if (changed) {
 			acq_frame = img_status.LastImageAcquired;
+			ready_frame = img_status.LastImageReady;
 			saved_frame = img_status.LastImageSaved;
 			DEB_ALWAYS() << acq_status << ", "
 				     << "acquired:" << acq_frame << ", "
+				     << "ready:" << ready_frame << ", "
 				     << "saved: " << saved_frame;
 		}
 		bool new_all_acquired = (acq_frame == last_frame);
@@ -512,17 +519,36 @@ void CtTestApp::runAcq(const index_map& indexes)
 			all_acquired = true;
 		}
 		bool acq_running = (acq_status == AcqRunning);
+		auto acq_error = control_status.Error;
+		bool saving_error = false;
+		if (acq_status == AcqFault) {
+			switch (acq_error) {
+			case CtControl::SaveUnknownError:
+			case CtControl::SaveOpenError:
+			case CtControl::SaveCloseError:
+			case CtControl::SaveAccessError:
+			case CtControl::SaveOverwriteError:
+			case CtControl::SaveDiskFull:
+			case CtControl::SaveOverun:
+				saving_error = true;
+				break;
+			}
+		}
+
 		bool new_interrupted = (!all_acquired && !acq_running);
 		if (new_interrupted && !acq_interrupted) {
 			DEB_ALWAYS() << "acq interrupted: " << acq_status;
+			DEB_ALWAYS() << DEB_VAR2(acq_error, saving_error);
 			acq_interrupted = true;
 		}
 		bool hw_finished = (all_acquired || acq_interrupted);
 		bool acq_finished;
 		if (acq_running)
 			acq_finished = false;
+		else if (acq_error != CtControl::NoError)
+			acq_finished = mgr.wait(0);
 		else if (auto_frame) {
-			long last_to_save = acq_interrupted ? acq_frame :
+			long last_to_save = acq_interrupted ? ready_frame :
 							      last_frame;
 			bool new_all_saved = (img_status.LastImageSaved ==
 					      last_to_save);
@@ -531,9 +557,8 @@ void CtTestApp::runAcq(const index_map& indexes)
 				all_saved = true;
 			}
 			acq_finished = all_saved;
-		} else {
+		} else
 			acq_finished = hw_finished;
-		}
 		if (acq_finished) {
 			DEB_ALWAYS() << "acq finished";
 			break;
@@ -558,7 +583,7 @@ void CtTestApp::runAcq(const index_map& indexes)
 	double elapsed = t - t0;
 	DEB_ALWAYS() << DEB_VAR1(elapsed);
 
-	if (show_statistics) {
+	if (show_statistics && (saved_frame >= 0)) {
 		int statistics_size = save->getStatisticHistorySize();
 		double incoming_speed;
 		double compression_speed;
