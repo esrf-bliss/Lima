@@ -259,7 +259,7 @@ void CtTestApp::init()
 	if (m_pars->test_attach_debugger) {
 		char buffer[1024];
 		DEB_ALWAYS() << "Press enter to continue";
-		fgets(buffer, sizeof(buffer), stdin);
+		auto _ = fgets(buffer, sizeof(buffer), stdin);
 	}
 
 	m_ct = getCtControl();
