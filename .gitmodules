@@ -157,3 +157,9 @@
 [submodule "advacam"]
 	path = camera/advacam
 	url = ../Lima-camera-advacam
+[submodule "svcam"]
+	path = camera/svcam
+	url = ../Lima-camera-svcam
+[submodule "camera/svcam"]
+	path = camera/svcam
+	url = https://gitlab.esrf.fr/limagroup/lima-camera-svcam
