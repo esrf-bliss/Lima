@@ -151,15 +151,12 @@
 [submodule "camera/template"]
         path = camera/template
         url = ../Lima-camera-template
-[submodule "princeton"]
+[submodule "camera/princeton"]
 	path = camera/princeton
 	url = ../Lima-camera-princeton
-[submodule "advacam"]
+[submodule "camera/advacam"]
 	path = camera/advacam
 	url = ../Lima-camera-advacam
-[submodule "svcam"]
-	path = camera/svcam
-	url = ../Lima-camera-svcam
 [submodule "camera/svcam"]
 	path = camera/svcam
-	url = https://gitlab.esrf.fr/limagroup/lima-camera-svcam
+	url = ../Lima-camera-svcam
