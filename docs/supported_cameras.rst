@@ -71,6 +71,8 @@ The following Conda packages are available from the `esrf-bcu` channel. Some cam
 +--------------------+-------+---------+----------------------+
 | Zwo                | Yes   |         | libASICamera2 1.26   |
 +--------------------+-------+---------+----------------------+
+| SVS-Vistek SVCam   | Yes   |         | SVCAM SDK 2.5.15     |
++--------------------+-------+---------+----------------------+
 
 Windows Only
 ============
@@ -112,6 +114,7 @@ Linux Only
   Rayonix MarCCD <camera/marccd/doc/index>
   Rayonix HS <camera/rayonixhs/doc/index>
   SlsDetector <camera/slsdetector/doc/index>
+  SVCam <camera/svcam/doc/index>
   Ueye <camera/ueye/doc/index>
   Ultra <camera/ultra/doc/index>
   V4l2 <camera/v4l2/doc/index>
