@@ -943,6 +943,8 @@ void CtAccumulation::_callIfNeedThresholdCallback(Data &aData,long long value)
  */
 void CtAccumulation::clear()
 {
+    DEB_MEMBER_FUNCT();
+
     AutoMutex aLock(m_cond.mutex());
     m_proc_info_map.clear();
     m_datas.clear();
@@ -950,8 +952,10 @@ void CtAccumulation::clear()
 
 #ifdef __unix
     bool use_malloc_trim = true;
-    if (use_malloc_trim)
+    if (use_malloc_trim) {
+	DEB_TRACE() << "CtAccumulation: calling malloc_trim(0) ...";
         malloc_trim(0);
+    }
 #endif
 }
 

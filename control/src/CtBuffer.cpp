@@ -261,8 +261,10 @@ void CtBuffer::setup(CtControl *ct)
 
 #ifdef __unix
   bool use_malloc_trim = true;
-  if (use_malloc_trim)
+  if (use_malloc_trim) {
+    DEB_TRACE() << "CtBuffer: calling malloc_trim(0) ...";
     malloc_trim(0);
+  }
 #endif
 }
 
