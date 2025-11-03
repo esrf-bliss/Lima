@@ -945,10 +945,12 @@ void CtAccumulation::clear()
 {
     DEB_MEMBER_FUNCT();
 
-    AutoMutex aLock(m_cond.mutex());
-    m_proc_info_map.clear();
-    m_datas.clear();
-    m_saturated_images.clear();
+    {
+	AutoMutex aLock(m_cond.mutex());
+	m_proc_info_map.clear();
+	m_datas.clear();
+	m_saturated_images.clear();
+    }
 
 #ifdef __unix
     bool use_malloc_trim = true;
