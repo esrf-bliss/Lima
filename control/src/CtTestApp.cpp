@@ -101,6 +101,9 @@ CtTestApp::Pars::Pars()
 	AddOpt(saving_statistics_history, "--saving-statistics-history",
 	       "saving statistics history size");
 
+	AddOpt(saving_use_hw_comp, "--saving-use-hw-comp",
+	       "saving uses hardware plugin compression");
+
 	AddOpt(video_active, "--video-active", "video active");
 
 	AddOpt(video_source, "--video-source", "video source");
@@ -308,6 +311,7 @@ void CtTestApp::init()
 		save->setSuffix(m_pars->saving_suffix);
 		save->setOverwritePolicy(m_pars->saving_overwrite_policy);
 		save->setFramesPerFile(m_pars->saving_frames_per_file);
+		save->setUseHwComp(m_pars->saving_use_hw_comp);
 	}
 
 	image->setBin(m_pars->image_bin);

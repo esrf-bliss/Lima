@@ -87,6 +87,7 @@ class LIMACORE_API CtTestApp
 			CtSaving::Overwrite
 		};
 		int saving_statistics_history{-1};
+		bool saving_use_hw_comp{false};
 
 		bool video_active{false};
 		CtVideo::VideoSource video_source{CtVideo::BASE_IMAGE};
