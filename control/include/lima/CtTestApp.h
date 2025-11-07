@@ -121,7 +121,17 @@ class LIMACORE_API CtTestApp
 
 	virtual void run();
 
+#ifdef __unix
+	static void sendSignal(int sig_no);
+#endif
+
  protected:
+	enum SignalMsg {
+		NoMsg,
+		StopSeq,
+		StopApp,
+	};
+
 	typedef std::map<std::string, std::string> EDFHeaderMap;
 
 	class ImageStatusCallback : public CtControl::ImageStatusCallback
@@ -176,6 +186,8 @@ class LIMACORE_API CtTestApp
 	CtControl *m_ct;
 	AutoPtr<ImageStatusCallback> m_img_status_cb;
 	std::vector<AutoPtr<ExecThread>> m_exec_thread_list;
+
+	static volatile SignalMsg m_signal_msg;
 };
 
 LIMACORE_API std::istream& operator >>(std::istream& is,

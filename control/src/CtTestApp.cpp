@@ -29,6 +29,8 @@
 #ifdef __unix
 #include <unistd.h>
 #include <sys/time.h>
+#include <signal.h>
+#include <string.h>
 #else
 #include <processlib/win/unistd.h>
 #include <windows.h> // For Sleep()
@@ -46,6 +48,8 @@ using namespace std;
 using namespace lima;
 
 DEB_GLOBAL(DebModTest);
+
+volatile CtTestApp::SignalMsg CtTestApp::m_signal_msg = CtTestApp::NoMsg;
 
 CtTestApp::Pars::Pars()
 {
@@ -232,6 +236,8 @@ void CtTestApp::run()
 
 	index_map indexes;
 	for (int i = 0; i < m_pars->test_nb_seq; ++i) {
+		if (m_signal_msg == StopApp)
+			break;
 		indexes["acq"] = i;
 		for (int j = 0; j < int(m_pars->acq_nb_frames.size()); ++j) {
 			indexes["nb_frames"] = j;
@@ -567,7 +573,10 @@ void CtTestApp::runAcq(const index_map& indexes)
 			DEB_ALWAYS() << "acq finished";
 			break;
 		}
-		if (!stopped && do_stop && (acq_frame >= stop_nb_frames)) {
+		bool stop = (do_stop && (acq_frame >= stop_nb_frames));
+		if ((m_signal_msg == StopSeq) || (m_signal_msg == StopApp))
+			stop = true;
+		if (!stopped && stop) {
 			DEB_ALWAYS() << "stopping acquisition ...";
 			m_ct->stopAcq();
 			stopped = true;
@@ -752,6 +761,23 @@ CtTestApp::EDFHeaderMap CtTestApp::readEDFHeader(std::ifstream& edf_file, std::s
 	DEB_RETURN() << DEB_VAR1(res);
 	return res;
 }
+
+#ifdef __unix
+
+void CtTestApp::sendSignal(int sig_no)
+{
+	DEB_STATIC_FUNCT();
+	DEB_ALWAYS() << DEB_VAR1(sig_no) << ": " << strsignal(sig_no);
+
+	switch (sig_no) {
+	case SIGINT:
+	case SIGTERM:
+		m_signal_msg = StopApp;
+		break;
+	}
+}
+
+#endif
 
 std::istream& lima::operator >>(std::istream& is,
 				CtTestApp::AcqStopPolicy& stop_policy)
