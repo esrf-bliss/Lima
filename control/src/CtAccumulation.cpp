@@ -953,10 +953,13 @@ void CtAccumulation::clear()
     }
 
 #ifdef __unix
-    bool use_malloc_trim = true;
+    unsigned long pad;
+    CtBuffer *buffer = m_ct.buffer();
+    buffer->getMallocTrimPad(pad);
+    bool use_malloc_trim = (pad != -1);
     if (use_malloc_trim) {
-	DEB_TRACE() << "CtAccumulation: calling malloc_trim(0) ...";
-        malloc_trim(0);
+	DEB_TRACE() << "CtAccumulation: calling malloc_trim(" << pad << ") ...";
+        malloc_trim(pad);
     }
 #endif
 }

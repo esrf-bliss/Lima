@@ -64,6 +64,9 @@ bool CtBufferFrameCB::newFrameReady(const HwFrameInfoType& frame_info)
 
 CtBuffer::CtBuffer(HwInterface *hw)
   : m_frame_cb(NULL),m_ct_accumulation(NULL),m_nb_buffers(0),m_mapped_frames(0)
+#ifdef __unix
+    ,m_malloc_trim_pad(0)
+#endif
 {
   DEB_CONSTRUCTOR();
 
@@ -260,10 +263,10 @@ void CtBuffer::setup(CtControl *ct)
   }
 
 #ifdef __unix
-  bool use_malloc_trim = true;
+  bool use_malloc_trim = (m_malloc_trim_pad != -1);
   if (use_malloc_trim) {
-    DEB_TRACE() << "CtBuffer: calling malloc_trim(0) ...";
-    malloc_trim(0);
+    DEB_TRACE() << "CtBuffer: calling malloc_trim(" << m_malloc_trim_pad << ") ...";
+    malloc_trim(m_malloc_trim_pad);
   }
 #endif
 }
@@ -347,3 +350,21 @@ bool CtBuffer::waitBuffersReleased(double timeout)
   DEB_RETURN() << DEB_VAR2(all_released, m_mapped_frames);
   return all_released;
 }
+
+#ifdef __unix
+
+void CtBuffer::setMallocTrimPad(unsigned long pad)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(pad);
+  m_malloc_trim_pad = pad;
+}
+
+void CtBuffer::getMallocTrimPad(unsigned long& pad) const
+{
+  DEB_MEMBER_FUNCT();
+  pad = m_malloc_trim_pad;
+  DEB_RETURN() << DEB_VAR1(pad);
+}
+
+#endif
