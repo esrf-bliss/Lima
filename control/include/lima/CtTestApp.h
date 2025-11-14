@@ -96,6 +96,9 @@ class LIMACORE_API CtTestApp
 		BufferParameters buffer_alloc_params;
 		BufferParameters acc_buffer_params;
 		BufferParameters saving_zbuffer_params;
+#ifdef __unix
+		unsigned long buffer_malloc_trim_pad{0};
+#endif
 
 		std::string proc_mask_file_name;
 		int proc_nb_threads{2};
