@@ -53,6 +53,11 @@ public:
 
 	bool waitBuffersReleased(double timeout=-1);
 
+%If (POSIX_PLATFORM)
+	void setMallocTrimPad(unsigned long  pad);
+	void getMallocTrimPad(unsigned long& pad /Out/) const;
+%End
+
 private:
 	CtBuffer(const CtBuffer&);
 };

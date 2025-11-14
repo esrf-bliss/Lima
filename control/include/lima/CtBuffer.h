@@ -95,6 +95,11 @@ namespace lima {
 
     bool waitBuffersReleased(double timeout=-1);
 
+#ifdef __unix
+    void setMallocTrimPad(unsigned long  pad);
+    void getMallocTrimPad(unsigned long& pad) const;
+#endif
+
   private:
     class _DataBuffer;
     friend class _DataBuffer;
@@ -113,6 +118,9 @@ namespace lima {
     HwBufferCtrlObj::Callback* 	m_hw_buffer_cb;
     int				m_nb_buffers;
     int				m_mapped_frames;
+#ifdef __unix
+    unsigned long		m_malloc_trim_pad;
+#endif
   };
 
 } // namespace lima
