@@ -373,8 +373,13 @@ public:
 			*/
 		virtual int getCompressedBufferSize(int data_size, int data_depth) { return 0; }
 
+		bool _allFramesWritten() const { return (m_written_frames == m_frames_to_write); }
+
+		bool _isReady() const;
+
 		virtual bool isReady() const;
 		virtual bool isReadyFor(Data& data) const;
+		virtual bool finished() const;
 		virtual void setReady();
 		virtual void prepareWritingFrame(Data& data);
 		void createSavingData(Data&);
@@ -442,6 +447,7 @@ public:
 		int			m_max_writing_task; ///< number of maximum parallel write
 		WritingTasks		m_waiting_tasks; ///< waiting tasks
 		WritingTasks		m_running_tasks; ///< running tasks
+		bool			m_last_task_closes_all;
 
 		BufferHelper		m_zbuffer_helper;
 	};
@@ -569,6 +575,10 @@ public:
 		bool isReadyFor(Data& data) const
 		{
 			return m_save_cnt->isReadyFor(data);
+		}
+		bool finished() const
+		{
+			return m_save_cnt->finished();
 		}
 		void setReady()
 		{
@@ -705,6 +715,7 @@ private:
 	void _ReadImage(Data&, int framenb);
 	bool _allStreamsReady();
 	bool _allStreamsReadyFor(Data& data);
+	bool _allStreamsFinished();
 	void _waitWritingThreads();
 
 	void _insertFrameData(FrameMap::value_type frame_data);
