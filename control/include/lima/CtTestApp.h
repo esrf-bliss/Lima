@@ -49,6 +49,13 @@ class LIMACORE_API CtTestApp
 
 	typedef BufferHelper::Parameters BufferParameters;
 
+	enum AcqStopPolicy
+	{
+		Never,
+		Random,
+		Fixed,
+	};
+
 	class LIMACORE_API Pars : public AppPars
 	{
 		DEB_CLASS_NAMESPC(DebModTest, "CtTestApp::Pars", "Control");
@@ -80,6 +87,7 @@ class LIMACORE_API CtTestApp
 			CtSaving::Overwrite
 		};
 		int saving_statistics_history{-1};
+		bool saving_use_hw_comp{false};
 
 		bool video_active{false};
 		CtVideo::VideoSource video_source{CtVideo::BASE_IMAGE};
@@ -89,8 +97,10 @@ class LIMACORE_API CtTestApp
 		BufferParameters acc_buffer_params;
 		BufferParameters saving_zbuffer_params;
 
+		std::string proc_mask_file_name;
 		int proc_nb_threads{2};
 
+		bool test_attach_debugger{false};
 		int test_nb_seq{1};
 		double test_seq_lat{0};
 		bool test_rm_files_before_acq{false};
@@ -99,17 +109,31 @@ class LIMACORE_API CtTestApp
 		std::string test_post_seq_cmd;
 		double test_acq_loop_wait_time{0.1};
 		double test_acq_loop_display_time{0.1};
+		AcqStopPolicy test_acq_stop_policy{Never};
+		int test_acq_stop_nb_frames{0};
 		int test_nb_exec_threads{0};
 
 		Pars();
 	};
 
 	CtTestApp(int argc, char *argv[]);
-	virtual ~CtTestApp() {}
+	virtual ~CtTestApp();
 
 	virtual void run();
 
+#ifdef __unix
+	static void sendSignal(int sig_no);
+#endif
+
  protected:
+	enum SignalMsg {
+		NoMsg,
+		StopSeq,
+		StopApp,
+	};
+
+	typedef std::map<std::string, std::string> EDFHeaderMap;
+
 	class ImageStatusCallback : public CtControl::ImageStatusCallback
 	{
 		DEB_CLASS_NAMESPC(DebModTest, "CtTestApp::ImageStatusCallback", 
@@ -153,12 +177,23 @@ class LIMACORE_API CtTestApp
 
 	void runAcq(const index_map& indexes);
 
+	Data readEDFFileImage(std::string filename);
+	EDFHeaderMap readEDFHeader(std::ifstream& edf_file, std::string filename);
+
 	AppArgs m_args;
 	Pars *m_pars;
+	Data m_mask_data;
 	CtControl *m_ct;
 	AutoPtr<ImageStatusCallback> m_img_status_cb;
 	std::vector<AutoPtr<ExecThread>> m_exec_thread_list;
+
+	static volatile SignalMsg m_signal_msg;
 };
+
+LIMACORE_API std::istream& operator >>(std::istream& is,
+				       CtTestApp::AcqStopPolicy& stop_policy);
+LIMACORE_API std::ostream& operator <<(std::ostream& os,
+				       const CtTestApp::AcqStopPolicy& stop_policy);
 
 } // namespace lima
 
