@@ -1173,6 +1173,28 @@ void CtSaving::getZBufferParameters(BufferHelper::Parameters& pars,
 	DEB_RETURN() << DEB_VAR1(pars);
 }
 
+/** @brief get the minimum number of zbuffers from all stream
+ */
+void CtSaving::getNbZBuffers(int& nb_zbuffers)
+{
+	DEB_MEMBER_FUNCT();
+
+	AutoMutex aLock(m_cond.mutex());
+	nb_zbuffers = -1;
+	for (int s = 0; s < m_nb_stream; ++s)
+	{
+		Stream& stream = getStream(s);
+		if (stream.isActive()) {
+			int stream_buffers = stream.getNbZBuffers();
+			if ((nb_zbuffers == -1) ||
+			    ((nb_zbuffers > 0) && (stream_buffers < nb_zbuffers)))
+				nb_zbuffers = stream_buffers;
+		}
+	}
+
+	DEB_RETURN() << DEB_VAR1(nb_zbuffers);
+}
+
 void CtSaving::_ReadImage(Data& image, int frameNumber)
 {
 	DEB_MEMBER_FUNCT();
@@ -1832,20 +1854,26 @@ bool CtSaving::_newFrameWrite(int frame_id)
 	return !!m_end_cbk;
 }
 
-void CtSaving::frameReady(Data& aData)
+void CtSaving::frameReady(Data& sData)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(aData);
+	DEB_PARAM() << DEB_VAR1(sData);
 
 	if (_controlIsFault()) {
-		DEB_WARNING() << "Skip saving data: " << aData;
+		DEB_WARNING() << "Skip saving data: " << sData;
 		return;
 	} else if (!m_end_cbk)
 		DEB_WARNING() << "No end callback registered";
 
+	// copy data to allow removing buffer (if required)
+	Data aData = sData;
+
 	_createSavingData(aData);
 
 	bool need_compression = _needCompression(aData);
+	// notify framework if using HW compressed image
+	if (!need_compression && _needParallelCompression())
+		_newImageCompressed(aData);
 
 	AutoMutex aLock(m_cond.mutex());
 
@@ -2123,6 +2151,21 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 	}
 }
 
+bool CtSaving::_needParallelCompression()
+{
+	DEB_MEMBER_FUNCT();
+
+	bool need_compression = false;
+	for (int s = 0; (s < m_nb_stream) && !need_compression; ++s) {
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+			need_compression = stream.needCompression();
+	}
+
+	DEB_RETURN() << DEB_VAR1(need_compression);
+	return need_compression;
+}
+
 bool CtSaving::_needCompression(Data& data)
 {
 	DEB_MEMBER_FUNCT();
@@ -2198,6 +2241,8 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 			return;
 	}
 
+	_newImageCompressed(aData);
+
 	long frame_nr = aData.frameNumber;
 
 	AutoMutex aLock(m_cond.mutex());
@@ -2218,6 +2263,21 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	_getTaskList(Save, aData, header, task_list, priority);
 
 	_postTaskList(aData, task_list, priority);
+}
+
+void CtSaving::_newImageCompressed(Data& aData)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(aData);
+
+	// update global image counters
+	m_ctrl.newImageCompressed(aData);
+
+	// release underlying buffer for uncompressed data
+	if (aData.buffer) {
+		aData.buffer->unref();
+		aData.buffer = NULL;
+	}
 }
 
 void CtSaving::_saveFinished(Data& aData, Stream& stream)
@@ -2434,7 +2494,7 @@ CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 CtSaving::SaveContainer::SaveContainer(Stream& stream)
 	: m_lock(m_cond.mutex()), m_stream(stream), m_statistic_size(16),
 	  m_log_stat_enable(false), m_log_stat_file(NULL),
-	  m_max_writing_task(1), m_last_task_closes_all(false)
+	  m_max_writing_task(1), m_last_task_closes_all(false), m_nb_zbuffers(0)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -2930,14 +2990,17 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	lock.unlock();
 
 	// check if ZBuffer pool needs to be allocated
-	prepareCompressionBuffers(ct);
+	_prepareCompressionBuffers(ct);
+	DEB_TRACE() << DEB_VAR1(m_nb_zbuffers);
 
 	_prepare(ct);			// call inheritance if needed
 }
 
-void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
+void CtSaving::SaveContainer::_prepareCompressionBuffers(CtControl& ct)
 {
 	DEB_MEMBER_FUNCT();
+
+	m_nb_zbuffers = 0;
 
 	FrameDim fdim;
 	ct.image()->getImageDim(fdim);
@@ -2952,6 +3015,10 @@ void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
 	int nb_frames;
 	ct.acquisition()->getAcqNbFrames(nb_frames);
 	m_zbuffer_helper.prepareBuffers(nb_frames, buffer_size);
+
+	BufferHelper::Parameters zbuffer_params;
+	m_zbuffer_helper.getParameters(zbuffer_params);
+	m_nb_zbuffers = zbuffer_params.getDefMaxNbBuffers(buffer_size);
 
 	auto size_2_buffers = m_zbuffer_helper.getSize2NbAllocBuffersMap();
 
@@ -2968,30 +3035,11 @@ void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
 	if (alloc_size != buffer_size)
 		THROW_CTL_ERROR(Error) << error_header
 				       << DEB_VAR1(alloc_size);
-
-	// If (not in-place) soft ext op link task is active, frame buffers are
-	// allocated on-the-fly, outside CtBuffer, without checking for overrun
-	SoftOpExternalMgr *ext_op = ct.externalOperation();
-	bool ext_link_task, ext_sink_task;
-	ext_op->isTaskActive(ext_link_task, ext_sink_task);
-	if (ext_link_task)
-		return;
-
-	long required;
-	ct.buffer()->getMaxNumber(required);
-	if (nb_frames < required)
-		required = nb_frames;
-	DEB_TRACE() << DEB_VAR3(nb_frames, required, alloc_nb);
-	if (alloc_nb >= required)
-		return;
-
-	BufferHelper::Parameters params;
-	m_zbuffer_helper.getParameters(params);
-	double min_req_percent = params.reqMemSizePercent * required / alloc_nb;
-	DEB_WARNING() << error_header << DEB_VAR2(alloc_nb, required);
-	DEB_WARNING() << "Should set "
-		      << "SavingZBufferParameters.reqMemSizePercent="
-		      << std::setprecision(2) << min_req_percent << " or higer";
+	else if (alloc_nb != m_nb_zbuffers) {
+		DEB_WARNING() << error_header
+			      << DEB_VAR2(m_nb_zbuffers, alloc_nb);
+		m_nb_zbuffers = alloc_nb;
+	}
 }
 
 void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
