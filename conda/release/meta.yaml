@@ -18,7 +18,7 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip 4.19* # API v12.7
+    - sip 6
     - processlib
     - libconfig 1.7*
     # I/O formats
