@@ -1,0 +1,26 @@
+[build-system]
+requires = ["sip >=6, <7"]
+build-backend = "sipbuild.api"
+
+[tool.sip.project]
+sip-files-dir = "build/sip"
+build-dir = "build-sip"
+sip-include-dirs=["common/sip", "hardware/sip", "control/sip", "control/software_operation/sip", "third-party/Processlib/sip"]
+
+[project]
+name = "limacore"
+requires-python = ">= 3.11"
+#dynamic = ["version"]
+authors = [{ name = "BCU (ESRF)" }]
+description = "Python binding for Lima"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Repository = "https://gitlab.esrf.fr/limagroup/lima"
+Documentation = "https://lima1.rtfd.io/"
