@@ -82,19 +82,34 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
         list(APPEND _sip_x -x ${_x})
     endforeach (_x ${SIP_DISABLE_FEATURES})
 
+    # Set in the pyproject.toml
+    set(_build_path ${PROJECT_SOURCE_DIR}/build-sip)
+    message("_build_path: ${_build_path}")
+
+    set(_message "Generating CPP code for module ${MODULE_NAME}")
     set(_sip_output_files)
     foreach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
         if( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
-            set(_sip_output_files ${_sip_output_files} ${_module_path}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
+            set(_sip_output_files ${_sip_output_files} ${_build_path}/${_child_module_name}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
         endif( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
     endforeach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
 
+    message("command: ${SIP_BUILD_EXECUTABLE} --no-protected-is-public --pep484-pyi --no-compile --concatenate ${SIP_CONCAT_PARTS} ${SIP_BUILD_EXTRA_OPTIONS}") 
+    message("_sip_output_files: ${_sip_output_files}")
+
+    list(APPEND _sip_module_files sip_array.c sip_core.c sip_descriptors.c sip_enum.c sip_int_convertors.c sip_object_map.c sip_threads.c sip_voidptr.c)
+
+    foreach(src ${_sip_module_files})
+        list(APPEND _sip_output_files ${_build_path}/${_child_module_name}/${src})
+    endforeach()
+
     add_custom_command(
         OUTPUT ${_sip_output_files}
+        COMMAND ${CMAKE_COMMAND} -E echo ${_message}
         COMMAND ${CMAKE_COMMAND} -E touch ${_sip_output_files}
-        COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS} -j ${SIP_CONCAT_PARTS} -c ${_module_path} ${_sip_include_dirs} ${_abs_module_sip}
+        COMMAND ${SIP_BUILD_EXECUTABLE} --no-protected-is-public --pep484-pyi --no-compile --concatenate ${SIP_CONCAT_PARTS} ${SIP_BUILD_EXTRA_OPTIONS}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
-        COMMENT "Generating SIP code for module ${MODULE_NAME}"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
     if (${RUN_CHECK_SIP_EXC})
@@ -117,11 +132,9 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
     else (CYGWIN)
         add_library(${_logical_name} SHARED ${_sip_output_files} )
     endif (CYGWIN)
-    target_link_libraries(${_logical_name} PRIVATE ${PYTHON_LIBRARY})
+    target_link_libraries(${_logical_name} PRIVATE ${Python3_LIBRARY})
     target_link_libraries(${_logical_name} PRIVATE ${EXTRA_LINK_LIBRARIES})
-    set_target_properties(${_logical_name} PROPERTIES
-                          PREFIX "" OUTPUT_NAME ${_child_module_name}
-                          LINKER_LANGUAGE CXX)
+    set_target_properties(${_logical_name} PROPERTIES PREFIX "" OUTPUT_NAME ${_child_module_name})
 
     if (WIN32)
       set_target_properties(${_logical_name} PROPERTIES SUFFIX ".pyd")
