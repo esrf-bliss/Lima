@@ -68,7 +68,7 @@ public:
   //virtual void setCommonHeader(const std::map<std::string,std::string>&);
   virtual void resetCommonHeader();
 
-  class Callback
+  class Callback /Abstract/
   {
   public:
     virtual ~Callback();

@@ -158,7 +158,7 @@ inline int _fill_setting_with_dict(Setting &setting,
 	      Setting child = setting.addList(key_str);
 	      return_value = _fill_setting_with_list(child,value);
 	    }
-	  else if(sipCanConvertToType(value,sipType_Data,SIP_NOT_NONE))
+	  else if(sipCanConvertToType(value,sipType_Data, SIP_NOT_NONE))
 	    {
 	      int state;
 	      int error = 0;
