@@ -122,13 +122,13 @@ using namespace lima;
     {
       bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
-					  sipType_CtAcquisition_AutoExposureMode);
+	aReturnFlag = !!sipCanConvertToType(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_CtAcquisition_AutoExposureMode, SIP_NOT_NONE);
       return aReturnFlag;
     }
   std::vector<CtAcquisition::AutoExposureMode> *modeListPt = new std::vector<CtAcquisition::AutoExposureMode>();
   for(int i = 0;i < PySequence_Size(sipPy);++i)
-    modeListPt->push_back(static_cast<CtAcquisition::AutoExposureMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+    modeListPt->push_back(static_cast<CtAcquisition::AutoExposureMode>(sipLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
   *sipCppPtr = modeListPt;
   return sipGetState(sipTransferObj);
 %End

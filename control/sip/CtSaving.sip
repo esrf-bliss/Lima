@@ -33,7 +33,7 @@ typedef std::pair<std::string, std::string> HeaderValue;
 
 %ConvertToTypeCode
    PyObject *key, *value;
-   SIP_SSIZE_T pos;
+   Py_ssize_t pos;
    
    if (sipIsErr == NULL)
    {

@@ -49,13 +49,13 @@ enum TrigMode {
     {
       bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
-					  sipType_TrigMode);
+	aReturnFlag = !!sipCanConvertToType(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_TrigMode, SIP_NOT_NONE);
       return aReturnFlag;
     }
   std::vector<TrigMode> *modeListPt = new std::vector<TrigMode>();
   for(int i = 0;i < PySequence_Size(sipPy);++i)
-    modeListPt->push_back(static_cast<TrigMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+    modeListPt->push_back(static_cast<TrigMode>(sipLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
   *sipCppPtr = modeListPt;
   return sipGetState(sipTransferObj);
 %End
@@ -100,13 +100,13 @@ enum ShutterMode {
     {
       bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
-					  sipType_ShutterMode);
+	aReturnFlag = !!sipCanConvertToType(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_ShutterMode, SIP_NOT_NONE);
       return aReturnFlag;
     }
   std::vector<ShutterMode> *modeListPt = new std::vector<ShutterMode>();
   for(int i = 0;i < PySequence_Size(sipPy);++i)
-    modeListPt->push_back(static_cast<ShutterMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+    modeListPt->push_back(static_cast<ShutterMode>(sipLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
   *sipCppPtr = modeListPt;
   return sipGetState(sipTransferObj);
 %End
@@ -168,13 +168,13 @@ enum VideoMode {Y8,Y16,Y32,Y64,
     {
       bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-        aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
-                                          sipType_VideoMode);
+        aReturnFlag = !!sipCanConvertToType(PySequence_Fast_GET_ITEM(sipPy,i),
+                                          sipType_VideoMode, SIP_NOT_NONE);
       return aReturnFlag;
     }
   std::list<VideoMode> *modeListPt = new std::list<VideoMode>();
   for(int i = 0;i < PySequence_Size(sipPy);++i)
-    modeListPt->push_back(static_cast<VideoMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+    modeListPt->push_back(static_cast<VideoMode>(sipLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
   *sipCppPtr = modeListPt;
   return sipGetState(sipTransferObj);
 %End
@@ -223,13 +223,13 @@ enum BinMode {
     {
       bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-        aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
-                                          sipType_RotationMode);
+        aReturnFlag = !!sipCanConvertToType(PySequence_Fast_GET_ITEM(sipPy,i),
+                                          sipType_RotationMode, SIP_NOT_NONE);
       return aReturnFlag;
     }
   std::list<RotationMode> *modeListPt = new std::list<RotationMode>();
   for(int i = 0;i < PySequence_Size(sipPy);++i)
-    modeListPt->push_back(static_cast<RotationMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+    modeListPt->push_back(static_cast<RotationMode>(sipLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
   *sipCppPtr = modeListPt;
   return sipGetState(sipTransferObj);
 %End
