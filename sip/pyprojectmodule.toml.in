@@ -3,11 +3,11 @@ requires = ["sip >=6, <7"]
 build-backend = "sipbuild.api"
 
 [project]
-name = "lima-limacore"
+name = "lima-@MODULE_NAME@"
 requires-python = ">= 3.11"
 #dynamic = ["version"]
 authors = [{ name = "BCU (ESRF)" }]
-description = "Python binding for Lima"
+description = "Python binding for Lima camera module"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -16,16 +16,18 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 
-[tool.sip.bindings.limacore]
+[tool.sip.bindings.@MODULE_NAME@]
 exceptions = true
 
 [tool.sip.project]
 sip-files-dir = "build/sip"
 build-dir = "build-sip"
-sip-include-dirs=["common/sip", "hardware/sip", "control/sip", "control/software_operation/sip","/opt/bliss/conda/miniconda/envs/processlib_sip6_test/share/sip/processlib"]
+sip-include-dirs=["sip", 
+                  "@SIP_INSTALL_DIR@/sip/processlib",
+                  "@SIP_INSTALL_DIR@/sip/lima"]
 sip-module="lima.sip"
 dunder-init= true
 
 [project.urls]
-Repository = "https://gitlab.esrf.fr/limagroup/lima"
+Repository = "https://gitlab.esrf.fr/limagroup/"
 Documentation = "https://lima1.rtfd.io/"

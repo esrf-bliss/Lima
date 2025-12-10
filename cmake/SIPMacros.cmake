@@ -42,11 +42,11 @@ get_filename_component(_SIPMACRO_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 set(SIP_INCLUDE_DIRS)
 set(SIP_TAGS)
-set(SIP_CONCAT_PARTS 16)
+set(SIP_CONCAT_PARTS 7)
 set(SIP_DISABLE_FEATURES)
 set(SIP_EXTRA_OPTIONS)
 
-macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
+macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
 
     set(EXTRA_LINK_LIBRARIES ${ARGN})
 
@@ -97,12 +97,6 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
     message("command: ${SIP_BUILD_EXECUTABLE} --no-protected-is-public --pep484-pyi --no-compile --concatenate ${SIP_CONCAT_PARTS} ${SIP_BUILD_EXTRA_OPTIONS}") 
     message("_sip_output_files: ${_sip_output_files}")
 
-    list(APPEND _sip_module_files sip_array.c sip_core.c sip_descriptors.c sip_enum.c sip_int_convertors.c sip_object_map.c sip_threads.c sip_voidptr.c)
-
-    foreach(src ${_sip_module_files})
-        list(APPEND _sip_output_files ${_build_path}/${_child_module_name}/${src})
-    endforeach()
-
     add_custom_command(
         OUTPUT ${_sip_output_files}
         COMMAND ${CMAKE_COMMAND} -E echo ${_message}
@@ -140,9 +134,10 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
       set_target_properties(${_logical_name} PROPERTIES SUFFIX ".pyd")
     endif (WIN32)
 
+    # since lima sip.so module is installed under lima/ do the same limacore
     install(TARGETS ${_logical_name}
-      LIBRARY DESTINATION "${Python3_SITEARCH}/${_parent_module_path}"
-      RUNTIME DESTINATION "${Python3_SITEARCH}/${_parent_module_path}"
+      LIBRARY DESTINATION "${Python3_SITEARCH}/lima"
+      RUNTIME DESTINATION "${Python3_SITEARCH}/lima"
     )
 
-endmacro(ADD_SIP_PYTHON_MODULE)
+endmacro(add_sip_python_module)

@@ -91,6 +91,7 @@ if(LIMA_ENABLE_PYTHON)
             FILES ${SIP_SOURCES}
                   ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip
                   ${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in
+                  ${CMAKE_SOURCE_DIR}/sip/pyprojectmodule.toml.in
             COMPONENT sip
             DESTINATION ${SIP_INSTALL_DIR}
         )
