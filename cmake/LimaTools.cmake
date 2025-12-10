@@ -104,6 +104,13 @@ function(limatools_run_sip_for_camera camera)
     "${CMAKE_CURRENT_SOURCE_DIR}/sip"
   )
 
+  # since sip6 generate the pyproject.toml file to configure sip-build tool at run time
+  find_file(sip_toml_file NAMES "pyprojectmodule.toml.in" PATHS ${LIMA_SIP_INCLUDE_DIRS} NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+  set(SIP_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR})
+  configure_file(${sip_toml_file} ${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml)
+  unset(sip_toml_file CACHE)
+  unset(SIP_INSTALL_DIR CACHE)
+
   # If Lima is an imported target, set the SIP_DISABLE_FEATURES
   set(SIP_DISABLE_FEATURES ${LIMA_SIP_DISABLE_FEATURES})
 

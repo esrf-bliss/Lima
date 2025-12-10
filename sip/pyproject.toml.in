@@ -22,7 +22,7 @@ exceptions = true
 [tool.sip.project]
 sip-files-dir = "build/sip"
 build-dir = "build-sip"
-sip-include-dirs=["common/sip", "hardware/sip", "control/sip", "control/software_operation/sip","/opt/bliss/conda/miniconda/envs/processlib_sip6_test/share/sip/processlib"]
+sip-include-dirs=["common/sip", "hardware/sip", "control/sip", "control/software_operation/sip","@SIP_INSTALL_DIR@/sip/processlib"]
 sip-module="lima.sip"
 dunder-init= true
 
