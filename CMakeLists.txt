@@ -329,6 +329,11 @@ if(LIMA_ENABLE_PYTHON)
     endif()
 #    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip PROPERTIES OBJECT_DEPENDS ${SIP_SOURCES})
     # Run sip now !
+
+    set(SIP_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR})
+    configure_file(sip/pyproject.toml.in ${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml)
+    unset(SIP_INSTALL_DIR CACHE)
+
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip FALSE)
 
     target_include_directories(python_module_limacore PRIVATE
