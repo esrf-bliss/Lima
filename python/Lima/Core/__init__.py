@@ -20,5 +20,6 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-from limacore import *
+from lima import processlib as Processlib
+from lima.limacore import *
 from .Debug import *
