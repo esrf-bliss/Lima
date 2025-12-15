@@ -1,4 +1,4 @@
-%Module(name=@MODULE_NAME@)
+%Module(name=lima.@MODULE_NAME@, use_limited_api=True)
 
 // Note: NumPy C-API is used by Lima binding. The header files
 // defining the NumPy C-API are only intepreted the first time they
