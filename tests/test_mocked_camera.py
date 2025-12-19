@@ -26,7 +26,7 @@ def test_bin_capability():
     hard = ct_image.getHard()
     assert hard.hasBinCapability()
 
-    binningCtrl = cam_hw.getHwCtrlObj(Core.HwCap.Bin)
+    binningCtrl = cam_hw.getHwCtrlObj(Core.HwCap.Type.Bin)
     assert binningCtrl.getBin() == Core.Bin(1, 1)
     binningCtrl.setBin(Core.Bin(2, 2))
     assert binningCtrl.getBin() == Core.Bin(2, 2)
