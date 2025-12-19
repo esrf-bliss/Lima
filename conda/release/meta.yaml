@@ -18,8 +18,8 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip 6
-    - processlib
+    - lima-sip6 13
+    - processlib 1.12
     - libconfig 1.7*
     # I/O formats
     - zlib
@@ -35,7 +35,7 @@ requirements:
     - {{ compiler('cxx') }}
   run:
     - python
-    - {{ pin_compatible('sip', min_pin='x.x.x', max_pin='x') }}
+    - {{ pin_compatible('lima-sip6', min_pin='x.x.x', max_pin='x') }}
     - {{ pin_compatible('processlib', max_pin='x.x') }}
     - libconfig 1.7*
     # I/O formats
