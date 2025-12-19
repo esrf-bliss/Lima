@@ -31,12 +31,12 @@ import argparse
 from Lima import Core
 from Lima import Simulator
 
-Core.DEB_GLOBAL(Core.DebModTest)
+Core.DEB_GLOBAL(Core.DebModule.DebModTest)
 
 
 class TestSaving:
 
-    Core.DEB_CLASS(Core.DebModTest, 'TestSaving')
+    Core.DEB_CLASS(Core.DebModule.DebModTest, 'TestSaving')
 
     @Core.DEB_MEMBER_FUNCT
     def __init__(self, camera='simulator'):
@@ -107,7 +107,7 @@ class TestSaving:
     def waitAcq(self):
         def acq_status():
             return self.ct_control.getStatus().AcquisitionStatus
-        while acq_status() == Core.AcqRunning:
+        while acq_status() == Core.AcqStatus.AcqRunning:
             time.sleep(0.1)
             sys.stdout.write(str(self.ct_control.getStatus()) + '\r')
             sys.stdout.flush()
@@ -142,10 +142,10 @@ def main(argv):
     args = parser.parse_args()
 
     if args.verbose == 1:
-        Core.DebParams.setTypeFlags(Core.DebTypeTrace)
-        Core.DebParams.setModuleFlags(Core.DebModTest)
+        Core.DebParams.setTypeFlags(Core.DebType.DebTypeTrace)
+        Core.DebParams.setModuleFlags(Core.DebType.DebModTest)
     elif args.verbose == 2:
-        Core.DebParams.setTypeFlags(Core.DebTypeTrace)
+        Core.DebParams.setTypeFlags(Core.DebType.DebTypeTrace)
         Core.DebParams.setModuleFlags(Core.DebParams.AllFlags)
     elif args.verbose >= 3:
         Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)

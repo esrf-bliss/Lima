@@ -141,7 +141,7 @@ class TestBufferAlloc:
         self.hw_inter.startAcq()
       self.check_mem(False)
       t0 = time.time()
-      while self.acq_status() == Core.AcqRunning:
+      while self.acq_status() == Core.AcqStatus.AcqRunning:
         time.sleep(0.1)
         if time.time() - t0 > self.config['acq_time']:
           if self.use_control():

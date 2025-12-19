@@ -11,10 +11,10 @@ def transformations() -> typing.Generator[typing.Any, None, None]:
         "crop1": Core.Roi(1, 1, 598, 298),
     }
     rots = {
-        "0deg": Core.Rotation_0,
-        "90deg": Core.Rotation_90,
-        "180deg": Core.Rotation_180,
-        "270deg": Core.Rotation_270,
+        "0deg": Core.RotationMode.Rotation_0,
+        "90deg": Core.RotationMode.Rotation_90,
+        "180deg": Core.RotationMode.Rotation_180,
+        "270deg": Core.RotationMode.Rotation_270,
     }
     binnings = {
         "1x1": Core.Bin(1, 1),
@@ -71,7 +71,7 @@ def test_transformations(lima_helper: LimaHelper, roi, perm, bin, rot, flip):
     )
     cam.width = 600
     cam.height = 300
-    cam.bpp = Core.Bpp32
+    cam.bpp = Core.ImageType.Bpp32
 
     image = lima_helper.image(cam)
     image.setRoi(roi)
