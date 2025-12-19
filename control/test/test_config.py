@@ -30,12 +30,12 @@ import time
 from Lima import Core
 from Lima import Simulator
 
-Core.DEB_GLOBAL(Core.DebModTest)
+Core.DEB_GLOBAL(Core.DebModule.DebModTest)
 
 
 class TestConfig:
 
-    Core.DEB_CLASS(Core.DebModTest, 'TestConfig')
+    Core.DEB_CLASS(Core.DebModule.DebModTest, 'TestConfig')
 
     @Core.DEB_MEMBER_FUNCT
     def __init__(self):
@@ -53,17 +53,18 @@ class TestConfig:
                 'exptime': 0.1,
                 'nbframes': 3,
                 'bin': Core.Bin(2, 2),
-                'rot': Core.Rotation_180,
+                'rot': Core.RotationMode.Rotation_180,
                 'prefix': 'conf1_',
-                'opolicy': Core.CtSaving.Overwrite
+                'opolicy': Core.CtSaving.OverwritePolicy.Overwrite
+
             },
             'conf2': {
                 'exptime': 0.8,
                 'nbframes': 2,
                 'bin': Core.Bin(4, 4),
-                'rot': Core.Rotation_90,
+                'rot': Core.RotationMode.Rotation_90,
                 'prefix': 'conf1_',
-                'opolicy': Core.CtSaving.Abort
+                'opolicy': Core.CtSaving.OverwritePolicyAbort
             }
         }
 

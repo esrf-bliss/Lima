@@ -43,7 +43,7 @@ class LimaHelper:
         ct_control.startAcq()
         for _ in range(10):
             status = ct_control.getStatus()
-            if status.AcquisitionStatus == Core.AcqReady:
+            if status.AcquisitionStatus == Core.AcqStatus.AcqReady:
                 return
             time.sleep(1.0)
         else:

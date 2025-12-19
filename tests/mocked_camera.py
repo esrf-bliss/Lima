@@ -42,15 +42,15 @@ class AcqThread(threading.Thread):
 
 
 class MockedCamera:
-    Core.DEB_CLASS(Core.DebModCamera, "mocked.Camera")
+    Core.DEB_CLASS(Core.DebModule.DebModCamera, "mocked.Camera")
 
     BPP_2_NUMPY = {
-        Core.Bpp8: numpy.uint8,
-        Core.Bpp16: numpy.uint16,
-        Core.Bpp32: numpy.uint32,
-        Core.Bpp8S: numpy.int8,
-        Core.Bpp16S: numpy.int16,
-        Core.Bpp32S: numpy.int32,
+        Core.ImageType.Bpp8: numpy.uint8,
+        Core.ImageType.Bpp16: numpy.uint16,
+        Core.ImageType.Bpp32: numpy.uint32,
+        Core.ImageType.Bpp8S: numpy.int8,
+        Core.ImageType.Bpp16S: numpy.int16,
+        Core.ImageType.Bpp32S: numpy.int32,
     }
 
     def __init__(
@@ -69,7 +69,7 @@ class MockedCamera:
         self.name = "mocked"
         self.width = 16
         self.height = 8
-        self.bpp: Core.ImageType = Core.Bpp8
+        self.bpp: Core.ImageType = Core.ImageType.Bpp8
         # 55um x 55 um
         self.pixel_size = 55e-6, 55e-6
 
@@ -77,11 +77,11 @@ class MockedCamera:
         self.binning: Core.Bin = Core.Bin(1, 1)
         self.roi: Core.Roi = Core.Roi()
 
-        self.trigger_mode: Core.TrigMod
+        self.trigger_mode: Core.TrigMode
         if trigger_multi:
-            self.trigger_mode = Core.IntTrigMult
+            self.trigger_mode = Core.TrigMode.IntTrigMult
         else:
-            self.trigger_mode = Core.IntTrig
+            self.trigger_mode = Core.TrigMode.IntTrig
 
         self.supports_sum_binning: bool = supports_sum_binning
         self.supports_roi: bool = supports_roi
@@ -179,7 +179,7 @@ class MockedCamera:
 
             self.__acquired_frames += 1
 
-        # if self.trigger_mode == Core.IntTrigMult:
+        # if self.trigger_mode == Core.TrigMode.IntTrigMult:
         self.__status = MockedState.READY
 
     def startAcq(self):
@@ -246,7 +246,7 @@ class DetInfoCtrlObj(Core.HwDetInfoCtrlObj):
         return self.getDefImageType()
 
     def setCurrImageType(self):
-        raise Core.Exceptions(Core.Hardware, Core.NotSupported)
+        raise Core.Exception(Core.Layer.Hardware, Core.ErrorType.NotSupported)
 
     def getPixelSize(self):
         return self.__camera.pixel_size
@@ -295,7 +295,7 @@ class MockedSyncCtrlObj(Core.HwSyncCtrlObj):
         if self.checkTrigMode(trig_mode):
             cam.trigger_mode = trig_mode
         else:
-            raise Core.Exceptions(Core.Hardware, Core.NotSupported)
+            raise Core.Exception(Core.Layer.Hardware, Core.ErrorType.NotSupported)
 
     def getTrigMode(self):
         cam = self.__camera()
@@ -438,30 +438,30 @@ class MockedInterface(Core.HwInterface):
         status = Core.HwInterface.StatusType()
 
         if self.__camera is None:
-            status.det = Core.DetFault
-            status.acq = Core.AcqFault
+            status.det = Core.DetStatus.DetFault
+            status.acq = Core.AcqStatus.AcqFault
             return status
 
         camserverStatus = self.__camera.status
         if camserverStatus == MockedState.ERROR:
-            status.det = Core.DetFault
-            status.acq = Core.AcqFault
+            status.det = Core.DetStatus.DetFault
+            status.acq = Core.AcqStatus.AcqFault
         else:
             if camserverStatus == MockedState.RUNNING:
-                status.det = Core.DetExposure
-                status.acq = Core.AcqRunning
+                status.det = Core.DetStatus.DetExposure
+                status.acq = Core.AcqStatus.AcqRunning
             else:
-                status.det = Core.DetIdle
+                status.det = Core.DetStatus.DetIdle
                 lastAcquiredFrame = self.__camera.acquiredFrames - 1
                 requestNbFrame = self.__syncObj.getNbFrames()
                 if not self.__acquisition_start_flag or (
                     lastAcquiredFrame >= 0 and lastAcquiredFrame == (requestNbFrame - 1)
                 ):
-                    status.acq = Core.AcqReady
+                    status.acq = Core.AcqStatus.AcqReady
                 else:
-                    status.acq = Core.AcqRunning
+                    status.acq = Core.AcqStatus.AcqRunning
 
-        status.det_mask = Core.DetExposure | Core.DetFault
+        #status.det_mask = Core.DetStatus.DetExposure | Core.DetStatus.DetFault
         return status
 
     def getNbAcquiredFrames(self):
