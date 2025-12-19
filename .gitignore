@@ -28,3 +28,4 @@ CMakeFiles/
 cmake_install.cmake
 scripts/config.txt
 build*
+pyproject.toml

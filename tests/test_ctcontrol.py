@@ -120,7 +120,7 @@ def test_acquisition_mean_bin_with_binroi_capability(lima_helper: LimaHelper):
     )
     ct_control = lima_helper.control(cam)
     ct_image = lima_helper.image(cam)
-    ct_image.setBinMode(Core.Bin_Mean)
+    ct_image.setBinMode(Core.BinMode.Bin_Mean)
     ct_image.setBin(Core.Bin(2, 2))
     ct_image.setRoi(Core.Roi(0, 0, 8, 2))  # in binned coord
     lima_helper.process_acquisition(ct_control)

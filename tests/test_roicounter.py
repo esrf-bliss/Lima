@@ -6,7 +6,7 @@ def test_write_read():
     myroi = Core.Roi(0, 0, 100, 100)
     my_opt_ext = Core.SoftOpExternalMgr()
 
-    roictmgr = my_opt_ext.addOp(Core.ROICOUNTERS, "titi", 0)
+    roictmgr = my_opt_ext.addOp(Core.SoftOpId.ROICOUNTERS, "titi", 0)
 
     roictmgr.updateRois([("myroi", myroi)])
 
