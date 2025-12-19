@@ -114,6 +114,9 @@ function(limatools_run_sip_for_camera camera)
   # If Lima is an imported target, set the SIP_DISABLE_FEATURES
   set(SIP_DISABLE_FEATURES ${LIMA_SIP_DISABLE_FEATURES})
 
+  # Get sip abi version of the lima.sip module, collected from FindSIP.cmake (from FindSIP.py)
+  set(SIP_ABI_VERSION ${LIMA_SIP_ABI_VERSION})
+ 
   add_sip_python_module(${MODULE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/${MODULE_NAME}.sip TRUE)
 
   target_link_libraries(python_module_${MODULE_NAME} PUBLIC ${camera} limacore Python3::Python Python3::NumPy)
@@ -127,13 +130,6 @@ macro (limatools_find_python_and_sip)
   find_package(SIP REQUIRED)
 
   include(SIPMacros)
-
-  if(WIN32)
-    set(SIP_TAGS WIN32_PLATFORM)
-  elseif(UNIX)
-    set(SIP_TAGS POSIX_PLATFORM)
-  endif(WIN32)
-  set(SIP_EXTRA_OPTIONS -e -g)
 
 endmacro()
 

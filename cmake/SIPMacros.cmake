@@ -22,29 +22,20 @@
 # SIP_INCLUDE_DIRS - List of directories which SIP will scan through when looking
 #     for included .sip files. (Corresponds to the -I option for SIP.)
 #
-# SIP_TAGS - List of tags to define when running SIP. (Corresponds to the -t
-#     option for SIP.)
-#
 # SIP_CONCAT_PARTS - An integer which defines the number of parts the C++ code
 #     of each module should be split into. Defaults to 8. (Corresponds to the
 #     -j option for SIP.)
 #
-# SIP_DISABLE_FEATURES - List of feature names which should be disabled
-#     running SIP. (Corresponds to the -x option for SIP.)
-#
-# SIP_EXTRA_OPTIONS - Extra command line options which should be passed on to
-#     SIP.
-
+# SIP_ABI_VERSION - Set the ABI version
 find_package(Python3 COMPONENTS Interpreter)
 
 # See https://itk.org/Bug/view.php?id=12265
 get_filename_component(_SIPMACRO_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 set(SIP_INCLUDE_DIRS)
-set(SIP_TAGS)
 set(SIP_CONCAT_PARTS 7)
 set(SIP_DISABLE_FEATURES)
-set(SIP_EXTRA_OPTIONS)
+set(SIP_ABI_VERSION)
 
 macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
 
@@ -72,15 +63,11 @@ macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
         list(APPEND _sip_include_dirs -I ${_abs_inc})
     endforeach (_inc )
 
-    set(_sip_tags)
-    foreach (_tag ${SIP_TAGS})
-        list(APPEND _sip_tags -t ${_tag})
-    endforeach (_tag)
-
-    set(_sip_x)
+   set(_sip_x)
     foreach (_x ${SIP_DISABLE_FEATURES})
-        list(APPEND _sip_x -x ${_x})
+        list(APPEND _sip_x --disabled-feature ${_x})
     endforeach (_x ${SIP_DISABLE_FEATURES})
+
 
     # Set in the pyproject.toml
     set(_build_path ${PROJECT_SOURCE_DIR}/build-sip)
@@ -94,14 +81,23 @@ macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
         endif( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
     endforeach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
 
-    message("command: ${SIP_BUILD_EXECUTABLE} --no-protected-is-public --pep484-pyi --no-compile --concatenate ${SIP_CONCAT_PARTS} ${SIP_BUILD_EXTRA_OPTIONS}") 
+    set(_sip_abi_option)
+    if (SIP_ABI_VERSION)
+	    #string(CONCAT _sip_abi_option "--abi-version " ${SIP_ABI_VERSION}) 
+	    list(APPEND _sip_abi_option --abi-version ${SIP_ABI_VERSION})
+    endif()
+
+    message("command: ${SIP_BUILD_EXECUTABLE} ${_sip_abi_option} ${_sip_x} --no-protected-is-public --pep484-pyi --no-compile --concatenate ${SIP_CONCAT_PARTS}") 
     message("_sip_output_files: ${_sip_output_files}")
 
     add_custom_command(
         OUTPUT ${_sip_output_files}
-        COMMAND ${CMAKE_COMMAND} -E echo ${_message}
         COMMAND ${CMAKE_COMMAND} -E touch ${_sip_output_files}
-        COMMAND ${SIP_BUILD_EXECUTABLE} --no-protected-is-public --pep484-pyi --no-compile --concatenate ${SIP_CONCAT_PARTS} ${SIP_BUILD_EXTRA_OPTIONS}
+	COMMAND ${SIP_BUILD_EXECUTABLE} ${_sip_abi_option} 
+					${_sip_x}
+					--no-protected-is-public 
+					--pep484-pyi --no-compile 
+					--concatenate ${SIP_CONCAT_PARTS}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
