@@ -3,7 +3,7 @@ import numpy as np
 from contextlib import nullcontext as does_not_raise
 import pytest
 
-from Lima import Core
+from lima import core
 from .lima_helper import LimaHelper
 
 try:
@@ -42,7 +42,7 @@ def create_simulator(bpp):
         def fillData(self, data):
             data.buffer.fill(data.frameNumber)
 
-    frame_dim = Core.FrameDim(Core.Size(10, 10), bpp)
+    frame_dim = core.FrameDim(core.Size(10, 10), bpp)
 
     cam = UniformCamera()
 
@@ -61,7 +61,7 @@ def simu(request, lima_helper: LimaHelper):
     if use_lima_simulator:
         cam = create_simulator(bpp)
         hw = Simulator.Interface(cam)
-        ct = Core.CtControl(hw)
+        ct = core.CtControl(hw)
 
     else:
         cam = create_mock(bpp)
@@ -70,7 +70,7 @@ def simu(request, lima_helper: LimaHelper):
     yield ct
 
 
-def wait_acq_finished(ct: Core.CtControl, timeout=5.0):
+def wait_acq_finished(ct: core.CtControl, timeout=5.0):
     """Wait for the end of the acquisition
 
     raise:
@@ -79,8 +79,9 @@ def wait_acq_finished(ct: Core.CtControl, timeout=5.0):
 
     SLEEP = 0.1
     retry = int(timeout / SLEEP)
-
-    while ct.getStatus().AcquisitionStatus == Core.AcqStatus.AcqRunning and retry > 0:
+    #due to accumulation, camera can not be in AcqRunning yet, so sleep a bit
+    time.sleep(2)
+    while ct.getStatus().AcquisitionStatus == core.AcqStatus.AcqRunning and retry > 0:
         time.sleep(SLEEP)
         retry -= 1
 
@@ -88,15 +89,15 @@ def wait_acq_finished(ct: Core.CtControl, timeout=5.0):
         raise RuntimeError("Acquisition finished TIMEOUT")
 
     status = ct.getStatus()
-    assert status.AcquisitionStatus == Core.AcqStatus.AcqReady
+    assert status.AcquisitionStatus == core.AcqStatus.AcqReady
 
     status = ct.getImageStatus()
     assert status.LastImageReady + 1 == ACQ_NB_FRAMES
 
 
-def prepare(tmp_path, ct: Core.CtControl, output_type=None, threshold=None, operation=None):
+def prepare(tmp_path, ct: core.CtControl, output_type=None, threshold=None, operation=None):
     acq = ct.acquisition()
-    acq.setAcqMode(Core.AcqMode.Accumulation)
+    acq.setAcqMode(core.AcqMode.Accumulation)
     acq.setAcqExpoTime(ACQ_EXPO_TIME)
     # acq.setLatencyTime(1)
     acq.setAcqNbFrames(ACQ_NB_FRAMES)
@@ -107,21 +108,21 @@ def prepare(tmp_path, ct: Core.CtControl, output_type=None, threshold=None, oper
         acc.setOutputType(output_type)
 
     if threshold:
-        acc.setFilter(Core.CtAccumulation.Filter.FILTER_THRESHOLD_MIN)
+        acc.setFilter(core.CtAccumulation.Filter.FILTER_THRESHOLD_MIN)
         acc.setThresholdBefore(threshold)
-        assert acc.getFilter() == Core.CtAccumulation.Filter.FILTER_THRESHOLD_MIN
+        assert acc.getFilter() == core.CtAccumulation.Filter.FILTER_THRESHOLD_MIN
         assert acc.getThresholdBefore() == threshold
     else:
-        assert acc.getFilter() == Core.CtAccumulation.Filter.FILTER_NONE
+        assert acc.getFilter() == core.CtAccumulation.Filter.FILTER_NONE
         assert acc.getThresholdBefore() == 0.
 
     if operation:
         acc.setOperation(operation)
         assert acc.getOperation() == operation
     else:
-        assert acc.getOperation() == Core.CtAccumulation.Operation.ACC_SUM
+        assert acc.getOperation() == core.CtAccumulation.Operation.ACC_SUM
 
-    class ThresholdCallback(Core.CtAccumulation.ThresholdCallback):
+    class ThresholdCallback(core.CtAccumulation.ThresholdCallback):
         def aboveMax(self, data, value):
             pass
 
@@ -134,38 +135,38 @@ def prepare(tmp_path, ct: Core.CtControl, output_type=None, threshold=None, oper
     sav = ct.saving()
     sav.setDirectory(str(tmp_path))
     sav.setPrefix("test_acc")
-    sav.setFormat(Core.CtSaving.FileFormat.HDF5)
-    sav.setSavingMode(Core.CtSaving.SavingMode.AutoFrame)
-    sav.setOverwritePolicy(Core.CtSaving.OverwritePolicy.Overwrite)
+    sav.setFormat(core.CtSaving.FileFormat.HDF5)
+    sav.setSavingMode(core.CtSaving.SavingMode.AutoFrame)
+    sav.setOverwritePolicy(core.CtSaving.OverwritePolicy.Overwrite)
 
     ct.prepareAcq()
 
 
-def start(ct: Core.CtControl):
+def start(ct: core.CtControl):
     ct.startAcq()
     status = ct.getStatus()
-    assert status.AcquisitionStatus == Core.AcqStatus.AcqRunning
+    assert status.AcquisitionStatus == core.AcqStatus.AcqRunning
 
 
 # def is_signed_integer(image_type):
-#     if image_type == Core.ImageType.Bpp8S or image_type == Core.ImageType.Bpp16S or image_type == Core.ImageType.Bpp32S:
+#     if image_type == core.ImageType.Bpp8S or image_type == core.ImageType.Bpp16S or image_type == core.ImageType.Bpp32S:
 #         return True
 #     else:
 #         return False
 
 
-def image_type_to_dtype(image_type: Core.ImageType):
-    if image_type == Core.ImageType.Bpp8:
+def image_type_to_dtype(image_type: core.ImageType):
+    if image_type == core.ImageType.Bpp8:
         return np.uint8
-    elif image_type == Core.ImageType.Bpp8S:
+    elif image_type == core.ImageType.Bpp8S:
         return np.int8
-    elif image_type == Core.ImageType.Bpp16:
+    elif image_type == core.ImageType.Bpp16:
         return np.uint16
-    elif image_type == Core.ImageType.Bpp16S:
+    elif image_type == core.ImageType.Bpp16S:
         return np.int16
-    elif image_type == Core.ImageType.Bpp32:
+    elif image_type == core.ImageType.Bpp32:
         return np.uint32
-    elif image_type == Core.ImageType.Bpp32S:
+    elif image_type == core.ImageType.Bpp32S:
         return np.int32
     raise ValueError(f"image_type {image_type} unsupported")
 
@@ -173,19 +174,19 @@ def image_type_to_dtype(image_type: Core.ImageType):
 @pytest.mark.parametrize(
     ("simu, output_type, expectation"),
     [
-        (Core.ImageType.Bpp8, None, does_not_raise()),
-        (Core.ImageType.Bpp8S, None, does_not_raise()),
-        (Core.ImageType.Bpp16, None, does_not_raise()),
-        (Core.ImageType.Bpp16S, None, does_not_raise()),
-        (Core.ImageType.Bpp32, None, does_not_raise()),
-        (Core.ImageType.Bpp32S, None, does_not_raise()),
-        (Core.ImageType.Bpp8, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp8S, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16S, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16S, Core.ImageType.Bpp16, pytest.raises(Core.Exception)),
-        (Core.ImageType.Bpp32, Core.ImageType.Bpp16S, pytest.raises(Core.Exception)),
-        (Core.ImageType.Bpp32S, Core.ImageType.Bpp16S, pytest.raises(Core.Exception)),
+        (core.ImageType.Bpp8, None, does_not_raise()),
+        (core.ImageType.Bpp8S, None, does_not_raise()),
+        (core.ImageType.Bpp16, None, does_not_raise()),
+        (core.ImageType.Bpp16S, None, does_not_raise()),
+        (core.ImageType.Bpp32, None, does_not_raise()),
+        (core.ImageType.Bpp32S, None, does_not_raise()),
+        (core.ImageType.Bpp8, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp8S, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16S, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16S, core.ImageType.Bpp16, pytest.raises(core.Exception)),
+        (core.ImageType.Bpp32, core.ImageType.Bpp16S, pytest.raises(core.Exception)),
+        (core.ImageType.Bpp32S, core.ImageType.Bpp16S, pytest.raises(core.Exception)),
     ],
     indirect=["simu"]
 )
@@ -219,19 +220,19 @@ def test_accumulation_filter_none(tmp_path, simu, output_type, expectation):
 @pytest.mark.parametrize(
     ("simu, output_type, expectation"),
     [
-        (Core.ImageType.Bpp8, None, does_not_raise()),
-        (Core.ImageType.Bpp8S, None, does_not_raise()),
-        (Core.ImageType.Bpp16, None, does_not_raise()),
-        (Core.ImageType.Bpp16S, None, does_not_raise()),
-        (Core.ImageType.Bpp32, None, does_not_raise()),
-        (Core.ImageType.Bpp32S, None, does_not_raise()),
-        (Core.ImageType.Bpp8, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp8S, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16S, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16S, Core.ImageType.Bpp16, pytest.raises(Core.Exception)),
-        (Core.ImageType.Bpp32, Core.ImageType.Bpp16S, pytest.raises(Core.Exception)),
-        (Core.ImageType.Bpp32S, Core.ImageType.Bpp16S, pytest.raises(Core.Exception)),
+        (core.ImageType.Bpp8, None, does_not_raise()),
+        (core.ImageType.Bpp8S, None, does_not_raise()),
+        (core.ImageType.Bpp16, None, does_not_raise()),
+        (core.ImageType.Bpp16S, None, does_not_raise()),
+        (core.ImageType.Bpp32, None, does_not_raise()),
+        (core.ImageType.Bpp32S, None, does_not_raise()),
+        (core.ImageType.Bpp8, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp8S, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16S, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16S, core.ImageType.Bpp16, pytest.raises(core.Exception)),
+        (core.ImageType.Bpp32, core.ImageType.Bpp16S, pytest.raises(core.Exception)),
+        (core.ImageType.Bpp32S, core.ImageType.Bpp16S, pytest.raises(core.Exception)),
     ],
     indirect=["simu"]
 )
@@ -283,26 +284,26 @@ def test_accumulation_filter_threshold(tmp_path, simu, output_type, expectation)
 @pytest.mark.parametrize(
     ("simu, output_type, expectation"),
     [
-        (Core.ImageType.Bpp8, None, does_not_raise()),
-        (Core.ImageType.Bpp8S, None, does_not_raise()),
-        (Core.ImageType.Bpp16, None, does_not_raise()),
-        (Core.ImageType.Bpp16S, None, does_not_raise()),
-        (Core.ImageType.Bpp32, None, does_not_raise()),
-        (Core.ImageType.Bpp32S, None, does_not_raise()),
-        (Core.ImageType.Bpp8, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp8S, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16, Core.ImageType.Bpp16, does_not_raise()),
-        (Core.ImageType.Bpp16, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16S, Core.ImageType.Bpp16S, does_not_raise()),
-        (Core.ImageType.Bpp16S, Core.ImageType.Bpp16, pytest.raises(Core.Exception)),
-        (Core.ImageType.Bpp32, Core.ImageType.Bpp16S, pytest.raises(Core.Exception)),
-        (Core.ImageType.Bpp32S, Core.ImageType.Bpp16S, pytest.raises(Core.Exception)),
+        (core.ImageType.Bpp8, None, does_not_raise()),
+        (core.ImageType.Bpp8S, None, does_not_raise()),
+        (core.ImageType.Bpp16, None, does_not_raise()),
+        (core.ImageType.Bpp16S, None, does_not_raise()),
+        (core.ImageType.Bpp32, None, does_not_raise()),
+        (core.ImageType.Bpp32S, None, does_not_raise()),
+        (core.ImageType.Bpp8, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp8S, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16, core.ImageType.Bpp16, does_not_raise()),
+        (core.ImageType.Bpp16, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16S, core.ImageType.Bpp16S, does_not_raise()),
+        (core.ImageType.Bpp16S, core.ImageType.Bpp16, pytest.raises(core.Exception)),
+        (core.ImageType.Bpp32, core.ImageType.Bpp16S, pytest.raises(core.Exception)),
+        (core.ImageType.Bpp32S, core.ImageType.Bpp16S, pytest.raises(core.Exception)),
     ],
     indirect=["simu"]
 )
 def test_accumulation_mean(tmp_path, simu, output_type, expectation):
     with expectation:
-        prepare(tmp_path, simu, output_type, operation=Core.CtAccumulation.Operation.ACC_MEAN)
+        prepare(tmp_path, simu, output_type, operation=core.CtAccumulation.Operation.ACC_MEAN)
         start(simu)
         wait_acq_finished(simu, timeout=ACQ_EXPO_TIME * 1.5 * (ACQ_NB_FRAMES + 1))
 

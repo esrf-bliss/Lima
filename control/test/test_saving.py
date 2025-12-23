@@ -28,17 +28,17 @@ import sys
 import time
 import argparse
 
-from Lima import Core
-from Lima import Simulator
+from lima import core
+from lima import simulator
 
-Core.DEB_GLOBAL(Core.DebModule.DebModTest)
+core.DEB_GLOBAL(core.DebModule.DebModTest)
 
 
 class TestSaving:
 
-    Core.DEB_CLASS(Core.DebModule.DebModTest, 'TestSaving')
+    core.DEB_CLASS(core.DebModule.DebModTest, 'TestSaving')
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def __init__(self, camera='simulator'):
         if camera == 'maxipix':
             try:
@@ -49,10 +49,10 @@ class TestSaving:
             self.cam = Maxipix.Camera(1, '/users/blissadm/local/maxipix/tpxatl25', 'tpxatl25', True)
             self.cam_hw = Maxipix.Interface(self.cam)
         else:
-            self.cam = Simulator.Camera()
-            self.cam_hw = Simulator.Interface(self.cam)
+            self.cam = simulator.Camera()
+            self.cam_hw = simulator.Interface(self.cam)
 
-        self.ct_control = Core.CtControl(self.cam_hw)
+        self.ct_control = core.CtControl(self.cam_hw)
         self.ct_saving = self.ct_control.saving()
         self.ct_acq = self.ct_control.acquisition()
 
@@ -65,12 +65,12 @@ class TestSaving:
             'overwrite': self.ct_saving.Overwrite
         }
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def __del__(self):
         del self.ct_control
         del self.cam_hw
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def start(self, exp_time, nb_frames, directory, prefix, fmt, overwrite, framesperfile, threads, repeats, log_stat):
         if fmt.lower() not in self.format_list:
             raise ValueError("Unsupported file format. Should be one of %s" % str(self.format_list))
@@ -96,18 +96,18 @@ class TestSaving:
         self.ct_saving.setEnableLogStat(log_stat)
 
         # Setting Pool thread can improve the performance on multi-core computer, e.g for compression purpose
-        Core.Processlib.PoolThreadMgr.get().setNumberOfThread(threads)
+        core.Processlib.PoolThreadMgr.get().setNumberOfThread(threads)
 
         self.repeats = repeats
         self.ct_control.prepareAcq()
         deb.Trace('[%d] PrepareAcq finished' % repeats)
         self.ct_control.startAcq()
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def waitAcq(self):
         def acq_status():
             return self.ct_control.getStatus().AcquisitionStatus
-        while acq_status() == Core.AcqStatus.AcqRunning:
+        while acq_status() == core.AcqStatus.AcqRunning:
             time.sleep(0.1)
             sys.stdout.write(str(self.ct_control.getStatus()) + '\r')
             sys.stdout.flush()
@@ -118,7 +118,7 @@ class TestSaving:
         print('[%d] statistics (MB/s) : incoming speed = %.2f, saving speed = %.2f, compression speed = %.2f, compression ratio = %.2f' % (self.repeats, stat[3]/mb, stat[0]/mb, stat[1]/mb, stat[2]))
 
 
-@Core.DEB_FUNCT
+@core.DEB_FUNCT
 def main(argv):
     parser = argparse.ArgumentParser(description='A Lima test program for saving format')
     parser.add_argument('-v', '--verbose', help='verbose mode, up to vvv', required=False, action='count')
@@ -142,14 +142,14 @@ def main(argv):
     args = parser.parse_args()
 
     if args.verbose == 1:
-        Core.DebParams.setTypeFlags(Core.DebType.DebTypeTrace)
-        Core.DebParams.setModuleFlags(Core.DebType.DebModTest)
+        core.DebParams.setTypeFlags(core.DebType.DebTypeTrace)
+        core.DebParams.setModuleFlags(core.DebType.DebModTest)
     elif args.verbose == 2:
-        Core.DebParams.setTypeFlags(Core.DebType.DebTypeTrace)
-        Core.DebParams.setModuleFlags(Core.DebParams.AllFlags)
+        core.DebParams.setTypeFlags(core.DebType.DebTypeTrace)
+        core.DebParams.setModuleFlags(core.DebParams.AllFlags)
     elif args.verbose >= 3:
-        Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
-        Core.DebParams.setModuleFlags(Core.DebParams.AllFlags)
+        core.DebParams.setTypeFlags(core.DebParams.AllFlags)
+        core.DebParams.setModuleFlags(core.DebParams.AllFlags)
 
     test_saving = TestSaving(args.camera)
 
@@ -174,7 +174,7 @@ def main(argv):
                     repeat,
                     args.log_stat
                 )
-            except Core.Exception:
+            except core.Exception:
                 raise RuntimeError
 
             test_saving.waitAcq()

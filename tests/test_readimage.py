@@ -1,4 +1,4 @@
-from Lima import Core
+from lima import core
 import time
 
 from .mocked_camera import MockedCamera
@@ -9,7 +9,7 @@ def test_readimage(lima_helper: LimaHelper):
     cam = MockedCamera()
     cam.width = 800
     cam.height = 600
-    cam.bpp = Core.ImageType.Bpp32
+    cam.bpp = core.ImageType.Bpp32
 
     control = lima_helper.control(cam)
 
@@ -17,15 +17,15 @@ def test_readimage(lima_helper: LimaHelper):
     acq.setAcqNbFrames(1)
 
     img = control.image()
-    roi = Core.Roi(300, 50, 450, 300)
+    roi = core.Roi(300, 50, 450, 300)
     img.setRoi(roi)
-    # img.setBin(Core.Bin(2, 2))
-    img.setRotation(Core.RotationMode.Rotation_90)
+    # img.setBin(core.Bin(2, 2))
+    img.setRotation(core.RotationMode.Rotation_90)
 
     control.prepareAcq()
     control.startAcq()
 
-    while control.getStatus().AcquisitionStatus == Core.AcqStatus.AcqRunning:
+    while control.getStatus().AcquisitionStatus == core.AcqStatus.AcqRunning:
         time.sleep(0.1)
 
     control.stopAcq()

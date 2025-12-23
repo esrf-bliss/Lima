@@ -55,7 +55,7 @@ test:
     - pytest-mock
     - h5py  # to check produced HDF5 files
   imports:
-    - Lima.Core
+    - lima.core
   commands:
     - pytest -vs -o log_cli=true -k 'not test_acc' tests
 

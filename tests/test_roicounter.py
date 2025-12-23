@@ -1,12 +1,12 @@
-from Lima import Core
+from lima import core
 
 
 def test_write_read():
     """Check that we can write and read a ROI"""
-    myroi = Core.Roi(0, 0, 100, 100)
-    my_opt_ext = Core.SoftOpExternalMgr()
+    myroi = core.Roi(0, 0, 100, 100)
+    my_opt_ext = core.SoftOpExternalMgr()
 
-    roictmgr = my_opt_ext.addOp(Core.SoftOpId.ROICOUNTERS, "titi", 0)
+    roictmgr = my_opt_ext.addOp(core.SoftOpId.ROICOUNTERS, "titi", 0)
 
     roictmgr.updateRois([("myroi", myroi)])
 
