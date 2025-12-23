@@ -57,7 +57,7 @@ test:
   imports:
     - lima.core
   commands:
-    - pytest -vs -o log_cli=true -k 'not test_acc' tests
+    - pytest -vs -o log_cli=true tests
 
 about:
   home: https://github.com/esrf-bliss/Lima
