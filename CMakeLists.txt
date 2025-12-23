@@ -343,7 +343,7 @@ if(LIMA_ENABLE_PYTHON)
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip)
     target_link_libraries(python_module_limacore PRIVATE limacore Python3::Python Python3::NumPy)
 
-    add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python/Lima ${CMAKE_BINARY_DIR}/python/Lima)
+    add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python/lima ${CMAKE_BINARY_DIR}/python/lima)
 endif()
 
 ## Installation

@@ -331,8 +331,8 @@ For instance if you are using the python binding for the Prosilica camera, a cli
 
 .. code-block:: python
 
-   from Lima import Prosilica as ProsilicaAcq
-   from Lima import Core
+   from lima import prosilica as ProsilicaAcq
+   from lima import core
 
    my_prosilica_ip_address = 192.168.1.2
    # we need the camera object first
@@ -342,7 +342,7 @@ For instance if you are using the python binding for the Prosilica camera, a cli
    camera_interface =  ProsilicaAcq.Interface(camera)
 
    # Now create the :cpp:class:`lima::CtControl` and passed to Lima the new HwInterface
-   control = Core.CtControl(camera_interface)
+   control = core.CtControl(camera_interface)
 
 The camera is now under control and it can be used  to acquire images !
 First get the sub-objects for the parameter setting of the detector, acquisition, saving and more if necessary.
@@ -359,8 +359,8 @@ First get the sub-objects for the parameter setting of the detector, acquisition
    pars.directory='/buffer/test_lima'
    pars.prefix='test1_'
    pars.suffix='.edf'
-   pars.fileFormat=Core.CtSaving.EDF
-   pars.savingMode=Core.CtSaving.AutoFrame
+   pars.fileFormat=core.CtSaving.EDF
+   pars.savingMode=core.CtSaving.AutoFrame
    saving.setParameters(pars)
 
    # pass parameters to camera hw interface
