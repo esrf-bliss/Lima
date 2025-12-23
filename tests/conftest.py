@@ -1,5 +1,5 @@
 import pytest
-from Lima import Core
+from lima import core
 from .lima_helper import LimaHelper
 
 
@@ -29,4 +29,4 @@ def pytest_addoption(parser):
 def session_setup(request):
     lima_all_flags = request.config.getoption("--lima-all-flags")
     if lima_all_flags:
-        Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
+        core.DebParams.setTypeFlags(core.DebParams.AllFlags)

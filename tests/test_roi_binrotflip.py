@@ -1,32 +1,32 @@
 import pytest
 import typing
-from Lima import Core
+from lima import core
 from .mocked_camera import MockedCamera
 from .lima_helper import LimaHelper
 
 
 def transformations() -> typing.Generator[typing.Any, None, None]:
     rois = {
-        "full": Core.Roi(0, 0, 600, 300),
-        "crop1": Core.Roi(1, 1, 598, 298),
+        "full": core.Roi(0, 0, 600, 300),
+        "crop1": core.Roi(1, 1, 598, 298),
     }
     rots = {
-        "0deg": Core.RotationMode.Rotation_0,
-        "90deg": Core.RotationMode.Rotation_90,
-        "180deg": Core.RotationMode.Rotation_180,
-        "270deg": Core.RotationMode.Rotation_270,
+        "0deg": core.RotationMode.Rotation_0,
+        "90deg": core.RotationMode.Rotation_90,
+        "180deg": core.RotationMode.Rotation_180,
+        "270deg": core.RotationMode.Rotation_270,
     }
     binnings = {
-        "1x1": Core.Bin(1, 1),
-        "1x2": Core.Bin(1, 2),
-        "2x1": Core.Bin(2, 1),
-        "2x2": Core.Bin(2, 2),
+        "1x1": core.Bin(1, 1),
+        "1x2": core.Bin(1, 2),
+        "2x1": core.Bin(2, 1),
+        "2x2": core.Bin(2, 2),
     }
     flips = {
-        "no": Core.Flip(False, False),
-        "v": Core.Flip(False, True),
-        "h": Core.Flip(True, False),
-        "hv": Core.Flip(True, True),
+        "no": core.Flip(False, False),
+        "v": core.Flip(False, True),
+        "h": core.Flip(True, False),
+        "hv": core.Flip(True, True),
     }
 
     def permutation(lst):
@@ -71,7 +71,7 @@ def test_transformations(lima_helper: LimaHelper, roi, perm, bin, rot, flip):
     )
     cam.width = 600
     cam.height = 300
-    cam.bpp = Core.ImageType.Bpp32
+    cam.bpp = core.ImageType.Bpp32
 
     image = lima_helper.image(cam)
     image.setRoi(roi)
