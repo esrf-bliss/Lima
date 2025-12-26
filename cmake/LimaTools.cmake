@@ -75,7 +75,7 @@ function(limatools_run_camera_python_tests test_src camera)
 endfunction()
 
 # this function is used to build camera's python binding
-function(limatools_run_sip_for_camera camera)
+function(limatools_run_sip_for_camera camera _sip_concat_parts)
 
   set(MODULE_NAME lima${camera})
 
@@ -116,7 +116,8 @@ function(limatools_run_sip_for_camera camera)
 
   # Get sip abi version of the lima.sip module, collected from FindSIP.cmake (from FindSIP.py)
   set(SIP_ABI_VERSION ${LIMA_SIP_ABI_VERSION})
- 
+  set(SIP_CONCAT_PARTS ${_sip_concat_parts})
+
   add_sip_python_module(${MODULE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/${MODULE_NAME}.sip TRUE)
 
   target_link_libraries(python_module_${MODULE_NAME} PUBLIC ${camera} limacore Python3::Python Python3::NumPy)
