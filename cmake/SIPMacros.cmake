@@ -33,11 +33,16 @@ find_package(Python3 COMPONENTS Interpreter)
 get_filename_component(_SIPMACRO_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 set(SIP_INCLUDE_DIRS)
-set(SIP_CONCAT_PARTS 7)
+set(SIP_CONCAT_PARTS)
 set(SIP_DISABLE_FEATURES)
 set(SIP_ABI_VERSION)
 
 macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
+
+
+	if (NOT SIP_CONCAT_PARTS)
+        set(SIP_CONCAT_PARTS 12)
+    endif()
 
     set(EXTRA_LINK_LIBRARIES ${ARGN})
 
