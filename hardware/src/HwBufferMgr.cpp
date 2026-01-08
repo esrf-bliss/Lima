@@ -1126,7 +1126,7 @@ MmapFileBufferAllocMgr::MmapFileBufferAllocMgr(const char* mapped_file):
 
   m_use_size = m_map_size;
   off_t tot_mem = _calc_req_mem_size(100);
-  m_alloc_params.reqMemSizePercent = double(m_use_size) / tot_mem;
+  m_alloc_params.reqMemSizePercent = 100.0 * m_use_size / tot_mem;
 
   DEB_TRACE() << DEB_VAR2(m_map_size, m_alloc_params);
 }
@@ -1219,6 +1219,6 @@ off_t MmapFileBufferAllocMgr::_calc_req_mem_size(double req_mem_size_percent)
   int mem_unit = 0;
   int system_mem;
   GetSystemMem(mem_unit, system_mem);
-  return req_mem_size_percent * mem_unit * system_mem;
+  return req_mem_size_percent * mem_unit * system_mem / 100.0;
 }
 #endif // !defined(_WIN32)
