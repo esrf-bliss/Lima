@@ -300,7 +300,7 @@ if(sipIsErr == NULL)
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
                       sipCheckConvertFromPyStr(PySequence_Fast_GET_ITEM(p,0)) &&
-                      PyInt_Check(PySequence_Fast_GET_ITEM(p,1));
+                      PyLong_Check(PySequence_Fast_GET_ITEM(p,1));
       }
     return aReturnFlag;
   }
@@ -311,7 +311,7 @@ if(sipIsErr == NULL)
       PyObject *p = PyList_GET_ITEM(sipPy,i);
       PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
       std::string name = sipConvertFromPyStr(aTmpName);
-      int roi_type = (int) PyInt_AsLong(PySequence_Fast_GET_ITEM(p,1));
+      int roi_type = (int) PyLong_AsLong(PySequence_Fast_GET_ITEM(p,1));
       names_typesPt->push_back(SoftOpRoiCounter::RoiNameAndType(name,roi_type));
     }
   *sipCppPtr = names_typesPt;
@@ -329,7 +329,7 @@ if(sipIsErr == NULL)
       j != sipCpp->end();++j,++i)
     {
       PyObject *aNamePy = sipConvertToPyStr(j->first);
-      PyObject *aTypePy = PyInt_FromLong(j->second);
+      PyObject *aTypePy = PyLong_FromLong(j->second);
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,aTypePy));
       Py_DECREF(aNamePy);Py_DECREF(aTypePy);
     }
@@ -690,7 +690,7 @@ if(sipIsErr == NULL)
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
                       sipCheckConvertFromPyStr(PySequence_Fast_GET_ITEM(p,0)) &&
-                      PyInt_Check(PySequence_Fast_GET_ITEM(p,1));
+                      PyLong_Check(PySequence_Fast_GET_ITEM(p,1));
       }
     return aReturnFlag;
   }
@@ -701,7 +701,7 @@ if(sipIsErr == NULL)
       PyObject *p = PyList_GET_ITEM(sipPy,i);
       PyObject *aTmpName = PySequence_Fast_GET_ITEM(p,0);
       std::string name = sipConvertFromPyStr(aTmpName);
-      int roi_mode = (int) PyInt_AsLong(PySequence_Fast_GET_ITEM(p,1));
+      int roi_mode = (int) PyLong_AsLong(PySequence_Fast_GET_ITEM(p,1));
       names_modesPt->push_back(SoftOpRoi2Spectrum::RoiNameAndMode(name,roi_mode));
     }
   *sipCppPtr = names_modesPt;
@@ -719,7 +719,7 @@ if(sipIsErr == NULL)
       j != sipCpp->end();++j,++i)
     {
       PyObject *aNamePy = sipConvertToPyStr(j->first);
-      PyObject *aModePy = PyInt_FromLong(j->second);
+      PyObject *aModePy = PyLong_FromLong(j->second);
       PyList_SET_ITEM(l,i,PyTuple_Pack(2,aNamePy,aModePy));
       Py_DECREF(aNamePy);Py_DECREF(aModePy);
     }

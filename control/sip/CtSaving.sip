@@ -235,6 +235,7 @@ using namespace lima;
                               int stream_idx = 0);
     void getZBufferParameters(BufferHelper::Parameters& pars /Out/,
                               int stream_idx = 0);
+    void getNbZBuffers(int& nb_zbuffers /Out/);
 
     // --- common headers
 

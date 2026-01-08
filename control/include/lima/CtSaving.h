@@ -198,6 +198,7 @@ public:
 				  int stream_idx = 0);
 	void getZBufferParameters(BufferHelper::Parameters& pars,
 				  int stream_idx = 0);
+	void getNbZBuffers(int& nb_zbuffers);
 
 	// --- common headers
 
@@ -350,7 +351,6 @@ public:
 		void getParameters(CtSaving::Parameters&) const;
 		void clear();
 		void prepare(CtControl&);
-		void prepareCompressionBuffers(CtControl&);
 
 		/** @brief should return true if container has compression or
 			*  heavy task to do before saving
@@ -373,8 +373,13 @@ public:
 			*/
 		virtual int getCompressedBufferSize(int data_size, int data_depth) { return 0; }
 
+		bool _allFramesWritten() const { return (m_written_frames == m_frames_to_write); }
+
+		bool _isReady() const;
+
 		virtual bool isReady() const;
 		virtual bool isReadyFor(Data& data) const;
+		virtual bool finished() const;
 		virtual void setReady();
 		virtual void prepareWritingFrame(Data& data);
 		void createSavingData(Data&);
@@ -395,6 +400,7 @@ public:
 		void getEnableLogStat(bool& enable) const;
 
 		BufferHelper& getZBufferHelper() { return m_zbuffer_helper; }
+		int getNbZBuffers() { return m_nb_zbuffers; }
 
 	protected:
 		virtual void* _open(const std::string& filename,
@@ -429,6 +435,8 @@ public:
 
 		int _getNbRunningTasks() const { return m_running_tasks.size(); }
 
+		void _prepareCompressionBuffers(CtControl&);
+
 		StatisticsType		m_statistic;
 		int			m_statistic_size;
 		bool                      m_log_stat_enable;
@@ -442,8 +450,11 @@ public:
 		int			m_max_writing_task; ///< number of maximum parallel write
 		WritingTasks		m_waiting_tasks; ///< waiting tasks
 		WritingTasks		m_running_tasks; ///< running tasks
+		bool			m_last_task_closes_all;
 
 		BufferHelper		m_zbuffer_helper;
+		int			m_nb_zbuffers;
+
 	};
 	friend class SaveContainer;
 
@@ -492,6 +503,11 @@ public:
 		BufferHelper& getZBufferHelper()
 		{
 			return m_save_cnt->getZBufferHelper();
+		}
+
+		int getNbZBuffers()
+		{
+			return m_save_cnt->getNbZBuffers();
 		}
 
 		void setSavingError(CtControl::ErrorCode error)
@@ -569,6 +585,10 @@ public:
 		bool isReadyFor(Data& data) const
 		{
 			return m_save_cnt->isReadyFor(data);
+		}
+		bool finished() const
+		{
+			return m_save_cnt->finished();
 		}
 		void setReady()
 		{
@@ -689,6 +709,7 @@ private:
 	void _stop();
 	void _close();
 	void _getCommonHeader(HeaderMap&);
+	bool _needParallelCompression();
 	bool _needCompression(Data&);
 	void _takeHeader(FrameHeaderMap::iterator&, HeaderMap& header,
 		bool keep_in_map);
@@ -696,6 +717,7 @@ private:
 		TaskList& task_list, int& priority);
 	void _postTaskList(Data&, const TaskList&, int priority);
 	void _compressionFinished(Data&, Stream&);
+	void _newImageCompressed(Data&);
 	void _saveFinished(Data&, Stream&);
 	void _setSavingError(CtControl::ErrorCode);
 	void _synchronousSaving(Data&, HeaderMap&);
@@ -705,6 +727,7 @@ private:
 	void _ReadImage(Data&, int framenb);
 	bool _allStreamsReady();
 	bool _allStreamsReadyFor(Data& data);
+	bool _allStreamsFinished();
 	void _waitWritingThreads();
 
 	void _insertFrameData(FrameMap::value_type frame_data);

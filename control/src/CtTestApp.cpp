@@ -121,6 +121,11 @@ CtTestApp::Pars::Pars()
 	AddOpt(saving_zbuffer_params, "--saving-zbuffer-params",
 	       "saving zbuffer allocation parameters");
 
+#ifdef __unix
+	AddOpt(buffer_malloc_trim_pad, "--buffer-malloc-trim-pad",
+	       "extra memory left in process heap after buffer alloc");
+#endif
+
 	AddOpt(proc_nb_threads, "--proc-nb-threads",
 	       "number of processing threads");
 
@@ -348,6 +353,10 @@ void CtTestApp::init()
 	acc->setBufferParameters(m_pars->acc_buffer_params);
 	DEB_ALWAYS() << DEB_VAR1(m_pars->saving_zbuffer_params);
 	save->setZBufferParameters(m_pars->saving_zbuffer_params);
+#ifdef __unix
+	DEB_ALWAYS() << DEB_VAR1(m_pars->buffer_malloc_trim_pad);
+	buffer->setMallocTrimPad(m_pars->buffer_malloc_trim_pad);
+#endif
 
 	PoolThreadMgr& mgr = PoolThreadMgr::get();
 	mgr.setNumberOfThread(m_pars->proc_nb_threads);

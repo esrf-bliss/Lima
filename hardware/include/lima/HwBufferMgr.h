@@ -447,6 +447,9 @@ class LIMACORE_API MmapFileBufferAllocMgr : public BufferAllocMgr
   MmapFileBufferAllocMgr(const char* mapped_file);
   virtual ~MmapFileBufferAllocMgr();
 
+  virtual void setAllocParameters(const AllocParameters& alloc_params) override;
+  virtual void getAllocParameters(AllocParameters& alloc_params) override;
+
   virtual int getMaxNbBuffers(const FrameDim& frame_dim);
   virtual void allocBuffers(int nb_buffers, 
 			    const FrameDim& frame_dim);
@@ -460,12 +463,15 @@ class LIMACORE_API MmapFileBufferAllocMgr : public BufferAllocMgr
   virtual void clearAllBuffers();
  private:
   int _calc_frame_mem_size(const FrameDim& frame_dim) const;
+  static off_t _calc_req_mem_size(double req_mem_size_percent);
 
   void*		m_map_mem_base;
   off_t		m_map_size;
+  off_t         m_use_size;
   int		m_frame_mem_size;
   FrameDim	m_frame_dim;
   int		m_nb_buffers;
+  AllocParameters m_alloc_params;
 };
 #endif // !defined(_WIN32)
 

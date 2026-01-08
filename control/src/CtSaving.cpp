@@ -185,12 +185,12 @@ private:
 struct CtSaving::_SavingSidebandData : public sideband::Data
 {
 	Mutex m_lock;
-	std::atomic<long> m_nb_cbk;
+	std::atomic<long> m_nb_cbk{0};
 	ZBufferList m_buffers;
 	SaveContainer::FrameParameters m_params;
 	SaveContainer::Stat m_stat;
 
-	_SavingSidebandData(::Data& data) : m_nb_cbk(0), m_stat(data)
+	_SavingSidebandData(::Data& data) : m_stat(data)
 	{}
 
 	std::string repr() override {
@@ -745,6 +745,7 @@ CtSaving::CtSaving(CtControl& aCtrl) :
 	m_frames_to_save(-1, -1),
 	m_end_cbk(NULL),
 	m_managed_mode(Software),
+	m_saving_stop(false),
 	m_saving_error_handler(NULL)
 {
 	DEB_CONSTRUCTOR();
@@ -1172,6 +1173,28 @@ void CtSaving::getZBufferParameters(BufferHelper::Parameters& pars,
 	DEB_RETURN() << DEB_VAR1(pars);
 }
 
+/** @brief get the minimum number of zbuffers from all stream
+ */
+void CtSaving::getNbZBuffers(int& nb_zbuffers)
+{
+	DEB_MEMBER_FUNCT();
+
+	AutoMutex aLock(m_cond.mutex());
+	nb_zbuffers = -1;
+	for (int s = 0; s < m_nb_stream; ++s)
+	{
+		Stream& stream = getStream(s);
+		if (stream.isActive()) {
+			int stream_buffers = stream.getNbZBuffers();
+			if ((nb_zbuffers == -1) ||
+			    ((nb_zbuffers > 0) && (stream_buffers < nb_zbuffers)))
+				nb_zbuffers = stream_buffers;
+		}
+	}
+
+	DEB_RETURN() << DEB_VAR1(nb_zbuffers);
+}
+
 void CtSaving::_ReadImage(Data& image, int frameNumber)
 {
 	DEB_MEMBER_FUNCT();
@@ -1218,6 +1241,22 @@ bool CtSaving::_allStreamsReadyFor(Data& data)
 
 	DEB_RETURN() << DEB_VAR1(ready_flag);
 	return ready_flag;
+}
+
+bool CtSaving::_allStreamsFinished()
+{
+	DEB_MEMBER_FUNCT();
+
+	bool finished_flag = true;
+	for (int s = 0; finished_flag && s < m_nb_stream; ++s)
+	{
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+			finished_flag = stream.finished();
+	}
+
+	DEB_RETURN() << DEB_VAR1(finished_flag);
+	return finished_flag;
 }
 
 void CtSaving::_waitWritingThreads()
@@ -1815,20 +1854,26 @@ bool CtSaving::_newFrameWrite(int frame_id)
 	return !!m_end_cbk;
 }
 
-void CtSaving::frameReady(Data& aData)
+void CtSaving::frameReady(Data& sData)
 {
 	DEB_MEMBER_FUNCT();
-	DEB_PARAM() << DEB_VAR1(aData);
+	DEB_PARAM() << DEB_VAR1(sData);
 
 	if (_controlIsFault()) {
-		DEB_WARNING() << "Skip saving data: " << aData;
+		DEB_WARNING() << "Skip saving data: " << sData;
 		return;
 	} else if (!m_end_cbk)
 		DEB_WARNING() << "No end callback registered";
 
+	// copy data to allow removing buffer (if required)
+	Data aData = sData;
+
 	_createSavingData(aData);
 
 	bool need_compression = _needCompression(aData);
+	// notify framework if using HW compressed image
+	if (!need_compression && _needParallelCompression())
+		_newImageCompressed(aData);
 
 	AutoMutex aLock(m_cond.mutex());
 
@@ -2025,7 +2070,6 @@ void CtSaving::clear()
 void CtSaving::close()
 {
 	DEB_MEMBER_FUNCT();
-	AutoMutex aLock(m_cond.mutex());
 	_close();
 }
 
@@ -2107,6 +2151,21 @@ void CtSaving::writeFrame(int aFrameNumber, int aNbFrames, bool synchronous)
 	}
 }
 
+bool CtSaving::_needParallelCompression()
+{
+	DEB_MEMBER_FUNCT();
+
+	bool need_compression = false;
+	for (int s = 0; (s < m_nb_stream) && !need_compression; ++s) {
+		Stream& stream = getStream(s);
+		if (stream.isActive())
+			need_compression = stream.needCompression();
+	}
+
+	DEB_RETURN() << DEB_VAR1(need_compression);
+	return need_compression;
+}
+
 bool CtSaving::_needCompression(Data& data)
 {
 	DEB_MEMBER_FUNCT();
@@ -2182,6 +2241,8 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 			return;
 	}
 
+	_newImageCompressed(aData);
+
 	long frame_nr = aData.frameNumber;
 
 	AutoMutex aLock(m_cond.mutex());
@@ -2202,6 +2263,21 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
 	_getTaskList(Save, aData, header, task_list, priority);
 
 	_postTaskList(aData, task_list, priority);
+}
+
+void CtSaving::_newImageCompressed(Data& aData)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(aData);
+
+	// update global image counters
+	m_ctrl.newImageCompressed(aData);
+
+	// release underlying buffer for uncompressed data
+	if (aData.buffer) {
+		aData.buffer->unref();
+		aData.buffer = NULL;
+	}
 }
 
 void CtSaving::_saveFinished(Data& aData, Stream& stream)
@@ -2228,7 +2304,11 @@ void CtSaving::_saveFinished(Data& aData, Stream& stream)
 	bool auto_saving = (saving_mode == AutoFrame) || (saving_mode == AutoHeader);
 	if (!auto_saving)
 	{
-		if (m_saving_stop) _close();
+		if (m_saving_stop)
+		{
+			AutoMutexUnlock u(aLock);
+			_close();
+		}
 		m_cond.signal();
 		return;
 	}
@@ -2388,7 +2468,7 @@ void CtSaving::_close()
 {
 	DEB_MEMBER_FUNCT();
 
-	if (_allStreamsReady())
+	if (_allStreamsFinished())
 	{
 		for (int s = 0; s < m_nb_stream; ++s)
 		{
@@ -2398,7 +2478,10 @@ void CtSaving::_close()
 		}
 	}
 	else
+	{
+		AutoMutex aLock(m_cond.mutex());
 		m_saving_stop = true;
+	}
 }
 
 #ifdef WITH_CONFIG
@@ -2411,7 +2494,7 @@ CtConfig::ModuleTypeCallback* CtSaving::_getConfigHandler()
 CtSaving::SaveContainer::SaveContainer(Stream& stream)
 	: m_lock(m_cond.mutex()), m_stream(stream), m_statistic_size(16),
 	  m_log_stat_enable(false), m_log_stat_file(NULL),
-	  m_max_writing_task(1)
+	  m_max_writing_task(1), m_last_task_closes_all(false), m_nb_zbuffers(0)
 {
 	DEB_CONSTRUCTOR();
 }
@@ -2426,6 +2509,51 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	DEB_MEMBER_FUNCT();
 	DEB_PARAM() << DEB_VAR2(aData, aHeader);
 
+	const long frameId = aData.frameNumber;
+
+	class RunningCleanup {
+		DEB_CLASS_NAMESPC(DebModControl,
+				  "CtSaving::SaveContainer::writeFile::RunningCleanup",
+				  "Control");
+	public:
+		RunningCleanup(SaveContainer& c, long f) :
+			m_c(c), m_frameId(f)
+		{}
+
+		~RunningCleanup()
+		{
+			try {
+				if (!m_done)
+					exec();
+			} catch (...) {
+			}
+		}
+
+		void exec()
+		{
+			DEB_MEMBER_FUNCT();
+			bool close_all = false;
+			{
+				AutoMutex lock(m_c.m_lock);
+				WritingTasks& running_tasks = m_c.m_running_tasks;
+				WritingTasks::iterator it = running_tasks.find(m_frameId);
+				if (it == running_tasks.end())
+					THROW_CTL_ERROR(Error) << "Could not find running task";
+				running_tasks.erase(it);
+				if (running_tasks.empty() && m_c.m_last_task_closes_all)
+					close_all = true;
+			}
+			if (close_all)
+				m_c.close();
+			m_done = true;
+		}
+
+	private:
+		SaveContainer& m_c;
+		long m_frameId;
+		bool m_done{false};
+	} running_cleanup(*this, frameId);
+
 	_SavingDataPtr saving = _getSavingData(aData);
 	Stat& stat = saving->m_stat;
 
@@ -2433,8 +2561,6 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 		AutoMutex l(saving->m_lock);
 		stat.writing_start = Timestamp::now();
 	}
-
-	const long frameId = aData.frameNumber;
 
 	FrameParameters& frame_par = saving->m_params;
 	if (!frame_par.isValid())
@@ -2512,7 +2638,7 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 	{
 		AutoMutex lock(m_lock);
 		++m_written_frames;
-		acq_end = (m_written_frames == m_frames_to_write);
+		acq_end = _allFramesWritten();
 		DEB_TRACE() << DEB_VAR3(acq_end, m_written_frames, m_frames_to_write);
 	}
 
@@ -2538,13 +2664,7 @@ void CtSaving::SaveContainer::writeFile(Data& aData, HeaderMap& aHeader)
 
 	DEB_TRACE() << "Write took : " << diff << "s";
 
-	{
-		AutoMutex lock(m_lock);
-		WritingTasks::iterator it = m_running_tasks.find(frameId);
-		if (it == m_running_tasks.end())
-			THROW_CTL_ERROR(Error) << "Could not find running task";
-		m_running_tasks.erase(it);
-	}
+	running_cleanup.exec();
 
 	writeFileStat(aData);
 }
@@ -2865,18 +2985,22 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 		}
 		m_files_to_write = multi_set ? 1 : (nextNumber - pars.nextNumber + 1);
 	}
+	m_last_task_closes_all = false;
 	prepareLogStat(pars);
 	lock.unlock();
 
 	// check if ZBuffer pool needs to be allocated
-	prepareCompressionBuffers(ct);
+	_prepareCompressionBuffers(ct);
+	DEB_TRACE() << DEB_VAR1(m_nb_zbuffers);
 
 	_prepare(ct);			// call inheritance if needed
 }
 
-void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
+void CtSaving::SaveContainer::_prepareCompressionBuffers(CtControl& ct)
 {
 	DEB_MEMBER_FUNCT();
+
+	m_nb_zbuffers = 0;
 
 	FrameDim fdim;
 	ct.image()->getImageDim(fdim);
@@ -2891,6 +3015,10 @@ void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
 	int nb_frames;
 	ct.acquisition()->getAcqNbFrames(nb_frames);
 	m_zbuffer_helper.prepareBuffers(nb_frames, buffer_size);
+
+	BufferHelper::Parameters zbuffer_params;
+	m_zbuffer_helper.getParameters(zbuffer_params);
+	m_nb_zbuffers = zbuffer_params.getDefMaxNbBuffers(buffer_size);
 
 	auto size_2_buffers = m_zbuffer_helper.getSize2NbAllocBuffersMap();
 
@@ -2907,30 +3035,11 @@ void CtSaving::SaveContainer::prepareCompressionBuffers(CtControl& ct)
 	if (alloc_size != buffer_size)
 		THROW_CTL_ERROR(Error) << error_header
 				       << DEB_VAR1(alloc_size);
-
-	// If (not in-place) soft ext op link task is active, frame buffers are
-	// allocated on-the-fly, outside CtBuffer, without checking for overrun
-	SoftOpExternalMgr *ext_op = ct.externalOperation();
-	bool ext_link_task, ext_sink_task;
-	ext_op->isTaskActive(ext_link_task, ext_sink_task);
-	if (ext_link_task)
-		return;
-
-	long required;
-	ct.buffer()->getMaxNumber(required);
-	if (nb_frames < required)
-		required = nb_frames;
-	DEB_TRACE() << DEB_VAR3(nb_frames, required, alloc_nb);
-	if (alloc_nb >= required)
-		return;
-
-	BufferHelper::Parameters params;
-	m_zbuffer_helper.getParameters(params);
-	double min_req_percent = params.reqMemSizePercent * required / alloc_nb;
-	DEB_WARNING() << error_header << DEB_VAR2(alloc_nb, required);
-	DEB_WARNING() << "Should set "
-		      << "SavingZBufferParameters.reqMemSizePercent="
-		      << std::setprecision(2) << min_req_percent << " or higer";
+	else if (alloc_nb != m_nb_zbuffers) {
+		DEB_WARNING() << error_header
+			      << DEB_VAR2(m_nb_zbuffers, alloc_nb);
+		m_nb_zbuffers = alloc_nb;
+	}
 }
 
 void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
@@ -2940,27 +3049,41 @@ void CtSaving::SaveContainer::updateNbFrames(long nb_acquired_frames)
 	
 	AutoMutex lock(m_lock);
 	m_frames_to_write = nb_acquired_frames;
+
+	// Remove waiting tasks that will never run
 	m_waiting_tasks.erase(
 		m_waiting_tasks.find(nb_acquired_frames),
 		m_waiting_tasks.end());
+
+	// If running tasks are the last and all the frames were written
+	// ensure to close at end
+	if (m_waiting_tasks.empty() && !m_running_tasks.empty() &&
+	    _allFramesWritten())
+	    m_last_task_closes_all = true;
+
+	// Remove all future frame params
 	if (m_frame_params.empty())
 		return;
 	long first = std::max(m_frame_params.begin()->first, nb_acquired_frames);
 	m_frame_params.erase(m_frame_params.find(first), m_frame_params.end());
 }
 
-bool CtSaving::SaveContainer::isReady() const
+bool CtSaving::SaveContainer::_isReady() const
 {
 	DEB_MEMBER_FUNCT();
-
-	AutoMutex lock(m_lock);
-
 	DEB_TRACE() << DEB_VAR3(m_running_tasks.size(), m_waiting_tasks.size(),
 				m_frame_params.size());
 	bool ready = (m_running_tasks.empty() && m_waiting_tasks.empty() &&
 		      m_frame_params.empty());
 	DEB_RETURN() << DEB_VAR1(ready);
 	return ready;
+}
+
+bool CtSaving::SaveContainer::isReady() const
+{
+	DEB_MEMBER_FUNCT();
+	AutoMutex lock(m_lock);
+	return _isReady();
 }
 
 bool CtSaving::SaveContainer::isReadyFor(Data& data) const
@@ -2997,6 +3120,17 @@ bool CtSaving::SaveContainer::isReadyFor(Data& data) const
 
 	DEB_RETURN() << DEB_VAR1(ready);
 	return ready;
+}
+
+bool CtSaving::SaveContainer::finished() const
+{
+	DEB_MEMBER_FUNCT();
+
+	AutoMutex lock(m_lock);
+	DEB_TRACE() << DEB_VAR2(m_written_frames, m_frames_to_write);
+	bool finished = _isReady() && _allFramesWritten();
+	DEB_RETURN() << DEB_VAR1(finished);
+	return finished;
 }
 
 void CtSaving::SaveContainer::setReady()

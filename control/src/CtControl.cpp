@@ -154,7 +154,7 @@ class CtControl::ImageStatusThread : public Thread
   DEB_CLASS_NAMESPC(DebModControl, "ImageStatusThread", "CtControl");
 
 public:
-  ImageStatusThread(Cond& cond, ImageStatusCallback *cb);
+  ImageStatusThread(ImageStatusCallback *cb);
   ~ImageStatusThread();
 
   ImageStatusCallback *cb()
@@ -179,16 +179,15 @@ private:
     bool *finished;
   };
   
-  Cond& m_cond;
+  Cond m_cond;
   ImageStatusCallback *m_cb;
   ImageStatus m_last_status;
   std::list<ChangeEvent *> m_event_list;
   bool m_waiting;
 };
 
-CtControl::ImageStatusThread::ImageStatusThread(Cond& cond, 
-						ImageStatusCallback *cb)
-  : m_cond(cond), m_cb(cb), m_waiting(false)
+CtControl::ImageStatusThread::ImageStatusThread(ImageStatusCallback *cb)
+  : m_cb(cb), m_waiting(false)
 {
   DEB_CONSTRUCTOR();
   start();
@@ -319,10 +318,15 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_acquired(CtControl::ltData()),
   m_base_images_ready(CtControl::ltData()),
   m_images_ready(CtControl::ltData()),
+  m_images_compressed(CtControl::ltData()),
   m_images_saved(CtControl::ltData()),
+  m_last_image_compressed(-1),
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
-  m_autosave(false), m_running(false),
+  m_autosave(false),
+  m_saving_compression(false),
+  m_saving_nb_zbuffers(0),
+  m_running(false),
   m_reconstruction_cbk(NULL),
   m_prepare_timeout(2)
 {
@@ -503,6 +507,7 @@ void CtControl::prepareAcq()
   m_images_acquired.clear();
   m_base_images_ready.clear();
   m_images_ready.clear();
+  m_images_compressed.clear();
   m_images_saved.clear();
   m_images_buffer.clear();
 
@@ -540,6 +545,7 @@ void CtControl::prepareAcq()
   
   DEB_TRACE() << "Setup Acquisition Buffers";
   m_ct_buffer->setup(this);
+  m_ct_buffer->getNumber(m_nb_buffers);
 
   DEB_TRACE() << "Apply Shutter Parameters";
   m_ct_shutter->apply();
@@ -550,6 +556,10 @@ void CtControl::prepareAcq()
   DEB_TRACE() << "Prepare Saving if needed";
   m_ct_saving->_prepare();
   m_autosave= m_ct_saving->hasAutoSaveMode();
+  m_saving_compression= m_ct_saving->_needParallelCompression();
+  int nb_zbuffers;
+  m_ct_saving->getNbZBuffers(nb_zbuffers);
+  m_saving_nb_zbuffers = (nb_zbuffers > 0) ? nb_zbuffers : m_nb_buffers;
 
   DEB_TRACE() << "Prepare Hardware for Acquisition";
   m_hw->prepareAcq();
@@ -797,11 +807,17 @@ void CtControl::stopAcqAsync(AcqStatus acq_status, ErrorCode error_code,
 void CtControl::_updateImageStatusThreads(bool force)
 {
   DEB_MEMBER_FUNCT();
-    
+  
+  ImageStatus status;
+  {
+    AutoMutex aLock(m_cond.mutex());
+    status = m_status.ImageCounters;
+  }
+
   ReadWriteLock::ReadGuard guard(m_img_status_thread_list_lock);
   for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
       i != m_img_status_thread_list.end();++i)
-    (*i)->imageStatusChanged(m_status.ImageCounters, force);
+    (*i)->imageStatusChanged(status, force);
 }
 
 
@@ -1089,8 +1105,19 @@ void CtControl::resetStatus(bool only_acq_status)
     return;
   }
   m_status.reset();
+  m_last_image_compressed = -1;
   aLock.unlock();
   _updateImageStatusThreads(true);
+}
+
+inline bool CtControl::_mustSkipProcessing(Data& data, AutoMutex& l)
+{
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR2(data, m_running);
+  ImageStatus &imgStatus = m_status.ImageCounters;
+  bool skip = !m_running && (data.frameNumber > imgStatus.LastImageAcquired);
+  DEB_RETURN() << DEB_VAR1(skip);
+  return skip;
 }
 
 bool CtControl::newFrameReady(Data& fdata)
@@ -1102,8 +1129,9 @@ bool CtControl::newFrameReady(Data& fdata)
 
   {
     AutoMutex aLock(m_cond.mutex());
-    if(_checkOverrun(fdata, aLock))
-      return false;// Stop Acquisition on overun
+    DEB_TRACE() << DEB_VAR1(m_running);
+    if(_mustSkipProcessing(fdata, aLock) || _checkOverrun(fdata, aLock))
+      return false;// Stop HW Acquisition on stop / overrun
 
     ImageStatus &imgStatus = m_status.ImageCounters;
     imgStatus.LastImageAcquired = _increment_image_cnt(fdata,
@@ -1141,6 +1169,10 @@ void CtControl::newBaseImageReady(Data &aData)
   DEB_PARAM() << DEB_VAR1(aData);
 
   AutoMutex aLock(m_cond.mutex());
+
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+
   ImageStatus &imgStatus = m_status.ImageCounters;
   imgStatus.LastBaseImageReady = _increment_image_cnt(aData,imgStatus.LastBaseImageReady,
 						      m_base_images_ready);
@@ -1172,6 +1204,9 @@ void CtControl::newImageReady(Data &aData)
 
   AutoMutex aLock(m_cond.mutex());
 
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+
   ImageStatus &imgStatus = m_status.ImageCounters;
   imgStatus.LastImageReady = _increment_image_cnt(aData,imgStatus.LastImageReady,
 						  m_images_ready);
@@ -1194,10 +1229,14 @@ void CtControl::newImageReady(Data &aData)
   _calcAcqStatus();
 }
 
-void CtControl::newCounterReady(Data&)
+void CtControl::newCounterReady(Data& aData)
 {
   DEB_MEMBER_FUNCT();
   AutoMutex aLock(m_cond.mutex());
+
+  if(_mustSkipProcessing(aData, aLock))
+    return;
+  
   ++m_status.ImageCounters.LastCounterReady;
   aLock.unlock();
   _calcAcqStatus();
@@ -1225,6 +1264,24 @@ long CtControl::_increment_image_cnt(Data& aData,
       cnt.erase(i);
     }
   return expectedImageCnt;
+}
+
+/** @brief inc the compressed counter.
+ *  @see newImageReady
+*/
+void CtControl::newImageCompressed(Data &data)
+{
+  DEB_MEMBER_FUNCT();
+
+  AutoMutex aLock(m_cond.mutex());
+
+  m_last_image_compressed = _increment_image_cnt(data,m_last_image_compressed,
+						 m_images_compressed);
+  aLock.unlock();
+
+  // TODO: activate when ImageStatus includes LastImageCompressed
+  // _updateImageStatusThreads(false);
+  // _calcAcqStatus();
 }
 
 /** @brief inc the save counter.
@@ -1291,7 +1348,7 @@ void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
 		   [&cb] (ImageStatusThread *t) { return t->cb() == &cb; });
   if(i != end)
     THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
-  AutoPtr<ImageStatusThread> thread = new ImageStatusThread(m_cond, &cb);
+  AutoPtr<ImageStatusThread> thread = new ImageStatusThread(&cb);
   cb.setImageStatusCallbackGen(this);
   m_img_status_thread_list.push_back(thread);
   thread.forget();
@@ -1327,7 +1384,7 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
 
   const ImageStatus &imageStatus = m_status.ImageCounters;
 
-  // ext ops are not in-place, relaxing hw buffer limit is LastImageReady
+  // ext ops are not in-place, relaxing hw buffer limit to LastImageReady
   // if no ext ops, full processing chain needs orig hw buffer
   bool full_chain = !m_op_ext_link_task_active;
 
@@ -1336,21 +1393,25 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
     imageStatus.LastImageReady;
   long imageToProcess = imageStatus.LastImageAcquired - lastProcessed;
 
-  long lastUsedForSave = full_chain ? imageStatus.LastImageSaved :
-    imageStatus.LastImageReady;
+  long lastUsedForSave;
+  if(full_chain)
+    lastUsedForSave = m_saving_compression ? m_last_image_compressed :
+      imageStatus.LastImageSaved;
+  else
+    lastUsedForSave = imageStatus.LastImageReady;
   long imageToSave = imageStatus.LastImageAcquired - lastUsedForSave;
 
-  long nb_buffers;
-  m_ct_buffer->getNumber(nb_buffers);
-  
+  long compressedToSave = !m_saving_compression ? 0 :
+    (m_last_image_compressed - imageStatus.LastImageSaved);
+
   bool overrunFlag = false;
   ErrorCode error_code = NoError;
-  if(imageToProcess >= nb_buffers) // Process overrun
+  if(imageToProcess >= m_nb_buffers) // Process overrun
     {
       overrunFlag = true;
       error_code = ProcessingOverun;
     }
-  else if(m_autosave && imageToSave >= nb_buffers) // Save overrun
+  else if(m_autosave && imageToSave >= m_nb_buffers) // Save overrun
     {
       overrunFlag = true;
       int first_to_save = -1, last_to_save = -1;
@@ -1369,6 +1430,12 @@ bool CtControl::_checkOverrun(Data& aData, AutoMutex& l)
       bool slow_processing = frames_to_compress > frames_to_save;
       DEB_ERROR() << DEB_VAR2(frames_to_compress, frames_to_save);
       error_code = slow_processing ? ProcessingOverun : SaveOverun;
+    }
+  else if(m_saving_compression && (compressedToSave >= m_saving_nb_zbuffers))
+    {
+      overrunFlag = true;
+      DEB_ERROR() << DEB_VAR2(compressedToSave, m_saving_nb_zbuffers);
+      error_code = SaveOverun;
     }
 
   if (overrunFlag) {

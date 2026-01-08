@@ -229,6 +229,7 @@ namespace lima
     void newBaseImageReady(Data &data);
     void newImageReady(Data &data);
     void newCounterReady(Data &data);
+    void newImageCompressed(Data &data);
     void newImageSaved(Data &data);
 
   private:
@@ -284,9 +285,14 @@ namespace lima
     bool		m_op_ext_link_task_active;
     bool		m_op_ext_sink_task_active;
 
+    long		m_last_image_compressed;
+    long		m_saving_nb_zbuffers;
+    long		m_nb_buffers;
+
     SortedDataType      m_images_acquired;
     SortedDataType      m_base_images_ready;
     SortedDataType      m_images_ready;
+    SortedDataType	m_images_compressed;
     SortedDataType	m_images_saved;
 
     std::map<int,Data>    m_images_buffer;
@@ -298,6 +304,7 @@ namespace lima
     ApplyPolicy		m_policy;
     bool		m_ready;
     bool		m_autosave;
+    bool		m_saving_compression;
     bool		m_running;
 #ifdef WITH_SPS_IMAGE
     bool		m_display_active_flag;
@@ -312,6 +319,8 @@ namespace lima
     inline bool _checkOverrun(Data&, AutoMutex&);
     inline void _calcAcqStatus();
     inline void _updateImageStatusThreads(bool force);
+
+    inline bool _mustSkipProcessing(Data&, AutoMutex&);
 
     void _stopAcq(bool faulty_acq);
 

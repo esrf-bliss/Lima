@@ -84,8 +84,8 @@ inline int _fill_setting_with_list(Setting &setting,
 	      long cValue = _from_python_long_2_c(value,return_value);
 	      setting.append(cValue);
 	    }
-	  else if(PyInt_Check(value))
-	    setting.append(int(PyInt_AsLong(value)));
+	  else if(PyLong_Check(value))
+	    setting.append(int(PyLong_AsLong(value)));
 	  else if(PyBool_Check(value))
 	    setting.append(PyObject_IsTrue(value));
 	  else if(PyDict_Check(value))
@@ -144,8 +144,8 @@ inline int _fill_setting_with_dict(Setting &setting,
 	      long cValue = _from_python_long_2_c(value,return_value);
 	      setting.set(key_str, cValue);
 	    }
-	  else if(PyInt_Check(value))
-	    setting.set(key_str, int(PyInt_AsLong(value)));
+	  else if(PyLong_Check(value))
+	    setting.set(key_str, int(PyLong_AsLong(value)));
 	  else if(PyBool_Check(value))
 	    setting.set(key_str, PyObject_IsTrue(value));
 	  else if(PyDict_Check(value))
@@ -217,7 +217,7 @@ inline bool _build_dict_from_setting(const Setting &setting,
 	    case Setting::Int:
 	      {
 		int value = sub_setting;
-		py_value = PyInt_FromLong(long(value));
+		py_value = PyLong_FromLong(long(value));
 		break;
 	      }
 	    case Setting::Int64:
