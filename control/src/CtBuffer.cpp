@@ -73,8 +73,16 @@ CtBuffer::CtBuffer(HwInterface *hw)
   if (!hw->getHwCtrlObj(m_hw_buffer))
     THROW_CTL_ERROR(Error) <<  "Cannot get hardware buffer object";
 
-  m_params.initMem = true;
-  m_params.reqMemSizePercent = 70.0;
+  // try to get default HW AllocParams, if possible
+  try {
+    m_hw_buffer->getAllocParameters(m_params);
+  } catch (...) {
+  }
+  // If HW params are not initialized, set the default
+  if (m_params == Parameters())
+    m_params.initMem = true;
+  if (m_params.reqMemSizePercent == 0.0)
+    m_params.reqMemSizePercent = 70.0;
   m_hw_buffer->setAllocParameters(m_params);
 
   m_hw_buffer_cb = m_hw_buffer->getBufferCallback();
