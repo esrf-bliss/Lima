@@ -60,16 +60,23 @@ DEB_GLOBAL_NAMESPC(DebModCommon, "MemUtils")
 
 void lima::GetSystemMem(int& mem_unit, int& system_mem)
 {
+	DEB_GLOBAL_FUNCT();
+	DEB_PARAM() << DEB_VAR1(mem_unit);
+
 	if (mem_unit < 0)
-		throw LIMA_COM_EXC(InvalidValue, "Invalid mem_unit value");
+		THROW_COM_ERROR(InvalidValue) << "Invalid mem_unit value"
+					      << DEB_VAR1(mem_unit);
+	bool auto_mem_unit = (mem_unit == 0);
 #ifdef __unix
         struct sysinfo s_info;
-	if (sysinfo(&s_info) < 0)
-		throw LIMA_COM_EXC(Error, "Error calling sysinfo");
+	int ret = sysinfo(&s_info);
+	if (ret < 0)
+		THROW_COM_ERROR(Error) << "Error calling sysinfo"
+				       << strerror(ret);
 
         long long tot_mem = s_info.totalram;
 	tot_mem *= s_info.mem_unit;
-	if (mem_unit == 0) 
+	if (auto_mem_unit)
 		mem_unit = s_info.mem_unit;
 #else  // Windoze
 	MEMORYSTATUSEX statex;
@@ -77,25 +84,42 @@ void lima::GetSystemMem(int& mem_unit, int& system_mem)
 	
 	GlobalMemoryStatusEx(&statex);
 	long long tot_mem = (long long) statex.ullAvailPhys;
-	if (mem_unit == 0) 
+	if (auto_mem_unit) 
 		mem_unit = 1;
 #endif
+	DEB_TRACE() << DEB_VAR3(tot_mem, mem_unit, auto_mem_unit);
 
 	const bool platform_32 = (sizeof(void *) == 4);
 	const long long two_gigas = 2LL * 1024 * 1024 * 1024;
 	if ((platform_32) && (tot_mem > two_gigas))
 		tot_mem = two_gigas;
 
-
 	long long huge_blocks = tot_mem / mem_unit;
-	if (huge_blocks > INT_MAX)
+	DEB_TRACE() << DEB_VAR1(huge_blocks);
+
+	if (auto_mem_unit) {
+		const int grow_factor = 1024;
+		while ((huge_blocks > INT_MAX) &&
+		       (mem_unit * grow_factor <= INT_MAX)) {
+			mem_unit *= grow_factor;
+			huge_blocks /= grow_factor;
+			DEB_TRACE() << DEB_VAR2(mem_unit, huge_blocks);
+		}
+	}
+	if (huge_blocks > INT_MAX) {
+		DEB_WARNING() << "Truncating " << DEB_VAR1(huge_blocks)
+			      << " to INT_MAX";
 		huge_blocks = INT_MAX;
+	}
 
 	system_mem = int(huge_blocks);
+	DEB_RETURN() << DEB_VAR2(mem_unit, system_mem);
 }
 
 void lima::GetPageSize(int& page_size)
 {
+	DEB_GLOBAL_FUNCT();
+	
 #ifdef __unix
 	page_size = getpagesize();
 #else
@@ -103,6 +127,7 @@ void lima::GetPageSize(int& page_size)
         GetSystemInfo (&system_info);
         page_size = system_info.dwPageSize;
 #endif
+	DEB_RETURN() << DEB_VAR1(page_size);
 }
 
 int lima::GetDefMaxNbBuffers(const FrameDim& frame_dim)
