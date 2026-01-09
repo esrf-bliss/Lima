@@ -1164,6 +1164,8 @@ void MmapFileBufferAllocMgr::getAllocParameters(AllocParameters& alloc_params)
 
 int MmapFileBufferAllocMgr::getMaxNbBuffers(const FrameDim& frame_dim)
 {
+  if (!frame_dim.isValid())
+    return 0;
   int frame_mem_size = _calc_frame_mem_size(frame_dim);
   return m_use_size / frame_mem_size;
 }
