@@ -26,7 +26,7 @@ requirements:
     - lz4-c 1.9*
     - hdf5 1.14*
     - libtiff
-    - cbflib         # [linux]
+    - cbflib >=0.9.7 # [linux]
     - openssl 3*     # [linux]
     - libnuma        # [linux]
   build:
@@ -43,7 +43,7 @@ requirements:
     - lz4-c 1.9*
     - hdf5 1.14*
     - libtiff
-    - cbflib        # [linux]
+    - {{ pin_compatible('cbflib', min_pin='x.x.x') }}  # [linux]
     - openssl 3*    # [linux]
     - libnuma       # [linux]
 
