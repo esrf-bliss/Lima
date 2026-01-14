@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2026
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -68,7 +68,7 @@ public:
   //virtual void setCommonHeader(const std::map<std::string,std::string>&);
   virtual void resetCommonHeader();
 
-  class Callback
+  class Callback /Abstract/
   {
   public:
     virtual ~Callback();

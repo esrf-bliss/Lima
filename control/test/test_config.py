@@ -27,23 +27,23 @@ from __future__ import print_function
 import sys
 import time
 
-from Lima import Core
-from Lima import Simulator
+from lima import core
+from lima import simulator
 
-Core.DEB_GLOBAL(Core.DebModTest)
+core.DEB_GLOBAL(core.DebModule.DebModTest)
 
 
 class TestConfig:
 
-    Core.DEB_CLASS(Core.DebModTest, 'TestConfig')
+    core.DEB_CLASS(core.DebModule.DebModTest, 'TestConfig')
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def __init__(self):
 
-        self.cam = Simulator.Camera()
-        self.cam_hw = Simulator.Interface(self.cam)
+        self.cam = simulator.Camera()
+        self.cam_hw = simulator.Interface(self.cam)
 
-        self.ct_control = Core.CtControl(self.cam_hw)
+        self.ct_control = core.CtControl(self.cam_hw)
         self.ct_saving = self.ct_control.saving()
         self.ct_image = self.ct_control.image()
         self.ct_acq = self.ct_control.acquisition()
@@ -52,27 +52,28 @@ class TestConfig:
             'conf1': {
                 'exptime': 0.1,
                 'nbframes': 3,
-                'bin': Core.Bin(2, 2),
-                'rot': Core.Rotation_180,
+                'bin': core.Bin(2, 2),
+                'rot': core.RotationMode.Rotation_180,
                 'prefix': 'conf1_',
-                'opolicy': Core.CtSaving.Overwrite
+                'opolicy': core.CtSaving.OverwritePolicy.Overwrite
+
             },
             'conf2': {
                 'exptime': 0.8,
                 'nbframes': 2,
-                'bin': Core.Bin(4, 4),
-                'rot': Core.Rotation_90,
+                'bin': core.Bin(4, 4),
+                'rot': core.RotationMode.Rotation_90,
                 'prefix': 'conf1_',
-                'opolicy': Core.CtSaving.Abort
+                'opolicy': core.CtSaving.OverwritePolicyAbort
             }
         }
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def __del__(self):
         del self.ct_control
         del self.cam_hw
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def start(self):
         for conf in list(self.conf_dict.keys()):
             self.ct_acq.setAcqExpoTime(self.conf_dict[conf]['exptime'])
@@ -90,7 +91,7 @@ class TestConfig:
         self.ct_config.save()
 
         # remove all
-        self.ct_config.remove(Core.CtConfig.All)
+        self.ct_config.remove(core.CtConfig.All)
 
         # reload confs from file
         self.ct_config.load()
@@ -140,7 +141,7 @@ class TestConfig:
         exit(0)
 
 
-@Core.DEB_FUNCT
+@core.DEB_FUNCT
 def main(argv):
     tst_config = TestConfig()
 

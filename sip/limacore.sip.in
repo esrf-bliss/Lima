@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2026
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-%Module(name=limacore)
+%Module(name=lima.limacore, use_limited_api=True)
 
 %Platforms {WIN32_PLATFORM WIN64_PLATFORM POSIX_PLATFORM}
 
@@ -69,24 +69,18 @@ inline PyObject *sipConvertToPyStr(const std::string& s)
 {
     PyObject *newstring;
 
-#if PY_MAJOR_VERSION >= 3
     // convert an std::string to a Python (unicode) string
     newstring = PyUnicode_DecodeUTF8(s.c_str(), s.length(), NULL);
     if (newstring == NULL) {
         PyErr_Clear();
         newstring = PyUnicode_FromString(s.c_str());
     }
-#else
-    // convert an std::string to a Python string - assume an ASCII string
-    newstring = PyString_FromString(s.c_str());
-#endif
-
   return newstring;
 }
 
 inline bool sipCheckConvertFromPyStr(PyObject *sipPy)
 {
-    return (PyBytes_Check(sipPy) | PyUnicode_Check(sipPy));
+    return (PyBytes_Check(sipPy) || PyUnicode_Check(sipPy));
 }
 
 inline std::string sipConvertFromPyStr(PyObject *sipPy)
@@ -98,10 +92,10 @@ inline std::string sipConvertFromPyStr(PyObject *sipPy)
     // If argument is a Python string, assume it's UTF-8
     if (PyUnicode_Check(sipPy)) {
         PyObject *pyS = PyUnicode_AsEncodedString(sipPy, "UTF-8", "");
-        s = PyBytes_AS_STRING(pyS);
+        s = PyBytes_AsString(pyS);
         Py_DECREF(pyS);
     } else if (PyBytes_Check(sipPy)) {
-        s = PyBytes_AS_STRING(sipPy);
+        s = PyBytes_AsString(sipPy);
     } else if (sipPy != Py_None) {
         throw std::exception();
     }
@@ -193,7 +187,7 @@ return aReturnFlag;
 
 *sipCppPtr = new std::vector<int>(PyList_Size(sipPy));
 for(int i = 0;i < PyList_Size(sipPy);++i)
-  (*sipCppPtr)->operator[](i) = PyLong_AS_LONG(PyList_GET_ITEM(sipPy,i));
+  (*sipCppPtr)->operator[](i) = PyLong_AsLong(PyList_GET_ITEM(sipPy,i));
 
     return sipGetState(sipTransferObj);
 %End
@@ -383,7 +377,7 @@ return aReturnListPt;
 
 %ConvertToTypeCode
 PyObject *key, *value;
-SIP_SSIZE_T pos;
+Py_ssize_t pos;
 
 if(sipIsErr == NULL)
 {
@@ -400,7 +394,7 @@ if(sipIsErr == NULL)
 pos = 0;
 while(PyDict_Next(sipPy, &pos, &key, &value))
 {
-  int anIndex = PyLong_AS_LONG(key);
+  int anIndex = PyLong_AsLong(key);
   std::pair<int,std::string> item(anIndex, sipConvertFromPyStr(value));
   (*sipCppPtr)->insert(item);
 }
@@ -432,7 +426,7 @@ return aReturnDictPt;
 
 %ConvertToTypeCode
 PyObject *key, *value;
-SIP_SSIZE_T pos;
+Py_ssize_t pos;
 
 if(sipIsErr == NULL)
 {
@@ -452,7 +446,7 @@ if(sipIsErr == NULL)
 pos = 0;
 while(PyDict_Next(sipPy, &pos, &key, &value))
 {
-  int anIndex = PyLong_AS_LONG(key);
+  int anIndex = PyLong_AsLong(key);
   std::pair<std::map<int,std::list<std::string> >::iterator, bool> aResult =
   (*sipCppPtr)->insert(std::pair<int,std::list<std::string> >(anIndex,std::list<std::string>()));
 

@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2026
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -34,21 +34,13 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
 {
   PyObject *itemPt = PyList_GetItem(sipPy,i);
   int state;
-#if (SIP_VERSION > 0x040800)
   HwCap *hwCapPt = (HwCap*)sipConvertToType(itemPt,sipType_HwCap, sipTransferObj,SIP_NOT_NONE, &state,sipIsErr);
-#else
-  HwCap *hwCapPt = (HwCap*)sipConvertToInstance(itemPt,sipClass_HwCap, sipTransferObj,SIP_NOT_NONE, &state,sipIsErr);
-#endif
   if(!*sipIsErr)
   {
     if(hwCapPt)
       (*sipCppPtr)->operator[](i) = HwCap(*hwCapPt);
   }
-#if (SIP_VERSION >= 0x040800)
   sipReleaseType(hwCapPt,sipType_HwCap,state);
-#else
-  sipReleaseInstance(hwCapPt,sipClass_HwCap,state);
-#endif
 }
 return sipGetState(sipTransferObj);
 %End
@@ -60,7 +52,7 @@ int aPos = 0;
 for(std::vector<HwCap>::iterator i = sipCpp->begin();
     i != sipCpp->end();++i,++aPos)
 {
-  PyObject *aHwCap = sipConvertFromInstance(&(*i),sipClass_HwCap,NULL);
+  PyObject *aHwCap = sipConvertFromType(&(*i),sipType_HwCap,NULL);
   PyList_SET_ITEM(returnList,aPos,aHwCap);
   Py_DECREF(aHwCap);
 }

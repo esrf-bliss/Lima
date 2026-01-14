@@ -12,40 +12,40 @@ Let's start with a simple example of an image acquisition function using the sim
 
 .. code-block:: python
 
-  from Lima import Core
-  from Lima import Simulator
+  from lima import core
+  from lima import simulator
   import time
 
 
   def test_mode_generator(cam, nb_frames_prefetched=0):
       if nb_frames_prefetched:
-          cam.setMode(Simulator.Camera.MODE_GENERATOR_PREFETCH)
+          cam.setMode(simulator.Camera.MODE_GENERATOR_PREFETCH)
           fb = cam.getFrameGetter()
           fb.setNbPrefetchedFrames(nb_frames_prefetched)
           test = fb.getNbPrefetchedFrames()
       else:
-          cam.setMode(Simulator.Camera.MODE_GENERATOR)
+          cam.setMode(simulator.Camera.MODE_GENERATOR)
           fb = cam.getFrameGetter()
 
       # Add a peak
-      p1 = Simulator.GaussPeak(10, 10, 23, 1000) # peak at 10,10 fwhm=23 and max=1000
+      p1 = simulator.GaussPeak(10, 10, 23, 1000) # peak at 10,10 fwhm=23 and max=1000
       fb.setPeaks([p1])
 
 
   def test_mode_loader(cam, nb_frames_prefetched=0):
       if nb_frames_prefetched:
-          cam.setMode(Simulator.Camera.MODE_LOADER_PREFETCH)
+          cam.setMode(simulator.Camera.MODE_LOADER_PREFETCH)
           fb = cam.getFrameGetter()
           fb.setNbPrefetchedFrames(nb_frames_prefetched)
           test = fb.getNbPrefetchedFrames()
       else:
-          cam.setMode(Simulator.Camera.MODE_LOADER)
+          cam.setMode(simulator.Camera.MODE_LOADER)
           fb = cam.getFrameGetter()
 
       # Set file pattern
       fb.setFilePattern(b'input\\test_*.edf')
 
-  cam = Simulator.Camera()
+  cam = simulator.Camera()
 
   #test_mode_generator(cam)
   #test_mode_generator(cam, 10)
@@ -53,10 +53,10 @@ Let's start with a simple example of an image acquisition function using the sim
   test_mode_loader(cam, 100)
 
   # Get the hardware interface
-  hwint = Simulator.Interface(cam)
+  hwint = simulator.Interface(cam)
 
   # Get the control interface
-  control = Core.CtControl(hwint)
+  control = core.CtControl(hwint)
 
   # Get the acquisition control
   acq = control.acquisition()
@@ -68,8 +68,8 @@ Let's start with a simple example of an image acquisition function using the sim
   pars.directory = b'output'
   pars.prefix = b'testsimul_'
   pars.suffix = b'.edf'
-  pars.fileFormat = Core.CtSaving.EDF
-  pars.savingMode = Core.CtSaving.AutoFrame
+  pars.fileFormat = core.CtSaving.EDF
+  pars.savingMode = core.CtSaving.AutoFrame
   saving.setParameters(pars)
 
   acq = control.acquisition()

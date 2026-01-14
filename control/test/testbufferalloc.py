@@ -4,14 +4,14 @@ import time
 import numpy as np
 import gc
 
-from Lima import Core, Simulator
+from lima import core, simulator
 
 class TestBufferAlloc:
 
   @staticmethod
   def get_simu_hw_inter():
-    cam = Simulator.Camera()
-    hw_inter = Simulator.Interface(cam)
+    cam = simulator.Camera()
+    hw_inter = simulator.Interface(cam)
     return hw_inter, cam
 
   @staticmethod
@@ -33,7 +33,7 @@ class TestBufferAlloc:
     self.config = config
 
     if self.use_control():
-      self.ct = Core.CtControl(self.hw_inter)
+      self.ct = core.CtControl(self.hw_inter)
       self.acq = self.ct.acquisition()
       self.acq.setLatencyTime(self.config['readout_time'])
       self.acq.setAcqExpoTime(self.config['exp_time'])
@@ -41,18 +41,18 @@ class TestBufferAlloc:
       image = self.ct.image()
       self.frame_dim = image.getImageDim()
     else:
-      det_info = self.hw_inter.getHwCtrlObj(Core.HwCap.DetInfo)
-      self.frame_dim = Core.FrameDim(det_info.getDetectorImageSize(), 
+      det_info = self.hw_inter.getHwCtrlObj(core.HwCap.DetInfo)
+      self.frame_dim = core.FrameDim(det_info.getDetectorImageSize(), 
                                      det_info.getCurrImageType())
   
-      self.buffer = self.hw_inter.getHwCtrlObj(Core.HwCap.Buffer)
+      self.buffer = self.hw_inter.getHwCtrlObj(core.HwCap.Buffer)
       self.buffer.setFrameDim(self.frame_dim)
 
-      self.sync = self.hw_inter.getHwCtrlObj(Core.HwCap.Sync)
+      self.sync = self.hw_inter.getHwCtrlObj(core.HwCap.Sync)
       self.sync.setLatTime(self.config['readout_time'])
       self.sync.setExpTime(self.config['exp_time'])
 
-    self.max_nb_buffers = int(Core.GetDefMaxNbBuffers(self.frame_dim) * 0.7) / 2
+    self.max_nb_buffers = int(core.GetDefMaxNbBuffers(self.frame_dim) * 0.7) / 2
     self.max_nb_buffers += 1000 - self.max_nb_buffers % 1000
     min_nb_buffers = min(6000, self.max_nb_buffers / 2)
     self.nb_frames_list = range(min_nb_buffers, self.max_nb_buffers + 1, 500)
@@ -141,7 +141,7 @@ class TestBufferAlloc:
         self.hw_inter.startAcq()
       self.check_mem(False)
       t0 = time.time()
-      while self.acq_status() == Core.AcqRunning:
+      while self.acq_status() == core.AcqStatus.AcqRunning:
         time.sleep(0.1)
         if time.time() - t0 > self.config['acq_time']:
           if self.use_control():

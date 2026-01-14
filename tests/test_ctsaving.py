@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os.path
 import logging
-from Lima import Core
+from lima import core
 from .mocked_camera import MockedCamera
 from .lima_helper import LimaHelper
 
@@ -23,8 +23,8 @@ def test_h5(lima_helper: LimaHelper, tmp_path):
     saving.setDirectory(str(tmp_path))
     saving.setPrefix("test")
     saving.setSuffix(".h5")
-    saving.setFormat(Core.CtSaving.FileFormat.HDF5)
-    saving.setSavingMode(Core.CtSaving.SavingMode.AutoFrame)
+    saving.setFormat(core.CtSaving.FileFormat.HDF5)
+    saving.setSavingMode(core.CtSaving.SavingMode.AutoFrame)
 
     lima_helper.process_acquisition(ct_control)
 

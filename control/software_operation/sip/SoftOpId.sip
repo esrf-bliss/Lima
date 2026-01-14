@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2026
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -151,7 +151,7 @@ if(sipIsErr == NULL)
                       PySequence_Size(p) == 2 &&
                       sipCheckConvertFromPyStr(PySequence_Fast_GET_ITEM(p,0)) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
-					  sipType_Roi,SIP_NOT_NONE);
+					  sipType_Roi, SIP_NOT_NONE);
       }
     return aReturnFlag;
   }
@@ -226,7 +226,7 @@ if(sipIsErr == NULL)
                       PySequence_Size(p) == 2 &&
                       sipCheckConvertFromPyStr(PySequence_Fast_GET_ITEM(p,0)) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
-					  sipType_ArcRoi,SIP_NOT_NONE);
+					  sipType_ArcRoi, SIP_NOT_NONE);
       }
     return aReturnFlag;
   }
@@ -355,7 +355,7 @@ if(sipIsErr == NULL)
                       PySequence_Size(p) == 2 &&
                       sipCheckConvertFromPyStr(PySequence_Fast_GET_ITEM(p,0)) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
-					  sipFindType("Tasks::RoiCounterTask"),SIP_NOT_NONE);
+					  sipFindType("Tasks::RoiCounterTask"), SIP_NOT_NONE);
       }
     return aReturnFlag;
   }
@@ -543,7 +543,7 @@ if(sipIsErr == NULL)
                       PySequence_Size(p) == 2 &&
                       sipCheckConvertFromPyStr(PySequence_Fast_GET_ITEM(p,0)) &&
                       sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),
-					  sipType_Roi,SIP_NOT_NONE);
+					  sipType_Roi, SIP_NOT_NONE);
       }
     return aReturnFlag;
   }
@@ -617,7 +617,7 @@ if(sipIsErr == NULL)
 	aReturnFlag = PySequence_Check(p) &&
                       PySequence_Size(p) == 2 &&
                       sipCheckConvertFromPyStr(PySequence_Fast_GET_ITEM(p,0)) &&
-                      sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),sipFindType("Tasks::Roi2SpectrumTask"),SIP_NOT_NONE);
+                      sipCanConvertToType(PySequence_Fast_GET_ITEM(p,1),sipFindType("Tasks::Roi2SpectrumTask"), SIP_NOT_NONE);
       }
     return aReturnFlag;
   }

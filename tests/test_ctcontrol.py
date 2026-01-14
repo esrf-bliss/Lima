@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 import numpy
-from Lima import Core
+from lima import core
 
 from .mocked_camera import MockedCamera
 from .lima_helper import LimaHelper
@@ -20,11 +20,11 @@ def test_acquisition_soft(lima_helper: LimaHelper):
     cam = MockedCamera()
     ct_control = lima_helper.control(cam)
     ct_image = lima_helper.image(cam)
-    ct_image.setBin(Core.Bin(2, 2))
+    ct_image.setBin(core.Bin(2, 2))
     lima_helper.process_acquisition(ct_control)
 
     # Check the hardware
-    assert cam.binning == Core.Bin(1, 1)
+    assert cam.binning == core.Bin(1, 1)
 
     # Check the resulting frame
     data = ct_control.ReadImage(0)
@@ -39,11 +39,11 @@ def test_acquisition_hard_binning(lima_helper: LimaHelper):
     cam = MockedCamera(supports_sum_binning=True)
     ct_control = lima_helper.control(cam)
     ct_image = lima_helper.image(cam)
-    ct_image.setBin(Core.Bin(2, 2))
+    ct_image.setBin(core.Bin(2, 2))
     lima_helper.process_acquisition(ct_control)
 
     # Check the hardware
-    assert cam.binning == Core.Bin(2, 2)
+    assert cam.binning == core.Bin(2, 2)
 
     # Check the resulting frame
     data = ct_control.ReadImage(0)
@@ -58,11 +58,11 @@ def test_acquisition_hard_roi(lima_helper: LimaHelper):
     cam = MockedCamera(supports_roi=True)
     ct_control = lima_helper.control(cam)
     ct_image = lima_helper.image(cam)
-    ct_image.setRoi(Core.Roi(0, 0, 8, 4))
+    ct_image.setRoi(core.Roi(0, 0, 8, 4))
     lima_helper.process_acquisition(ct_control)
 
     # Check the hardware
-    assert cam.roi == Core.Roi(0, 0, 8, 4)
+    assert cam.roi == core.Roi(0, 0, 8, 4)
 
     # Check the resulting frame
     data = ct_control.ReadImage(0)
@@ -83,7 +83,7 @@ def test_readimage_after_changing_image_dim(lima_helper: LimaHelper):
     data = ct_control.ReadImage(0)
     assert data.buffer.shape == (8, 16)
 
-    ct_image.setRoi(Core.Roi(0, 0, 8, 4))
+    ct_image.setRoi(core.Roi(0, 0, 8, 4))
 
     # The frame was already aquired, it should not change
     data = ct_control.ReadImage(0)
@@ -101,7 +101,7 @@ def test_readimage_after_prepare(lima_helper: LimaHelper):
     ct_control.prepareAcq()
 
     # We are not allowed to read any image
-    with pytest.raises(Core.Exception):
+    with pytest.raises(core.Exception):
         ct_control.ReadImage(0)
 
 
@@ -120,14 +120,14 @@ def test_acquisition_mean_bin_with_binroi_capability(lima_helper: LimaHelper):
     )
     ct_control = lima_helper.control(cam)
     ct_image = lima_helper.image(cam)
-    ct_image.setBinMode(Core.Bin_Mean)
-    ct_image.setBin(Core.Bin(2, 2))
-    ct_image.setRoi(Core.Roi(0, 0, 8, 2))  # in binned coord
+    ct_image.setBinMode(core.BinMode.Bin_Mean)
+    ct_image.setBin(core.Bin(2, 2))
+    ct_image.setRoi(core.Roi(0, 0, 8, 2))  # in binned coord
     lima_helper.process_acquisition(ct_control)
 
     # Check the hardware
-    assert cam.roi == Core.Roi(0, 0, 16, 4)
-    assert cam.binning == Core.Bin(1, 1)
+    assert cam.roi == core.Roi(0, 0, 16, 4)
+    assert cam.binning == core.Bin(1, 1)
 
     # Check the resulting frame
     data = ct_control.ReadImage(0)

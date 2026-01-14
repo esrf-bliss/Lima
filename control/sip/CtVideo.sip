@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2026
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE 
@@ -72,7 +72,7 @@ using namespace lima;
 %MethodCode
   Py_BEGIN_ALLOW_THREADS
   const char* buffer = sipCpp->buffer();
-  SIP_SSIZE_T size = sipCpp->size();
+  Py_ssize_t size = sipCpp->size();
   if (buffer)
      sipRes = PyBytes_FromStringAndSize(buffer, size);
   else
@@ -158,13 +158,13 @@ using namespace lima;
     {
       bool aReturnFlag = !!PySequence_Check(sipPy);
       for(int i = 0;aReturnFlag && i < PySequence_Size(sipPy);++i)
-	aReturnFlag = !!sipCanConvertToEnum(PySequence_Fast_GET_ITEM(sipPy,i),
-					  sipType_CtVideo_AutoGainMode);
+	aReturnFlag = !!sipCanConvertToType(PySequence_Fast_GET_ITEM(sipPy,i),
+					  sipType_CtVideo_AutoGainMode, SIP_NOT_NONE);
       return aReturnFlag;
     }
   std::vector<CtVideo::AutoGainMode> *modeListPt = new std::vector<CtVideo::AutoGainMode>();
   for(int i = 0;i < PySequence_Size(sipPy);++i)
-    modeListPt->push_back(static_cast<CtVideo::AutoGainMode>(SIPLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
+    modeListPt->push_back(static_cast<CtVideo::AutoGainMode>(sipLong_AsLong(PySequence_Fast_GET_ITEM(sipPy,i))));
   *sipCppPtr = modeListPt;
   return sipGetState(sipTransferObj);
 %End

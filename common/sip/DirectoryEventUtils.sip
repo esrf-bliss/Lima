@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2026
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -41,8 +41,8 @@ public:
     virtual void prepare(const DirectoryEvent::Parameters &parameters);
     virtual bool nextFileExpected(int file_number,
 				  const char *full_path,
-				  int &next_file_number_expected /In,Out/) throw() = 0;
-    virtual bool newFile(int file_number,const char *full_path) throw() = 0;
+				  int &next_file_number_expected /In,Out/) = 0;
+    virtual bool newFile(int file_number,const char *full_path) = 0;
   };
 
   DirectoryEvent(bool local,Callback&);

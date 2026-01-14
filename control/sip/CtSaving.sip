@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2026
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -33,7 +33,7 @@ typedef std::pair<std::string, std::string> HeaderValue;
 
 %ConvertToTypeCode
    PyObject *key, *value;
-   SIP_SSIZE_T pos;
+   Py_ssize_t pos;
    
    if (sipIsErr == NULL)
    {

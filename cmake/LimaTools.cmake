@@ -1,7 +1,7 @@
 ###########################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-#  Copyright (C) : 2009-2025
+#  Copyright (C) : 2009-2026
 #  European Synchrotron Radiation Facility
 #  CS40220 38043 Grenoble Cedex 9
 #  FRANCE
@@ -75,7 +75,7 @@ function(limatools_run_camera_python_tests test_src camera)
 endfunction()
 
 # this function is used to build camera's python binding
-function(limatools_run_sip_for_camera camera)
+function(limatools_run_sip_for_camera camera _sip_concat_parts)
 
   set(MODULE_NAME lima${camera})
 
@@ -104,8 +104,19 @@ function(limatools_run_sip_for_camera camera)
     "${CMAKE_CURRENT_SOURCE_DIR}/sip"
   )
 
+  # since sip6 generate the pyproject.toml file to configure sip-build tool at run time
+  find_file(sip_toml_file NAMES "pyprojectmodule.toml.in" PATHS ${LIMA_SIP_INCLUDE_DIRS} NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+  set(SIP_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR})
+  configure_file(${sip_toml_file} ${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml)
+  unset(sip_toml_file CACHE)
+  unset(SIP_INSTALL_DIR CACHE)
+
   # If Lima is an imported target, set the SIP_DISABLE_FEATURES
   set(SIP_DISABLE_FEATURES ${LIMA_SIP_DISABLE_FEATURES})
+
+  # Get sip abi version of the lima.sip module, collected from FindSIP.cmake (from FindSIP.py)
+  set(SIP_ABI_VERSION ${LIMA_SIP_ABI_VERSION})
+  set(SIP_CONCAT_PARTS ${_sip_concat_parts})
 
   add_sip_python_module(${MODULE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/sip/${MODULE_NAME}.sip TRUE)
 
@@ -120,13 +131,6 @@ macro (limatools_find_python_and_sip)
   find_package(SIP REQUIRED)
 
   include(SIPMacros)
-
-  if(WIN32)
-    set(SIP_TAGS WIN32_PLATFORM)
-  elseif(UNIX)
-    set(SIP_TAGS POSIX_PLATFORM)
-  endif(WIN32)
-  set(SIP_EXTRA_OPTIONS -e -g)
 
 endmacro()
 
@@ -144,7 +148,7 @@ macro (limatools_install_camera_tango files)
   foreach(file ${file_list})
     install (
       FILES ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-      DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/Lima/Server/camera>"
+      DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/lima/server/camera>"
       )
   endforeach()
 endmacro()

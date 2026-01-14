@@ -1,7 +1,7 @@
 ###########################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-#  Copyright (C) : 2009-2025
+#  Copyright (C) : 2009-2026
 #  European Synchrotron Radiation Facility
 #  BP 220, Grenoble 38043
 #  FRANCE
@@ -22,7 +22,7 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 4.0)
 
 project (Lima)
 include(cmake/project_version.cmake)
@@ -327,8 +327,14 @@ if(LIMA_ENABLE_PYTHON)
     if (NOT LIMA_ENABLE_SPS_IMAGE)
       set(SIP_DISABLE_FEATURES ${SIP_DISABLE_FEATURES} WITH_SPS_IMAGE)
     endif()
-#    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip PROPERTIES OBJECT_DEPENDS ${SIP_SOURCES})
+
     # Run sip now !
+    set(SIP_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR})
+    configure_file(sip/pyproject.toml.in ${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml)
+    unset(SIP_INSTALL_DIR CACHE)
+
+    # Get sip abi version of the lima.sip module, collected from FindSIP.cmake (from FindSIP.py)
+    set(SIP_ABI_VERSION ${LIMA_SIP_ABI_VERSION})
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip FALSE)
 
     target_include_directories(python_module_limacore PRIVATE
@@ -337,7 +343,7 @@ if(LIMA_ENABLE_PYTHON)
         ${CMAKE_CURRENT_SOURCE_DIR}/third-party/Processlib/sip)
     target_link_libraries(python_module_limacore PRIVATE limacore Python3::Python Python3::NumPy)
 
-    add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python/Lima ${CMAKE_BINARY_DIR}/python/Lima)
+    add_custom_command(TARGET lima${NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/python/lima ${CMAKE_BINARY_DIR}/python/lima)
 endif()
 
 ## Installation

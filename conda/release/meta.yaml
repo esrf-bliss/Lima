@@ -18,15 +18,15 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip 4.19* # API v12.7
-    - processlib
+    - lima-sip6 13*
+    - processlib 1.11*
     - libconfig 1.7*
     # I/O formats
     - zlib
     - lz4-c 1.9*
     - hdf5 1.14*
     - libtiff
-    - cbflib         # [linux]
+    - cbflib >=0.9.7 # [linux]
     - openssl 3*     # [linux]
     - libnuma        # [linux]
   build:
@@ -35,7 +35,7 @@ requirements:
     - {{ compiler('cxx') }}
   run:
     - python
-    - {{ pin_compatible('sip', min_pin='x.x.x', max_pin='x') }}
+    - {{ pin_compatible('lima-sip6', min_pin='x.x.x', max_pin='x') }}
     - {{ pin_compatible('processlib', max_pin='x.x') }}
     - libconfig 1.7*
     # I/O formats
@@ -43,7 +43,7 @@ requirements:
     - lz4-c 1.9*
     - hdf5 1.14*
     - libtiff
-    - cbflib        # [linux]
+    - {{ pin_compatible('cbflib', min_pin='x.x.x') }}  # [linux]
     - openssl 3*    # [linux]
     - libnuma       # [linux]
 
@@ -55,7 +55,7 @@ test:
     - pytest-mock
     - h5py  # to check produced HDF5 files
   imports:
-    - Lima.Core
+    - lima.core
   commands:
     - pytest -vs -o log_cli=true tests
 

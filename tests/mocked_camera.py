@@ -6,7 +6,7 @@ import threading
 import numpy
 import logging
 import time
-from Lima import Core
+from lima import core
 
 
 _logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class AcqThread(threading.Thread):
     def _run(self):
         if self.camera.buffer_ctrl:
             buffer_mgr = self.camera.buffer_ctrl.getBuffer()
-            buffer_mgr.setStartTimestamp(Core.Timestamp.now())
+            buffer_mgr.setStartTimestamp(core.Timestamp.now())
 
         self.camera.doAcquisition()
 
@@ -42,15 +42,15 @@ class AcqThread(threading.Thread):
 
 
 class MockedCamera:
-    Core.DEB_CLASS(Core.DebModCamera, "mocked.Camera")
+    core.DEB_CLASS(core.DebModule.DebModCamera, "mocked.Camera")
 
     BPP_2_NUMPY = {
-        Core.Bpp8: numpy.uint8,
-        Core.Bpp16: numpy.uint16,
-        Core.Bpp32: numpy.uint32,
-        Core.Bpp8S: numpy.int8,
-        Core.Bpp16S: numpy.int16,
-        Core.Bpp32S: numpy.int32,
+        core.ImageType.Bpp8: numpy.uint8,
+        core.ImageType.Bpp16: numpy.uint16,
+        core.ImageType.Bpp32: numpy.uint32,
+        core.ImageType.Bpp8S: numpy.int8,
+        core.ImageType.Bpp16S: numpy.int16,
+        core.ImageType.Bpp32S: numpy.int32,
     }
 
     def __init__(
@@ -69,19 +69,19 @@ class MockedCamera:
         self.name = "mocked"
         self.width = 16
         self.height = 8
-        self.bpp: Core.ImageType = Core.Bpp8
+        self.bpp: core.ImageType = core.ImageType.Bpp8
         # 55um x 55 um
         self.pixel_size = 55e-6, 55e-6
 
         # For hardware capability
-        self.binning: Core.Bin = Core.Bin(1, 1)
-        self.roi: Core.Roi = Core.Roi()
+        self.binning: core.Bin = core.Bin(1, 1)
+        self.roi: core.Roi = core.Roi()
 
-        self.trigger_mode: Core.TrigMod
+        self.trigger_mode: core.TrigMode
         if trigger_multi:
-            self.trigger_mode = Core.IntTrigMult
+            self.trigger_mode = core.TrigMode.IntTrigMult
         else:
-            self.trigger_mode = Core.IntTrig
+            self.trigger_mode = core.TrigMode.IntTrig
 
         self.supports_sum_binning: bool = supports_sum_binning
         self.supports_roi: bool = supports_roi
@@ -90,11 +90,11 @@ class MockedCamera:
         self.__nb_frames = 1
         self.__expo_time = 1.0
         self.__acquired_frames = 0
-        self.__buffer_ctrl: Core.SoftBufferCtrlObj | None = None
+        self.__buffer_ctrl: core.SoftBufferCtrlObj | None = None
         self.__status: MockedState = MockedState.READY
         self.__acq_thread = None
 
-    def _set_buffer_ctrl(self, buffer_ctrl: Core.SoftBufferCtrlObj):
+    def _set_buffer_ctrl(self, buffer_ctrl: core.SoftBufferCtrlObj):
         self.__buffer_ctrl = buffer_ctrl
 
     def __str__(self):
@@ -170,16 +170,16 @@ class MockedCamera:
 
                 self.__buffer_mgr.copy_data(frame_id, frame)
 
-                frame_info = Core.HwFrameInfoType()
+                frame_info = core.HwFrameInfoType()
                 frame_info.acq_frame_nb = frame_id
-                frame_info.frame_timestamp = Core.Timestamp.now()
+                frame_info.frame_timestamp = core.Timestamp.now()
                 self.__buffer_mgr.newFrameReady(frame_info)
             else:
                 _logger.warning("No buffer ctrl setup")
 
             self.__acquired_frames += 1
 
-        # if self.trigger_mode == Core.IntTrigMult:
+        # if self.trigger_mode == core.TrigMode.IntTrigMult:
         self.__status = MockedState.READY
 
     def startAcq(self):
@@ -225,16 +225,16 @@ class MockedCamera:
         return self.__buffer_ctrl
 
 
-class DetInfoCtrlObj(Core.HwDetInfoCtrlObj):
+class DetInfoCtrlObj(core.HwDetInfoCtrlObj):
     def __init__(self, camera: MockedCamera):
-        Core.HwDetInfoCtrlObj.__init__(self)
+        core.HwDetInfoCtrlObj.__init__(self)
         self.__camera: MockedCamera = camera
         self.__width = camera.width
         self.__height = camera.height
         self.__bpp = camera.bpp
 
     def getMaxImageSize(self):
-        return Core.Size(self.__width, self.__height)
+        return core.Size(self.__width, self.__height)
 
     def getDetectorImageSize(self):
         return self.getMaxImageSize()
@@ -246,7 +246,7 @@ class DetInfoCtrlObj(Core.HwDetInfoCtrlObj):
         return self.getDefImageType()
 
     def setCurrImageType(self):
-        raise Core.Exceptions(Core.Hardware, Core.NotSupported)
+        raise core.Exception(core.Layer.Hardware, core.ErrorType.NotSupported)
 
     def getPixelSize(self):
         return self.__camera.pixel_size
@@ -276,9 +276,9 @@ class DetInfoCtrlObj(Core.HwDetInfoCtrlObj):
         return 0
 
 
-class MockedSyncCtrlObj(Core.HwSyncCtrlObj):
+class MockedSyncCtrlObj(core.HwSyncCtrlObj):
     def __init__(self, camera, det_info):
-        Core.HwSyncCtrlObj.__init__(self)
+        core.HwSyncCtrlObj.__init__(self)
         self.__camera = weakref.ref(camera)
         self.__det_info = weakref.ref(det_info)
 
@@ -295,7 +295,7 @@ class MockedSyncCtrlObj(Core.HwSyncCtrlObj):
         if self.checkTrigMode(trig_mode):
             cam.trigger_mode = trig_mode
         else:
-            raise Core.Exceptions(Core.Hardware, Core.NotSupported)
+            raise core.Exception(core.Layer.Hardware, core.ErrorType.NotSupported)
 
     def getTrigMode(self):
         cam = self.__camera()
@@ -333,7 +333,7 @@ class MockedSyncCtrlObj(Core.HwSyncCtrlObj):
 
     def getValidRanges(self):
         det_info = self.__det_info()
-        return Core.HwSyncCtrlObj.ValidRangesType(
+        return core.HwSyncCtrlObj.ValidRangesType(
             det_info.get_min_exposition_time(),
             det_info.get_max_exposition_time(),
             det_info.get_min_latency(),
@@ -347,41 +347,41 @@ class MockedSyncCtrlObj(Core.HwSyncCtrlObj):
         cam.exposure = exposure
 
 
-class MockedHwBinCtrlObj(Core.HwBinCtrlObj):
+class MockedHwBinCtrlObj(core.HwBinCtrlObj):
     def __init__(self, camera: MockedCamera):
-        Core.HwBinCtrlObj.__init__(self)
+        core.HwBinCtrlObj.__init__(self)
         self.__camera: MockedCamera = camera
 
-    def setBin(self, bin: Core.Bin):
-        self.__camera.binning = Core.Bin(bin.getX(), bin.getY())
+    def setBin(self, bin: core.Bin):
+        self.__camera.binning = core.Bin(bin.getX(), bin.getY())
 
-    def getBin(self) -> Core.Bin:
+    def getBin(self) -> core.Bin:
         bin = self.__camera.binning
-        return Core.Bin(bin.getX(), bin.getY())
+        return core.Bin(bin.getX(), bin.getY())
 
-    def checkBin(self, bin: Core.Bin) -> Core.Bin:
-        return Core.Bin(bin.getX(), bin.getY())
+    def checkBin(self, bin: core.Bin) -> core.Bin:
+        return core.Bin(bin.getX(), bin.getY())
 
 
-class MockedHwRoiCtrlObj(Core.HwRoiCtrlObj):
+class MockedHwRoiCtrlObj(core.HwRoiCtrlObj):
     def __init__(self, camera: MockedCamera):
-        Core.HwRoiCtrlObj.__init__(self)
+        core.HwRoiCtrlObj.__init__(self)
         self.__camera: MockedCamera = camera
 
-    def setRoi(self, roi: Core.Roi):
+    def setRoi(self, roi: core.Roi):
         self.__camera.roi = roi
 
-    def getRoi(self) -> Core.Roi:
+    def getRoi(self) -> core.Roi:
         return self.__camera.roi
 
-    def checkRoi(self, roi: Core.Roi) -> Core.Roi:
+    def checkRoi(self, roi: core.Roi) -> core.Roi:
         return roi
 
 
-class MockedInterface(Core.HwInterface):
+class MockedInterface(core.HwInterface):
     def __init__(self, camera: MockedCamera):
-        Core.HwInterface.__init__(self)
-        self.__buffer_ctrl = Core.SoftBufferCtrlObj()
+        core.HwInterface.__init__(self)
+        self.__buffer_ctrl = core.SoftBufferCtrlObj()
 
         self.__camera: MockedCamera = camera
         self.__camera._set_buffer_ctrl(self.__buffer_ctrl)
@@ -415,7 +415,7 @@ class MockedInterface(Core.HwInterface):
             self.__camera = None
 
     def getCapList(self):
-        return [Core.HwCap(x) for x in self.__capabilities]
+        return [core.HwCap(x) for x in self.__capabilities]
 
     def reset(self, reset_level):
         if reset_level == self.HardReset:
@@ -435,33 +435,33 @@ class MockedInterface(Core.HwInterface):
         self.__camera.stopAcq()
 
     def getStatus(self):
-        status = Core.HwInterface.StatusType()
+        status = core.HwInterface.StatusType()
 
         if self.__camera is None:
-            status.det = Core.DetFault
-            status.acq = Core.AcqFault
+            status.det = core.DetStatus.DetFault
+            status.acq = core.AcqStatus.AcqFault
             return status
 
         camserverStatus = self.__camera.status
         if camserverStatus == MockedState.ERROR:
-            status.det = Core.DetFault
-            status.acq = Core.AcqFault
+            status.det = core.DetStatus.DetFault
+            status.acq = core.AcqStatus.AcqFault
         else:
             if camserverStatus == MockedState.RUNNING:
-                status.det = Core.DetExposure
-                status.acq = Core.AcqRunning
+                status.det = core.DetStatus.DetExposure
+                status.acq = core.AcqStatus.AcqRunning
             else:
-                status.det = Core.DetIdle
+                status.det = core.DetStatus.DetIdle
                 lastAcquiredFrame = self.__camera.acquiredFrames - 1
                 requestNbFrame = self.__syncObj.getNbFrames()
                 if not self.__acquisition_start_flag or (
                     lastAcquiredFrame >= 0 and lastAcquiredFrame == (requestNbFrame - 1)
                 ):
-                    status.acq = Core.AcqReady
+                    status.acq = core.AcqStatus.AcqReady
                 else:
-                    status.acq = Core.AcqRunning
+                    status.acq = core.AcqStatus.AcqRunning
 
-        status.det_mask = Core.DetExposure | Core.DetFault
+        #status.det_mask = core.DetStatus.DetExposure | core.DetStatus.DetFault
         return status
 
     def getNbAcquiredFrames(self):

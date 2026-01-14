@@ -22,31 +22,27 @@
 # SIP_INCLUDE_DIRS - List of directories which SIP will scan through when looking
 #     for included .sip files. (Corresponds to the -I option for SIP.)
 #
-# SIP_TAGS - List of tags to define when running SIP. (Corresponds to the -t
-#     option for SIP.)
-#
 # SIP_CONCAT_PARTS - An integer which defines the number of parts the C++ code
 #     of each module should be split into. Defaults to 8. (Corresponds to the
 #     -j option for SIP.)
 #
-# SIP_DISABLE_FEATURES - List of feature names which should be disabled
-#     running SIP. (Corresponds to the -x option for SIP.)
-#
-# SIP_EXTRA_OPTIONS - Extra command line options which should be passed on to
-#     SIP.
-
+# SIP_ABI_VERSION - Set the ABI version
 find_package(Python3 COMPONENTS Interpreter)
 
 # See https://itk.org/Bug/view.php?id=12265
 get_filename_component(_SIPMACRO_LIST_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 set(SIP_INCLUDE_DIRS)
-set(SIP_TAGS)
-set(SIP_CONCAT_PARTS 16)
+set(SIP_CONCAT_PARTS)
 set(SIP_DISABLE_FEATURES)
-set(SIP_EXTRA_OPTIONS)
+set(SIP_ABI_VERSION)
 
-macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
+macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
+
+
+	if (NOT SIP_CONCAT_PARTS)
+        set(SIP_CONCAT_PARTS 12)
+    endif()
 
     set(EXTRA_LINK_LIBRARIES ${ARGN})
 
@@ -72,29 +68,43 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
         list(APPEND _sip_include_dirs -I ${_abs_inc})
     endforeach (_inc )
 
-    set(_sip_tags)
-    foreach (_tag ${SIP_TAGS})
-        list(APPEND _sip_tags -t ${_tag})
-    endforeach (_tag)
-
-    set(_sip_x)
+   set(_sip_x)
     foreach (_x ${SIP_DISABLE_FEATURES})
-        list(APPEND _sip_x -x ${_x})
+        list(APPEND _sip_x --disabled-feature ${_x})
     endforeach (_x ${SIP_DISABLE_FEATURES})
 
+
+    # Set in the pyproject.toml
+    set(_build_path ${PROJECT_SOURCE_DIR}/build-sip)
+    message("_build_path: ${_build_path}")
+
+    set(_message "Generating CPP code for module ${MODULE_NAME}")
     set(_sip_output_files)
     foreach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
         if( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
-            set(_sip_output_files ${_sip_output_files} ${_module_path}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
+            set(_sip_output_files ${_sip_output_files} ${_build_path}/${_child_module_name}/sip${_child_module_name}part${CONCAT_NUM}.cpp )
         endif( ${CONCAT_NUM} LESS ${SIP_CONCAT_PARTS} )
     endforeach(CONCAT_NUM RANGE 0 ${SIP_CONCAT_PARTS} )
+
+    set(_sip_abi_option)
+    if (SIP_ABI_VERSION)
+	    #string(CONCAT _sip_abi_option "--abi-version " ${SIP_ABI_VERSION}) 
+	    list(APPEND _sip_abi_option --abi-version ${SIP_ABI_VERSION})
+    endif()
+
+    message("command: ${SIP_BUILD_EXECUTABLE} ${_sip_abi_option} ${_sip_x} --no-protected-is-public --pep484-pyi --no-compile --concatenate ${SIP_CONCAT_PARTS}") 
+    message("_sip_output_files: ${_sip_output_files}")
 
     add_custom_command(
         OUTPUT ${_sip_output_files}
         COMMAND ${CMAKE_COMMAND} -E touch ${_sip_output_files}
-        COMMAND ${SIP_EXECUTABLE} ${_sip_tags} ${_sip_x} ${SIP_EXTRA_OPTIONS} -j ${SIP_CONCAT_PARTS} -c ${_module_path} ${_sip_include_dirs} ${_abs_module_sip}
+	COMMAND ${SIP_BUILD_EXECUTABLE} ${_sip_abi_option} 
+					${_sip_x}
+					--no-protected-is-public 
+					--pep484-pyi --no-compile 
+					--concatenate ${SIP_CONCAT_PARTS}
         DEPENDS ${_abs_module_sip} ${SIP_EXTRA_FILES_DEPEND}
-        COMMENT "Generating SIP code for module ${MODULE_NAME}"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
     if (${RUN_CHECK_SIP_EXC})
@@ -117,19 +127,18 @@ macro(ADD_SIP_PYTHON_MODULE MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
     else (CYGWIN)
         add_library(${_logical_name} SHARED ${_sip_output_files} )
     endif (CYGWIN)
-    target_link_libraries(${_logical_name} PRIVATE ${PYTHON_LIBRARY})
+    target_link_libraries(${_logical_name} PRIVATE ${Python3_LIBRARY})
     target_link_libraries(${_logical_name} PRIVATE ${EXTRA_LINK_LIBRARIES})
-    set_target_properties(${_logical_name} PROPERTIES
-                          PREFIX "" OUTPUT_NAME ${_child_module_name}
-                          LINKER_LANGUAGE CXX)
+    set_target_properties(${_logical_name} PROPERTIES PREFIX "" OUTPUT_NAME ${_child_module_name})
 
     if (WIN32)
       set_target_properties(${_logical_name} PROPERTIES SUFFIX ".pyd")
     endif (WIN32)
 
+    # since lima sip.so module is installed under lima/ do the same limacore
     install(TARGETS ${_logical_name}
-      LIBRARY DESTINATION "${Python3_SITEARCH}/${_parent_module_path}"
-      RUNTIME DESTINATION "${Python3_SITEARCH}/${_parent_module_path}"
+      LIBRARY DESTINATION "${Python3_SITEARCH}/lima"
+      RUNTIME DESTINATION "${Python3_SITEARCH}/lima"
     )
 
-endmacro(ADD_SIP_PYTHON_MODULE)
+endmacro(add_sip_python_module)

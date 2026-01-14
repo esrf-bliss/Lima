@@ -75,9 +75,9 @@ endif()
 
 if(LIMA_ENABLE_PYTHON)
     install(
-         DIRECTORY python/Lima/
+         DIRECTORY python/lima/
          COMPONENT sip
-         DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/Lima>")
+         DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/lima>")
 
     file(GLOB SIP_SOURCES
         "${CMAKE_SOURCE_DIR}/common/sip/*.sip"
@@ -91,6 +91,7 @@ if(LIMA_ENABLE_PYTHON)
             FILES ${SIP_SOURCES}
                   ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip
                   ${CMAKE_SOURCE_DIR}/sip/limamodules.sip.in
+                  ${CMAKE_SOURCE_DIR}/sip/pyprojectmodule.toml.in
             COMPONENT sip
             DESTINATION ${SIP_INSTALL_DIR}
         )
