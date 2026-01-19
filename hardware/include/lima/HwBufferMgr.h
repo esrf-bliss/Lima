@@ -463,7 +463,7 @@ class LIMACORE_API MmapFileBufferAllocMgr : public BufferAllocMgr
   virtual void clearAllBuffers();
  private:
   int _calc_frame_mem_size(const FrameDim& frame_dim) const;
-  static off_t _calc_req_mem_size(double req_mem_size_percent);
+  double _calc_mem_size_percent();
 
   void*		m_map_mem_base;
   off_t		m_map_size;

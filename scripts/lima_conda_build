@@ -152,7 +152,7 @@ else
     exit 1
 fi
 
-CPUS=$(lscpu | grep '^CPU(s)' | awk '{print $2}')
+CPUS=$(lscpu | grep '^CPU(s):' | awk '{print $2}')
 function parallel_cmake
 {
     configure_flags=""

@@ -39,7 +39,7 @@ deploy-devel:
     - build-win
   script:
     - cp -Rf dist/* /conda-devel/
-    - conda index /conda-devel/
+    - conda index --channeldata /conda-devel/
   tags:
     - conda
     - linux
@@ -59,7 +59,7 @@ deploy-stable:
     - build-win
   script:
     - cp -Rf dist/* /conda/
-    - conda index /conda/
+    - conda index --channeldata /conda/
   tags:
     - conda
     - linux

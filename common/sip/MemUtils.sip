@@ -23,8 +23,33 @@
 #include "lima/MemUtils.h"
 using namespace lima;
 %End
-void GetSystemMem(int& mem_unit, int& system_mem);
-	
+
+// void GetSystemMem(int& mem_unit, int& system_mem);
+// mem_unit is actually an In,Out parameter: 0=auto
+SIP_PYOBJECT GetSystemMem(int mem_unit = 0);
+%MethodCode
+	int mem_unit = a0;
+	int system_mem;
+
+	Py_BEGIN_ALLOW_THREADS
+	try {
+		GetSystemMem(mem_unit, system_mem);
+	} catch (Exception &sipExceptionRef) {
+		Py_BLOCK_THREADS
+		const std::string& tmpString = sipExceptionRef.getErrMsg();
+		const char *detail = tmpString.c_str();
+		PyErr_SetString(sipException_Exception, detail);
+		return SIP_NULLPTR;
+	} catch (...) {
+		Py_BLOCK_THREADS
+		sipRaiseUnknownException();
+		return SIP_NULLPTR;
+	}
+	Py_END_ALLOW_THREADS
+
+	sipRes = sipBuildResult(NULL, "(ii)", mem_unit, system_mem);
+%End
+
 void GetPageSize(int& page_size);
 
 int GetDefMaxNbBuffers(const FrameDim& frame_dim);
