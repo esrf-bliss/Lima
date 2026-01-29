@@ -70,14 +70,22 @@ using namespace lima;
 
       SIP_PYOBJECT		buffer() 	const;
 %MethodCode
+  const char* buffer;
+  Py_ssize_t size;
   Py_BEGIN_ALLOW_THREADS
-  const char* buffer = sipCpp->buffer();
-  Py_ssize_t size = sipCpp->size();
-  if (buffer)
-     sipRes = PyBytes_FromStringAndSize(buffer, size);
-  else
-     sipRes = Py_None;
+  buffer = sipCpp->buffer();
+  size = sipCpp->size();
   Py_END_ALLOW_THREADS
+  if (buffer)
+  {
+     if((sipRes = PyBytes_FromStringAndSize(buffer, size)) == NULL)
+        sipIsErr = 1;
+  }
+  else
+  {
+     Py_INCREF(Py_None);
+     sipRes = Py_None;
+  }
 %End
       int 			width() 	const;
       int 			height() 	const;
