@@ -183,7 +183,7 @@ Then install the build tools:
 For linux
 ::
 
-   mamba install cmake gxx_linux-64
+   mamba install cmake gxx_linux-64 ninja
 
 For windows, just be sure you have visual studio 2017 x64 installed
 
@@ -228,15 +228,15 @@ For linux:
 
 ::
 
-  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=$CONDA_PREFIX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
+  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DCMAKE_FIND_ROOT_PATH=$CONDA_PREFIX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DPython3_FIND_STRATEGY=LOCATION -DLIMA_ENABLE_PYTANGO_SERVER=1
   cmake --build build --target install
 
 For windows:
 
 ::
 
-  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_FIND_ROOT_PATH=%CONDA_PREFIX% -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX%
-  cmake --build build --target install --config Release
+  cmake -Bbuild -H. -DLIMA_ENABLE_PYTHON=1 -DCAMERA_ENABLE_TESTS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DCMAKE_FIND_ROOT_PATH=$CONDA_PREFIX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DPython3_FIND_STRATEGY=LOCATION -DLIMA_ENABLE_PYTANGO_SERVER=1
+  cmake --build build --target install
 
 
 .. _Conda: https://conda.io/docs
