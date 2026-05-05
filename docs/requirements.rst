@@ -37,6 +37,8 @@ Saving format dependencies
 - zlib_, a lossless data-compression library. For Windows, you can download the ESRF binary package `zlib-windows`_ and install it under ``C:\Program Files`` ;
 - CBF_, a library for accessing Crystallographic Binary Files (CBF files) and Image-supporting CIF (imgCIF) files ;
 - HDF5_, a data model, library, and file format for storing and managing data ;
+- OpenJPEG_, an open source JPEG 2000 codec, required for HDF5 JPEG 2000 saving ;
+- Kakadu_, an optional JPEG 2000 codec that can be used as an alternative HDF5 JPEG 2000 encoder ;
 - CCfits_, CFITSIO_, a library for reading and writing data files in FITS (Flexible Image Transport System) data format ;
 - LZ4_ >= 1.9.1, a lossless compression algorithm ;
 - libconfig_, a library for processing structured configuration files. For Windows, you can download the ESRF binary package `libconfig-windows`_ and install it under ``C:\Program Files``.
@@ -69,6 +71,8 @@ PyTango server dependencies
 .. _zlib: https://zlib.net/
 .. _CBF: http://www.bernstein-plus-sons.com/software/CBF
 .. _HDF5: https://support.hdfgroup.org/HDF5
+.. _OpenJPEG: https://www.openjpeg.org/
+.. _Kakadu: https://kakadusoftware.com/
 .. _CCfits: https://heasarc.gsfc.nasa.gov/fitsio/ccfits
 .. _CFITSIO: https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html
 .. _LZ4: https://lz4.github.io/lz4

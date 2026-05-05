@@ -92,3 +92,39 @@ Let's start with a simple example of an image acquisition function using the sim
 
   # read the first image
   im0 = control.ReadImage(0)
+
+HDF5 JPEG 2000 saving
+`````````````````````
+
+When Lima is built with ``LIMA_ENABLE_HDF5`` and ``LIMA_ENABLE_HDF5_JP2K``, the
+``HDF5JP2K`` saving format stores each HDF5 chunk as a JPEG 2000 codestream.
+The default compression ratio is ``10.0`` and the default encoder is OpenJPEG.
+
+.. code-block:: python
+
+  saving = control.saving()
+
+  saving.setDirectory(b"output")
+  saving.setPrefix(b"jp2k_")
+  saving.setFormat(core.CtSaving.FileFormat.HDF5JP2K)
+  saving.setFormatSuffix()
+  saving.setSavingMode(core.CtSaving.SavingMode.AutoFrame)
+
+  # Optional: change the target lossy compression ratio.
+  saving.setJp2kCompressionRatio(10.0)
+
+  # Optional: select Kakadu when Lima was built with LIMA_ENABLE_KAKADU_JP2K.
+  saving.setJp2kCompressionCodec(
+      core.CtSaving.Jp2kCompressionCodec.JP2KKakadu
+  )
+
+OpenJPEG remains available explicitly:
+
+.. code-block:: python
+
+  saving.setJp2kCompressionCodec(
+      core.CtSaving.Jp2kCompressionCodec.JP2KOpenJPEG
+  )
+
+Reading these files from an external process requires the matching HDF5 filter
+plugin to be available to HDF5, for example through ``HDF5_PLUGIN_PATH``.

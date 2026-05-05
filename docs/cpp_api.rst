@@ -86,6 +86,34 @@ Let's get started with a simple example of an image acquisition function using t
 
   std::cout << "SIMUTEST: acq stopped" << std::endl;
 
+HDF5 JPEG 2000 Saving
+^^^^^^^^^^^^^^^^^^^^^
+
+When Lima is built with ``LIMA_ENABLE_HDF5`` and ``LIMA_ENABLE_HDF5_JP2K``, the
+``CtSaving::HDF5JP2K`` format stores HDF5 chunks compressed as JPEG 2000. The
+default compression ratio is ``10.0`` and the default encoder is OpenJPEG.
+
+.. code-block:: c++
+
+  CtSaving *save = ct.saving();
+  save->setDirectory("./data");
+  save->setPrefix("jp2k_");
+  save->setFormat(CtSaving::HDF5JP2K);
+  save->setFormatSuffix();
+  save->setSavingMode(CtSaving::AutoFrame);
+
+  // Optional: change the target lossy compression ratio.
+  save->setJp2kCompressionRatio(10.0);
+
+  // Optional: select Kakadu when Lima was built with LIMA_ENABLE_KAKADU_JP2K.
+  save->setJp2kCompressionCodec(CtSaving::JP2KKakadu);
+
+OpenJPEG can be selected explicitly with:
+
+.. code-block:: c++
+
+  save->setJp2kCompressionCodec(CtSaving::JP2KOpenJPEG);
+
 Control Interfaces
 ^^^^^^^^^^^^^^^^^^
 
