@@ -127,44 +127,11 @@ if(LIMA_ENABLE_HDF5)
 
     list(APPEND saving_definitions -DWITH_JP2K_COMPRESSION)
 
-    set(KAKADU_ROOT "" CACHE PATH "Path to Kakadu root directory")
-    set(KAKADU_LIBRARY_DIR "" CACHE PATH "Path to Kakadu library directory")
-    if(DEFINED ENV{KAKADU_ROOT})
-      set(KAKADU_ROOT "$ENV{KAKADU_ROOT}" CACHE PATH "Path to Kakadu root directory" FORCE)
-    endif()
-    if(DEFINED ENV{KAKADU_LIBRARY_DIR})
-      set(KAKADU_LIBRARY_DIR "$ENV{KAKADU_LIBRARY_DIR}" CACHE PATH "Path to Kakadu library directory" FORCE)
-    endif()
-    if(DEFINED ENV{KAKADU_CORESYS_INCLUDE_DIR})
-      set(KAKADU_CORESYS_INCLUDE_DIR "$ENV{KAKADU_CORESYS_INCLUDE_DIR}" CACHE PATH "Path to Kakadu coresys include directory" FORCE)
-    endif()
-    if(DEFINED ENV{KAKADU_SUPPORT_INCLUDE_DIR})
-      set(KAKADU_SUPPORT_INCLUDE_DIR "$ENV{KAKADU_SUPPORT_INCLUDE_DIR}" CACHE PATH "Path to Kakadu support include directory" FORCE)
-    endif()
-    if(DEFINED ENV{KAKADU_AUX_LIBRARY})
-      set(KAKADU_AUX_LIBRARY "$ENV{KAKADU_AUX_LIBRARY}" CACHE FILEPATH "Path to Kakadu auxiliary library" FORCE)
-    endif()
-    if(DEFINED ENV{KAKADU_CORE_LIBRARY})
-      set(KAKADU_CORE_LIBRARY "$ENV{KAKADU_CORE_LIBRARY}" CACHE FILEPATH "Path to Kakadu core library" FORCE)
-    endif()
-
-    find_path(KAKADU_CORESYS_INCLUDE_DIR kdu_compressed.h
-      HINTS "${KAKADU_ROOT}/coresys/common")
-    find_path(KAKADU_SUPPORT_INCLUDE_DIR kdu_stripe_compressor.h
-      HINTS "${KAKADU_ROOT}/apps/support")
-    find_library(KAKADU_AUX_LIBRARY kdu_a86R
-      HINTS "${KAKADU_LIBRARY_DIR}" "${KAKADU_ROOT}/lib/Linux-x86-64-gcc"
-            "${KAKADU_ROOT}/lib")
-    find_library(KAKADU_CORE_LIBRARY kdu_v86R
-      HINTS "${KAKADU_LIBRARY_DIR}" "${KAKADU_ROOT}/lib/Linux-x86-64-gcc"
-            "${KAKADU_ROOT}/lib")
-    if(KAKADU_CORESYS_INCLUDE_DIR AND KAKADU_SUPPORT_INCLUDE_DIR AND
-       KAKADU_AUX_LIBRARY AND KAKADU_CORE_LIBRARY)
+    find_package(Kakadu QUIET)
+    if(KAKADU_FOUND)
       list(APPEND saving_definitions -DWITH_KAKADU_JP2K)
-      list(APPEND saving_includes ${KAKADU_CORESYS_INCLUDE_DIR}
-                                  ${KAKADU_SUPPORT_INCLUDE_DIR})
-      list(APPEND saving_libs ${KAKADU_AUX_LIBRARY} ${KAKADU_CORE_LIBRARY}
-                              dl)
+      list(APPEND saving_includes ${KAKADU_INCLUDE_DIRS})
+      list(APPEND saving_libs ${KAKADU_LIBRARIES} dl)
     else()
       message(STATUS "Kakadu JP2K support disabled: set KAKADU_ROOT or Kakadu include/library paths")
     endif()
