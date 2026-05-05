@@ -101,6 +101,43 @@ if(LIMA_ENABLE_HDF5)
     # list(APPEND saving_libs ${LIB_HDF5_BS})
     # list(APPEND saving_includes ${LIB_BS_INCLUDE_DIR})
   endif()
+
+  if(LIMA_ENABLE_HDF5_JP2K)
+    find_path(OPENJPEG_INCLUDE_DIR openjpeg.h
+      PATH_SUFFIXES openjpeg-2.5 openjpeg-2.4 openjpeg-2.3 openjpeg-2.2 openjpeg-2.1)
+    find_library(OPENJPEG_LIBRARY openjp2)
+    if(NOT OPENJPEG_INCLUDE_DIR OR NOT OPENJPEG_LIBRARY)
+      message(FATAL_ERROR "OpenJPEG library not found, please install openjpeg development files or disable LIMA_ENABLE_HDF5_JP2K")
+    endif()
+    list(APPEND saving_includes ${OPENJPEG_INCLUDE_DIR})
+    list(APPEND saving_libs ${OPENJPEG_LIBRARY})
+
+    list(APPEND saving_definitions -DWITH_JP2K_COMPRESSION)
+
+    set(KAKADU_ROOT "$ENV{HOME}/Bliss/v8_6_2-02252E" CACHE PATH "Path to Kakadu root directory")
+    find_path(KAKADU_CORESYS_INCLUDE_DIR kdu_compressed.h
+      PATHS "${KAKADU_ROOT}/coresys/common" NO_DEFAULT_PATH)
+    find_path(KAKADU_SUPPORT_INCLUDE_DIR kdu_stripe_compressor.h
+      PATHS "${KAKADU_ROOT}/apps/support" NO_DEFAULT_PATH)
+    find_library(KAKADU_AUX_LIBRARY kdu_a86R
+      PATHS "${KAKADU_ROOT}/lib/Linux-x86-64-gcc" NO_DEFAULT_PATH)
+    find_library(KAKADU_CORE_LIBRARY kdu_v86R
+      PATHS "${KAKADU_ROOT}/lib/Linux-x86-64-gcc" NO_DEFAULT_PATH)
+    if(KAKADU_CORESYS_INCLUDE_DIR AND KAKADU_SUPPORT_INCLUDE_DIR AND
+       KAKADU_AUX_LIBRARY AND KAKADU_CORE_LIBRARY)
+      list(APPEND saving_definitions -DWITH_KAKADU_JP2K)
+      list(APPEND saving_includes ${KAKADU_CORESYS_INCLUDE_DIR}
+                                  ${KAKADU_SUPPORT_INCLUDE_DIR})
+      list(APPEND saving_libs ${KAKADU_AUX_LIBRARY} ${KAKADU_CORE_LIBRARY}
+                              dl)
+    else()
+      message(STATUS "Kakadu JP2K support disabled: set KAKADU_ROOT to a built Kakadu tree")
+    endif()
+  endif()
+endif()
+
+if(LIMA_ENABLE_HDF5_JP2K AND NOT LIMA_ENABLE_HDF5)
+  message(FATAL_ERROR "LIMA_ENABLE_HDF5_JP2K requires LIMA_ENABLE_HDF5")
 endif()
 
 if(LIMA_ENABLE_NXS)

@@ -256,7 +256,7 @@ CtSaving::Parameters::Parameters()
 	: imageType(Bpp8), nextNumber(0), fileFormat(RAW), savingMode(Manual),
 	overwritePolicy(Abort), useHwComp(false),
 	indexFormat("%04d"), framesPerFile(1), everyNFrames(1),
-	nbframes(0)
+	nbframes(0), jp2kCompressionRatio(10.0), jp2kCompressionCodec(JP2KOpenJPEG)
 {
 }
 
@@ -284,6 +284,9 @@ void CtSaving::Parameters::checkValid() const
 	default:
 		break;
 	}
+
+	if (jp2kCompressionRatio <= 0)
+		THROW_CTL_ERROR(InvalidValue) << "JP2K compression ratio must be > 0";
 }
 
 
@@ -498,6 +501,12 @@ void CtSaving::Stream::createSaveContainer()
 			"saving option, not managed";
 #endif
 		goto common;
+	case HDF5JP2K:
+#if !defined  (WITH_HDF5_SAVING) || !defined (WITH_JP2K_COMPRESSION)
+		THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the hdf5 jp2k"
+			"saving option, not managed";
+#endif
+		goto common;
 	case EDFConcat:
 #ifndef __unix
 		THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with the edf concat "
@@ -561,6 +570,7 @@ void CtSaving::Stream::createSaveContainer()
 	case HDF5:
 	case HDF5GZ:
 	case HDF5BS:
+	case HDF5JP2K:
 		m_save_cnt = new SaveContainerHdf5(*this, m_pars.fileFormat);
 		break;
 #endif
@@ -577,6 +587,45 @@ void CtSaving::Stream::createSaveContainer()
 
 	AutoMutex lock(m_cond.mutex());
 	m_cnt_status = Init;
+}
+
+void CtSaving::Stream::setJp2kCompressionRatio(double ratio)
+{
+	DEB_MEMBER_FUNCT();
+
+	if (ratio <= 0)
+		THROW_CTL_ERROR(InvalidValue) << "JP2K compression ratio must be > 0";
+
+	Parameters pars = getParameters(Auto);
+	pars.jp2kCompressionRatio = ratio;
+	setParameters(pars);
+	m_save_cnt->setJp2kCompressionRatio(ratio);
+}
+
+double CtSaving::Stream::getJp2kCompressionRatio() const
+{
+	DEB_MEMBER_FUNCT();
+
+	const Parameters& pars = getParameters(Auto);
+	return pars.jp2kCompressionRatio;
+}
+
+void CtSaving::Stream::setJp2kCompressionCodec(Jp2kCompressionCodec codec)
+{
+	DEB_MEMBER_FUNCT();
+
+	Parameters pars = getParameters(Auto);
+	pars.jp2kCompressionCodec = codec;
+	setParameters(pars);
+	m_save_cnt->setJp2kCompressionCodec(codec);
+}
+
+CtSaving::Jp2kCompressionCodec CtSaving::Stream::getJp2kCompressionCodec() const
+{
+	DEB_MEMBER_FUNCT();
+
+	const Parameters& pars = getParameters(Auto);
+	return pars.jp2kCompressionCodec;
 }
 
 void CtSaving::Stream::writeFile(Data& data, HeaderMap& header)
@@ -801,6 +850,9 @@ CtSaving::CtSaving(CtControl& aCtrl) :
 #endif
 #ifdef WITH_BS_COMPRESSION
 	m_format_list.push_back(CtSaving::HDF5BS);
+#endif
+#ifdef WITH_JP2K_COMPRESSION
+	m_format_list.push_back(CtSaving::HDF5JP2K);
 #endif
 #endif
 }
@@ -1091,6 +1143,7 @@ void CtSaving::setFormatSuffix(int stream_idx)
 	case HDF5: ext = std::string(".h5"); break;
 	case HDF5GZ: ext = std::string(".h5"); break;
 	case HDF5BS: ext = std::string(".h5"); break;
+	case HDF5JP2K: ext = std::string(".h5"); break;
 	default: ext = std::string(".dat");
 		break;
 	}
@@ -1430,6 +1483,58 @@ void CtSaving::getEveryNFrames(long& every_n_frames,
 	every_n_frames = pars.everyNFrames;
 
 	DEB_RETURN() << DEB_VAR1(every_n_frames);
+}
+
+void CtSaving::setJp2kCompressionRatio(double ratio, int stream_idx)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(ratio, stream_idx);
+
+	if (ratio <= 0)
+		THROW_CTL_ERROR(InvalidValue) << "JP2K compression ratio must be > 0";
+
+	AutoMutex aLock(m_cond.mutex());
+	Stream& stream = getStream(stream_idx);
+	stream.setJp2kCompressionRatio(ratio);
+}
+
+void CtSaving::getJp2kCompressionRatio(double& ratio, int stream_idx) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(stream_idx);
+
+	AutoMutex aLock(m_cond.mutex());
+	const Stream& stream = getStream(stream_idx);
+	ratio = stream.getJp2kCompressionRatio();
+
+	DEB_RETURN() << DEB_VAR1(ratio);
+}
+
+void CtSaving::setJp2kCompressionCodec(Jp2kCompressionCodec codec, int stream_idx)
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR2(codec, stream_idx);
+
+#if !defined(WITH_KAKADU_JP2K)
+	if (codec == JP2KKakadu)
+		THROW_CTL_ERROR(NotSupported) << "Lima is not compiled with Kakadu JP2K support";
+#endif
+
+	AutoMutex aLock(m_cond.mutex());
+	Stream& stream = getStream(stream_idx);
+	stream.setJp2kCompressionCodec(codec);
+}
+
+void CtSaving::getJp2kCompressionCodec(Jp2kCompressionCodec& codec, int stream_idx) const
+{
+	DEB_MEMBER_FUNCT();
+	DEB_PARAM() << DEB_VAR1(stream_idx);
+
+	AutoMutex aLock(m_cond.mutex());
+	const Stream& stream = getStream(stream_idx);
+	codec = stream.getJp2kCompressionCodec();
+
+	DEB_RETURN() << DEB_VAR1(codec);
 }
 
 /** @brief set who will manage the saving.

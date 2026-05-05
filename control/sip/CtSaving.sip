@@ -140,6 +140,12 @@ using namespace lima;
 	CBFMiniHeader,
 	HDF5GZ,
 	HDF5BS,
+	HDF5JP2K,
+    };
+
+    enum Jp2kCompressionCodec {
+	JP2KOpenJPEG,
+	JP2KKakadu,
     };
 
     enum SavingMode {
@@ -169,6 +175,8 @@ using namespace lima;
       long framesPerFile;
       long everyNFrames;
       long nbframes;
+      double jp2kCompressionRatio;
+      CtSaving::Jp2kCompressionCodec jp2kCompressionCodec;
 
       Parameters();
       void checkValid() const;
@@ -225,6 +233,12 @@ using namespace lima;
 
     void setEveryNFrames(long frames_per_file, int stream_idx=0);
     void getEveryNFrames(long& frames_per_file /Out/, int stream_idx=0) const;
+
+    void setJp2kCompressionRatio(double ratio, int stream_idx=0);
+    void getJp2kCompressionRatio(double& ratio /Out/, int stream_idx=0) const;
+
+    void setJp2kCompressionCodec(Jp2kCompressionCodec codec, int stream_idx=0);
+    void getJp2kCompressionCodec(Jp2kCompressionCodec& codec /Out/, int stream_idx=0) const;
 
     void setManagedMode(ManagedMode mode);
     void getManagedMode(ManagedMode &mode /Out/) const;
