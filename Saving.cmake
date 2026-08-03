@@ -103,35 +103,15 @@ if(LIMA_ENABLE_HDF5)
   endif()
 
   if(LIMA_ENABLE_HDF5_JP2K)
-    set(OPENJPEG_ROOT "" CACHE PATH "Path to OpenJPEG root directory")
-    if(DEFINED ENV{OPENJPEG_ROOT})
-      set(OPENJPEG_ROOT "$ENV{OPENJPEG_ROOT}" CACHE PATH "Path to OpenJPEG root directory" FORCE)
-    endif()
-    if(DEFINED ENV{OPENJPEG_INCLUDE_DIR})
-      set(OPENJPEG_INCLUDE_DIR "$ENV{OPENJPEG_INCLUDE_DIR}" CACHE PATH "Path to OpenJPEG include directory" FORCE)
-    endif()
-    if(DEFINED ENV{OPENJPEG_LIBRARY})
-      set(OPENJPEG_LIBRARY "$ENV{OPENJPEG_LIBRARY}" CACHE FILEPATH "Path to OpenJPEG library" FORCE)
-    endif()
-
-    find_path(OPENJPEG_INCLUDE_DIR openjpeg.h
-      HINTS "${OPENJPEG_ROOT}/include" "${OPENJPEG_ROOT}"
-      PATH_SUFFIXES openjpeg-2.5 openjpeg-2.4 openjpeg-2.3 openjpeg-2.2 openjpeg-2.1)
-    find_library(OPENJPEG_LIBRARY openjp2
-      HINTS "${OPENJPEG_ROOT}/lib" "${OPENJPEG_ROOT}/lib64" "${OPENJPEG_ROOT}")
-    if(NOT OPENJPEG_INCLUDE_DIR OR NOT OPENJPEG_LIBRARY)
-      message(FATAL_ERROR "OpenJPEG library not found, please install openjpeg development files or disable LIMA_ENABLE_HDF5_JP2K")
-    endif()
-    list(APPEND saving_includes ${OPENJPEG_INCLUDE_DIR})
-    list(APPEND saving_libs ${OPENJPEG_LIBRARY})
-
     list(APPEND saving_definitions -DWITH_JP2K_COMPRESSION)
-
+    
+    # At minima build with OpenJPEG
+    find_package(OpenJPEG REQUIRED)
+    list(APPEND saving_definitions -DWITH_OPENJPEG_JP2K)
+    
     if(LIMA_ENABLE_KAKADU_JP2K)
       find_package(Kakadu REQUIRED)
       list(APPEND saving_definitions -DWITH_KAKADU_JP2K)
-      list(APPEND saving_includes ${KAKADU_INCLUDE_DIRS})
-      list(APPEND saving_libs ${KAKADU_LIBRARIES} dl)
     endif()
   endif()
 endif()

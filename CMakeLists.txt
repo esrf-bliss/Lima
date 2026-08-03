@@ -268,6 +268,13 @@ target_link_libraries(limacore PUBLIC Threads::Threads processlib)
 target_link_libraries(limacore PRIVATE ${saving_libs} ${extra_libs})
 target_link_libraries(limacore PRIVATE ${saving_private_libs})
 
+if(LIMA_ENABLE_HDF5_JP2K)
+    target_link_libraries(limacore PRIVATE OpenJPEG::OpenJPEG)
+    if(LIMA_ENABLE_KAKADU_JP2K)
+        target_link_libraries(limacore PRIVATE Kakadu::Kakadu)
+    endif()
+endif()
+
 if(UNIX)
     target_compile_definitions(limacore PUBLIC -DHAS_INOTIFY)
     target_link_libraries(limacore PRIVATE "rt")

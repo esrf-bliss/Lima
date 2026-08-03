@@ -1,58 +1,59 @@
-set(KAKADU_ROOT "" CACHE PATH "Path to Kakadu root directory")
-set(KAKADU_LIBRARY_DIR "" CACHE PATH "Path to Kakadu library directory")
+include(FindPackageHandleStandardArgs)
 
-if(DEFINED ENV{KAKADU_ROOT})
-  set(KAKADU_ROOT "$ENV{KAKADU_ROOT}" CACHE PATH "Path to Kakadu root directory" FORCE)
-endif()
-if(DEFINED ENV{KAKADU_LIBRARY_DIR})
-  set(KAKADU_LIBRARY_DIR "$ENV{KAKADU_LIBRARY_DIR}" CACHE PATH "Path to Kakadu library directory" FORCE)
-endif()
-if(DEFINED ENV{KAKADU_CORESYS_INCLUDE_DIR})
-  set(KAKADU_CORESYS_INCLUDE_DIR "$ENV{KAKADU_CORESYS_INCLUDE_DIR}" CACHE PATH "Path to Kakadu coresys include directory" FORCE)
-endif()
-if(DEFINED ENV{KAKADU_SUPPORT_INCLUDE_DIR})
-  set(KAKADU_SUPPORT_INCLUDE_DIR "$ENV{KAKADU_SUPPORT_INCLUDE_DIR}" CACHE PATH "Path to Kakadu support include directory" FORCE)
-endif()
-if(DEFINED ENV{KAKADU_AUX_LIBRARY})
-  set(KAKADU_AUX_LIBRARY "$ENV{KAKADU_AUX_LIBRARY}" CACHE FILEPATH "Path to Kakadu auxiliary library" FORCE)
-endif()
-if(DEFINED ENV{KAKADU_CORE_LIBRARY})
-  set(KAKADU_CORE_LIBRARY "$ENV{KAKADU_CORE_LIBRARY}" CACHE FILEPATH "Path to Kakadu core library" FORCE)
-endif()
-
-find_path(KAKADU_CORESYS_INCLUDE_DIR
+find_path(KAKADU_CORESYS_INCLUDE_DIRS
   NAMES kdu_compressed.h
-  HINTS "${KAKADU_ROOT}/coresys/common")
+  PATH_SUFFIXES kakadu/coresys/common
+  HINTS "${KAKADU_ROOT}"
+  DOC "Kakadu coresys include directory")
 
-find_path(KAKADU_SUPPORT_INCLUDE_DIR
+find_path(KAKADU_AUX_INCLUDE_DIRS
   NAMES kdu_stripe_compressor.h
-  HINTS "${KAKADU_ROOT}/apps/support")
-
-find_library(KAKADU_AUX_LIBRARY
-  NAMES kdu_a86R
-  HINTS "${KAKADU_LIBRARY_DIR}" "${KAKADU_ROOT}/lib/Linux-x86-64-gcc"
-        "${KAKADU_ROOT}/lib")
+  PATH_SUFFIXES kakadu/apps/support
+  HINTS "${KAKADU_ROOT}"
+  DOC "Kakadu support include directory")
 
 find_library(KAKADU_CORE_LIBRARY
-  NAMES kdu_v86R
-  HINTS "${KAKADU_LIBRARY_DIR}" "${KAKADU_ROOT}/lib/Linux-x86-64-gcc"
-        "${KAKADU_ROOT}/lib")
+  NAMES kdu_v86R kdu_v87R
+  HINTS "${KAKADU_ROOT}/lib/Linux-x86-64-gcc"
+  DOC "Path to Kakadu auxiliary library")
 
-set(KAKADU_INCLUDE_DIRS ${KAKADU_CORESYS_INCLUDE_DIR} ${KAKADU_SUPPORT_INCLUDE_DIR})
-set(KAKADU_LIBRARIES ${KAKADU_AUX_LIBRARY} ${KAKADU_CORE_LIBRARY})
+find_library(KAKADU_AUX_LIBRARY
+  NAMES kdu_a86R kdu_a87R
+  HINTS "${KAKADU_ROOT}/lib/Linux-x86-64-gcc"
+  DOC "Path to Kakadu auxiliary library")
 
-include(FindPackageHandleStandardArgs)
+if (KAKADU_CORE_LIBRARY)
+    get_filename_component(KAKADU_LIBRARY_DIR ${KAKADU_CORE_LIBRARY} PATH)
+endif()
+
+mark_as_advanced(KAKADU_CORESYS_INCLUDE_DIRS KAKADU_AUX_INCLUDE_DIRS KAKADU_CORE_LIBRARY KAKADU_AUX_LIBRARY)
+
 find_package_handle_standard_args(Kakadu
-  DEFAULT_MSG
-  KAKADU_CORESYS_INCLUDE_DIR
-  KAKADU_SUPPORT_INCLUDE_DIR
-  KAKADU_AUX_LIBRARY
-  KAKADU_CORE_LIBRARY)
+  REQUIRED_VARS
+  KAKADU_CORESYS_INCLUDE_DIRS
+  KAKADU_AUX_INCLUDE_DIRS
+  KAKADU_CORE_LIBRARY
+  KAKADU_AUX_LIBRARY)
 
-mark_as_advanced(
-  KAKADU_ROOT
-  KAKADU_LIBRARY_DIR
-  KAKADU_CORESYS_INCLUDE_DIR
-  KAKADU_SUPPORT_INCLUDE_DIR
-  KAKADU_AUX_LIBRARY
-  KAKADU_CORE_LIBRARY)
+set(KAKADU_INCLUDE_DIRS ${KAKADU_CORESYS_INCLUDE_DIRS} ${KAKADU_AUX_INCLUDE_DIRS})
+
+if(KAKADU_FOUND)
+    if(NOT TARGET Kakadu::Kakadu)
+        add_library(Kakadu::Kakadu SHARED IMPORTED)
+    endif()
+    if(KAKADU_CORESYS_INCLUDE_DIRS AND KAKADU_AUX_INCLUDE_DIRS)
+        set(KAKADU_INCLUDE_DIRS ${KAKADU_CORESYS_INCLUDE_DIRS} ${KAKADU_AUX_INCLUDE_DIRS})
+        set_target_properties(Kakadu::Kakadu PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${KAKADU_INCLUDE_DIRS}")
+    endif()
+    if(EXISTS "${KAKADU_CORE_LIBRARY}")
+        set_target_properties(Kakadu::Kakadu PROPERTIES
+            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+            IMPORTED_LOCATION "${KAKADU_CORE_LIBRARY}")
+    endif()
+    if(EXISTS "${KAKADU_AUX_LIBRARY}")
+        set_target_properties(Kakadu::Kakadu PROPERTIES
+            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+            IMPORTED_LOCATION "${KAKADU_AUX_LIBRARY}")
+    endif()
+endif()
