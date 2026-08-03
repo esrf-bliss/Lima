@@ -20,9 +20,17 @@ classifiers = [
 exceptions = true
 
 [tool.sip.project]
-sip-files-dir = "build/sip"
+sip-files-dir = "@CMAKE_CURRENT_BINARY_DIR@/sip"
 build-dir = "build-sip"
-sip-include-dirs=["common/sip", "hardware/sip", "control/sip", "control/software_operation/sip","@SIP_INSTALL_DIR@/sip/processlib"]
+sip-include-dirs=[
+  "common/sip",
+  "hardware/sip",
+  "control/sip",
+  "control/software_operation/sip",
+  "third-party/Processlib/sip",
+  "third-party/Processlib/tasks/sip",
+  "@SIP_INSTALL_DIR@/sip/processlib"
+]
 sip-module="lima.sip"
 dunder-init= true
 

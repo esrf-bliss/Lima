@@ -46,5 +46,20 @@ print("default_sip_dir:%s" % python_modules_dir)
 
 import lima.sip
 
-lima_sip_abi_version  = f"{lima.sip.SIP_ABI_VERSION>>16}.{lima.sip.SIP_ABI_VERSION&0x00ff00 >> 8}"
+if hasattr(lima.sip, "SIP_ABI_VERSION"):
+    lima_sip_abi_version_num = lima.sip.SIP_ABI_VERSION
+else:
+    for major in range(20, 0, -1):
+        source_path = sysconfig.get_path("purelib") + f"/sipbuild/module/source/{major}"
+        if __import__("os").path.isdir(source_path):
+            minors = [
+                int(name) for name in __import__("os").listdir(source_path)
+                if name.isdigit()
+            ]
+            minor = max(minors) if minors else 0
+            lima_sip_abi_version_num = (major << 16) | (minor << 8)
+            break
+    else:
+        lima_sip_abi_version_num = lima.sip.SIP_VERSION
+lima_sip_abi_version  = f"{lima_sip_abi_version_num >> 16}.{(lima_sip_abi_version_num & 0x00ff00) >> 8}"
 print(f"lima_sip_abi_version:{lima_sip_abi_version}") 

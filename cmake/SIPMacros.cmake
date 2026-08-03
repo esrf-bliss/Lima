@@ -97,6 +97,7 @@ macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
 
     add_custom_command(
         OUTPUT ${_sip_output_files}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${_build_path}/${_child_module_name}
         COMMAND ${CMAKE_COMMAND} -E touch ${_sip_output_files}
 	COMMAND ${SIP_BUILD_EXECUTABLE} ${_sip_abi_option} 
 					${_sip_x}
@@ -127,6 +128,7 @@ macro(add_sip_python_module MODULE_NAME MODULE_SIP RUN_CHECK_SIP_EXC)
     else (CYGWIN)
         add_library(${_logical_name} SHARED ${_sip_output_files} )
     endif (CYGWIN)
+    target_include_directories(${_logical_name} PRIVATE ${_build_path})
     target_link_libraries(${_logical_name} PRIVATE ${Python3_LIBRARY})
     target_link_libraries(${_logical_name} PRIVATE ${EXTRA_LINK_LIBRARIES})
     set_target_properties(${_logical_name} PROPERTIES PREFIX "" OUTPUT_NAME ${_child_module_name})

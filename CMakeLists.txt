@@ -335,6 +335,12 @@ if(LIMA_ENABLE_PYTHON)
 
     # Get sip abi version of the lima.sip module, collected from FindSIP.cmake (from FindSIP.py)
     set(SIP_ABI_VERSION ${LIMA_SIP_ABI_VERSION})
+    file(GLOB LIMA_SIP_EXTRA_FILES_DEPEND CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/common/sip/*.sip"
+        "${CMAKE_CURRENT_SOURCE_DIR}/hardware/sip/*.sip"
+        "${CMAKE_CURRENT_SOURCE_DIR}/control/sip/*.sip"
+        "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip/*.sip")
+    set(SIP_EXTRA_FILES_DEPEND ${LIMA_SIP_EXTRA_FILES_DEPEND})
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip FALSE)
 
     target_include_directories(python_module_limacore PRIVATE
