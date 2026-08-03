@@ -112,6 +112,12 @@ else()
     option(LIMA_ENABLE_HDF5_JP2K "compile HDF5 JPEG2000/OpenJPEG saving code?" OFF)
 endif()
 
+if(DEFINED ENV{LIMA_ENABLE_KAKADU_JP2K})
+    set(LIMA_ENABLE_KAKADU_JP2K "$ENV{LIMA_ENABLE_KAKADU_JP2K}" CACHE BOOL "compile Kakadu JPEG2000 encoder support?" FORCE)
+else()
+    option(LIMA_ENABLE_KAKADU_JP2K "compile Kakadu JPEG2000 encoder support?" OFF)
+endif()
+
 if(DEFINED ENV{LIMA_ENABLE_HDF5_BS})
     set(LIMA_ENABLE_HDF5_BS "$ENV{LIMA_ENABLE_HDF5_BS}" CACHE BOOL "compile HDF5/BS saving code?" FORCE)
 else()
