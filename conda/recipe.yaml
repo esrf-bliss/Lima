@@ -1,0 +1,94 @@
+# Strip the 'v' from the version tag
+context:
+  tag: ${{ git.latest_tag('.') }}
+  version: ${{ tag[1:] }}
+  build: ${{ git.latest_tag_distance('.') }}
+
+package:
+  name: lima-core
+  version: ${{ version }}
+
+source:
+  path: ..
+
+build:
+  number: ${{ build }}
+  string: ${{ python | version_to_buildstring }}${{ hash }}_${{ build }}${{ '_kakadu' if kakadu else '' }}
+  script:
+    env:
+      KAKADU: ${{ "1" if kakadu }}
+
+requirements:
+  host:
+    - python ${{ python }}.*
+    - lima-sip6 13*
+    - processlib 1.11*
+    - libconfig 1.7*
+    # I/O formats
+    - zlib
+    - lz4-c 1.9*
+    - openjpeg
+    - if: kakadu
+      then: kakadu 8*
+    - hdf5 1.14*
+    - libtiff
+    - if: linux
+      then:
+        - cbflib >=0.9.7
+        - openssl 3*
+        - libnuma
+  build:
+    - cmake
+    - ninja
+    - ${{ compiler('cxx') }}
+  run:
+    - python
+    - ${{ pin_compatible('lima-sip6', lower_bound='x.x.x', upper_bound='x') }}
+    - ${{ pin_compatible('processlib', upper_bound='x.x') }}
+    - libconfig 1.7*
+    # I/O formats
+    - zlib
+    - lz4-c 1.9*
+    - openjpeg
+    - if: kakadu
+      then: kakadu 8*
+    - hdf5 1.14*
+    - libtiff
+    - ${{ pin_compatible('cbflib', lower_bound='x.x.x') }}  # [linux]
+    - if: linux
+      then:
+        - openssl 3*
+        - libnuma
+
+tests:
+  - package_contents:
+      lib:
+      - limacore
+  - python:
+      imports:
+        - lima.core
+      pip_check: true
+      python_version: ${{ python }}.*
+  - requirements:
+      run:
+        - pytest
+        - pytest-mock
+        - h5py  # to check produced HDF5 files
+    files:
+      source:
+        - tests
+    script:
+      - pytest -vs -o log_cli=true tests
+
+about:
+  homepage: https://github.com/esrf-bliss/Lima
+  documentation: https://lima1.readthedocs.io/
+  license: GPL-3.0-or-later
+  license_file: COPYING
+  summary: A library for the unified control of 2D detectors
+
+extra:
+  maintainers:
+   - Laurent Claustre
+   - Alejandro Homs
+   - Samuel Debionne
