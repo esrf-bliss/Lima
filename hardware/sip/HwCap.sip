@@ -76,7 +76,7 @@ public:
 		DetInfo, Buffer, Sync, 	// Standard: these are mandatory
 		Roi, Bin, Flip,		// Image operations
 		Kinetics, FrameTransfer,// Acquisition modes
-		Timing,			// Read only detector timmings
+		Timing,			// Read only detector timings
 		Shutter,		// Shutter control
 		SerialLine, 		// Generic detector serial line
 		Video,			// Video capable usualy color camera
