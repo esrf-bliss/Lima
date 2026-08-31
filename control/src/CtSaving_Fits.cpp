@@ -56,7 +56,8 @@ SaveContainerFits::~SaveContainerFits()
 }
 
 void* SaveContainerFits::_open(const std::string &filename,
-			       std::ios_base::openmode openFlags)
+			       std::ios_base::openmode openFlags,
+			       CtSaving::Parameters& /*pars*/)
 {
   DEB_MEMBER_FUNCT();
   return new std::string("!" + filename + ".fits");
