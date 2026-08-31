@@ -20,9 +20,16 @@ classifiers = [
 exceptions = true
 
 [tool.sip.project]
-sip-files-dir = "build/sip"
+sip-files-dir = "@CMAKE_CURRENT_BINARY_DIR@/sip"
 build-dir = "build-sip"
 sip-include-dirs=["sip", 
+                  "@CMAKE_BINARY_DIR@/sip",
+                  "@CMAKE_SOURCE_DIR@/common/sip",
+                  "@CMAKE_SOURCE_DIR@/hardware/sip",
+                  "@CMAKE_SOURCE_DIR@/control/sip",
+                  "@CMAKE_SOURCE_DIR@/control/software_operation/sip",
+                  "@CMAKE_SOURCE_DIR@/third-party/Processlib/sip",
+                  "@CMAKE_SOURCE_DIR@/third-party/Processlib/tasks/sip",
                   "@SIP_INSTALL_DIR@/sip/processlib",
                   "@SIP_INSTALL_DIR@/sip/lima"]
 sip-module="lima.sip"
