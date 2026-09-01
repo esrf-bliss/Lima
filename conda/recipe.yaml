@@ -27,7 +27,7 @@ requirements:
     # I/O formats
     - zlib
     - lz4-c 1.9*
-    - openjpeg
+    - openjph
     - if: kakadu
       then: kakadu 8*
     - hdf5 1.14*
@@ -49,7 +49,7 @@ requirements:
     # I/O formats
     - zlib
     - lz4-c 1.9*
-    - openjpeg
+    - openjph
     - if: kakadu
       then: kakadu 8*
     - hdf5 1.14*

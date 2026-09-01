@@ -105,9 +105,9 @@ if(LIMA_ENABLE_HDF5)
   if(LIMA_ENABLE_HDF5_JP2K)
     list(APPEND saving_definitions -DWITH_JP2K_COMPRESSION)
     
-    # At minima build with OpenJPEG
-    find_package(OpenJPEG REQUIRED)
-    list(APPEND saving_definitions -DWITH_OPENJPEG_JP2K)
+    # At minima build with OpenJPH
+    find_package(OpenJPH REQUIRED)
+    list(APPEND saving_definitions -DWITH_OPENJPH_JP2K)
     
     if(LIMA_ENABLE_KAKADU_JP2K)
       find_package(Kakadu REQUIRED)

@@ -291,11 +291,14 @@ void ImageBsCompression::_compression(const char *src,int data_size,int data_dep
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <vector>
 
-#ifdef WITH_OPENJPEG_JP2K
-#include <openjpeg.h>
+#ifdef WITH_OPENJPH_JP2K
+#include "openjph/ojph_arch.h"
+#include "openjph/ojph_codestream.h"
+#include "openjph/ojph_file.h"
+#include "openjph/ojph_mem.h"
+#include "openjph/ojph_params.h"
 #endif
 
 #ifdef WITH_KAKADU_JP2K
@@ -326,229 +329,91 @@ inline bool jp2k_is_signed(lima::hdf5_jp2k::DataType type)
          type == lima::hdf5_jp2k::JP2K_INT16;
 }
 
-#ifdef WITH_OPENJPEG_JP2K
+#ifdef WITH_OPENJPH_JP2K
 
-struct Jp2kMemStream
-{
-  Jp2kMemStream() :
-    read_buffer(NULL),
-    read_size(0),
-    read_offset(0),
-    write_buffer(NULL)
-  {}
-
-  const unsigned char* read_buffer;
-  OPJ_UINT64 read_size;
-  OPJ_UINT64 read_offset;
-  std::vector<unsigned char>* write_buffer;
-};
-
-OPJ_SIZE_T jp2k_read(void* buffer, OPJ_SIZE_T bytes, void* user_data)
-{
-  Jp2kMemStream* stream = static_cast<Jp2kMemStream*>(user_data);
-  if (stream->read_offset >= stream->read_size)
-    return static_cast<OPJ_SIZE_T>(-1);
-
-  OPJ_UINT64 remaining = stream->read_size - stream->read_offset;
-  OPJ_SIZE_T to_read = static_cast<OPJ_SIZE_T>(
-    std::min<OPJ_UINT64>(remaining, static_cast<OPJ_UINT64>(bytes)));
-  std::memcpy(buffer, stream->read_buffer + stream->read_offset, to_read);
-  stream->read_offset += to_read;
-  return to_read;
-}
-
-OPJ_SIZE_T jp2k_write(void* buffer, OPJ_SIZE_T bytes, void* user_data)
-{
-  Jp2kMemStream* stream = static_cast<Jp2kMemStream*>(user_data);
-  if (!stream->write_buffer)
-    return static_cast<OPJ_SIZE_T>(-1);
-
-  OPJ_UINT64 end_offset = stream->read_offset + static_cast<OPJ_UINT64>(bytes);
-  if (end_offset > stream->write_buffer->size())
-    stream->write_buffer->resize(static_cast<std::size_t>(end_offset));
-  std::memcpy(&(*stream->write_buffer)[static_cast<std::size_t>(stream->read_offset)],
-        buffer, bytes);
-  stream->read_offset = end_offset;
-  return bytes;
-}
-
-OPJ_OFF_T jp2k_skip(OPJ_OFF_T bytes, void* user_data)
-{
-  Jp2kMemStream* stream = static_cast<Jp2kMemStream*>(user_data);
-  if (bytes < 0)
-    return -1;
-
-  if (stream->write_buffer) {
-    OPJ_UINT64 new_offset = stream->read_offset + static_cast<OPJ_UINT64>(bytes);
-    if (new_offset > stream->write_buffer->size())
-      stream->write_buffer->resize(static_cast<std::size_t>(new_offset));
-    stream->read_offset = new_offset;
-    return bytes;
-  }
-
-  OPJ_UINT64 new_offset = stream->read_offset + static_cast<OPJ_UINT64>(bytes);
-  if (new_offset > stream->read_size)
-    new_offset = stream->read_size;
-  OPJ_OFF_T skipped = static_cast<OPJ_OFF_T>(new_offset - stream->read_offset);
-  stream->read_offset = new_offset;
-  return skipped;
-}
-
-OPJ_BOOL jp2k_seek(OPJ_OFF_T bytes, void* user_data)
-{
-  Jp2kMemStream* stream = static_cast<Jp2kMemStream*>(user_data);
-  if (bytes < 0)
-    return OPJ_FALSE;
-  if (stream->write_buffer) {
-    OPJ_UINT64 offset = static_cast<OPJ_UINT64>(bytes);
-    if (offset > stream->write_buffer->size())
-      stream->write_buffer->resize(static_cast<std::size_t>(offset));
-    stream->read_offset = offset;
-    return OPJ_TRUE;
-  }
-  if (static_cast<OPJ_UINT64>(bytes) > stream->read_size)
-    return OPJ_FALSE;
-  stream->read_offset = static_cast<OPJ_UINT64>(bytes);
-  return OPJ_TRUE;
-}
-
-void jp2k_noop_free(void*)
-{
-}
-
-void jp2k_error(const char* msg, void*)
-{
-  std::cerr << "OpenJPEG: " << msg;
-}
-
-OPJ_CODEC_FORMAT jp2k_codec_format(const unsigned char* src, std::size_t src_size)
-{
-  if (src_size >= 2 && src[0] == 0xff && src[1] == 0x4f)
-    return OPJ_CODEC_J2K;
-  return OPJ_CODEC_JP2;
-}
-
-opj_stream_t* create_write_stream(Jp2kMemStream& mem)
-{
-  opj_stream_t* stream = opj_stream_create(1024 * 1024, OPJ_FALSE);
-  if (!stream)
-    throw LIMA_CTL_EXC(Error, "Cannot create OpenJPEG output stream");
-  opj_stream_set_user_data(stream, &mem, jp2k_noop_free);
-  opj_stream_set_write_function(stream, jp2k_write);
-  opj_stream_set_skip_function(stream, jp2k_skip);
-  opj_stream_set_seek_function(stream, jp2k_seek);
-  return stream;
-}
-
-opj_stream_t* create_read_stream(Jp2kMemStream& mem)
-{
-  opj_stream_t* stream = opj_stream_create(1024 * 1024, OPJ_TRUE);
-  if (!stream)
-    throw LIMA_CTL_EXC(Error, "Cannot create OpenJPEG input stream");
-  opj_stream_set_user_data(stream, &mem, jp2k_noop_free);
-  opj_stream_set_user_data_length(stream, mem.read_size);
-  opj_stream_set_read_function(stream, jp2k_read);
-  opj_stream_set_skip_function(stream, jp2k_skip);
-  opj_stream_set_seek_function(stream, jp2k_seek);
-  return stream;
-}
-
-template <class T>
-void copy_to_component(Data& data, opj_image_comp_t& comp)
-{
-  const T* src = static_cast<const T*>(data.data());
-  std::size_t nb_pixels = static_cast<std::size_t>(data.dimensions[0]) *
-        static_cast<std::size_t>(data.dimensions[1]);
-  for (std::size_t i = 0; i < nb_pixels; ++i)
-    comp.data[i] = static_cast<OPJ_INT32>(src[i]);
-}
-
-template <class T>
-void copy_from_component(const opj_image_comp_t& comp, std::vector<unsigned char>& out)
-{
-  T* dst = reinterpret_cast<T*>(&out[0]);
-  std::size_t nb_pixels = static_cast<std::size_t>(comp.w) *
-        static_cast<std::size_t>(comp.h);
-  for (std::size_t i = 0; i < nb_pixels; ++i)
-    dst[i] = static_cast<T>(comp.data[i]);
-}
-
-void encode_openjpeg(Data& data, double compression_ratio,
+void encode_openjph(Data& data, double /*compression_ratio*/,
   std::vector<unsigned char>& out)
 {
   using namespace lima::hdf5_jp2k;
 
   DataType jp2k_type = toJp2kType(data.type);
 
-  opj_image_cmptparm_t comp;
-  std::memset(&comp, 0, sizeof(comp));
-  comp.dx = 1;
-  comp.dy = 1;
-  comp.w = data.dimensions[0];
-  comp.h = data.dimensions[1];
-  comp.prec = jp2k_precision(jp2k_type);
-  comp.sgnd = jp2k_is_signed(jp2k_type) ? 1 : 0;
-
-  opj_image_t* image = opj_image_create(1, &comp, OPJ_CLRSPC_GRAY);
-  if (!image)
-    throw LIMA_CTL_EXC(Error, "Cannot create OpenJPEG image");
-  image->x1 = comp.w;
-  image->y1 = comp.h;
+  const ojph::ui32 width = static_cast<ojph::ui32>(data.dimensions[0]);
+  const ojph::ui32 height = static_cast<ojph::ui32>(data.dimensions[1]);
+  const ojph::ui32 precision = static_cast<ojph::ui32>(jp2k_precision(jp2k_type));
+  const bool is_signed = jp2k_is_signed(jp2k_type);
+  const void* input_buffer = data.data();
 
   try {
-    switch (jp2k_type) {
-    case JP2K_UINT8:
-      copy_to_component<unsigned char>(data, image->comps[0]);
-      break;
-    case JP2K_INT8:
-      copy_to_component<char>(data, image->comps[0]);
-      break;
-    case JP2K_UINT16:
-      copy_to_component<unsigned short>(data, image->comps[0]);
-      break;
-    case JP2K_INT16:
-      copy_to_component<short>(data, image->comps[0]);
-      break;
+    ojph::codestream codestream;
+
+    ojph::param_siz siz = codestream.access_siz();
+    siz.set_image_extent(ojph::point(width, height));
+    siz.set_num_components(1);
+    siz.set_component(0, ojph::point(1, 1), precision, is_signed);
+    siz.set_image_offset(ojph::point(0, 0));
+    siz.set_tile_size(ojph::size(0, 0));
+    siz.set_tile_offset(ojph::point(0, 0));
+
+    ojph::param_cod cod = codestream.access_cod();
+    cod.set_num_decomposition(5);
+    cod.set_block_dims(64, 64);
+    cod.set_progression_order("RPCL");
+    cod.set_color_transform(false); /* samples are not assumed to be RGB */
+    cod.set_reversible(true);       /* lossless 5/3 wavelet (HTJ2K) */
+
+    codestream.set_planar(false);
+
+    ojph::mem_outfile file;
+    file.open();
+    codestream.write_headers(&file);
+
+    ojph::ui32 next_comp;
+    ojph::line_buf* cur_line = codestream.exchange(nullptr, next_comp);
+
+    for (ojph::ui32 y = 0; y < height; y++) {
+      ojph::si32* dst = cur_line->i32;
+      const std::size_t row_offset = static_cast<std::size_t>(y) * width;
+
+      if (precision <= 8) {
+        if (is_signed) {
+          const int8_t* src = static_cast<const int8_t*>(input_buffer) + row_offset;
+          for (ojph::ui32 x = 0; x < width; x++)
+            dst[x] = src[x];
+        } else {
+          const uint8_t* src = static_cast<const uint8_t*>(input_buffer) + row_offset;
+          for (ojph::ui32 x = 0; x < width; x++)
+            dst[x] = src[x];
+        }
+      } else {
+        if (is_signed) {
+          const int16_t* src = static_cast<const int16_t*>(input_buffer) + row_offset;
+          for (ojph::ui32 x = 0; x < width; x++)
+            dst[x] = src[x];
+        } else {
+          const uint16_t* src = static_cast<const uint16_t*>(input_buffer) + row_offset;
+          for (ojph::ui32 x = 0; x < width; x++)
+            dst[x] = src[x];
+        }
+      }
+
+      cur_line = codestream.exchange(cur_line, next_comp);
     }
 
-    opj_cparameters_t parameters;
-    opj_set_default_encoder_parameters(&parameters);
-    parameters.tcp_numlayers = 1;
-    parameters.cp_disto_alloc = 1;
-    parameters.tcp_rates[0] = compression_ratio;
-    parameters.irreversible = 1;
+    codestream.flush();
+    codestream.close();
 
-    opj_codec_t* codec = opj_create_compress(OPJ_CODEC_J2K);
-    if (!codec)
-      throw LIMA_CTL_EXC(Error, "Cannot create OpenJPEG encoder");
-    opj_set_error_handler(codec, jp2k_error, NULL);
-
-    Jp2kMemStream mem;
-    mem.write_buffer = &out;
-    opj_stream_t* stream = create_write_stream(mem);
-
-    try {
-      if (!opj_setup_encoder(codec, &parameters, image) ||
-          !opj_start_compress(codec, image, stream) ||
-          !opj_encode(codec, stream) ||
-          !opj_end_compress(codec, stream))
-        throw LIMA_CTL_EXC(Error, "OpenJPEG encoding failed");
-    } catch (...) {
-      opj_stream_destroy(stream);
-      opj_destroy_codec(codec);
-      throw;
-    }
-
-    opj_stream_destroy(stream);
-    opj_destroy_codec(codec);
-    opj_image_destroy(image);
+    const std::size_t used = file.get_used_size();
+    out.resize(used);
+    std::memcpy(out.data(), file.get_data(), used);
+  } catch (const std::exception& e) {
+    throw LIMA_CTL_EXC(Error, "[OpenJPH] encode error") << ": " << e.what();
   } catch (...) {
-    opj_image_destroy(image);
-    throw;
+    throw LIMA_CTL_EXC(Error, "[OpenJPH] encode unknown error");
   }
 }
 
-#endif //WITH_OPENJPEG_JP2K
+#endif //WITH_OPENJPH_JP2K
 
 #ifdef WITH_KAKADU_JP2K
 
@@ -795,7 +660,7 @@ void lima::hdf5_jp2k::encode(Data& data, std::vector<unsigned char>& out)
 void lima::hdf5_jp2k::encode(Data& data, double compression_ratio,
            std::vector<unsigned char>& out)
 {
-  encode(data, compression_ratio, OpenJPEG, out);
+  encode(data, compression_ratio, OpenJPH, out);
 }
 
 void lima::hdf5_jp2k::encode(Data& data, double compression_ratio, Codec codec,
@@ -812,12 +677,12 @@ void lima::hdf5_jp2k::encode(Data& data, double compression_ratio, Codec codec,
 #else
     throw LIMA_CTL_EXC(Error, "Lima is not compiled with Kakadu JP2K support");
 #endif
-    case OpenJPEG:
-#if defined(WITH_OPENJPEG_JP2K)
-      encode_openjpeg(data, compression_ratio, out);
+    case OpenJPH:
+#if defined(WITH_OPENJPH_JP2K)
+      encode_openjph(data, compression_ratio, out);
       break;
 #else
-    throw LIMA_CTL_EXC(Error, "Lima is not compiled with OpenJPEG JP2K support");
+    throw LIMA_CTL_EXC(Error, "Lima is not compiled with OpenJPH JP2K support");
 #endif
     default:
       throw LIMA_CTL_EXC(Error, "Unknown JP2K codec");
@@ -874,7 +739,7 @@ void ImageJp2kCompression::process(Data &aData)
   std::vector<unsigned char> compressed;
   hdf5_jp2k::encode(aData, m_compression_ratio,
 		    (m_codec == CtSaving::JP2KKakadu) ?
-		    hdf5_jp2k::Kakadu : hdf5_jp2k::OpenJPEG,
+		    hdf5_jp2k::Kakadu : hdf5_jp2k::OpenJPH,
 		    compressed);
 
   ZBufferList aBufferList;

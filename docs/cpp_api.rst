@@ -91,7 +91,7 @@ HDF5 JPEG 2000 Saving
 
 When Lima is built with ``LIMA_ENABLE_HDF5`` and ``LIMA_ENABLE_HDF5_JP2K``, the
 ``CtSaving::HDF5JP2K`` format stores HDF5 chunks compressed as JPEG 2000. The
-default compression ratio is ``10.0`` and the default encoder is OpenJPEG.
+default compression ratio is ``10.0`` and the default encoder is OpenJPH.
 
 .. code-block:: c++
 
@@ -108,11 +108,11 @@ default compression ratio is ``10.0`` and the default encoder is OpenJPEG.
   // Optional: select Kakadu when Lima was built with LIMA_ENABLE_KAKADU_JP2K.
   save->setJp2kCompressionCodec(CtSaving::JP2KKakadu);
 
-OpenJPEG can be selected explicitly with:
+OpenJPH can be selected explicitly with:
 
 .. code-block:: c++
 
-  save->setJp2kCompressionCodec(CtSaving::JP2KOpenJPEG);
+  save->setJp2kCompressionCodec(CtSaving::JP2KOpenJPH);
 
 Control Interfaces
 ^^^^^^^^^^^^^^^^^^

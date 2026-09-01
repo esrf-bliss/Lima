@@ -256,7 +256,7 @@ CtSaving::Parameters::Parameters()
 	: imageType(Bpp8), nextNumber(0), fileFormat(RAW), savingMode(Manual),
 	overwritePolicy(Abort), useHwComp(false),
 	indexFormat("%04d"), framesPerFile(1), everyNFrames(1),
-	nbframes(0), jp2kCompressionRatio(10.0), jp2kCompressionCodec(JP2KOpenJPEG)
+	nbframes(0), jp2kCompressionRatio(10.0), jp2kCompressionCodec(JP2KOpenJPH)
 {
 }
 

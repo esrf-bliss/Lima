@@ -45,7 +45,7 @@ enum DataType {
 };
 
 enum Codec {
-	OpenJPEG = 0,
+	OpenJPH = 0,
 	Kakadu = 1,
 };
 

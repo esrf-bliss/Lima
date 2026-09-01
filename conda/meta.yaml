@@ -24,7 +24,7 @@ requirements:
     # I/O formats
     - zlib
     - lz4-c 1.9*
-    - openjpeg
+    - openjph
     - hdf5 1.14*
     - libtiff
     - cbflib >=0.9.7 # [linux]
@@ -42,7 +42,7 @@ requirements:
     # I/O formats
     - zlib
     - lz4-c 1.9*
-    - openjpeg
+    - openjph
     - hdf5 1.14*
     - libtiff
     - {{ pin_compatible('cbflib', min_pin='x.x.x') }}  # [linux]

@@ -144,7 +144,7 @@ using namespace lima;
     };
 
     enum Jp2kCompressionCodec {
-	JP2KOpenJPEG,
+	JP2KOpenJPH,
 	JP2KKakadu,
     };
 

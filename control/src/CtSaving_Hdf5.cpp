@@ -675,9 +675,29 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 			if (aFormat == CtSaving::HDF5JP2K) {
 				if (!hdf5_jp2k::isSupported(aData.type))
 					THROW_CTL_ERROR(Error) << "HDF5 JP2K supports only 8-bit and 16-bit integer image data";
-				plist.setFilter(hdf5_jp2k::filter_id(), H5Z_FLAG_MANDATORY, 0, NULL);
+
+				unsigned int data_type_size_in_bytes = 0x0000;
+				switch (aData.type) {
+				case Data::UINT8:
+					data_type_size_in_bytes = 0x0001;
+					break;
+				case Data::INT8:
+					data_type_size_in_bytes = 0x0081;
+					break;
+				case Data::UINT16:
+					data_type_size_in_bytes = 0x0002;
+					break;
+				case Data::INT16:
+					data_type_size_in_bytes = 0x0082;
+					break;
+				}
+				unsigned int width = data_dims[2];
+				unsigned int height = data_dims[1];
+				
+				unsigned int opt_vals[5]= {1, data_type_size_in_bytes, width, height, 1};
+				plist.setFilter(hdf5_jp2k::filter_id(), H5Z_FLAG_MANDATORY, 5, opt_vals);
 				string compression = (m_jp2k_codec == CtSaving::JP2KKakadu) ?
-					"kakadu-jp2k" : "openjpeg-jp2k";
+					"kakadu-jp2k" : "openjph-htj2k";
 				write_h5_attribute(file->m_instrument_detector, "compression", compression);
 				write_h5_attribute(file->m_instrument_detector, "compression_ratio",
 						   m_jp2k_compression_ratio);

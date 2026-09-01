@@ -98,7 +98,7 @@ HDF5 JPEG 2000 saving
 
 When Lima is built with ``LIMA_ENABLE_HDF5`` and ``LIMA_ENABLE_HDF5_JP2K``, the
 ``HDF5JP2K`` saving format stores each HDF5 chunk as a JPEG 2000 codestream.
-The default compression ratio is ``10.0`` and the default encoder is OpenJPEG.
+The default compression ratio is ``10.0`` and the default encoder is OpenJPH.
 
 .. code-block:: python
 
@@ -118,12 +118,12 @@ The default compression ratio is ``10.0`` and the default encoder is OpenJPEG.
       core.CtSaving.Jp2kCompressionCodec.JP2KKakadu
   )
 
-OpenJPEG remains available explicitly:
+OpenJPH remains available explicitly:
 
 .. code-block:: python
 
   saving.setJp2kCompressionCodec(
-      core.CtSaving.Jp2kCompressionCodec.JP2KOpenJPEG
+      core.CtSaving.Jp2kCompressionCodec.JP2KOpenJPH
   )
 
 Reading these files from an external process requires the matching HDF5 filter

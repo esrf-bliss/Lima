@@ -85,12 +85,12 @@ public:
 		CBFMiniHeader,		///< CBF mini header
 		HDF5GZ,                 ///< HDF5 format with Z compression
 		HDF5BS,                 ///< HDF5 format with BitShuffle/LZ4 compression
-		HDF5JP2K,               ///< HDF5 format with JPEG2000/OpenJPEG compression
+		HDF5JP2K,               ///< HDF5 format with JPEG2000/OpenJPH compression
 	};
 
 	enum Jp2kCompressionCodec
 	{
-		JP2KOpenJPEG,
+		JP2KOpenJPH,
 		JP2KKakadu,
 	};
 
@@ -390,7 +390,7 @@ public:
 		virtual void setJp2kCompressionRatio(double) {}
 		virtual double getJp2kCompressionRatio() const { return 10.0; }
 		virtual void setJp2kCompressionCodec(Jp2kCompressionCodec) {}
-		virtual Jp2kCompressionCodec getJp2kCompressionCodec() const { return JP2KOpenJPEG; }
+		virtual Jp2kCompressionCodec getJp2kCompressionCodec() const { return JP2KOpenJPH; }
 
 		bool _allFramesWritten() const { return (m_written_frames == m_frames_to_write); }
 
