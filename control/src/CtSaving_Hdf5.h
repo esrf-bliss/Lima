@@ -22,12 +22,18 @@
 #ifndef CTSAVING_HDF5_H
 #define CTSAVING_HDF5_H
 
+#include <string>
+
 #include "H5Cpp.h"
 #include "hdf5_hl.h"
+
 #include "lima/CtSaving.h"
 #include "lima/CtAcquisition.h"
 #include "lima/CtSaving_Compression.h"
-#include <string>
+
+#ifdef WITH_JP2K_COMPRESSION
+#include "CtSaving_Hdf5Jp2k.h"
+#endif
 
 #ifdef WITH_BS_COMPRESSION
 #define BSHUF_H5FILTER	32008
@@ -55,9 +61,14 @@ public:
 	SaveContainerHdf5(CtSaving::Stream& stream, CtSaving::FileFormat format);
 	virtual ~SaveContainerHdf5();
 	virtual bool needParallelCompression() const 
-	{return ((m_format == CtSaving::HDF5GZ)||(m_format == CtSaving::HDF5BS));}
+	{return ((m_format == CtSaving::HDF5GZ)||(m_format == CtSaving::HDF5BS)||
+		 (m_format == CtSaving::HDF5JP2K));}
 	virtual SinkTaskBase* getCompressionTask(const CtSaving::HeaderMap&);
 	virtual int getCompressedBufferSize(int data_size, int data_depth);
+	virtual void setJp2kCompressionRatio(double ratio);
+	virtual double getJp2kCompressionRatio() const;
+	virtual void setJp2kCompressionCodec(CtSaving::Jp2kCompressionCodec codec);
+	virtual CtSaving::Jp2kCompressionCodec getJp2kCompressionCodec() const;
 
 protected:
 	virtual void _prepare(CtControl &control);
@@ -105,6 +116,8 @@ private:
 	HwInterface *m_hw_int;
 	bool m_is_multiset;
 	int m_compression_level;
+	double m_jp2k_compression_ratio;
+	CtSaving::Jp2kCompressionCodec m_jp2k_codec;
 	int m_frames_per_file;
         int m_every_n_frames;     
 	int m_file_cnt;

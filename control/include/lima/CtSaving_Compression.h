@@ -120,6 +120,25 @@ class ImageBsCompression: public SinkTaskBase
 };
 #endif // WITH_BS_COMPRESSION 
 
+#ifdef WITH_JP2K_COMPRESSION
+class ImageJp2kCompression: public SinkTaskBase
+{
+  DEB_CLASS_NAMESPC(DebModControl, "Image JPEG2000 Compression Task", "Control");
+
+  CtSaving::SaveContainer&	m_container;
+  double			m_compression_ratio;
+  CtSaving::Jp2kCompressionCodec m_codec;
+
+ public:
+  ImageJp2kCompression(CtSaving::SaveContainer &save_cnt,
+		       double compression_ratio,
+		       CtSaving::Jp2kCompressionCodec codec);
+  ~ImageJp2kCompression();
+  static int calcBufferSize(int data_size, int data_depth);
+  virtual void process(Data &aData);
+};
+#endif // WITH_JP2K_COMPRESSION
+
 #ifdef WITH_Z_COMPRESSION 
 #include <zlib.h>
 

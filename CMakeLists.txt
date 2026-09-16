@@ -268,6 +268,13 @@ target_link_libraries(limacore PUBLIC Threads::Threads processlib)
 target_link_libraries(limacore PRIVATE ${saving_libs} ${extra_libs})
 target_link_libraries(limacore PRIVATE ${saving_private_libs})
 
+if(LIMA_ENABLE_HDF5_JP2K)
+    target_link_libraries(limacore PRIVATE OpenJPH::OpenJPH)
+    if(LIMA_ENABLE_KAKADU_JP2K)
+        target_link_libraries(limacore PRIVATE Kakadu::Kakadu)
+    endif()
+endif()
+
 if(UNIX)
     target_compile_definitions(limacore PUBLIC -DHAS_INOTIFY)
     target_link_libraries(limacore PRIVATE "rt")
@@ -335,12 +342,6 @@ if(LIMA_ENABLE_PYTHON)
 
     # Get sip abi version of the lima.sip module, collected from FindSIP.cmake (from FindSIP.py)
     set(SIP_ABI_VERSION ${LIMA_SIP_ABI_VERSION})
-    file(GLOB LIMA_SIP_EXTRA_FILES_DEPEND CONFIGURE_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/common/sip/*.sip"
-        "${CMAKE_CURRENT_SOURCE_DIR}/hardware/sip/*.sip"
-        "${CMAKE_CURRENT_SOURCE_DIR}/control/sip/*.sip"
-        "${CMAKE_CURRENT_SOURCE_DIR}/control/software_operation/sip/*.sip")
-    set(SIP_EXTRA_FILES_DEPEND ${LIMA_SIP_EXTRA_FILES_DEPEND})
     add_sip_python_module(limacore ${CMAKE_CURRENT_BINARY_DIR}/sip/limacore.sip FALSE)
 
     target_include_directories(python_module_limacore PRIVATE

@@ -125,9 +125,9 @@ def main(argv):
     parser.add_argument('-e', '--exposure', type=float, help='exposure time in sec.', required=False, default=0.1)
     parser.add_argument('-n', '--nbframes', type=int, help='number of frames.', required=False, default=1)
     if sys.platform == 'win32':
-        format_list = ['all', 'cbf', 'edf', 'edfgz', 'hdf5', 'hdf5gz', 'hdf5bs', 'raw']
+        format_list = ['all', 'cbf', 'edf', 'edfgz', 'hdf5', 'hdf5gz', 'hdf5bs', 'hdf5jp2k', 'raw']
     else:
-        format_list = ['all', 'cbf', 'edf', 'edfgz', 'edflz4', 'fits', 'hdf5', 'hdf5gz', 'hdf5bs', 'tiff', 'raw']
+        format_list = ['all', 'cbf', 'edf', 'edfgz', 'edflz4', 'fits', 'hdf5', 'hdf5gz', 'hdf5bs', 'hdf5jp2k', 'tiff', 'raw']
     format_list.sort()
     parser.add_argument('-f', '--format', help='saving format', choices=format_list, required=False, default='all', nargs='+')
     parser.add_argument('-d', '--directory', help='saving directory', required=False, default='./data')

@@ -101,6 +101,27 @@ if(LIMA_ENABLE_HDF5)
     # list(APPEND saving_libs ${LIB_HDF5_BS})
     # list(APPEND saving_includes ${LIB_BS_INCLUDE_DIR})
   endif()
+
+  if(LIMA_ENABLE_HDF5_JP2K)
+    list(APPEND saving_definitions -DWITH_JP2K_COMPRESSION)
+    
+    # At minima build with OpenJPH
+    find_package(OpenJPH REQUIRED)
+    list(APPEND saving_definitions -DWITH_OPENJPH_JP2K)
+    
+    if(LIMA_ENABLE_KAKADU_JP2K)
+      find_package(Kakadu REQUIRED)
+      list(APPEND saving_definitions -DWITH_KAKADU_JP2K)
+    endif()
+  endif()
+endif()
+
+if(LIMA_ENABLE_HDF5_JP2K AND NOT LIMA_ENABLE_HDF5)
+  message(FATAL_ERROR "LIMA_ENABLE_HDF5_JP2K requires LIMA_ENABLE_HDF5")
+endif()
+
+if(LIMA_ENABLE_KAKADU_JP2K AND NOT LIMA_ENABLE_HDF5_JP2K)
+  message(FATAL_ERROR "LIMA_ENABLE_KAKADU_JP2K requires LIMA_ENABLE_HDF5_JP2K")
 endif()
 
 if(LIMA_ENABLE_NXS)

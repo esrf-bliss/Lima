@@ -83,7 +83,7 @@ Options are ``<camera-name> <saving-format> python pytango-server``:
 
 ``<saving-format>`` can be a combination of any of the following options::
 
-  cbf|nxs|fits|edfgz|edflz4|tiff|hdf5
+  cbf|nxs|fits|edfgz|edflz4|tiff|hdf5|hdf5jp2k
 
 ``python`` will install the python module
 
@@ -120,6 +120,52 @@ Run ``cmake`` in the build directory:
      -DLIMACAMERA_BASLER=true
      -DLIMA_ENABLE_PYTANGO_SERVER=true
      -DLIMA_ENABLE_PYTHON=true
+
+HDF5 JPEG 2000 saving can be enabled with:
+
+.. code-block:: bash
+
+  cmake ..
+     -DLIMA_ENABLE_HDF5=true
+     -DLIMA_ENABLE_HDF5_JP2K=true
+
+OpenJPEG is required when ``LIMA_ENABLE_HDF5_JP2K`` is enabled. If it is not
+installed in a standard location, point CMake to it with either
+``OPENJPEG_ROOT`` or the explicit ``OPENJPEG_INCLUDE_DIR`` and
+``OPENJPEG_LIBRARY`` variables:
+
+.. code-block:: bash
+
+  cmake ..
+     -DLIMA_ENABLE_HDF5=true
+     -DLIMA_ENABLE_HDF5_JP2K=true
+     -DOPENJPEG_ROOT=/path/to/openjpeg
+
+Kakadu support is optional and must be explicitly enabled. When enabled and
+found, it can be selected at run time as the JPEG 2000 encoder. It can be
+discovered with ``KAKADU_ROOT`` or with the explicit Kakadu include and library
+variables:
+
+.. code-block:: bash
+
+  cmake ..
+     -DLIMA_ENABLE_HDF5=true
+     -DLIMA_ENABLE_HDF5_JP2K=true
+     -DLIMA_ENABLE_KAKADU_JP2K=true
+     -DKAKADU_ROOT=/path/to/kakadu
+
+The same paths can also be provided through environment variables, for example:
+
+.. code-block:: bash
+
+  export OPENJPEG_ROOT=/path/to/openjpeg
+  export KAKADU_ROOT=/path/to/kakadu
+  cmake .. -DLIMA_ENABLE_HDF5=true -DLIMA_ENABLE_HDF5_JP2K=true -DLIMA_ENABLE_KAKADU_JP2K=true
+
+Files written with ``HDF5JP2K`` use a custom HDF5 filter. Applications that read
+the files outside the Lima process, such as h5py or silx, must load a matching
+HDF5 filter plugin. The reader plugin is expected to be distributed outside
+Lima, for example through hdf5plugin.
 
 Then compile and install:
 

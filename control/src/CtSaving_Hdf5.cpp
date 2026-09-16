@@ -185,6 +185,9 @@ static void calculate_chunck(hsize_t* data_size, hsize_t* chunck, int  depth)
 SaveContainerHdf5::SaveContainerHdf5(CtSaving::Stream& stream, CtSaving::FileFormat format)
 	: CtSaving::SaveContainer(stream), m_format(format) {
 	DEB_CONSTRUCTOR();
+	const CtSaving::Parameters& pars = stream.getParameters(CtSaving::Auto);
+	m_jp2k_compression_ratio = pars.jp2kCompressionRatio;
+	m_jp2k_codec = pars.jp2kCompressionCodec;
 #if defined(WITH_BS_COMPRESSION)
 	if (format == CtSaving::HDF5BS) {
 		int ret= bshuf_register_h5filter();
@@ -192,10 +195,48 @@ SaveContainerHdf5::SaveContainerHdf5(CtSaving::Stream& stream, CtSaving::FileFor
 			THROW_CTL_ERROR(Error) << "Cannot register H5BSHUF filter";
 	}
 #endif
+#if defined(WITH_JP2K_COMPRESSION)
+	if (format == CtSaving::HDF5JP2K) {
+		int ret = hdf5_jp2k::register_filter();
+		if (ret < 0)
+			THROW_CTL_ERROR(Error) << "Cannot register HDF5 JP2K filter";
+	}
+#endif
 }
 
 SaveContainerHdf5::~SaveContainerHdf5() {
 	DEB_DESTRUCTOR();
+}
+
+void SaveContainerHdf5::setJp2kCompressionRatio(double ratio)
+{
+	DEB_MEMBER_FUNCT();
+
+	if (ratio <= 0)
+		THROW_CTL_ERROR(InvalidValue) << "JP2K compression ratio must be > 0";
+
+	m_jp2k_compression_ratio = ratio;
+}
+
+double SaveContainerHdf5::getJp2kCompressionRatio() const
+{
+	DEB_MEMBER_FUNCT();
+
+	return m_jp2k_compression_ratio;
+}
+
+void SaveContainerHdf5::setJp2kCompressionCodec(CtSaving::Jp2kCompressionCodec codec)
+{
+	DEB_MEMBER_FUNCT();
+
+	m_jp2k_codec = codec;
+}
+
+CtSaving::Jp2kCompressionCodec SaveContainerHdf5::getJp2kCompressionCodec() const
+{
+	DEB_MEMBER_FUNCT();
+
+	return m_jp2k_codec;
 }
 
 void SaveContainerHdf5::_prepare(CtControl& control) {
@@ -630,6 +671,38 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 				plist.setFilter(BSHUF_H5FILTER, H5Z_FLAG_MANDATORY, 2, opt_vals);
 			}
 #endif
+#if defined(WITH_JP2K_COMPRESSION)
+			if (aFormat == CtSaving::HDF5JP2K) {
+				if (!hdf5_jp2k::isSupported(aData.type))
+					THROW_CTL_ERROR(Error) << "HDF5 JP2K supports only 8-bit and 16-bit integer image data";
+
+				unsigned int data_type_size_in_bytes = 0x0000;
+				switch (aData.type) {
+				case Data::UINT8:
+					data_type_size_in_bytes = 0x0001;
+					break;
+				case Data::INT8:
+					data_type_size_in_bytes = 0x0081;
+					break;
+				case Data::UINT16:
+					data_type_size_in_bytes = 0x0002;
+					break;
+				case Data::INT16:
+					data_type_size_in_bytes = 0x0082;
+					break;
+				}
+				unsigned int width = data_dims[2];
+				unsigned int height = data_dims[1];
+				
+				unsigned int opt_vals[5]= {1, data_type_size_in_bytes, width, height, 1};
+				plist.setFilter(hdf5_jp2k::filter_id(), H5Z_FLAG_MANDATORY, 5, opt_vals);
+				string compression = (m_jp2k_codec == CtSaving::JP2KKakadu) ?
+					"kakadu-jp2k" : "openjph-htj2k";
+				write_h5_attribute(file->m_instrument_detector, "compression", compression);
+				write_h5_attribute(file->m_instrument_detector, "compression_ratio",
+						   m_jp2k_compression_ratio);
+			}
+#endif
 			// create new dspace
 			file->m_image_dataspace = DataSpace(RANK_THREE, data_dims, max_dims);
 			file->m_image_dataset =
@@ -687,7 +760,8 @@ long SaveContainerHdf5::_writeFile(void* f,Data &aData,
 		dxpl = H5Pcreate(H5P_DATASET_XFER);
 
 		ZBufferList buffers;
-		if ((aFormat == CtSaving::HDF5GZ) || (aFormat == CtSaving::HDF5BS))  {
+		if ((aFormat == CtSaving::HDF5GZ) || (aFormat == CtSaving::HDF5BS) ||
+		    (aFormat == CtSaving::HDF5JP2K))  {
 			buffers = std::move(_takeBuffers(aData));
 			// with single chunk, only one buffer allocated
 			ZBuffer& b = buffers.front();
@@ -778,6 +852,12 @@ SinkTaskBase* SaveContainerHdf5::getCompressionTask(const CtSaving::HeaderMap& /
 		return new ImageBsCompression(*this);
 	}
 #endif
+#if defined(WITH_JP2K_COMPRESSION)
+	if(m_format == CtSaving::HDF5JP2K) {
+		return new ImageJp2kCompression(*this, m_jp2k_compression_ratio,
+						m_jp2k_codec);
+	}
+#endif
 	return NULL;
 }
 
@@ -791,6 +871,9 @@ int SaveContainerHdf5::getCompressedBufferSize(int data_size, int data_depth)
 	if(m_format == CtSaving::HDF5BS)
 		return ImageBsCompression::calcBufferSize(data_size, data_depth);
 #endif
+#if defined(WITH_JP2K_COMPRESSION)
+	if(m_format == CtSaving::HDF5JP2K)
+		return ImageJp2kCompression::calcBufferSize(data_size, data_depth);
+#endif
 	return 0;
 }
-

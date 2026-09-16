@@ -85,6 +85,13 @@ public:
 		CBFMiniHeader,		///< CBF mini header
 		HDF5GZ,                 ///< HDF5 format with Z compression
 		HDF5BS,                 ///< HDF5 format with BitShuffle/LZ4 compression
+		HDF5JP2K,               ///< HDF5 format with JPEG2000/OpenJPH compression
+	};
+
+	enum Jp2kCompressionCodec
+	{
+		JP2KOpenJPH,
+		JP2KKakadu,
 	};
 
 	enum SavingMode
@@ -120,6 +127,8 @@ public:
 		long framesPerFile;	///< the number of images save in one files
 		long everyNFrames; ///< save every N frames (skip the others)
 		long nbframes;
+		double jp2kCompressionRatio; ///< target JPEG2000 lossy compression ratio
+		Jp2kCompressionCodec jp2kCompressionCodec; ///< JPEG2000 encoder backend
 
 		Parameters();
 		void checkValid() const;
@@ -187,6 +196,11 @@ public:
 
 	void setEveryNFrames(long every_n_frames, int stream_idx = 0);
 	void getEveryNFrames(long& every_n_frames, int stream_idx = 0) const;
+
+	void setJp2kCompressionRatio(double ratio, int stream_idx = 0);
+	void getJp2kCompressionRatio(double& ratio, int stream_idx = 0) const;
+	void setJp2kCompressionCodec(Jp2kCompressionCodec codec, int stream_idx = 0);
+	void getJp2kCompressionCodec(Jp2kCompressionCodec& codec, int stream_idx = 0) const;
 
 	void setManagedMode(ManagedMode mode);
 	void getManagedMode(ManagedMode& mode) const;
@@ -268,6 +282,7 @@ public:
 		friend class FileLz4Compression;
 		friend class ImageZCompression;
 		friend class ImageBsCompression;
+		friend class ImageJp2kCompression;
 
 		struct FrameParameters
 		{
@@ -372,6 +387,10 @@ public:
 		/** @brief get the required ZBuffer size for compression.
 			*/
 		virtual int getCompressedBufferSize(int data_size, int data_depth) { return 0; }
+		virtual void setJp2kCompressionRatio(double) {}
+		virtual double getJp2kCompressionRatio() const { return 10.0; }
+		virtual void setJp2kCompressionCodec(Jp2kCompressionCodec) {}
+		virtual Jp2kCompressionCodec getJp2kCompressionCodec() const { return JP2KOpenJPH; }
 
 		bool _allFramesWritten() const { return (m_written_frames == m_frames_to_write); }
 
@@ -566,6 +585,10 @@ public:
 		{
 			m_save_cnt->setMaxConcurrentWritingTask(nb_threads);
 		}
+		void setJp2kCompressionRatio(double ratio);
+		double getJp2kCompressionRatio() const;
+		void setJp2kCompressionCodec(Jp2kCompressionCodec codec);
+		Jp2kCompressionCodec getJp2kCompressionCodec() const;
 
 		void setEnableLogStat(bool enable)
 		{
@@ -774,6 +797,8 @@ inline const char* convert_2_string(CtSaving::FileFormat fileFormat)
 		aFileFormatHumanPt = "HDF5GZ"; break;
 	case CtSaving::HDF5BS:
 		aFileFormatHumanPt = "HDF5BS"; break;
+	case CtSaving::HDF5JP2K:
+		aFileFormatHumanPt = "HDF5JP2K"; break;
 	default:
 		aFileFormatHumanPt = "RAW"; break;
 	}
@@ -799,6 +824,8 @@ inline void convert_from_string(const std::string& val,
 	else if (buffer == "hdf5")		fileFormat = CtSaving::HDF5;
 	else if (buffer == "hdf5gz")      fileFormat = CtSaving::HDF5GZ;
 	else if (buffer == "hdf5bs")      fileFormat = CtSaving::HDF5BS;
+	else if (buffer == "hdf5jp2k" || buffer == "hdf5jpeg2000")
+		fileFormat = CtSaving::HDF5JP2K;
 	else
 	{
 		std::ostringstream msg;
@@ -979,7 +1006,9 @@ inline std::ostream& operator<<(std::ostream& os, const CtSaving::Parameters& pa
 		<< "useHwComp=" << params.useHwComp << ","
 		<< "framesPerFile=" << params.framesPerFile << ", "
 		<< "everyNFrames=" << params.everyNFrames << ", "
-		<< "nbframes=" << params.nbframes
+		<< "nbframes=" << params.nbframes << ", "
+		<< "jp2kCompressionRatio=" << params.jp2kCompressionRatio << ", "
+		<< "jp2kCompressionCodec=" << params.jp2kCompressionCodec
 		<< ">";
 	return os;
 }
@@ -999,7 +1028,9 @@ inline bool operator ==(const CtSaving::Parameters& a,
 		(a.indexFormat == b.indexFormat) &&
 		(a.framesPerFile == b.framesPerFile) &&
 		(a.everyNFrames == b.everyNFrames) &&
-		(a.nbframes == b.nbframes));
+		(a.nbframes == b.nbframes) &&
+		(a.jp2kCompressionRatio == b.jp2kCompressionRatio) &&
+		(a.jp2kCompressionCodec == b.jp2kCompressionCodec));
 }
 
 inline std::ostream& operator<<(std::ostream& os, const CtSaving::HeaderMap& header)

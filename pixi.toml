@@ -1,0 +1,29 @@
+[workspace]
+channels = ["conda-forge", "esrf-bcu"]
+name = "lima"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+configure = "cmake -Bbuild -H. -G Ninja -DLIMA_BUILD_SUBMODULES=0 -DLIMA_ENABLE_PYTHON=1 -DLIMA_ENABLE_TESTS=1 -DLIMA_ENABLE_DEBUG=1 -DLIMA_ENABLE_CONFIG=1 -DLIMA_ENABLE_TIFF=1 -DLIMA_ENABLE_HDF5=1 -DLIMA_ENABLE_HDF5_BS=1 -DLIMA_ENABLE_EDFGZ=1 -DLIMA_ENABLE_EDFLZ4=1 -DLIMA_ENABLE_CBF=1 -DLIMA_ENABLE_HDF5_JP2K=1 -DLIMA_ENABLE_KAKADU_JP2K=0 -DLIMA_ENABLE_NUMA=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_FIND_ROOT_PATH=$CONDA_PREFIX -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DPython3_FIND_STRATEGY=LOCATION"
+build = "cmake --build build"
+install = "cmake --build build --target install"
+
+[dependencies]
+python = "*"
+lima-sip6 = "13*"
+processlib = "1.11*"
+libconfig = "1.7*"
+# I/O formats
+zlib = "*"
+lz4-c = "1.9*"
+openjph = "*"
+hdf5 = "1.14*"
+libtiff = "*"
+cbflib = ">=0.9.7"
+openssl = "3*"
+libnuma = "*"
+# Build
+cxx-compiler = "*"
+cmake = "*"
+ninja = "*"
