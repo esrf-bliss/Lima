@@ -486,7 +486,13 @@ void CtControl::prepareAcq()
   getStatus(aStatus);
 
   if(aStatus.AcquisitionStatus == AcqRunning)
-    THROW_CTL_ERROR(Error) << "Acquisition not finished";
+  {
+    if (m_running)
+      THROW_CTL_ERROR(Error) << "Acquisition not finished";
+    else
+      THROW_CTL_ERROR(Error) << "Previous acquisition still being processed/saved: "
+                             << "wait for completion, or call abortAcq() to discard pending images";
+  }
 
   if(aStatus.AcquisitionStatus == AcqConfig)
     THROW_CTL_ERROR(Error) << "Configuration not finished";
