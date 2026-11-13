@@ -121,6 +121,13 @@ Run ``cmake`` in the build directory:
      -DLIMA_ENABLE_PYTANGO_SERVER=true
      -DLIMA_ENABLE_PYTHON=true
 
+``LIMA_ENABLE_PYTHON``/``LIMA_ENABLE_PYTANGO_SERVER`` require the ``sip``
+tool (``pip install sip`` or the ``sip`` conda package) to build the Python
+bindings. CMake generates the ``lima.sip`` ABI stub it needs on the fly, so
+no extra package is required for this - it previously required installing
+the ``lima-sip6`` conda package explicitly, which was never documented and
+had no source form; that is no longer needed.
+
 HDF5 JPEG 2000 saving can be enabled with:
 
 .. code-block:: bash
