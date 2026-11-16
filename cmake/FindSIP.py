@@ -29,13 +29,15 @@
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
+import os
+import sys
+import sysconfig
+
 import sipbuild
 
 print("sip_version:%06.0x" % sipbuild.version.SIP_VERSION)
 print("sip_version_num:%d" % sipbuild.version.SIP_VERSION)
 print("sip_version_str:%s" % sipbuild.version.SIP_VERSION_STR)
-
-import sysconfig
 
 if "deb_system" in sysconfig.get_scheme_names():
     python_modules_dir = sysconfig.get_path("purelib", "deb_system")
@@ -44,22 +46,53 @@ else:
 print("default_sip_dir:%s" % python_modules_dir)
 
 
-import lima.sip
-
-if hasattr(lima.sip, "SIP_ABI_VERSION"):
-    lima_sip_abi_version_num = lima.sip.SIP_ABI_VERSION
-else:
+def abi_version_from_installed_sip():
+    """ABI version sip itself ships support for, used as a fallback when
+    lima.sip doesn't expose SIP_ABI_VERSION directly."""
     for major in range(20, 0, -1):
         source_path = sysconfig.get_path("purelib") + f"/sipbuild/module/source/{major}"
-        if __import__("os").path.isdir(source_path):
-            minors = [
-                int(name) for name in __import__("os").listdir(source_path)
-                if name.isdigit()
-            ]
+        if os.path.isdir(source_path):
+            minors = [int(name) for name in os.listdir(source_path) if name.isdigit()]
             minor = max(minors) if minors else 0
-            lima_sip_abi_version_num = (major << 16) | (minor << 8)
-            break
+            return (major << 16) | (minor << 8)
+    return None
+
+
+try:
+    import lima.sip
+except ModuleNotFoundError:
+    # lima.sip is only published as the lima-sip6 conda package - it has no
+    # source of its own, it's a generic sip-generated stub (same idea as
+    # PyQt5.sip) built on the fly from whatever `sip` is installed, purely to
+    # pin an ABI version and provide sip.h. When it isn't installed (e.g.
+    # building from source outside conda), generate that same stub ourselves
+    # instead of requiring the package.
+    import subprocess
+    import tempfile
+
+    gen_dir = os.path.join(tempfile.gettempdir(), "lima-sip-module")
+    os.makedirs(gen_dir, exist_ok=True)
+    subprocess.run(
+        [sys.executable, "-m", "sipbuild.tools.module",
+         "--sdist", "--sip-h", "--target-dir", gen_dir, "lima.sip"],
+        check=True,
+    )
+    print(f"sip_inc_dir:{gen_dir}")
+
+    lima_sip_abi_version_num = abi_version_from_installed_sip()
+    if lima_sip_abi_version_num is None:
+        lima_sip_abi_version_num = sipbuild.version.SIP_VERSION
+else:
+    # lima-sip6's conda recipe drops sip.h next to the usual include dir of
+    # the environment it's installed into.
+    print(f"sip_inc_dir:{os.path.join(sys.prefix, 'include')}")
+
+    if hasattr(lima.sip, "SIP_ABI_VERSION"):
+        lima_sip_abi_version_num = lima.sip.SIP_ABI_VERSION
     else:
-        lima_sip_abi_version_num = lima.sip.SIP_VERSION
-lima_sip_abi_version  = f"{lima_sip_abi_version_num >> 16}.{(lima_sip_abi_version_num & 0x00ff00) >> 8}"
-print(f"lima_sip_abi_version:{lima_sip_abi_version}") 
+        lima_sip_abi_version_num = abi_version_from_installed_sip()
+        if lima_sip_abi_version_num is None:
+            lima_sip_abi_version_num = lima.sip.SIP_VERSION
+
+lima_sip_abi_version = f"{lima_sip_abi_version_num >> 16}.{(lima_sip_abi_version_num & 0x00ff00) >> 8}"
+print(f"lima_sip_abi_version:{lima_sip_abi_version}")
