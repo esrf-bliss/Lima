@@ -9,6 +9,7 @@ stages:
 
 .build-conda: &build-conda
   stage: build
+  retry: 2
   artifacts:
     paths:
       - dist/
