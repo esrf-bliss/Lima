@@ -20,7 +20,8 @@ requirements:
     - python {{ python }}
     - lima-sip6 13*
     - processlib 1.11*
-    - libconfig 1.7*
+    - libconfig 1.7*                       # [not win]
+    - libconfig 1.7.3 h63175ca_0             # [win]
     # I/O formats
     - zlib
     - lz4-c 1.9*
@@ -38,7 +39,8 @@ requirements:
     - python
     - {{ pin_compatible('lima-sip6', min_pin='x.x.x', max_pin='x') }}
     - {{ pin_compatible('processlib', max_pin='x.x') }}
-    - libconfig 1.7*
+    - libconfig 1.7*                       # [not win]
+    - libconfig 1.7.3 h63175ca_0             # [win]
     # I/O formats
     - zlib
     - lz4-c 1.9*
