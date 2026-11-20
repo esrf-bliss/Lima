@@ -42,7 +42,7 @@ deploy-devel:
     - build-win
   script:
     - cp -Rf dist/* /conda-devel/
-    - conda index --channeldata /conda-devel/
+    - flock /conda-devel/.reindex.lock -c "conda index --channeldata /conda-devel/"
   tags:
     - conda
     - linux
@@ -62,7 +62,7 @@ deploy-stable:
     - build-win
   script:
     - cp -Rf dist/* /conda/
-    - conda index --channeldata /conda/
+    - flock /conda/.reindex.lock -c "conda index --channeldata /conda/"
   tags:
     - conda
     - linux
