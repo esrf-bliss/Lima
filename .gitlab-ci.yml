@@ -2,6 +2,13 @@ variables:
   GIT_SUBMODULE_PATHS: third-party/bitshuffle
   GIT_SUBMODULE_DEPTH: 1
   GIT_SUBMODULE_STRATEGY: recursive
+  # Disable git's background auto-gc for every git invocation, including the
+  # runner's own checkout/submodule-update before `script:` runs - that's
+  # where the bitshuffle/zstd .git copy race actually happens, too early for
+  # a `git config --global` in script to help.
+  GIT_CONFIG_COUNT: 1
+  GIT_CONFIG_KEY_0: gc.auto
+  GIT_CONFIG_VALUE_0: 0
 
 stages:
   - build
@@ -19,7 +26,6 @@ stages:
 build-linux:
   <<: *build-conda
   script:
-    - git config --global gc.auto 0
     - conda mambabuild conda --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
   tags:
     - linux
@@ -27,7 +33,6 @@ build-linux:
 build-win:
   <<: *build-conda
   script:
-    - git config --global gc.auto 0
     - call conda mambabuild conda --prefix-length=80 --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
   tags:
     - win
