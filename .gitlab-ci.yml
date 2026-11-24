@@ -1,7 +1,14 @@
 variables:
   GIT_SUBMODULE_PATHS: third-party/bitshuffle
   GIT_SUBMODULE_DEPTH: 1
-  GIT_SUBMODULE_STRATEGY: recursive
+  # Not recursive: lima only builds bitshuffle's bitshuffle.c/bitshuffle_core.c
+  # (see control/bitshuffle/CMakeLists.txt), never its nested zstd submodule
+  # (only used by bitshuffle's own Python --zstd option). Checking zstd out
+  # was the actual source of the recurring "Failed to copy
+  # .git/modules/third-party/bitshuffle/modules/zstd/objects/bitmap-ref-tips_*"
+  # race with conda-build's source copy: not worth fighting gc.auto timing
+  # for a submodule we never use - just stop cloning it.
+  GIT_SUBMODULE_STRATEGY: normal
   # Disable git's background auto-gc for every git invocation, including the
   # runner's own checkout/submodule-update before `script:` runs - that's
   # where the bitshuffle/zstd .git copy race actually happens, too early for
