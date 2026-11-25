@@ -136,7 +136,7 @@ enum AcqStatus {
 	AcqReady, AcqRunning, AcqFault, AcqConfig
 };
 
-enum DetStatus {
+enum DetStatus /BaseType=IntFlag/ {
 	DetIdle			= 0x00,
 	DetFault		= 0x01, 
 	DetWaitForTrigger	= 0x02,
