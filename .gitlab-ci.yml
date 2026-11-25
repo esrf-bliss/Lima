@@ -33,14 +33,14 @@ stages:
 build-linux:
   <<: *build-conda
   script:
-    - conda mambabuild conda --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
+    - conda build conda --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
   tags:
     - linux
 
 build-win:
   <<: *build-conda
   script:
-    - call conda mambabuild conda --prefix-length=80 --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
+    - conda build conda --prefix-length=80 --output-folder=dist/ -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
   tags:
     - win
 
